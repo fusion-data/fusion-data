@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "fusion_iam.auth";
+option java_outer_classname = "AuthProto";
+
+package fusion_iam.v1;
+
+service Auth {
+  rpc Signin(SigninRequest) returns (SigninReplay) {}
+}
+
+message SigninRequest {
+  optional string email = 1;
+  optional string phone = 2;
+  string password = 3;
+}
+
+enum TokenType {
+  TOKEN_TYPE_UNSPECIFIED = 0;
+  TOKEN_TYPE_BEARER = 1;
+}
+
+message SigninReplay {
+  string token = 1;
+  TokenType token_type = 2;
+}

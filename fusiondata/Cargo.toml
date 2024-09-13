@@ -1,0 +1,177 @@
+[workspace]
+members = ["crates/*", "ultimates/*"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.80"
+description = "Rust libraries of The fusiondata"
+license-file = "LICENSE"
+repository = "https://github.com/fusion-data/fusion-data"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+#unused = "allow" # For experimental dev
+
+[workspace.dependencies]
+# -- projects begin
+ultimate-common = { version = "0.1.0", path = "./ultimates/ultimate-common" }
+ultimate = { version = "0.1.0", path = "./ultimates/ultimate" }
+ultimate-api = { version = "0.1.0", path = "./ultimates/ultimate-api" }
+ultimate-db = { version = "0.1.0", path = "./ultimates/ultimate-db" }
+ultimate-web = { version = "0.1.0", path = "./ultimates/ultimate-web" }
+ultimate-grpc = { version = "0.1.0", path = "./ultimates/ultimate-grpc" }
+# -- projects end
+# begin -- memory allocator
+tikv-jemallocator = "0.6"
+# end   -- memory allocator
+# -- QRCode
+qrcode-rs = { version = "0.1" }
+image = { version = "0.25" }
+# -- Misc
+derive_more = { version = "1.0", features = ["from", "display"] }
+toml = "0.8"
+config = { version = "0.14", default-features = false, features = [
+    "toml",
+    "yaml",
+] }
+itertools = "0.13"
+regex = "1"
+rand = "0.8"
+bytes = "1"
+ulid = { version = "1", features = ["serde", "uuid"] }
+uuid = { version = "1", features = [
+    "v4",
+    "v7",
+    "fast-rng",
+    "serde",
+    #    "macro-diagnostics", # Enable better diagnostics for compile-time UUIDs
+] }
+rust_decimal = { version = "1", features = ["serde-str"] }
+rust_decimal_macros = "1"
+chrono = { version = "0.4", default-features = false, features = [
+    "std",
+    "clock",
+    "serde",
+] }
+typed-builder = "0.20"
+derive-getters = "0.5"
+clap = { version = "4.5.7", features = ["derive"] }
+o2o = { version = "0.4" }
+# -- Helpful macros for working with enums and strings
+enum-iterator = "2"
+# -- Error
+anyhow = "1"
+thiserror = "1"
+# -- Crypt & Encoding
+base16ct = { version = "0.2", features = ["alloc"] }
+base64ct = { version = "1", features = ["std", "alloc"] }
+aes-gcm = "0.10"
+hmac = "0.12"
+sha2 = "0.10"
+argon2 = "0.5"
+# -- JWT & JWE
+josekit = "0.8"
+aliri = "0.6"
+# -- Async
+futures = "0.3"
+async-trait = "0.1"
+async-stream = "0.3"
+tokio = { version = "1", features = [
+    "rt",
+    "rt-multi-thread",
+    "net",
+    "macros",
+    "time",
+    "signal",
+] }
+tokio-stream = { version = "0.1", features = ["time"] }
+# -- Logging
+log = "0.4"
+env_logger = "0.11"
+# -- Tracing
+tracing = { version = "0.1", features = ["log"] }
+tracing-log = "0.2"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-appender = "0.2"
+# -- Database
+sqlx = { version = "0.7", features = [
+    "runtime-tokio",
+    "postgres",
+    "uuid",
+    "chrono",
+    "rust_decimal",
+    "json",
+] }
+modql = { version = "0.4", features = ["with-sea-query"] }
+sea-query = { version = "0.31", features = ["attr"] }
+sea-query-binder = { version = "0.6", features = [
+    "sqlx-postgres",
+    "with-uuid",
+    "with-chrono",
+    "with-rust_decimal",
+] }
+# -- Serde
+serde = { version = "1", features = ["derive"] }
+serde_with = { version = "3", features = ["chrono_0_4"] }
+serde_json = { version = "1" }
+serde_repr = "0.1"
+# -- Web
+url = "2.4"
+urlencoding = "2.1"
+serde_urlencoded = "0.7"
+headers = "0.4"
+mime = "0.3"
+http = "1.1"
+reqwest = { version = "0.12", features = ["json"] }
+hyper = "1"
+hyper-util = "0.1"
+tower = "0.5"
+tower-http = { version = "0.5", features = [
+    "fs",
+    "trace",
+    "cors",
+    "compression-full",
+] }
+tower-service = { version = "0.3" }
+tower-cookies = "0.10"
+cookie = "0.18"
+axum = { version = "0.7", features = ["macros", "form"] }
+axum-extra = { version = "0.9", features = ["typed-header"] }
+axum-macros = { version = "0.4" }
+# openapi
+utoipa = { version = "5.0.0-beta", features = [
+    "axum_extras",
+    "chrono",
+    "decimal",
+    "uuid",
+    "repr",
+    "preserve_order",
+    "preserve_path_order",
+] }
+utoipa-scalar = { version = "0.2.0-beta", features = ["axum"] }
+# -- Dev/Test
+asserhttp = { version = "0.7", features = ["reqwest"] }
+dotenvy = "0.15"
+# -- Data Science
+polars = "0.43"
+# An Excel/OpenDocument Spreadsheets reader and deserializer in pure rust
+calamine = "0.25"
+# -- RPC
+tonic = "0.12"
+tonic-types = "0.12"
+tonic-reflection = "0.12"
+tonic-web = "0.12"
+tonic-build = { version = "0.12", features = ["prost"] }
+prost = "0.13"
+prost-build = "0.13"
+prost-types = "0.13"
+
+# -- opendal
+opendal = { version = "0.49", features = ["services-obs"] }
+
+strum = { version = "0.26", features = ["derive"] }
+strum_macros = "0.26"
+
+pretty_assertions = "1.4"

@@ -1,0 +1,30 @@
+[package]
+name = "ultimate-common"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description.workspace = true
+license-file.workspace = true
+repository.workspace = true
+readme = "README.md"
+
+[features]
+prost = ["dep:prost-types"]
+
+[dependencies]
+thiserror.workspace = true
+serde.workspace = true
+sha2.workspace = true
+hmac.workspace = true
+base64ct.workspace = true
+base16ct.workspace = true
+# -- Date & Time
+chrono.workspace = true
+# chrono-tz = { version = "0.9" }
+rand.workspace = true
+regex.workspace = true
+prost-types = { workspace = true, optional = true }
+
+[dev-dependencies]
+dotenvy.workspace = true
+serde_json.workspace = true

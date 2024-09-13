@@ -1,0 +1,78 @@
+[package]
+name = "fusion-iam"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description.workspace = true
+license-file.workspace = true
+repository.workspace = true
+
+[lints]
+workspace = true
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+
+[features]
+default = ["tonic-reflection"]
+tonic-reflection = ["dep:tonic-reflection", "ultimate-grpc/tonic-reflection"]
+tonic-web = ["dep:tonic-web", "ultimate-grpc/tonic-web"]
+
+[dependencies]
+# -- ultimates
+ultimate-common = { workspace = true }
+ultimate = { workspace = true, features = ["tonic"] }
+ultimate-api = { workspace = true }
+ultimate-grpc = { workspace = true }
+ultimate-db = { workspace = true }
+# -- misc
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_repr = { workspace = true }
+chrono = { workspace = true }
+rust_decimal = { workspace = true }
+derive_more = { workspace = true }
+derive-getters = { workspace = true }
+typed-builder = { workspace = true }
+enum-iterator = { workspace = true }
+o2o = { workspace = true }
+# -- tokio & async
+tokio = { workspace = true }
+futures = { workspace = true }
+async-stream = { workspace = true }
+# -- tracing
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+tracing-log = { workspace = true }
+# -- db
+sqlx = { workspace = true }
+sea-query = { workspace = true }
+sea-query-binder = { workspace = true }
+modql = { workspace = true }
+# -- grpc https://crates.io/crates/tonic
+tower-http = { workspace = true }
+tonic = { workspace = true }
+tonic-types = { workspace = true }
+tonic-web = { workspace = true, optional = true }
+tonic-reflection = { workspace = true, optional = true }
+prost = { workspace = true }
+prost-types = { workspace = true }
+# -- qrcode
+qrcode-rs = { workspace = true }
+image = { workspace = true }
+
+
+[target.'cfg(not(target_env = "msvc"))'.dependencies]
+# -- memory allocator
+tikv-jemallocator.workspace = true
+
+[dev-dependencies]
+pretty_assertions.workspace = true
+hyper = { workspace = true }
+hyper-util = { workspace = true }
+tower = { workspace = true }
+
+[build-dependencies]
+tonic-build = { workspace = true, features = ["prost"] }

@@ -1,0 +1,100 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "fusion_iam.permission";
+option java_outer_classname = "PermissionProto";
+
+package fusion_iam.v1;
+
+import "google/protobuf/field_mask.proto";
+import "fusion_iam/v1/iam.proto";
+import "ultimate_api/v1/ultimate.proto";
+
+service Permission {
+  rpc Create(CreatePermissionRequest) returns (PermissionResponse) {}
+  rpc Find(GetPermissionRequest) returns (PermissionDto) {}
+  rpc Update(UpdatePermissionRequest) returns (PermissionResponse) {}
+  rpc Delete(DeletePermissionRequest) returns (DeletePermissionResponse) {}
+  rpc Page(PagePermissionRequest) returns (PagePermissionResponse) {}
+  rpc AssignRole(AssignPermmissionToRolesRequest) returns (fusion_iam.v1.Empty) {}
+}
+
+message PermissionDto {
+  int64 id = 1;
+  string code = 2;
+  string description = 3;
+  string resource = 4;
+  string action = 5;
+  int64 cid = 6;
+  int64 ctime = 7;
+  optional int64 mid = 8;
+  optional int64 mtime = 9;
+}
+
+message AssignPermmissionToRolesRequest {
+  int64 permission_id = 1;
+  repeated int64 role_ids = 2;
+}
+
+message CreatePermissionRequest {
+  google.protobuf.FieldMask field_mask = 1;
+  CreatePermissionDto dto = 2;
+}
+
+message CreatePermissionDto {
+  string code = 3;
+  optional string description = 4;
+  string resource = 5;
+  string action = 6;
+}
+
+message UpdatePermissionDto {
+  optional string code = 3;
+  optional string description = 4;
+  optional string resource = 5;
+  optional string action = 6;
+}
+
+message GetPermissionRequest {
+  int64 id = 1;
+}
+
+message UpdatePermissionRequest {
+  google.protobuf.FieldMask field_mask = 1;
+  int64 id = 2;
+  UpdatePermissionDto dto = 3;
+}
+
+message DeletePermissionRequest {
+  int64 id = 1;
+}
+
+message PermissionResponse {
+  int64 id = 1;
+  PermissionDto permission = 2;
+}
+
+message DeletePermissionResponse {}
+
+message FilterPermissionDto {
+  optional string code = 1;
+  optional string description = 2;
+  optional string resource = 3;
+  optional string action = 4;
+}
+
+message RolePermissionFilterDto {
+  optional int64 role_id = 1;
+  optional int64 permission_id = 2;
+}
+
+message PagePermissionRequest {
+  ultimate_api.v1.Pagination pagination = 1;
+  repeated FilterPermissionDto filter = 2;
+  RolePermissionFilterDto role_perm_filter = 3;
+}
+
+message PagePermissionResponse {
+  ultimate_api.v1.Page page = 1;
+  repeated PermissionDto items = 2;
+}

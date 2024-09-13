@@ -1,0 +1,48 @@
+[ultimate.app]
+run_mode = "dev"
+name = "qinling"
+
+[ultimate.security.pwd]
+pwd_key = "0123456789ABCDEF0123456789ABCDEF"
+secret_key = "0123456789ABCDEF0123456789ABCDEF"
+expires_in = 604800
+default_pwd = "2024.Ultimate"
+
+[ultimate.security.token]
+expires_in = 7200
+secret_key = "0123456789ABCDEF0123456789ABCDEF"
+public_key = """-----BEGIN PUBLIC KEY-----
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEOTv4YquENmDfXoSN0TQiOqmgR1Px
+UDTicuyW06VcX/XOkXp/6vmIIBFUXVWREJmQy7EIhNXM1qCy7Hs6SK9y7A==
+-----END PUBLIC KEY-----"""
+private_key = """-----BEGIN PRIVATE KEY-----
+MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgbMlaUVhOz9IHvlxT
+4i7Wm6cmubzzGZr/PNNME25ZVNuhRANCAAQ5O/hiq4Q2YN9ehI3RNCI6qaBHU/FQ
+NOJy7JbTpVxf9c6Ren/q+YggEVRdVZEQmZDLsQiE1czWoLLsezpIr3Ls
+-----END PRIVATE KEY-----"""
+
+[ultimate.web]
+enable = false
+# server_addr = "0.0.0.0:9500"
+
+[ultimate.trace]
+enable = true
+target = false
+log_level = "debug"
+log_writer = "console"
+log_dir = "./logs/"
+
+# 默认 log_name 同 ultimate.app.name
+#log_name = ""
+
+[ultimate.db]
+enable = false
+# url = "postgres://<username>:<password>@localhost:5432/<database>"
+
+[ultimate.grpc]
+enable = false
+# server_addr = "0.0.0.0:9501"
+plaintext = true
+
+[ultimate.grpc.clients]
+# ultimate-iam = { addr = "http://127.0.0.1:9501", plaintext = true }
