@@ -1,0 +1,108 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "fusion_iam.user";
+option java_outer_classname = "UserProto";
+
+package fusion_iam.v1;
+
+import "ultimate_api/v1/ultimate.proto";
+import "fusion_iam/v1/iam.proto";
+
+service User {
+  rpc Find(FindUserRequest) returns (UserResponse) {}
+
+  rpc Create(CreateUserRequest) returns (CreateUserResponse) {}
+
+  rpc Update(UpdateUserRequest) returns (UserResponse) {}
+
+  rpc Page(PageUserRequest) returns (PageUserResponse) {}
+
+  rpc Delete(FindUserRequest) returns (DeleteUserResponse) {}
+
+  rpc AssignRole(AssignUserToRolesRequest) returns (fusion_iam.v1.Empty) {}
+}
+
+enum UserStatus {
+  USER_STATUS_UNSPECIFIED = 0;
+  USER_STATUS_DISABLED = 99;
+  USER_STATUS_ENABLED = 100;
+}
+
+enum Gender {
+  GENDER_UNSPECIFIED = 0;
+  GENDER_MALE = 1;
+  GENDER_FEMALE = 2;
+}
+
+message UserDto {
+  int64 id = 1;
+  string name = 2;
+  optional string email = 3;
+  optional string phone = 4;
+  UserStatus status = 5;
+  Gender gender = 6;
+  int64 cid = 20;
+  int64 ctime = 21;
+  optional int64 mid = 22;
+  optional int64 mtime = 23;
+}
+
+// 添加用户角色关联请求
+message AssignUserToRolesRequest {
+  int64 user_id = 1;
+  repeated int64 role_ids = 2;
+}
+
+
+message FindUserRequest { int64 id = 1; }
+
+message CreateUserRequest {
+  bool returining_payload = 1;
+  optional string name = 2;
+  optional string email = 3;
+  optional string phone = 4;
+  optional int32 status = 5;
+  optional string password = 6;
+}
+
+message CreateUserResponse {
+  oneof data {
+    int64 id = 1;
+    UserDto user = 2;
+  }
+}
+
+message UpdateUserRequest {
+  bool returning_payload = 1;
+  int64 id = 2;
+  optional string name = 3;
+  optional int32 status = 4;
+}
+
+message UserResponse { UserDto user = 1; }
+
+message DeleteUserResponse {}
+
+message PageUserRequest {
+  ultimate_api.v1.Pagination pagination = 1;
+  repeated FilterUserRequest filter = 2;
+}
+
+message FilterUserRequest {
+  // 支持模糊搜索
+  optional string name = 1;
+
+  optional string email = 2;
+
+  optional string phone = 3;
+
+  repeated int32 status = 4;
+
+  Gender gender = 5;
+}
+
+message PageUserResponse {
+  ultimate_api.v1.Page page = 1;
+  repeated UserDto items = 2;
+}

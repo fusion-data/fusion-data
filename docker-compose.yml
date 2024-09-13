@@ -1,0 +1,22 @@
+name: "fusiondata"
+
+services:
+  db:
+    build:
+      context: ./scripts/software/postgres
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - ./scripts/.env
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - fusiondata
+    ports:
+      - "45432:45432"
+
+networks:
+  fusiondata:
+
+volumes:
+  postgres-data:

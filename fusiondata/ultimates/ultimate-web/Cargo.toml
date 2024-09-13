@@ -1,0 +1,35 @@
+[package]
+name = "ultimate-web"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description.workspace = true
+license-file.workspace = true
+repository.workspace = true
+
+[lints]
+workspace = true
+
+[features]
+# default = ["with-uuid"]
+uuid = ["dep:uuid", "ultimate/uuid"]
+tonic = ["dep:tonic", "ultimate/tonic"]
+
+[dependencies]
+ultimate-common.workspace = true
+ultimate.workspace = true
+ultimate-api.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+mime.workspace = true
+hyper.workspace = true
+tower-http.workspace = true
+axum.workspace = true
+axum-extra.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+serde_with.workspace = true
+ulid.workspace = true
+uuid = { workspace = true, optional = true }
+utoipa = { workspace = true, optional = true }
+tonic = { workspace = true, optional = true }

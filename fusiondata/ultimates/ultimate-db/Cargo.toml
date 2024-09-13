@@ -1,0 +1,38 @@
+[package]
+name = "ultimate-db"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description.workspace = true
+license-file.workspace = true
+repository.workspace = true
+
+[lints]
+workspace = true
+
+[features]
+default = ["modql"]
+utoipa = ["dep:utoipa", "ultimate-api/utoipa"]
+modql = ["dep:modql", "ultimate-api/modql"]
+
+[dependencies]
+ultimate-api = { workspace = true }
+ultimate-common.workspace = true
+ultimate.workspace = true
+derive_more.workspace = true
+serde.workspace = true
+serde_with.workspace = true
+serde_json.workspace = true
+log.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+uuid.workspace = true
+sqlx.workspace = true
+sea-query-binder.workspace = true
+sea-query.workspace = true
+modql = { workspace = true, optional = true }
+utoipa = { workspace = true, optional = true }
+
+[dev-dependencies]
+anyhow.workspace = true

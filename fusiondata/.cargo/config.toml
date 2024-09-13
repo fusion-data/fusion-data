@@ -1,0 +1,41 @@
+# 设置运行 cargo 时的系统环境变量
+[env]
+RUST_LOG = "info,tower_http=debug,fusion_iam=debug,ultimate_web=debug,ultimate_db=debug,ultimate=debug,ultimate_common=debug"
+
+[alias]
+clippy-all = "clippy --all-features -- -D warnings"
+check-all = "check --all-features"
+
+# 设置 rustc 编译器参数
+# [build]
+# rustflags = ["--cfg", "uuid_unstable"]
+
+# [profile.release]
+# default-features = false
+# features = []
+
+
+# On Windows
+# ```
+# cargo install -f cargo-binutils
+# rustup component add llvm-tools-preview
+# ```
+[target.x86_64-pc-windows-msvc]
+rustflags = ["-C", "link-arg=-fuse-ld=lld"]
+[target.x86_64-pc-windows-gnu]
+rustflags = ["-C", "link-arg=-fuse-ld=lld"]
+
+# On Linux:
+# - Ubuntu, `sudo apt-get install lld clang`
+# - Arch, `sudo pacman -S lld clang`
+[target.x86_64-unknown-linux-gnu]
+rustflags = ["-C", "linker=clang", "-C", "link-arg=-fuse-ld=lld"]
+
+# On MacOS, `brew install michaeleisel/zld/zld`
+#rustflags = ["-C", "link-arg=-fuse-ld=/usr/local/bin/zld"]
+#rustflags = ["-C", "link-arg=-fuse-ld=/usr/local/bin/zld"]
+[target.x86_64-apple-darwin]
+rustflags = ["-C", "linker=clang", "-C", "link-arg=-fuse-ld=lld"]
+
+[target.aarch64-apple-darwin]
+rustflags = ["-C", "linker=clang", "-C", "link-arg=-fuse-ld=lld"]

@@ -1,0 +1,19 @@
+[package]
+name = "ultimate-api"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description.workspace = true
+license-file.workspace = true
+repository.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+serde = { workspace = true }
+serde_repr = { workspace = true }
+bytes = { workspace = true }
+prost = { workspace = true }
+utoipa = { workspace = true, optional = true }
+modql = { workspace = true, optional = true }
