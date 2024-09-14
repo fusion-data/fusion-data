@@ -1,5 +1,9 @@
 # 身份认证和授权
 
+- [ABAC](./abac.md)
+- [基于标签的访问控制](./label.md)
+- [集成 RBAC 与 ABAC](./rbac-abac.md)
+
 ## 系统架构设计
 
 1. 后端 (Rust):

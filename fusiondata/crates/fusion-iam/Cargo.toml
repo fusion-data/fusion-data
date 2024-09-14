@@ -4,8 +4,9 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 description.workspace = true
-license-file.workspace = true
+license.workspace = true
 repository.workspace = true
+publish = false
 
 [lints]
 workspace = true
@@ -27,6 +28,8 @@ ultimate = { workspace = true, features = ["tonic"] }
 ultimate-api = { workspace = true }
 ultimate-grpc = { workspace = true }
 ultimate-db = { workspace = true }
+# -- fusiondatas
+fusiondata = { workspace = true }
 # -- misc
 serde = { workspace = true }
 serde_json = { workspace = true }

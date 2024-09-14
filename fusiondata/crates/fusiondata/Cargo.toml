@@ -1,5 +1,5 @@
 [package]
-name = "ultimate-api"
+name = "fusiondata"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -11,9 +11,7 @@ repository.workspace = true
 workspace = true
 
 [dependencies]
+ultimate-common = { workspace = true }
+ultimate = { workspace = true }
 serde = { workspace = true }
-serde_repr = { workspace = true }
-bytes = { workspace = true }
-prost = { workspace = true }
-utoipa = { workspace = true, optional = true }
-modql = { workspace = true, optional = true }
+serde_json = { workspace = true }
