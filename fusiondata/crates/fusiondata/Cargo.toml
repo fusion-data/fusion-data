@@ -11,7 +11,10 @@ repository.workspace = true
 workspace = true
 
 [dependencies]
-ultimate-common = { workspace = true }
-ultimate = { workspace = true }
+# ultimate-common = { workspace = true }
+# -- mics
 serde = { workspace = true }
 serde_json = { workspace = true }
+chrono = { workspace = true }
+strum = { workspace = true }
+uuid = { workspace = true }

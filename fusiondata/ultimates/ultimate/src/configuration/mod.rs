@@ -7,19 +7,19 @@ use std::{env, str::FromStr, sync::Arc};
 
 use ultimate_common::string::b64u_decode;
 
+mod configuration;
 mod error;
 pub mod model;
-mod ultimate_config;
 mod util;
 
 pub(crate) use self::util::load_config;
+pub use configuration::*;
 pub use error::{Error, Result};
-pub use ultimate_config::*;
 
 #[derive(Clone)]
 pub struct ConfigState {
   underling: Arc<Config>,
-  ultimate_config: Arc<UltimateConfig>,
+  ultimate_config: Arc<Configuration>,
 }
 
 impl ConfigState {
@@ -56,19 +56,19 @@ impl ConfigState {
   ///
   pub fn load() -> Result<Self> {
     let c = load_config()?;
-    let ultimate_config = UltimateConfig::try_from(&c)?;
+    let ultimate_config = Configuration::try_from(&c)?;
     Ok(Self::new(Arc::new(c), Arc::new(ultimate_config)))
   }
 
-  pub(crate) fn new(underling: Arc<Config>, ultimate_config: Arc<UltimateConfig>) -> Self {
+  pub(crate) fn new(underling: Arc<Config>, ultimate_config: Arc<Configuration>) -> Self {
     Self { underling, ultimate_config }
   }
 
-  pub fn ultimate_config(&self) -> &UltimateConfig {
+  pub fn ultimate_config(&self) -> &Configuration {
     self.ultimate_config.as_ref()
   }
 
-  pub fn ultimate_config_clone(&self) -> Arc<UltimateConfig> {
+  pub fn ultimate_config_clone(&self) -> Arc<Configuration> {
     self.ultimate_config.clone()
   }
 

@@ -2,7 +2,7 @@ use serde::{
   de::{Unexpected, Visitor},
   Deserialize, Deserializer, Serialize,
 };
-use strum_macros::AsRefStr;
+use strum::AsRefStr;
 
 #[derive(Debug, Clone, PartialEq, Serialize, AsRefStr)]
 pub enum RunMode {

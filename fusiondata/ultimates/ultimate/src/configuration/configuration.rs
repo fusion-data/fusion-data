@@ -5,7 +5,7 @@ use serde::{Deserialize, Deserializer, Serialize};
 use super::model::{AppConf, DbConf, GrpcConf, SecurityConf, TraceConfig, WebConfig};
 
 #[derive(Clone, Serialize, Deserialize)]
-pub struct UltimateConfig {
+pub struct Configuration {
   app: AppConf,
 
   security: SecurityConf,
@@ -19,7 +19,7 @@ pub struct UltimateConfig {
   grpc: GrpcConf,
 }
 
-impl UltimateConfig {
+impl Configuration {
   pub fn app(&self) -> &AppConf {
     &self.app
   }
@@ -45,11 +45,11 @@ impl UltimateConfig {
   }
 }
 
-impl TryFrom<&Config> for UltimateConfig {
+impl TryFrom<&Config> for Configuration {
   type Error = super::Error;
 
   fn try_from(c: &Config) -> std::result::Result<Self, Self::Error> {
-    let qc = c.get::<UltimateConfig>("ultimate")?;
+    let qc = c.get::<Configuration>("ultimate")?;
     Ok(qc)
   }
 }
@@ -124,7 +124,7 @@ mod tests {
     std::env::set_var("ULTIMATE__SECURITY__PWD__PWD_KEY", "80c9a35c0f231219ca14c44fe10c728d");
     std::env::set_var("ULTIMATE__APP__NAME", "ultimate");
     let c = load_config().unwrap();
-    let qc = UltimateConfig::try_from(&c).unwrap();
+    let qc = Configuration::try_from(&c).unwrap();
 
     assert_eq!(qc.security().pwd().pwd_key(), b"80c9a35c0f231219ca14c44fe10c728d");
     assert_eq!(qc.security().token().secret_key(), b"8462b1ec9af827ebed13926f8f1e5409774fa1a21a1c8f726a4a34cf7dcabaf2");
