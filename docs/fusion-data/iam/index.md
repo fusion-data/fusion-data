@@ -4,6 +4,17 @@
 - [基于标签的访问控制](./label.md)
 - [集成 RBAC 与 ABAC](./rbac-abac.md)
 
+## 相关资料
+
+- [Identity and Access Management](https://en.wikipedia.org/wiki/Identity_management)
+  - [OAuth](https://en.wikipedia.org/wiki/OAuth)
+  - [Authentication](https://en.wikipedia.org/wiki/Authentication)
+  - [Authorization](https://en.wikipedia.org/wiki/Authorization)
+  - [Access control](https://en.wikipedia.org/wiki/Access_control)
+  - [Digital identity](https://en.wikipedia.org/wiki/Digital_identity)
+- [Role-based access control](https://en.wikipedia.org/wiki/Role-based_access_control)
+- [Attribute-based access control (ABAC)](https://en.wikipedia.org/wiki/Attribute-based_access_control)。基于属性的访问控制有时也被称为 policy-based access control (PBAC) 或 claims-based access control (CBAC) ，这是微软特有的术语。实现 ABAC 的主要标准是 XACML 和 ALFA (XACML)。
+
 ## 系统架构设计
 
 1. 后端 (Rust):

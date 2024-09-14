@@ -2,49 +2,41 @@
 
 为了支持ABAC（基于属性的访问控制）模型，我们需要扩展现有的数据模型。以下是ABAC支持的设计文档和相应的SQL语句：
 
-## ABAC 支持设计文档
+## 参数资料
 
-1. 属性表：存储各种实体（用户、资源、环境等）的属性
-2. 策略表：定义ABAC策略规则
-3. 属性值表：存储具体实体的属性值
+- 华为云 IAM 策略语法: https://support.huaweicloud.com/usermanual-iam/iam_01_0019.html
+  - 策略鉴权规则: https://support.huaweicloud.com/usermanual-iam/iam_01_0020.html
+    1. 用户发起访问请求
+    2. 系统在用户被授予的策略中寻找请求对应的action，优先寻找Deny指令。如果找到一个适用的Deny指令，系统将返回Deny决定
+    3. 如果没有找到Deny指令，系统将寻找适用于请求的任何Allow指令。如果找到一个Allow指令，系统将返回Allow决定
+    4. 如果找不到Allow指令，最终决定为Deny，鉴权结束
 
-### SQL语句
+## ABAC 组件
 
-```sql
+### 架构（Architecture）
 
-```
+ABAC 的推荐架构如下：
 
-### 示例数据
+- 策略执行点（PEP）：它负责保护要应用 ABAC 的应用程序和数据。PEP 检查请求并生成一个授权请求，然后将其发送给 PDP。
+- 策略决策点（PDP）：是整个架构的大脑。它根据配置的策略来评估传入的请求。PDP 会返回 "允许"/"拒绝" 决定。策略还可以使用 PIP 来检索缺失的元数据。
+- 策略信息点（PIP）是 PDP 与数据库等外部属性源之间的桥梁。
 
-```sql
--- 插入示例属性
-INSERT INTO iam.attribute (name, description, entity_type, data_type, cid, ctime)
-VALUES
-('department', '用户所属部门', 'user', 'string', 1, CURRENT_TIMESTAMP),
-('clearance_level', '用户安全等级', 'user', 'integer', 1, CURRENT_TIMESTAMP),
-('document_classification', '文档分类级别', 'resource', 'string', 1, CURRENT_TIMESTAMP),
-('time_of_day', '当前时间', 'environment', 'string', 1, CURRENT_TIMESTAMP);
+### 属性（Attributes）
 
--- 插入示例策略
-INSERT INTO iam.policy (name, description, condition, effect, resource, action, cid, ctime)
-VALUES
-('高级文档访问策略', '允许高安全等级用户访问机密文档',
- '{"user.clearance_level": {"gte": 4}, "resource.document_classification": "confidential", "environment.time_of_day": {"between": ["09:00", "17:00"]}}',
- 'allow', 'document', 'read', 1, CURRENT_TIMESTAMP);
+属性可以是关于任何事物和任何人的。它们往往分为 4 个不同的类别：
 
--- 插入示例属性值
-INSERT INTO iam.attribute_value (attribute_id, entity_id, value, cid, ctime)
-VALUES
-((SELECT id FROM iam.attribute WHERE name = 'department'), 1, 'IT', 1, CURRENT_TIMESTAMP),
-((SELECT id FROM iam.attribute WHERE name = 'clearance_level'), 1, '5', 1, CURRENT_TIMESTAMP);
-```
+- subject (主体)属性：描述尝试访问的用户的属性，如年龄、权限、部门、角色、职称等
+- action (动作)属性：描述正在尝试的操作的属性，例如读取、删除、查看、批准
+- resource (资源)属性：描述所访问对象（或资源）的属性，如对象类型（医疗记录、银行账户）、部门、分类或敏感性、位置等
+- environment (环境、contextual)属性：涉及时间、地点或访问控制情景动态方面的属性
 
-这个设计允许您：
+### 策略（Policies）
 
-1. 定义各种类型的属性（用户、资源、环境）
-2. 创建复杂的ABAC策略
-3. 为具体实体（如用户）分配属性值
+策略是汇集了各种属性的语句，用于表达可以发生什么和不允许发生什么。ABAC 中的策略可以是授予策略或拒绝策略。策略也可以是本地或全局的，并可以以覆盖其他策略的方式编写。示例包括
 
-在实际应用中，您需要实现一个策略引擎来解析和评估这些ABAC规则。该引擎将结合RBAC和ABAC的规则，以决定是否授予访问权限。
+- 如果文件与用户同属一个部门，则用户可以查看该文件
+- 如果用户是文档所有者，且文档处于草稿模式，则可以编辑该文档
+- 上午 9 点前拒绝访问
 
-请注意，这只是ABAC支持的基本框架。您可能需要根据具体需求进行调整和扩展。例如，您可能需要添加版本控制、策略优先级等功能。
+有了 ABAC，你就可以拥有任意多的策略，以满足多种不同场景和技术的需要。
+

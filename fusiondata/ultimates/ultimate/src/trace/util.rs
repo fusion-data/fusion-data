@@ -1,9 +1,9 @@
 use tracing::info;
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
 
-use crate::configuration::{model::LogWriterType, UltimateConfig};
+use crate::configuration::{model::LogWriterType, Configuration};
 
-pub fn init_trace(c: &UltimateConfig) {
+pub fn init_trace(c: &Configuration) {
   if !c.trace().enable {
     return;
   }
@@ -45,7 +45,7 @@ pub fn init_trace(c: &UltimateConfig) {
 }
 
 #[cfg(feature = "tracing-appender")]
-pub fn init_log_appender(c: &UltimateConfig) -> tracing_appender::rolling::RollingFileAppender {
+pub fn init_log_appender(c: &Configuration) -> tracing_appender::rolling::RollingFileAppender {
   use std::path::Path;
 
   let path = Path::new(&c.trace().log_dir);

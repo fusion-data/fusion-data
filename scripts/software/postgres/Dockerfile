@@ -1,4 +1,4 @@
-FROM postgres:16-alpine
+FROM postgres:16
 
 ENV LANG=zh_CN.utf8
 ENV TZ=Asia/Chongqing

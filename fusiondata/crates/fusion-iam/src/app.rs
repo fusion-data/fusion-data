@@ -3,7 +3,7 @@ use std::sync::{Arc, OnceLock};
 use derive_getters::Getters;
 use typed_builder::TypedBuilder;
 use ultimate::{
-  configuration::{ConfigState, UltimateConfig},
+  configuration::{ConfigState, Configuration},
   ctx::Ctx,
   starter,
 };
@@ -19,7 +19,7 @@ pub struct AppState {
 }
 
 impl AppState {
-  pub fn ultimate_config(&self) -> &UltimateConfig {
+  pub fn ultimate_config(&self) -> &Configuration {
     self.config_state().ultimate_config()
   }
 
