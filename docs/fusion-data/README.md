@@ -4,7 +4,7 @@
 - [数据治理](./governance.md)
 - [调度系统](./scheduler.md)
 - [数据集成](./integration.md)
-- [身份认证和授权](./iam.md)
+- [身份认证和授权](./iam/index.md)
 
 ## 整体架构
 

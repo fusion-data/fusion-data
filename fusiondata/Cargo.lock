@@ -1003,6 +1003,7 @@ dependencies = [
  "derive-getters",
  "derive_more",
  "enum-iterator",
+ "fusiondata",
  "futures",
  "hyper",
  "hyper-util",
@@ -1038,6 +1039,16 @@ dependencies = [
  "ultimate-common",
  "ultimate-db",
  "ultimate-grpc",
+]
+
+[[package]]
+name = "fusiondata"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "ultimate",
+ "ultimate-common",
 ]
 
 [[package]]
