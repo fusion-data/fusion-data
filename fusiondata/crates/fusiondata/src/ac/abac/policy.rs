@@ -1,18 +1,14 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, str::FromStr};
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use strum::AsRefStr;
-use uuid::Uuid;
 
 use crate::ac::Effect;
 
 /// 策略的授权
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct Policy {
-  pub id: Uuid,
-  pub description: Option<String>,
-
   /// 策略所作用的资源。
   ///
   /// 格式为 `“服务名:region:domainId:资源类型:资源路径”`, 资源类型支持通配符号*，通配符号*表示所有。示例：
@@ -33,13 +29,15 @@ pub struct Policy {
   ///
   /// 示例: `"StringEndWithIfExists":{"g:UserName":["specialCharacter"]}` 表示当用户输入的用户名以 `"specialCharacter"` 结尾时该条 statement 生效。
   pub condition: Option<Value>,
+
+  pub description: Option<String>,
 }
 
 /// 策略结构
 ///
 /// 策略结构包括Version（策略版本号）和Statement（策略权限语句）两部分，其中Statement可以有多个，表示不同的授权项。
 #[derive(Debug, Serialize, Deserialize)]
-pub struct PolicyStructure {
+pub struct PolicyStatement {
   /// 策略版本号
   pub version: PolicyVersion,
 
@@ -47,10 +45,18 @@ pub struct PolicyStructure {
   pub statement: Vec<Policy>,
 }
 
+impl FromStr for PolicyStatement {
+  type Err = serde_json::Error;
+
+  fn from_str(s: &str) -> Result<Self, Self::Err> {
+    serde_json::from_str(s)
+  }
+}
+
 #[derive(Debug, Default, Serialize, Deserialize, AsRefStr)]
 pub enum PolicyVersion {
   #[default]
-  #[strum(serialize = "v1.0")]
+  #[serde(rename = "v1.0")]
   V1_0,
 }
 
@@ -60,4 +66,17 @@ pub struct AccessRequest {
   pub resource: Vec<String>,
   pub action: Vec<String>,
   pub environment: HashMap<String, Value>,
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn test_policy() {
+    let text =
+      "{\"version\":\"v1.0\",\"statement\":[{\"effect\":\"Allow\",\"action\":[\"GET\"],\"resource\":[\"*\"]}]}";
+    let policy = text.parse::<PolicyStatement>().unwrap();
+    println!("{:?}", policy);
+  }
 }

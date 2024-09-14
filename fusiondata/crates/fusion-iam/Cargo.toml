@@ -24,10 +24,10 @@ tonic-web = ["dep:tonic-web", "ultimate-grpc/tonic-web"]
 [dependencies]
 # -- ultimates
 ultimate-common = { workspace = true }
-ultimate = { workspace = true, features = ["tonic"] }
+ultimate = { workspace = true, features = ["tonic", "uuid"] }
 ultimate-api = { workspace = true }
 ultimate-grpc = { workspace = true }
-ultimate-db = { workspace = true }
+ultimate-db = { workspace = true, features = ["uuid"] }
 # -- fusiondatas
 fusiondata = { workspace = true }
 # -- misc
@@ -41,6 +41,7 @@ derive-getters = { workspace = true }
 typed-builder = { workspace = true }
 enum-iterator = { workspace = true }
 o2o = { workspace = true }
+uuid = { workspace = true }
 # -- tokio & async
 tokio = { workspace = true }
 futures = { workspace = true }

@@ -53,4 +53,24 @@ grpcurl -plaintext -import-path ./crates/fusion-iam/proto \
        "id": 1
      }' \
   localhost:8889 fusion_iam.v1.Role/Get
+
+
+grpcurl -plaintext -import-path ./crates/fusion-iam/proto \
+  -import-path ./crates/fusion-iam/proto/fusion_iam/v1 \
+  -proto access_control.proto \
+  -H 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiYWxnIjoiZGlyIn0.._QTBCD_ZH49y3Rh5teJQNQ.Tst-zxGVa4VjbRHqIp2VWgHvozCFlmBNANfqO2ljdrg.9CtL86ZhdUrFNleXaSaMhQ' \
+  -d '{
+       "policy": "{\"version\":\"v1.0\",\"statement\":[{\"effect\":\"Allow\",\"action\":[\"GET\"],\"resource\":[\"*\"]}]}"
+     }' \
+  localhost:8889 fusion_iam.v1.AccessControl/CreatePolicyStatement
+
+
+grpcurl -plaintext -import-path ./crates/fusion-iam/proto \
+  -import-path ./crates/fusion-iam/proto/fusion_iam/v1 \
+  -proto access_control.proto \
+  -H 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiYWxnIjoiZGlyIn0.._QTBCD_ZH49y3Rh5teJQNQ.Tst-zxGVa4VjbRHqIp2VWgHvozCFlmBNANfqO2ljdrg.9CtL86ZhdUrFNleXaSaMhQ' \
+  -d '{
+       "id": "0191efc2-b13b-7932-8468-8470648c17db"
+     }' \
+  localhost:8889 fusion_iam.v1.AccessControl/GetPolicyStatement
 ```

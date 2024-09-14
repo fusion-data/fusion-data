@@ -1,3 +1,4 @@
+mod access_control;
 pub mod app;
 mod auth;
 mod ctx;
@@ -7,6 +8,6 @@ mod permission;
 mod role;
 mod run;
 mod user;
-pub mod util;
+mod util;
 
 pub use run::run;

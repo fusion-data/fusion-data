@@ -27,7 +27,7 @@ log.workspace = true
 thiserror.workspace = true
 tokio.workspace = true
 tracing.workspace = true
-uuid.workspace = true
+uuid = { workspace = true, optional = true }
 sqlx.workspace = true
 sea-query-binder.workspace = true
 sea-query.workspace = true

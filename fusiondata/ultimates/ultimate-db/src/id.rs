@@ -1,5 +1,8 @@
 use derive_more::derive::Display;
-use modql::{field::HasSeaFields, filter::FilterNode};
+use modql::{
+  field::HasSeaFields,
+  filter::{FilterNode, FilterNodes, OpValsString},
+};
 use sea_query::SimpleExpr;
 use serde::{Deserialize, Serialize};
 use sqlx::{postgres::PgRow, FromRow};
@@ -25,6 +28,12 @@ impl Id {
       Id::Uuid(id) => (col, id.to_string()).into(),
     }
   }
+}
+
+#[derive(Debug, Default, Deserialize, FilterNodes)]
+pub struct IdUuidFilter {
+  #[modql(cast_as = "uuid")]
+  pub id: Option<OpValsString>,
 }
 
 impl From<Id> for FilterNode {
@@ -65,6 +74,18 @@ impl From<String> for Id {
 impl From<&str> for Id {
   fn from(value: &str) -> Self {
     Id::String(value.to_string())
+  }
+}
+
+impl From<Uuid> for Id {
+  fn from(value: Uuid) -> Self {
+    Id::Uuid(value)
+  }
+}
+
+impl From<&Uuid> for Id {
+  fn from(value: &Uuid) -> Self {
+    Id::Uuid(*value)
   }
 }
 

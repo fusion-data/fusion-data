@@ -1,5 +1,5 @@
 use modql::field::{HasSeaFields, SeaField, SeaFields};
-use modql::filter::{FilterGroups, ListOptions};
+use modql::filter::{FilterGroups, ListOptions, OpValString};
 use sea_query::{Condition, Expr, PostgresQueryBuilder, Query, SelectStatement};
 use sea_query_binder::SqlxBinder;
 use sqlx::postgres::PgRow;
@@ -8,7 +8,7 @@ use sqlx::Row;
 use ultimate_api::v1::{Page, PagePayload, Pagination};
 
 use crate::base::{prep_fields_for_create, prep_fields_for_update, CommonIden, DbBmc};
-use crate::{Error, Result};
+use crate::{Error, IdUuidFilter, Result};
 use crate::{Id, ModelManager};
 
 /// Create a new entity。需要自增主键ID
@@ -97,7 +97,7 @@ where
   let sqlx_query = sqlx::query_with(&sql, values);
 
   let count = mm.dbx().execute(sqlx_query).await?;
-  if count == 0 {
+  if count == 1 {
     Ok(())
   } else {
     // TODO 需要更有效的插入失败错误
@@ -137,7 +137,10 @@ where
   E: for<'r> FromRow<'r, PgRow> + Unpin + Send,
   E: HasSeaFields,
 {
-  let filter: FilterGroups = id.to_filter_node("id").into();
+  let filter: FilterGroups = match id {
+    Id::Uuid(id) => IdUuidFilter { id: Some(OpValString::Eq(id.to_string()).into()) }.into(),
+    _ => id.to_filter_node("id").into(),
+  };
   find_unique::<MC, E, _>(mm, filter).await?.ok_or_else(|| Error::EntityNotFound {
     schema: MC::SCHEMA,
     entity: MC::TABLE,

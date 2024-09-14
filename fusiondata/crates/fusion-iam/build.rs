@@ -61,6 +61,7 @@ fn main() {
         "proto/fusion_iam/v1/user.proto",
         "proto/fusion_iam/v1/role.proto",
         "proto/fusion_iam/v1/permission.proto",
+        "proto/fusion_iam/v1/access_control.proto",
       ],
       &["proto"],
     )
