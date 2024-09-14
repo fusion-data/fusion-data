@@ -10,7 +10,6 @@ use fusiondata::ac::Effect;
 
 fn main() {
   let policy = Policy {
-    id: Uuid::now_v7(),
     description: Some("高级文档访问策略".to_string()),
     resource: vec!["document".to_string()],
     action: vec!["read".to_string()],

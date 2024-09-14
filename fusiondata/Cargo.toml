@@ -112,6 +112,7 @@ modql = { version = "0.4", features = ["with-sea-query"] }
 sea-query = { version = "0.31", features = ["attr"] }
 sea-query-binder = { version = "0.6", features = [
     "sqlx-postgres",
+    "with-json",
     "with-uuid",
     "with-chrono",
     "with-rust_decimal",

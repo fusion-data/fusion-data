@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "fusion_iam.auth";
+option java_outer_classname = "AccessControlProto";
+
+package fusion_iam.v1;
+
+service AccessControl {
+  rpc CreatePolicyStatement(CreatePolicyRequest) returns (CreatePolicyResponse) {}
+  rpc GetPolicyStatement(GetPolicyRequest) returns (GetPolicyResponse) {}
+  rpc UpdatePolicyStatement(UpdatePolicyRequest) returns (UpdatePolicyResponse) {}
+  rpc DeletePolicyStatement(DeletePolicyRequest) returns (DeletePolicyResponse) {}
+}
+
+message PolicyStatementDto {
+  string id = 1;
+  optional string description = 2;
+  string policy = 3;
+  int32 status = 4;
+  int64 cid = 5;
+  int64 ctime = 6;
+  optional int64 mid = 7;
+  optional int64 mtime = 8;
+}
+
+message CreatePolicyRequest {
+  string policy = 1;
+  optional string description = 2;
+}
+
+message CreatePolicyResponse {
+  string id = 1;
+  PolicyStatementDto policy_statement = 2;
+}
+
+message GetPolicyRequest {
+  string id = 1;
+}
+
+message GetPolicyResponse {
+  PolicyStatementDto policy_statement = 1;
+}
+
+message UpdatePolicyRequest {
+  string id = 1;
+  optional string policy = 2;
+  optional int32 status = 3;
+}
+
+message UpdatePolicyResponse {
+  PolicyStatementDto policy_statement = 1;
+}
+
+message DeletePolicyRequest {
+  string id = 1;
+}
+
+message DeletePolicyResponse {}

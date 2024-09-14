@@ -92,47 +92,44 @@ CREATE TABLE IF NOT EXISTS iam.role_permission
 --------
 -- ABAC
 --------
--- 属性表
-CREATE TABLE IF NOT EXISTS iam.attribute
-(
-    id          BIGSERIAL PRIMARY KEY,
-    name        VARCHAR(255) NOT NULL,
-    description TEXT,
-    entity_type VARCHAR(50)  NOT NULL, -- 如：user, resource, environment
-    data_type   VARCHAR(50)  NOT NULL, -- 如：string, integer, boolean, date
-    cid         BIGINT       NOT NULL,
-    ctime       TIMESTAMPTZ  NOT NULL,
-    mid         BIGINT,
-    mtime       TIMESTAMPTZ
-);
+
 -- 策略表
 CREATE TABLE IF NOT EXISTS iam.policy
 (
-    id          BIGSERIAL PRIMARY KEY,
-    name        VARCHAR(255) NOT NULL,
-    description TEXT,
-    condition   TEXT         NOT NULL, -- 存储策略条件的JSON或其他格式
-    effect      VARCHAR(10)  NOT NULL, -- 'allow' 或 'deny'
-    resource    VARCHAR(255) NOT NULL,
-    action      VARCHAR(255) NOT NULL,
-    cid         BIGINT       NOT NULL,
-    ctime       TIMESTAMPTZ  NOT NULL,
+    id          UUID PRIMARY KEY,
+    description VARCHAR(255),
+    policy      JSONB       NOT NULL,
+    status      INT         NOT NULL,
+    cid         BIGINT      NOT NULL,
+    ctime       TIMESTAMPTZ NOT NULL,
     mid         BIGINT,
     mtime       TIMESTAMPTZ
 );
--- 属性值表
-CREATE TABLE IF NOT EXISTS iam.attribute_value
-(
-    id           BIGSERIAL PRIMARY KEY,
-    attribute_id BIGINT      NOT NULL REFERENCES iam.attribute (id),
-    entity_id    BIGINT      NOT NULL, -- 关联到具体实体（如用户ID）
-    value        TEXT        NOT NULL,
-    cid          BIGINT      NOT NULL,
-    ctime        TIMESTAMPTZ NOT NULL,
-    mid          BIGINT,
-    mtime        TIMESTAMPTZ
-);
--- 索引
-CREATE INDEX idx_attribute_entity_type ON iam.attribute (entity_type);
-CREATE INDEX idx_attribute_value_attribute_id ON iam.attribute_value (attribute_id);
-CREATE INDEX idx_attribute_value_entity_id ON iam.attribute_value (entity_id);
+-- -- 属性表
+-- CREATE TABLE IF NOT EXISTS iam.attribute
+-- (
+--     id          BIGSERIAL PRIMARY KEY,
+--     name        VARCHAR(255) NOT NULL,
+--     description TEXT,
+--     entity_type VARCHAR(50)  NOT NULL, -- 如：user, resource, environment
+--     data_type   VARCHAR(50)  NOT NULL, -- 如：string, integer, boolean, date
+--     cid         BIGINT       NOT NULL,
+--     ctime       TIMESTAMPTZ  NOT NULL,
+--     mid         BIGINT,
+--     mtime       TIMESTAMPTZ
+-- );-- 属性值表
+-- CREATE TABLE IF NOT EXISTS iam.attribute_value
+-- (
+--     id           BIGSERIAL PRIMARY KEY,
+--     attribute_id BIGINT      NOT NULL REFERENCES iam.attribute (id),
+--     entity_id    BIGINT      NOT NULL, -- 关联到具体实体（如用户ID）
+--     value        TEXT        NOT NULL,
+--     cid          BIGINT      NOT NULL,
+--     ctime        TIMESTAMPTZ NOT NULL,
+--     mid          BIGINT,
+--     mtime        TIMESTAMPTZ
+-- );
+-- -- 索引
+-- CREATE INDEX idx_attribute_entity_type ON iam.attribute (entity_type);
+-- CREATE INDEX idx_attribute_value_attribute_id ON iam.attribute_value (attribute_id);
+-- CREATE INDEX idx_attribute_value_entity_id ON iam.attribute_value (entity_id);
