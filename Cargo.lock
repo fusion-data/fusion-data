@@ -520,6 +520,9 @@ name = "bytes"
 version = "1.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "428d9aa8fbc0670b7b8d6030a7fadd0f86151cae55e4dbbece15f3780a3dfaf3"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "cc"
@@ -1057,9 +1060,27 @@ name = "fusion-scheduler"
 version = "0.1.0"
 dependencies = [
  "chrono",
+ "fusion-scheduler-api",
+ "serde",
+ "serde_json",
+ "serde_repr",
  "tokio",
  "tokio-cron-scheduler",
  "ultimate-common",
+]
+
+[[package]]
+name = "fusion-scheduler-api"
+version = "0.1.0"
+dependencies = [
+ "bytes",
+ "prost",
+ "serde",
+ "serde_json",
+ "serde_repr",
+ "tonic",
+ "tonic-build",
+ "uuid",
 ]
 
 [[package]]

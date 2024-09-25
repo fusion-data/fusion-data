@@ -1,0 +1,5 @@
+syntax = "proto3";
+
+package fusion_scheduler_api.v1;
+
+message TagsWrapper { repeated string tags = 1; }

@@ -1,0 +1,105 @@
+syntax = "proto3";
+
+package fusion_scheduler_api.v1;
+
+import "fusion_scheduler_api/v1/types.proto";
+
+service Scheduler {
+  rpc CreateJob(CreateJobRequest) returns (CreateJobResponse);
+  rpc UpdateJob(UpdateJobRequest) returns (UpdateJobResponse);
+
+  rpc CreateTrigger(CreateTriggerRequest) returns (CreateTriggerResponse);
+  rpc UpdateTrigger(UpdateTriggerRequest) returns (UpdateTriggerResponse);
+}
+
+// ---------------- Job types ----------------
+
+message JobDefinition {
+  enum JobType {
+    // 未指定，无效值
+    UNSPECIFIED = 0;
+    // 脚本任务
+    SCRIPT = 1;
+    // HTTP 任务
+    HTTP = 2;
+    // Python 任务
+    PYTHON = 3;
+  }
+
+  string job_id = 1;
+  JobType job_type = 2;
+  bytes data = 3;
+  optional string description = 4;
+  repeated string tags = 5;
+}
+
+message CreateJobRequest {
+  JobDefinition job_definition = 1;
+
+  // 要关联的 Trigger ID
+  repeated string trigger_ids = 2;
+}
+
+message CreateJobResponse { string job_id = 1; }
+
+message UpdateJobRequest {
+  string job_id = 1;
+  optional JobDefinition.JobType job_type = 2;
+  optional bytes data = 3;
+  optional string description = 4;
+  fusion_scheduler_api.v1.TagsWrapper tags = 5;
+}
+
+message UpdateJobResponse { string job_id = 1; }
+
+// ---------------- Trigger types ----------------
+
+message TriggerDefinition {
+  string trigger_id = 1;
+  oneof schedule {
+    SimpleSchedule simple = 2;
+    CronSchedule cron = 3;
+  }
+  bytes data = 4;
+  optional string description = 5;
+  repeated string tags = 6;
+}
+
+message SimpleSchedule {
+  // 设置 job 执行的次数，0 表示无限制
+  int32 count = 1;
+
+  // 设置每次执行间隔时间，单位为秒
+  int64 interval = 2;
+
+  // 设置第一次执行时延迟时间，单位为秒。
+  int64 delay = 3;
+}
+
+message CronSchedule {
+  string cron = 1;
+}
+
+message CreateTriggerRequest {
+  TriggerDefinition trigger_definition = 1;
+
+  // 要关联的 Job ID
+  repeated string job_ids = 2;
+}
+
+message CreateTriggerResponse { string trigger_id = 1; }
+
+message UpdateTriggerRequest {
+  string trigger_id = 1;
+  oneof schedule {
+    SimpleSchedule simple = 2;
+    CronSchedule cron = 3;
+  }
+  optional bytes data = 4;
+  optional string description = 5;
+  fusion_scheduler_api.v1.TagsWrapper tags = 6;
+}
+
+message UpdateTriggerResponse {
+  string trigger_id = 1;
+}

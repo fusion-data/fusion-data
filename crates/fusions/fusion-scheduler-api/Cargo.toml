@@ -1,5 +1,5 @@
 [package]
-name = "fusion-scheduler"
+name = "fusion-scheduler-api"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -11,11 +11,13 @@ repository.workspace = true
 workspace = true
 
 [dependencies]
-ultimate-common = { workspace = true }
-fusion-scheduler-api = { workspace = true }
-tokio = { workspace = true }
-tokio-cron-scheduler = { workspace = true }
-chrono = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 serde_repr = { workspace = true }
+uuid = { workspace = true }
+prost = { workspace = true }
+tonic = { workspace = true }
+bytes = { workspace = true, features = ["serde"] }
+
+[build-dependencies]
+tonic-build = { workspace = true }
