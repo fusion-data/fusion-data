@@ -1,5 +1,7 @@
 use thiserror::Error;
 
+pub type Result<T> = core::result::Result<T, Error>;
+
 #[derive(Debug, Error)]
 pub enum Error {
   // -- Base64
@@ -22,4 +24,8 @@ pub enum Error {
   WrongFormat(&'static str),
 }
 
-pub type Result<T> = core::result::Result<T, Error>;
+impl From<chrono::ParseError> for Error {
+  fn from(value: chrono::ParseError) -> Self {
+    Error::DateFailParse(value.to_string())
+  }
+}

@@ -1,0 +1,17 @@
+[package]
+name = "fusion-scheduler"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+ultimate-common = { workspace = true }
+tokio = { workspace = true }
+tokio-cron-scheduler = { workspace = true }
+chrono = { workspace = true }

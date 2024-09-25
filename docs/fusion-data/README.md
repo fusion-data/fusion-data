@@ -6,41 +6,61 @@
 - [数据集成](./integration.md)
 - [身份认证和授权](./iam/index.md)
 
-## 整体架构
+## 子系统
 
-- 整体架构:
-  - 使用微服务架构,将5个子系统解耦
-  - 采用API网关统一管理服务接口
-  - 使用消息队列实现系统间异步通信
-- 技术选择:
-  - Rust: 性能关键的组件,如数据处理引擎、调度系统核心
-  - Python: 快速开发和数据分析相关功能
-  - 数据库: PostgreSQL (关系型)和 ClickHouse (列式存储)
-  - 消息队列: Kafka
-  - 容器化: Docker 和 Kubernetes
-- 子系统设计:
-  - 商业智能 (BI):
-    - 使用Python构建数据可视化和报表生成功能
-    - 集成开源BI工具如Superset
-    - 使用Rust开发数据质量检测引擎
-    - Python实现元数据管理和数据血缘分析
-  - 调度系统:
-    - Rust实现核心调度逻辑,确保高性能
-    - 集成Apache Airflow作为工作流管理工具
-  - 数据集成:
-    - Rust开发高性能ETL引擎
-    - Python编写各种数据源连接器
-  - 身份认证和授权:
-    - 使用Rust实现核心认证逻辑
-    - 集成开源IAM解决方案如Keycloak
-  - 数据存储:
-    - 使用数据湖架构,结合对象存储和分布式文件系统
-    - 采用Delta Lake等技术实现ACID事务
-  - 可扩展性:
-    - 设计插件系统,允许使用Python快速开发新功能
-    - 使用Kubernetes实现服务的弹性伸缩
-  - 监控和日志:
-    - 集成Prometheus和Grafana进行系统监控
-    - 使用ELK栈进行日志管理
+### 通用库 fusiondata-common
 
-这个设计结合了Rust的高性能和Python的开发效率,可以构建一个强大而灵活的数据平台。根据具体需求,您可以进一步细化每个子系统的设计。
+数据库访问，缓存系统，消息系统，WEB/gRPC 等的实际工具封装库
+
+### 系统监控 fusiondata-system
+
+### IAM fusiondata-iam
+
+作为主应用模块，负责认证和授权，菜单，权限，路由配置，系统监控功能?
+
+### 任务调度 fusiodata-scheduler
+
+批量/定时任务
+
+### 通知服务 fusiondata-notification
+
+email、phone、站内消息、……
+
+### 文件服务 fusiondata-file
+
+文件上传下载、云对象存储访问、……
+
+### 数据集成 fusiondata-integration
+
+各种数据数据（源）的访问/操作/转换/加载
+
+### 主数据管理 fusiondata-maindata
+
+### 元数据管理 fusiondata-meta
+
+### 数据资产 fusiondata-asset
+
+### 数据标准 fusiondata-standard
+
+### 数据质量 fusiondata-quality
+
+- 数据稽查报告: 约束条件、指标
+- 数据质量报告: 对稽查数据的报告
+
+### 数据市场 fusiondata-market
+
+- 提供基于SQL的服务：SQL as Services
+- market作为数据服务模块，market模块引用market-api模块，market-execute模块、market-log模块分别承担数据服务的不同功能。
+
+### 数据对比 fusiondata-comparison
+
+作为数据比对模块，通过数据比对sql来校验数据源和数据目的的数据差异和总数情况。
+
+### BI fusiondata-bi
+
+商业智能应用: 报表、可视化
+
+### 流程编排 fusiodata-workflow
+
+对业务流进行编排，通常会由“任务调度”子系统进行调度执行
+

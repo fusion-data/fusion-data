@@ -1,12 +1,8 @@
 {
-  "editor.tabSize": 2,
-  "editor.formatOnSave": true,
-  "rust-analyzer.cargo.buildScripts.enable": true,
-  "rust-analyzer.linkedProjects": [
-    "fusiondata/Cargo.toml"
-  ],
   "accessibility.signals.terminalBell": {
     "sound": "off"
   },
-  "accessibility.signalOptions.volume": 0
+  "editor.tabSize": 2,
+  "editor.formatOnSave": true,
+  "rust-analyzer.cargo.buildScripts.enable": true,
 }
