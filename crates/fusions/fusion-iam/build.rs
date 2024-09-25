@@ -8,8 +8,6 @@ static ENUM_ATTR: &str =
 static MODQL_MESSAGE_ATTR: &str = "#[derive(modql::field::Fields)]";
 
 fn main() {
-  println!("cargo::rerun-if-changed=proto/fusion_iam/**/*");
-
   let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
 
   let enums = ["UserStatus", "Gender", "RoleStatus"];
@@ -44,6 +42,7 @@ fn main() {
   let field_messages = ["CreateRoleDto"];
 
   let mut iam_b = tonic_build::configure()
+    .emit_rerun_if_changed(true)
     .file_descriptor_set_path(out_dir.join("fusion_iam_descriptor.bin"))
     // .compile_well_known_types(true)
     .extern_path(".ultimate_api", "::ultimate_api");

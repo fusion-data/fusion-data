@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/*", "ultimates/*"]
+members = ["crates/fusions/*", "crates/ultimates/*"]
 resolver = "2"
 
 [workspace.package]
@@ -16,13 +16,13 @@ unsafe_code = "forbid"
 
 [workspace.dependencies]
 # -- projects begin
-ultimate-common = { version = "0.1.0", path = "./ultimates/ultimate-common" }
-ultimate = { version = "0.1.0", path = "./ultimates/ultimate" }
-ultimate-api = { version = "0.1.0", path = "./ultimates/ultimate-api" }
-ultimate-db = { version = "0.1.0", path = "./ultimates/ultimate-db" }
-ultimate-web = { version = "0.1.0", path = "./ultimates/ultimate-web" }
-ultimate-grpc = { version = "0.1.0", path = "./ultimates/ultimate-grpc" }
-fusiondata = { version = "0.1.0", path = "./crates/fusiondata" }
+ultimate-common = { version = "0.1.0", path = "./crates/ultimates/ultimate-common" }
+ultimate = { version = "0.1.0", path = "./crates/ultimates/ultimate" }
+ultimate-api = { version = "0.1.0", path = "./crates/ultimates/ultimate-api" }
+ultimate-db = { version = "0.1.0", path = "./crates/ultimates/ultimate-db" }
+ultimate-web = { version = "0.1.0", path = "./crates/ultimates/ultimate-web" }
+ultimate-grpc = { version = "0.1.0", path = "./crates/ultimates/ultimate-grpc" }
+fusiondata = { version = "0.1.0", path = "./crates/fusions/fusiondata" }
 # -- projects end
 # begin -- memory allocator
 tikv-jemallocator = "0.6"
@@ -76,7 +76,7 @@ hmac = "0.12"
 sha2 = "0.10"
 argon2 = "0.5"
 # -- JWT & JWE
-josekit = "0.8"
+josekit = "0.10"
 aliri = "0.6"
 # -- Async
 futures = "0.3"
@@ -99,6 +99,8 @@ tracing = { version = "0.1", features = ["log"] }
 tracing-log = "0.2"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tracing-appender = "0.2"
+# -- scheduler
+tokio-cron-scheduler = { version = "0.13", features = ["has_bytes", "signal"] }
 # -- Database
 sqlx = { version = "0.7", features = [
     "runtime-tokio",
@@ -174,6 +176,6 @@ prost-build = "0.13"
 prost-types = "0.13"
 
 # -- opendal
-opendal = { version = "0.49", features = ["services-obs"] }
+opendal = { version = "0.50", features = ["services-obs"] }
 
 pretty_assertions = "1.4"

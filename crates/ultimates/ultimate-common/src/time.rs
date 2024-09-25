@@ -1,5 +1,6 @@
 use std::sync::OnceLock;
 
+use chrono::TimeZone;
 pub use chrono::{DateTime, Duration, FixedOffset, Local, Utc};
 
 use super::Result;
@@ -42,7 +43,12 @@ pub fn now_epoch_seconds() -> i64 {
   now_utc().timestamp()
 }
 
-pub fn format_time(time: UtcDateTime) -> Result<String> {
+pub fn to_local<Tz: TimeZone>(t: DateTime<Tz>) -> DateTime<FixedOffset> {
+  t.with_timezone(local_offset())
+}
+
+/// Returns an RFC 3339 and ISO 8601 date and time string such as 1996-12-19T16:39:57-08:00.
+pub fn format_time<Tz: TimeZone>(time: DateTime<Tz>) -> Result<String> {
   Ok(time.to_rfc3339())
 }
 
@@ -56,7 +62,7 @@ pub fn from_milliseconds(milliseconds: i64) -> DateTime<Utc> {
 }
 
 pub fn parse_utc(moment: &str) -> Result<UtcDateTime> {
-  let time = moment.parse::<UtcDateTime>().unwrap();
+  let time = moment.parse::<UtcDateTime>()?;
   Ok(time)
 }
 
