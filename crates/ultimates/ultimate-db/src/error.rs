@@ -96,3 +96,16 @@ impl From<Error> for DataError {
     }
   }
 }
+
+#[cfg(feature = "tonic")]
+impl From<Error> for tonic::Status {
+  fn from(e: Error) -> Self {
+    match e {
+      Error::EntityNotFound { .. } => Self::not_found(e.to_string()),
+      Error::NotFound { .. } => Self::not_found(e.to_string()),
+      Error::UserAlreadyExists { .. } => Self::already_exists(e.to_string()),
+      Error::UniqueViolation { .. } => Self::already_exists(e.to_string()),
+      _ => Self::internal(e.to_string()),
+    }
+  }
+}

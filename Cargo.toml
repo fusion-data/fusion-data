@@ -23,6 +23,7 @@ ultimate-db = { version = "0.1.0", path = "./crates/ultimates/ultimate-db" }
 ultimate-web = { version = "0.1.0", path = "./crates/ultimates/ultimate-web" }
 ultimate-grpc = { version = "0.1.0", path = "./crates/ultimates/ultimate-grpc" }
 fusiondata = { version = "0.1.0", path = "./crates/fusions/fusiondata" }
+fusion-server = { version = "0.1.0", path = "./crates/fusions/fusion-server" }
 fusion-scheduler-api = { version = "0.1.0", path = "./crates/fusions/fusion-scheduler-api" }
 # -- projects end
 # begin -- memory allocator
@@ -119,6 +120,7 @@ sea-query-binder = { version = "0.6", features = [
     "with-uuid",
     "with-chrono",
     "with-rust_decimal",
+    "postgres-array",
 ] }
 # -- Serde
 serde = { version = "1", features = ["derive"] }

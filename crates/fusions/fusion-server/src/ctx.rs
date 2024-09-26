@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use derive_getters::Getters;
 use tonic::{metadata::MetadataMap, Extensions, Status};
 use ultimate::ctx::Ctx;
 use ultimate_common::time::now_utc;
@@ -12,7 +11,7 @@ use crate::app::{get_app_state, AppState};
 static X_APP_VERSION: &str = "X-APP-VARSION";
 static X_DEVICE_ID: &str = "X-DEVICE-ID";
 
-#[derive(Clone, Getters)]
+#[derive(Clone)]
 pub struct CtxW {
   ctx: Ctx,
   mm: ModelManager,
@@ -24,19 +23,35 @@ impl CtxW {
     let mm = state.mm().clone().with_ctx(ctx.clone());
     Self { ctx, mm, req_meta }
   }
+
+  pub fn ctx(&self) -> &Ctx {
+    &self.ctx
+  }
+
+  pub fn mm(&self) -> &ModelManager {
+    &self.mm
+  }
+
+  pub fn req_meta(&self) -> &Arc<RequestMetadata> {
+    &self.req_meta
+  }
+
+  pub fn with_mm(self, mm: ModelManager) -> Self {
+    Self { mm, ..self }
+  }
 }
 
 impl TryFrom<&MetadataMap> for CtxW {
   type Error = Status;
   fn try_from(metadata: &MetadataMap) -> core::result::Result<Self, Status> {
     let app = get_app_state();
-    let sc = app.ultimate_config().security();
+    let sc = app.configuration().security();
     let req_time = now_utc();
 
     let payload = extract_jwt_payload_from_metadata(sc, metadata)?;
     let req_meta = RequestMetadata::from(metadata);
 
-    let ctx = Ctx::try_from_jwt_payload(&payload, Some(req_time))?;
+    let ctx = Ctx::try_from_jwt_payload(payload, Some(req_time))?;
     Ok(CtxW::new(app, ctx, Arc::new(req_meta)))
   }
 }

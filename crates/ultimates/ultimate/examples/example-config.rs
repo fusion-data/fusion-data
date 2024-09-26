@@ -10,5 +10,5 @@ fn main() {
 
   let config_state = starter::load_and_init();
 
-  println!("Config content is:\n{}", toml::to_string(config_state.ultimate_config()).unwrap());
+  println!("Config content is:\n{}", toml::to_string(config_state.configuration()).unwrap());
 }

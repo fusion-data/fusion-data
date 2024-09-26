@@ -1,58 +1,5 @@
-use config::Config;
 use serde::de::{Unexpected, Visitor};
 use serde::{Deserialize, Deserializer, Serialize};
-
-use super::model::{AppConf, DbConf, GrpcConf, SecurityConf, TraceConfig, WebConfig};
-
-#[derive(Clone, Serialize, Deserialize)]
-pub struct Configuration {
-  app: AppConf,
-
-  security: SecurityConf,
-
-  db: DbConf,
-
-  trace: TraceConfig,
-
-  web: WebConfig,
-
-  grpc: GrpcConf,
-}
-
-impl Configuration {
-  pub fn app(&self) -> &AppConf {
-    &self.app
-  }
-
-  pub fn web(&self) -> &WebConfig {
-    &self.web
-  }
-
-  pub fn security(&self) -> &SecurityConf {
-    &self.security
-  }
-
-  pub fn db(&self) -> &DbConf {
-    &self.db
-  }
-
-  pub fn trace(&self) -> &TraceConfig {
-    &self.trace
-  }
-
-  pub fn grpc(&self) -> &GrpcConf {
-    &self.grpc
-  }
-}
-
-impl TryFrom<&Config> for Configuration {
-  type Error = super::Error;
-
-  fn try_from(c: &Config) -> std::result::Result<Self, Self::Error> {
-    let qc = c.get::<Configuration>("ultimate")?;
-    Ok(qc)
-  }
-}
 
 #[derive(Debug, Clone, Serialize, PartialEq)]
 pub enum ApiValidEffect {
@@ -108,9 +55,7 @@ impl<'d> Visitor<'d> for StrToApiValidEffect {
 
 #[cfg(test)]
 mod tests {
-  use crate::configuration::{model::KeyConf, util::load_config};
-
-  use super::*;
+  use crate::configuration::{model::KeyConf, util::load_config, Configuration};
 
   #[test]
   fn test_config_load() {

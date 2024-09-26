@@ -1,0 +1,19 @@
+[package]
+name = "fusion-server"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+tokio = { workspace = true }
+ultimate-common = { workspace = true }
+ultimate = { workspace = true }
+ultimate-db = { workspace = true }
+ultimate-grpc = { workspace = true }
+tonic = { workspace = true }

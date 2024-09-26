@@ -6,17 +6,17 @@ static MESSAGE_ATTR: &str = "#[derive(serde::Serialize, serde::Deserialize)]";
 // static MODQL_MESSAGE_ATTR: &str = "#[derive(modql::field::Fields)]";
 
 fn main() {
-  let _out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
+  let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
 
-  let enum_reprs = ["JobDefinition.JobType"];
+  let enum_reprs = ["JobDefinition.JobType", "TriggerDefinition.TriggerType"];
   let enums = ["TriggerDefinition.schedule", "UpdateTriggerRequest.schedule"];
 
   let mut iam_b = tonic_build::configure()
     .emit_rerun_if_changed(true)
-    // .file_descriptor_set_path(out_dir.join("fusion_scheduler_api_descriptor.bin"))
     // .extern_path(".fusion_scheduler_api.v1", "::fusion_scheduler_api::v1");
     .message_attribute(BASE_PACKAGE, MESSAGE_ATTR)
-    .bytes(["."]);
+    // .bytes(["."])
+    .file_descriptor_set_path(out_dir.join("fusion_scheduler_api_descriptor.bin"));
 
   iam_b = enum_reprs.iter().fold(iam_b, |b, e| {
     b.enum_attribute(

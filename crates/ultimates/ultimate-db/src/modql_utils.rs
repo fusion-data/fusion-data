@@ -2,8 +2,13 @@ use modql::filter::{IntoSeaError, SeaResult};
 use serde::Deserialize;
 use ultimate_common::time::{local_offset, Duration, OffsetDateTime, UtcDateTime};
 
+#[cfg(feature = "uuid")]
+pub fn uuid_to_sea_value(json_value: serde_json::Value) -> SeaResult<sea_query::Value> {
+  Ok(uuid::Uuid::deserialize(json_value)?.into())
+}
+
 pub fn time_to_sea_value(json_value: serde_json::Value) -> SeaResult<sea_query::Value> {
-  Ok(UtcDateTime::deserialize(json_value)?.into())
+  to_sea_chrono_utc(json_value)
 }
 
 pub fn to_sea_chrono_utc(v: serde_json::Value) -> SeaResult<sea_query::Value> {

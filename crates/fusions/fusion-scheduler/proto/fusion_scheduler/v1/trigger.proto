@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package fusion_scheduler.v1;
+
+import "fusion_scheduler_api/v1/scheduler.proto";
+
+service Trigger {
+  rpc CreateTrigger(CreateTriggerRequest) returns (CreateTriggerResponse);
+}
+
+message CreateTriggerRequest {
+  fusion_scheduler_api.v1.TriggerDefinition.TriggerType type = 1;
+  optional string description = 2;
+  repeated string tags = 3;
+  bytes data = 4;
+}
+
+message CreateTriggerResponse {
+  string id = 1;
+}

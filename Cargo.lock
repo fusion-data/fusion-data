@@ -1016,6 +1016,7 @@ dependencies = [
  "derive-getters",
  "derive_more",
  "enum-iterator",
+ "fusion-server",
  "fusiondata",
  "futures",
  "hyper",
@@ -1061,12 +1062,25 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "fusion-scheduler-api",
+ "fusion-server",
+ "modql",
+ "prost",
+ "sea-query",
  "serde",
  "serde_json",
  "serde_repr",
+ "sqlx",
  "tokio",
  "tokio-cron-scheduler",
+ "tonic",
+ "tonic-build",
+ "tonic-reflection",
+ "tracing",
+ "ultimate",
  "ultimate-common",
+ "ultimate-db",
+ "ultimate-grpc",
+ "uuid",
 ]
 
 [[package]]
@@ -1081,6 +1095,18 @@ dependencies = [
  "tonic",
  "tonic-build",
  "uuid",
+]
+
+[[package]]
+name = "fusion-server"
+version = "0.1.0"
+dependencies = [
+ "tokio",
+ "tonic",
+ "ultimate",
+ "ultimate-common",
+ "ultimate-db",
+ "ultimate-grpc",
 ]
 
 [[package]]
@@ -3899,6 +3925,7 @@ dependencies = [
  "sqlx",
  "thiserror",
  "tokio",
+ "tonic",
  "tracing",
  "ultimate",
  "ultimate-api",

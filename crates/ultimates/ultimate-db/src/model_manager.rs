@@ -12,9 +12,9 @@ pub struct ModelManager {
 
 impl ModelManager {
   /// Constructor
-  pub async fn new(db_config: &DbConf) -> Result<Self> {
+  pub fn new(db_config: &DbConf) -> Result<Self> {
     let db_pool =
-      new_db_pool_from_config(db_config).await.map_err(|ex| Error::CantCreateModelManagerProvider(ex.to_string()))?;
+      new_db_pool_from_config(db_config).map_err(|ex| Error::CantCreateModelManagerProvider(ex.to_string()))?;
     let dbx = Dbx::new(db_pool, false)?;
     Ok(ModelManager { dbx, ctx: None })
   }

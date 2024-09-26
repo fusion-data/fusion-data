@@ -55,14 +55,23 @@ message UpdateJobResponse { string job_id = 1; }
 // ---------------- Trigger types ----------------
 
 message TriggerDefinition {
-  string trigger_id = 1;
-  oneof schedule {
-    SimpleSchedule simple = 2;
-    CronSchedule cron = 3;
+  enum TriggerType {
+    // 未指定，无效值
+    UNSPECIFIED = 0;
+    // 简单触发器，每固定时间执行一次
+    SIMPLE = 1;
+    // Cron 触发器，根据 cron 表达式执行
+    CRON = 2;
   }
-  bytes data = 4;
-  optional string description = 5;
-  repeated string tags = 6;
+  string trigger_id = 1;
+  TriggerType trigger_type = 2;
+  oneof schedule {
+    SimpleSchedule simple = 3;
+    CronSchedule cron = 4;
+  }
+  bytes data = 5;
+  optional string description = 6;
+  repeated string tags = 7;
 }
 
 message SimpleSchedule {

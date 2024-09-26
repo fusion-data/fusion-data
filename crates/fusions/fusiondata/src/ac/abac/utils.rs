@@ -22,7 +22,7 @@ pub fn evaluate_condition(condition: &Value, request: &AccessRequest) -> bool {
         if let Some(entity_value) = entity_value {
           match value {
             Value::Object(condition_map) => {
-              for (op, expected_value) in condition_map {
+              for (_op, _expected_value) in condition_map {
                 /*match op.as_str() {
                   "eq" => {
                     if entity_value != expected_value {
@@ -81,7 +81,7 @@ pub fn evaluate_condition(condition: &Value, request: &AccessRequest) -> bool {
   }
 }
 
-pub fn evaluate_policy(policy: &Policy, request: &AccessRequest) -> bool {
+pub fn evaluate_policy(_policy: &Policy, _request: &AccessRequest) -> bool {
   // if policy.resource != request.resource["type"] || policy.action != request.action {
   //   return false;
   // }

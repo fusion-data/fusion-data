@@ -10,12 +10,43 @@ repository.workspace = true
 [lints]
 workspace = true
 
+[[bin]]
+name = "fusion-scheduler"
+path = "src/bin/fusion-scheduler.rs"
+
 [dependencies]
-ultimate-common = { workspace = true }
-fusion-scheduler-api = { workspace = true }
-tokio = { workspace = true }
-tokio-cron-scheduler = { workspace = true }
+# -- misc
 chrono = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 serde_repr = { workspace = true }
+uuid = { workspace = true }
+
+# -- async
+tokio = { workspace = true }
+tokio-cron-scheduler = { workspace = true }
+
+# -- tracing
+tracing = { workspace = true }
+
+ultimate-common = { workspace = true }
+ultimate = { workspace = true }
+
+# -- db
+ultimate-db = { workspace = true, features = ["uuid", "tonic"] }
+sqlx = { workspace = true }
+sea-query = { workspace = true }
+modql = { workspace = true }
+
+# -- grpc
+ultimate-grpc = { workspace = true }
+prost = { workspace = true }
+tonic = { workspace = true }
+tonic-reflection = { workspace = true, optional = true }
+
+# -- fusions
+fusion-server = { workspace = true }
+fusion-scheduler-api = { workspace = true }
+
+[build-dependencies]
+tonic-build = { workspace = true }

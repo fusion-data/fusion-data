@@ -1,4 +1,5 @@
 use tonic::{Request, Response, Status};
+use ultimate_grpc::GrpcServiceIntercepted;
 
 use crate::{
   pb::fusion_iam::v1::{
@@ -7,7 +8,7 @@ use crate::{
     AssignUserToRolesRequest, CreateUserRequest, CreateUserResponse, DeleteUserResponse, Empty, FindUserRequest,
     PageUserRequest, PageUserResponse, UpdateUserRequest, UserDto, UserResponse,
   },
-  util::grpc::{interceptor::auth_interceptor, GrpcServiceIntercepted},
+  util::grpc::interceptor::auth_interceptor,
 };
 
 use super::user_serv;

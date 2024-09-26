@@ -1,6 +1,6 @@
 use futures::{Future, TryFutureExt};
 use prost_types::FieldMask;
-use tonic::{metadata::MetadataMap, service::RoutesBuilder, transport::Server, Status};
+use tonic::{metadata::MetadataMap, service::Routes, transport::Server, Status};
 use tower_http::trace::TraceLayer;
 use ultimate::{
   configuration::model::{GrpcConf, SecurityConf},
@@ -8,14 +8,11 @@ use ultimate::{
   DataError,
 };
 
-pub fn init_grpc_server<'b, F>(
+pub fn init_grpc_server<'b>(
   conf: &GrpcConf,
-  _encoded_file_descriptor_sets: impl IntoIterator<Item = &'b [u8]>,
-  f: F,
-) -> ultimate::Result<impl Future<Output = std::result::Result<(), DataError>>>
-where
-  F: FnOnce(&mut RoutesBuilder),
-{
+  encoded_file_descriptor_sets: impl IntoIterator<Item = &'b [u8]>,
+  mut routes: Routes,
+) -> ultimate::Result<impl Future<Output = std::result::Result<(), DataError>>> {
   let grpc_addr = conf.server_addr.parse()?;
 
   #[allow(unused_mut)]
@@ -24,21 +21,18 @@ where
   #[cfg(feature = "tonic-web")]
   let mut b = b.accept_http1(true).layer(tonic_web::GrpcWebLayer::new());
 
-  let mut routes_builder = RoutesBuilder::default();
-  f(&mut routes_builder);
-
   #[cfg(feature = "tonic-reflection")]
   {
-    let rb = _encoded_file_descriptor_sets
+    let rb = encoded_file_descriptor_sets
       .into_iter()
       .fold(tonic_reflection::server::Builder::configure(), |rb, set| rb.register_encoded_file_descriptor_set(set));
     let service = rb.build_v1().unwrap();
-    routes_builder.add_service(service);
+    routes = routes.add_service(service);
   }
 
   // let s = router.into_service();
 
-  let serve = b.add_routes(routes_builder.routes()).serve(grpc_addr).map_err(DataError::from);
+  let serve = b.add_routes(routes).serve(grpc_addr).map_err(DataError::from);
   Ok(serve)
 }
 
