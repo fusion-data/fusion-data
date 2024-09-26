@@ -1,6 +1,7 @@
 use fusion_scheduler_api::v1::{
-  scheduler_server, CreateJobRequest, CreateJobResponse, CreateTriggerRequest, CreateTriggerResponse, UpdateJobRequest,
-  UpdateJobResponse, UpdateTriggerRequest, UpdateTriggerResponse,
+  scheduler_server, CreateJobRequest, CreateJobResponse, CreateTriggerRequest, CreateTriggerResponse, PullJobRequest,
+  PullJobResponse, RegisterNodeRequest, RegisterNodeResponse, UpdateJobRequest, UpdateJobResponse,
+  UpdateTriggerRequest, UpdateTriggerResponse,
 };
 use fusion_server::{ctx::CtxW, grpc::interceptor::auth_interceptor};
 use tonic::{Request, Response, Status};
@@ -60,6 +61,17 @@ impl scheduler_server::Scheduler for SchedulerGrpcSvc {
     request: Request<UpdateTriggerRequest>,
   ) -> Result<Response<UpdateTriggerResponse>, Status> {
     debug!("update_trigger: {:?}", request.into_inner());
+    todo!()
+  }
+
+  async fn pull_job(&self, request: Request<PullJobRequest>) -> Result<Response<PullJobResponse>, Status> {
+    todo!()
+  }
+
+  async fn register_node(
+    &self,
+    request: Request<RegisterNodeRequest>,
+  ) -> Result<Response<RegisterNodeResponse>, Status> {
     todo!()
   }
 }

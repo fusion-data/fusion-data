@@ -5,11 +5,49 @@ package fusion_scheduler_api.v1;
 import "fusion_scheduler_api/v1/types.proto";
 
 service Scheduler {
+  // 拉取任务
+  rpc PullJob(PullJobRequest) returns (PullJobResponse);
+
+  // 注册节点
+  rpc RegisterNode(RegisterNodeRequest) returns (RegisterNodeResponse);
+
   rpc CreateJob(CreateJobRequest) returns (CreateJobResponse);
   rpc UpdateJob(UpdateJobRequest) returns (UpdateJobResponse);
 
   rpc CreateTrigger(CreateTriggerRequest) returns (CreateTriggerResponse);
   rpc UpdateTrigger(UpdateTriggerRequest) returns (UpdateTriggerResponse);
+}
+
+message PullJobRequest {
+  // 当前节点的 ID
+  string node_id = 1;
+
+  // 拉取的作业数量
+  int32 fetch_count = 2;
+
+  // 根据作业标签检索
+  repeated string tags = 3;
+}
+
+message PullJobResponse {
+  JobDefinition job_definition = 1;
+
+  TriggerDefinition trigger_definition = 2;
+
+  // 计算出的作业开始执行时间
+  int64 begin_time = 4;
+}
+
+message RegisterNodeRequest {
+  // 注册的当前节点 ID(uuid)，需要在集群内全局唯一
+  string node_id = 1;
+
+  // 节点的角色列表，可用于过滤作业类型
+  repeated string roles = 2;
+}
+
+message RegisterNodeResponse {
+
 }
 
 // ---------------- Job types ----------------

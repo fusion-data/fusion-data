@@ -3,3 +3,8 @@ syntax = "proto3";
 package fusion_scheduler_api.v1;
 
 message TagsWrapper { repeated string tags = 1; }
+
+message JobFilterRequest {
+  map<string, string> job_id = 1;
+  map<string, int64> ctime = 2;
+}
