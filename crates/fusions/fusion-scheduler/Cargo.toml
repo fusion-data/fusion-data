@@ -31,6 +31,7 @@ tracing = { workspace = true }
 
 ultimate-common = { workspace = true }
 ultimate = { workspace = true }
+ultimate-api = { workspace = true }
 
 # -- db
 ultimate-db = { workspace = true, features = ["uuid", "tonic"] }

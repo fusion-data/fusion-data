@@ -7,8 +7,7 @@ pub fn try_into_op_vals_value_opt<V: Serialize>(value: V) -> Result<Option<OpVal
 
   let values: OpValsValue = serde_json::from_value(value)?;
 
-  let v = if values.0.is_empty() { None } else { Some(values) };
-  Ok(v)
+  Ok(if values.0.is_empty() { None } else { Some(values) })
 }
 
 #[cfg(feature = "uuid")]

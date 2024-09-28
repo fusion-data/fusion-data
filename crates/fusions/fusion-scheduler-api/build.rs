@@ -13,7 +13,7 @@ fn main() {
 
   let mut iam_b = tonic_build::configure()
     .emit_rerun_if_changed(true)
-    // .extern_path(".fusion_scheduler_api.v1", "::fusion_scheduler_api::v1");
+    .extern_path(".ultimate_api.v1", "::ultimate_api::v1")
     .message_attribute(BASE_PACKAGE, MESSAGE_ATTR)
     // .bytes(["."])
     .file_descriptor_set_path(out_dir.join("fusion_scheduler_api_descriptor.bin"));
@@ -32,5 +32,7 @@ fn main() {
   //   .iter()
   //   .fold(iam_b, |b, m| b.message_attribute(format!("{}.{}", BASE_PACKAGE, m), MODQL_MESSAGE_ATTR));
 
-  iam_b.compile(&["proto/fusion_scheduler_api/v1/scheduler.proto"], &["proto"]).unwrap();
+  iam_b
+    .compile(&["proto/fusion_scheduler_api/v1/scheduler_api.proto"], &["proto", "../../ultimates/ultimate-api/proto"])
+    .unwrap();
 }

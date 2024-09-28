@@ -1077,6 +1077,7 @@ dependencies = [
  "tonic-reflection",
  "tracing",
  "ultimate",
+ "ultimate-api",
  "ultimate-common",
  "ultimate-db",
  "ultimate-grpc",
@@ -1094,6 +1095,7 @@ dependencies = [
  "serde_repr",
  "tonic",
  "tonic-build",
+ "ultimate-api",
  "uuid",
 ]
 
@@ -3886,8 +3888,11 @@ dependencies = [
  "bytes",
  "modql",
  "prost",
+ "prost-build",
  "serde",
+ "serde_json",
  "serde_repr",
+ "ultimate",
  "utoipa",
 ]
 

@@ -18,7 +18,7 @@ fn test_update_trigger_request() {
   let update_trigger_request = UpdateTriggerRequest {
     trigger_id: Uuid::now_v7().to_string(),
     data: Some(vec![]),
-    tags: Some(TagsWrapper { tags: vec!["tag1".to_string(), "tag2".to_string()] }),
+    tags: Some(vec!["tag1".to_string(), "tag2".to_string()].into()),
     schedule: Some(update_trigger_request::Schedule::Simple(SimpleSchedule { count: 1, interval: 1, delay: 1 })),
     ..Default::default()
   };

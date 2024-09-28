@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package fusion_scheduler_api.v1;
 
-import "fusion_scheduler_api/v1/types.proto";
+import "ultimate_api/v1/type.proto";
 
 service Scheduler {
   // 拉取任务
@@ -85,7 +85,7 @@ message UpdateJobRequest {
   optional JobDefinition.JobType job_type = 2;
   optional bytes data = 3;
   optional string description = 4;
-  fusion_scheduler_api.v1.TagsWrapper tags = 5;
+  ultimate_api.v1.ArrayString tags = 5;
 }
 
 message UpdateJobResponse { string job_id = 1; }
@@ -101,6 +101,7 @@ message TriggerDefinition {
     // Cron 触发器，根据 cron 表达式执行
     CRON = 2;
   }
+
   string trigger_id = 1;
   TriggerType trigger_type = 2;
   oneof schedule {
@@ -144,7 +145,7 @@ message UpdateTriggerRequest {
   }
   optional bytes data = 4;
   optional string description = 5;
-  fusion_scheduler_api.v1.TagsWrapper tags = 6;
+  ultimate_api.v1.ArrayString tags = 6;
 }
 
 message UpdateTriggerResponse {

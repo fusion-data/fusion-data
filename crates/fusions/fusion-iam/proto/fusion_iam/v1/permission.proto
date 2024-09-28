@@ -1,14 +1,10 @@
 syntax = "proto3";
 
-option java_multiple_files = true;
-option java_package = "fusion_iam.permission";
-option java_outer_classname = "PermissionProto";
-
 package fusion_iam.v1;
 
 import "google/protobuf/field_mask.proto";
 import "fusion_iam/v1/iam.proto";
-import "ultimate_api/v1/ultimate.proto";
+import "ultimate_api/v1/page.proto";
 
 service Permission {
   rpc Create(CreatePermissionRequest) returns (PermissionResponse) {}

@@ -6,8 +6,6 @@ use ultimate_common::time::UtcDateTime;
 use ultimate_db::DbRowType;
 use uuid::Uuid;
 
-use crate::pb::fusion_scheduler::v1::CreateJobRequest;
-
 #[derive(Debug, FromRow, Fields)]
 #[enum_def]
 pub struct SchedJob {
@@ -30,12 +28,6 @@ pub struct SchedJobForCreate {
   pub description: Option<String>,
   pub tags: Vec<String>,
   pub data: Vec<u8>,
-}
-
-impl From<CreateJobRequest> for SchedJobForCreate {
-  fn from(req: CreateJobRequest) -> Self {
-    Self { id: None, r#type: req.r#type, description: req.description, tags: req.tags, data: req.data }
-  }
 }
 
 impl From<JobDefinition> for SchedJobForCreate {

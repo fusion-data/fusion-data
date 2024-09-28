@@ -1,0 +1,86 @@
+syntax = "proto3";
+
+package ultimate_api.v1;
+
+import "ultimate_api/v1/type.proto";
+
+enum OpNumber {
+  EQ = 0;
+  NOT = 1;
+  IN = 2;
+  NOT_IN = 3;
+  LT = 4;
+  LTE = 5;
+  GT = 6;
+  GTE = 7;
+  NULL = 8;
+}
+
+message FilterBool {
+  enum OpBool {
+    EQ = 0;
+    NOT = 1;
+    NULL = 2;
+  }
+
+  OpBool op = 1;
+
+  oneof v {
+    bool is_null = 2;
+    bool value = 3;
+    ultimate_api.v1.ArrayBool values = 4;
+  }
+}
+
+message FilterInt32 {
+  OpNumber op = 1;
+
+  oneof v {
+    bool is_null = 2;
+    int32 value = 3;
+    ultimate_api.v1.ArrayInt32 values = 4;
+  }
+}
+
+message FilterInt64 {
+  OpNumber op = 1;
+
+  oneof v {
+    bool is_null = 2;
+    int64 value = 3;
+    ultimate_api.v1.ArrayInt64 values = 4;
+  }
+}
+
+// f64
+message FilterDouble {
+  OpNumber op = 1;
+
+  oneof v {
+    bool is_null = 2;
+    double value = 3;
+    ultimate_api.v1.ArrayDouble values = 4;
+  }
+}
+
+message FilterString {
+  enum OpString {
+    EQ = 0;
+    NOT = 1;
+    IN = 2;
+    NOT_IN = 3;
+    LT = 4;
+    LTE = 5;
+    GT = 6;
+    GTE = 7;
+    NULL = 8;
+  }
+
+  OpString op = 1;
+
+  oneof v {
+    bool is_null = 2;
+    string value = 3;
+    ultimate_api.v1.ArrayString values = 4;
+  }
+}

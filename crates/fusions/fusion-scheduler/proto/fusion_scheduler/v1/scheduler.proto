@@ -1,0 +1,77 @@
+syntax = "proto3";
+
+package fusion_scheduler.v1;
+
+import "ultimate_api/v1/type.proto";
+import "ultimate_api/v1/page.proto";
+import "ultimate_api/v1/ql.proto";
+import "fusion_scheduler_api/v1/scheduler_api.proto";
+
+service Scheduler {
+  rpc PageJob(PageJobRequest) returns (PageJobResponse);
+  rpc PageTrigger(PageTriggerRequest) returns (PageTriggerResponse);
+}
+
+message PageJobRequest {
+  ultimate_api.v1.Pagination pagination = 1;
+  JobFilterRequest filter = 2;
+}
+
+message PageJobResponse {
+  ultimate_api.v1.Page page = 1;
+  repeated SchedJobDto records = 2;
+}
+
+message SchedJobDto {
+  string id = 1;
+  fusion_scheduler_api.v1.JobDefinition.JobType type = 2;
+  optional string description = 3;
+  repeated string tags = 4;
+  bytes dat = 5;
+  int64 cid = 6;
+  int64 ctime = 7;
+  optional int64 mid = 8;
+  optional int64 mtime = 9;
+}
+
+message UpdateJobRequest {
+  string id = 1;
+  optional fusion_scheduler_api.v1.JobDefinition.JobType type = 2;
+  optional bytes data = 3;
+  optional string description = 4;
+  ultimate_api.v1.ArrayString tags = 5;
+}
+
+message JobFilterRequest {
+  repeated ultimate_api.v1.FilterString id = 1;
+  repeated ultimate_api.v1.FilterInt64 ctime = 2;
+  repeated ultimate_api.v1.FilterInt32 type = 3;
+}
+
+message PageTriggerRequest {
+  ultimate_api.v1.Pagination pagination = 1;
+  TriggerFilterRequest filter = 2;
+}
+
+message PageTriggerResponse {
+  ultimate_api.v1.Page page = 1;
+  repeated SchedTriggerDto records = 2;
+}
+
+message SchedTriggerDto {
+  string id = 1;
+  fusion_scheduler_api.v1.TriggerDefinition.TriggerType type = 2;
+  optional string description = 3;
+  repeated string tags = 4;
+  bytes data = 5;
+  int64 cid = 6;
+  int64 ctime = 7;
+  optional int64 mid = 8;
+  optional int64 mtime = 9;
+}
+
+message TriggerFilterRequest {
+  repeated ultimate_api.v1.FilterString id = 1;
+  repeated ultimate_api.v1.FilterInt64 ctime = 2;
+  repeated ultimate_api.v1.FilterInt32 type = 3;
+}

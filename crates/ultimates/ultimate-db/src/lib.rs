@@ -1,6 +1,7 @@
 use ultimate::configuration::model::DbConf;
 
 pub mod acs;
+mod api_helpers;
 pub mod base;
 mod error;
 mod id;
@@ -8,6 +9,7 @@ mod model_manager;
 mod modql_utils;
 pub mod store;
 
+pub use api_helpers::*;
 pub use error::{Error, Result};
 pub use id::*;
 pub use model_manager::*;
