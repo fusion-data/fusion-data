@@ -4,7 +4,10 @@ use modql::filter::{FilterGroups, FilterNodes, OpValsValue};
 use sea_query::Condition;
 use ultimate::DataError;
 use ultimate_api::v1::{filter_string::OpString, FilterInt64, FilterString, OpNumber};
-use ultimate_db::{try_into_op_vals_value_opt_with_filter_int64, try_into_op_vals_value_opt_with_filter_string};
+use ultimate_db::{
+  datetime_to_sea_value, try_into_op_vals_value_opt_with_filter_int64, try_into_op_vals_value_opt_with_filter_string,
+  uuid_to_sea_value,
+};
 use uuid::Uuid;
 
 fn main() {
@@ -35,7 +38,7 @@ struct JobFilter {
   #[modql(to_sea_value_fn = "uuid_to_sea_value")]
   job_id: Option<OpValsValue>,
 
-  #[modql(to_sea_value_fn = "time_to_sea_value")]
+  #[modql(to_sea_value_fn = "datetime_to_sea_value")]
   ctime: Option<OpValsValue>,
 }
 

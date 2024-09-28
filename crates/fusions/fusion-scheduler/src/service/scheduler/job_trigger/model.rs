@@ -4,7 +4,7 @@ use modql::{
 };
 use sqlx::prelude::FromRow;
 use ultimate_common::time::UtcDateTime;
-use ultimate_db::{to_sea_chrono_utc, uuid_to_sea_value, DbRowType};
+use ultimate_db::{datetime_to_sea_value, uuid_to_sea_value, DbRowType};
 use uuid::Uuid;
 
 #[derive(Debug, FromRow, Fields)]
@@ -32,6 +32,6 @@ pub struct JobTriggerFilter {
 
   pub cid: Option<OpValsInt64>,
 
-  #[modql(to_sea_value_fn = "to_sea_chrono_utc")]
+  #[modql(to_sea_value_fn = "datetime_to_sea_value")]
   pub ctime: Option<OpValsValue>,
 }
