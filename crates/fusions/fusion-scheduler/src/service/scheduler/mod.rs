@@ -1,6 +1,6 @@
-mod job;
-mod job_trigger;
-mod trigger;
+//! 调度作业聚合服务
+//!
+mod scheduler_grpc_svc;
+mod scheduler_svc;
 
-pub use job::*;
-pub use trigger::*;
+use scheduler_svc::SchedulerSvc;

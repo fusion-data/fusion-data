@@ -10,7 +10,7 @@ use tracing::debug;
 use ultimate_grpc::GrpcServiceIntercepted;
 use uuid::Uuid;
 
-use crate::service::scheduler::JobSvc;
+use crate::service::JobSvc;
 
 pub fn scheduler_api_grpc_svc() -> GrpcServiceIntercepted<SchedulerApiServer<SchedulerApiGrpcSvc>> {
   SchedulerApiServer::with_interceptor(SchedulerApiGrpcSvc, auth_interceptor)

@@ -110,24 +110,30 @@ message TriggerDefinition {
     SimpleSchedule simple = 3;
     CronSchedule cron = 4;
   }
-  bytes data = 5;
-  optional string description = 6;
-  repeated string tags = 7;
+  optional string description = 5;
+  repeated string tags = 6;
+  bytes data = 7;
 }
 
 message SimpleSchedule {
-  // 设置 job 执行的次数，0 表示无限制
-  int32 count = 1;
-
-  // 设置每次执行间隔时间，单位为秒
-  int64 interval = 2;
+  // 设置每次执行间隔时间，单位为秒。值必需大于0！
+  int64 interval_seconds = 1;
 
   // 设置第一次执行时延迟时间，单位为秒。
-  int64 delay = 3;
+  int64 delay_seconds = 2;
+
+  // 设置 job 执行的次数，负数代表无限制
+  int32 repeat_count = 3;
 }
 
 message CronSchedule {
   string cron = 1;
+
+  // 设置触发器有效的开始时间
+  optional int64 begin_time = 2;
+
+  // 设置触发器有效的结束时间
+  optional int64 end_time = 3;
 }
 
 message CreateTriggerRequest {
@@ -152,4 +158,16 @@ message UpdateTriggerRequest {
 
 message UpdateTriggerResponse {
   string trigger_id = 1;
+}
+
+// ---- Task ----
+message JobTask {
+  // 任务状态
+  enum JobTaskStatus {
+    UNSPECIFIED = 0;
+    ENQUEUED = 1;
+    RUNNING = 2;
+    COMPLETED_SUCCESSFULLY = 3;
+    COMPLETED_FAILED = 4;
+  }
 }

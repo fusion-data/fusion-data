@@ -8,22 +8,22 @@ use ultimate_db::{datetime_to_sea_value, uuid_to_sea_value, DbRowType};
 use uuid::Uuid;
 
 #[derive(Debug, FromRow, Fields)]
-pub struct JobTrigger {
+pub struct JobTriggerRel {
   pub job_id: Uuid,
   pub trigger_id: Uuid,
   pub cid: i64,
   pub ctime: UtcDateTime,
 }
-impl DbRowType for JobTrigger {}
+impl DbRowType for JobTriggerRel {}
 
 #[derive(Debug, Fields)]
-pub struct JobTriggerForCreate {
+pub struct JobTriggerRelForCreate {
   pub job_id: Uuid,
   pub trigger_id: Uuid,
 }
 
 #[derive(Debug, Default, FilterNodes)]
-pub struct JobTriggerFilter {
+pub struct JobTriggerRelFilter {
   #[modql(to_sea_value_fn = "uuid_to_sea_value")]
   pub job_id: Option<OpValsValue>,
 

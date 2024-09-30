@@ -11,13 +11,13 @@ use ultimate_db::{
 use uuid::Uuid;
 
 fn main() {
-  let id = vec![FilterString::op_value(OpString::Eq, Uuid::now_v7())];
+  let id = vec![FilterString::new_value(OpString::Eq, Uuid::now_v7())];
   let begin = Utc::now();
   let end = begin + Duration::days(1);
   println!("ctime: [{}, {})", begin, end);
   let ctime = vec![
-    FilterInt64::op_value(OpNumber::Gte, begin.timestamp_millis()),
-    FilterInt64::op_value(OpNumber::Lt, end.timestamp_millis()),
+    FilterInt64::new_value(OpNumber::Gte, begin.timestamp_millis()),
+    FilterInt64::new_value(OpNumber::Lt, end.timestamp_millis()),
   ];
   let filter_request = JobFilterRequest { id, ctime, ..Default::default() };
 

@@ -3954,6 +3954,7 @@ dependencies = [
  "tower-http",
  "tower-service",
  "ultimate",
+ "uuid",
 ]
 
 [[package]]

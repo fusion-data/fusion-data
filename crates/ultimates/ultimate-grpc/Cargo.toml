@@ -10,8 +10,12 @@ repository.workspace = true
 [lints]
 workspace = true
 
+[features]
+uuid = ["dep:uuid", "ultimate/uuid"]
+
 [dependencies]
 ultimate = { workspace = true, features = ["tonic"] }
+uuid = { workspace = true, optional = true }
 http = { workspace = true }
 futures = { workspace = true }
 tower-service = { workspace = true }

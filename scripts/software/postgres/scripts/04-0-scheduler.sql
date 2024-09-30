@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS sched.sched_job
     "type"      INT         NOT NULL,
     description VARCHAR,
     tags        VARCHAR[]   NOT NULL DEFAULT '{}',
-    data        JSONB,
+    data        BYTEA,
     cid         BIGINT      NOT NULL,
     ctime       TIMESTAMPTZ NOT NULL,
     mid         BIGINT,
@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS sched.sched_trigger
     "type"      INT         NOT NULL,
     schedule    JSONB       NOT NULL,
     tags        VARCHAR[]   NOT NULL DEFAULT '{}',
-    data        JSONB,
+    data        BYTEA,
     cid         BIGINT      NOT NULL,
     ctime       TIMESTAMPTZ NOT NULL,
     mid         BIGINT,
@@ -35,12 +35,27 @@ CREATE TABLE IF NOT EXISTS sched.sched_trigger
     CONSTRAINT sched_trigger_pk PRIMARY KEY (id)
 );
 --
--- sched_job_trigger
-CREATE TABLE IF NOT EXISTS sched.sched_job_trigger
+-- sched_job_trigger_rel
+CREATE TABLE IF NOT EXISTS sched.sched_job_trigger_rel
 (
-    job_id     UUID        NOT NULL,
-    trigger_id UUID        NOT NULL,
+    job_id     UUID        NOT NULL REFERENCES sched.sched_job (id),
+    trigger_id UUID        NOT NULL REFERENCES sched.sched_trigger (id),
     cid        BIGINT      NOT NULL,
     ctime      TIMESTAMPTZ NOT NULL,
     CONSTRAINT sched_job_trigger_pk PRIMARY KEY (job_id, trigger_id)
+);
+--
+-- sched_job_task
+CREATE TABLE IF NOT EXISTS sched.sched_job_task
+(
+    id                 UUID        NOT NULL,
+    job_id             UUID        NOT NULL REFERENCES sched.sched_job (id),
+    trigger_id         UUID REFERENCES sched.sched_trigger (id),
+    status             INT         NOT NULL,
+    retry_count        INT         NOT NULL DEFAULT 0,
+    execute_begin_time TIMESTAMPTZ,
+    execute_end_time   TIMESTAMPTZ,
+    cid                BIGINT      NOT NULL,
+    ctime              TIMESTAMPTZ NOT NULL,
+    CONSTRAINT sched_job_task_pk PRIMARY KEY (id)
 );

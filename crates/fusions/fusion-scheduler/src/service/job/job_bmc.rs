@@ -1,6 +1,6 @@
-use ultimate_db::{base::DbBmc, generate_common_bmc_fns};
+use ultimate_db::{base::DbBmc, generate_common_bmc_fns, generate_filter_bmc_fns};
 
-use super::{SchedJob, SchedJobForCreate, SchedJobForUpdate};
+use super::{SchedJob, SchedJobFilter, SchedJobForCreate, SchedJobForUpdate};
 
 pub struct SchedJobBmc;
 impl DbBmc for SchedJobBmc {
@@ -13,4 +13,10 @@ generate_common_bmc_fns!(
   Entity: SchedJob,
   ForCreate: SchedJobForCreate,
   ForUpdate: SchedJobForUpdate,
+);
+
+generate_filter_bmc_fns!(
+  Bmc: SchedJobBmc,
+  Entity: SchedJob,
+  Filter: SchedJobFilter,
 );

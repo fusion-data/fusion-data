@@ -10,16 +10,53 @@ import "fusion_scheduler_api/v1/scheduler_api.proto";
 service Scheduler {
   rpc PageJob(PageJobRequest) returns (PageJobResponse);
   rpc PageTrigger(PageTriggerRequest) returns (PageTriggerResponse);
+
+  // 手动触发一个 Job
+  rpc TriggerJob(TriggerJobRequest) returns (TriggerJobResponse);
+
+  // 查询作业任务
+  rpc PageJobTask(PageJobTaskRequest) returns (PageJobTaskResponse);
+}
+
+message PageJobTaskRequest {
+  ultimate_api.v1.Pagination pagination = 1;
+  repeated FilterJobTaskRequest filter = 2;
+}
+
+message FilterJobTaskRequest {
+  repeated ultimate_api.v1.FilterString task_id = 1;
+
+  repeated ultimate_api.v1.FilterString job_id = 2;
+
+  // [fusion_scheduler_api.v1.JobTask.JobTaskStatus]
+  repeated ultimate_api.v1.FilterInt32 status = 3;
+
+  repeated ultimate_api.v1.FilterInt64 excute_begin_time = 4;
+
+  repeated ultimate_api.v1.FilterInt64 excute_end_time = 5;
+}
+
+message PageJobTaskResponse {
+  ultimate_api.v1.Page page = 1;
+}
+
+message TriggerJobRequest {
+  string job_id = 1;
+}
+
+message TriggerJobResponse {
+  // 任务 ID，已进入执行队列
+  string job_task_id = 1;
 }
 
 message PageJobRequest {
   ultimate_api.v1.Pagination pagination = 1;
-  JobFilterRequest filter = 2;
+  repeated JobFilterRequest filter = 2;
 }
 
 message PageJobResponse {
   ultimate_api.v1.Page page = 1;
-  repeated SchedJobDto records = 2;
+  repeated SchedJobDto items = 2;
 }
 
 message SchedJobDto {
@@ -27,7 +64,7 @@ message SchedJobDto {
   fusion_scheduler_api.v1.JobDefinition.JobType type = 2;
   optional string description = 3;
   repeated string tags = 4;
-  bytes dat = 5;
+  optional bytes data = 5;
   int64 cid = 6;
   int64 ctime = 7;
   optional int64 mid = 8;
@@ -44,8 +81,10 @@ message UpdateJobRequest {
 
 message JobFilterRequest {
   repeated ultimate_api.v1.FilterString id = 1;
-  repeated ultimate_api.v1.FilterInt64 ctime = 2;
-  repeated ultimate_api.v1.FilterInt32 type = 3;
+  repeated ultimate_api.v1.FilterInt32 type = 2;
+  repeated ultimate_api.v1.FilterInt32 status = 3;
+  repeated ultimate_api.v1.FilterInt64 ctime = 4;
+  repeated ultimate_api.v1.FilterInt64 mtime = 5;
 }
 
 message PageTriggerRequest {
@@ -55,7 +94,7 @@ message PageTriggerRequest {
 
 message PageTriggerResponse {
   ultimate_api.v1.Page page = 1;
-  repeated SchedTriggerDto records = 2;
+  repeated SchedTriggerDto items = 2;
 }
 
 message SchedTriggerDto {
@@ -63,7 +102,7 @@ message SchedTriggerDto {
   fusion_scheduler_api.v1.TriggerDefinition.TriggerType type = 2;
   optional string description = 3;
   repeated string tags = 4;
-  bytes data = 5;
+  optional bytes data = 5;
   int64 cid = 6;
   int64 ctime = 7;
   optional int64 mid = 8;

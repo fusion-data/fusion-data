@@ -42,7 +42,7 @@ sea-query = { workspace = true }
 modql = { workspace = true }
 
 # -- grpc
-ultimate-grpc = { workspace = true }
+ultimate-grpc = { workspace = true, features = ["uuid"] }
 prost = { workspace = true }
 tonic = { workspace = true }
 tonic-reflection = { workspace = true, optional = true }

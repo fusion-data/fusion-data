@@ -1,13 +1,14 @@
 use fusion_server::ctx::CtxW;
 use ultimate::Result;
+use ultimate_api::v1::PagePayload;
 use uuid::Uuid;
 
-use crate::service::scheduler::{
+use crate::service::{
   job::job_bmc::SchedJobBmc,
-  job_trigger::{JobTriggerBmc, JobTriggerForCreate},
+  job_trigger_rel::{JobTriggerRelBmc, JobTriggerRelForCreate},
 };
 
-use super::SchedJobForCreate;
+use super::{SchedJob, SchedJobForCreate, SchedJobForPage};
 
 pub struct JobSvc;
 
@@ -25,16 +26,21 @@ impl JobSvc {
 
     if let Some(trigger_ids) = rel_triggers {
       if !trigger_ids.is_empty() {
-        JobTriggerBmc::delete_by_job_id(&mm, job_id).await?;
+        JobTriggerRelBmc::delete_by_job_id(&mm, job_id).await?;
       }
-      JobTriggerBmc::insert_many(
+      JobTriggerRelBmc::insert_many(
         &mm,
-        trigger_ids.into_iter().map(|trigger_id| JobTriggerForCreate { job_id, trigger_id }),
+        trigger_ids.into_iter().map(|trigger_id| JobTriggerRelForCreate { job_id, trigger_id }),
       )
       .await?;
     }
 
     mm.dbx().commit_txn().await?;
     Ok(job_id)
+  }
+
+  pub async fn page(ctx: &CtxW, for_page: SchedJobForPage) -> Result<PagePayload<SchedJob>> {
+    let page = SchedJobBmc::page(ctx.mm(), for_page.filter, for_page.pagination).await?;
+    Ok(page)
   }
 }
