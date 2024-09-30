@@ -1,4 +1,4 @@
-use fusion_scheduler_api::v1::JobDefinition;
+use fusion_scheduler_api::v1::CreateJobRequest;
 use modql::field::Fields;
 use sea_query::enum_def;
 use sqlx::FromRow;
@@ -13,7 +13,8 @@ pub struct SchedJob {
   pub r#type: i32,
   pub description: Option<String>,
   pub tags: Vec<String>,
-  pub data: Vec<u8>,
+  // json object
+  pub data: Option<serde_json::Value>,
   pub cid: i64,
   pub ctime: UtcDateTime,
   pub mid: Option<i64>,
@@ -24,16 +25,23 @@ impl DbRowType for SchedJob {}
 #[derive(Debug, Fields)]
 pub struct SchedJobForCreate {
   pub id: Option<Uuid>,
+  #[field(name = "type")]
   pub r#type: i32,
   pub description: Option<String>,
   pub tags: Vec<String>,
-  pub data: Vec<u8>,
+  // json object
+  pub data: Option<serde_json::Value>,
 }
 
-impl From<JobDefinition> for SchedJobForCreate {
-  fn from(job: JobDefinition) -> Self {
-    let id = if job.job_id.is_empty() { None } else { job.job_id.parse().ok() };
-    Self { id, r#type: job.job_type, description: job.description, tags: job.tags, data: job.data }
+impl From<CreateJobRequest> for SchedJobForCreate {
+  fn from(job: CreateJobRequest) -> Self {
+    Self {
+      id: None,
+      r#type: job.job_type,
+      description: job.description,
+      tags: job.tags,
+      data: job.data.map(|bytes| serde_json::to_value(bytes).unwrap()),
+    }
   }
 }
 

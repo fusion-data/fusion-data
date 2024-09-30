@@ -4,10 +4,7 @@ package fusion_scheduler_api.v1;
 
 import "ultimate_api/v1/type.proto";
 
-service Scheduler {
-  // 拉取任务
-  rpc PullJob(PullJobRequest) returns (PullJobResponse);
-
+service SchedulerApi {
   // 注册节点
   rpc RegisterNode(RegisterNodeRequest) returns (RegisterNodeResponse);
 
@@ -16,6 +13,9 @@ service Scheduler {
 
   rpc CreateTrigger(CreateTriggerRequest) returns (CreateTriggerResponse);
   rpc UpdateTrigger(UpdateTriggerRequest) returns (UpdateTriggerResponse);
+
+  // 拉取任务
+  rpc PullJob(PullJobRequest) returns (PullJobResponse);
 }
 
 message PullJobRequest {
@@ -72,10 +72,12 @@ message JobDefinition {
 }
 
 message CreateJobRequest {
-  JobDefinition job_definition = 1;
-
+  JobDefinition.JobType job_type = 2;
+  optional bytes data = 3;
+  optional string description = 4;
+  repeated string tags = 5;
   // 要关联的 Trigger ID
-  repeated string trigger_ids = 2;
+  repeated string trigger_ids = 6;
 }
 
 message CreateJobResponse { string job_id = 1; }

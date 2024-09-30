@@ -15,7 +15,6 @@ pub fn init_grpc_server<'b>(
 ) -> ultimate::Result<impl Future<Output = std::result::Result<(), DataError>>> {
   let grpc_addr = conf.server_addr.parse()?;
 
-  #[allow(unused_mut)]
   let mut b = Server::builder().layer(TraceLayer::new_for_grpc());
 
   #[cfg(feature = "tonic-web")]

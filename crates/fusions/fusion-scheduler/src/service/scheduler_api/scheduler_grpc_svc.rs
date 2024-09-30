@@ -1,7 +1,8 @@
 use fusion_scheduler_api::v1::{
-  scheduler_server, CreateJobRequest, CreateJobResponse, CreateTriggerRequest, CreateTriggerResponse, PullJobRequest,
-  PullJobResponse, RegisterNodeRequest, RegisterNodeResponse, UpdateJobRequest, UpdateJobResponse,
-  UpdateTriggerRequest, UpdateTriggerResponse,
+  scheduler_api_server::{SchedulerApi, SchedulerApiServer},
+  CreateJobRequest, CreateJobResponse, CreateTriggerRequest, CreateTriggerResponse, PullJobRequest, PullJobResponse,
+  RegisterNodeRequest, RegisterNodeResponse, UpdateJobRequest, UpdateJobResponse, UpdateTriggerRequest,
+  UpdateTriggerResponse,
 };
 use fusion_server::{ctx::CtxW, grpc::interceptor::auth_interceptor};
 use tonic::{Request, Response, Status};
@@ -11,14 +12,14 @@ use uuid::Uuid;
 
 use crate::service::scheduler::JobSvc;
 
-pub fn scheduler_grpc_svc() -> GrpcServiceIntercepted<scheduler_server::SchedulerServer<SchedulerGrpcSvc>> {
-  scheduler_server::SchedulerServer::with_interceptor(SchedulerGrpcSvc, auth_interceptor)
+pub fn scheduler_api_grpc_svc() -> GrpcServiceIntercepted<SchedulerApiServer<SchedulerApiGrpcSvc>> {
+  SchedulerApiServer::with_interceptor(SchedulerApiGrpcSvc, auth_interceptor)
 }
 
-pub struct SchedulerGrpcSvc;
+pub struct SchedulerApiGrpcSvc;
 
 #[tonic::async_trait]
-impl scheduler_server::Scheduler for SchedulerGrpcSvc {
+impl SchedulerApi for SchedulerApiGrpcSvc {
   async fn create_job(&self, request: Request<CreateJobRequest>) -> Result<Response<CreateJobResponse>, Status> {
     let (_meta, exts, request) = request.into_parts();
     let ctx: &CtxW = (&exts).try_into()?;
@@ -35,8 +36,7 @@ impl scheduler_server::Scheduler for SchedulerGrpcSvc {
       Some(trigger_ids)
     };
 
-    let entity_c =
-      request.job_definition.ok_or_else(|| Status::invalid_argument("Missing field 'job_definition'"))?.into();
+    let entity_c = request.into();
 
     let job_id = JobSvc::create(ctx, entity_c, tigger_ids).await?.to_string();
 

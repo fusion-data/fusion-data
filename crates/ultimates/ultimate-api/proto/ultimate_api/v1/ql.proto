@@ -26,7 +26,7 @@ message FilterBool {
   OpBool op = 1;
 
   oneof v {
-    bool is_null = 2;
+    ultimate_api.v1.Null is_null = 2;
     bool value = 3;
     ultimate_api.v1.ArrayBool values = 4;
   }
@@ -36,7 +36,7 @@ message FilterInt32 {
   OpNumber op = 1;
 
   oneof v {
-    bool is_null = 2;
+    ultimate_api.v1.Null is_null = 2;
     int32 value = 3;
     ultimate_api.v1.ArrayInt32 values = 4;
   }
@@ -46,7 +46,7 @@ message FilterInt64 {
   OpNumber op = 1;
 
   oneof v {
-    bool is_null = 2;
+    ultimate_api.v1.Null is_null = 2;
     int64 value = 3;
     ultimate_api.v1.ArrayInt64 values = 4;
   }
@@ -57,7 +57,7 @@ message FilterDouble {
   OpNumber op = 1;
 
   oneof v {
-    bool is_null = 2;
+    ultimate_api.v1.Null is_null = 2;
     double value = 3;
     ultimate_api.v1.ArrayDouble values = 4;
   }
@@ -79,7 +79,7 @@ message FilterString {
   OpString op = 1;
 
   oneof v {
-    bool is_null = 2;
+    ultimate_api.v1.Null is_null = 2;
     string value = 3;
     ultimate_api.v1.ArrayString values = 4;
   }

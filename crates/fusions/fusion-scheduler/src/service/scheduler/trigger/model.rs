@@ -13,7 +13,8 @@ pub struct SchedTrigger {
   pub schedule: serde_json::Value,
   pub description: Option<String>,
   pub tags: Vec<String>,
-  pub data: Vec<u8>,
+  // json object
+  pub data: Option<serde_json::Value>,
   pub cid: i64,
   pub ctime: UtcDateTime,
   pub mid: Option<i64>,

@@ -18,22 +18,23 @@ impl JobSvc {
     }
     let job_id = entity_c.id.unwrap();
 
-    ctx.mm().dbx().begin_txn().await?;
+    let mm = ctx.mm().get_or_clone_with_txn()?;
+    mm.dbx().begin_txn().await?;
 
-    SchedJobBmc::insert(ctx.mm(), entity_c).await?;
+    SchedJobBmc::insert(&mm, entity_c).await?;
 
     if let Some(trigger_ids) = rel_triggers {
       if !trigger_ids.is_empty() {
-        JobTriggerBmc::delete_by_job_id(ctx.mm(), job_id).await?;
+        JobTriggerBmc::delete_by_job_id(&mm, job_id).await?;
       }
       JobTriggerBmc::insert_many(
-        ctx.mm(),
+        &mm,
         trigger_ids.into_iter().map(|trigger_id| JobTriggerForCreate { job_id, trigger_id }),
       )
       .await?;
     }
 
-    ctx.mm().dbx().commit_txn().await?;
+    mm.dbx().commit_txn().await?;
     Ok(job_id)
   }
 }

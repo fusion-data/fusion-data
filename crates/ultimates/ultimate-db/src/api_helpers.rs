@@ -1,6 +1,6 @@
 use modql::filter::{OpValInt32, OpValString, OpValValue, OpValsInt32, OpValsString, OpValsValue};
 use ultimate::DataError;
-use ultimate_api::v1::{FilterInt32, FilterInt64, FilterString, OpNumber, OpString};
+use ultimate_api::v1::{FilterInt32, FilterInt64, FilterString, Null, OpNumber, OpString};
 
 /// 将 FilterString 转换为 OpValsValue。通常用于可映射为字符串的数据类型，比如：UUID、DateTime(字符串格式化)、……
 pub fn try_into_op_vals_value_opt_with_filter_string(
@@ -37,7 +37,7 @@ fn try_into_op_val_value_with_int64(v: FilterInt64) -> Result<OpValValue, DataEr
     OpNumber::Gte => OpValValue::Gte(v.try_into()?),
     OpNumber::Lt => OpValValue::Lt(v.try_into()?),
     OpNumber::Lte => OpValValue::Lte(v.try_into()?),
-    OpNumber::Null => OpValValue::Null(v.try_into()?),
+    OpNumber::Null => OpValValue::Null(Null::try_from(v)?.is_null()),
   };
   Ok(op_val)
 }
@@ -51,7 +51,7 @@ fn try_into_op_val_value(v: FilterString) -> Result<OpValValue, DataError> {
     OpString::Gte => OpValValue::Gte(v.try_into()?),
     OpString::Lt => OpValValue::Lt(v.try_into()?),
     OpString::Lte => OpValValue::Lte(v.try_into()?),
-    OpString::Null => OpValValue::Null(v.try_into()?),
+    OpString::Null => OpValValue::Null(Null::try_from(v)?.is_null()),
   };
   Ok(op_val)
 }
@@ -78,7 +78,7 @@ fn try_into_op_val_string(v: FilterString) -> Result<OpValString, DataError> {
     OpString::Gte => OpValString::Gte(v.try_into()?),
     OpString::Lt => OpValString::Lt(v.try_into()?),
     OpString::Lte => OpValString::Lte(v.try_into()?),
-    OpString::Null => OpValString::Null(v.try_into()?),
+    OpString::Null => OpValString::Null(Null::try_from(v)?.is_null()),
   };
   Ok(op_val)
 }
@@ -105,7 +105,7 @@ pub fn try_into_op_val_int32(v: FilterInt32) -> Result<OpValInt32, DataError> {
     OpNumber::Lte => OpValInt32::Lte(v.try_into()?),
     OpNumber::Gt => OpValInt32::Gt(v.try_into()?),
     OpNumber::Gte => OpValInt32::Gte(v.try_into()?),
-    OpNumber::Null => OpValInt32::Null(v.try_into()?),
+    OpNumber::Null => OpValInt32::Null(Null::try_from(v)?.is_null()),
   };
   Ok(op_val)
 }

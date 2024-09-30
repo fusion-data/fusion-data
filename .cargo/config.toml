@@ -9,8 +9,11 @@ check-all = "check --all-features"
 # 设置 rustc 编译器参数
 # [build]
 # rustflags = ["--cfg", "uuid_unstable"]
+# rustflags = ["-C", "force-unwind-tables"]
 
-# [profile.release]
+[profile.release]
+panic = "abort"
+opt-level = 3
 # default-features = false
 # features = []
 
