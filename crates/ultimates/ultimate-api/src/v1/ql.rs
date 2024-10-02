@@ -2,27 +2,27 @@ use serde_json::json;
 use ultimate::DataError;
 
 use super::{
-  filter_bool, filter_double, filter_int32, filter_int64, filter_string, ArrayBool, ArrayDouble, ArrayInt32,
-  ArrayInt64, ArrayString, FilterBool, FilterDouble, FilterInt32, FilterInt64, FilterString, Null, OpNumber, OpString,
+  val_bool, val_double, val_int32, val_int64, val_string, ArrayBool, ArrayDouble, ArrayInt32, ArrayInt64, ArrayString,
+  Null, OpBool, OpNumber, OpString, ValBool, ValDouble, ValInt32, ValInt64, ValString,
 };
 
 macro_rules! impl_filter_helpers {
   ($S:ty, $Op:ty, $op_v:expr, $t:ty, $arr_t:ty, $v_package:ident) => {
     impl $S {
       pub fn new_is_null() -> Self {
-        Self { op: $op_v.into(), v: Some($v_package::V::IsNull(Null::IsNull as i32)) }
+        Self { o: $op_v.into(), value: Some($v_package::Value::N(Null::IsNull as i32)) }
       }
 
       pub fn new_not_null() -> Self {
-        Self { op: $op_v.into(), v: Some($v_package::V::IsNull(Null::NotNull as i32)) }
+        Self { o: $op_v.into(), value: Some($v_package::Value::N(Null::NotNull as i32)) }
       }
 
       pub fn new_value(op: $Op, value: impl Into<$t>) -> Self {
-        Self { op: op.into(), v: Some($v_package::V::Value(value.into())) }
+        Self { o: op.into(), value: Some($v_package::Value::V(value.into())) }
       }
 
       pub fn new_values(op: $Op, values: impl Into<$arr_t>) -> Self {
-        Self { op: op.into(), v: Some($v_package::V::Values(values.into())) }
+        Self { o: op.into(), value: Some($v_package::Value::Vs(values.into())) }
       }
     }
 
@@ -30,11 +30,11 @@ macro_rules! impl_filter_helpers {
       type Error = DataError;
 
       fn try_from(value: $S) -> Result<Self, Self::Error> {
-        let v = value.v.ok_or_else(|| {
+        let v = value.value.ok_or_else(|| {
           DataError::bad_request(format!("Invalid From<{}> for Null, missing field 'v'", stringify!($S)))
         })?;
         match v {
-          $v_package::V::IsNull(v) => Ok(v.try_into()?),
+          $v_package::Value::N(v) => Ok(v.try_into()?),
           _ => {
             Err(DataError::bad_request(format!("Invalid From<{}> for Null, missing field 'is_null'", stringify!($S))))
           }
@@ -46,11 +46,11 @@ macro_rules! impl_filter_helpers {
       type Error = DataError;
 
       fn try_from(value: $S) -> Result<Self, Self::Error> {
-        let v = value.v.ok_or_else(|| {
+        let v = value.value.ok_or_else(|| {
           DataError::bad_request(format!("Invalid From<{}> for {}, missing field 'v'", stringify!($S), stringify!($t)))
         })?;
         match v {
-          $v_package::V::Value(v) => Ok(v),
+          $v_package::Value::V(v) => Ok(v),
           _ => Err(DataError::bad_request(format!(
             "Invalid From<{}> for {}, missing field 'value'",
             stringify!($S),
@@ -64,11 +64,11 @@ macro_rules! impl_filter_helpers {
       type Error = DataError;
 
       fn try_from(value: $S) -> Result<Self, Self::Error> {
-        let v = value.v.ok_or_else(|| {
+        let v = value.value.ok_or_else(|| {
           DataError::bad_request(format!("Invalid From<{}> for {}, missing field 'v'", stringify!($S), stringify!($t)))
         })?;
         match v {
-          $v_package::V::Values(v) => Ok(v),
+          $v_package::Value::Vs(v) => Ok(v),
           _ => Err(DataError::bad_request(
             (format!("Invalid From<{}> for {}, missing field 'values'", stringify!($S), stringify!($arr_t))),
           )),
@@ -93,11 +93,11 @@ macro_rules! impl_filter_serde_helpers {
       type Error = DataError;
 
       fn try_from(value: $S) -> Result<Self, Self::Error> {
-        let v = value.v.ok_or_else(|| {
+        let v = value.value.ok_or_else(|| {
           DataError::bad_request(format!("Invalid From<{}> for serde_json::Value, missing field 'v'", stringify!($S)))
         })?;
         match v {
-          $v_package::V::Value(v) => Ok(json!(v)),
+          $v_package::Value::V(v) => Ok(json!(v)),
           _ => Err(DataError::bad_request("Invalid filter string, need field 'value")),
         }
       }
@@ -107,9 +107,9 @@ macro_rules! impl_filter_serde_helpers {
       type Error = DataError;
 
       fn try_from(value: $S) -> Result<Self, Self::Error> {
-        let v = value.v.ok_or_else(|| DataError::bad_request("Missing field 'v'"))?;
+        let v = value.value.ok_or_else(|| DataError::bad_request("Missing field 'v'"))?;
         match v {
-          $v_package::V::Values(v) => Ok(v.value.into_iter().map(|v| json!(v)).collect()),
+          $v_package::Value::Vs(v) => Ok(v.value.into_iter().map(|v| json!(v)).collect()),
           _ => Err(DataError::bad_request(
             (format!("Invalid From<{}> for Vec<serde_json::Value>, missing field 'values'", stringify!($S))),
           )),
@@ -119,27 +119,27 @@ macro_rules! impl_filter_serde_helpers {
   };
 }
 
-// -- FilterBool begin
-impl_filter_helpers!(FilterBool, OpNumber, OpNumber::Null, bool, ArrayBool, filter_bool);
-// -- FilterBool end
+// -- OpBool begin
+impl_filter_helpers!(ValBool, OpBool, OpBool::Null, bool, ArrayBool, val_bool);
+// -- OpBool end
 
-// -- FilterString begin
-impl_filter_helpers!(FilterString, OpString, OpString::Null, String, ArrayString, filter_string);
-impl_filter_serde_helpers!(FilterString, filter_string);
-// -- FilterString end
+// -- OpString begin
+impl_filter_helpers!(ValString, OpString, OpString::Null, String, ArrayString, val_string);
+impl_filter_serde_helpers!(ValString, val_string);
+// -- OpString end
 
-// -- FilterInt32 begin
-impl_filter_helpers!(FilterInt32, OpNumber, OpNumber::Null, i32, ArrayInt32, filter_int32);
-// -- FilterInt32 end
+// -- ValInt32 begin
+impl_filter_helpers!(ValInt32, OpNumber, OpNumber::Null, i32, ArrayInt32, val_int32);
+// -- ValInt32 end
 
-// -- FilterInt64 begin
-impl_filter_helpers!(FilterInt64, OpNumber, OpNumber::Null, i64, ArrayInt64, filter_int64);
-impl_filter_serde_helpers!(FilterInt64, filter_int64);
-// -- FilterInt64 end
+// -- ValInt64 begin
+impl_filter_helpers!(ValInt64, OpNumber, OpNumber::Null, i64, ArrayInt64, val_int64);
+impl_filter_serde_helpers!(ValInt64, val_int64);
+// -- ValInt64 end
 
-// -- FilterDouble begin
-impl_filter_helpers!(FilterDouble, OpNumber, OpNumber::Null, f64, ArrayDouble, filter_double);
-// -- FilterDouble end
+// -- ValDouble begin
+impl_filter_helpers!(ValDouble, OpNumber, OpNumber::Null, f64, ArrayDouble, val_double);
+// -- ValDouble end
 
 #[cfg(test)]
 mod tests {
@@ -147,7 +147,7 @@ mod tests {
 
   #[test]
   fn test_int32() {
-    let fi32 = FilterInt32::new_is_null();
+    let fi32 = ValInt32::new_is_null();
     let n: Null = fi32.try_into().unwrap();
     assert_eq!(Null::IsNull, n);
   }

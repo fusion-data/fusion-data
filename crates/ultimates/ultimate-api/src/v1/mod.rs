@@ -8,4 +8,5 @@ pub use page::*;
 pub use ql::*;
 pub use r#type::*;
 
-pub use filter_string::OpString;
+pub use val_bool::OpBool;
+pub use val_string::OpString;

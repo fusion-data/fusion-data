@@ -24,16 +24,16 @@ message PageJobTaskRequest {
 }
 
 message FilterJobTaskRequest {
-  repeated ultimate_api.v1.FilterString task_id = 1;
+  repeated ultimate_api.v1.ValString task_id = 1;
 
-  repeated ultimate_api.v1.FilterString job_id = 2;
+  repeated ultimate_api.v1.ValString job_id = 2;
 
   // [fusion_scheduler_api.v1.JobTask.JobTaskStatus]
-  repeated ultimate_api.v1.FilterInt32 status = 3;
+  repeated ultimate_api.v1.ValInt32 status = 3;
 
-  repeated ultimate_api.v1.FilterInt64 excute_begin_time = 4;
+  repeated ultimate_api.v1.ValInt64 excute_begin_time = 4;
 
-  repeated ultimate_api.v1.FilterInt64 excute_end_time = 5;
+  repeated ultimate_api.v1.ValInt64 excute_end_time = 5;
 }
 
 message PageJobTaskResponse {
@@ -80,11 +80,11 @@ message UpdateJobRequest {
 }
 
 message JobFilterRequest {
-  repeated ultimate_api.v1.FilterString id = 1;
-  repeated ultimate_api.v1.FilterInt32 type = 2;
-  repeated ultimate_api.v1.FilterInt32 status = 3;
-  repeated ultimate_api.v1.FilterInt64 ctime = 4;
-  repeated ultimate_api.v1.FilterInt64 mtime = 5;
+  repeated ultimate_api.v1.ValString id = 1;
+  repeated ultimate_api.v1.ValInt32 type = 2;
+  repeated ultimate_api.v1.ValInt32 status = 3;
+  repeated ultimate_api.v1.ValInt64 ctime = 4;
+  repeated ultimate_api.v1.ValInt64 mtime = 5;
 }
 
 message PageTriggerRequest {
@@ -110,7 +110,7 @@ message SchedTriggerDto {
 }
 
 message TriggerFilterRequest {
-  repeated ultimate_api.v1.FilterString id = 1;
-  repeated ultimate_api.v1.FilterInt64 ctime = 2;
-  repeated ultimate_api.v1.FilterInt32 type = 3;
+  repeated ultimate_api.v1.ValString id = 1;
+  repeated ultimate_api.v1.ValInt64 ctime = 2;
+  repeated ultimate_api.v1.ValInt32 type = 3;
 }

@@ -12,13 +12,15 @@ fn main() {
   let mut c = prost_build::Config::new();
   c.out_dir(out_dir).message_attribute(BASE_PACKAGE, SERDE_ATTR);
 
-  ["OpNumber", "FilterString.OpString", "FilterBool.OpBool"].into_iter().for_each(|en| {
+  ["OpNumber", "ValString.OpString", "ValBool.OpBool"].into_iter().for_each(|en| {
     c.enum_attribute(format!("{}.{}", BASE_PACKAGE, en), SERDE_REPR_ATTR);
   });
 
-  ["FilterString.v", "FilterBool.v", "FilterDouble.v", "FilterInt32.v", "FilterInt64.v"].into_iter().for_each(|m| {
-    c.type_attribute(format!("{}.{}", BASE_PACKAGE, m), SERDE_ATTR);
-  });
+  ["ValString.value", "ValBool.value", "ValDouble.value", "ValInt32.value", "ValInt64.value"].into_iter().for_each(
+    |m| {
+      c.type_attribute(format!("{}.{}", BASE_PACKAGE, m), SERDE_ATTR);
+    },
+  );
 
   // let modql_messages = ["CreateJobRequest", "CreateTriggerRequest"];
   // b = modql_messages.iter().fold(b, |b, m| b.message_attribute(format!("{}.{}", BASE_PACKAGE, m), MODQL_MESSAGE_ATTR));

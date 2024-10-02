@@ -3,7 +3,7 @@ use fusion_scheduler::pb::fusion_scheduler::v1::JobFilterRequest;
 use modql::filter::{FilterGroups, FilterNodes, OpValsValue};
 use sea_query::Condition;
 use ultimate::DataError;
-use ultimate_api::v1::{filter_string::OpString, FilterInt64, FilterString, OpNumber};
+use ultimate_api::v1::{OpNumber, OpString, ValInt64, ValString};
 use ultimate_db::{
   datetime_to_sea_value, try_into_op_vals_value_opt_with_filter_int64, try_into_op_vals_value_opt_with_filter_string,
   uuid_to_sea_value,
@@ -11,13 +11,13 @@ use ultimate_db::{
 use uuid::Uuid;
 
 fn main() {
-  let id = vec![FilterString::new_value(OpString::Eq, Uuid::now_v7())];
+  let id = vec![ValString::new_value(OpString::Eq, Uuid::now_v7())];
   let begin = Utc::now();
   let end = begin + Duration::days(1);
   println!("ctime: [{}, {})", begin, end);
   let ctime = vec![
-    FilterInt64::new_value(OpNumber::Gte, begin.timestamp_millis()),
-    FilterInt64::new_value(OpNumber::Lt, end.timestamp_millis()),
+    ValInt64::new_value(OpNumber::Gte, begin.timestamp_millis()),
+    ValInt64::new_value(OpNumber::Lt, end.timestamp_millis()),
   ];
   let filter_request = JobFilterRequest { id, ctime, ..Default::default() };
 

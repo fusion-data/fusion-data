@@ -16,54 +16,54 @@ enum OpNumber {
   NULL = 8;
 }
 
-message FilterBool {
+message ValBool {
   enum OpBool {
     EQ = 0;
     NOT = 1;
     NULL = 2;
   }
 
-  OpBool op = 1;
+  OpBool o = 1;
 
-  oneof v {
-    ultimate_api.v1.Null is_null = 2;
-    bool value = 3;
-    ultimate_api.v1.ArrayBool values = 4;
+  oneof value {
+    ultimate_api.v1.Null n = 2;
+    bool v = 3;
+    ultimate_api.v1.ArrayBool vs = 4;
   }
 }
 
-message FilterInt32 {
-  OpNumber op = 1;
+message ValInt32 {
+  OpNumber o = 1;
 
-  oneof v {
-    ultimate_api.v1.Null is_null = 2;
-    int32 value = 3;
-    ultimate_api.v1.ArrayInt32 values = 4;
+  oneof value {
+    ultimate_api.v1.Null n = 2;
+    int32 v = 3;
+    ultimate_api.v1.ArrayInt32 vs = 4;
   }
 }
 
-message FilterInt64 {
-  OpNumber op = 1;
+message ValInt64 {
+  OpNumber o = 1;
 
-  oneof v {
-    ultimate_api.v1.Null is_null = 2;
-    int64 value = 3;
-    ultimate_api.v1.ArrayInt64 values = 4;
+  oneof value {
+    ultimate_api.v1.Null n = 2;
+    int64 v = 3;
+    ultimate_api.v1.ArrayInt64 vs = 4;
   }
 }
 
 // f64
-message FilterDouble {
-  OpNumber op = 1;
+message ValDouble {
+  OpNumber o = 1;
 
-  oneof v {
-    ultimate_api.v1.Null is_null = 2;
-    double value = 3;
-    ultimate_api.v1.ArrayDouble values = 4;
+  oneof value {
+    ultimate_api.v1.Null n = 2;
+    double v = 3;
+    ultimate_api.v1.ArrayDouble vs = 4;
   }
 }
 
-message FilterString {
+message ValString {
   enum OpString {
     EQ = 0;
     NOT = 1;
@@ -73,14 +73,35 @@ message FilterString {
     LTE = 5;
     GT = 6;
     GTE = 7;
-    NULL = 8;
+    CONTAINS = 8;
+    NOT_CONTAINS = 9;
+    CONTAINS_ANY = 10;
+    NOT_CONTAINS_ANY = 11;
+    CONTAINS_ALL = 12;
+    STARTS_WITH = 13;
+    NOT_STARTS_WITH = 14;
+    STARTS_WITH_ANY = 15;
+    NOT_STARTS_WITH_ANY = 16;
+    ENDS_WITH = 17;
+    NOT_ENDS_WITH = 18;
+    ENDS_WITH_ANY = 19;
+    NOT_ENDS_WITH_ANY = 20;
+    EMPTY = 21;
+    NULL = 22;
+    CONTAINS_CI = 23;
+    NOT_CONTAINS_CI = 24;
+    STARTS_WITH_CI = 25;
+    NOT_STARTS_WITH_CI = 26;
+    ENDS_WITH_CI = 27;
+    NOT_ENDS_WITH_CI = 28;
+    I_LIKE = 29;
   }
 
-  OpString op = 1;
+  OpString o = 1;
 
-  oneof v {
-    ultimate_api.v1.Null is_null = 2;
-    string value = 3;
-    ultimate_api.v1.ArrayString values = 4;
+  oneof value {
+    ultimate_api.v1.Null n = 2;
+    string v = 3;
+    ultimate_api.v1.ArrayString vs = 4;
   }
 }
