@@ -22,11 +22,11 @@ fn main() {
     },
   );
 
-  // let modql_messages = ["CreateJobRequest", "CreateTriggerRequest"];
+  // let modql_messages = ["CreateProcessDefinitionRequest", "CreateTriggerDefinitionRequest"];
   // b = modql_messages.iter().fold(b, |b, m| b.message_attribute(format!("{}.{}", BASE_PACKAGE, m), MODQL_MESSAGE_ATTR));
 
   c.compile_protos(
-    &["proto/ultimate_api/v1/type.proto", "proto/ultimate_api/v1/page.proto", "proto/ultimate_api/v1/ql.proto"],
+    &["proto/ultimate_api/v1/types.proto", "proto/ultimate_api/v1/page.proto", "proto/ultimate_api/v1/ql.proto"],
     &["proto"],
   )
   .unwrap();

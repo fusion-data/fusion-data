@@ -2,23 +2,23 @@ syntax = "proto3";
 
 package fusion_scheduler.v1;
 
-import "ultimate_api/v1/type.proto";
+import "ultimate_api/v1/types.proto";
 import "ultimate_api/v1/page.proto";
 import "ultimate_api/v1/ql.proto";
 import "fusion_scheduler_api/v1/scheduler_api.proto";
 
 service Scheduler {
-  rpc PageJob(PageJobRequest) returns (PageJobResponse);
+  rpc PageProcess(PageProcessRequest) returns (PageProcessResponse);
   rpc PageTrigger(PageTriggerRequest) returns (PageTriggerResponse);
 
-  // 手动触发一个 Job
-  rpc TriggerJob(TriggerJobRequest) returns (TriggerJobResponse);
+  // 手动触发一个 Process
+  rpc TriggerProcess(TriggerProcessRequest) returns (TriggerProcessResponse);
 
   // 查询作业任务
-  rpc PageJobTask(PageJobTaskRequest) returns (PageJobTaskResponse);
+  rpc PageProcessTask(PageProcessTaskRequest) returns (PageProcessTaskResponse);
 }
 
-message PageJobTaskRequest {
+message PageProcessTaskRequest {
   ultimate_api.v1.Pagination pagination = 1;
   repeated FilterJobTaskRequest filter = 2;
 }
@@ -28,40 +28,40 @@ message FilterJobTaskRequest {
 
   repeated ultimate_api.v1.ValString job_id = 2;
 
-  // [fusion_scheduler_api.v1.JobTask.JobTaskStatus]
+  // [fusion_scheduler_api.v1.JobInstance.JobInstanceStatus]
   repeated ultimate_api.v1.ValInt32 status = 3;
 
-  repeated ultimate_api.v1.ValInt64 excute_begin_time = 4;
+  repeated ultimate_api.v1.ValInt64 execute_begin_time = 4;
 
-  repeated ultimate_api.v1.ValInt64 excute_end_time = 5;
+  repeated ultimate_api.v1.ValInt64 execute_end_time = 5;
 }
 
-message PageJobTaskResponse {
+message PageProcessTaskResponse {
   ultimate_api.v1.Page page = 1;
 }
 
-message TriggerJobRequest {
-  string job_id = 1;
+message TriggerProcessRequest {
+  int64 process_id = 1;
 }
 
-message TriggerJobResponse {
+message TriggerProcessResponse {
   // 任务 ID，已进入执行队列
   string job_task_id = 1;
 }
 
-message PageJobRequest {
+message PageProcessRequest {
   ultimate_api.v1.Pagination pagination = 1;
-  repeated JobFilterRequest filter = 2;
+  repeated ProcessFilterRequest filter = 2;
 }
 
-message PageJobResponse {
+message PageProcessResponse {
   ultimate_api.v1.Page page = 1;
-  repeated SchedJobDto items = 2;
+  repeated SchedProcessDto items = 2;
 }
 
-message SchedJobDto {
-  string id = 1;
-  fusion_scheduler_api.v1.JobDefinition.JobType type = 2;
+message SchedProcessDto {
+  int64 id = 1;
+  string key = 2;
   optional string description = 3;
   repeated string tags = 4;
   optional bytes data = 5;
@@ -71,17 +71,16 @@ message SchedJobDto {
   optional int64 mtime = 9;
 }
 
-message UpdateJobRequest {
+message UpdateProcessRequest {
   string id = 1;
-  optional fusion_scheduler_api.v1.JobDefinition.JobType type = 2;
+  optional string variables = 2;
   optional bytes data = 3;
   optional string description = 4;
   ultimate_api.v1.ArrayString tags = 5;
 }
 
-message JobFilterRequest {
+message ProcessFilterRequest {
   repeated ultimate_api.v1.ValString id = 1;
-  repeated ultimate_api.v1.ValInt32 type = 2;
   repeated ultimate_api.v1.ValInt32 status = 3;
   repeated ultimate_api.v1.ValInt64 ctime = 4;
   repeated ultimate_api.v1.ValInt64 mtime = 5;
@@ -99,7 +98,7 @@ message PageTriggerResponse {
 
 message SchedTriggerDto {
   string id = 1;
-  fusion_scheduler_api.v1.TriggerDefinition.TriggerType type = 2;
+  fusion_scheduler_api.v1.TriggerDefinition.TriggerKind kind = 2;
   optional string description = 3;
   repeated string tags = 4;
   optional bytes data = 5;
@@ -112,5 +111,5 @@ message SchedTriggerDto {
 message TriggerFilterRequest {
   repeated ultimate_api.v1.ValString id = 1;
   repeated ultimate_api.v1.ValInt64 ctime = 2;
-  repeated ultimate_api.v1.ValInt32 type = 3;
+  repeated ultimate_api.v1.ValInt32 kind = 3;
 }

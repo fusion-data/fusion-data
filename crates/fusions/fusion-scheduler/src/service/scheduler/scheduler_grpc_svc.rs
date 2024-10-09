@@ -1,12 +1,13 @@
 use tonic::{Request, Response, Status};
-use ultimate_grpc::utils::parse_uuid;
 
 use crate::{
   pb::fusion_scheduler::v1::{
-    scheduler_server::Scheduler, PageJobRequest, PageJobResponse, PageJobTaskRequest, PageJobTaskResponse,
-    PageTriggerRequest, PageTriggerResponse, TriggerJobRequest, TriggerJobResponse,
+    scheduler_server::Scheduler, PageProcessRequest, PageProcessResponse, PageProcessTaskRequest,
+    PageProcessTaskResponse, PageTriggerRequest, PageTriggerResponse, TriggerProcessRequest, TriggerProcessResponse,
   },
-  service::{JobSvc, JobTaskSvc, TriggerSvc},
+  service::{
+    process_definition::ProcessDefinitionSvc, process_task::ProcessTaskSvc, trigger_definition::TriggerDefinitionSvc,
+  },
 };
 
 use super::scheduler_svc::SchedulerSvc;
@@ -15,11 +16,11 @@ pub struct SchedulerGrpcSvc;
 
 #[tonic::async_trait]
 impl Scheduler for SchedulerGrpcSvc {
-  async fn page_job(&self, request: Request<PageJobRequest>) -> Result<Response<PageJobResponse>, Status> {
+  async fn page_process(&self, request: Request<PageProcessRequest>) -> Result<Response<PageProcessResponse>, Status> {
     let (_, exts, request) = request.into_parts();
     let ctx = (&exts).try_into()?;
 
-    let page = JobSvc::page(ctx, request.try_into()?).await?;
+    let page = ProcessDefinitionSvc::page(ctx, request.try_into()?).await?;
     Ok(Response::new(page.into()))
   }
 
@@ -27,23 +28,29 @@ impl Scheduler for SchedulerGrpcSvc {
     let (_, exts, request) = request.into_parts();
     let ctx = (&exts).try_into()?;
 
-    let page = TriggerSvc::page(ctx, request.try_into()?).await?;
+    let page = TriggerDefinitionSvc::page(ctx, request.try_into()?).await?;
     Ok(Response::new(page.into()))
   }
 
-  async fn trigger_job(&self, request: Request<TriggerJobRequest>) -> Result<Response<TriggerJobResponse>, Status> {
+  async fn trigger_process(
+    &self,
+    request: Request<TriggerProcessRequest>,
+  ) -> Result<Response<TriggerProcessResponse>, Status> {
     let (_, exts, request) = request.into_parts();
     let ctx = (&exts).try_into()?;
 
-    let job_task_id = SchedulerSvc::trigger_job(ctx, parse_uuid(&request.job_id)?).await?;
-    Ok(Response::new(TriggerJobResponse { job_task_id: job_task_id.to_string() }))
+    let job_task_id = SchedulerSvc::trigger_process(ctx, request.process_id).await?;
+    Ok(Response::new(TriggerProcessResponse { job_task_id: job_task_id.to_string() }))
   }
 
-  async fn page_job_task(&self, request: Request<PageJobTaskRequest>) -> Result<Response<PageJobTaskResponse>, Status> {
+  async fn page_process_task(
+    &self,
+    request: Request<PageProcessTaskRequest>,
+  ) -> Result<Response<PageProcessTaskResponse>, Status> {
     let (_, exts, request) = request.into_parts();
     let ctx = (&exts).try_into()?;
 
-    let page = JobTaskSvc::page(ctx, request.try_into()?).await?;
+    let page = ProcessTaskSvc::page(ctx, request.try_into()?).await?;
     Ok(Response::new(page.into()))
   }
 }

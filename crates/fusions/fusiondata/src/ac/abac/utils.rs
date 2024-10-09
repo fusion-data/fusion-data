@@ -10,9 +10,9 @@ pub fn evaluate_condition(condition: &Value, request: &AccessRequest) -> bool {
         if parts.len() != 2 {
           return false;
         }
-        let (entity_type, attr_name) = (parts[0], parts[1]);
+        let (entity_kind, attr_name) = (parts[0], parts[1]);
 
-        let entity_value = match entity_type {
+        let entity_value = match entity_kind {
           "user" => request.subject.get(attr_name),
           // "resource" => request.resource.get(attr_name),
           "environment" => request.environment.get(attr_name),

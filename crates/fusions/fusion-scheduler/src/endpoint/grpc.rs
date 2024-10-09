@@ -1,4 +1,4 @@
-use std::future::Future;
+use std::{future::Future, net::SocketAddr};
 
 use fusion_server::app::AppState;
 use tonic::service::RoutesBuilder;
@@ -7,7 +7,9 @@ use ultimate_grpc::utils::init_grpc_server;
 
 use crate::service::scheduler_api::scheduler_api_grpc_svc;
 
-pub fn grpc_serve(app_state: &AppState) -> ultimate::Result<impl Future<Output = std::result::Result<(), DataError>>> {
+pub async fn grpc_serve(
+  app_state: &AppState,
+) -> ultimate::Result<(SocketAddr, impl Future<Output = std::result::Result<(), DataError>>)> {
   let grpc_conf = app_state.configuration().grpc();
 
   #[cfg(not(feature = "tonic-reflection"))]
@@ -19,5 +21,5 @@ pub fn grpc_serve(app_state: &AppState) -> ultimate::Result<impl Future<Output =
 
   rb.add_service(scheduler_api_grpc_svc());
 
-  init_grpc_server(grpc_conf, file_descriptor_sets, rb.routes())
+  init_grpc_server(grpc_conf, file_descriptor_sets, rb.routes()).await
 }

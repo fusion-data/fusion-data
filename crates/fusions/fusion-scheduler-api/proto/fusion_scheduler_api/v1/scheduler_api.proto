@@ -2,20 +2,76 @@ syntax = "proto3";
 
 package fusion_scheduler_api.v1;
 
-import "ultimate_api/v1/type.proto";
+option java_multiple_files = false;
+option java_package = "xyz.fusiondata.scheduler.api";
+option go_package = "./;pb";
+
+import "ultimate_api/v1/types.proto";
 
 service SchedulerApi {
-  // 注册节点
-  rpc RegisterNode(RegisterNodeRequest) returns (RegisterNodeResponse);
+  // 注册 Worker 节点到 Master
+  rpc RegisterWorker(RegisterWorkerRequest) returns (RegisterWorkerResponse);
 
-  rpc CreateJob(CreateJobRequest) returns (CreateJobResponse);
-  rpc UpdateJob(UpdateJobRequest) returns (UpdateJobResponse);
+  // 创建流程定义
+  rpc CreateProcessDefinition(CreateProcessDefinitionRequest) returns (CreateProcessDefinitionResponse);
 
-  rpc CreateTrigger(CreateTriggerRequest) returns (CreateTriggerResponse);
+  // 创建触发器定义
+  rpc CreateTriggerDefinition(CreateTriggerDefinitionRequest) returns (CreateTriggerDefinitionResponse);
   rpc UpdateTrigger(UpdateTriggerRequest) returns (UpdateTriggerResponse);
+
+  rpc EventListener(stream EventRequest) returns (stream EventResponse);
 
   // 拉取任务
   rpc PullJob(PullJobRequest) returns (PullJobResponse);
+}
+
+message RegisterWorkerRequest {
+  // 注册的当前节点 ID(uuid)，需要在集群内全局唯一
+  string worker_id = 1;
+
+  // 节点关联的命名空间列表。若设置，则只有匹配命名空间下的 job 可以被此节点执行
+  repeated string namespaces = 2;
+}
+
+message RegisterWorkerResponse {
+  MasterInfo master_info = 1;
+}
+
+message MasterInfo {
+  string master_id = 1;
+
+  // 当前 master 节点的 IP:PORT 地址
+  string master_addr = 2;
+
+  // Master 节点可执行的 namespace 列表
+  repeated string namespaces = 5;
+}
+
+enum EventKind {
+  HEARTBEAT = 0;
+
+  // 注册监听器
+  REGISTER_LISTENER = 1;
+
+  // 主节点丢失
+  MASTER_MISSING = 2;
+
+  // 节点状态变更
+  NODE_CHANGED = 3;
+
+  // push
+  JOB_TASK_TRIGGERED = 20;
+  // pull
+  JOB_TASK_COMPLETED = 21;
+}
+
+message EventRequest {
+
+}
+
+message EventResponse {
+  EventKind event_kind = 1;
+  optional bytes payload = 2;
 }
 
 message PullJobRequest {
@@ -30,7 +86,7 @@ message PullJobRequest {
 }
 
 message PullJobResponse {
-  JobDefinition job_definition = 1;
+  ProcessDefinition process_definition = 1;
 
   TriggerDefinition trigger_definition = 2;
 
@@ -38,115 +94,130 @@ message PullJobResponse {
   int64 begin_time = 4;
 }
 
-message RegisterNodeRequest {
-  // 注册的当前节点 ID(uuid)，需要在集群内全局唯一
-  string node_id = 1;
+// ---------------- task types -------------------
 
-  // 节点的角色列表，可用于过滤作业类型
-  repeated string roles = 2;
-}
-
-message RegisterNodeResponse {
-
-}
-
-// ---------------- Job types ----------------
-
-message JobDefinition {
-  enum JobType {
+message TaskDefinition {
+  enum TaskKind {
     // 未指定，无效值
     UNSPECIFIED = 0;
     // 脚本任务
-    SCRIPT = 1;
+    RUST = 1;
+    // 脚本任务
+    SCRIPT = 2;
     // HTTP 任务
-    HTTP = 2;
+    HTTP = 3;
     // Python 任务
-    PYTHON = 3;
+    PYTHON = 4;
   }
 
-  string job_id = 1;
-  JobType job_type = 2;
-  bytes data = 3;
-  optional string description = 4;
-  repeated string tags = 5;
+  string task_id = 1;
+  TaskKind task_kind = 2;
 }
 
-message CreateJobRequest {
-  JobDefinition.JobType job_type = 2;
-  optional bytes data = 3;
-  optional string description = 4;
-  repeated string tags = 5;
-  // 要关联的 Trigger ID
-  repeated string trigger_ids = 6;
+
+// ---------------- process types ----------------
+
+message ProcessDefinition {
+  int64 process_id = 1;
+  string process_key = 2;
+  string variables = 3;
+  optional bytes data = 4;
+  optional string description = 5;
+  repeated string tags = 6;
+  repeated TaskDefinition tasks = 7;
+  // 流程超时时间（秒）
+  int64 timeout = 8;
 }
 
-message CreateJobResponse { string job_id = 1; }
-
-message UpdateJobRequest {
-  string job_id = 1;
-  optional JobDefinition.JobType job_type = 2;
-  optional bytes data = 3;
-  optional string description = 4;
-  ultimate_api.v1.ArrayString tags = 5;
+message CreateProcessDefinitionRequest {
+  string process_key = 1;
+  optional string description = 2;
+  repeated string tags = 3;
+  // 任务变量，json object 类型。默认为空JSON对象（`{}`）
+  string variables = 4;
+  // 可选的流程任务数据，由流程自行决定序列化方式
+  optional bytes data = 5;
+  // 可选的关联触发器 ID 列表
+  repeated int64 trigger_ids = 6;
 }
 
-message UpdateJobResponse { string job_id = 1; }
+message CreateProcessDefinitionResponse {
+  ProcessDefinition process_definition = 1;
+}
 
 // ---------------- Trigger types ----------------
 
 message TriggerDefinition {
-  enum TriggerType {
+  enum TriggerKind {
     // 未指定，无效值
     UNSPECIFIED = 0;
-    // 简单触发器，每固定时间执行一次
-    SIMPLE = 1;
     // Cron 触发器，根据 cron 表达式执行
-    CRON = 2;
+    CRON = 1;
+    // 固定速率
+    FIXED_RATE = 2;
+    // 固定延迟
+    FIXED_DELAY = 3;
   }
 
-  string trigger_id = 1;
-  TriggerType trigger_type = 2;
+  int64 trigger_id = 1;
+  string trigger_key = 2;
+  TriggerKind trigger_kind = 3;
+  optional string variables = 4;
   oneof schedule {
-    SimpleSchedule simple = 3;
-    CronSchedule cron = 4;
+    SimpleSchedule simple = 5;
+    CronSchedule cron = 6;
+    bool depend = 7;
   }
-  optional string description = 5;
-  repeated string tags = 6;
-  bytes data = 7;
+  optional string description = 10;
+  repeated string tags = 11;
+  // 超时时间（秒），触发器可以覆盖关联 ProcessDefinition 的 timeout 值
+  optional int64 timeout = 12;
+    // 设置触发器有效的开始时间
+  optional int64 valid_begin_time = 13;
+
+  // 设置触发器有效的结束时间
+  optional int64 valid_end_time = 14;
 }
 
 message SimpleSchedule {
-  // 设置每次执行间隔时间，单位为秒。值必需大于0！
-  int64 interval_seconds = 1;
+  // 设置每次执行时间隔。值必需大于0！
+  // https://crates.io/crates/duration-str
+  string interval = 1;
 
   // 设置第一次执行时延迟时间，单位为秒。
-  int64 delay_seconds = 2;
+  // https://crates.io/crates/duration-str
+  string first_delay = 2;
 
-  // 设置 job 执行的次数，负数代表无限制
-  int32 repeat_count = 3;
+  // 设置 job 执行的次数，不设置则代表无限制
+  optional int32 execution_count = 3;
 }
 
 message CronSchedule {
+  // cron 表达式，详情参考 https://crontab.guru/ 和 https://crates.io/crates/croner
   string cron = 1;
-
-  // 设置触发器有效的开始时间
-  optional int64 begin_time = 2;
-
-  // 设置触发器有效的结束时间
-  optional int64 end_time = 3;
 }
 
-message CreateTriggerRequest {
+message CreateTriggerDefinitionRequest {
+  // 要关联的 ProcessDefinition ID 列表
+  repeated int64 process_ids = 1;
+
+  string trigger_key = 2;
+  TriggerDefinition.TriggerKind trigger_kind = 3;
+  optional string variables = 4;
+  oneof schedule {
+    SimpleSchedule simple = 5;
+    CronSchedule cron = 6;
+  }
+  optional string description = 7;
+  repeated string tags = 8;
+}
+
+message CreateTriggerDefinitionResponse {
   TriggerDefinition trigger_definition = 1;
-
-  // 要关联的 Job ID
-  repeated string job_ids = 2;
 }
-
-message CreateTriggerResponse { string trigger_id = 1; }
 
 message UpdateTriggerRequest {
-  string trigger_id = 1;
+  int64 trigger_id = 1;
   oneof schedule {
     SimpleSchedule simple = 2;
     CronSchedule cron = 3;
@@ -154,6 +225,8 @@ message UpdateTriggerRequest {
   optional bytes data = 4;
   optional string description = 5;
   ultimate_api.v1.ArrayString tags = 6;
+  optional string trigger_key = 7;
+  optional string variables = 8;
 }
 
 message UpdateTriggerResponse {
@@ -161,9 +234,9 @@ message UpdateTriggerResponse {
 }
 
 // ---- Task ----
-message JobTask {
+message JobInstance {
   // 任务状态
-  enum JobTaskStatus {
+  enum JobInstanceStatus {
     UNSPECIFIED = 0;
     ENQUEUED = 1;
     RUNNING = 2;

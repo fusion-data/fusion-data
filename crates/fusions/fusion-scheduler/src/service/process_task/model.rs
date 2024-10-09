@@ -1,6 +1,6 @@
 use modql::{
   field::Fields,
-  filter::{FilterNodes, OpValsInt32, OpValsValue},
+  filter::{FilterNodes, OpValsInt32, OpValsInt64, OpValsValue},
 };
 use sqlx::FromRow;
 use ultimate::DataError;
@@ -9,10 +9,10 @@ use ultimate_common::time::UtcDateTime;
 use ultimate_db::{datetime_to_sea_value, uuid_to_sea_value, DbRowType};
 use uuid::Uuid;
 
-use crate::pb::fusion_scheduler::v1::{PageJobTaskRequest, PageJobTaskResponse};
+use crate::pb::fusion_scheduler::v1::{PageProcessTaskRequest, PageProcessTaskResponse};
 
 #[derive(Debug, FromRow, Fields)]
-pub struct SchedJobTask {
+pub struct ProcessTask {
   pub id: Uuid,
   pub job_id: Uuid,
   pub trigger_id: Option<Uuid>,
@@ -23,18 +23,16 @@ pub struct SchedJobTask {
   pub mid: Option<i64>,
   pub mtime: Option<UtcDateTime>,
 }
-impl DbRowType for SchedJobTask {}
+impl DbRowType for ProcessTask {}
 
 #[derive(Debug, Default, FilterNodes)]
-pub struct JobTaskFilter {
+pub struct ProcessTaskFilter {
   #[modql(to_sea_value_fn = "uuid_to_sea_value")]
   pub id: Option<OpValsValue>,
 
-  #[modql(to_sea_value_fn = "uuid_to_sea_value")]
-  pub job_id: Option<OpValsValue>,
+  pub process_id: Option<OpValsInt64>,
 
-  #[modql(to_sea_value_fn = "uuid_to_sea_value")]
-  pub trigger_id: Option<OpValsValue>,
+  pub trigger_id: Option<OpValsInt64>,
 
   pub status: Option<OpValsInt32>,
 
@@ -49,23 +47,23 @@ pub struct JobTaskFilter {
 
 pub struct JobTaskForPage {
   pub pagination: Pagination,
-  pub filter: Vec<JobTaskFilter>,
+  pub filter: Vec<ProcessTaskFilter>,
 }
 
-impl TryFrom<PageJobTaskRequest> for JobTaskForPage {
+impl TryFrom<PageProcessTaskRequest> for JobTaskForPage {
   type Error = DataError;
 
-  fn try_from(value: PageJobTaskRequest) -> Result<Self, Self::Error> {
+  fn try_from(value: PageProcessTaskRequest) -> Result<Self, Self::Error> {
     todo!()
   }
 }
 
 pub struct JobTaskPage {
   pub page: Page,
-  pub items: Vec<SchedJobTask>,
+  pub items: Vec<ProcessTask>,
 }
 
-impl From<JobTaskPage> for PageJobTaskResponse {
+impl From<JobTaskPage> for PageProcessTaskResponse {
   fn from(value: JobTaskPage) -> Self {
     todo!()
   }

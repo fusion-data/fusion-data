@@ -12,12 +12,12 @@ message SigninRequest {
   string password = 3;
 }
 
-enum TokenType {
-  TOKEN_TYPE_UNSPECIFIED = 0;
-  TOKEN_TYPE_BEARER = 1;
+enum TokenKind {
+  TOKEN_KIND_UNSPECIFIED = 0;
+  BEARER = 1;
 }
 
 message SigninReplay {
   string token = 1;
-  TokenType token_type = 2;
+  TokenKind token_kind = 2;
 }

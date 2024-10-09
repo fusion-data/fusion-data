@@ -1,6 +1,14 @@
+use std::{net::SocketAddr, time::Duration};
+
 use futures::{Future, TryFutureExt};
 use prost_types::FieldMask;
-use tonic::{metadata::MetadataMap, service::Routes, transport::Server, Status};
+use tokio::net::TcpListener;
+use tonic::{
+  metadata::MetadataMap,
+  service::Routes,
+  transport::{server::TcpIncoming, Server},
+  Status,
+};
 use tower_http::trace::TraceLayer;
 use ultimate::{
   configuration::model::{GrpcConf, SecurityConf},
@@ -8,12 +16,13 @@ use ultimate::{
   DataError,
 };
 
-pub fn init_grpc_server<'b>(
+pub async fn init_grpc_server<'b>(
   conf: &GrpcConf,
   encoded_file_descriptor_sets: impl IntoIterator<Item = &'b [u8]>,
   mut routes: Routes,
-) -> ultimate::Result<impl Future<Output = std::result::Result<(), DataError>>> {
-  let grpc_addr = conf.server_addr.parse()?;
+) -> ultimate::Result<(SocketAddr, impl Future<Output = std::result::Result<(), DataError>>)> {
+  let tcp_listener = TcpListener::bind(&conf.server_addr).await?;
+  let local_addr = tcp_listener.local_addr()?;
 
   let mut b = Server::builder().layer(TraceLayer::new_for_grpc());
 
@@ -29,10 +38,11 @@ pub fn init_grpc_server<'b>(
     routes = routes.add_service(service);
   }
 
-  // let s = router.into_service();
+  let tcp_incoming = TcpIncoming::from_listener(tcp_listener, false, Some(Duration::from_secs(30)))
+    .map_err(|_| DataError::server_error("Bind tcp listener failed"))?;
 
-  let serve = b.add_routes(routes).serve(grpc_addr).map_err(DataError::from);
-  Ok(serve)
+  let serve = b.add_routes(routes).serve_with_incoming(tcp_incoming).map_err(DataError::from);
+  Ok((local_addr, serve))
 }
 
 pub fn extract_jwt_payload_from_metadata(
@@ -40,7 +50,8 @@ pub fn extract_jwt_payload_from_metadata(
   metadata: &MetadataMap,
 ) -> Result<JwtPayload, tonic::Status> {
   let token = extract_token_from_metadata(metadata)?;
-  let (payload, _) = SecurityUtils::decrypt_jwt(sc.pwd(), token).map_err(|e| Status::unauthenticated(e.to_string()))?;
+  let (payload, _) =
+    SecurityUtils::decrypt_jwt(sc.pwd(), token).map_err(|e| Status::unauthenticated(e.to_string()))?;
   Ok(payload)
 }
 

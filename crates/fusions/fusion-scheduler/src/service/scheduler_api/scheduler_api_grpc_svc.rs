@@ -1,16 +1,17 @@
 use fusion_scheduler_api::v1::{
   scheduler_api_server::{SchedulerApi, SchedulerApiServer},
-  CreateJobRequest, CreateJobResponse, CreateTriggerRequest, CreateTriggerResponse, PullJobRequest, PullJobResponse,
-  RegisterNodeRequest, RegisterNodeResponse, UpdateJobRequest, UpdateJobResponse, UpdateTriggerRequest,
-  UpdateTriggerResponse,
+  CreateProcessDefinitionRequest, CreateProcessDefinitionResponse, CreateTriggerDefinitionRequest,
+  CreateTriggerDefinitionResponse, EventRequest, EventResponse, PullJobRequest, PullJobResponse,
+  RegisterWorkerRequest, RegisterWorkerResponse, UpdateTriggerRequest, UpdateTriggerResponse,
 };
 use fusion_server::{ctx::CtxW, grpc::interceptor::auth_interceptor};
-use tonic::{Request, Response, Status};
+use std::pin::Pin;
+use tokio_stream::Stream;
+use tonic::{Request, Response, Status, Streaming};
 use tracing::debug;
 use ultimate_grpc::GrpcServiceIntercepted;
-use uuid::Uuid;
 
-use crate::service::JobSvc;
+use crate::service::process_definition::ProcessDefinitionSvc;
 
 pub fn scheduler_api_grpc_svc() -> GrpcServiceIntercepted<SchedulerApiServer<SchedulerApiGrpcSvc>> {
   SchedulerApiServer::with_interceptor(SchedulerApiGrpcSvc, auth_interceptor)
@@ -20,38 +21,34 @@ pub struct SchedulerApiGrpcSvc;
 
 #[tonic::async_trait]
 impl SchedulerApi for SchedulerApiGrpcSvc {
-  async fn create_job(&self, request: Request<CreateJobRequest>) -> Result<Response<CreateJobResponse>, Status> {
-    let (_meta, exts, request) = request.into_parts();
-    let ctx: &CtxW = (&exts).try_into()?;
-
-    let tigger_ids = if request.trigger_ids.is_empty() {
-      None
-    } else {
-      let mut trigger_ids = Vec::with_capacity(request.trigger_ids.len());
-      for id in request.trigger_ids.iter() {
-        let uuid =
-          Uuid::parse_str(id).map_err(|_| Status::invalid_argument(format!("Invalid trigger id: '{}'", id)))?;
-        trigger_ids.push(uuid);
-      }
-      Some(trigger_ids)
-    };
-
-    let entity_c = request.into();
-
-    let job_id = JobSvc::create(ctx, entity_c, tigger_ids).await?.to_string();
-
-    Ok(Response::new(CreateJobResponse { job_id }))
-  }
-
-  async fn update_job(&self, request: Request<UpdateJobRequest>) -> Result<Response<UpdateJobResponse>, Status> {
-    debug!("update_job: {:?}", request.into_inner());
+  async fn register_worker(
+    &self,
+    request: Request<RegisterWorkerRequest>,
+  ) -> Result<Response<RegisterWorkerResponse>, Status> {
     todo!()
   }
 
-  async fn create_trigger(
+  async fn create_process_definition(
     &self,
-    request: Request<CreateTriggerRequest>,
-  ) -> Result<Response<CreateTriggerResponse>, Status> {
+    request: Request<CreateProcessDefinitionRequest>,
+  ) -> Result<Response<CreateProcessDefinitionResponse>, Status> {
+    let (_meta, exts, request) = request.into_parts();
+    let ctx: &CtxW = (&exts).try_into()?;
+
+    let link_trigger_ids = if request.trigger_ids.is_empty() { None } else { Some(request.trigger_ids.clone()) };
+
+    let entity_c = request.into();
+
+    let process_id = ProcessDefinitionSvc::create(ctx, entity_c, link_trigger_ids).await?;
+    let process = ProcessDefinitionSvc::find_by_id(ctx, process_id).await?;
+
+    Ok(Response::new(CreateProcessDefinitionResponse { process_definition: None /*Some(process)*/ }))
+  }
+
+  async fn create_trigger_definition(
+    &self,
+    request: Request<CreateTriggerDefinitionRequest>,
+  ) -> Result<Response<CreateTriggerDefinitionResponse>, Status> {
     debug!("create_trigger: {:?}", request.into_inner());
     todo!()
   }
@@ -64,14 +61,16 @@ impl SchedulerApi for SchedulerApiGrpcSvc {
     todo!()
   }
 
-  async fn pull_job(&self, request: Request<PullJobRequest>) -> Result<Response<PullJobResponse>, Status> {
+  type EventListenerStream = Pin<Box<dyn Stream<Item = Result<EventResponse, Status>> + Send>>;
+
+  async fn event_listener(
+    &self,
+    request: Request<Streaming<EventRequest>>,
+  ) -> Result<Response<Self::EventListenerStream>, Status> {
     todo!()
   }
 
-  async fn register_node(
-    &self,
-    request: Request<RegisterNodeRequest>,
-  ) -> Result<Response<RegisterNodeResponse>, Status> {
+  async fn pull_job(&self, request: Request<PullJobRequest>) -> Result<Response<PullJobResponse>, Status> {
     todo!()
   }
 }

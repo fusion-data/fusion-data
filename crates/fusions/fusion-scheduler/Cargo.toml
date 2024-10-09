@@ -17,20 +17,7 @@ name = "fusion-scheduler"
 path = "src/bin/fusion-scheduler.rs"
 
 [dependencies]
-# -- misc
-chrono = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
-serde_repr = { workspace = true }
-uuid = { workspace = true }
-
-# -- async
-tokio = { workspace = true }
-tokio-cron-scheduler = { workspace = true }
-
-# -- tracing
-tracing = { workspace = true }
-
+# -- ultimates
 ultimate-common = { workspace = true }
 ultimate = { workspace = true }
 ultimate-api = { workspace = true }
@@ -50,6 +37,25 @@ tonic-reflection = { workspace = true, optional = true }
 # -- fusions
 fusion-server = { workspace = true }
 fusion-scheduler-api = { workspace = true }
+hierarchical_hash_wheel_timer = { workspace = true }
+
+# -- misc
+duration-str = { workspace = true }
+chrono = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_repr = { workspace = true }
+uuid = { workspace = true }
+croner = { workspace = true }
+
+# -- async
+tokio = { workspace = true }
+tokio-stream = { workspace = true }
+tokio-cron-scheduler = { workspace = true }
+
+# -- tracing
+tracing = { workspace = true }
+
 
 [build-dependencies]
 tonic-build = { workspace = true }

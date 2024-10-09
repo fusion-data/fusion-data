@@ -19,6 +19,8 @@ uuid = { workspace = true }
 prost = { workspace = true }
 tonic = { workspace = true }
 bytes = { workspace = true, features = ["serde"] }
+duration-str = { workspace = true }
+croner = { workspace = true }
 
 [build-dependencies]
 tonic-build = { workspace = true }

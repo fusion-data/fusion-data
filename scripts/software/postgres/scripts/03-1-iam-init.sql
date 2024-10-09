@@ -5,6 +5,10 @@ SET TIMEZONE TO 'Asia/Chongqing';
 --
 -- initial data
 ------------------
+-- 初始化租户
+INSERT INTO iam.tenant(name, cid, ctime)
+VALUES ('默认租户', 1, CURRENT_TIMESTAMP);
+-- 初始化用户
 INSERT INTO iam."user" (id, email, phone, name, status, gender, cid, ctime)
 VALUES (1, 'admin@fusiondata.com', NULL, '超管', 100, 0, 1, CURRENT_TIMESTAMP),
        (10000, 'user@fusiondata.com', '13912345678', '普通用户', 100, 0, 1, CURRENT_TIMESTAMP);
@@ -16,6 +20,9 @@ VALUES (1,
         1, CURRENT_TIMESTAMP);
 -- 重置 user_id_seq，使新用户注册从ID为 10001 开始
 ALTER SEQUENCE iam.user_id_seq RESTART 10001;
+INSERT INTO iam.user_tenant_rel (user_id, tenant_id, cid, ctime)
+VALUES (1, 1, 1, CURRENT_TIMESTAMP),
+       (10000, 1, 1, CURRENT_TIMESTAMP);
 --
 -- 初始化数据
 INSERT INTO iam.role (id, name, description, status, cid, ctime)

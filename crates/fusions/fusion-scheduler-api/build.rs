@@ -8,8 +8,9 @@ static MESSAGE_ATTR: &str = "#[derive(serde::Serialize, serde::Deserialize)]";
 fn main() {
   let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
 
-  let enum_reprs = ["JobDefinition.JobType", "TriggerDefinition.TriggerType"];
-  let enums = ["TriggerDefinition.schedule", "UpdateTriggerRequest.schedule"];
+  let enum_list = ["TaskDefinition.TaskKind", "TriggerDefinition.TriggerKind"];
+  let oneof_list =
+    ["TriggerDefinition.schedule", "CreateTriggerDefinitionRequest.schedule", "UpdateTriggerRequest.schedule"];
 
   let mut iam_b = tonic_build::configure()
     .emit_rerun_if_changed(true)
@@ -18,13 +19,13 @@ fn main() {
     // .bytes(["."])
     .file_descriptor_set_path(out_dir.join("fusion_scheduler_api_descriptor.bin"));
 
-  iam_b = enum_reprs.iter().fold(iam_b, |b, e| {
+  iam_b = enum_list.iter().fold(iam_b, |b, e| {
     b.enum_attribute(
       format!("{}.{}", BASE_PACKAGE, e),
       "#[derive(serde_repr::Serialize_repr, serde_repr::Deserialize_repr)]",
     )
   });
-  iam_b = enums.iter().fold(iam_b, |b, e| {
+  iam_b = oneof_list.iter().fold(iam_b, |b, e| {
     b.type_attribute(format!("{}.{}", BASE_PACKAGE, e), "#[derive(serde::Serialize, serde::Deserialize)]")
   });
   // builder = messages.iter().fold(builder, |b, m| b.message_attribute(format!("{}.{}", BASE_PACKAGE, m), MESSAGE_ATTR));

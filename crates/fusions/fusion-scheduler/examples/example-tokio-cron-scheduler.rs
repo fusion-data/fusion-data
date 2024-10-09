@@ -8,39 +8,39 @@ async fn main() -> Result<(), JobSchedulerError> {
   let tz = *time::local_offset();
   println!("Local time zone is {:?}", tz);
 
-  // Add basic cron job
+  // Add basic cron process
   //   sched
   //     .add(Job::new_tz("1/10 * * * * *", tz, |job_id, _l| {
-  //       println!("I run every 10 seconds, job id is {}", job_id);
+  //       println!("I run every 10 seconds, process id is {}", job_id);
   //     })?)
   //     .await?;
 
-  //   // Add async job
+  //   // Add async process
   //   sched
   //     .add(Job::new_async_tz("1/7 * * * * *", tz, |job_id, mut l| {
   //       Box::pin(async move {
   //         println!("I run async every 7 seconds");
 
-  //         // Query the next execution time for this job
+  //         // Query the next execution time for this process
   //         let next_tick = l.next_tick_for_job(job_id).await;
   //         match next_tick {
-  //           Ok(Some(ts)) => println!("Next time for 7s job is {:?}", time::to_local(ts)),
-  //           _ => println!("Could not get next tick for 7s job"),
+  //           Ok(Some(ts)) => println!("Next time for 7s process is {:?}", time::to_local(ts)),
+  //           _ => println!("Could not get next tick for 7s process"),
   //         }
   //       })
   //     })?)
   //     .await?;
 
-  //   // Add one-shot job with given duration
+  //   // Add one-shot process with given duration
   //   sched
   //     .add(Job::new_one_shot(Duration::from_secs(18), |job_id, _l| {
-  //       println!("I only run once, job id is {}", job_id);
+  //       println!("I only run once, process id is {}", job_id);
   //     })?)
   //     .await?;
 
-  // Create repeated job with given duration, make it mutable to edit it afterwards
+  // Create repeated process with given duration, make it mutable to edit it afterwards
   let mut jj = Job::new_repeated(Duration::from_secs(8), |uuid, _l| {
-    println!("I run repeatedly every 8 seconds, job id is {}", uuid);
+    println!("I run repeatedly every 8 seconds, process id is {}", uuid);
   })?;
 
   // Add actions to be executed when the jobs starts/stop etc.
@@ -49,7 +49,10 @@ async fn main() -> Result<(), JobSchedulerError> {
       &sched,
       Box::new(|job_id, notification_id, type_of_notification| {
         Box::pin(async move {
-          println!("Job {:?} was started, notification {:?} ran ({:?})", job_id, notification_id, type_of_notification);
+          println!(
+            "Job {:?} was started, notification {:?} ran ({:?})",
+            job_id, notification_id, type_of_notification
+          );
         })
       }),
     )
@@ -60,7 +63,10 @@ async fn main() -> Result<(), JobSchedulerError> {
     &sched,
     Box::new(|job_id, notification_id, type_of_notification| {
       Box::pin(async move {
-        println!("Job {:?} was completed, notification {:?} ran ({:?})", job_id, notification_id, type_of_notification);
+        println!(
+          "Job {:?} was completed, notification {:?} ran ({:?})",
+          job_id, notification_id, type_of_notification
+        );
       })
     }),
   )
@@ -96,7 +102,7 @@ async fn main() -> Result<(), JobSchedulerError> {
   tokio::time::sleep(Duration::from_secs(20)).await;
 
   sched.remove(&jj_job_id).await?;
-  println!("Removed job[{}] successfully", jj_job_id);
+  println!("Removed process[{}] successfully", jj_job_id);
 
   tokio::time::sleep(Duration::from_secs(5)).await;
   sched.shutdown().await?;

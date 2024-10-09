@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package ultimate_api.v1;
 
-import "ultimate_api/v1/type.proto";
+import "ultimate_api/v1/types.proto";
 
 enum OpNumber {
   EQ = 0;

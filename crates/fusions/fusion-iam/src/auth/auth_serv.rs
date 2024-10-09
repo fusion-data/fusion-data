@@ -2,7 +2,7 @@ use fusion_server::app::AppState;
 use ultimate::{security::pwd::verify_pwd, Result};
 
 use crate::{
-  pb::fusion_iam::v1::{SigninReplay, SigninRequest, TokenType},
+  pb::fusion_iam::v1::{SigninReplay, SigninRequest, TokenKind},
   user::{user_serv, UserFilter},
 };
 
@@ -15,5 +15,5 @@ pub async fn signin(app: &AppState, req: SigninRequest) -> Result<SigninReplay> 
   verify_pwd(&req.password, &uc.encrypted_pwd).await?;
 
   let token = make_token(app.configuration().security(), u.id)?;
-  Ok(SigninReplay { token, token_type: TokenType::Bearer as i32 })
+  Ok(SigninReplay { token, token_kind: TokenKind::Bearer as i32 })
 }

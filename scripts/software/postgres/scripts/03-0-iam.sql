@@ -3,6 +3,18 @@ SET TIMEZONE TO 'Asia/Chongqing';
 \c - fusiondata;
 CREATE SCHEMA IF NOT EXISTS iam;
 --
+-- tenant
+CREATE TABLE IF NOT EXISTS iam.tenant
+(
+    id    SERIAL       NOT NULL,
+    name  VARCHAR(256) NOT NULL,
+    cid   BIGINT       NOT NULL,
+    ctime TIMESTAMPTZ  NOT NULL,
+    mid   BIGINT,
+    mtime TIMESTAMPTZ,
+    CONSTRAINT tenant_pk PRIMARY KEY (id)
+);
+--
 -- User
 CREATE TABLE IF NOT EXISTS iam.user
 (
@@ -19,6 +31,14 @@ CREATE TABLE IF NOT EXISTS iam.user
     mid    BIGINT,
     mtime  TIMESTAMPTZ,
     CONSTRAINT user_pk PRIMARY KEY (id)
+);
+CREATE TABLE IF NOT EXISTS iam.user_tenant_rel
+(
+    user_id   BIGINT      NOT NULL REFERENCES iam.user (id),
+    tenant_id INT         NOT NULL REFERENCES iam.tenant (id),
+    cid       BIGINT      NOT NULL,
+    ctime     TIMESTAMPTZ NOT NULL,
+    CONSTRAINT user_tenant_rel_pk PRIMARY KEY (user_id, tenant_id)
 );
 --
 -- User Credential

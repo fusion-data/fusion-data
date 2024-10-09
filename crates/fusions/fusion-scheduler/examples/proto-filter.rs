@@ -1,5 +1,5 @@
 use chrono::{Duration, Utc};
-use fusion_scheduler::pb::fusion_scheduler::v1::JobFilterRequest;
+use fusion_scheduler::pb::fusion_scheduler::v1::ProcessFilterRequest;
 use modql::filter::{FilterGroups, FilterNodes, OpValsValue};
 use sea_query::Condition;
 use ultimate::DataError;
@@ -19,11 +19,11 @@ fn main() {
     ValInt64::new_value(OpNumber::Gte, begin.timestamp_millis()),
     ValInt64::new_value(OpNumber::Lt, end.timestamp_millis()),
   ];
-  let filter_request = JobFilterRequest { id, ctime, ..Default::default() };
+  let filter_request = ProcessFilterRequest { id, ctime, ..Default::default() };
 
   println!("\n{:?}", filter_request);
 
-  let job_filter: JobFilter = filter_request.try_into().unwrap();
+  let job_filter: ProcessFilter = filter_request.try_into().unwrap();
   println!("\n{:?}", job_filter);
 
   let filters: FilterGroups = job_filter.into();
@@ -34,7 +34,7 @@ fn main() {
 }
 
 #[derive(Debug, Default, FilterNodes)]
-struct JobFilter {
+struct ProcessFilter {
   #[modql(to_sea_value_fn = "uuid_to_sea_value")]
   job_id: Option<OpValsValue>,
 
@@ -42,9 +42,9 @@ struct JobFilter {
   ctime: Option<OpValsValue>,
 }
 
-impl TryFrom<JobFilterRequest> for JobFilter {
+impl TryFrom<ProcessFilterRequest> for ProcessFilter {
   type Error = DataError;
-  fn try_from(value: JobFilterRequest) -> Result<Self, Self::Error> {
+  fn try_from(value: ProcessFilterRequest) -> Result<Self, Self::Error> {
     Ok(Self {
       job_id: try_into_op_vals_value_opt_with_filter_string(value.id)?,
       ctime: try_into_op_vals_value_opt_with_filter_int64(value.ctime)?,
