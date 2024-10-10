@@ -1,16 +1,15 @@
-use std::net::SocketAddr;
+use std::future::Future;
 
 use fusion_server::app::get_app_state;
-use futures::Future;
+use tokio::sync::oneshot;
 use tonic::service::RoutesBuilder;
-use ultimate::DataError;
-use ultimate_grpc::utils::init_grpc_server;
+use ultimate_grpc::{utils::init_grpc_server, GrpcStartInfo};
 
 use crate::{
   access_control::access_control_svc, auth::auth_svc, permission::permission_svc, role::role_svc, user::grpc::user_svc,
 };
 
-pub async fn grpc_serve() -> ultimate::Result<(SocketAddr, impl Future<Output = std::result::Result<(), DataError>>)> {
+pub fn grpc_serve(tx: oneshot::Sender<GrpcStartInfo>) -> impl Future<Output = ultimate::Result<()>> {
   let grpc_conf = get_app_state().configuration().grpc();
 
   #[cfg(not(feature = "tonic-reflection"))]
@@ -25,5 +24,5 @@ pub async fn grpc_serve() -> ultimate::Result<(SocketAddr, impl Future<Output = 
     .add_service(user_svc())
     .add_service(auth_svc());
 
-  init_grpc_server(grpc_conf, file_descriptor_sets, rb.routes()).await
+  init_grpc_server(grpc_conf, file_descriptor_sets, rb.routes(), tx)
 }

@@ -5,4 +5,5 @@ pub struct SchedulerConfig {
   pub node_id: &'static str,
   pub advertised_addr: Option<String>,
   pub namespaces: Vec<String>,
+  pub heartbeat_interval: &'static str,
 }

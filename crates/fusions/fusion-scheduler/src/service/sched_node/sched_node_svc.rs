@@ -1,3 +1,4 @@
+use chrono::Utc;
 use fusion_server::ctx::CtxW;
 use ultimate::Result;
 
@@ -23,5 +24,16 @@ impl SchedNodeSvc {
   pub async fn find(ctx: &CtxW, filter: Vec<SchedNodeFilter>) -> Result<Option<SchedNode>> {
     let opt = SchedNodeBmc::find_unique(ctx.mm(), filter).await?;
     Ok(opt)
+  }
+
+  pub async fn find_many(ctx: &CtxW, filter: Vec<SchedNodeFilter>) -> Result<Vec<SchedNode>> {
+    let list = SchedNodeBmc::find_many(ctx.mm(), filter, None).await?;
+    Ok(list)
+  }
+
+  pub async fn heartbeat(ctx: &CtxW, node_id: &str) -> Result<()> {
+    let entity_u = SchedNodeForUpdate { status: Some(100), last_check_time: Some(Utc::now()), ..Default::default() };
+    SchedNodeBmc::update_by_id(ctx.mm(), node_id, entity_u).await?;
+    Ok(())
   }
 }

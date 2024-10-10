@@ -36,6 +36,11 @@ impl CtxW {
     &self.req_meta
   }
 
+  pub fn into_tx_mm_ctx(self) -> ultimate::Result<CtxW> {
+    let mm = self.mm.get_or_clone_with_txn()?;
+    Ok(self.with_mm(mm))
+  }
+
   pub fn with_mm(self, mm: ModelManager) -> Self {
     Self { mm, ..self }
   }

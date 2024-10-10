@@ -22,3 +22,8 @@ port = 45432
 database = "fusiondata"
 username = "fusiondata"
 password = "2024.Fusiondata"
+
+[fusion-scheduler]
+node_id = "node-1"
+heartbeat_interval = "10s"
+namespaces = ["default"]

@@ -4,22 +4,6 @@ SET TIMEZONE TO 'Asia/Chongqing';
 -- create schema
 CREATE SCHEMA IF NOT EXISTS sched;
 --
--- sched_locks
-CREATE TABLE IF NOT EXISTS sched.sched_locks
-(
-    name      VARCHAR(64)  NOT NULL,
-    -- 锁类型
-    lock_type INT          NOT NULL,
-    -- 锁值
-    value     VARCHAR(128) NOT NULL DEFAULT 0,
-    cid       BIGINT       NOT NULL,
-    ctime     TIMESTAMPTZ  NOT NULL,
-    mid       BIGINT,
-    -- 心跳最后更新时间，若超过 N 则代表当前锁定值 value 无效，允许 node 重新抢占
-    mtime     TIMESTAMPTZ,
-    CONSTRAINT sched_locks_pk PRIMARY KEY (name)
-);
---
 -- sched_node
 CREATE TABLE IF NOT EXISTS sched.sched_node
 (
@@ -37,6 +21,14 @@ CREATE TABLE IF NOT EXISTS sched.sched_node
     CONSTRAINT sched_node_pk PRIMARY KEY (id)
 );
 COMMENT ON COLUMN sched.sched_node.last_check_time IS '节点最后检查时间';
+--
+-- sched_locks
+CREATE TABLE IF NOT EXISTS sched.sched_lock
+(
+    node_id   VARCHAR(36) NOT NULL REFERENCES sched.sched_node (id),
+    lock_kind INT         NOT NULL,
+    CONSTRAINT sched_locks_pk PRIMARY KEY (node_id, lock_kind)
+);
 --
 -- sched_group 调度分组
 CREATE TABLE IF NOT EXISTS sched.sched_namespace

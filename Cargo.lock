@@ -3982,6 +3982,7 @@ dependencies = [
  "tonic-web",
  "tower-http 0.6.1",
  "tower-service",
+ "tracing",
  "ultimate",
  "uuid",
 ]

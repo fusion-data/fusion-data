@@ -63,13 +63,12 @@ impl From<DataError> for AppError {
   fn from(err: DataError) -> Self {
     match err {
       DataError::BizError { code, msg } => Self::new(msg).with_err_code(code),
+      DataError::InternalError { code, msg, .. } => Self::new(msg).with_err_code(code),
       DataError::SecurityError(e) => convert_security_error(e),
-      DataError::UltimateCommonError(e) => Self::new(e.to_string()),
       DataError::SystemTimeError(e) => Self::new(e.to_string()),
-      DataError::ParseIntError(e) => Self::new(e.to_string()),
+      DataError::ParseIntError(e) => Self::new(e.to_string()).with_err_code(400),
       DataError::IoError(e) => Self::new(e.to_string()),
       DataError::JsonError(e) => Self::new(e.to_string()),
-      DataError::TaskJoinError(e) => Self::new(e.to_string()),
     }
   }
 }

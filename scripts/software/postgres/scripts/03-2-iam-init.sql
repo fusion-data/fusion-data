@@ -57,21 +57,21 @@ ALTER SEQUENCE iam.role_id_seq RESTART 3;
 ALTER SEQUENCE iam.permission_id_seq RESTART 5;
 
 
---------
--- ABAC init datas
---------
--- 插入示例属性
-INSERT INTO iam.attribute (name, description, entity_type, data_type, cid, ctime)
-VALUES ('department', '用户所属部门', 'user', 'string', 1, CURRENT_TIMESTAMP),
-       ('clearance_level', '用户安全等级', 'user', 'integer', 1, CURRENT_TIMESTAMP),
-       ('document_classification', '文档分类级别', 'resource', 'string', 1, CURRENT_TIMESTAMP),
-       ('time_of_day', '当前时间', 'environment', 'string', 1, CURRENT_TIMESTAMP);
--- 插入示例策略
-INSERT INTO iam.policy (name, description, condition, effect, resource, action, cid, ctime)
-VALUES ('高级文档访问策略', '允许高安全等级用户访问机密文档',
-        '{"user.clearance_level": {"gte": 4}, "resource.document_classification": "confidential", "environment.time_of_day": {"between": ["09:00", "17:00"]}}',
-        'allow', 'document', 'read', 1, CURRENT_TIMESTAMP);
--- 插入示例属性值
-INSERT INTO iam.attribute_value (attribute_id, entity_id, value, cid, ctime)
-VALUES ((SELECT id FROM iam.attribute WHERE name = 'department'), 1, 'IT', 1, CURRENT_TIMESTAMP),
-       ((SELECT id FROM iam.attribute WHERE name = 'clearance_level'), 1, '5', 1, CURRENT_TIMESTAMP);
+-- --------
+-- -- ABAC init datas
+-- --------
+-- -- 插入示例属性
+-- INSERT INTO iam.attribute (name, description, entity_type, data_type, cid, ctime)
+-- VALUES ('department', '用户所属部门', 'user', 'string', 1, CURRENT_TIMESTAMP),
+--        ('clearance_level', '用户安全等级', 'user', 'integer', 1, CURRENT_TIMESTAMP),
+--        ('document_classification', '文档分类级别', 'resource', 'string', 1, CURRENT_TIMESTAMP),
+--        ('time_of_day', '当前时间', 'environment', 'string', 1, CURRENT_TIMESTAMP);
+-- -- 插入示例策略
+-- INSERT INTO iam.policy (name, description, condition, effect, resource, action, cid, ctime)
+-- VALUES ('高级文档访问策略', '允许高安全等级用户访问机密文档',
+--         '{"user.clearance_level": {"gte": 4}, "resource.document_classification": "confidential", "environment.time_of_day": {"between": ["09:00", "17:00"]}}',
+--         'allow', 'document', 'read', 1, CURRENT_TIMESTAMP);
+-- -- 插入示例属性值
+-- INSERT INTO iam.attribute_value (attribute_id, entity_id, value, cid, ctime)
+-- VALUES ((SELECT id FROM iam.attribute WHERE name = 'department'), 1, 'IT', 1, CURRENT_TIMESTAMP),
+--        ((SELECT id FROM iam.attribute WHERE name = 'clearance_level'), 1, '5', 1, CURRENT_TIMESTAMP);

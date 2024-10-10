@@ -2,7 +2,7 @@ use std::{net::SocketAddr, time::Duration};
 
 use futures::{Future, TryFutureExt};
 use prost_types::FieldMask;
-use tokio::net::TcpListener;
+use tokio::{net::TcpListener, sync::oneshot};
 use tonic::{
   metadata::MetadataMap,
   service::Routes,
@@ -10,19 +10,28 @@ use tonic::{
   Status,
 };
 use tower_http::trace::TraceLayer;
+use tracing::info;
 use ultimate::{
   configuration::model::{GrpcConf, SecurityConf},
   security::{jose::JwtPayload, SecurityUtils},
   DataError,
 };
 
+use crate::GrpcStartInfo;
+
 pub async fn init_grpc_server<'b>(
   conf: &GrpcConf,
-  encoded_file_descriptor_sets: impl IntoIterator<Item = &'b [u8]>,
+  _encoded_file_descriptor_sets: impl IntoIterator<Item = &'b [u8]>,
   mut routes: Routes,
-) -> ultimate::Result<(SocketAddr, impl Future<Output = std::result::Result<(), DataError>>)> {
+  tx: oneshot::Sender<GrpcStartInfo>,
+) -> ultimate::Result<()> {
   let tcp_listener = TcpListener::bind(&conf.server_addr).await?;
   let local_addr = tcp_listener.local_addr()?;
+  let start_info = GrpcStartInfo { local_addr };
+  match tx.send(start_info) {
+    Ok(_) => info!("Grpc server listening to {}", local_addr),
+    Err(e) => panic!("Init grpc server info failed: {:?}", e),
+  };
 
   let mut b = Server::builder().layer(TraceLayer::new_for_grpc());
 
@@ -31,7 +40,7 @@ pub async fn init_grpc_server<'b>(
 
   #[cfg(feature = "tonic-reflection")]
   {
-    let rb = encoded_file_descriptor_sets
+    let rb = _encoded_file_descriptor_sets
       .into_iter()
       .fold(tonic_reflection::server::Builder::configure(), |rb, set| rb.register_encoded_file_descriptor_set(set));
     let service = rb.build_v1().unwrap();
@@ -41,8 +50,7 @@ pub async fn init_grpc_server<'b>(
   let tcp_incoming = TcpIncoming::from_listener(tcp_listener, false, Some(Duration::from_secs(30)))
     .map_err(|_| DataError::server_error("Bind tcp listener failed"))?;
 
-  let serve = b.add_routes(routes).serve_with_incoming(tcp_incoming).map_err(DataError::from);
-  Ok((local_addr, serve))
+  b.add_routes(routes).serve_with_incoming(tcp_incoming).await.map_err(DataError::from)
 }
 
 pub fn extract_jwt_payload_from_metadata(
