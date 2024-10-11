@@ -1,26 +1,22 @@
 use fusion_server::app::AppState;
-use tokio::{sync::mpsc, task::JoinHandle};
+use tokio::sync::mpsc;
 use tracing::{error, info};
 
 use crate::service::{sched_namespace::SchedNamespace, sched_node::SchedNodeSvc};
 
 use super::DbCmd;
 
-pub fn loop_db_runner(runner: DbRunner) -> JoinHandle<()> {
-  tokio::spawn(runner.run())
-}
-
-pub struct DbRunner {
+pub struct CmdRunner {
   app_state: AppState,
   rx: mpsc::Receiver<DbCmd>,
 }
 
-impl DbRunner {
+impl CmdRunner {
   pub fn new(app_state: AppState, rx: mpsc::Receiver<DbCmd>) -> Self {
     Self { app_state, rx }
   }
 
-  async fn run(mut self) {
+  pub async fn run(mut self) {
     while let Some(msg) = self.rx.recv().await {
       match msg {
         DbCmd::Heartbeat(node_id) => self.heartbeat(node_id).await,
@@ -38,7 +34,7 @@ impl DbRunner {
     todo!()
   }
 
-  async fn heartbeat(&self, node_id: &str) {
+  async fn heartbeat(&self, node_id: i64) {
     let ctx = self.app_state.create_super_admin_ctx();
     match SchedNodeSvc::heartbeat(&ctx, node_id).await {
       Ok(_) => {}

@@ -11,5 +11,5 @@ pub(in crate::master) enum DbCmd {
   Stop,
   ListenNamespaces(Vec<SchedNamespace>),
   UnlistenNamespaces(Vec<SchedNamespace>),
-  Heartbeat(&'static str),
+  Heartbeat(i64),
 }

@@ -94,8 +94,8 @@ pub struct Dbx {
 }
 
 impl Dbx {
-  pub fn new(db_pool: Db, txn: bool) -> Result<Self> {
-    Ok(Dbx { db_pool, txn_holder: Arc::default(), txn })
+  pub fn new(db_pool: Db, txn: bool) -> Self {
+    Dbx { db_pool, txn_holder: Arc::default(), txn }
   }
 
   pub fn is_txn(&self) -> bool {

@@ -22,7 +22,7 @@ impl ProcessDefinitionSvc {
     entity_c: ProcessDefinitionForCreate,
     rel_triggers: Option<Vec<i64>>,
   ) -> Result<i64> {
-    let mm = ctx.mm().get_or_clone_with_txn()?;
+    let mm = ctx.mm().get_or_clone_with_txn();
     mm.dbx().begin_txn().await?;
 
     let process_id = ProcessDefinitionBmc::create(&mm, entity_c).await?;

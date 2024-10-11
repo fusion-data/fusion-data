@@ -1041,14 +1041,17 @@ name = "fusion-scheduler"
 version = "0.1.0"
 dependencies = [
  "chrono",
+ "config",
  "croner",
  "duration-str",
  "fusion-scheduler-api",
  "fusion-server",
+ "fusiondata",
  "hierarchical_hash_wheel_timer",
  "modql",
  "prost",
  "sea-query",
+ "sea-query-binder",
  "serde",
  "serde_json",
  "serde_repr",

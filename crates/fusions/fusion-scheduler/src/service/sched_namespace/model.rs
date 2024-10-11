@@ -1,4 +1,7 @@
-use modql::field::Fields;
+use modql::{
+  field::Fields,
+  filter::{FilterNodes, OpValsInt32, OpValsInt64},
+};
 use sea_query::enum_def;
 use sqlx::FromRow;
 use ultimate_common::time::UtcDateTime;
@@ -27,4 +30,10 @@ impl DbRowType for SchedNamespace {}
 pub struct AssociateNamespaceWithScheduler {
   pub namespace: String,
   pub scheduler_id: String,
+}
+
+#[derive(Default, FilterNodes)]
+pub struct SchedNamespaceFilter {
+  pub node_id: Option<OpValsInt64>,
+  pub tenant_id: Option<OpValsInt32>,
 }

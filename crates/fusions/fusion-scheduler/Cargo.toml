@@ -26,6 +26,7 @@ ultimate-api = { workspace = true }
 ultimate-db = { workspace = true, features = ["uuid", "tonic"] }
 sqlx = { workspace = true }
 sea-query = { workspace = true }
+sea-query-binder = { workspace = true }
 modql = { workspace = true }
 
 # -- grpc
@@ -35,11 +36,13 @@ tonic = { workspace = true }
 tonic-reflection = { workspace = true, optional = true }
 
 # -- fusions
+fusiondata = { workspace = true }
 fusion-server = { workspace = true }
 fusion-scheduler-api = { workspace = true }
 hierarchical_hash_wheel_timer = { workspace = true }
 
 # -- misc
+config = { workspace = true }
 duration-str = { workspace = true }
 chrono = { workspace = true }
 serde = { workspace = true }

@@ -1,26 +1,25 @@
 use fusion_server::app::get_app_state;
+use hierarchical_hash_wheel_timer::thread_timer::TimerWithThread;
 use tokio::sync::oneshot;
-use tracing::error;
 
-use crate::{endpoint::grpc_serve, master::Scheduler};
+use crate::{endpoint::grpc_serve, master::spawn_loop};
 
 pub async fn fusion_scheduler_start() -> ultimate::Result<()> {
   let app = get_app_state();
 
-  let (grpc_start_tx, grpc_start_rx) = oneshot::channel();
+  let (tx, rx) = oneshot::channel();
+  let grpc_handle = tokio::spawn(grpc_serve(app, tx));
 
-  let grpc_join_handle = tokio::spawn(grpc_serve(app, grpc_start_tx));
+  let grpc_start_info = rx.await?;
 
-  let grpc_start_info = grpc_start_rx.await?;
+  let timer_core = TimerWithThread::for_uuid_closures();
 
-  let mut scheduler = Scheduler::new(app.clone(), grpc_start_info)?;
-  scheduler.init().await?;
+  let (master_handle, scheduler_handle) = spawn_loop(app.clone(), grpc_start_info.local_addr, &timer_core);
 
-  match grpc_join_handle.await? {
-    Ok(_) => {}
-    Err(e) => error!("Start grpc server failed: {:?}", e),
-  };
-  scheduler.shutdown().await;
-
+  let (master_ret, scheduler_ret, grpc_ret) = tokio::join!(master_handle, scheduler_handle, grpc_handle);
+  timer_core.shutdown();
+  scheduler_ret??;
+  master_ret??;
+  grpc_ret??;
   Ok(())
 }

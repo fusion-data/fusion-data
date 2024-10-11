@@ -5,7 +5,7 @@ use duration_str::HumanFormat;
 use fusion_scheduler_api::v1::{trigger_definition::Schedule as ProtoSchedule, CronSchedule, SimpleSchedule};
 use modql::{
   field::Fields,
-  filter::{FilterNodes, OpValsInt32, OpValsValue},
+  filter::{FilterNodes, OpValsInt32, OpValsInt64, OpValsString, OpValsValue},
 };
 use sea_query::enum_def;
 use serde::{Deserialize, Serialize};
@@ -13,20 +13,24 @@ use sqlx::{postgres::PgTypeInfo, FromRow};
 use ultimate::DataError;
 use ultimate_api::v1::{PagePayload, Pagination};
 use ultimate_common::time::UtcDateTime;
-use ultimate_db::{datetime_to_sea_value, uuid_to_sea_value, DbRowType};
-use uuid::Uuid;
+use ultimate_db::{datetime_to_sea_value, DbRowType};
 
 use crate::pb::fusion_scheduler::v1::{PageTriggerRequest, PageTriggerResponse};
 
 #[derive(Debug, Clone, FromRow, Fields)]
 #[enum_def]
 pub struct TriggerDefinition {
-  pub id: Uuid,
+  pub id: i64,
+  pub tenant_id: i32,
+  pub namespace_id: i32,
+  pub key: String,
   pub kind: i32,
   pub schedule: TriggerSchedule,
   pub variables: Option<serde_json::Value>,
   pub description: Option<String>,
   pub tags: Vec<String>,
+  pub next_trigger_time: UtcDateTime,
+  pub status: i32,
   pub cid: i64,
   pub ctime: UtcDateTime,
   pub mid: Option<i64>,
@@ -34,18 +38,17 @@ pub struct TriggerDefinition {
 }
 impl DbRowType for TriggerDefinition {}
 
-#[derive(Debug, FilterNodes)]
+#[derive(Debug, Default, FilterNodes)]
 pub struct TriggerDefinitionFilter {
-  #[modql(to_sea_value_fn = "uuid_to_sea_value")]
-  pub id: Option<OpValsValue>,
-
+  pub id: Option<OpValsInt64>,
+  pub tenant_id: Option<OpValsInt32>,
+  pub namespace_id: Option<OpValsInt32>,
+  pub key: Option<OpValsString>,
   pub kind: Option<OpValsInt32>,
-
   pub status: Option<OpValsInt32>,
 
   #[modql(to_sea_value_fn = "datetime_to_sea_value")]
   pub ctime: Option<OpValsValue>,
-
   #[modql(to_sea_value_fn = "datetime_to_sea_value")]
   pub mtime: Option<OpValsValue>,
 }

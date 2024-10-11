@@ -8,7 +8,7 @@ CREATE SCHEMA IF NOT EXISTS sched;
 CREATE TABLE IF NOT EXISTS sched.sched_node
 (
     -- 节点ID
-    id              VARCHAR(36) NOT NULL,
+    id              BIGINT      NOT NULL,
     kind            INT         NOT NULL,
     -- 节点通信地址
     addr            VARCHAR(64) NOT NULL,
@@ -22,11 +22,22 @@ CREATE TABLE IF NOT EXISTS sched.sched_node
 );
 COMMENT ON COLUMN sched.sched_node.last_check_time IS '节点最后检查时间';
 --
+-- global_path
+CREATE TABLE IF NOT EXISTS sched.global_path
+(
+    path     VARCHAR(1024) NOT NULL,
+    value    TEXT,
+    revision BIGINT        NOT NULL DEFAULT 0,
+    CONSTRAINT lock_path_pk PRIMARY KEY (path)
+);
+COMMENT ON TABLE sched.global_path IS '全局路径，用于选主、分布式锁等功能';
+--
 -- sched_locks
 CREATE TABLE IF NOT EXISTS sched.sched_lock
 (
-    node_id   VARCHAR(36) NOT NULL REFERENCES sched.sched_node (id),
-    lock_kind INT         NOT NULL,
+    node_id   BIGINT NOT NULL REFERENCES sched.sched_node (id),
+    lock_kind INT    NOT NULL,
+    version   BIGINT NOT NULL DEFAULT 0,
     CONSTRAINT sched_locks_pk PRIMARY KEY (node_id, lock_kind)
 );
 --
@@ -36,7 +47,7 @@ CREATE TABLE IF NOT EXISTS sched.sched_namespace
     id        SERIAL       NOT NULL,
     tenant_id INT          NOT NULL REFERENCES iam.tenant (id),
     namespace VARCHAR(512) NOT NULL UNIQUE,
-    node_id   VARCHAR(36) REFERENCES sched.sched_node (id),
+    node_id   BIGINT REFERENCES sched.sched_node (id),
     status    INT          NOT NULL,
     cid       BIGINT       NOT NULL,
     ctime     TIMESTAMPTZ  NOT NULL,
@@ -70,21 +81,22 @@ CREATE UNIQUE INDEX process_definition_uidx_key ON sched.process_definition (nam
 -- 触发器定义
 CREATE TABLE IF NOT EXISTS sched.trigger_definition
 (
-    id               BIGSERIAL   NOT NULL,
-    tenant_id        INT         NOT NULL REFERENCES iam.tenant (id),
-    namespace_id     INT         NOT NULL REFERENCES sched.sched_namespace (id),
-    key              VARCHAR     NOT NULL,
-    description      VARCHAR,
-    "type"           INT         NOT NULL,
-    tags             VARCHAR[]   NOT NULL DEFAULT '{}',
-    variables        JSONB,
-    status           INT         NOT NULL,
-    valid_begin_time TIMESTAMPTZ,
-    valid_end_time   TIMESTAMPTZ,
-    cid              BIGINT      NOT NULL,
-    ctime            TIMESTAMPTZ NOT NULL,
-    mid              BIGINT,
-    mtime            TIMESTAMPTZ,
+    id                BIGSERIAL   NOT NULL,
+    tenant_id         INT         NOT NULL REFERENCES iam.tenant (id),
+    namespace_id      INT         NOT NULL REFERENCES sched.sched_namespace (id),
+    key               VARCHAR     NOT NULL,
+    kind              INT         NOT NULL,
+    tags              VARCHAR[]   NOT NULL DEFAULT '{}',
+    variables         JSONB,
+    description       VARCHAR,
+    next_trigger_time TIMESTAMPTZ NOT NULL,
+    status            INT         NOT NULL,
+    valid_begin_time  TIMESTAMPTZ,
+    valid_end_time    TIMESTAMPTZ,
+    cid               BIGINT      NOT NULL,
+    ctime             TIMESTAMPTZ NOT NULL,
+    mid               BIGINT,
+    mtime             TIMESTAMPTZ,
     CONSTRAINT trigger_definition_pk PRIMARY KEY (id)
 );
 CREATE UNIQUE INDEX trigger_definition_uidx_key ON sched.trigger_definition (namespace_id, key);
