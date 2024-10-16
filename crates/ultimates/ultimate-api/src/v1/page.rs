@@ -49,6 +49,12 @@ impl Pagination {
   }
 }
 
+impl SortBy {
+  pub fn new(field: impl Into<String>, direction: SortDirection) -> Self {
+    Self { field: field.into(), direction: direction.into() }
+  }
+}
+
 impl Page {
   pub fn new(pagination: &Pagination, total_size: i64) -> Self {
     let page = pagination.page;

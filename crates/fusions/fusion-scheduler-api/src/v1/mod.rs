@@ -1,13 +1,16 @@
-use std::time::Duration;
+// use std::time::Duration;
 
 tonic::include_proto!("fusion_scheduler_api.v1");
 
-impl SimpleSchedule {
-  pub fn interval_duration(&self) -> Result<Duration, String> {
-    duration_str::parse(&self.interval)
-  }
+#[cfg(feature = "with-db")]
+mod db_helpers;
 
-  pub fn first_delay_duration(&self) -> Result<Duration, String> {
-    duration_str::parse(&self.first_delay)
-  }
-}
+// impl SimpleSchedule {
+//   pub fn interval_duration(&self) -> Result<Duration, String> {
+//     duration_str::parse(&self.interval)
+//   }
+
+//   pub fn first_delay_duration(&self) -> Result<Duration, String> {
+//     duration_str::parse(&self.first_delay)
+//   }
+// }

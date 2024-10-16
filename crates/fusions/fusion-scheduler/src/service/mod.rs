@@ -2,6 +2,7 @@
 //!
 pub mod global_path;
 pub mod process_definition;
+pub mod process_instance;
 pub mod process_task;
 mod process_trigger_rel;
 pub mod sched_namespace;

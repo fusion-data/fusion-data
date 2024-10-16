@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS sched.sched_lock
     CONSTRAINT sched_locks_pk PRIMARY KEY (node_id, lock_kind)
 );
 --
--- sched_group 调度分组
+-- sched_namespace 调度分组
 CREATE TABLE IF NOT EXISTS sched.sched_namespace
 (
     id        SERIAL       NOT NULL,
@@ -70,6 +70,7 @@ CREATE TABLE IF NOT EXISTS sched.process_definition
     tags         VARCHAR[]   NOT NULL DEFAULT '{}',
     variables    JSONB,
     data         BYTEA,
+    status       INT         NOT NULL DEFAULT 100,
     cid          BIGINT      NOT NULL,
     ctime        TIMESTAMPTZ NOT NULL,
     mid          BIGINT,
@@ -81,55 +82,29 @@ CREATE UNIQUE INDEX process_definition_uidx_key ON sched.process_definition (nam
 -- 触发器定义
 CREATE TABLE IF NOT EXISTS sched.trigger_definition
 (
-    id                BIGSERIAL   NOT NULL,
-    tenant_id         INT         NOT NULL REFERENCES iam.tenant (id),
-    namespace_id      INT         NOT NULL REFERENCES sched.sched_namespace (id),
-    key               VARCHAR     NOT NULL,
-    kind              INT         NOT NULL,
-    tags              VARCHAR[]   NOT NULL DEFAULT '{}',
-    variables         JSONB,
-    description       VARCHAR,
-    next_trigger_time TIMESTAMPTZ NOT NULL,
-    status            INT         NOT NULL,
-    valid_begin_time  TIMESTAMPTZ,
-    valid_end_time    TIMESTAMPTZ,
-    cid               BIGINT      NOT NULL,
-    ctime             TIMESTAMPTZ NOT NULL,
-    mid               BIGINT,
-    mtime             TIMESTAMPTZ,
+    id                 BIGSERIAL   NOT NULL,
+    tenant_id          INT         NOT NULL REFERENCES iam.tenant (id),
+    namespace_id       INT         NOT NULL REFERENCES sched.sched_namespace (id),
+    key                VARCHAR     NOT NULL,
+    trigger_kind       INT         NOT NULL,
+    tags               VARCHAR[]   NOT NULL DEFAULT '{}',
+    variables          JSONB,
+    description        VARCHAR,
+    executed_count     BIGINT      NOT NULL DEFAULT 0,
+    refresh_occurrence TIMESTAMPTZ NOT NULL,
+    status             INT         NOT NULL,
+    valid_time         TIMESTAMPTZ,
+    invalid_time       TIMESTAMPTZ,
+    cid                BIGINT      NOT NULL,
+    ctime              TIMESTAMPTZ NOT NULL,
+    mid                BIGINT,
+    mtime              TIMESTAMPTZ,
     CONSTRAINT trigger_definition_pk PRIMARY KEY (id)
 );
 CREATE UNIQUE INDEX trigger_definition_uidx_key ON sched.trigger_definition (namespace_id, key);
-COMMENT ON COLUMN sched.trigger_definition.valid_begin_time IS '触发器有效开始时间，为NULL代表不限制';
-COMMENT ON COLUMN sched.trigger_definition.valid_end_time IS '触发器有效结束时间，为NULL代表不限制';
--- 简单调度
-CREATE TABLE IF NOT EXISTS sched.trigger_simple_schedule
-(
-    id              UUID        NOT NULL,
-    trigger_id      BIGINT      NOT NULL REFERENCES sched.trigger_definition (id),
-    interval_type   INT         NOT NULL,
-    "interval"      INTERVAL    NOT NULL,
-    first_delay     INTERVAL    NOT NULL,
-    execution_count INT,
-    cid             BIGINT      NOT NULL,
-    ctime           TIMESTAMPTZ NOT NULL,
-    mid             BIGINT,
-    mtime           TIMESTAMPTZ,
-    CONSTRAINT trigger_simple_schedule_pk PRIMARY KEY (id)
-);
-COMMENT ON COLUMN sched.trigger_simple_schedule.interval_type IS '间隔类型，1: 固定速率，2: 固定延迟';
--- CRON 调度
-CREATE TABLE IF NOT EXISTS sched.trigger_cron_schedule
-(
-    id         UUID        NOT NULL,
-    trigger_id BIGINT      NOT NULL REFERENCES sched.trigger_definition (id),
-    cron       VARCHAR     NOT NULL,
-    cid        BIGINT      NOT NULL,
-    ctime      TIMESTAMPTZ NOT NULL,
-    mid        BIGINT,
-    mtime      TIMESTAMPTZ,
-    CONSTRAINT trigger_cron_schedule_pk PRIMARY KEY (id)
-);
+COMMENT ON COLUMN sched.trigger_definition.refresh_occurrence IS '需要重新计算发生时间';
+COMMENT ON COLUMN sched.trigger_definition.valid_time IS '触发器生效开始时间，为NULL代表不限制';
+COMMENT ON COLUMN sched.trigger_definition.invalid_time IS '触发器无效结束时间，为NULL代表不限制';
 --
 -- 流程定义与触发器关联表
 CREATE TABLE IF NOT EXISTS sched.process_trigger_rel
@@ -144,21 +119,21 @@ CREATE TABLE IF NOT EXISTS sched.process_trigger_rel
 -- 流程实例
 CREATE TABLE IF NOT EXISTS sched.process_instance
 (
-    id                    UUID        NOT NULL,
-    process_id            BIGINT      NOT NULL REFERENCES sched.process_definition (id),
-    trigger_id            BIGINT REFERENCES sched.trigger_definition (id),
-    status                INT         NOT NULL,
-    retry_count           INT         NOT NULL DEFAULT 0,
-    execute_begin_time    TIMESTAMPTZ NOT NULL,
-    execute_complete_time TIMESTAMPTZ,
-    cid                   BIGINT      NOT NULL,
-    ctime                 TIMESTAMPTZ NOT NULL,
-    mid                   BIGINT,
-    mtime                 TIMESTAMPTZ,
+    id             UUID        NOT NULL,
+    process_id     BIGINT      NOT NULL REFERENCES sched.process_definition (id),
+    trigger_id     BIGINT REFERENCES sched.trigger_definition (id),
+    status         INT         NOT NULL DEFAULT 1,
+    retry_count    INT         NOT NULL DEFAULT 0,
+    execution_time TIMESTAMPTZ NOT NULL,
+    complete_time  TIMESTAMPTZ,
+    cid            BIGINT      NOT NULL,
+    ctime          TIMESTAMPTZ NOT NULL,
+    mid            BIGINT,
+    mtime          TIMESTAMPTZ,
     CONSTRAINT process_instance_pk PRIMARY KEY (id)
 );
-COMMENT ON COLUMN sched.process_instance.execute_begin_time IS '计算出的流程实例开始执行时间';
-COMMENT ON COLUMN sched.process_instance.execute_complete_time IS '流程实例实际执行完成时间';
+COMMENT ON COLUMN sched.process_instance.execution_time IS '计算出的流程实例开始执行时间';
+COMMENT ON COLUMN sched.process_instance.complete_time IS '流程实例实际执行完成时间';
 --
 -- 流程任务
 CREATE TABLE IF NOT EXISTS sched.process_task

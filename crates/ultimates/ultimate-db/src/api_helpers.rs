@@ -126,9 +126,7 @@ fn try_into_op_val_string(v: ValString) -> Result<OpValString, DataError> {
   Ok(op_val)
 }
 
-pub fn try_into_op_vals_int32_opt(
-  value: impl IntoIterator<Item = ValInt32>,
-) -> Result<Option<OpValsInt32>, DataError> {
+pub fn try_into_op_vals_int32_opt(value: impl IntoIterator<Item = ValInt32>) -> Result<Option<OpValsInt32>, DataError> {
   let mut vals = Vec::new();
   for item in value {
     let op_val = try_into_op_val_int32(item)?;

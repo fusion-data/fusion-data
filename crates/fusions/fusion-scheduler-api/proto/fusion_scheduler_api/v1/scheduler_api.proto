@@ -96,7 +96,7 @@ message PullJobResponse {
 
 // ---------------- task types -------------------
 
-message TaskDefinition {
+message InstanceTask {
   enum TaskKind {
     // 未指定，无效值
     UNSPECIFIED = 0;
@@ -118,13 +118,22 @@ message TaskDefinition {
 // ---------------- process types ----------------
 
 message ProcessDefinition {
+  enum ProcessStatus {
+    // 未指定，无效值
+    UNSPECIFIED = 0;
+    // 禁用
+    DISABLED = 99;
+    // 启用
+    ENABLED = 100;
+  }
+
   int64 process_id = 1;
   string process_key = 2;
   string variables = 3;
   optional bytes data = 4;
   optional string description = 5;
   repeated string tags = 6;
-  repeated TaskDefinition tasks = 7;
+  repeated InstanceTask tasks = 7;
   // 流程超时时间（秒）
   int64 timeout = 8;
 }
@@ -149,14 +158,26 @@ message CreateProcessDefinitionResponse {
 
 message TriggerDefinition {
   enum TriggerKind {
-    // 未指定，无效值
-    UNSPECIFIED = 0;
-    // Cron 触发器，根据 cron 表达式执行
-    CRON = 1;
+    // 未指定则默认为：固定速率
+    TRIGGER_KIND_UNSPECIFIED = 0;
     // 固定速率
-    FIXED_RATE = 2;
+    FIXED_RATE = 1;
     // 固定延迟
-    FIXED_DELAY = 3;
+    FIXED_DELAY = 2;
+  }
+
+  enum TriggerStatus {
+    // 未指定则默认为：ACTIVE
+    TRIGGER_STATUS_UNSPECIFIED = 0;
+
+    // 已禁用
+    DISABLED = 99;
+
+    // 触发器已启用
+    ACTIVE = 100;
+
+    // 触发器已禁用
+    COMPLETED = 200;
   }
 
   int64 trigger_id = 1;
@@ -173,10 +194,10 @@ message TriggerDefinition {
   // 超时时间（秒），触发器可以覆盖关联 ProcessDefinition 的 timeout 值
   optional int64 timeout = 12;
     // 设置触发器有效的开始时间
-  optional int64 valid_begin_time = 13;
+  optional int64 valid_time = 13;
 
   // 设置触发器有效的结束时间
-  optional int64 valid_end_time = 14;
+  optional int64 invalid_time = 14;
 }
 
 message SimpleSchedule {
@@ -189,12 +210,14 @@ message SimpleSchedule {
   string first_delay = 2;
 
   // 设置 job 执行的次数，不设置则代表无限制
-  optional int32 execution_count = 3;
+  optional int64 execution_count = 3;
 }
 
 message CronSchedule {
   // cron 表达式，详情参考 https://crontab.guru/ 和 https://crates.io/crates/croner
   string cron = 1;
+  // 时区。未指定则所运行操作系统的本地时区。
+  optional string tz = 2;
 }
 
 message CreateTriggerDefinitionRequest {
@@ -210,6 +233,8 @@ message CreateTriggerDefinitionRequest {
   }
   optional string description = 7;
   repeated string tags = 8;
+  optional int64 valid_time = 9;
+  optional int64 invalid_time = 10;
 }
 
 message CreateTriggerDefinitionResponse {
@@ -233,14 +258,36 @@ message UpdateTriggerResponse {
   string trigger_id = 1;
 }
 
-// ---- Task ----
-message JobInstance {
+// ---- Instance & Task ----
+message ProcessInstance {
   // 任务状态
-  enum JobInstanceStatus {
+  enum InstanceStatus {
     UNSPECIFIED = 0;
+    // 已入队
     ENQUEUED = 1;
+    // 运行中
     RUNNING = 2;
-    COMPLETED_SUCCESSFULLY = 3;
-    COMPLETED_FAILED = 4;
+    // 错误完成
+    COMPLETED_FAILED = 90;
+    // 被取消
+    CANCELED = 99;
+    // 成功完成
+    COMPLETED_SUCCESSFULLY = 100;
+  }
+}
+
+// ---- SchedNode ----
+message SchedNode {
+  enum NodeStatus {
+    NODE_STATUS_UNSPECIFIED = 0;
+    UNHEALTHY = 90;
+    DISABLED = 99;
+    HEALTHY = 100;
+  }
+
+  enum NodeKind {
+    NODE_KIND_UNSPECIFIED = 0;
+    SCHEDULER = 1;
+    WORKER = 2;
   }
 }

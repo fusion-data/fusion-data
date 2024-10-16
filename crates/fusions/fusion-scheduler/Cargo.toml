@@ -16,10 +16,13 @@ workspace = true
 name = "fusion-scheduler"
 path = "src/bin/fusion-scheduler.rs"
 
+[features]
+tonic-reflection = ["ultimate-grpc/tonic-reflection", "dep:tonic-reflection"]
+
 [dependencies]
 # -- ultimates
 ultimate-common = { workspace = true }
-ultimate = { workspace = true }
+ultimate = { workspace = true, features = ["uuid"] }
 ultimate-api = { workspace = true }
 
 # -- db
@@ -38,23 +41,26 @@ tonic-reflection = { workspace = true, optional = true }
 # -- fusions
 fusiondata = { workspace = true }
 fusion-server = { workspace = true }
-fusion-scheduler-api = { workspace = true }
+fusion-scheduler-api = { workspace = true, features = ["with-db"] }
 hierarchical_hash_wheel_timer = { workspace = true }
 
 # -- misc
 config = { workspace = true }
-duration-str = { workspace = true }
 chrono = { workspace = true }
+chrono-tz = { workspace = true }
+duration-str = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 serde_repr = { workspace = true }
 uuid = { workspace = true }
+ulid = { workspace = true }
 croner = { workspace = true }
 
 # -- async
 tokio = { workspace = true }
 tokio-stream = { workspace = true }
 tokio-cron-scheduler = { workspace = true }
+futures = { workspace = true }
 
 # -- tracing
 tracing = { workspace = true }

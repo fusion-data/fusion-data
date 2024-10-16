@@ -1,4 +1,4 @@
-use fusion_scheduler_api::v1::CreateProcessDefinitionRequest;
+use fusion_scheduler_api::v1::{self, process_definition::ProcessStatus, CreateProcessDefinitionRequest};
 use modql::{
   field::Fields,
   filter::{FilterNodes, OpValsInt32, OpValsValue},
@@ -13,19 +13,20 @@ use ultimate_db::{
   try_into_op_vals_value_opt_with_filter_string, uuid_to_sea_value, DbRowType,
 };
 
-use crate::pb::fusion_scheduler::v1::{
-  PageProcessRequest, PageProcessResponse, ProcessFilterRequest, SchedProcessDto,
-};
+use crate::pb::fusion_scheduler::v1::{PageProcessRequest, PageProcessResponse, ProcessFilterRequest, SchedProcessDto};
 
 #[derive(Debug, FromRow, Fields)]
 #[enum_def]
 pub struct ProcessDefinition {
   pub id: i64,
+  pub tenant_id: i32,
+  pub namespace_id: i32,
   pub key: String,
   pub description: Option<String>,
   pub tags: Vec<String>,
-  // json object
+  pub variables: Option<serde_json::Value>,
   pub data: Option<Vec<u8>>,
+  pub status: Option<ProcessStatus>,
   pub cid: i64,
   pub ctime: UtcDateTime,
   pub mid: Option<i64>,
@@ -46,6 +47,12 @@ impl From<ProcessDefinition> for SchedProcessDto {
       mid: row.mid,
       mtime: row.mtime.map(|v| v.timestamp_millis()),
     }
+  }
+}
+
+impl From<ProcessDefinition> for v1::ProcessDefinition {
+  fn from(value: ProcessDefinition) -> Self {
+    todo!()
   }
 }
 

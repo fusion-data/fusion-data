@@ -1,7 +1,7 @@
 use modql::filter::OpValInt64;
 use ultimate_db::{
   base::{self, DbBmc},
-  ModelManager, Result,
+  Error, ModelManager, Result,
 };
 
 use super::{ProcessTriggerRel, ProcessTriggerRelFilter, ProcessTriggerRelForCreate};
@@ -17,10 +17,19 @@ impl DbBmc for ProcessTriggerRelBmc {
 }
 
 impl ProcessTriggerRelBmc {
-  pub async fn delete_by_job_id(mm: &ModelManager, process_id: i64) -> Result<u64> {
+  pub async fn delete_by(mm: &ModelManager, process_id: Option<i64>, trigger_id: Option<i64>) -> Result<u64> {
+    if process_id.is_none() && trigger_id.is_none() {
+      return Err(Error::InvalidArgument {
+        message: "At least one of 'process_id' and 'trigger_id' is required".to_string(),
+      });
+    }
     let size = base::delete::<Self, _>(
       mm,
-      ProcessTriggerRelFilter { process_id: Some(OpValInt64::Eq(process_id).into()), ..Default::default() },
+      ProcessTriggerRelFilter {
+        process_id: process_id.map(|pid| OpValInt64::Eq(pid).into()),
+        trigger_id: trigger_id.map(|tid| OpValInt64::Eq(tid).into()),
+        ..Default::default()
+      },
     )
     .await?;
     Ok(size)

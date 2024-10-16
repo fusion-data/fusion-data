@@ -1,8 +1,8 @@
 use fusion_scheduler_api::v1::{
   scheduler_api_server::{SchedulerApi, SchedulerApiServer},
   CreateProcessDefinitionRequest, CreateProcessDefinitionResponse, CreateTriggerDefinitionRequest,
-  CreateTriggerDefinitionResponse, EventRequest, EventResponse, PullJobRequest, PullJobResponse,
-  RegisterWorkerRequest, RegisterWorkerResponse, UpdateTriggerRequest, UpdateTriggerResponse,
+  CreateTriggerDefinitionResponse, EventRequest, EventResponse, PullJobRequest, PullJobResponse, RegisterWorkerRequest,
+  RegisterWorkerResponse, UpdateTriggerRequest, UpdateTriggerResponse,
 };
 use fusion_server::{ctx::CtxW, grpc::interceptor::auth_interceptor};
 use std::pin::Pin;
@@ -35,14 +35,14 @@ impl SchedulerApi for SchedulerApiGrpcSvc {
     let (_meta, exts, request) = request.into_parts();
     let ctx: &CtxW = (&exts).try_into()?;
 
-    let link_trigger_ids = if request.trigger_ids.is_empty() { None } else { Some(request.trigger_ids.clone()) };
+    let link_trigger_ids = request.trigger_ids.clone();
 
     let entity_c = request.into();
 
     let process_id = ProcessDefinitionSvc::create(ctx, entity_c, link_trigger_ids).await?;
     let process = ProcessDefinitionSvc::find_by_id(ctx, process_id).await?;
 
-    Ok(Response::new(CreateProcessDefinitionResponse { process_definition: None /*Some(process)*/ }))
+    Ok(Response::new(CreateProcessDefinitionResponse { process_definition: Some(process.into()) }))
   }
 
   async fn create_trigger_definition(

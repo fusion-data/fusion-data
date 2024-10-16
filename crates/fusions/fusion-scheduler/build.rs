@@ -19,7 +19,7 @@ fn main() {
   // let modql_messages = ["CreateProcessDefinitionRequest", "CreateTriggerDefinitionRequest"];
   // b = modql_messages.iter().fold(b, |b, m| b.message_attribute(format!("{}.{}", BASE_PACKAGE, m), MODQL_MESSAGE_ATTR));
 
-  b.compile(
+  b.compile_protos(
     &["proto/fusion_scheduler/v1/scheduler.proto"],
     &["proto", "../fusion-scheduler-api/proto", "../../ultimates/ultimate-api/proto"],
   )

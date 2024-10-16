@@ -1,6 +1,6 @@
 use ultimate_db::{base::DbBmc, generate_filter_bmc_fns};
 
-use super::{SchedNamespace, SchedNamespaceFilter};
+use super::{SchedNamespace, SchedNamespaceFilter, SchedNamespaceForUpdate};
 
 pub struct SchedNamespaceBmc;
 impl DbBmc for SchedNamespaceBmc {
@@ -12,4 +12,5 @@ generate_filter_bmc_fns!(
   Bmc: SchedNamespaceBmc,
   Entity: SchedNamespace,
   Filter: SchedNamespaceFilter,
+  ForUpdate: SchedNamespaceForUpdate,
 );

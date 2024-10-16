@@ -5,6 +5,7 @@ mod api_helpers;
 pub mod base;
 mod error;
 mod id;
+mod macro_helpers;
 mod model_manager;
 mod modql_utils;
 pub mod store;

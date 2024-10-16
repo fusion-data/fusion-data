@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use chrono::Utc;
+use fusion_scheduler_api::v1::sched_node::NodeKind;
 use fusion_server::{app::AppState, ctx::CtxW};
 use hierarchical_hash_wheel_timer::{ClosureTimer, TimerReturn};
 use modql::filter::OpValInt64;
@@ -10,19 +11,18 @@ use ultimate::Result;
 use uuid::Uuid;
 
 use crate::service::{
-  sched_namespace::{SchedNamespaceFilter, SchedNamespaceSvc},
-  sched_node::{NodeKind, SchedNode, SchedNodeFilter, SchedNodeForCreate, SchedNodeSvc},
+  sched_node::{SchedNode, SchedNodeFilter, SchedNodeForCreate, SchedNodeSvc},
   trigger_definition::TriggerDefinitionSvc,
 };
 
-use super::{CmdRunner, DbCmd, SchedulerConfig, TimerRef};
+use super::{CmdRunner, SchedCmd, SchedulerConfig, TimerRef};
 
 pub async fn loop_scheduler(
   app: AppState,
   scheduler_config: SchedulerConfig,
   timer_ref: TimerRef,
-  db_tx: mpsc::Sender<DbCmd>,
-  db_rx: mpsc::Receiver<DbCmd>,
+  db_tx: mpsc::Sender<SchedCmd>,
+  db_rx: mpsc::Receiver<SchedCmd>,
 ) -> Result<Scheduler> {
   register(&scheduler_config, app.create_super_admin_ctx()).await?;
 
@@ -39,7 +39,7 @@ pub struct Scheduler {
   app: AppState,
   scheduler_config: SchedulerConfig,
   timer_ref: TimerRef,
-  db_tx: mpsc::Sender<DbCmd>,
+  db_tx: mpsc::Sender<SchedCmd>,
 }
 
 impl Scheduler {
@@ -66,14 +66,8 @@ impl Scheduler {
     let node_id = self.scheduler_config.node_id();
     let ctx = self.app.create_super_admin_ctx();
 
-    let namespaces = SchedNamespaceSvc::find_many(
-      &ctx,
-      vec![SchedNamespaceFilter { node_id: Some(OpValInt64::Eq(node_id).into()), ..Default::default() }],
-    )
-    .await?;
-    let namespace_ids = namespaces.into_iter().map(|n| n.id).collect();
+    let triggers = TriggerDefinitionSvc::scan_next_triggers(&ctx, node_id).await?;
 
-    TriggerDefinitionSvc::scan_next_triggers(&ctx, namespace_ids).await?;
     Ok(())
   }
 
@@ -122,11 +116,11 @@ async fn is_alive_node(node_addr: &str) -> bool {
 }
 
 /// 启动 node 心跳定时任务
-fn start_heartbeat(timer_ref: &mut TimerRef, tx: mpsc::Sender<DbCmd>, conf: &SchedulerConfig) {
+fn start_heartbeat(timer_ref: &mut TimerRef, tx: mpsc::Sender<SchedCmd>, conf: &SchedulerConfig) {
   let node_id = conf.node_id();
   let period = conf.heartbeat_interval();
   timer_ref.schedule_action_periodic(Uuid::nil(), Duration::from_secs(17), *period, move |_| {
-    match tx.blocking_send(DbCmd::Heartbeat(node_id)) {
+    match tx.blocking_send(SchedCmd::Heartbeat(node_id)) {
       Ok(_) => {}
       Err(e) => error!("Failed to send heartbeat to cmd runner: {}", e),
     };

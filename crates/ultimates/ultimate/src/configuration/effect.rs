@@ -72,10 +72,7 @@ mod tests {
     let qc = Configuration::try_from(&c).unwrap();
 
     assert_eq!(qc.security().pwd().pwd_key(), b"80c9a35c0f231219ca14c44fe10c728d");
-    assert_eq!(
-      qc.security().token().secret_key(),
-      b"8462b1ec9af827ebed13926f8f1e5409774fa1a21a1c8f726a4a34cf7dcabaf2"
-    );
+    assert_eq!(qc.security().token().secret_key(), b"8462b1ec9af827ebed13926f8f1e5409774fa1a21a1c8f726a4a34cf7dcabaf2");
 
     // 由默认配置文件提供
     assert_eq!(qc.web().server_addr(), "0.0.0.0:8000");

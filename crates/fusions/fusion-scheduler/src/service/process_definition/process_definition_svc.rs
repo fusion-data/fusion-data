@@ -17,23 +17,15 @@ impl ProcessDefinitionSvc {
     Ok(entity)
   }
 
-  pub async fn create(
-    ctx: &CtxW,
-    entity_c: ProcessDefinitionForCreate,
-    rel_triggers: Option<Vec<i64>>,
-  ) -> Result<i64> {
+  pub async fn create(ctx: &CtxW, entity_c: ProcessDefinitionForCreate, rel_triggers: Vec<i64>) -> Result<i64> {
     let mm = ctx.mm().get_or_clone_with_txn();
     mm.dbx().begin_txn().await?;
 
     let process_id = ProcessDefinitionBmc::create(&mm, entity_c).await?;
 
-    if let Some(trigger_ids) = rel_triggers {
-      if !trigger_ids.is_empty() {
-        ProcessTriggerRelBmc::delete_by_job_id(&mm, process_id).await?;
-      }
-
+    if !rel_triggers.is_empty() {
       let data =
-        trigger_ids.into_iter().map(|trigger_id| ProcessTriggerRelForCreate { process_id, trigger_id }).collect();
+        rel_triggers.into_iter().map(|trigger_id| ProcessTriggerRelForCreate { process_id, trigger_id }).collect();
       ProcessTriggerRelBmc::insert_many(&mm, data).await?;
     }
 

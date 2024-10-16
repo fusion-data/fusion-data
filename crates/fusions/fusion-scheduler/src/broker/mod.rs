@@ -11,15 +11,15 @@ use tokio::{sync::mpsc, task::JoinHandle};
 
 use crate::service::sched_node::SchedNode;
 
-mod _master;
 mod config;
 mod db_runner;
+mod master;
 mod model;
 mod scheduler;
 
-use _master::*;
 use config::*;
 use db_runner::CmdRunner;
+use master::*;
 pub use model::*;
 use scheduler::*;
 

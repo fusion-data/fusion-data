@@ -49,10 +49,7 @@ async fn main() -> Result<(), JobSchedulerError> {
       &sched,
       Box::new(|job_id, notification_id, type_of_notification| {
         Box::pin(async move {
-          println!(
-            "Job {:?} was started, notification {:?} ran ({:?})",
-            job_id, notification_id, type_of_notification
-          );
+          println!("Job {:?} was started, notification {:?} ran ({:?})", job_id, notification_id, type_of_notification);
         })
       }),
     )
@@ -63,10 +60,7 @@ async fn main() -> Result<(), JobSchedulerError> {
     &sched,
     Box::new(|job_id, notification_id, type_of_notification| {
       Box::pin(async move {
-        println!(
-          "Job {:?} was completed, notification {:?} ran ({:?})",
-          job_id, notification_id, type_of_notification
-        );
+        println!("Job {:?} was completed, notification {:?} ran ({:?})", job_id, notification_id, type_of_notification);
       })
     }),
   )

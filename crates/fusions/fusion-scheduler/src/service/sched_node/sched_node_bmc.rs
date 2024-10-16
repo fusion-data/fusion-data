@@ -3,7 +3,7 @@ use sea_query::{Expr, PostgresQueryBuilder, Query};
 use sea_query_binder::SqlxBinder;
 use ultimate_common::time::UtcDateTime;
 use ultimate_db::{
-  base::{prep_fields_for_update, CommonIden, DbBmc},
+  base::{self, prep_fields_for_update, CommonIden, DbBmc},
   generate_common_bmc_fns, generate_filter_bmc_fns, ModelManager, Result,
 };
 
@@ -49,6 +49,10 @@ impl SchedNodeBmc {
     let sqlx_query = sqlx::query_as_with::<_, SchedNode, _>(&sql, values);
     let node = mm.dbx().fetch_one(sqlx_query).await?;
     Ok(node)
+  }
+
+  pub async fn update(mm: &ModelManager, vec: Vec<SchedNodeFilter>, entity_u: SchedNodeForUpdate) -> Result<u64> {
+    base::update::<Self, _, _>(mm, vec, entity_u).await
   }
 }
 

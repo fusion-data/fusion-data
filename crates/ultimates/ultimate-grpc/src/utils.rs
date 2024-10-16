@@ -1,30 +1,34 @@
-use std::{net::SocketAddr, time::Duration};
+use std::{future::Future, time::Duration};
 
-use futures::{Future, TryFutureExt};
+use futures::TryFutureExt;
 use prost_types::FieldMask;
 use tokio::{net::TcpListener, sync::oneshot};
 use tonic::{
   metadata::MetadataMap,
-  service::Routes,
   transport::{server::TcpIncoming, Server},
   Status,
 };
 use tower_http::trace::TraceLayer;
 use tracing::info;
 use ultimate::{
-  configuration::model::{GrpcConf, SecurityConf},
+  configuration::model::SecurityConf,
   security::{jose::JwtPayload, SecurityUtils},
   DataError,
 };
 
-use crate::GrpcStartInfo;
+use crate::{GrpcSettings, GrpcStartInfo};
 
-pub async fn init_grpc_server<'b>(
-  conf: &GrpcConf,
-  _encoded_file_descriptor_sets: impl IntoIterator<Item = &'b [u8]>,
-  mut routes: Routes,
-  tx: oneshot::Sender<GrpcStartInfo>,
-) -> ultimate::Result<()> {
+/// 初始化 grpc 服务
+///
+/// # Returns:
+/// - rx: gRPC 服务启动信息
+/// - future: gRPC 服务 Future，调用 .await 进行（阻塞）执行循环
+///
+pub async fn init_grpc_server(
+  setting: GrpcSettings<'_>,
+) -> ultimate::Result<(oneshot::Receiver<GrpcStartInfo>, impl Future<Output = ultimate::Result<()>>)> {
+  let conf = &setting.conf;
+  let (tx, rx) = oneshot::channel();
   let tcp_listener = TcpListener::bind(&conf.server_addr).await?;
   let local_addr = tcp_listener.local_addr()?;
   let start_info = GrpcStartInfo { local_addr };
@@ -33,14 +37,16 @@ pub async fn init_grpc_server<'b>(
     Err(e) => panic!("Init grpc server info failed: {:?}", e),
   };
 
-  let mut b = Server::builder().layer(TraceLayer::new_for_grpc());
+  let mut routes = setting.routes;
+  let mut server = Server::builder().layer(TraceLayer::new_for_grpc());
 
   #[cfg(feature = "tonic-web")]
   let mut b = b.accept_http1(true).layer(tonic_web::GrpcWebLayer::new());
 
   #[cfg(feature = "tonic-reflection")]
   {
-    let rb = _encoded_file_descriptor_sets
+    let rb = setting
+      .encoded_file_descriptor_sets
       .into_iter()
       .fold(tonic_reflection::server::Builder::configure(), |rb, set| rb.register_encoded_file_descriptor_set(set));
     let service = rb.build_v1().unwrap();
@@ -50,7 +56,7 @@ pub async fn init_grpc_server<'b>(
   let tcp_incoming = TcpIncoming::from_listener(tcp_listener, false, Some(Duration::from_secs(30)))
     .map_err(|_| DataError::server_error("Bind tcp listener failed"))?;
 
-  b.add_routes(routes).serve_with_incoming(tcp_incoming).await.map_err(DataError::from)
+  Ok((rx, server.add_routes(routes).serve_with_incoming(tcp_incoming).map_err(DataError::from)))
 }
 
 pub fn extract_jwt_payload_from_metadata(
@@ -58,8 +64,7 @@ pub fn extract_jwt_payload_from_metadata(
   metadata: &MetadataMap,
 ) -> Result<JwtPayload, tonic::Status> {
   let token = extract_token_from_metadata(metadata)?;
-  let (payload, _) =
-    SecurityUtils::decrypt_jwt(sc.pwd(), token).map_err(|e| Status::unauthenticated(e.to_string()))?;
+  let (payload, _) = SecurityUtils::decrypt_jwt(sc.pwd(), token).map_err(|e| Status::unauthenticated(e.to_string()))?;
   Ok(payload)
 }
 
