@@ -1,10 +1,10 @@
+use fusion_server::ctx::CtxW;
 use modql::filter::OpValInt64;
 use prost_types::FieldMask;
 use tonic::{Request, Response, Status};
-use ultimate_grpc::utils::field_mask_match_with;
+use ultimate_grpc::{utils::field_mask_match_with, GrpcServiceIntercepted};
 
 use crate::{
-  ctx::CtxW,
   pb::fusion_iam::v1::{
     role_server::{Role, RoleServer},
     AssignRoleToPermissionsRequest, CreateRoleRequest, DeleteRoleRequest, DeleteRoleResponse, Empty, GetRoleRequest,
@@ -12,7 +12,7 @@ use crate::{
   },
   permission::{permission_serv, PermissionFilters},
   role::{role_serv, RoleFilters},
-  util::grpc::{interceptor::auth_interceptor, GrpcServiceIntercepted},
+  util::grpc::interceptor::auth_interceptor,
 };
 
 use super::role_permission::RolePermissionFilter;

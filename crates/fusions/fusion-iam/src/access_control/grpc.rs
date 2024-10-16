@@ -1,4 +1,6 @@
 use tonic::{Request, Response, Status};
+use tracing::debug;
+use ultimate_grpc::GrpcServiceIntercepted;
 use uuid::Uuid;
 
 use crate::{
@@ -7,7 +9,7 @@ use crate::{
     CreatePolicyRequest, CreatePolicyResponse, DeletePolicyRequest, DeletePolicyResponse, GetPolicyRequest,
     GetPolicyResponse, UpdatePolicyRequest, UpdatePolicyResponse,
   },
-  util::grpc::{interceptor::auth_interceptor, GrpcServiceIntercepted},
+  util::grpc::interceptor::auth_interceptor,
 };
 
 use super::policy_serv;
@@ -50,6 +52,7 @@ impl AccessControl for AccessControlService {
     &self,
     request: Request<UpdatePolicyRequest>,
   ) -> Result<Response<UpdatePolicyResponse>, Status> {
+    debug!("update_policy_statement: {:?}", request);
     todo!()
   }
 
@@ -57,6 +60,7 @@ impl AccessControl for AccessControlService {
     &self,
     request: Request<DeletePolicyRequest>,
   ) -> Result<Response<DeletePolicyResponse>, Status> {
+    debug!("delete_policy_statement: {:?}", request);
     todo!()
   }
 }

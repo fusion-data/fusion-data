@@ -12,23 +12,23 @@ pub struct ModelManager {
 
 impl ModelManager {
   /// Constructor
-  pub async fn new(db_config: &DbConf) -> Result<Self> {
+  pub fn new(db_config: &DbConf) -> Result<Self> {
     let db_pool =
-      new_db_pool_from_config(db_config).await.map_err(|ex| Error::CantCreateModelManagerProvider(ex.to_string()))?;
-    let dbx = Dbx::new(db_pool, false)?;
+      new_db_pool_from_config(db_config).map_err(|ex| Error::CantCreateModelManagerProvider(ex.to_string()))?;
+    let dbx = Dbx::new(db_pool, false);
     Ok(ModelManager { dbx, ctx: None })
   }
 
-  pub fn clone_with_txn(&self) -> Result<ModelManager> {
-    let dbx = Dbx::new(self.dbx.db().clone(), true)?;
-    Ok(ModelManager { dbx, ctx: self.ctx.clone() })
+  pub fn clone_with_txn(&self) -> ModelManager {
+    let dbx = Dbx::new(self.dbx.db().clone(), true);
+    ModelManager { dbx, ctx: self.ctx.clone() }
   }
 
-  pub fn get_or_clone_with_txn(&self) -> Result<ModelManager> {
+  pub fn get_or_clone_with_txn(&self) -> ModelManager {
     if self.dbx().is_txn() {
-      Ok(self.clone())
+      self.clone()
     } else {
-      Ok(self.clone_with_txn()?)
+      self.clone_with_txn()
     }
   }
 

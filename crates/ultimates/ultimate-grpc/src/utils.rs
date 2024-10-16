@@ -1,45 +1,62 @@
-use futures::{Future, TryFutureExt};
+use std::{future::Future, time::Duration};
+
+use futures::TryFutureExt;
 use prost_types::FieldMask;
-use tonic::{metadata::MetadataMap, service::RoutesBuilder, transport::Server, Status};
+use tokio::{net::TcpListener, sync::oneshot};
+use tonic::{
+  metadata::MetadataMap,
+  transport::{server::TcpIncoming, Server},
+  Status,
+};
 use tower_http::trace::TraceLayer;
+use tracing::info;
 use ultimate::{
-  configuration::model::{GrpcConf, SecurityConf},
+  configuration::model::SecurityConf,
   security::{jose::JwtPayload, SecurityUtils},
   DataError,
 };
 
-pub fn init_grpc_server<'b, F>(
-  conf: &GrpcConf,
-  _encoded_file_descriptor_sets: impl IntoIterator<Item = &'b [u8]>,
-  f: F,
-) -> ultimate::Result<impl Future<Output = std::result::Result<(), DataError>>>
-where
-  F: FnOnce(&mut RoutesBuilder),
-{
-  let grpc_addr = conf.server_addr.parse()?;
+use crate::{GrpcSettings, GrpcStartInfo};
 
-  #[allow(unused_mut)]
-  let mut b = Server::builder().layer(TraceLayer::new_for_grpc());
+/// 初始化 grpc 服务
+///
+/// # Returns:
+/// - rx: gRPC 服务启动信息
+/// - future: gRPC 服务 Future，调用 .await 进行（阻塞）执行循环
+///
+pub async fn init_grpc_server(
+  setting: GrpcSettings<'_>,
+) -> ultimate::Result<(oneshot::Receiver<GrpcStartInfo>, impl Future<Output = ultimate::Result<()>>)> {
+  let conf = &setting.conf;
+  let (tx, rx) = oneshot::channel();
+  let tcp_listener = TcpListener::bind(&conf.server_addr).await?;
+  let local_addr = tcp_listener.local_addr()?;
+  let start_info = GrpcStartInfo { local_addr };
+  match tx.send(start_info) {
+    Ok(_) => info!("Grpc server listening to {}", local_addr),
+    Err(e) => panic!("Init grpc server info failed: {:?}", e),
+  };
+
+  let mut routes = setting.routes;
+  let mut server = Server::builder().layer(TraceLayer::new_for_grpc());
 
   #[cfg(feature = "tonic-web")]
   let mut b = b.accept_http1(true).layer(tonic_web::GrpcWebLayer::new());
 
-  let mut routes_builder = RoutesBuilder::default();
-  f(&mut routes_builder);
-
   #[cfg(feature = "tonic-reflection")]
   {
-    let rb = _encoded_file_descriptor_sets
+    let rb = setting
+      .encoded_file_descriptor_sets
       .into_iter()
       .fold(tonic_reflection::server::Builder::configure(), |rb, set| rb.register_encoded_file_descriptor_set(set));
     let service = rb.build_v1().unwrap();
-    routes_builder.add_service(service);
+    routes = routes.add_service(service);
   }
 
-  // let s = router.into_service();
+  let tcp_incoming = TcpIncoming::from_listener(tcp_listener, false, Some(Duration::from_secs(30)))
+    .map_err(|_| DataError::server_error("Bind tcp listener failed"))?;
 
-  let serve = b.add_routes(routes_builder.routes()).serve(grpc_addr).map_err(DataError::from);
-  Ok(serve)
+  Ok((rx, server.add_routes(routes).serve_with_incoming(tcp_incoming).map_err(DataError::from)))
 }
 
 pub fn extract_jwt_payload_from_metadata(
@@ -63,4 +80,9 @@ pub fn extract_token_from_metadata(metadata: &MetadataMap) -> Result<&str, tonic
 // 当 paths 为空或者 paths 包含以 path 开头的路径时返回 true，否则返回 false
 pub fn field_mask_match_with(field_mask: &FieldMask, path: &str) -> bool {
   field_mask.paths.is_empty() || field_mask.paths.iter().any(|p| p.starts_with(path))
+}
+
+#[cfg(feature = "uuid")]
+pub fn parse_uuid(s: &str) -> core::result::Result<uuid::Uuid, Status> {
+  uuid::Uuid::parse_str(s).map_err(|e| Status::invalid_argument(format!("Invalid uuid: {}", e)))
 }

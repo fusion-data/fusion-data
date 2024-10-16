@@ -86,38 +86,47 @@ macro_rules! generate_filter_bmc_fns {
 	(
 		Bmc: $struct_name:ident,
 		Entity: $entity:ty,
-		$(Filter: $filter:ty,)?
+		Filter: $filter:ty,
+		$(ForUpdate: $update:ty,)?
 	) => {
 		impl $struct_name {
+			pub async fn find_unique(
+				mm: &ultimate_db::ModelManager,
+				filter: Vec<$filter>,
+			) -> ultimate_db::Result<Option<$entity>> {
+				ultimate_db::base::find_unique::<Self, _, _>(mm, filter).await
+			}
+
+			pub async fn find_many(
+				mm: &ultimate_db::ModelManager,
+				filter: Vec<$filter>,
+				pagination: Option<&ultimate_api::v1::Pagination>,
+			) -> ultimate_db::Result<Vec<$entity>> {
+				ultimate_db::base::find_many::<Self, _, _>(mm, filter, pagination.map(Into::into)).await
+			}
+
+			pub async fn count(
+				mm: &ultimate_db::ModelManager,
+				filter: Vec<$filter>,
+			) -> ultimate_db::Result<i64> {
+				ultimate_db::base::count::<Self, _>(mm, filter).await
+			}
+
+			pub async fn page(
+				mm: &ultimate_db::ModelManager,
+				filter: Vec<$filter>,
+				pagination: ultimate_api::v1::Pagination,
+			) -> ultimate_db::Result<ultimate_api::v1::PagePayload<$entity>> {
+				ultimate_db::base::page::<Self, _, _>(mm, filter, pagination).await
+			}
+
 			$(
-				pub async fn find_unique(
+				pub async fn update(
 					mm: &ultimate_db::ModelManager,
 					filter: Vec<$filter>,
-				) -> ultimate_db::Result<Option<$entity>> {
-					ultimate_db::base::find_unique::<Self, _, _>(mm, filter).await
-				}
-
-				pub async fn find_many(
-					mm: &ultimate_db::ModelManager,
-					filter: Vec<$filter>,
-					pagination: Option<&ultimate_api::v1::Pagination>,
-				) -> ultimate_db::Result<Vec<$entity>> {
-					ultimate_db::base::find_many::<Self, _, _>(mm, filter, pagination.map(Into::into)).await
-				}
-
-				pub async fn count(
-					mm: &ultimate_db::ModelManager,
-					filter: Vec<$filter>,
-				) -> ultimate_db::Result<i64> {
-					ultimate_db::base::count::<Self, _>(mm, filter).await
-				}
-
-				pub async fn page(
-					mm: &ultimate_db::ModelManager,
-					filter: Vec<$filter>,
-					pagination: ultimate_api::v1::Pagination,
-				) -> ultimate_db::Result<ultimate_api::v1::PagePayload<$entity>> {
-					ultimate_db::base::page::<Self, _, _>(mm, filter, pagination).await
+					entity_u: $update,
+				) -> ultimate_db::Result<u64> {
+					ultimate_db::base::update::<Self, _, _>(mm, filter, entity_u).await
 				}
 			)?
 		}

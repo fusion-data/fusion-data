@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package ultimate_api.v1;
+
+// 分页请求
+message Pagination {
+  int64 page = 1;
+  int64 page_size = 2;
+  repeated SortBy sort_bys = 3;
+  optional int64 offset = 4;
+}
+
+// 分页回复
+message Page {
+  int64 page = 1;
+  int64 page_size = 2;
+  int64 total_size = 3;
+  int64 total_page = 4;
+}
+
+// 排序
+message SortBy {
+  string field = 1;
+  SortDirection direction = 2;
+}
+
+// 排序方向
+enum SortDirection {
+  SORT_DIRECTION_UNSPECIFIED = 0;
+  SORT_DIRECTION_ASC = 1;
+  SORT_DIRECTION_DESC = 2;
+}

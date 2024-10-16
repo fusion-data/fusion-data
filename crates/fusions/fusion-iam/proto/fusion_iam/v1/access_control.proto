@@ -1,9 +1,5 @@
 syntax = "proto3";
 
-option java_multiple_files = true;
-option java_package = "fusion_iam.auth";
-option java_outer_classname = "AccessControlProto";
-
 package fusion_iam.v1;
 
 service AccessControl {
