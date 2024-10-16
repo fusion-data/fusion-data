@@ -1,7 +1,8 @@
+use fusion_server::ctx::CtxW;
 use ultimate::Result;
 use ultimate_api::v1::{PagePayload, Pagination};
 
-use crate::{ctx::CtxW, pb::fusion_iam::v1::CreateRoleDto, role::role_bmc::RoleBmc};
+use crate::{pb::fusion_iam::v1::CreateRoleDto, role::role_bmc::RoleBmc};
 
 use super::{
   role_permission::{RolePermissionBmc, RolePermissionForCreate},

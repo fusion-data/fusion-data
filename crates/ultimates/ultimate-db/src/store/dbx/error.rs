@@ -30,3 +30,10 @@ impl From<Error> for DataError {
     DataError::server_error(e.to_string())
   }
 }
+
+#[cfg(feature = "tonic")]
+impl From<Error> for tonic::Status {
+  fn from(e: Error) -> Self {
+    tonic::Status::internal(e.to_string())
+  }
+}

@@ -1,12 +1,8 @@
 syntax = "proto3";
 
-option java_multiple_files = true;
-option java_package = "fusion_iam.user";
-option java_outer_classname = "UserProto";
-
 package fusion_iam.v1;
 
-import "ultimate_api/v1/ultimate.proto";
+import "ultimate_api/v1/page.proto";
 import "fusion_iam/v1/iam.proto";
 
 service User {

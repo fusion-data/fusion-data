@@ -1,8 +1,9 @@
+use fusion_server::ctx::CtxW;
 use prost_types::FieldMask;
 use tonic::{Request, Response, Status};
+use ultimate_grpc::GrpcServiceIntercepted;
 
 use crate::{
-  ctx::CtxW,
   pb::fusion_iam::v1::{
     permission_server::{Permission, PermissionServer},
     AssignPermmissionToRolesRequest, CreatePermissionRequest, DeletePermissionRequest, DeletePermissionResponse, Empty,
@@ -10,7 +11,6 @@ use crate::{
     UpdatePermissionRequest,
   },
   util::grpc::interceptor::auth_interceptor,
-  util::grpc::GrpcServiceIntercepted,
 };
 
 use super::{permission_serv, PermissionFilters};

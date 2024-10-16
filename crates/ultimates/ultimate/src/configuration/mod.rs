@@ -3,26 +3,78 @@
 //!
 //! [^config]: 使用了 crate [config](https://docs.rs/config)
 use config::Config;
+use serde::{Deserialize, Serialize};
 use std::{env, str::FromStr, sync::Arc};
 
 use ultimate_common::string::b64u_decode;
 
-mod configuration;
+mod effect;
 mod error;
 pub mod model;
 mod util;
 
 pub(crate) use self::util::load_config;
-pub use configuration::*;
+pub use effect::*;
 pub use error::{Error, Result};
+use model::*;
 
-#[derive(Clone)]
-pub struct ConfigState {
-  underling: Arc<Config>,
-  ultimate_config: Arc<Configuration>,
+#[derive(Clone, Serialize, Deserialize)]
+pub struct Configuration {
+  app: AppConf,
+
+  security: SecurityConf,
+
+  db: DbConf,
+
+  trace: TraceConfig,
+
+  web: WebConfig,
+
+  grpc: GrpcConf,
 }
 
-impl ConfigState {
+impl Configuration {
+  pub fn app(&self) -> &AppConf {
+    &self.app
+  }
+
+  pub fn web(&self) -> &WebConfig {
+    &self.web
+  }
+
+  pub fn security(&self) -> &SecurityConf {
+    &self.security
+  }
+
+  pub fn db(&self) -> &DbConf {
+    &self.db
+  }
+
+  pub fn trace(&self) -> &TraceConfig {
+    &self.trace
+  }
+
+  pub fn grpc(&self) -> &GrpcConf {
+    &self.grpc
+  }
+}
+
+impl TryFrom<&Config> for Configuration {
+  type Error = Error;
+
+  fn try_from(c: &Config) -> std::result::Result<Self, Self::Error> {
+    let qc = c.get::<Configuration>("ultimate")?;
+    Ok(qc)
+  }
+}
+
+#[derive(Clone)]
+pub struct ConfigurationState {
+  underling: Arc<Config>,
+  configuration: Arc<Configuration>,
+}
+
+impl ConfigurationState {
   /// ULTIMATE 配置文件根，支持通过环境变量覆盖默认配置。
   ///
   /// # Examples
@@ -61,15 +113,15 @@ impl ConfigState {
   }
 
   pub(crate) fn new(underling: Arc<Config>, ultimate_config: Arc<Configuration>) -> Self {
-    Self { underling, ultimate_config }
+    Self { underling, configuration: ultimate_config }
   }
 
-  pub fn ultimate_config(&self) -> &Configuration {
-    self.ultimate_config.as_ref()
+  pub fn configuration(&self) -> &Configuration {
+    self.configuration.as_ref()
   }
 
-  pub fn ultimate_config_clone(&self) -> Arc<Configuration> {
-    self.ultimate_config.clone()
+  pub fn configuration_clone(&self) -> Arc<Configuration> {
+    self.configuration.clone()
   }
 
   pub fn underling(&self) -> &Config {

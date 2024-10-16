@@ -1,29 +1,14 @@
-use std::{ops::Deref, sync::Arc};
+use std::{ops::Deref, sync::Arc, time::SystemTime};
 
 use josekit::jwt::JwtPayload;
-use ultimate_common::time::{self, DateTime, Duration, Utc, UtcDateTime};
+use ultimate_common::time::{self, Duration, UtcDateTime};
 
 use crate::DataError;
 
 #[derive(Debug, Default)]
 pub struct InnerCtx {
-  /// 会话用户 ID
-  uid: i64,
-
-  /// 请求时时间
-  req_time: DateTime<Utc>,
-
-  /// 会话过期时间
-  expires_at: DateTime<Utc>,
-
-  /// 组织ID列表。用于需要通过不同组织身份进行细粒度权限控制
-  ext_orgs: Vec<i64>,
-
-  /// 角色ID列表。用于需要通过不同角色身份进行细粒度权限控制
-  ext_roles: Vec<i64>,
-
-  /// 权限ID列表。用于需要通过不同权限ID进行细粒度权限控制
-  ext_privileges: Vec<i64>,
+  payload: JwtPayload,
+  req_time: UtcDateTime,
 }
 
 /// 会话上下文。
@@ -32,84 +17,53 @@ pub struct InnerCtx {
 pub struct Ctx(Arc<InnerCtx>);
 
 impl Ctx {
-  pub fn new(uid: i64, req_time: UtcDateTime, expires_at: UtcDateTime) -> Self {
-    Self(Arc::new(InnerCtx { uid, req_time, expires_at, ..Default::default() }))
+  pub fn new(payload: JwtPayload, req_time: UtcDateTime) -> Self {
+    Self(Arc::new(InnerCtx { payload, req_time }))
   }
 
   pub fn new_root() -> Self {
     let req_time = time::now_utc();
     let expires_at = req_time + Duration::minutes(30);
-    Self::new(0, req_time, expires_at)
+    let mut payload = JwtPayload::new();
+    payload.set_expires_at(&expires_at.into());
+    payload.set_subject("0");
+    Self::new(payload, req_time)
   }
 
   pub fn new_super_admin() -> Self {
     let req_time = time::now_utc();
     let expires_at = req_time + Duration::minutes(30);
-    Self::new(1, req_time, expires_at)
+    let mut payload = JwtPayload::new();
+    payload.set_expires_at(&expires_at.into());
+    payload.set_subject("1");
+    Self::new(payload, req_time)
   }
 
   pub fn uid(&self) -> i64 {
-    self.uid
+    self.payload.subject().and_then(|s| s.parse::<i64>().ok()).unwrap_or(0)
   }
 
   pub fn req_time(&self) -> &UtcDateTime {
     &self.req_time
   }
 
-  pub fn expires_at(&self) -> &UtcDateTime {
-    &self.expires_at
+  pub fn expires_at(&self) -> Option<UtcDateTime> {
+    self.payload.expires_at().as_ref().map(|exp| (*exp).into())
   }
 
-  // pub fn with_expires_at(mut self, expires_at: UtcDateTime) -> Self {
-  //   self.expires_at = expires_at;
-  //   self
-  // }
-
-  pub fn ext_orgs(&self) -> &[i64] {
-    &self.ext_orgs
-  }
-
-  // pub fn with_ext_orgs(mut self, ext_orgs: Vec<i64>) -> Self {
-  //   self.ext_orgs = ext_orgs;
-  //   self
-  // }
-
-  pub fn ext_roles(&self) -> &[i64] {
-    &self.ext_roles
-  }
-
-  // pub fn with_ext_roles(mut self, ext_roles: Vec<i64>) -> Self {
-  //   self.0.ext_roles = ext_roles;
-  //   self
-  // }
-
-  pub fn ext_privileges(&self) -> &[i64] {
-    &self.ext_privileges
-  }
-
-  // pub fn with_ext_privileges(mut self, ext_privileges: Vec<i64>) -> Self {
-  //   self.ext_privileges = ext_privileges;
-  //   self
-  // }
-
-  pub fn try_from_jwt_payload(payload: &JwtPayload, req_time: Option<UtcDateTime>) -> Result<Self, DataError> {
+  pub fn try_from_jwt_payload(mut payload: JwtPayload, req_time: Option<UtcDateTime>) -> Result<Self, DataError> {
     let req_time = req_time.unwrap_or_else(time::now_utc);
 
-    let sub = payload.subject().ok_or_else(|| DataError::unauthorized("'sub' of jwt missing"))?;
-
-    let uid: i64 = sub.parse().map_err(|_| DataError::unauthorized(format!("<sub:{sub}> invalid")))?;
-
-    let expires_at: UtcDateTime = if let Some(st) = payload.expires_at() {
-      let expires_at = st.into();
-      if expires_at < time::now_utc() {
+    if let Some(st) = payload.expires_at() {
+      if st < SystemTime::now() {
         return Err(DataError::unauthorized("The token expired"));
       }
-      expires_at
     } else {
-      UtcDateTime::MAX_UTC
+      let exp: SystemTime = UtcDateTime::MAX_UTC.into();
+      payload.set_expires_at(&exp);
     };
 
-    Ok(Ctx::new(uid, req_time, expires_at))
+    Ok(Ctx::new(payload, req_time))
   }
 }
 
@@ -125,6 +79,6 @@ impl TryFrom<JwtPayload> for Ctx {
   type Error = DataError;
 
   fn try_from(payload: JwtPayload) -> std::result::Result<Self, Self::Error> {
-    Ctx::try_from_jwt_payload(&payload, Some(time::now_utc()))
+    Ctx::try_from_jwt_payload(payload, Some(time::now_utc()))
   }
 }

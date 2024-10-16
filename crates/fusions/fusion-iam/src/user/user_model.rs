@@ -8,7 +8,7 @@ use sqlx::prelude::FromRow;
 use ultimate::{DataError, Result};
 use ultimate_api::v1::{Page, PagePayload, Pagination};
 use ultimate_common::{regex, time::UtcDateTime};
-use ultimate_db::{to_sea_chrono_utc, DbRowType};
+use ultimate_db::{datetime_to_sea_value, DbRowType};
 
 use crate::pb::fusion_iam::v1::{
   CreateUserRequest, FilterUserRequest, Gender, PageUserRequest, PageUserResponse, UpdateUserRequest, UserDto,
@@ -124,12 +124,12 @@ pub struct UserFilter {
 
   pub cid: Option<OpValsInt64>,
 
-  #[modql(to_sea_value_fn = "to_sea_chrono_utc")]
+  #[modql(to_sea_value_fn = "datetime_to_sea_value")]
   pub ctime: Option<OpValsValue>,
 
   pub mid: Option<OpValsInt64>,
 
-  #[modql(to_sea_value_fn = "to_sea_chrono_utc")]
+  #[modql(to_sea_value_fn = "datetime_to_sea_value")]
   pub mtime: Option<OpValsValue>,
 }
 

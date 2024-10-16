@@ -12,11 +12,11 @@ pub enum DataError {
   #[error("Biz error. code: {code}, msg: {msg}")]
   BizError { code: i32, msg: String },
 
-  #[error(transparent)]
-  SecurityError(#[from] SecurityError),
+  #[error("Internal error: {code} {msg}")]
+  InternalError { code: i32, msg: String, cause: Option<Box<dyn std::error::Error + Send + Sync>> },
 
   #[error(transparent)]
-  UltimateCommonError(#[from] ultimate_common::Error),
+  SecurityError(#[from] SecurityError),
 
   #[error(transparent)]
   SystemTimeError(#[from] std::time::SystemTimeError),
@@ -29,9 +29,6 @@ pub enum DataError {
 
   #[error(transparent)]
   JsonError(#[from] serde_json::Error),
-
-  #[error(transparent)]
-  TaskJoinError(#[from] tokio::task::JoinError),
 }
 
 impl DataError {
@@ -61,6 +58,33 @@ impl DataError {
 
   pub fn ok(msg: impl Into<String>) -> Self {
     DataError::BizError { code: 0, msg: msg.into() }
+  }
+}
+
+impl From<ultimate_common::Error> for DataError {
+  fn from(value: ultimate_common::Error) -> Self {
+    DataError::server_error(value.to_string())
+  }
+}
+
+impl<T> From<tokio::sync::mpsc::error::SendError<T>> for DataError
+where
+  T: Send + Sync + 'static,
+{
+  fn from(e: tokio::sync::mpsc::error::SendError<T>) -> Self {
+    DataError::InternalError { code: 500, msg: "channel send error".into(), cause: Some(Box::new(e)) }
+  }
+}
+
+impl From<tokio::sync::oneshot::error::RecvError> for DataError {
+  fn from(e: tokio::sync::oneshot::error::RecvError) -> Self {
+    DataError::InternalError { code: 500, msg: "channel recv error".into(), cause: Some(Box::new(e)) }
+  }
+}
+
+impl From<tokio::task::JoinError> for DataError {
+  fn from(value: tokio::task::JoinError) -> Self {
+    DataError::InternalError { code: 500, msg: "Join tokio task error".into(), cause: Some(Box::new(value)) }
   }
 }
 
@@ -134,13 +158,12 @@ impl From<DataError> for tonic::Status {
   fn from(value: DataError) -> Self {
     match value {
       DataError::BizError { code, msg } => make_tonic_status(code, msg),
+      DataError::InternalError { code, msg, .. } => make_tonic_status(code, msg),
       DataError::SecurityError(_) => tonic::Status::unauthenticated("Token error"),
-      DataError::UltimateCommonError(ex) => tonic::Status::from_error(ex.into()),
       DataError::SystemTimeError(ex) => tonic::Status::from_error(ex.into()),
       DataError::ParseIntError(ex) => tonic::Status::from_error(ex.into()),
       DataError::IoError(e) => tonic::Status::internal(e.to_string()),
       DataError::JsonError(ex) => tonic::Status::from_error(ex.into()),
-      DataError::TaskJoinError(ex) => tonic::Status::from_error(ex.into()),
     }
   }
 }

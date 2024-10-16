@@ -1,11 +1,9 @@
+use fusion_server::ctx::CtxW;
 use fusiondata::ac::abac::policy::PolicyStatement;
 use ultimate::Result;
 use uuid::Uuid;
 
-use crate::{
-  access_control::{bmc::PolicyBmc, PolicyForCreate},
-  ctx::CtxW,
-};
+use crate::access_control::{bmc::PolicyBmc, PolicyForCreate};
 
 use super::Policy;
 
