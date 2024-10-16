@@ -407,7 +407,7 @@ where
   Ok(n)
 }
 
-pub async fn delete<MC, E, F>(mm: &ModelManager, filter: F) -> Result<u64>
+pub async fn delete<MC, F>(mm: &ModelManager, filter: F) -> Result<u64>
 where
   MC: DbBmc,
   F: Into<FilterGroups>,

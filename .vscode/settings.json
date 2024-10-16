@@ -5,4 +5,5 @@
   "editor.tabSize": 2,
   "editor.formatOnSave": true,
   "rust-analyzer.cargo.buildScripts.enable": true,
+  "accessibility.signalOptions.volume": 0,
 }

@@ -1,13 +1,16 @@
 use ultimate::configuration::model::DbConf;
 
 pub mod acs;
+mod api_helpers;
 pub mod base;
 mod error;
 mod id;
+mod macro_helpers;
 mod model_manager;
 mod modql_utils;
 pub mod store;
 
+pub use api_helpers::*;
 pub use error::{Error, Result};
 pub use id::*;
 pub use model_manager::*;
@@ -19,8 +22,8 @@ pub struct DbState {
 }
 
 impl DbState {
-  pub async fn from_config(db: &DbConf) -> Result<Self> {
-    let mm = ModelManager::new(db).await?;
+  pub fn from_config(db: &DbConf) -> Result<Self> {
+    let mm = ModelManager::new(db)?;
     Ok(DbState { mm })
   }
 

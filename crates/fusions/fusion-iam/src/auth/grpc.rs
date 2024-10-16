@@ -1,11 +1,9 @@
+use fusion_server::app::get_app_state;
 use tonic::{Request, Response, Status};
 
-use crate::{
-  app::get_app_state,
-  pb::fusion_iam::v1::{
-    auth_server::{Auth, AuthServer},
-    SigninReplay, SigninRequest,
-  },
+use crate::pb::fusion_iam::v1::{
+  auth_server::{Auth, AuthServer},
+  SigninReplay, SigninRequest,
 };
 
 use super::auth_serv;

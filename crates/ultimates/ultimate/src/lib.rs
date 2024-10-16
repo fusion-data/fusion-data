@@ -8,6 +8,7 @@ pub mod security;
 pub mod signal;
 pub mod starter;
 pub mod trace;
+pub mod utils;
 
 pub use data_error::*;
 pub use model::*;

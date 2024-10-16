@@ -1,0 +1,34 @@
+[package]
+name = "fusion-scheduler-api"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lints]
+workspace = true
+
+[features]
+with-db = ["sqlx", "sea-query", "modql", "ultimate-db"]
+
+[dependencies]
+ultimate-api = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_repr = { workspace = true }
+uuid = { workspace = true }
+prost = { workspace = true }
+tonic = { workspace = true }
+bytes = { workspace = true, features = ["serde"] }
+duration-str = { workspace = true }
+croner = { workspace = true }
+ultimate-db = { workspace = true, optional = true }
+sqlx = { workspace = true, optional = true }
+sea-query = { workspace = true, optional = true }
+modql = { workspace = true, optional = true }
+enum-iterator = { workspace = true, optional = true }
+
+[build-dependencies]
+tonic-build = { workspace = true }

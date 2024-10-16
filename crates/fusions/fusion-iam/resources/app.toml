@@ -1,6 +1,6 @@
 [ultimate.app]
 run_mode = "DEV"
-name = "app-example"
+name = "fusion-iam"
 
 [ultimate.security.pwd]
 expires_in = 604800

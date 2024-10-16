@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package ultimate_api.v1;
+
+enum Null {
+  NULL_UNSPECIFIED = 0;
+  IS_NULL = 1;
+  NOT_NULL = 2;
+}
+
+message ArrayBool {
+  repeated bool value = 1;
+}
+
+message ArrayInt64 {
+  repeated int64 value = 1;
+}
+
+message ArrayInt32 {
+  repeated int32 value = 1;
+}
+
+message ArrayDouble {
+  repeated double value = 1;
+}
+
+message ArrayString {
+  repeated string value = 1;
+}

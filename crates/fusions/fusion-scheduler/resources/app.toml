@@ -1,0 +1,29 @@
+[ultimate.app]
+run_mode = "DEV"
+name = "fusion-scheduler"
+
+[ultimate.security.pwd]
+expires_in = 604800
+default_pwd = "2024.Fusiondata"
+
+[ultimate.web]
+enable = true
+server_addr = "0.0.0.0:58000"
+
+[ultimate.grpc]
+enable = true
+server_addr = "0.0.0.0:58010"
+plaintext = true
+
+[ultimate.db]
+enable = true
+host = "localhost"
+port = 45432
+database = "fusiondata"
+username = "fusiondata"
+password = "2024.Fusiondata"
+
+[fusion-scheduler]
+node_id = "node-1"
+heartbeat_interval = "10s"
+namespaces = ["default"]
