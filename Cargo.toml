@@ -57,6 +57,7 @@ typed-builder = "0.20"
 derive-getters = "0.5"
 clap = { version = "4.5", features = ["derive"] }
 o2o = { version = "0.4" }
+secrecy = { version = "0.10", features = ["serde"] }
 # Make retry like a built-in feature provided by Rust.
 backon = { version = "1.2" }
 # -- Helpful macros for working with enums and strings
@@ -95,8 +96,16 @@ env_logger = "0.11"
 # -- Tracing
 tracing = { version = "0.1", features = ["log"] }
 tracing-log = "0.2"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-subscriber = { version = "0.3", features = [
+    "registry",
+    "env-filter",
+    "chrono",
+] }
 tracing-appender = "0.2"
+init-tracing-opentelemetry = { version = "0.22", features = [
+    "tracing_subscriber_ext",
+] }
+tracing-opentelemetry-instrumentation-sdk = "0.21"
 # -- Time
 chrono = { version = "0.4", default-features = false, features = [
     "std",
@@ -156,8 +165,9 @@ cookie = "0.18"
 axum = { version = "0.7", features = ["macros", "form"] }
 axum-extra = { version = "0.9", features = ["typed-header"] }
 axum-macros = { version = "0.4" }
+axum-tracing-opentelemetry = "0.21"
 # openapi
-utoipa = { version = "5.0.0-beta", features = [
+utoipa = { version = "5.1", features = [
     "axum_extras",
     "chrono",
     "decimal",
@@ -166,7 +176,7 @@ utoipa = { version = "5.0.0-beta", features = [
     "preserve_order",
     "preserve_path_order",
 ] }
-utoipa-scalar = { version = "0.2.0-beta", features = ["axum"] }
+utoipa-scalar = { version = "0.2", features = ["axum"] }
 # -- Dev/Test
 asserhttp = { version = "0.7", features = ["reqwest"] }
 dotenvy = "0.15"
@@ -179,6 +189,7 @@ tonic = "0.12"
 tonic-types = "0.12"
 tonic-reflection = "0.12"
 tonic-web = "0.12"
+tonic-tracing-opentelemetry = "0.21"
 tonic-build = { version = "0.12", features = ["prost"] }
 prost = "0.13"
 prost-build = "0.13"

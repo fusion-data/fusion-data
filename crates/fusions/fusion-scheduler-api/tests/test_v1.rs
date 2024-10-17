@@ -1,6 +1,6 @@
 use uuid::Uuid;
 
-use fusion_scheduler_api::v1::instance_task::TaskKind;
+use fusion_scheduler_api::v1::task::TaskKind;
 use fusion_scheduler_api::v1::{
   update_trigger_request, CronSchedule, ProcessDefinition, SimpleSchedule, UpdateTriggerRequest,
 };

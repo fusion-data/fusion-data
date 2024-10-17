@@ -11,19 +11,19 @@ use tokio::{sync::mpsc, task::JoinHandle};
 
 use crate::service::sched_node::SchedNode;
 
+mod cmd_runner;
 mod config;
-mod db_runner;
 mod master;
 mod model;
 mod scheduler;
 
+use cmd_runner::CmdRunner;
 use config::*;
-use db_runner::CmdRunner;
 use master::*;
 pub use model::*;
 use scheduler::*;
 
-pub type TimerCore = TimerWithThread<uuid::Uuid, OneShotClosureState<uuid::Uuid>, PeriodicClosureState<uuid::Uuid>>;
+// pub type TimerCore = TimerWithThread<uuid::Uuid, OneShotClosureState<uuid::Uuid>, PeriodicClosureState<uuid::Uuid>>;
 pub type TimerRef =
   thread_timer::TimerRef<uuid::Uuid, OneShotClosureState<uuid::Uuid>, PeriodicClosureState<uuid::Uuid>>;
 
@@ -35,7 +35,7 @@ enum MasterSchedulers {
 pub fn spawn_loop(
   app: AppState,
   grpc_sock_addr: SocketAddr,
-  timer_core: &TimerCore,
+  timer_ref: TimerRef,
 ) -> (JoinHandle<ultimate::Result<()>>, JoinHandle<ultimate::Result<Scheduler>>) {
   let scheduler_config =
     match SchedulerConfig::try_new(app.configuration_state().underling(), grpc_sock_addr.to_string()) {
@@ -45,12 +45,12 @@ pub fn spawn_loop(
   let (db_tx, db_rx) = mpsc::channel(1024);
 
   let master_handle = {
-    let f = loop_master(app.clone(), scheduler_config.clone(), timer_core.timer_ref(), db_tx.clone());
+    let f = loop_master(app.clone(), scheduler_config.clone(), timer_ref.clone(), db_tx.clone());
     tokio::spawn(f)
   };
 
   let scheduler_handle = {
-    let f = loop_scheduler(app, scheduler_config, timer_core.timer_ref(), db_tx, db_rx);
+    let f = loop_scheduler(app, scheduler_config, timer_ref, db_tx, db_rx);
     tokio::spawn(f)
   };
 

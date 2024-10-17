@@ -11,8 +11,9 @@ repository.workspace = true
 workspace = true
 
 [features]
-default = ["tracing-appender"]
+default = []
 tonic = ["dep:tonic", "dep:prost"]
+opentelemetry = ["dep:init-tracing-opentelemetry"]
 
 [dependencies]
 ultimate-common.workspace = true
@@ -31,6 +32,7 @@ tracing.workspace = true
 # tracing-log.workspace = true
 tracing-subscriber.workspace = true
 tracing-appender = { workspace = true, optional = true }
+init-tracing-opentelemetry = { workspace = true, optional = true }
 rand.workspace = true
 argon2.workspace = true
 josekit.workspace = true

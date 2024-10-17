@@ -8,6 +8,9 @@ import "ultimate_api/v1/ql.proto";
 import "fusion_scheduler_api/v1/scheduler_api.proto";
 
 service Scheduler {
+    // Scheduler 健康状态
+  rpc HealthyCheck(HealthCheckRequest) returns (HealthCheckResponse);
+
   rpc PageProcess(PageProcessRequest) returns (PageProcessResponse);
   rpc PageTrigger(PageTriggerRequest) returns (PageTriggerResponse);
 
@@ -16,6 +19,13 @@ service Scheduler {
 
   // 查询作业任务
   rpc PageProcessTask(PageProcessTaskRequest) returns (PageProcessTaskResponse);
+}
+
+message HealthCheckRequest {}
+
+message HealthCheckResponse {
+  // 是否可处理请求（API 触发调度）及任务
+  bool ready = 1;
 }
 
 message PageProcessTaskRequest {

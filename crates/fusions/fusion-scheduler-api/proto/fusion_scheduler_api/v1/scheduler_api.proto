@@ -13,107 +13,17 @@ service SchedulerApi {
   rpc RegisterWorker(RegisterWorkerRequest) returns (RegisterWorkerResponse);
 
   // 创建流程定义
-  rpc CreateProcessDefinition(CreateProcessDefinitionRequest) returns (CreateProcessDefinitionResponse);
+  rpc CreateProcess(CreateProcessRequest) returns (CreateProcessResponse);
 
   // 创建触发器定义
-  rpc CreateTriggerDefinition(CreateTriggerDefinitionRequest) returns (CreateTriggerDefinitionResponse);
+  rpc CreateTrigger(CreateTriggerRequest) returns (CreateTriggerResponse);
+
+  // 更新触发器定义
   rpc UpdateTrigger(UpdateTriggerRequest) returns (UpdateTriggerResponse);
 
   rpc EventListener(stream EventRequest) returns (stream EventResponse);
-
-  // 拉取任务
   rpc PullJob(PullJobRequest) returns (PullJobResponse);
 }
-
-message RegisterWorkerRequest {
-  // 注册的当前节点 ID(uuid)，需要在集群内全局唯一
-  string worker_id = 1;
-
-  // 节点关联的命名空间列表。若设置，则只有匹配命名空间下的 job 可以被此节点执行
-  repeated string namespaces = 2;
-}
-
-message RegisterWorkerResponse {
-  MasterInfo master_info = 1;
-}
-
-message MasterInfo {
-  string master_id = 1;
-
-  // 当前 master 节点的 IP:PORT 地址
-  string master_addr = 2;
-
-  // Master 节点可执行的 namespace 列表
-  repeated string namespaces = 5;
-}
-
-enum EventKind {
-  HEARTBEAT = 0;
-
-  // 注册监听器
-  REGISTER_LISTENER = 1;
-
-  // 主节点丢失
-  MASTER_MISSING = 2;
-
-  // 节点状态变更
-  NODE_CHANGED = 3;
-
-  // push
-  JOB_TASK_TRIGGERED = 20;
-  // pull
-  JOB_TASK_COMPLETED = 21;
-}
-
-message EventRequest {
-
-}
-
-message EventResponse {
-  EventKind event_kind = 1;
-  optional bytes payload = 2;
-}
-
-message PullJobRequest {
-  // 当前节点的 ID
-  string node_id = 1;
-
-  // 拉取的作业数量
-  int32 fetch_count = 2;
-
-  // 根据作业标签检索
-  repeated string tags = 3;
-}
-
-message PullJobResponse {
-  ProcessDefinition process_definition = 1;
-
-  TriggerDefinition trigger_definition = 2;
-
-  // 计算出的作业开始执行时间
-  int64 begin_time = 4;
-}
-
-// ---------------- task types -------------------
-
-message InstanceTask {
-  enum TaskKind {
-    // 未指定，无效值
-    UNSPECIFIED = 0;
-    // 脚本任务
-    RUST = 1;
-    // 脚本任务
-    SCRIPT = 2;
-    // HTTP 任务
-    HTTP = 3;
-    // Python 任务
-    PYTHON = 4;
-  }
-
-  string task_id = 1;
-  TaskKind task_kind = 2;
-}
-
 
 // ---------------- process types ----------------
 
@@ -133,12 +43,11 @@ message ProcessDefinition {
   optional bytes data = 4;
   optional string description = 5;
   repeated string tags = 6;
-  repeated InstanceTask tasks = 7;
   // 流程超时时间（秒）
-  int64 timeout = 8;
+  int64 timeout = 7;
 }
 
-message CreateProcessDefinitionRequest {
+message CreateProcessRequest {
   string process_key = 1;
   optional string description = 2;
   repeated string tags = 3;
@@ -150,8 +59,8 @@ message CreateProcessDefinitionRequest {
   repeated int64 trigger_ids = 6;
 }
 
-message CreateProcessDefinitionResponse {
-  ProcessDefinition process_definition = 1;
+message CreateProcessResponse {
+  ProcessDefinition process = 1;
 }
 
 // ---------------- Trigger types ----------------
@@ -220,7 +129,7 @@ message CronSchedule {
   optional string tz = 2;
 }
 
-message CreateTriggerDefinitionRequest {
+message CreateTriggerRequest {
   // 要关联的 ProcessDefinition ID 列表
   repeated int64 process_ids = 1;
 
@@ -237,8 +146,8 @@ message CreateTriggerDefinitionRequest {
   optional int64 invalid_time = 10;
 }
 
-message CreateTriggerDefinitionResponse {
-  TriggerDefinition trigger_definition = 1;
+message CreateTriggerResponse {
+  TriggerDefinition trigger = 1;
 }
 
 message UpdateTriggerRequest {
@@ -276,6 +185,44 @@ message ProcessInstance {
   }
 }
 
+// XXX worker 不需要感知 ProcessTask，这里仅做定义
+message Task {
+  enum TaskKind {
+    // 未指定，无效值
+    UNSPECIFIED = 0;
+    // Rust 代码任务
+    RUST = 1;
+    // 脚本任务
+    SCRIPT = 2;
+    // HTTP 任务
+    HTTP = 3;
+    // Python 任务
+    PYTHON = 4;
+    // SQL 任务
+    SQL = 5;
+  }
+
+}
+
+// 任务作业
+message TaskJob {
+  enum JobStatus {
+    UNSPECIFIED = 0;
+    CREATED = 1;
+    ENQUEUED = 2;
+    // 错误完成
+    COMPLETED_FAILED = 90;
+    // 被取消
+    CANCELED = 99;
+    // 成功完成
+    COMPLETED_SUCCESSFULLY = 100;
+  }
+
+  string task_id = 1;
+  Task.TaskKind task_kind = 2;
+}
+
+
 // ---- SchedNode ----
 message SchedNode {
   enum NodeStatus {
@@ -290,4 +237,76 @@ message SchedNode {
     SCHEDULER = 1;
     WORKER = 2;
   }
+}
+
+// ----
+
+
+message RegisterWorkerRequest {
+  // 注册的当前节点 ID(uuid)，需要在集群内全局唯一
+  string worker_id = 1;
+
+  // 节点关联的命名空间列表。若设置，则只有匹配命名空间下的 job 可以被此节点执行
+  repeated string namespaces = 2;
+}
+
+message RegisterWorkerResponse {
+  MasterInfo master_info = 1;
+}
+
+message MasterInfo {
+  string master_id = 1;
+
+  // 当前 master 节点的 IP:PORT 地址
+  string master_addr = 2;
+
+  // Master 节点可执行的 namespace 列表
+  repeated string namespaces = 5;
+}
+
+enum EventKind {
+  HEARTBEAT = 0;
+
+  // 注册监听器
+  REGISTER_LISTENER = 1;
+
+  // 主节点丢失
+  MASTER_MISSING = 2;
+
+  // 节点状态变更
+  NODE_CHANGED = 3;
+
+  // push
+  JOB_TASK_TRIGGERED = 20;
+  // pull
+  JOB_TASK_COMPLETED = 21;
+}
+
+message EventRequest {
+
+}
+
+message EventResponse {
+  EventKind event_kind = 1;
+  optional bytes payload = 2;
+}
+
+message PullJobRequest {
+  // 当前节点的 ID
+  string node_id = 1;
+
+  // 拉取的作业数量
+  int32 fetch_count = 2;
+
+  // 根据作业标签检索
+  repeated string tags = 3;
+}
+
+message PullJobResponse {
+  ProcessDefinition process_definition = 1;
+
+  TriggerDefinition trigger_definition = 2;
+
+  // 计算出的作业开始执行时间
+  int64 begin_time = 4;
 }

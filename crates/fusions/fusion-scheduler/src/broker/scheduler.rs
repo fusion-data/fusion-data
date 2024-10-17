@@ -71,7 +71,7 @@ impl Scheduler {
     Ok(())
   }
 
-  // 扫描任务，并添加任务到 timer_ref
+  // 扫描任务，创建 TaskJob 并添加到 timer_ref
   async fn scan_tasks(&mut self) -> Result<()> {
     Ok(())
   }
@@ -115,14 +115,14 @@ async fn is_alive_node(node_addr: &str) -> bool {
   todo!()
 }
 
-/// 启动 node 心跳定时任务
+/// 启动 scheduler node 心跳定时任务
 fn start_heartbeat(timer_ref: &mut TimerRef, tx: mpsc::Sender<SchedCmd>, conf: &SchedulerConfig) {
   let node_id = conf.node_id();
   let period = conf.heartbeat_interval();
-  timer_ref.schedule_action_periodic(Uuid::nil(), Duration::from_secs(17), *period, move |_| {
+  timer_ref.schedule_action_periodic(Uuid::now_v7(), Duration::from_secs(17), *period, move |job_id| {
     match tx.blocking_send(SchedCmd::Heartbeat(node_id)) {
       Ok(_) => {}
-      Err(e) => error!("Failed to send heartbeat to cmd runner: {}", e),
+      Err(e) => error!("[job:{}] Failed to send heartbeat to cmd runner: {}", job_id, e),
     };
     TimerReturn::Reschedule(())
   });

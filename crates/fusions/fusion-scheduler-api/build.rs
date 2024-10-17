@@ -11,15 +11,14 @@ fn main() {
   let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
 
   let enum_list = [
-    "InstanceTask.TaskKind",
+    "Task.TaskKind",
     "TriggerDefinition.TriggerKind",
     "ProcessInstance.InstanceStatus",
     "ProcessDefinition.ProcessStatus",
     "SchedNode.NodeStatus",
     "SchedNode.NodeKind",
   ];
-  let oneof_list =
-    ["TriggerDefinition.schedule", "CreateTriggerDefinitionRequest.schedule", "UpdateTriggerRequest.schedule"];
+  let oneof_list = ["TriggerDefinition.schedule", "CreateTriggerRequest.schedule", "UpdateTriggerRequest.schedule"];
 
   let mut iam_b = tonic_build::configure()
     .emit_rerun_if_changed(true)

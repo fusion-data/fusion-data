@@ -22,7 +22,7 @@ fn main() {
     },
   );
 
-  // let modql_messages = ["CreateProcessDefinitionRequest", "CreateTriggerDefinitionRequest"];
+  // let modql_messages = ["CreateProcessRequest", "CreateTriggerRequest"];
   // b = modql_messages.iter().fold(b, |b, m| b.message_attribute(format!("{}.{}", BASE_PACKAGE, m), MODQL_MESSAGE_ATTR));
 
   c.compile_protos(

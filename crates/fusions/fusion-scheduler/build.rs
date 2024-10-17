@@ -16,7 +16,7 @@ fn main() {
     .extern_path(".ultimate_api.v1", "::ultimate_api::v1")
     .extern_path(".fusion_scheduler_api.v1", "::fusion_scheduler_api::v1");
 
-  // let modql_messages = ["CreateProcessDefinitionRequest", "CreateTriggerDefinitionRequest"];
+  // let modql_messages = ["CreateProcessRequest", "CreateTriggerRequest"];
   // b = modql_messages.iter().fold(b, |b, m| b.message_attribute(format!("{}.{}", BASE_PACKAGE, m), MODQL_MESSAGE_ATTR));
 
   b.compile_protos(

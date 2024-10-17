@@ -2,8 +2,9 @@ use tonic::{Request, Response, Status};
 
 use crate::{
   pb::fusion_scheduler::v1::{
-    scheduler_server::Scheduler, PageProcessRequest, PageProcessResponse, PageProcessTaskRequest,
-    PageProcessTaskResponse, PageTriggerRequest, PageTriggerResponse, TriggerProcessRequest, TriggerProcessResponse,
+    scheduler_server::Scheduler, HealthCheckRequest, HealthCheckResponse, PageProcessRequest, PageProcessResponse,
+    PageProcessTaskRequest, PageProcessTaskResponse, PageTriggerRequest, PageTriggerResponse, TriggerProcessRequest,
+    TriggerProcessResponse,
   },
   service::{
     process_definition::ProcessDefinitionSvc, process_task::ProcessTaskSvc, trigger_definition::TriggerDefinitionSvc,
@@ -52,5 +53,12 @@ impl Scheduler for SchedulerGrpcSvc {
 
     let page = ProcessTaskSvc::page(ctx, request.try_into()?).await?;
     Ok(Response::new(page.into()))
+  }
+
+  async fn healthy_check(
+    &self,
+    _request: Request<HealthCheckRequest>,
+  ) -> Result<Response<HealthCheckResponse>, Status> {
+    todo!()
   }
 }

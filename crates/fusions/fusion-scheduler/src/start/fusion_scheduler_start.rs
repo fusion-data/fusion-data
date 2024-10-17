@@ -14,7 +14,7 @@ pub async fn fusion_scheduler_start() -> ultimate::Result<()> {
 
   let timer_core = TimerWithThread::for_uuid_closures();
 
-  let (master_handle, scheduler_handle) = spawn_loop(app.clone(), grpc_start_info.local_addr, &timer_core);
+  let (master_handle, scheduler_handle) = spawn_loop(app.clone(), grpc_start_info.local_addr, timer_core.timer_ref());
 
   let (master_ret, scheduler_ret, grpc_ret) = tokio::join!(master_handle, scheduler_handle, grpc_serve_handle);
   match timer_core.shutdown() {

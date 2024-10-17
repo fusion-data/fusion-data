@@ -1,10 +1,10 @@
 use ultimate_db::generate_enum_i32_to_sea_query_value;
 
 use super::{
-  instance_task::TaskKind,
   process_definition::ProcessStatus,
   process_instance::InstanceStatus,
   sched_node::{NodeKind, NodeStatus},
+  task::TaskKind,
   trigger_definition::{TriggerKind, TriggerStatus},
 };
 

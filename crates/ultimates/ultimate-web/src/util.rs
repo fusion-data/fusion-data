@@ -56,7 +56,7 @@ pub fn extract_session(parts: &Parts, sc: &SecurityConf) -> Result<Ctx, DataErro
   let (payload, _) =
     SecurityUtils::decrypt_jwt(sc.pwd(), &token).map_err(|_e| DataError::unauthorized("Failed decode jwt"))?;
 
-  Ctx::try_from_jwt_payload(payload, Some(req_time))
+  Ctx::try_from_jwt_payload(payload, Some(req_time), None)
 }
 
 pub fn opt_to_app_result<T>(opt: Option<T>) -> AppResult<T>

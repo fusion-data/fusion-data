@@ -54,7 +54,7 @@ fn main() {
     .fold(iam_b, |b, m| b.message_attribute(format!("{}.{}", BASE_PACKAGE, m), MODQL_MESSAGE_ATTR));
 
   iam_b
-    .compile(
+    .compile_protos(
       &[
         "proto/fusion_iam/v1/auth.proto",
         "proto/fusion_iam/v1/user.proto",

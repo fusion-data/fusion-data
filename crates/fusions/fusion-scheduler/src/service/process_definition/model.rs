@@ -1,4 +1,4 @@
-use fusion_scheduler_api::v1::{self, process_definition::ProcessStatus, CreateProcessDefinitionRequest};
+use fusion_scheduler_api::v1::{self, process_definition::ProcessStatus, CreateProcessRequest};
 use modql::{
   field::Fields,
   filter::{FilterNodes, OpValsInt32, OpValsValue},
@@ -65,8 +65,8 @@ pub struct ProcessDefinitionForCreate {
   pub data: Option<serde_json::Value>,
 }
 
-impl From<CreateProcessDefinitionRequest> for ProcessDefinitionForCreate {
-  fn from(job: CreateProcessDefinitionRequest) -> Self {
+impl From<CreateProcessRequest> for ProcessDefinitionForCreate {
+  fn from(job: CreateProcessRequest) -> Self {
     Self {
       key: job.process_key,
       description: job.description,

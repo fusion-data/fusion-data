@@ -55,8 +55,9 @@ impl TryFrom<&MetadataMap> for CtxW {
 
     let payload = extract_jwt_payload_from_metadata(sc, metadata)?;
     let req_meta = RequestMetadata::from(metadata);
+    let request_id = metadata.get("request_id").and_then(|v| v.to_str().ok().map(|s| s.to_string()));
 
-    let ctx = Ctx::try_from_jwt_payload(payload, Some(req_time))?;
+    let ctx = Ctx::try_from_jwt_payload(payload, Some(req_time), request_id)?;
     Ok(CtxW::new(app, ctx, Arc::new(req_meta)))
   }
 }

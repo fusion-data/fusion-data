@@ -1,8 +1,8 @@
 use fusion_scheduler_api::v1::{
   scheduler_api_server::{SchedulerApi, SchedulerApiServer},
-  CreateProcessDefinitionRequest, CreateProcessDefinitionResponse, CreateTriggerDefinitionRequest,
-  CreateTriggerDefinitionResponse, EventRequest, EventResponse, PullJobRequest, PullJobResponse, RegisterWorkerRequest,
-  RegisterWorkerResponse, UpdateTriggerRequest, UpdateTriggerResponse,
+  CreateProcessRequest, CreateProcessResponse, CreateTriggerRequest, CreateTriggerResponse, EventRequest,
+  EventResponse, PullJobRequest, PullJobResponse, RegisterWorkerRequest, RegisterWorkerResponse, UpdateTriggerRequest,
+  UpdateTriggerResponse,
 };
 use fusion_server::{ctx::CtxW, grpc::interceptor::auth_interceptor};
 use std::pin::Pin;
@@ -28,10 +28,10 @@ impl SchedulerApi for SchedulerApiGrpcSvc {
     todo!()
   }
 
-  async fn create_process_definition(
+  async fn create_process(
     &self,
-    request: Request<CreateProcessDefinitionRequest>,
-  ) -> Result<Response<CreateProcessDefinitionResponse>, Status> {
+    request: Request<CreateProcessRequest>,
+  ) -> Result<Response<CreateProcessResponse>, Status> {
     let (_meta, exts, request) = request.into_parts();
     let ctx: &CtxW = (&exts).try_into()?;
 
@@ -42,13 +42,13 @@ impl SchedulerApi for SchedulerApiGrpcSvc {
     let process_id = ProcessDefinitionSvc::create(ctx, entity_c, link_trigger_ids).await?;
     let process = ProcessDefinitionSvc::find_by_id(ctx, process_id).await?;
 
-    Ok(Response::new(CreateProcessDefinitionResponse { process_definition: Some(process.into()) }))
+    Ok(Response::new(CreateProcessResponse { process: Some(process.into()) }))
   }
 
-  async fn create_trigger_definition(
+  async fn create_trigger(
     &self,
-    request: Request<CreateTriggerDefinitionRequest>,
-  ) -> Result<Response<CreateTriggerDefinitionResponse>, Status> {
+    request: Request<CreateTriggerRequest>,
+  ) -> Result<Response<CreateTriggerResponse>, Status> {
     debug!("create_trigger: {:?}", request.into_inner());
     todo!()
   }
