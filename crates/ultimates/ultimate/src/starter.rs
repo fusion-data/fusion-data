@@ -1,9 +1,9 @@
-use crate::{configuration::ConfigurationState, trace};
+use crate::{configuration::ConfigurationState, tracing};
 
 pub fn load_and_init() -> ConfigurationState {
   let config_state = config_load();
   let ultimate_config = config_state.configuration();
-  trace::init_trace(ultimate_config);
+  tracing::init_tracing(ultimate_config);
   config_state
 }
 

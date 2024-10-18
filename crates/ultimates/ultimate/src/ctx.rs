@@ -1,7 +1,6 @@
 use std::{ops::Deref, sync::Arc, time::SystemTime};
 
 use josekit::jwt::JwtPayload;
-use tracing::{span::EnteredSpan, Span};
 use ulid::Ulid;
 use ultimate_common::time::{self, Duration, UtcDateTime};
 use uuid::Uuid;

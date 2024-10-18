@@ -100,6 +100,7 @@ tracing-subscriber = { version = "0.3", features = [
     "registry",
     "env-filter",
     "chrono",
+    "json",
 ] }
 tracing-appender = "0.2"
 init-tracing-opentelemetry = { version = "0.22", features = [

@@ -6,7 +6,7 @@ use std::fmt::Display;
 use tracing::log::Level;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct TraceConfig {
+pub struct TracingConfig {
   pub enable: bool,
 
   pub target: bool,
@@ -20,13 +20,24 @@ pub struct TraceConfig {
 
   /// 目标文件名，默认为 <app name>.log
   pub log_name: Option<String>,
+
+  pub otel: Option<OtelConfig>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OtelConfig {
+  // always_on
+  pub traces_sample: String,
+  // http://localhost:4317
+  pub exporter_otlp_endpoint: String,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 #[allow(non_camel_case_types)]
 pub enum LogWriterType {
-  Console,
+  Stdout,
   File,
+  Both,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug, Hash)]
@@ -91,7 +102,7 @@ impl<'de> Deserialize<'de> for LogWriterType {
   where
     D: Deserializer<'de>,
   {
-    const MSG: &str = "expect in ('console', 'file').";
+    const MSG: &str = "expect in ('stdout', 'file', 'both').";
 
     struct StrToLogWriterType;
     impl<'d> Visitor<'d> for StrToLogWriterType {
@@ -105,10 +116,12 @@ impl<'de> Deserialize<'de> for LogWriterType {
       where
         E: serde::de::Error,
       {
-        let writer = if v.eq_ignore_ascii_case("console") {
-          LogWriterType::Console
+        let writer = if v.eq_ignore_ascii_case("stdout") {
+          LogWriterType::Stdout
         } else if v.eq_ignore_ascii_case("file") {
           LogWriterType::File
+        } else if v.eq_ignore_ascii_case("both") {
+          LogWriterType::Both
         } else {
           return Err(serde::de::Error::invalid_value(Unexpected::Str(v), &MSG));
         };

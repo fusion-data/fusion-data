@@ -17,7 +17,10 @@ name = "fusion-scheduler"
 path = "src/bin/fusion-scheduler.rs"
 
 [features]
-tonic-reflection = ["ultimate-grpc/tonic-reflection", "dep:tonic-reflection"]
+default = []
+tonic-reflection = ["dep:tonic-reflection", "ultimate-grpc/tonic-reflection"]
+tonic-web = ["dep:tonic-web", "ultimate-grpc/tonic-web"]
+opentelemetry = ["ultimate/opentelemetry"]
 
 [dependencies]
 # -- ultimates
@@ -37,6 +40,7 @@ ultimate-grpc = { workspace = true, features = ["uuid"] }
 prost = { workspace = true }
 tonic = { workspace = true }
 tonic-reflection = { workspace = true, optional = true }
+tonic-web = { workspace = true, optional = true }
 
 # -- fusions
 fusiondata = { workspace = true }

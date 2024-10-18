@@ -7,7 +7,7 @@ mod run_mode;
 pub mod security;
 pub mod signal;
 pub mod starter;
-pub mod trace;
+pub mod tracing;
 pub mod utils;
 
 pub use data_error::*;

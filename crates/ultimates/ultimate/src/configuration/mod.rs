@@ -26,7 +26,7 @@ pub struct Configuration {
 
   db: DbConf,
 
-  trace: TraceConfig,
+  tracing: TracingConfig,
 
   web: WebConfig,
 
@@ -50,8 +50,8 @@ impl Configuration {
     &self.db
   }
 
-  pub fn trace(&self) -> &TraceConfig {
-    &self.trace
+  pub fn tracing(&self) -> &TracingConfig {
+    &self.tracing
   }
 
   pub fn grpc(&self) -> &GrpcConf {

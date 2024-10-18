@@ -11,7 +11,7 @@ repository.workspace = true
 workspace = true
 
 [features]
-default = []
+default = ["tracing-appender"]
 tonic = ["dep:tonic", "dep:prost"]
 opentelemetry = ["dep:init-tracing-opentelemetry"]
 

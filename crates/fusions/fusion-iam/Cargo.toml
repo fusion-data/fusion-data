@@ -21,9 +21,10 @@ codegen-units = 1
 panic = "abort"
 
 [features]
-default = ["tonic-reflection"]
+default = []
 tonic-reflection = ["dep:tonic-reflection", "ultimate-grpc/tonic-reflection"]
 tonic-web = ["dep:tonic-web", "ultimate-grpc/tonic-web"]
+opentelemetry = ["ultimate/opentelemetry"]
 
 [dependencies]
 # -- misc

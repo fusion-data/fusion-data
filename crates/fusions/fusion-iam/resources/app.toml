@@ -10,6 +10,10 @@ default_pwd = "2024.Fusiondata"
 enable = true
 server_addr = "0.0.0.0:8888"
 
+[ultimate.tracing]
+enable = true
+log_writer = "both"
+
 [ultimate.grpc]
 enable = true
 server_addr = "0.0.0.0:8889"

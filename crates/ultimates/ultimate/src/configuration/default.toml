@@ -1,6 +1,6 @@
 [ultimate.app]
 run_mode = "dev"
-name = "qinling"
+name = "ultimate"
 
 [ultimate.security.pwd]
 pwd_key = "0123456789ABCDEF0123456789ABCDEF"
@@ -25,11 +25,11 @@ NOJy7JbTpVxf9c6Ren/q+YggEVRdVZEQmZDLsQiE1czWoLLsezpIr3Ls
 enable = false
 # server_addr = "0.0.0.0:9500"
 
-[ultimate.trace]
+[ultimate.tracing]
 enable = true
-target = false
-log_level = "debug"
-log_writer = "console"
+target = true
+log_level = "info"
+log_writer = "stdout"
 log_dir = "./logs/"
 
 # 默认 log_name 同 ultimate.app.name
