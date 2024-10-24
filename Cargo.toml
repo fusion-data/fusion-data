@@ -2,10 +2,15 @@
 members = ["crates/fusions/*", "crates/ultimates/*", "crates/samples/*"]
 resolver = "2"
 
+[profile.release]
+opt-level = 3
+codegen-units = 1
+lto = true
+
 [workspace.package]
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.80"
+rust-version = "1.82"
 description = "Rust libraries of The fusiondata"
 license = "Apache-2.0"
 repository = "https://github.com/fusion-data/fusion-data"
@@ -20,10 +25,11 @@ ultimate-common = { version = "0.1.0", path = "./crates/ultimates/ultimate-commo
 ultimate = { version = "0.1.0", path = "./crates/ultimates/ultimate" }
 ultimate-api = { version = "0.1.0", path = "./crates/ultimates/ultimate-api" }
 ultimate-db = { version = "0.1.0", path = "./crates/ultimates/ultimate-db" }
+ultimate-db-macros = { version = "0.1.0", path = "./crates/ultimates/ultimate-db-macros" }
 ultimate-web = { version = "0.1.0", path = "./crates/ultimates/ultimate-web" }
 ultimate-grpc = { version = "0.1.0", path = "./crates/ultimates/ultimate-grpc" }
 fusiondata = { version = "0.1.0", path = "./crates/fusions/fusiondata" }
-fusion-server = { version = "0.1.0", path = "./crates/fusions/fusion-server" }
+fusiondata-context = { version = "0.1.0", path = "./crates/fusions/fusiondata-context" }
 fusion-scheduler-api = { version = "0.1.0", path = "./crates/fusions/fusion-scheduler-api" }
 # -- projects end
 # begin -- memory allocator
@@ -68,6 +74,10 @@ strum = { version = "0.26", features = ["derive"] }
 # -- Error
 anyhow = "1"
 thiserror = "1"
+# -- Macros
+quote = "1"
+syn = { version = "2", features = ["full"] }
+proc-macro2 = "1"
 # -- Crypt & Encoding
 base16ct = { version = "0.2", features = ["alloc"] }
 base64ct = { version = "1", features = ["std", "alloc"] }
@@ -120,24 +130,22 @@ croner = "2.0"
 hierarchical_hash_wheel_timer = "1.3"
 tokio-cron-scheduler = { version = "0.13", features = ["has_bytes", "signal"] }
 # -- Database
-sqlx = { version = "0.7", features = [
+sqlx = { version = "0.8", features = [
     "runtime-tokio",
     "postgres",
-    "uuid",
     "chrono",
     "rust_decimal",
     "json",
 ] }
-modql = { version = "0.4", features = ["with-sea-query"] }
-sea-query = { version = "0.31", features = ["attr"] }
-sea-query-binder = { version = "0.6", features = [
+sea-query = { version = "0.32", features = ["attr", "thread-safe"] }
+sea-query-binder = { version = "0.7", features = [
     "sqlx-postgres",
     "with-json",
-    "with-uuid",
     "with-chrono",
     "with-rust_decimal",
     "postgres-array",
 ] }
+rusqlite = { version = "0.32", features = ["bundled"] }
 # -- Serde
 serde = { version = "1", features = ["derive"] }
 serde_with = { version = "3", features = ["chrono_0_4"] }
@@ -182,7 +190,7 @@ utoipa-scalar = { version = "0.2", features = ["axum"] }
 asserhttp = { version = "0.7", features = ["reqwest"] }
 dotenvy = "0.15"
 # -- Data Science
-polars = "0.43"
+polars = "0.44"
 # An Excel/OpenDocument Spreadsheets reader and deserializer in pure rust
 calamine = "0.26"
 # -- RPC

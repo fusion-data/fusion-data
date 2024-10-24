@@ -7,7 +7,7 @@ use ulid::Ulid;
 use ultimate::security;
 use ultimate::DataError;
 
-pub type AppResult<T> = core::result::Result<Json<T>, AppError>;
+pub type AppResult<T> = core::result::Result<Json<T>, Box<AppError>>;
 
 /// A default error response for most API errors.
 #[derive(Debug, Serialize)]

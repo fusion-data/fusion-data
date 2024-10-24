@@ -2,9 +2,9 @@ use std::time::Duration;
 
 use chrono::Utc;
 use fusion_scheduler_api::v1::sched_node::NodeStatus;
-use fusion_server::ctx::CtxW;
-use modql::filter::{OpValInt32, OpValValue};
+use fusiondata_context::ctx::CtxW;
 use ultimate::Result;
+use ultimate_db::modql::filter::{OpValInt32, OpValValue};
 
 use super::{sched_node_bmc::SchedNodeBmc, SchedNode, SchedNodeFilter, SchedNodeForCreate, SchedNodeForUpdate};
 

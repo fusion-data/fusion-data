@@ -11,14 +11,22 @@ repository.workspace = true
 workspace = true
 
 [features]
-default = ["modql"]
+default = ["uuid"]
 utoipa = ["dep:utoipa", "ultimate-api/utoipa"]
-modql = ["dep:modql", "ultimate-api/modql"]
+with-rusqlite = ["rusqlite"]
+uuid = [
+  "dep:uuid",
+  "ultimate-db-macros/uuid",
+  "sqlx/uuid",
+  "sea-query-binder/with-uuid",
+]
+with-ilike = []
 
 [dependencies]
-ultimate-api = { workspace = true }
 ultimate-common.workspace = true
 ultimate.workspace = true
+ultimate-api = { workspace = true }
+ultimate-db-macros = { workspace = true }
 derive_more.workspace = true
 serde.workspace = true
 serde_with.workspace = true
@@ -29,9 +37,10 @@ tokio.workspace = true
 tracing.workspace = true
 uuid = { workspace = true, optional = true }
 sqlx.workspace = true
-sea-query-binder.workspace = true
 sea-query.workspace = true
-modql = { workspace = true, optional = true }
+sea-query-binder.workspace = true
+chrono = { workspace = true }
+rusqlite = { workspace = true, optional = true }
 utoipa = { workspace = true, optional = true }
 tonic = { workspace = true, optional = true }
 

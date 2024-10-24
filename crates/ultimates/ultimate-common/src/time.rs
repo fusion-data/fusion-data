@@ -1,7 +1,8 @@
-use std::sync::OnceLock;
+use std::{str::FromStr, sync::OnceLock};
 
 use chrono::TimeZone;
 pub use chrono::{DateTime, Duration, FixedOffset, Local, Utc};
+use serde::{Deserialize, Deserializer, Serializer};
 
 use super::Result;
 
@@ -64,6 +65,22 @@ pub fn from_milliseconds(milliseconds: i64) -> DateTime<Utc> {
 pub fn parse_utc(moment: &str) -> Result<UtcDateTime> {
   let time = moment.parse::<UtcDateTime>()?;
   Ok(time)
+}
+
+pub fn deserialize_fixed_offset<'de, D>(deserializer: D) -> core::result::Result<FixedOffset, D::Error>
+where
+  D: Deserializer<'de>,
+{
+  let s: String = Deserialize::deserialize(deserializer)?;
+  FixedOffset::from_str(&s).map_err(|e| serde::de::Error::custom(e.to_string()))
+}
+
+pub fn serialize_fixed_offset<S>(offset: &FixedOffset, serializer: S) -> core::result::Result<S::Ok, S::Error>
+where
+  S: Serializer,
+{
+  let text = offset.to_string();
+  serializer.serialize_str(&text)
 }
 
 #[cfg(feature = "prost")]

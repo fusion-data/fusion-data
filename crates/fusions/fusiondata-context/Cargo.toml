@@ -1,5 +1,5 @@
 [package]
-name = "fusion-server"
+name = "fusiondata-context"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -11,9 +11,10 @@ repository.workspace = true
 workspace = true
 
 [dependencies]
-tokio = { workspace = true }
 ultimate-common = { workspace = true }
 ultimate = { workspace = true }
 ultimate-db = { workspace = true }
 ultimate-grpc = { workspace = true }
+fusiondata = { workspace = true }
+tokio = { workspace = true }
 tonic = { workspace = true }

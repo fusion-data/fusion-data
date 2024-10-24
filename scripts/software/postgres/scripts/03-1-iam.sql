@@ -1,111 +1,111 @@
-SET TIMEZONE TO 'Asia/Chongqing';
+set timezone to 'Asia/Chongqing';
 \c fusiondata;
 \c - fusiondata;
-CREATE SCHEMA IF NOT EXISTS iam;
+create schema if not exists iam;
 --
 -- tenant
-CREATE TABLE IF NOT EXISTS iam.tenant
+create table if not exists iam.tenant
 (
-    id    SERIAL       NOT NULL,
-    name  VARCHAR(256) NOT NULL,
-    cid   BIGINT       NOT NULL,
-    ctime TIMESTAMPTZ  NOT NULL,
-    mid   BIGINT,
-    mtime TIMESTAMPTZ,
-    CONSTRAINT tenant_pk PRIMARY KEY (id)
+    id    serial       not null,
+    name  varchar(256) not null,
+    cid   bigint       not null,
+    ctime timestamptz  not null,
+    mid   bigint,
+    mtime timestamptz,
+    constraint tenant_pk primary key (id)
 );
 --
 -- User
-CREATE TABLE IF NOT EXISTS iam.user
+create table if not exists iam.user
 (
-    id     BIGSERIAL   NOT NULL,
-    email  VARCHAR
-        CONSTRAINT user_uk_email UNIQUE,
-    phone  VARCHAR
-        CONSTRAINT user_uk_phone UNIQUE,
-    name   VARCHAR,
-    status INT         NOT NULL,
-    gender INT         NOT NULL,
-    cid    BIGINT      NOT NULL,
-    ctime  TIMESTAMPTZ NOT NULL,
-    mid    BIGINT,
-    mtime  TIMESTAMPTZ,
-    CONSTRAINT user_pk PRIMARY KEY (id)
+    id     bigserial   not null,
+    email  varchar
+        constraint user_uk_email unique,
+    phone  varchar
+        constraint user_uk_phone unique,
+    name   varchar,
+    status int         not null,
+    gender int         not null,
+    cid    bigint      not null,
+    ctime  timestamptz not null,
+    mid    bigint,
+    mtime  timestamptz,
+    constraint user_pk primary key (id)
 );
-CREATE TABLE IF NOT EXISTS iam.user_tenant_rel
+create table if not exists iam.user_tenant_rel
 (
-    user_id   BIGINT      NOT NULL REFERENCES iam.user (id),
-    tenant_id INT         NOT NULL REFERENCES iam.tenant (id),
-    cid       BIGINT      NOT NULL,
-    ctime     TIMESTAMPTZ NOT NULL,
-    CONSTRAINT user_tenant_rel_pk PRIMARY KEY (user_id, tenant_id)
+    user_id   bigint      not null references iam.user (id),
+    tenant_id int         not null references iam.tenant (id),
+    cid       bigint      not null,
+    ctime     timestamptz not null,
+    constraint user_tenant_rel_pk primary key (user_id, tenant_id)
 );
 --
 -- User Credential
-CREATE TABLE IF NOT EXISTS iam.user_credential
+create table if not exists iam.user_credential
 (
-    id            BIGINT       NOT NULL
-        CONSTRAINT user_credential_fk_user REFERENCES iam.user (id),
-    encrypted_pwd VARCHAR(255) NOT NULL,
-    cid           BIGINT       NOT NULL,
-    ctime         TIMESTAMPTZ  NOT NULL,
-    mid           BIGINT,
-    mtime         TIMESTAMPTZ,
-    CONSTRAINT user_credential_pk PRIMARY KEY (id)
+    id            bigint       not null
+        constraint user_credential_fk_user references iam.user (id),
+    encrypted_pwd varchar(255) not null,
+    cid           bigint       not null,
+    ctime         timestamptz  not null,
+    mid           bigint,
+    mtime         timestamptz,
+    constraint user_credential_pk primary key (id)
 );
 --
 -- Role
-CREATE TABLE IF NOT EXISTS iam.role
+create table if not exists iam.role
 (
-    id          BIGSERIAL   NOT NULL,
-    name        VARCHAR(50) NOT NULL,
-    description TEXT,
-    status      INT         NOT NULL,
-    cid         BIGINT      NOT NULL,
-    ctime       TIMESTAMPTZ NOT NULL,
-    mid         BIGINT,
-    mtime       TIMESTAMPTZ,
-    CONSTRAINT role_pk PRIMARY KEY (id)
+    id          bigserial   not null,
+    name        varchar(50) not null,
+    description text,
+    status      int         not null,
+    cid         bigint      not null,
+    ctime       timestamptz not null,
+    mid         bigint,
+    mtime       timestamptz,
+    constraint role_pk primary key (id)
 );
 --
 -- Permission
-CREATE TABLE IF NOT EXISTS iam.permission
+create table if not exists iam.permission
 (
-    id          BIGSERIAL    NOT NULL,
-    code        VARCHAR(255) NOT NULL
-        CONSTRAINT permission_uk UNIQUE,
-    description TEXT,
-    resource    VARCHAR(255) NOT NULL,
-    action      VARCHAR(255) NOT NULL,
-    cid         BIGINT       NOT NULL,
-    ctime       TIMESTAMPTZ  NOT NULL,
-    mid         BIGINT,
-    mtime       TIMESTAMPTZ,
-    CONSTRAINT permission_pk PRIMARY KEY (id)
+    id          bigserial    not null,
+    code        varchar(255) not null
+        constraint permission_uk unique,
+    description text,
+    resource    varchar(255) not null,
+    action      varchar(255) not null,
+    cid         bigint       not null,
+    ctime       timestamptz  not null,
+    mid         bigint,
+    mtime       timestamptz,
+    constraint permission_pk primary key (id)
 );
 --
 -- User Role Relation
-CREATE TABLE IF NOT EXISTS iam.user_role
+create table if not exists iam.user_role
 (
-    user_id BIGINT      NOT NULL,
-    role_id BIGINT      NOT NULL,
-    cid     BIGINT      NOT NULL,
-    ctime   TIMESTAMPTZ NOT NULL,
-    CONSTRAINT user_role_pk PRIMARY KEY (user_id, role_id),
-    CONSTRAINT user_role_fk_user FOREIGN KEY (user_id) REFERENCES iam.user (id),
-    CONSTRAINT user_role_fk_role FOREIGN KEY (role_id) REFERENCES iam.role (id)
+    user_id bigint      not null,
+    role_id bigint      not null,
+    cid     bigint      not null,
+    ctime   timestamptz not null,
+    constraint user_role_pk primary key (user_id, role_id),
+    constraint user_role_fk_user foreign key (user_id) references iam.user (id),
+    constraint user_role_fk_role foreign key (role_id) references iam.role (id)
 );
 --
 -- Role Permission Relation
-CREATE TABLE IF NOT EXISTS iam.role_permission
+create table if not exists iam.role_permission
 (
-    role_id       BIGINT      NOT NULL,
-    permission_id BIGINT      NOT NULL,
-    cid           BIGINT      NOT NULL,
-    ctime         TIMESTAMPTZ NOT NULL,
-    CONSTRAINT role_permission_pk PRIMARY KEY (role_id, permission_id),
-    CONSTRAINT role_permission_fk_role FOREIGN KEY (role_id) REFERENCES iam.role (id),
-    CONSTRAINT role_permission_fk_permission FOREIGN KEY (permission_id) REFERENCES iam.permission (id)
+    role_id       bigint      not null,
+    permission_id bigint      not null,
+    cid           bigint      not null,
+    ctime         timestamptz not null,
+    constraint role_permission_pk primary key (role_id, permission_id),
+    constraint role_permission_fk_role foreign key (role_id) references iam.role (id),
+    constraint role_permission_fk_permission foreign key (permission_id) references iam.permission (id)
 );
 
 
@@ -114,16 +114,16 @@ CREATE TABLE IF NOT EXISTS iam.role_permission
 --------
 
 -- 策略表
-CREATE TABLE IF NOT EXISTS iam.policy
+create table if not exists iam.policy
 (
-    id          UUID PRIMARY KEY,
-    description VARCHAR(255),
-    policy      JSONB       NOT NULL,
-    status      INT         NOT NULL,
-    cid         BIGINT      NOT NULL,
-    ctime       TIMESTAMPTZ NOT NULL,
-    mid         BIGINT,
-    mtime       TIMESTAMPTZ
+    id          uuid primary key,
+    description varchar(255),
+    policy      jsonb       not null,
+    status      int         not null,
+    cid         bigint      not null,
+    ctime       timestamptz not null,
+    mid         bigint,
+    mtime       timestamptz
 );
 -- -- 属性表
 -- CREATE TABLE IF NOT EXISTS iam.attribute

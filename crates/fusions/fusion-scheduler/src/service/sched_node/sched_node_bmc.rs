@@ -1,7 +1,7 @@
-use modql::field::HasSeaFields;
 use sea_query::{Expr, PostgresQueryBuilder, Query};
 use sea_query_binder::SqlxBinder;
 use ultimate_common::time::UtcDateTime;
+use ultimate_db::modql::field::HasSeaFields;
 use ultimate_db::{
   base::{self, prep_fields_for_update, CommonIden, DbBmc},
   generate_common_bmc_fns, generate_filter_bmc_fns, ModelManager, Result,

@@ -1,4 +1,4 @@
-use ultimate::configuration::model::DbConf;
+use ultimate::configuration::model::DbConfig;
 
 pub mod acs;
 mod api_helpers;
@@ -7,6 +7,7 @@ mod error;
 mod id;
 mod macro_helpers;
 mod model_manager;
+pub mod modql;
 mod modql_utils;
 pub mod store;
 
@@ -22,7 +23,7 @@ pub struct DbState {
 }
 
 impl DbState {
-  pub fn from_config(db: &DbConf) -> Result<Self> {
+  pub fn from_config(db: &DbConfig) -> Result<Self> {
     let mm = ModelManager::new(db)?;
     Ok(DbState { mm })
   }

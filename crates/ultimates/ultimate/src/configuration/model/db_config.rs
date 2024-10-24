@@ -5,11 +5,10 @@ use std::time::Duration;
 use ultimate_common::model::sensitive::UriString;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct DbConf {
+pub struct DbConfig {
   enable: bool,
 
   /// The URI of the database
-  // #[serde(serialize_with = "ser_str_secret")]
   url: Option<UriString>,
 
   host: Option<String>,
@@ -50,7 +49,7 @@ pub struct DbConf {
   schema_search_path: Option<String>,
 }
 
-impl DbConf {
+impl DbConfig {
   pub fn enable(&self) -> bool {
     self.enable
   }

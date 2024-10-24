@@ -3,7 +3,6 @@ use std::{ops::Deref, sync::Arc, time::SystemTime};
 use josekit::jwt::JwtPayload;
 use ulid::Ulid;
 use ultimate_common::time::{self, Duration, UtcDateTime};
-use uuid::Uuid;
 
 use crate::DataError;
 
@@ -26,7 +25,7 @@ pub struct Ctx {
 impl Ctx {
   pub fn new(payload: JwtPayload, req_time: Option<UtcDateTime>, request_id: Option<String>) -> Self {
     let req_time = req_time.unwrap_or_else(time::now_utc);
-    let request_id = request_id.unwrap_or_else(|| Uuid::now_v7().to_string());
+    let request_id = request_id.unwrap_or_else(|| Ulid::new().to_string());
 
     tracing::Span::current().record("sub", payload.subject().unwrap_or_default());
 

@@ -20,21 +20,21 @@ use model::*;
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Configuration {
-  app: AppConf,
+  app: AppConfig,
 
   security: SecurityConf,
 
-  db: DbConf,
+  db: DbConfig,
 
   tracing: TracingConfig,
 
   web: WebConfig,
 
-  grpc: GrpcConf,
+  grpc: GrpcConfig,
 }
 
 impl Configuration {
-  pub fn app(&self) -> &AppConf {
+  pub fn app(&self) -> &AppConfig {
     &self.app
   }
 
@@ -46,7 +46,7 @@ impl Configuration {
     &self.security
   }
 
-  pub fn db(&self) -> &DbConf {
+  pub fn db(&self) -> &DbConfig {
     &self.db
   }
 
@@ -54,7 +54,7 @@ impl Configuration {
     &self.tracing
   }
 
-  pub fn grpc(&self) -> &GrpcConf {
+  pub fn grpc(&self) -> &GrpcConfig {
     &self.grpc
   }
 }

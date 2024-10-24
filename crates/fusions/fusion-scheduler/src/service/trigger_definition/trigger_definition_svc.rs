@@ -1,6 +1,6 @@
 use chrono::{DateTime, Utc};
 use fusion_scheduler_api::v1::trigger_definition::TriggerStatus;
-use fusion_server::ctx::CtxW;
+use fusiondata_context::ctx::CtxW;
 use tracing::error;
 use ultimate::Result;
 use ultimate_api::v1::PagePayload;

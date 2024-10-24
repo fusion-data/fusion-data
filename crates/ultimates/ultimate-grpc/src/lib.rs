@@ -1,7 +1,7 @@
 use std::net::SocketAddr;
 
 use tonic::service::{interceptor::InterceptedService, Routes};
-use ultimate::configuration::model::GrpcConf;
+use ultimate::configuration::model::GrpcConfig;
 
 pub mod utils;
 
@@ -14,7 +14,7 @@ pub struct GrpcStartInfo {
 }
 
 pub struct GrpcSettings<'b> {
-  pub conf: &'b GrpcConf,
+  pub conf: &'b GrpcConfig,
   /// tonic generated file descriptor sets
   pub encoded_file_descriptor_sets: Vec<&'b [u8]>,
   pub routes: Routes,

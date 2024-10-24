@@ -49,7 +49,7 @@ ultimate-db = { workspace = true, features = ["uuid"] }
 
 # -- fusions
 fusiondata = { workspace = true }
-fusion-server = { workspace = true }
+fusiondata-context = { workspace = true }
 
 # -- tokio & async
 tokio = { workspace = true }
@@ -65,7 +65,6 @@ tracing-log = { workspace = true }
 sqlx = { workspace = true }
 sea-query = { workspace = true }
 sea-query-binder = { workspace = true }
-modql = { workspace = true }
 
 # -- grpc https://crates.io/crates/tonic
 tower-http = { workspace = true }

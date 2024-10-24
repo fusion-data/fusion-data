@@ -1,4 +1,4 @@
-use fusion_server::app::AppState;
+use fusiondata_context::app::AppState;
 use ultimate::{security::pwd::verify_pwd, Result};
 
 use crate::{

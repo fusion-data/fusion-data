@@ -4,7 +4,7 @@ use fusion_scheduler_api::v1::{
   EventResponse, PullJobRequest, PullJobResponse, RegisterWorkerRequest, RegisterWorkerResponse, UpdateTriggerRequest,
   UpdateTriggerResponse,
 };
-use fusion_server::{ctx::CtxW, grpc::interceptor::auth_interceptor};
+use fusiondata_context::{ctx::CtxW, grpc::interceptor::auth_interceptor};
 use std::pin::Pin;
 use tokio_stream::Stream;
 use tonic::{Request, Response, Status, Streaming};

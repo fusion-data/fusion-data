@@ -2,7 +2,7 @@
 //!
 use std::net::SocketAddr;
 
-use fusion_server::app::AppState;
+use fusiondata_context::app::AppState;
 use hierarchical_hash_wheel_timer::{
   thread_timer::{self, TimerWithThread},
   OneShotClosureState, PeriodicClosureState,

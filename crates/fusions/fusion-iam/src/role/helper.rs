@@ -1,6 +1,6 @@
-use modql::filter::{OpValInt32, OpValString};
 use ultimate::{DataError, Result};
 use ultimate_api::v1::PagePayload;
+use ultimate_db::modql::filter::{OpValInt32, OpValString};
 
 use crate::pb::fusion_iam::v1::{FilterRoleDto, PageRoleResponse, RoleDto, RoleStatus, UpdateRoleDto};
 

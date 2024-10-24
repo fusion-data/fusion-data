@@ -18,7 +18,6 @@ serde_repr = { workspace = true }
 bytes = { workspace = true }
 prost = { workspace = true }
 utoipa = { workspace = true, optional = true }
-modql = { workspace = true, optional = true }
 
 [build-dependencies]
 prost-build = { workspace = true }

@@ -1,5 +1,8 @@
+set timezone to 'Asia/Chongqing';
+\c fusiondata;
+\c - fusiondata;
 --------------------------------
 -- initial data
 --------------------------------
-INSERT INTO sched.sched_namespace(tenant_id, namespace, status, cid, ctime)
-VALUES (1, 'default', 100, 1, NOW());
+insert into sched.sched_namespace(tenant_id, namespace, status, cid, ctime)
+values (1, 'default', 100, 1, now());

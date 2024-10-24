@@ -1,19 +1,19 @@
-SET TIMEZONE TO 'Asia/Chongqing';
+set timezone to 'Asia/Chongqing';
 \c template1;
 -- create extension adminpack;
 ----------------------------------------
 -- #functions
 ----------------------------------------
 -- 将数组反序
-CREATE OR REPLACE FUNCTION array_reverse(anyarray) RETURNS anyarray AS
+create or replace function array_reverse(anyarray) returns anyarray as
 $$
-SELECT ARRAY(
-               SELECT $1[i]
-               FROM GENERATE_SUBSCRIPTS($1, 1) AS s (i)
-               ORDER BY i DESC
+select array(
+               select $1[i]
+               from generate_subscripts($1, 1) as s (i)
+               order by i desc
        );
-$$ LANGUAGE 'sql' STRICT
-                  IMMUTABLE;
+$$ language 'sql' strict
+                  immutable;
 ----------------------------------------
 -- #functions
 ----------------------------------------
@@ -60,68 +60,68 @@ $$ LANGUAGE 'sql' STRICT
 -- grant all privileges on all tables in schema public to massdata;
 -- grant all privileges on all sequences in schema public to massdata;
 -- 批量 grant/ revoke 用户权限
-CREATE OR REPLACE FUNCTION g_or_v(
-    g_or_v TEXT,
+create or replace function g_or_v(
+    g_or_v text,
     -- 输入 grant or revoke 表示赋予或回收
-    own NAME,
+    own name,
     -- 指定用户 owner
-    target NAME,
+    target name,
     -- 赋予给哪个目标用户 grant privilege to who?
-    objtyp TEXT,
+    objtyp text,
     --  对象类别: 表, 物化视图, 视图 object type 'r', 'v' or 'm', means table,view,materialized view
-    exp TEXT[],
+    exp text[],
     --  排除哪些对象, 用数组表示, excluded objects
-    priv TEXT --  权限列表, privileges, ,splits, like 'select,insert,update'
-) RETURNS VOID AS
+    priv text --  权限列表, privileges, ,splits, like 'select,insert,update'
+) returns void as
 $$
-DECLARE
-    nsp     NAME;
-    rel     NAME;
-    sql     TEXT;
-    tmp_nsp NAME := '';
-BEGIN
-    FOR nsp,
-        rel IN
-        SELECT t2.nspname,
+declare
+    nsp     name;
+    rel     name;
+    sql     text;
+    tmp_nsp name := '';
+begin
+    for nsp,
+        rel in
+        select t2.nspname,
                t1.relname
-        FROM pg_class t1,
+        from pg_class t1,
              pg_namespace t2
-        WHERE t1.relkind = objtyp
-          AND t1.relnamespace = t2.oid
-          AND t1.relowner = (SELECT oid
-                             FROM pg_roles
-                             WHERE rolname = own)
-        LOOP
-            IF (
+        where t1.relkind = objtyp
+          and t1.relnamespace = t2.oid
+          and t1.relowner = (select oid
+                             from pg_roles
+                             where rolname = own)
+        loop
+            if (
                    tmp_nsp = ''
-                       OR tmp_nsp <> nsp
+                       or tmp_nsp <> nsp
                    )
-                AND LOWER(g_or_v) = 'grant' THEN -- auto grant schema to target user
+                and lower(g_or_v) = 'grant' then -- auto grant schema to target user
                 sql := 'GRANT usage on schema "' || nsp || '" to ' || target;
-                EXECUTE sql;
-                RAISE NOTICE '%',
+                execute sql;
+                raise notice '%',
                     sql;
-            END IF;
+            end if;
             tmp_nsp := nsp;
-            IF (
-                exp IS NOT NULL
-                    AND nsp || '.' || rel = ANY (exp)
-                ) THEN
-                RAISE NOTICE '% excluded % .',
+            if (
+                exp is not null
+                    and nsp || '.' || rel = any (exp)
+                ) then
+                raise notice '% excluded % .',
                     g_or_v,
                     nsp || '.' || rel;
-            ELSE
-                IF LOWER(g_or_v) = 'grant' THEN
+            else
+                if lower(g_or_v) = 'grant' then
                     sql := g_or_v || ' ' || priv || ' on "' || nsp || '"."' || rel || '" to ' || target;
-                ELSIF LOWER(g_or_v) = 'revoke' THEN
+                elsif lower(g_or_v) = 'revoke' then
                     sql := g_or_v || ' ' || priv || ' on "' || nsp || '"."' || rel || '" from ' || target;
-                ELSE
-                    RAISE NOTICE 'you must enter grant or revoke';
-                END IF;
-                RAISE NOTICE '%',
+                else
+                    raise notice 'you must enter grant or revoke';
+                end if;
+                raise notice '%',
                     sql;
-                EXECUTE sql;
-            END IF;
-        END LOOP;
-END;
-$$ LANGUAGE plpgsql;
+                execute sql;
+            end if;
+        end loop;
+end;
+$$ language plpgsql;

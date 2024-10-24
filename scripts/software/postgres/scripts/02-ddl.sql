@@ -1,4 +1,4 @@
-SET TIMEZONE TO 'Asia/Chongqing';
+set timezone to 'Asia/Chongqing';
 --
-CREATE USER fusiondata WITH NOSUPERUSER REPLICATION ENCRYPTED PASSWORD '2024.Fusiondata';
-CREATE DATABASE fusiondata OWNER = fusiondata TEMPLATE = template1;
+create user fusiondata with nosuperuser replication encrypted password '2024.Fusiondata';
+create database fusiondata owner = fusiondata template = template1;

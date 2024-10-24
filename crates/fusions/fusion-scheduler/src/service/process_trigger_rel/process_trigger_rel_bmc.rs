@@ -1,4 +1,4 @@
-use modql::filter::OpValInt64;
+use ultimate_db::modql::filter::OpValInt64;
 use ultimate_db::{
   base::{self, DbBmc},
   Error, ModelManager, Result,

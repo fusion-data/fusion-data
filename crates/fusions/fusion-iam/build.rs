@@ -5,7 +5,7 @@ static BASE_PACKAGE: &str = ".fusion_iam.v1";
 static ENUM_ATTR: &str =
   "#[derive(serde_repr::Serialize_repr, serde_repr::Deserialize_repr, enum_iterator::Sequence, sqlx::Type)]";
 // static MESSAGE_ATTR: &str = "#[derive(serde::Serialize, serde::Deserialize)]";
-static MODQL_MESSAGE_ATTR: &str = "#[derive(modql::field::Fields)]";
+static MODQL_MESSAGE_ATTR: &str = "#[derive(ultimate_db::modql::field::Fields)]";
 
 fn main() {
   let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());

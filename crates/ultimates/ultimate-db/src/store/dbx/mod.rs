@@ -10,7 +10,7 @@ use sqlx::query::{Query, QueryAs};
 use sqlx::{ConnectOptions, FromRow, IntoArguments, Pool, Postgres, Transaction};
 use tokio::sync::Mutex;
 use tracing::trace;
-use ultimate::configuration::model::DbConf;
+use ultimate::configuration::model::DbConfig;
 
 mod error;
 
@@ -20,7 +20,7 @@ pub use error::{Error, Result};
 
 pub type Db = Pool<Postgres>;
 
-pub fn new_db_pool_from_config(c: &DbConf) -> Result<Db> {
+pub fn new_db_pool_from_config(c: &DbConfig) -> Result<Db> {
   if !c.enable() {
     return Err(Error::ConfigInvalid("Need set ultimate.db.enable = true"));
   }

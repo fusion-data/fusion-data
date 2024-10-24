@@ -1,4 +1,4 @@
-use fusion_server::app::get_app_state;
+use fusiondata_context::app::get_app_state;
 use tonic::{Request, Response, Status};
 use tracing::info;
 use ultimate::tracing::get_trace_id;
