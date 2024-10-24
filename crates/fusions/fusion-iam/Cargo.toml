@@ -24,7 +24,7 @@ panic = "abort"
 default = []
 tonic-reflection = ["dep:tonic-reflection", "ultimate-grpc/tonic-reflection"]
 tonic-web = ["dep:tonic-web", "ultimate-grpc/tonic-web"]
-opentelemetry = ["ultimate/opentelemetry"]
+opentelemetry = ["ultimate/opentelemetry", "ultimate-grpc/opentelemetry"]
 
 [dependencies]
 # -- misc

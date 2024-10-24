@@ -8,7 +8,6 @@ use tonic::{
   transport::{server::TcpIncoming, Server},
   Status,
 };
-use tower_http::trace::TraceLayer;
 use tracing::info;
 use ultimate::{
   configuration::model::SecurityConf,
@@ -37,11 +36,19 @@ pub async fn init_grpc_server(
     Err(e) => panic!("Init grpc server info failed: {:?}", e),
   };
 
+  #[allow(unused_mut)]
   let mut routes = setting.routes;
-  let mut server = Server::builder().layer(TraceLayer::new_for_grpc());
+
+  #[cfg(not(feature = "opentelemetry"))]
+  let mut server = Server::builder().layer(tower_http::trace::TraceLayer::new_for_grpc());
+  #[cfg(feature = "opentelemetry")]
+  let mut server = Server::builder().layer(
+    tonic_tracing_opentelemetry::middleware::server::OtelGrpcLayer::default()
+      .filter(tonic_tracing_opentelemetry::middleware::filters::reject_healthcheck),
+  );
 
   #[cfg(feature = "tonic-web")]
-  let mut b = b.accept_http1(true).layer(tonic_web::GrpcWebLayer::new());
+  let mut server = server.accept_http1(true).layer(tonic_web::GrpcWebLayer::new());
 
   #[cfg(feature = "tonic-reflection")]
   {

@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/fusions/*", "crates/ultimates/*"]
+members = ["crates/fusions/*", "crates/ultimates/*", "crates/samples/*"]
 resolver = "2"
 
 [workspace.package]
@@ -38,9 +38,11 @@ toml = "0.8"
 config = { version = "0.14", default-features = false, features = [
     "toml",
     "yaml",
+    "json5",
+    "json",
 ] }
 itertools = "0.13"
-regex = "1"
+regex = { version = "1", features = ["unicode-case"] }
 rand = "0.8"
 bytes = "1"
 ulid = { version = "1", features = ["serde", "uuid"] }
@@ -81,15 +83,13 @@ futures = "0.3"
 futures-util = "0.3"
 async-trait = "0.1"
 async-stream = "0.3"
-tokio = { version = "1", features = [
-    "rt",
-    "rt-multi-thread",
-    "net",
-    "macros",
-    "time",
-    "signal",
+tokio = { version = "1", default-features = false, features = [
+    "full",
+    "tracing",
 ] }
-tokio-stream = { version = "0.1", features = ["time"] }
+tokio-stream = { version = "0.1", features = ["full"] }
+tokio-util = { version = "0.7", features = ["full", "tracing"] }
+tokio-test = { version = "0.4" }
 # -- Logging
 log = "0.4"
 env_logger = "0.11"

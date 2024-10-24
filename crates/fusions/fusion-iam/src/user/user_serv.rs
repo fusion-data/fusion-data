@@ -38,6 +38,7 @@ pub async fn delete_by_id(ctx: &CtxW, id: i64) -> Result<()> {
   Ok(())
 }
 
+#[tracing::instrument(skip(ctx, req))]
 pub async fn get_fetch_credential(ctx: &CtxW, req: UserFilter) -> Result<(User, UserCredential)> {
   let u = UserBmc::find_unique(ctx.mm(), vec![req]).await?.ok_or_else(|| DataError::not_found("User not exists."))?;
   let uc = UserCredentialBmc::find_by_id(ctx.mm(), u.id).await?;

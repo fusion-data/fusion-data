@@ -1,3 +1,5 @@
+mod init_tracing;
 mod utils;
 
-pub use utils::init_tracing;
+pub use init_tracing::init_tracing;
+pub use utils::*;

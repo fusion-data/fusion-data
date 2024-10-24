@@ -8,6 +8,7 @@ use crate::{
 
 use super::utils::make_token;
 
+#[tracing::instrument(skip(app, req))]
 pub async fn signin(app: &AppState, req: SigninRequest) -> Result<SigninReplay> {
   let ctx = app.create_super_admin_ctx();
 

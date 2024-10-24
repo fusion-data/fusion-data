@@ -11,6 +11,7 @@ repository.workspace = true
 workspace = true
 
 [features]
+# default = ["opentelemetry"]
 uuid = ["dep:uuid", "ultimate/uuid"]
 opentelemetry = [
   "ultimate/opentelemetry",

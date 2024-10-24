@@ -12,6 +12,7 @@ use crate::{Error, IdUuidFilter, Result};
 use crate::{Id, ModelManager};
 
 /// Create a new entity。需要自增主键ID
+#[tracing::instrument(skip(mm, data))]
 pub async fn create<MC, E>(mm: &ModelManager, data: E) -> Result<i64>
 where
   MC: DbBmc,
@@ -40,6 +41,7 @@ where
   Ok(id)
 }
 
+#[tracing::instrument(skip(mm, data))]
 pub async fn create_many<MC, E>(mm: &ModelManager, data: Vec<E>) -> Result<Vec<i64>>
 where
   MC: DbBmc,
@@ -75,6 +77,7 @@ where
   Ok(ids)
 }
 
+#[tracing::instrument(skip(mm, data))]
 pub async fn insert<MC, E>(mm: &ModelManager, data: E) -> Result<()>
 where
   MC: DbBmc,
@@ -105,6 +108,7 @@ where
   }
 }
 
+#[tracing::instrument(skip(mm, data))]
 pub async fn insert_many<MC, E>(mm: &ModelManager, data: impl IntoIterator<Item = E>) -> Result<u64>
 where
   MC: DbBmc,
@@ -131,23 +135,35 @@ where
   Ok(rows)
 }
 
+#[tracing::instrument(skip(mm, id))]
 pub async fn find_by_id<MC, E>(mm: &ModelManager, id: Id) -> Result<E>
 where
   MC: DbBmc,
   E: for<'r> FromRow<'r, PgRow> + Unpin + Send,
   E: HasSeaFields,
 {
-  let filter: FilterGroups = match id {
+  // -- Build the query
+  let mut query = Query::select();
+  query.from(MC::table_ref()).columns(E::sea_column_refs());
+
+  // condition from filter
+  let filters: FilterGroups = match id {
     Id::Uuid(id) => IdUuidFilter { id: Some(OpValString::Eq(id.to_string()).into()) }.into(),
     _ => id.to_filter_node("id").into(),
   };
-  find_unique::<MC, E, _>(mm, filter).await?.ok_or_else(|| Error::EntityNotFound {
-    schema: MC::SCHEMA,
-    entity: MC::TABLE,
-    id,
-  })
+  let cond: Condition = filters.try_into()?;
+  query.cond_where(cond);
+
+  // -- Execute the query
+  let (sql, values) = query.build_sqlx(PostgresQueryBuilder);
+  let sqlx_query = sqlx::query_as_with::<_, E, _>(&sql, values);
+  match mm.dbx().fetch_optional(sqlx_query).await? {
+    Some(entity) => Ok(entity),
+    None => Err(Error::EntityNotFound { schema: MC::SCHEMA, entity: MC::TABLE, id }),
+  }
 }
 
+#[tracing::instrument(skip(mm, filter))]
 pub async fn find_unique<MC, E, F>(mm: &ModelManager, filter: F) -> Result<Option<E>>
 where
   MC: DbBmc,
@@ -172,6 +188,7 @@ where
   Ok(entity)
 }
 
+#[tracing::instrument(skip(mm, filter))]
 pub async fn find_first<MC, E, F>(mm: &ModelManager, filter: F) -> Result<Option<E>>
 where
   MC: DbBmc,
@@ -183,6 +200,7 @@ where
   Ok(list.into_iter().next())
 }
 
+#[tracing::instrument(skip(mm, filter, list_options))]
 pub async fn find_many<MC, E, F>(mm: &ModelManager, filter: F, list_options: Option<ListOptions>) -> Result<Vec<E>>
 where
   MC: DbBmc,
@@ -212,6 +230,7 @@ where
   Ok(entities)
 }
 
+#[tracing::instrument(skip(mm, f))]
 pub async fn find_many_on<MC, E, F>(mm: &ModelManager, f: F) -> Result<Vec<E>>
 where
   MC: DbBmc,
@@ -235,6 +254,7 @@ where
   Ok(entities)
 }
 
+#[tracing::instrument(skip(mm, filter))]
 pub async fn count<MC, F>(mm: &ModelManager, filter: F) -> Result<i64>
 where
   MC: DbBmc,
@@ -257,6 +277,7 @@ where
   Ok(count)
 }
 
+#[tracing::instrument(skip(mm, f))]
 pub async fn count_on<MC, F>(mm: &ModelManager, f: F) -> Result<i64>
 where
   MC: DbBmc,
@@ -280,6 +301,7 @@ where
   Ok(count)
 }
 
+#[tracing::instrument(skip(mm, filter, pagination))]
 pub async fn page<MC, E, F>(mm: &ModelManager, filter: F, pagination: Pagination) -> Result<PagePayload<E>>
 where
   MC: DbBmc,
@@ -294,6 +316,7 @@ where
   Ok(PagePayload::new(Page::new(&pagination, total_size), items))
 }
 
+#[tracing::instrument(skip(mm, id, data))]
 pub async fn update_by_id<MC, E>(mm: &ModelManager, id: Id, data: E) -> Result<()>
 where
   MC: DbBmc,
@@ -322,6 +345,7 @@ where
 }
 
 /// 根据过滤条件更新，返回更新的记录数
+#[tracing::instrument(skip(mm, filter, data))]
 pub async fn update<MC, E, F>(mm: &ModelManager, filter: F, data: E) -> Result<u64>
 where
   MC: DbBmc,
@@ -352,6 +376,7 @@ where
   Ok(count)
 }
 
+#[tracing::instrument(skip(mm, id))]
 pub async fn delete_by_id<MC>(mm: &ModelManager, id: Id) -> Result<()>
 where
   MC: DbBmc,
@@ -387,6 +412,7 @@ where
   _check_result::<MC>(count, id)
 }
 
+#[tracing::instrument(skip(mm, ids))]
 pub async fn delete_by_ids<MC>(mm: &ModelManager, ids: Vec<Id>) -> Result<u64>
 where
   MC: DbBmc,
@@ -407,6 +433,7 @@ where
   Ok(n)
 }
 
+#[tracing::instrument(skip(mm, filter))]
 pub async fn delete<MC, F>(mm: &ModelManager, filter: F) -> Result<u64>
 where
   MC: DbBmc,
@@ -426,6 +453,7 @@ where
   Ok(n)
 }
 
+// #[tracing::instrument(skip(list_options))]
 pub fn compute_list_options<MC>(list_options: Option<ListOptions>) -> Result<ListOptions>
 where
   MC: DbBmc,
