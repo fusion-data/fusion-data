@@ -1,10 +1,10 @@
-use modql::{
-  field::Fields,
-  filter::{FilterNodes, OpValsInt64},
-};
 use sea_query::enum_def;
 use sqlx::FromRow;
 use ultimate_common::time::UtcDateTime;
+use ultimate_db::modql::{
+  field::Fields,
+  filter::{FilterNodes, OpValsInt64},
+};
 use ultimate_db::{
   base::{self, DbBmc},
   DbRowType, ModelManager, Result,

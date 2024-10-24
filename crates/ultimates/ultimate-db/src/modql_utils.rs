@@ -1,4 +1,4 @@
-use modql::filter::{IntoSeaError, OpValsValue, SeaResult};
+use crate::modql::filter::{IntoSeaError, OpValsValue, SeaResult};
 use serde::{Deserialize, Serialize};
 use ultimate_common::time::{Duration, UtcDateTime};
 
@@ -15,7 +15,6 @@ pub fn uuid_to_sea_value(json_value: serde_json::Value) -> SeaResult<sea_query::
   Ok(uuid::Uuid::deserialize(json_value)?.into())
 }
 
-#[cfg(feature = "modql")]
 pub fn datetime_to_sea_value(v: serde_json::Value) -> SeaResult<sea_query::Value> {
   if v.as_str().is_some() {
     Ok(UtcDateTime::deserialize(v)?.into())

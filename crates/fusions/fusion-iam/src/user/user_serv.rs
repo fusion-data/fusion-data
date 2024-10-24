@@ -1,6 +1,6 @@
 use fusion_server::ctx::CtxW;
-use modql::filter::OpValInt64;
 use ultimate::{DataError, Result};
+use ultimate_db::modql::filter::OpValInt64;
 
 use super::{
   user_role::{UserRoleBmc, UserRoleForCreate},

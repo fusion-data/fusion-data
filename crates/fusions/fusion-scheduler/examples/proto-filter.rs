@@ -1,9 +1,9 @@
 use chrono::{Duration, Utc};
 use fusion_scheduler::pb::fusion_scheduler::v1::ProcessFilterRequest;
-use modql::filter::{FilterGroups, FilterNodes, OpValsValue};
 use sea_query::Condition;
 use ultimate::DataError;
 use ultimate_api::v1::{OpNumber, OpString, ValInt64, ValString};
+use ultimate_db::modql::filter::{FilterGroups, FilterNodes, OpValsValue};
 use ultimate_db::{
   datetime_to_sea_value, try_into_op_vals_value_opt_with_filter_int64, try_into_op_vals_value_opt_with_filter_string,
   uuid_to_sea_value,

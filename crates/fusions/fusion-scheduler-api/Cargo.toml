@@ -11,7 +11,7 @@ repository.workspace = true
 workspace = true
 
 [features]
-with-db = ["sqlx", "sea-query", "modql", "ultimate-db"]
+with-db = ["sqlx", "sea-query", "ultimate-db"]
 
 [dependencies]
 ultimate-api = { workspace = true }
@@ -27,7 +27,6 @@ croner = { workspace = true }
 ultimate-db = { workspace = true, optional = true }
 sqlx = { workspace = true, optional = true }
 sea-query = { workspace = true, optional = true }
-modql = { workspace = true, optional = true }
 enum-iterator = { workspace = true, optional = true }
 
 [build-dependencies]

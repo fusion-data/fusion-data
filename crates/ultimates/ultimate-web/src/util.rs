@@ -66,6 +66,6 @@ where
   if let Some(v) = opt {
     Ok(Json(v))
   } else {
-    Err(AppError::new_with_code(404, "Not found."))
+    Err(Box::new(AppError::new_with_code(404, "Not found.")))
   }
 }

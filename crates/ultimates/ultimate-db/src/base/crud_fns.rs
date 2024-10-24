@@ -1,5 +1,5 @@
-use modql::field::{HasSeaFields, SeaField, SeaFields};
-use modql::filter::{FilterGroups, ListOptions, OpValString};
+use crate::modql::field::{HasSeaFields, SeaField, SeaFields};
+use crate::modql::filter::{FilterGroups, ListOptions};
 use sea_query::{Condition, Expr, PostgresQueryBuilder, Query, SelectStatement};
 use sea_query_binder::SqlxBinder;
 use sqlx::postgres::PgRow;
@@ -8,7 +8,7 @@ use sqlx::Row;
 use ultimate_api::v1::{Page, PagePayload, Pagination};
 
 use crate::base::{prep_fields_for_create, prep_fields_for_update, CommonIden, DbBmc};
-use crate::{Error, IdUuidFilter, Result};
+use crate::{Error, Result};
 use crate::{Id, ModelManager};
 
 /// Create a new entity。需要自增主键ID
@@ -147,10 +147,7 @@ where
   query.from(MC::table_ref()).columns(E::sea_column_refs());
 
   // condition from filter
-  let filters: FilterGroups = match id {
-    Id::Uuid(id) => IdUuidFilter { id: Some(OpValString::Eq(id.to_string()).into()) }.into(),
-    _ => id.to_filter_node("id").into(),
-  };
+  let filters: FilterGroups = id.to_filter_node("id").into();
   let cond: Condition = filters.try_into()?;
   query.cond_where(cond);
 

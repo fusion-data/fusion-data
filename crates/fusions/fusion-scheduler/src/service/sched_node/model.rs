@@ -1,11 +1,11 @@
 use fusion_scheduler_api::v1::sched_node::{NodeKind, NodeStatus};
-use modql::{
-  field::Fields,
-  filter::{FilterNodes, OpValsInt32, OpValsInt64, OpValsString, OpValsValue},
-};
 use sea_query::enum_def;
 use sqlx::FromRow;
 use ultimate_common::time::UtcDateTime;
+use ultimate_db::modql::{
+  field::Fields,
+  filter::{FilterNodes, OpValsInt32, OpValsInt64, OpValsString, OpValsValue},
+};
 use ultimate_db::{datetime_to_sea_value, DbRowType};
 
 #[derive(Debug, Clone, FromRow, Fields)]

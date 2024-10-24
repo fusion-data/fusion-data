@@ -1,4 +1,4 @@
-use modql::SIden;
+use crate::modql::SIden;
 use sea_query::{IntoIden, TableRef};
 
 /// The DbBmc trait must be implemented for the Bmc struct of an entity.

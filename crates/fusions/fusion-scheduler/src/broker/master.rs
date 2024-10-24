@@ -4,11 +4,11 @@ use std::{
 };
 
 use fusion_server::{app::AppState, ctx::CtxW};
-use modql::filter::OpValInt32;
 use tokio::sync::{mpsc, RwLock};
 use tracing::{error, info, warn};
 use ultimate::Result;
 use ultimate_api::v1::{Pagination, SortBy, SortDirection};
+use ultimate_db::modql::filter::OpValInt32;
 
 use crate::service::{
   global_path::{GlobalPath, GlobalPathSvc},

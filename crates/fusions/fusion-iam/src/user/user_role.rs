@@ -1,5 +1,5 @@
-use modql::field::Fields;
 use sqlx::prelude::FromRow;
+use ultimate_db::modql::field::Fields;
 use ultimate_db::{base::DbBmc, generate_common_bmc_fns, DbRowType};
 
 #[derive(Debug, FromRow, Fields)]

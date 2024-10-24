@@ -64,49 +64,10 @@ impl Page {
   }
 }
 
-#[cfg(feature = "modql")]
-impl From<SortBy> for modql::filter::OrderBy {
-  fn from(value: SortBy) -> Self {
-    match value.direction() {
-      SortDirection::Asc | SortDirection::Unspecified => modql::filter::OrderBy::Asc(value.field),
-      SortDirection::Desc => modql::filter::OrderBy::Desc(value.field),
-    }
-  }
-}
-
-#[cfg(feature = "modql")]
-impl From<&SortBy> for modql::filter::OrderBy {
-  fn from(value: &SortBy) -> Self {
-    match value.direction() {
-      SortDirection::Asc | SortDirection::Unspecified => modql::filter::OrderBy::Asc(value.field.clone()),
-      SortDirection::Desc => modql::filter::OrderBy::Desc(value.field.clone()),
-    }
-  }
-}
-#[cfg(feature = "modql")]
-impl From<Pagination> for modql::filter::ListOptions {
-  fn from(value: Pagination) -> Self {
-    let offset = Some(value.offset_value());
-    let limit = Some(if value.page_size > 0 { value.page_size } else { default_page_size() });
-    let order_bys = Some(modql::filter::OrderBys::new(value.sort_bys.into_iter().map(Into::into).collect()));
-    modql::filter::ListOptions { limit, offset, order_bys }
-  }
-}
-
-#[cfg(feature = "modql")]
-impl From<&Pagination> for modql::filter::ListOptions {
-  fn from(value: &Pagination) -> Self {
-    let offset = Some(value.offset_value());
-    let limit = Some(if value.page_size > 0 { value.page_size } else { default_page_size() });
-    let order_bys = Some(modql::filter::OrderBys::new(value.sort_bys.iter().map(|v| v.into()).collect()));
-    modql::filter::ListOptions { limit, offset, order_bys }
-  }
-}
-
-fn default_page() -> i64 {
+pub fn default_page() -> i64 {
   1
 }
 
-fn default_page_size() -> i64 {
+pub fn default_page_size() -> i64 {
   20
 }

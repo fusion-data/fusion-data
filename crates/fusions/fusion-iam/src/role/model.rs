@@ -1,10 +1,10 @@
-use modql::{
-  field::Fields,
-  filter::{FilterNodes, OpValsInt32, OpValsString},
-};
 use sea_query::enum_def;
 use sqlx::prelude::FromRow;
 use ultimate_common::time::UtcDateTime;
+use ultimate_db::modql::{
+  field::Fields,
+  filter::{FilterNodes, OpValsInt32, OpValsString},
+};
 use ultimate_db::DbRowType;
 
 use crate::pb::fusion_iam::v1::RoleStatus;

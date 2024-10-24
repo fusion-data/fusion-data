@@ -4,10 +4,10 @@ use chrono::Utc;
 use fusion_scheduler_api::v1::sched_node::NodeKind;
 use fusion_server::{app::AppState, ctx::CtxW};
 use hierarchical_hash_wheel_timer::{ClosureTimer, TimerReturn};
-use modql::filter::OpValInt64;
 use tokio::sync::mpsc;
 use tracing::error;
 use ultimate::Result;
+use ultimate_db::modql::filter::OpValInt64;
 use uuid::Uuid;
 
 use crate::service::{
