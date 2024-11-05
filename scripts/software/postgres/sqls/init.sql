@@ -1,19 +1,20 @@
-set timezone to 'Asia/Chongqing';
-\c template1;
+set
+  timezone to 'Asia/Chongqing';
+
 -- create extension adminpack;
 ----------------------------------------
 -- #functions
 ----------------------------------------
 -- 将数组反序
-create or replace function array_reverse(anyarray) returns anyarray as
-$$
+create
+or replace function array_reverse (anyarray) returns anyarray as $$
 select array(
                select $1[i]
                from generate_subscripts($1, 1) as s (i)
                order by i desc
        );
-$$ language 'sql' strict
-                  immutable;
+$$ language 'sql' strict immutable;
+
 ----------------------------------------
 -- #functions
 ----------------------------------------
@@ -60,20 +61,20 @@ $$ language 'sql' strict
 -- grant all privileges on all tables in schema public to massdata;
 -- grant all privileges on all sequences in schema public to massdata;
 -- 批量 grant/ revoke 用户权限
-create or replace function g_or_v(
-    g_or_v text,
-    -- 输入 grant or revoke 表示赋予或回收
-    own name,
-    -- 指定用户 owner
-    target name,
-    -- 赋予给哪个目标用户 grant privilege to who?
-    objtyp text,
-    --  对象类别: 表, 物化视图, 视图 object type 'r', 'v' or 'm', means table,view,materialized view
-    exp text[],
-    --  排除哪些对象, 用数组表示, excluded objects
-    priv text --  权限列表, privileges, ,splits, like 'select,insert,update'
-) returns void as
-$$
+create
+or replace function g_or_v (
+  g_or_v text,
+  -- 输入 grant or revoke 表示赋予或回收
+  own name,
+  -- 指定用户 owner
+  target name,
+  -- 赋予给哪个目标用户 grant privilege to who?
+  objtyp text,
+  --  对象类别: 表, 物化视图, 视图 object type 'r', 'v' or 'm', means table,view,materialized view
+  exp text[],
+  --  排除哪些对象, 用数组表示, excluded objects
+  priv text --  权限列表, privileges, ,splits, like 'select,insert,update'
+) returns void as $$
 declare
     nsp     name;
     rel     name;
