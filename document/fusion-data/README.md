@@ -2,7 +2,7 @@
 
 - [商业智能](./bi.md)
 - [数据治理](./governance.md)
-- [调度系统](./scheduler.md)
+- [调度系统](./scheduler/scheduler.md)
 - [数据集成](./integration.md)
 - [身份认证和授权](./iam/index.md)
 
@@ -34,9 +34,9 @@ email、phone、站内消息、……
 
 各种数据数据（源）的访问/操作/转换/加载
 
-### 主数据管理 fusiondata-maindata
+### 元数据管理 fusiondata-metadata
 
-### 元数据管理 fusiondata-meta
+### 主数据管理 fusiondata-maindata
 
 ### 数据资产 fusiondata-asset
 

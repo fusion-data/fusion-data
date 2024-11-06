@@ -31,7 +31,7 @@ pub fn ok_ulid(id: Ulid) -> AppResult<IdUlidResult> {
   Ok(IdUlidResult::new(id).into())
 }
 
-#[cfg(feature = "uuid")]
+
 #[inline]
 pub fn ok_uuid(id: uuid::Uuid) -> AppResult<ultimate::IdUuidResult> {
   Ok(ultimate::IdUuidResult::new(id).into())

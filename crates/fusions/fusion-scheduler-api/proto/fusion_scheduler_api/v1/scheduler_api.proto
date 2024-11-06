@@ -37,8 +37,8 @@ message ProcessDefinition {
     ENABLED = 100;
   }
 
-  int64 process_id = 1;
-  string process_key = 2;
+  string process_id = 1;
+  // string  = 2;
   string variables = 3;
   optional bytes data = 4;
   optional string description = 5;
@@ -47,16 +47,20 @@ message ProcessDefinition {
   int64 timeout = 7;
 }
 
+// 创建流程定义请求。
+//
+// 注意：创建流程时，process_id 和 description 至少一个非空。
 message CreateProcessRequest {
-  string process_key = 1;
+  // 可选，不填则自动生成（默认使用 UUID）
+  optional string process_id = 1;
   optional string description = 2;
-  repeated string tags = 3;
+  ultimate_api.v1.ArrayString tags = 3;
   // 任务变量，json object 类型。默认为空JSON对象（`{}`）
-  string variables = 4;
+  optional string variables = 4;
   // 可选的流程任务数据，由流程自行决定序列化方式
   optional bytes data = 5;
   // 可选的关联触发器 ID 列表
-  repeated int64 trigger_ids = 6;
+  ultimate_api.v1.ArrayString trigger_ids = 6;
 }
 
 message CreateProcessResponse {

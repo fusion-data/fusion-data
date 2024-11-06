@@ -13,6 +13,12 @@ pub enum OpValUuid {
   In(Vec<Uuid>),
   NotIn(Vec<Uuid>),
 
+  Lt(Uuid),
+  Lte(Uuid),
+
+  Gt(Uuid),
+  Gte(Uuid),
+
   Null(bool),
 }
 
@@ -73,6 +79,12 @@ mod json {
         ("$not", Value::String(string_v)) => OpValUuid::Not(parse_to_uuid(&string_v)?),
         ("$notIn", value) => OpValUuid::NotIn(into_uuids(value)?),
 
+        ("$lt", Value::String(string_v)) => OpValUuid::Lt(parse_to_uuid(&string_v)?),
+        ("$lte", Value::String(string_v)) => OpValUuid::Lte(parse_to_uuid(&string_v)?),
+
+        ("$gt", Value::String(string_v)) => OpValUuid::Gt(parse_to_uuid(&string_v)?),
+        ("$gte", Value::String(string_v)) => OpValUuid::Gte(parse_to_uuid(&string_v)?),
+
         ("$null", Value::Bool(v)) => OpValUuid::Null(v),
 
         (_, v) => return Err(Error::JsonOpValNotSupported { operator: op.to_string(), value: v }),
@@ -90,7 +102,7 @@ mod with_sea_query {
   use super::*;
   use crate::modql::filter::{sea_is_col_value_null, FilterNodeOptions, SeaResult};
   use crate::modql::into_node_value_expr;
-  use sea_query::{BinOper, ColumnRef, Condition, ConditionExpression, Expr, Func, SimpleExpr};
+  use sea_query::{BinOper, ColumnRef, ConditionExpression, SimpleExpr};
 
   impl OpValUuid {
     pub fn into_sea_cond_expr(
@@ -110,11 +122,14 @@ mod with_sea_query {
       };
 
       let cond = match self {
-        OpValUuid::Eq(s) => binary_fn(BinOper::Equal, s),
-        OpValUuid::Not(s) => binary_fn(BinOper::NotEqual, s),
-        OpValUuid::In(s) => binaries_fn(BinOper::In, s),
-        OpValUuid::NotIn(s) => binaries_fn(BinOper::NotIn, s),
-
+        OpValUuid::Eq(u) => binary_fn(BinOper::Equal, u),
+        OpValUuid::Not(u) => binary_fn(BinOper::NotEqual, u),
+        OpValUuid::In(u) => binaries_fn(BinOper::In, u),
+        OpValUuid::NotIn(u) => binaries_fn(BinOper::NotIn, u),
+        OpValUuid::Lt(u) => binary_fn(BinOper::SmallerThan, u),
+        OpValUuid::Lte(u) => binary_fn(BinOper::SmallerThanOrEqual, u),
+        OpValUuid::Gt(u) => binary_fn(BinOper::GreaterThan, u),
+        OpValUuid::Gte(u) => binary_fn(BinOper::GreaterThanOrEqual, u),
         OpValUuid::Null(null) => sea_is_col_value_null(col.clone(), null),
       };
 

@@ -59,15 +59,6 @@ impl Configuration {
   }
 }
 
-impl TryFrom<&Config> for Configuration {
-  type Error = Error;
-
-  fn try_from(c: &Config) -> std::result::Result<Self, Self::Error> {
-    let qc = c.get::<Configuration>("ultimate")?;
-    Ok(qc)
-  }
-}
-
 #[derive(Clone)]
 pub struct ConfigurationState {
   underling: Arc<Config>,
@@ -80,7 +71,7 @@ impl ConfigurationState {
   /// # Examples
   ///
   /// ```rust
-  /// # use ultimate::configuration::{ConfigState, model::*};
+  /// # use ultimate::configuration::{ConfigurationState, model::*};
   /// # fn test_config_state_from_env() {
   /// // 两个下划线作为层级分隔符
   /// std::env::set_var("ULTIMATE__WEB__SERVER_ADDR", "0.0.0.0:8000");
@@ -91,8 +82,8 @@ impl ConfigurationState {
   /// );
   /// std::env::set_var("ULTIMATE__SECURITY__PWD__PWD_KEY", "80c9a35c0f231219ca14c44fe10c728d");
   ///
-  /// let config_state = ConfigState::load().unwrap();
-  /// let qc = config_state.ultimate_config();
+  /// let configuration = ConfigurationState::load().unwrap();
+  /// let qc = configuration.configuration();
   ///
   /// assert_eq!(qc.security().pwd().pwd_key(), b"80c9a35c0f231219ca14c44fe10c728d");
   /// assert_eq!(
@@ -108,7 +99,7 @@ impl ConfigurationState {
   ///
   pub fn load() -> Result<Self> {
     let c = load_config()?;
-    let ultimate_config = Configuration::try_from(&c)?;
+    let ultimate_config = c.get("ultimate").unwrap();
     Ok(Self::new(Arc::new(c), Arc::new(ultimate_config)))
   }
 

@@ -12,7 +12,6 @@ workspace = true
 
 [features]
 # default = ["opentelemetry"]
-uuid = ["dep:uuid", "ultimate/uuid"]
 opentelemetry = [
   "ultimate/opentelemetry",
   "dep:tonic-tracing-opentelemetry",
@@ -21,7 +20,7 @@ opentelemetry = [
 
 [dependencies]
 ultimate = { workspace = true, features = ["tonic"] }
-uuid = { workspace = true, optional = true }
+uuid = { workspace = true }
 http = { workspace = true }
 futures = { workspace = true }
 tracing = { workspace = true }

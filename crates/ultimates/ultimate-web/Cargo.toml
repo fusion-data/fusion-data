@@ -12,7 +12,6 @@ workspace = true
 
 [features]
 # default = ["with-uuid"]
-uuid = ["dep:uuid", "ultimate/uuid"]
 tonic = ["dep:tonic", "ultimate/tonic"]
 
 [dependencies]
@@ -30,6 +29,6 @@ serde.workspace = true
 serde_json.workspace = true
 serde_with.workspace = true
 ulid.workspace = true
-uuid = { workspace = true, optional = true }
-utoipa = { workspace = true, optional = true }
+uuid = { workspace = true }
+# utoipa = { workspace = true, optional = true }
 tonic = { workspace = true, optional = true }

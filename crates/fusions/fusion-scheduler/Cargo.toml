@@ -17,25 +17,25 @@ name = "fusion-scheduler"
 path = "src/bin/fusion-scheduler.rs"
 
 [features]
-default = []
+default = ["tonic-reflection", "tonic-web"]
 tonic-reflection = ["dep:tonic-reflection", "ultimate-grpc/tonic-reflection"]
 tonic-web = ["dep:tonic-web", "ultimate-grpc/tonic-web"]
 opentelemetry = ["ultimate/opentelemetry"]
 
 [dependencies]
+ultimate = { workspace = true }
 # -- ultimates
 ultimate-common = { workspace = true }
-ultimate = { workspace = true, features = ["uuid"] }
 ultimate-api = { workspace = true }
 
 # -- db
-ultimate-db = { workspace = true, features = ["uuid", "tonic"] }
+ultimate-db = { workspace = true, features = ["tonic"] }
 sqlx = { workspace = true }
 sea-query = { workspace = true }
 sea-query-binder = { workspace = true }
 
+ultimate-grpc = { workspace = true }
 # -- grpc
-ultimate-grpc = { workspace = true, features = ["uuid"] }
 prost = { workspace = true }
 tonic = { workspace = true }
 tonic-reflection = { workspace = true, optional = true }
@@ -62,12 +62,13 @@ croner = { workspace = true }
 # -- async
 tokio = { workspace = true }
 tokio-stream = { workspace = true }
-tokio-cron-scheduler = { workspace = true }
 futures = { workspace = true }
 
 # -- tracing
 tracing = { workspace = true }
 
+[dev-dependencies]
+tokio-cron-scheduler = { workspace = true }
 
 [build-dependencies]
 tonic-build = { workspace = true }

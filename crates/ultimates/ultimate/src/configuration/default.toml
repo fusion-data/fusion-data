@@ -1,7 +1,7 @@
 [ultimate.app]
 run_mode = "dev"
 name = "ultimate"
-time_offset = "+80:00"
+time_offset = "+08:00"
 
 [ultimate.security.pwd]
 pwd_key = "0123456789ABCDEF0123456789ABCDEF"
@@ -35,6 +35,11 @@ log_dir = "./logs/"
 
 # 默认 log_name 同 ultimate.app.name
 #log_name = ""
+
+[ultimate.tracing.otel]
+enable = false
+traces_sample = "always_on"
+exporter_otlp_endpoint = "http://localhost:4317"
 
 [ultimate.db]
 enable = false

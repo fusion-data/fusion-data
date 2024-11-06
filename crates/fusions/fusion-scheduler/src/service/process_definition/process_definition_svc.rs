@@ -1,6 +1,7 @@
 use fusiondata_context::ctx::CtxW;
 use ultimate::Result;
 use ultimate_api::v1::PagePayload;
+use uuid::Uuid;
 
 use crate::service::{
   process_definition::process_definition_bmc::ProcessDefinitionBmc,
@@ -12,16 +13,17 @@ use super::{ProcessDefinition, ProcessDefinitionForCreate, SchedProcessForPage};
 pub struct ProcessDefinitionSvc;
 
 impl ProcessDefinitionSvc {
-  pub async fn find_by_id(ctx: &CtxW, id: i64) -> Result<ProcessDefinition> {
+  pub async fn find_by_id(ctx: &CtxW, id: Uuid) -> Result<ProcessDefinition> {
     let entity = ProcessDefinitionBmc::find_by_id(ctx.mm(), id).await?;
     Ok(entity)
   }
 
-  pub async fn create(ctx: &CtxW, entity_c: ProcessDefinitionForCreate, rel_triggers: Vec<i64>) -> Result<i64> {
+  pub async fn create(ctx: &CtxW, entity_c: ProcessDefinitionForCreate, rel_triggers: Vec<Uuid>) -> Result<Uuid> {
     let mm = ctx.mm().get_or_clone_with_txn();
     mm.dbx().begin_txn().await?;
 
-    let process_id = ProcessDefinitionBmc::create(&mm, entity_c).await?;
+    let process_id = entity_c.id;
+    ProcessDefinitionBmc::insert(&mm, entity_c).await?;
 
     if !rel_triggers.is_empty() {
       let data =

@@ -51,7 +51,7 @@ message PageProcessTaskResponse {
 }
 
 message TriggerProcessRequest {
-  int64 process_id = 1;
+  string process_id = 1;
 }
 
 message TriggerProcessResponse {
@@ -70,15 +70,14 @@ message PageProcessResponse {
 }
 
 message SchedProcessDto {
-  int64 id = 1;
-  string key = 2;
-  optional string description = 3;
-  repeated string tags = 4;
-  optional bytes data = 5;
-  int64 cid = 6;
-  int64 ctime = 7;
-  optional int64 mid = 8;
-  optional int64 mtime = 9;
+  string id = 1;
+  optional string description = 2;
+  repeated string tags = 3;
+  optional bytes data = 4;
+  int64 cid = 5;
+  int64 ctime = 6;
+  optional int64 mid = 7;
+  optional int64 mtime = 8;
 }
 
 message UpdateProcessRequest {

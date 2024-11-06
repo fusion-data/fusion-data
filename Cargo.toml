@@ -136,14 +136,16 @@ sqlx = { version = "0.8", features = [
     "chrono",
     "rust_decimal",
     "json",
+    "uuid",
 ] }
 sea-query = { version = "0.32", features = ["attr", "thread-safe"] }
 sea-query-binder = { version = "0.7", features = [
     "sqlx-postgres",
+    "postgres-array",
     "with-json",
     "with-chrono",
     "with-rust_decimal",
-    "postgres-array",
+    "with-uuid",
 ] }
 rusqlite = { version = "0.32", features = ["bundled"] }
 # -- Serde

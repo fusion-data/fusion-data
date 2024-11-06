@@ -141,6 +141,43 @@ impl_filter_serde_helpers!(ValInt64, val_int64);
 impl_filter_helpers!(ValDouble, OpNumber, OpNumber::Null, f64, ArrayDouble, val_double);
 // -- ValDouble end
 
+// -- Uuid begin
+impl TryFrom<ValString> for uuid::Uuid {
+  type Error = DataError;
+
+  fn try_from(value: ValString) -> Result<Self, Self::Error> {
+    let v = value.value.ok_or_else(|| {
+      DataError::bad_request(format!("Invalid From<{}> for serde_json::Value, missing field 'v'", stringify!($S)))
+    })?;
+    match v {
+      val_string::Value::V(v) => Ok(v.parse()?),
+      _ => Err(DataError::bad_request("Invalid filter string, need field 'value")),
+    }
+  }
+}
+
+impl TryFrom<ValString> for Vec<uuid::Uuid> {
+  type Error = DataError;
+
+  fn try_from(value: ValString) -> Result<Self, Self::Error> {
+    let v = value.value.ok_or_else(|| DataError::bad_request("Missing field 'v'"))?;
+    match v {
+      val_string::Value::Vs(v) => {
+        let mut vs = Vec::with_capacity(v.value.len());
+        for item in v.value {
+          vs.push(item.parse()?);
+        }
+        Ok(vs)
+      }
+      _ => Err(DataError::bad_request(format!(
+        "Invalid From<{}> for Vec<uuid::Uuid>, missing field 'values'",
+        stringify!($S)
+      ))),
+    }
+  }
+}
+// -- Uuid end
+
 #[cfg(test)]
 mod tests {
   use super::*;

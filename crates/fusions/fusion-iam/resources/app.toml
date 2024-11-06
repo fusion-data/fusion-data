@@ -14,10 +14,9 @@ server_addr = "0.0.0.0:8888"
 enable = true
 log_writer = "both"
 
-[ultimate.tracing.otel]
-exporter_otlp_endpoint = "http://localhost:4317"
-traces_sample = "always_on"
-
+# [ultimate.tracing.otel]
+# exporter_otlp_endpoint = "http://localhost:4317"
+# traces_sample = "always_on"
 
 [ultimate.grpc]
 enable = true

@@ -82,15 +82,14 @@ from_tuples_opval!(
   // Bool
   OpValBool
 );
-#[cfg(feature = "uuid")]
+
 use super::super::OpValUuid;
-#[cfg(feature = "uuid")]
+
 from_tuples_opval!(OpValUuid);
 // endregion: --- From Tuples (OpValType)
 
 // region:    --- Froms Tuples (Uuid val)
 
-#[cfg(feature = "uuid")]
 impl From<(&str, &uuid::Uuid)> for FilterNode {
   fn from((name, ov): (&str, &uuid::Uuid)) -> Self {
     let opvals = vec![OpValUuid::Eq(*ov).into()];
@@ -98,7 +97,6 @@ impl From<(&str, &uuid::Uuid)> for FilterNode {
   }
 }
 
-#[cfg(feature = "uuid")]
 impl From<(&str, uuid::Uuid)> for FilterNode {
   fn from((name, ov): (&str, uuid::Uuid)) -> Self {
     let opvals = vec![OpValUuid::Eq(ov).into()];
@@ -191,7 +189,7 @@ mod with_sea_query {
       for op_val in self.opvals.into_iter() {
         let cond_expr = match op_val {
           OpVal::String(ov) => ov.into_sea_cond_expr(&col, node_options)?,
-          #[cfg(feature = "uuid")]
+
           OpVal::Uuid(ov) => ov.into_sea_cond_expr(&col, node_options)?,
           OpVal::Int64(ov) => ov.into_sea_cond_expr(&col, node_options)?,
           OpVal::Int32(ov) => ov.into_sea_cond_expr(&col, node_options)?,

@@ -106,6 +106,12 @@ impl From<AddrParseError> for DataError {
   }
 }
 
+impl From<uuid::Error> for DataError {
+  fn from(value: uuid::Error) -> Self {
+    DataError::InternalError { code: 500, msg: value.to_string(), cause: None }
+  }
+}
+
 impl Serialize for DataError {
   fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
   where

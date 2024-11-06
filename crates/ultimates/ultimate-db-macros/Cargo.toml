@@ -23,4 +23,4 @@ proc-macro2 = { workspace = true }
 sea-query = { workspace = true }
 rusqlite = { workspace = true, optional = true }
 chrono = { workspace = true }
-uuid = { workspace = true, optional = true }
+uuid = { workspace = true }

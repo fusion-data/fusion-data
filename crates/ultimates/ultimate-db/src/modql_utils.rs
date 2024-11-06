@@ -10,7 +10,6 @@ pub fn try_into_op_vals_value_opt<V: Serialize>(value: V) -> Result<Option<OpVal
   Ok(if values.0.is_empty() { None } else { Some(values) })
 }
 
-#[cfg(feature = "uuid")]
 pub fn uuid_to_sea_value(json_value: serde_json::Value) -> SeaResult<sea_query::Value> {
   Ok(uuid::Uuid::deserialize(json_value)?.into())
 }
@@ -26,26 +25,26 @@ pub fn datetime_to_sea_value(v: serde_json::Value) -> SeaResult<sea_query::Value
   }
 }
 
-#[cfg(feature = "utoipa")]
-pub fn op_vals_integer_schema() -> utoipa::openapi::Object {
-  utoipa::openapi::ObjectBuilder::new()
-    .schema_type(utoipa::openapi::Type::Object)
-    .description(Some("opvalfloat64"))
-    .build()
-}
+// #[cfg(feature = "utoipa")]
+// pub fn op_vals_integer_schema() -> utoipa::openapi::Object {
+//   utoipa::openapi::ObjectBuilder::new()
+//     .schema_type(utoipa::openapi::Type::Object)
+//     .description(Some("opvalfloat64"))
+//     .build()
+// }
 
-#[cfg(feature = "utoipa")]
-pub fn op_vals_string_schema() -> utoipa::openapi::Object {
-  utoipa::openapi::ObjectBuilder::new()
-    .schema_type(utoipa::openapi::schema::Type::String)
-    .description(Some("https://github.com/jeremychone/rust-modql?tab=readme-ov-file#opvalstring-operators"))
-    .build()
-}
+// #[cfg(feature = "utoipa")]
+// pub fn op_vals_string_schema() -> utoipa::openapi::Object {
+//   utoipa::openapi::ObjectBuilder::new()
+//     .schema_type(utoipa::openapi::schema::Type::String)
+//     .description(Some("https://github.com/jeremychone/rust-modql?tab=readme-ov-file#opvalstring-operators"))
+//     .build()
+// }
 
-#[cfg(feature = "utoipa")]
-pub fn op_vals_bool_schema() -> utoipa::openapi::Object {
-  utoipa::openapi::ObjectBuilder::new()
-    .schema_type(utoipa::openapi::schema::Type::Boolean)
-    .description(Some("https://github.com/jeremychone/rust-modql?tab=readme-ov-file#opvalbool-operators"))
-    .build()
-}
+// #[cfg(feature = "utoipa")]
+// pub fn op_vals_bool_schema() -> utoipa::openapi::Object {
+//   utoipa::openapi::ObjectBuilder::new()
+//     .schema_type(utoipa::openapi::schema::Type::Boolean)
+//     .description(Some("https://github.com/jeremychone/rust-modql?tab=readme-ov-file#opvalbool-operators"))
+//     .build()
+// }

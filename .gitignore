@@ -288,3 +288,4 @@ venv.bak/
 .gitignore.bak
 # backup files, `.drawio` ect.
 .*.bkp
+.*.dtmp

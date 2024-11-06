@@ -35,7 +35,12 @@ impl SchedulerApi for SchedulerApiGrpcSvc {
     let (_meta, exts, request) = request.into_parts();
     let ctx: &CtxW = (&exts).try_into()?;
 
-    let link_trigger_ids = request.trigger_ids.clone();
+    let link_trigger_ids = request
+      .trigger_ids
+      .clone()
+      .unwrap_or_default()
+      .try_into()
+      .map_err(|e| Status::invalid_argument(format!("Invalid UUID: {}", e)))?;
 
     let entity_c = request.into();
 

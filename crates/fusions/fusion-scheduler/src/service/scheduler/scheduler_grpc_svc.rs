@@ -40,7 +40,11 @@ impl Scheduler for SchedulerGrpcSvc {
     let (_, exts, request) = request.into_parts();
     let ctx = (&exts).try_into()?;
 
-    let job_task_id = SchedulerSvc::trigger_process(ctx, request.process_id).await?;
+    let job_task_id = SchedulerSvc::trigger_process(
+      ctx,
+      request.process_id.parse().map_err(|e| Status::invalid_argument(format!("Invalid UUID: {}", e)))?,
+    )
+    .await?;
     Ok(Response::new(TriggerProcessResponse { job_task_id: job_task_id.to_string() }))
   }
 

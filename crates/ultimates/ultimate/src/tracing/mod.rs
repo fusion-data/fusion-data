@@ -1,5 +1,5 @@
 mod init_tracing;
 mod utils;
 
-pub use init_tracing::init_tracing;
+pub(crate) use init_tracing::*;
 pub use utils::*;

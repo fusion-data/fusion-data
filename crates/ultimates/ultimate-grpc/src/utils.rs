@@ -89,7 +89,7 @@ pub fn field_mask_match_with(field_mask: &FieldMask, path: &str) -> bool {
   field_mask.paths.is_empty() || field_mask.paths.iter().any(|p| p.starts_with(path))
 }
 
-#[cfg(feature = "uuid")]
+
 pub fn parse_uuid(s: &str) -> core::result::Result<uuid::Uuid, Status> {
   uuid::Uuid::parse_str(s).map_err(|e| Status::invalid_argument(format!("Invalid uuid: {}", e)))
 }

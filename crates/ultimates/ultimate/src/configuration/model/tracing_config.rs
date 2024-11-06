@@ -5,7 +5,7 @@ use serde::{
 use std::fmt::Display;
 use tracing::log::Level;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct TracingConfig {
   pub enable: bool,
 
@@ -21,31 +21,53 @@ pub struct TracingConfig {
   /// 目标文件名，默认为 <app name>.log
   pub log_name: Option<String>,
 
-  pub otel: Option<OtelConfig>,
+  pub otel: OtelConfig,
+}
+
+impl TracingConfig {
+  pub fn otel(&self) -> &OtelConfig {
+    &self.otel
+  }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OtelConfig {
-  // always_on
+  pub enable: bool,
   pub traces_sample: String,
-  // http://localhost:4317
   pub exporter_otlp_endpoint: String,
 }
 
-#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+impl Default for OtelConfig {
+  fn default() -> Self {
+    Self {
+      enable: Default::default(),
+      traces_sample: String::from("always_on"),
+      exporter_otlp_endpoint: String::from("http://localhost:4317"),
+    }
+  }
+}
+
+#[derive(Debug, Clone, Default, Serialize, PartialEq, Eq)]
 #[allow(non_camel_case_types)]
 pub enum LogWriterType {
+  #[default]
   Stdout,
   File,
   Both,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug, Hash)]
-pub struct LogLevel(Level);
+pub struct LogLevel(pub(crate) Level);
 
 impl Display for LogLevel {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     f.pad(self.0.as_str())
+  }
+}
+
+impl Default for LogLevel {
+  fn default() -> Self {
+    LogLevel(Level::Info)
   }
 }
 
