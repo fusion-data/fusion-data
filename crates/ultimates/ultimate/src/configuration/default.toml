@@ -24,7 +24,7 @@ NOJy7JbTpVxf9c6Ren/q+YggEVRdVZEQmZDLsQiE1czWoLLsezpIr3Ls
 
 [ultimate.web]
 enable = false
-# server_addr = "0.0.0.0:9500"
+server_addr = "0.0.0.0:9500"
 
 [ultimate.tracing]
 enable = true
@@ -47,7 +47,7 @@ enable = false
 
 [ultimate.grpc]
 enable = false
-# server_addr = "0.0.0.0:9501"
+server_addr = "0.0.0.0:9501"
 plaintext = true
 
 [ultimate.grpc.clients]

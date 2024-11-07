@@ -8,9 +8,9 @@ use tower_http::{
 };
 use tracing::info;
 
-use ultimate::configuration::Configuration;
+use ultimate::configuration::UltimateConfig;
 
-pub async fn init_server(conf: Arc<Configuration>, app: Router) -> ultimate::Result<()> {
+pub async fn init_server(conf: Arc<UltimateConfig>, app: Router) -> ultimate::Result<()> {
   let make_service = app
     .layer(CompressionLayer::new())
     .layer(CorsLayer::new().allow_methods(cors::Any).allow_origin(cors::Any))

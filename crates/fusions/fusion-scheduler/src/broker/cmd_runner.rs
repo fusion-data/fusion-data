@@ -1,19 +1,22 @@
-use fusiondata_context::app::AppState;
+use std::sync::Arc;
+
+use fusiondata_context::ctx::CtxW;
 use tokio::sync::mpsc;
 use tracing::{error, info};
+use ultimate::application::Application;
 
 use crate::service::{sched_namespace::SchedNamespace, sched_node::SchedNodeSvc};
 
 use super::SchedCmd;
 
 pub struct CmdRunner {
-  app_state: AppState,
+  app: Arc<Application>,
   rx: mpsc::Receiver<SchedCmd>,
 }
 
 impl CmdRunner {
-  pub fn new(app_state: AppState, rx: mpsc::Receiver<SchedCmd>) -> Self {
-    Self { app_state, rx }
+  pub fn new(app_state: Arc<Application>, rx: mpsc::Receiver<SchedCmd>) -> Self {
+    Self { app: app_state, rx }
   }
 
   pub async fn run(mut self) {
@@ -35,7 +38,7 @@ impl CmdRunner {
   }
 
   async fn heartbeat(&self, node_id: i64) {
-    let ctx = self.app_state.create_super_admin_ctx();
+    let ctx = CtxW::new_with_app(self.app.clone());
     match SchedNodeSvc::heartbeat(&ctx, node_id).await {
       Ok(_) => {}
       Err(e) => error!("Failed to heartbeat to scheduler: {}", e),

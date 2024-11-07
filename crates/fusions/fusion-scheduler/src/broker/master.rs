@@ -1,12 +1,13 @@
 use std::{
   collections::{BTreeMap, BTreeSet, VecDeque},
+  sync::Arc,
   time::Duration,
 };
 
-use fusiondata_context::{app::AppState, ctx::CtxW};
+use fusiondata_context::ctx::CtxW;
 use tokio::sync::{mpsc, RwLock};
 use tracing::{error, info, warn};
-use ultimate::Result;
+use ultimate::{application::Application, Result};
 use ultimate_api::v1::{Pagination, SortBy, SortDirection};
 use ultimate_db::modql::filter::OpValInt32;
 
@@ -19,7 +20,7 @@ use crate::service::{
 use super::{SchedCmd, SchedulerConfig, TimerRef};
 
 pub async fn loop_master(
-  app: AppState,
+  app: Arc<Application>,
   scheduler_config: SchedulerConfig,
   timer_ref: TimerRef,
   db_tx: mpsc::Sender<SchedCmd>,
@@ -27,7 +28,7 @@ pub async fn loop_master(
   let mut master_opt: Option<SchedNode> = None;
   while master_opt.is_none() {
     let alive_timeout = *scheduler_config.alive_timeout();
-    let ctx = app.create_super_admin_ctx();
+    let ctx = CtxW::new_with_app(app.clone());
     let node_id = scheduler_config.node_id();
     let node = match SchedNodeSvc::find_active_master(&ctx, alive_timeout).await? {
       Some(node) => node,
@@ -48,7 +49,7 @@ pub async fn loop_master(
 }
 
 pub struct Master {
-  app: AppState,
+  app: Arc<Application>,
   config: SchedulerConfig,
   timer_ref: TimerRef,
   cmd_tx: mpsc::Sender<SchedCmd>,
@@ -57,7 +58,7 @@ pub struct Master {
 
 impl Master {
   pub fn new(
-    app: AppState,
+    app: Arc<Application>,
     scheduler_config: SchedulerConfig,
     timer_ref: TimerRef,
     db_tx: mpsc::Sender<SchedCmd>,
@@ -81,7 +82,7 @@ impl Master {
   /// # Returns:
   ///   - `true`: 需要重新平衡 namespaces
   async fn scan_schedulers(&self) -> Result<bool> {
-    let ctx = self.app.create_super_admin_ctx();
+    let ctx = CtxW::new_with_app(self.app.clone());
 
     let healthy_nodes = SchedNodeSvc::check_healthy_schedulers(&ctx, *self.config.alive_timeout()).await?;
 
@@ -98,7 +99,7 @@ impl Master {
 
   /// 平衡 namespace
   async fn balance_namespaces(&self) -> Result<()> {
-    let ctx = self.app.create_super_admin_ctx();
+    let ctx = CtxW::new_with_app(self.app.clone());
 
     let schedulers = self.schedulers.read().await;
     let node_len = schedulers.len();
@@ -180,7 +181,7 @@ impl Master {
   }
 
   async fn get_batch_namespace(&self, batch_size: i64) -> Result<VecDeque<SchedNamespace>> {
-    let ctx = self.app.create_super_admin_ctx();
+    let ctx = CtxW::new_with_app(self.app.clone());
     let items = SchedNamespaceSvc::find_many(
       &ctx,
       vec![SchedNamespaceFilter { status: Some(OpValInt32::Eq(100).into()), ..Default::default() }],

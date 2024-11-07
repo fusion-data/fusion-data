@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package fusion_metadata.v1;
+
+import "ultimate_api/v1/types.proto";
+import "ultimate_api/v1/page.proto";
+import "ultimate_api/v1/ql.proto";
+
+service Metadata {
+  rpc CreateMetadata(CreateMetadataRequest) returns (CreateMetadataResponse) {}
+}
+
+message CreateMetadataRequest {
+  string name = 1;
+}
+
+message CreateMetadataResponse {
+  string id = 1;
+}

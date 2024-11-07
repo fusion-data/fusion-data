@@ -4,6 +4,8 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use ultimate_common::model::sensitive::UriString;
 
+use crate::configuration::Configurable;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DbConfig {
   enable: bool,
@@ -115,5 +117,11 @@ impl DbConfig {
 
   pub fn schema_search_path(&self) -> Option<&str> {
     self.schema_search_path.as_deref()
+  }
+}
+
+impl Configurable for DbConfig {
+  fn config_prefix() -> &'static str {
+    "ultimate.db"
   }
 }

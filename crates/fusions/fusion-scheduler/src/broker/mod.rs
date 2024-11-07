@@ -1,13 +1,10 @@
 //! 调度员
 //!
-use std::net::SocketAddr;
+use std::{net::SocketAddr, sync::Arc};
 
-use fusiondata_context::app::AppState;
-use hierarchical_hash_wheel_timer::{
-  thread_timer::{self, TimerWithThread},
-  OneShotClosureState, PeriodicClosureState,
-};
+use hierarchical_hash_wheel_timer::{thread_timer, OneShotClosureState, PeriodicClosureState};
 use tokio::{sync::mpsc, task::JoinHandle};
+use ultimate::application::Application;
 
 use crate::service::sched_node::SchedNode;
 
@@ -33,15 +30,14 @@ enum MasterSchedulers {
 }
 
 pub fn spawn_loop(
-  app: AppState,
+  app: Arc<Application>,
   grpc_sock_addr: SocketAddr,
   timer_ref: TimerRef,
 ) -> (JoinHandle<ultimate::Result<()>>, JoinHandle<ultimate::Result<Scheduler>>) {
-  let scheduler_config =
-    match SchedulerConfig::try_new(app.configuration_state().underling(), grpc_sock_addr.to_string()) {
-      Ok(c) => c,
-      Err(e) => panic!("Parse scheduler config failed: {}", e),
-    };
+  let scheduler_config = match SchedulerConfig::try_new(&app.underlying_config(), grpc_sock_addr.to_string()) {
+    Ok(c) => c,
+    Err(e) => panic!("Parse scheduler config failed: {}", e),
+  };
   let (db_tx, db_rx) = mpsc::channel(1024);
 
   let master_handle = {

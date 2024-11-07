@@ -1,8 +1,11 @@
 use std::future::Future;
 
-use fusiondata_context::app::AppState;
 use tokio::sync::oneshot;
 use tonic::service::RoutesBuilder;
+use ultimate::{
+  application::Application,
+  configuration::{ConfigRegistry, GrpcConfig},
+};
 use ultimate_grpc::{utils::init_grpc_server, GrpcSettings, GrpcStartInfo};
 
 use crate::{
@@ -10,9 +13,9 @@ use crate::{
 };
 
 pub async fn grpc_serve(
-  app_state: &AppState,
+  app: &Application,
 ) -> ultimate::Result<(oneshot::Receiver<GrpcStartInfo>, impl Future<Output = ultimate::Result<()>>)> {
-  let conf = app_state.configuration().grpc();
+  let conf: GrpcConfig = app.get_config()?;
 
   #[cfg(not(feature = "tonic-reflection"))]
   let encoded_file_descriptor_sets = vec![];
@@ -26,5 +29,5 @@ pub async fn grpc_serve(
     .add_service(user_svc())
     .add_service(auth_svc());
 
-  init_grpc_server(GrpcSettings { conf, encoded_file_descriptor_sets, routes: rb.routes() }).await
+  init_grpc_server(GrpcSettings { conf: &conf, encoded_file_descriptor_sets, routes: rb.routes() }).await
 }

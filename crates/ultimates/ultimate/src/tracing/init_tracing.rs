@@ -1,4 +1,5 @@
-use tracing::{info, Subscriber};
+use log::Level;
+use tracing::{info, subscriber::DefaultGuard, Subscriber};
 use tracing_subscriber::{
   filter::EnvFilter,
   fmt::{
@@ -11,19 +12,40 @@ use tracing_subscriber::{
 };
 
 use crate::{
-  configuration::{
-    model::{LogLevel, LogWriterType, TracingConfig},
-    Configuration,
-  },
+  configuration::{LogLevel, LogWriterType, TracingConfig, UltimateConfig},
   Result,
 };
 
-pub fn init_tracing(c: &Configuration) {
+pub fn init_tracing(c: &UltimateConfig) {
   if !c.tracing().enable {
     return;
   }
 
   init_subscribers(c.app().name(), c.tracing()).expect("Init tracing error. Please check your configuration");
+}
+
+// setup a temporary subscriber to log output during setup
+pub(crate) fn init_tracing_guard() -> DefaultGuard {
+  let c = TracingConfig {
+    enable: true,
+    target: true,
+    log_level: LogLevel(Level::Trace),
+    log_writer: LogWriterType::Stdout,
+    log_dir: "./logs/".to_string(),
+    ..Default::default()
+  };
+  let subscriber = tracing_subscriber::registry()
+    .with(build_loglevel_filter_layer(c.log_level))
+    .with(stdout_fmt_layer(&c))
+    .with(file_fmt_layer(&temporary_app_name(), &c));
+
+  ::tracing::subscriber::set_default(subscriber)
+}
+
+fn temporary_app_name() -> String {
+  std::env::var("ULTIMATE__APP__NAME")
+    .or_else(|_| std::env::var("ULTIMATE_APP_NAME"))
+    .unwrap_or_else(|_| "ultimate".to_string())
 }
 
 fn init_subscribers(app_name: &str, c: &TracingConfig) -> Result<()> {
@@ -47,10 +69,8 @@ fn init_subscribers(app_name: &str, c: &TracingConfig) -> Result<()> {
   let subscriber = tracing_subscriber::registry()
     .with(otel_layer)
     .with(build_loglevel_filter_layer(c.log_level))
-    .with(stdout_fmt_layer(c));
-
-  #[cfg(feature = "tracing-appender")]
-  let subscriber = subscriber.with(file_fmt_layer(app_name, c));
+    .with(stdout_fmt_layer(c))
+    .with(file_fmt_layer(app_name, c));
 
   tracing::subscriber::set_global_default(subscriber)?;
   Ok(())
@@ -94,7 +114,6 @@ where
   }
 }
 
-#[cfg(feature = "tracing-appender")]
 pub fn file_fmt_layer<S>(
   app_name: &str,
   c: &TracingConfig,

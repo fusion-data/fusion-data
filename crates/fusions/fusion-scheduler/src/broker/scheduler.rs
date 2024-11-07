@@ -1,12 +1,12 @@
-use std::time::Duration;
+use std::{sync::Arc, time::Duration};
 
 use chrono::Utc;
 use fusion_scheduler_api::v1::sched_node::NodeKind;
-use fusiondata_context::{app::AppState, ctx::CtxW};
+use fusiondata_context::ctx::CtxW;
 use hierarchical_hash_wheel_timer::{ClosureTimer, TimerReturn};
 use tokio::sync::mpsc;
 use tracing::error;
-use ultimate::Result;
+use ultimate::{application::Application, Result};
 use ultimate_db::modql::filter::OpValInt64;
 use uuid::Uuid;
 
@@ -18,13 +18,13 @@ use crate::service::{
 use super::{CmdRunner, SchedCmd, SchedulerConfig, TimerRef};
 
 pub async fn loop_scheduler(
-  app: AppState,
+  app: Arc<Application>,
   scheduler_config: SchedulerConfig,
   timer_ref: TimerRef,
   db_tx: mpsc::Sender<SchedCmd>,
   db_rx: mpsc::Receiver<SchedCmd>,
 ) -> Result<Scheduler> {
-  register(&scheduler_config, app.create_super_admin_ctx()).await?;
+  register(&scheduler_config, CtxW::new_with_app(app.clone())).await?;
 
   let cmd_runner_handle = tokio::spawn(CmdRunner::new(app.clone(), db_rx).run());
 
@@ -36,7 +36,7 @@ pub async fn loop_scheduler(
 }
 
 pub struct Scheduler {
-  app: AppState,
+  app: Arc<Application>,
   scheduler_config: SchedulerConfig,
   timer_ref: TimerRef,
   db_tx: mpsc::Sender<SchedCmd>,
@@ -64,7 +64,7 @@ impl Scheduler {
   // 扫描触发器，计算下一次待执行任务并存储到数据库中
   async fn scan_triggers(&mut self) -> Result<()> {
     let node_id = self.scheduler_config.node_id();
-    let ctx = self.app.create_super_admin_ctx();
+    let ctx = CtxW::new_with_app(self.app.clone());
 
     let triggers = TriggerDefinitionSvc::scan_next_triggers(&ctx, node_id).await?;
 

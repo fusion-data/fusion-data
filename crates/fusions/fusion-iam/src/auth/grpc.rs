@@ -1,7 +1,8 @@
-use fusiondata_context::app::get_app_state;
+use std::sync::Arc;
+
+use fusiondata_context::ctx::{CtxW, RequestMetadata};
 use tonic::{Request, Response, Status};
-use tracing::info;
-use ultimate::tracing::get_trace_id;
+use ultimate::{application::Application, ctx::Ctx};
 
 use crate::pb::fusion_iam::v1::{
   auth_server::{Auth, AuthServer},
@@ -16,10 +17,11 @@ pub struct AuthService;
 impl Auth for AuthService {
   #[tracing::instrument(skip(self, request))]
   async fn signin(&self, request: Request<SigninRequest>) -> Result<Response<SigninReplay>, Status> {
-    let app = get_app_state();
-    let trace_id = get_trace_id();
-    info!("trace_id: {:?}", trace_id);
-    let res = auth_serv::signin(app, request.into_inner()).await?;
+    let req_meta = RequestMetadata::from(request.metadata());
+    let ctx = CtxW::new_with_req_meta(Application::global(), Arc::new(req_meta));
+    // let trace_id = get_trace_id();
+    // info!("trace_id: {:?}", trace_id);
+    let res = auth_serv::signin(ctx, request.into_inner()).await?;
     Ok(Response::new(res))
   }
 }

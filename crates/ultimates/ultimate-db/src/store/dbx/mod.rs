@@ -10,7 +10,7 @@ use sqlx::query::{Query, QueryAs};
 use sqlx::{ConnectOptions, FromRow, IntoArguments, Pool, Postgres, Transaction};
 use tokio::sync::Mutex;
 use tracing::trace;
-use ultimate::configuration::model::DbConfig;
+use ultimate::configuration::DbConfig;
 
 mod error;
 

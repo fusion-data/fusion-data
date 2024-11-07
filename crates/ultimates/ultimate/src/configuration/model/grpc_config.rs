@@ -2,6 +2,8 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
+use crate::configuration::Configurable;
+
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(default)]
 pub struct GrpcConfig {
@@ -13,6 +15,12 @@ pub struct GrpcConfig {
   pub plaintext: bool,
 
   pub clients: HashMap<String, GrpcClientConfig>,
+}
+
+impl Configurable for GrpcConfig {
+  fn config_prefix() -> &'static str {
+    "ultimate.grpc"
+  }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

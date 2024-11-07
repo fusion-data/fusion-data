@@ -20,6 +20,7 @@ ultimate-common.workspace = true
 ultimate.workspace = true
 ultimate-api = { workspace = true }
 ultimate-db-macros = { workspace = true }
+async-trait.workspace = true
 derive_more.workspace = true
 serde.workspace = true
 serde_with.workspace = true
@@ -39,3 +40,4 @@ tonic = { workspace = true, optional = true }
 
 [dev-dependencies]
 anyhow.workspace = true
+tracing-subscriber.workspace = true

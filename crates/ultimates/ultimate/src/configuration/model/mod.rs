@@ -4,7 +4,9 @@ mod grpc_config;
 mod security_config;
 mod tracing_config;
 mod web_config;
+mod ultimate_config;
 
+pub use ultimate_config::*;
 pub use app_config::*;
 pub use db_config::*;
 pub use grpc_config::*;

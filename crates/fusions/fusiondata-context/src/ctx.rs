@@ -1,31 +1,42 @@
 use std::sync::Arc;
 
 use tonic::{metadata::MetadataMap, Extensions, Status};
-use ultimate::ctx::Ctx;
+use ultimate::{application::Application, ctx::Ctx};
 use ultimate_common::time::now_utc;
 use ultimate_db::ModelManager;
 use ultimate_grpc::utils::extract_jwt_payload_from_metadata;
-
-use crate::app::{get_app_state, AppState};
 
 static X_APP_VERSION: &str = "X-APP-VARSION";
 static X_DEVICE_ID: &str = "X-DEVICE-ID";
 
 #[derive(Clone)]
 pub struct CtxW {
-  ctx: Ctx,
+  app: Arc<Application>,
   mm: ModelManager,
   req_meta: Arc<RequestMetadata>,
 }
 
 impl CtxW {
-  pub fn new(state: &AppState, ctx: Ctx, req_meta: Arc<RequestMetadata>) -> Self {
-    let mm = state.mm().clone().with_ctx(ctx.clone());
-    Self { ctx, mm, req_meta }
+  pub fn new(app: Arc<Application>, ctx: Ctx, req_meta: Arc<RequestMetadata>) -> Self {
+    let mm = app.get_component::<ModelManager>().expect("Component ModelManager not found").with_ctx(ctx);
+    Self { app, mm, req_meta }
   }
 
-  pub fn ctx(&self) -> &Ctx {
-    &self.ctx
+  pub fn new_with_app(app: Arc<Application>) -> Self {
+    Self::new(app, Ctx::new_super_admin(), Default::default())
+  }
+
+  pub fn new_with_req_meta(app: Arc<Application>, req_meta: Arc<RequestMetadata>) -> Self {
+    Self::new(app, Ctx::new_super_admin(), req_meta)
+  }
+
+  // pub fn ctx(&self) -> &Ctx {
+  //   self.mm().ctx_ref()
+  //   &self.ctx
+  // }
+
+  pub fn app(&self) -> &Application {
+    &self.app
   }
 
   pub fn mm(&self) -> &ModelManager {
@@ -49,15 +60,16 @@ impl CtxW {
 impl TryFrom<&MetadataMap> for CtxW {
   type Error = Status;
   fn try_from(metadata: &MetadataMap) -> core::result::Result<Self, Status> {
-    let app = get_app_state();
-    let sc = app.configuration().security();
+    let app = Application::global();
+
+    let sc = app.ultimate_config().security();
     let req_time = now_utc();
 
     let payload = extract_jwt_payload_from_metadata(sc, metadata)?;
     let req_meta = RequestMetadata::from(metadata);
     let request_id = metadata.get("request_id").and_then(|v| v.to_str().ok().map(|s| s.to_string()));
 
-    let ctx = Ctx::try_from_jwt_payload(payload, Some(req_time), request_id)?;
+    let ctx = Ctx::new_with_jwt_payload(payload, Some(req_time), request_id)?;
     Ok(CtxW::new(app, ctx, Arc::new(req_meta)))
   }
 }

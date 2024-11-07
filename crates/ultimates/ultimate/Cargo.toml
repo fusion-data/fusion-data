@@ -8,10 +8,12 @@ license.workspace = true
 repository.workspace = true
 
 [lints]
-workspace = true
+# workspace = true
+[lints.rust]
+unsafe_code = "allow"
 
 [features]
-default = ["tracing-appender", "opentelemetry"]
+default = ["opentelemetry"]
 tonic = ["dep:tonic", "dep:prost"]
 opentelemetry = [
   "dep:init-tracing-opentelemetry",
@@ -20,11 +22,14 @@ opentelemetry = [
 
 [dependencies]
 ultimate-common.workspace = true
-thiserror.workspace = true
+ultimate-macros = { workspace = true }
+thiserror = { workspace = true }
+dashmap = { workspace = true }
+inventory = { workspace = true }
+async-trait = { workspace = true }
 regex.workspace = true
 futures.workspace = true
 tokio.workspace = true
-async-trait.workspace = true
 toml.workspace = true
 config.workspace = true
 strum.workspace = true
@@ -34,7 +39,7 @@ log.workspace = true
 tracing.workspace = true
 # tracing-log.workspace = true
 tracing-subscriber.workspace = true
-tracing-appender = { workspace = true, optional = true }
+tracing-appender = { workspace = true }
 init-tracing-opentelemetry = { workspace = true, optional = true }
 tracing-opentelemetry-instrumentation-sdk = { workspace = true, optional = true }
 rand.workspace = true

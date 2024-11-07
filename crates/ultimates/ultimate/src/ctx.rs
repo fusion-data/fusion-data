@@ -23,6 +23,7 @@ pub struct Ctx {
 }
 
 impl Ctx {
+  /// Create a new context
   pub fn new(payload: JwtPayload, req_time: Option<UtcDateTime>, request_id: Option<String>) -> Self {
     let req_time = req_time.unwrap_or_else(time::now_utc);
     let request_id = request_id.unwrap_or_else(|| Ulid::new().to_string());
@@ -34,6 +35,24 @@ impl Ctx {
     // let _request_span_guard = Arc::new(Box::new(request_span.enter()));
 
     Self { inner: Arc::new(InnerCtx { payload, req_time, request_id }) /*, request_span*/ }
+  }
+
+  /// Create a new context and authentication check to see if it's expired
+  pub fn new_with_jwt_payload(
+    mut payload: JwtPayload,
+    req_time: Option<UtcDateTime>,
+    request_id: Option<String>,
+  ) -> Result<Self, DataError> {
+    if let Some(st) = payload.expires_at() {
+      if st < SystemTime::now() {
+        return Err(DataError::unauthorized("The token expired"));
+      }
+    } else {
+      let exp: SystemTime = UtcDateTime::MAX_UTC.into();
+      payload.set_expires_at(&exp);
+    };
+
+    Ok(Ctx::new(payload, req_time, request_id))
   }
 
   pub fn new_root() -> Self {
@@ -70,27 +89,6 @@ impl Ctx {
   pub fn request_id(&self) -> &str {
     &self.request_id
   }
-
-  // pub fn request_span(&self) -> Span {
-  //   self.request_span.clone()
-  // }
-
-  pub fn try_from_jwt_payload(
-    mut payload: JwtPayload,
-    req_time: Option<UtcDateTime>,
-    request_id: Option<String>,
-  ) -> Result<Self, DataError> {
-    if let Some(st) = payload.expires_at() {
-      if st < SystemTime::now() {
-        return Err(DataError::unauthorized("The token expired"));
-      }
-    } else {
-      let exp: SystemTime = UtcDateTime::MAX_UTC.into();
-      payload.set_expires_at(&exp);
-    };
-
-    Ok(Ctx::new(payload, req_time, request_id))
-  }
 }
 
 impl Deref for Ctx {
@@ -105,6 +103,6 @@ impl TryFrom<JwtPayload> for Ctx {
   type Error = DataError;
 
   fn try_from(payload: JwtPayload) -> std::result::Result<Self, Self::Error> {
-    Ctx::try_from_jwt_payload(payload, Some(time::now_utc()), Some(Ulid::new().to_string()))
+    Ctx::new_with_jwt_payload(payload, Some(time::now_utc()), Some(Ulid::new().to_string()))
   }
 }

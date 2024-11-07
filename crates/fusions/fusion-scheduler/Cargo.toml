@@ -16,6 +16,10 @@ workspace = true
 name = "fusion-scheduler"
 path = "src/bin/fusion-scheduler.rs"
 
+[[bin]]
+name = "fusion-scheduler-worker"
+path = "src/bin/fusion-scheduler-worker.rs"
+
 [features]
 default = ["tonic-reflection", "tonic-web"]
 tonic-reflection = ["dep:tonic-reflection", "ultimate-grpc/tonic-reflection"]
@@ -34,8 +38,8 @@ sqlx = { workspace = true }
 sea-query = { workspace = true }
 sea-query-binder = { workspace = true }
 
-ultimate-grpc = { workspace = true }
 # -- grpc
+ultimate-grpc = { workspace = true }
 prost = { workspace = true }
 tonic = { workspace = true }
 tonic-reflection = { workspace = true, optional = true }

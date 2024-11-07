@@ -7,7 +7,7 @@ use fusion_scheduler_api::v1::{
 
 #[test]
 fn test_process_definition() {
-  let process_definition = ProcessDefinition { process_id: Uuid::now_v7().to_string(), ..Default::default() };
+  let process_definition = ProcessDefinition { id: Uuid::now_v7().to_string(), ..Default::default() };
   println!("process_definition: {:?}", process_definition);
   println!("process_definition json: {}", serde_json::to_string_pretty(&process_definition).unwrap());
   let task_kind = TaskKind::Http;

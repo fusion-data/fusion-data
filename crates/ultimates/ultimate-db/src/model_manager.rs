@@ -1,4 +1,4 @@
-use ultimate::{configuration::model::DbConfig, ctx::Ctx};
+use ultimate::{configuration::DbConfig, ctx::Ctx};
 
 use crate::store::{dbx::new_db_pool_from_config, Dbx};
 

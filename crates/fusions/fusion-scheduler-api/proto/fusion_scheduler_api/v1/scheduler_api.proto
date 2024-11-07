@@ -37,8 +37,8 @@ message ProcessDefinition {
     ENABLED = 100;
   }
 
-  string process_id = 1;
-  // string  = 2;
+  string id = 1;
+  ProcessStatus status  = 2;
   string variables = 3;
   optional bytes data = 4;
   optional string description = 5;
@@ -87,15 +87,15 @@ message TriggerDefinition {
     DISABLED = 99;
 
     // 触发器已启用
-    ACTIVE = 100;
+    ENABLED = 100;
 
-    // 触发器已禁用
+    // 触发器已完成，通常在次数上限或结束时间达到时为此状态
     COMPLETED = 200;
   }
 
-  int64 trigger_id = 1;
-  string trigger_key = 2;
-  TriggerKind trigger_kind = 3;
+  string id = 1;
+  TriggerStatus status = 2;
+  TriggerKind kind = 3;
   optional string variables = 4;
   oneof schedule {
     SimpleSchedule simple = 5;
@@ -103,14 +103,16 @@ message TriggerDefinition {
     bool depend = 7;
   }
   optional string description = 10;
-  repeated string tags = 11;
+  ultimate_api.v1.ArrayString tags = 11;
+
   // 超时时间（秒），触发器可以覆盖关联 ProcessDefinition 的 timeout 值
   optional int64 timeout = 12;
-    // 设置触发器有效的开始时间
-  optional int64 valid_time = 13;
+
+  // 设置触发器有效的开始时间
+  optional int64 begin_time = 13;
 
   // 设置触发器有效的结束时间
-  optional int64 invalid_time = 14;
+  optional int64 end_time = 14;
 }
 
 message SimpleSchedule {
