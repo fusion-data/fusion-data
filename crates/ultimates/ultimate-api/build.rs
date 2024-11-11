@@ -4,7 +4,7 @@ static BASE_PACKAGE: &str = ".ultimate_api.v1";
 
 static SERDE_ATTR: &str = "#[derive(serde::Serialize, serde::Deserialize)]";
 static SERDE_REPR_ATTR: &str = "#[derive(serde_repr::Serialize_repr, serde_repr::Deserialize_repr)]";
-// static MODQL_MESSAGE_ATTR: &str = "#[derive(modql::field::Fields)]";
+// static MODQL_MESSAGE_ATTR: &str = "#[derive(ultimate_db::modql::field::Fields)]";
 
 fn main() {
   let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
@@ -22,7 +22,7 @@ fn main() {
     },
   );
 
-  // let modql_messages = ["CreateProcessDefinitionRequest", "CreateTriggerDefinitionRequest"];
+  // let modql_messages = ["CreateProcessRequest", "CreateTriggerRequest"];
   // b = modql_messages.iter().fold(b, |b, m| b.message_attribute(format!("{}.{}", BASE_PACKAGE, m), MODQL_MESSAGE_ATTR));
 
   c.compile_protos(

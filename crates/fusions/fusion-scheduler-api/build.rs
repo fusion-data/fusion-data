@@ -3,7 +3,7 @@ use std::{env, path::PathBuf};
 static BASE_PACKAGE: &str = ".fusion_scheduler_api.v1";
 
 static MESSAGE_ATTR: &str = "#[derive(serde::Serialize, serde::Deserialize)]";
-// static MODQL_MESSAGE_ATTR: &str = "#[derive(modql::field::Fields)]";
+// static MODQL_MESSAGE_ATTR: &str = "#[derive(ultimate_db::modql::field::Fields)]";
 static ENUM_ATTR: &str = "#[derive(serde_repr::Serialize_repr, serde_repr::Deserialize_repr)]";
 static ENUM_ITERATOR_ATTR: &str = r#"#[cfg_attr(feature = "enum-iterator", derive(enum_iterator::Sequence))]"#;
 static ENUM_SQLX_ATTR: &str = r#"#[cfg_attr(feature = "sqlx", derive(sqlx::Type))]"#;
@@ -11,15 +11,14 @@ fn main() {
   let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
 
   let enum_list = [
-    "InstanceTask.TaskKind",
+    "Task.TaskKind",
     "TriggerDefinition.TriggerKind",
     "ProcessInstance.InstanceStatus",
     "ProcessDefinition.ProcessStatus",
     "SchedNode.NodeStatus",
     "SchedNode.NodeKind",
   ];
-  let oneof_list =
-    ["TriggerDefinition.schedule", "CreateTriggerDefinitionRequest.schedule", "UpdateTriggerRequest.schedule"];
+  let oneof_list = ["TriggerDefinition.schedule", "CreateTriggerRequest.schedule", "UpdateTriggerRequest.schedule"];
 
   let mut iam_b = tonic_build::configure()
     .emit_rerun_if_changed(true)

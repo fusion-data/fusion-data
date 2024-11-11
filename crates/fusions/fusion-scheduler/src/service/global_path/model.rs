@@ -1,8 +1,8 @@
-use modql::{
+use sqlx::prelude::FromRow;
+use ultimate_db::modql::{
   field::Fields,
   filter::{FilterNodes, OpValsInt64, OpValsString},
 };
-use sqlx::prelude::FromRow;
 use ultimate_db::DbRowType;
 
 #[derive(Debug, FromRow, Fields)]

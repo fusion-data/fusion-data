@@ -1,10 +1,10 @@
 use ultimate::{
-  configuration::model::SecurityConf,
+  configuration::SecurityConfig,
   security::{jose::JwtPayload, SecurityUtils},
   DataError, Result,
 };
 
-pub fn make_token(sc: &SecurityConf, uid: i64) -> Result<String> {
+pub fn make_token(sc: &SecurityConfig, uid: i64) -> Result<String> {
   let mut payload = JwtPayload::new();
   payload.set_subject(uid.to_string());
 

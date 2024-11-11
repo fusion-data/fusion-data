@@ -3,7 +3,7 @@ use std::{net::AddrParseError, num::ParseIntError};
 use config::ConfigError;
 use serde::{ser::SerializeMap, Serialize};
 use thiserror::Error;
-use tracing::error;
+use tracing::{error, subscriber::SetGlobalDefaultError};
 
 use crate::security::Error as SecurityError;
 
@@ -61,6 +61,12 @@ impl DataError {
   }
 }
 
+impl From<SetGlobalDefaultError> for DataError {
+  fn from(value: SetGlobalDefaultError) -> Self {
+    DataError::InternalError { code: 500, msg: value.to_string(), cause: None }
+  }
+}
+
 impl From<ultimate_common::Error> for DataError {
   fn from(value: ultimate_common::Error) -> Self {
     DataError::server_error(value.to_string())
@@ -97,6 +103,12 @@ impl From<ConfigError> for DataError {
 impl From<AddrParseError> for DataError {
   fn from(value: AddrParseError) -> Self {
     DataError::server_error(format!("Addr parse error: {}", value))
+  }
+}
+
+impl From<uuid::Error> for DataError {
+  fn from(value: uuid::Error) -> Self {
+    DataError::InternalError { code: 500, msg: value.to_string(), cause: None }
   }
 }
 

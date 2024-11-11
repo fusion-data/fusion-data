@@ -1,8 +1,15 @@
 # fusiondata
 
 
-## Development environment with Docker
+## 开发环境
 
-```bash
-docker compose up -d --build && docker compose logs -f db
-```
+开发环境详细配置请见：[development](./document/development-zh.md) 说明。
+
+
+## Thanks
+
+Borrowed a lot of inspiration and code from the following projects:
+
+- [modql](https://crates.io/crates/modql)
+- [spring](https://crates.io/crates/spring)
+- [Hash Wheel Timer](https://crates.io/crates/hierarchical_hash_wheel_timer)

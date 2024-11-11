@@ -1,13 +1,13 @@
-use std::time::Duration;
+use std::{sync::Arc, time::Duration};
 
 use chrono::Utc;
 use fusion_scheduler_api::v1::sched_node::NodeKind;
-use fusion_server::{app::AppState, ctx::CtxW};
+use fusiondata_context::ctx::CtxW;
 use hierarchical_hash_wheel_timer::{ClosureTimer, TimerReturn};
-use modql::filter::OpValInt64;
 use tokio::sync::mpsc;
 use tracing::error;
-use ultimate::Result;
+use ultimate::{application::Application, Result};
+use ultimate_db::modql::filter::OpValInt64;
 use uuid::Uuid;
 
 use crate::service::{
@@ -18,13 +18,13 @@ use crate::service::{
 use super::{CmdRunner, SchedCmd, SchedulerConfig, TimerRef};
 
 pub async fn loop_scheduler(
-  app: AppState,
+  app: Arc<Application>,
   scheduler_config: SchedulerConfig,
   timer_ref: TimerRef,
   db_tx: mpsc::Sender<SchedCmd>,
   db_rx: mpsc::Receiver<SchedCmd>,
 ) -> Result<Scheduler> {
-  register(&scheduler_config, app.create_super_admin_ctx()).await?;
+  register(&scheduler_config, CtxW::new_with_app(app.clone())).await?;
 
   let cmd_runner_handle = tokio::spawn(CmdRunner::new(app.clone(), db_rx).run());
 
@@ -36,7 +36,7 @@ pub async fn loop_scheduler(
 }
 
 pub struct Scheduler {
-  app: AppState,
+  app: Arc<Application>,
   scheduler_config: SchedulerConfig,
   timer_ref: TimerRef,
   db_tx: mpsc::Sender<SchedCmd>,
@@ -64,14 +64,14 @@ impl Scheduler {
   // 扫描触发器，计算下一次待执行任务并存储到数据库中
   async fn scan_triggers(&mut self) -> Result<()> {
     let node_id = self.scheduler_config.node_id();
-    let ctx = self.app.create_super_admin_ctx();
+    let ctx = CtxW::new_with_app(self.app.clone());
 
     let triggers = TriggerDefinitionSvc::scan_next_triggers(&ctx, node_id).await?;
 
     Ok(())
   }
 
-  // 扫描任务，并添加任务到 timer_ref
+  // 扫描任务，创建 TaskJob 并添加到 timer_ref
   async fn scan_tasks(&mut self) -> Result<()> {
     Ok(())
   }
@@ -115,14 +115,14 @@ async fn is_alive_node(node_addr: &str) -> bool {
   todo!()
 }
 
-/// 启动 node 心跳定时任务
+/// 启动 scheduler node 心跳定时任务
 fn start_heartbeat(timer_ref: &mut TimerRef, tx: mpsc::Sender<SchedCmd>, conf: &SchedulerConfig) {
   let node_id = conf.node_id();
   let period = conf.heartbeat_interval();
-  timer_ref.schedule_action_periodic(Uuid::nil(), Duration::from_secs(17), *period, move |_| {
+  timer_ref.schedule_action_periodic(Uuid::now_v7(), Duration::from_secs(17), *period, move |job_id| {
     match tx.blocking_send(SchedCmd::Heartbeat(node_id)) {
       Ok(_) => {}
-      Err(e) => error!("Failed to send heartbeat to cmd runner: {}", e),
+      Err(e) => error!("[job:{}] Failed to send heartbeat to cmd runner: {}", job_id, e),
     };
     TimerReturn::Reschedule(())
   });

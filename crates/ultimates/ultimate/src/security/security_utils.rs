@@ -1,6 +1,6 @@
 use josekit::{jwe::JweHeader, jwt::JwtPayload, JoseError};
 
-use crate::configuration::model::KeyConf;
+use crate::configuration::KeyConf;
 
 use super::jose::{decrypt_jwe_dir, encrypt_jwe_dir};
 

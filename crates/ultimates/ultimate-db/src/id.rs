@@ -1,22 +1,19 @@
-use derive_more::derive::Display;
-use modql::{
-  field::HasSeaFields,
-  filter::{FilterNode, FilterNodes, OpValsString},
-};
+use crate::modql::{field::HasSeaFields, filter::FilterNode};
+
 use sea_query::SimpleExpr;
 use serde::{Deserialize, Serialize};
 use sqlx::{postgres::PgRow, FromRow};
-use uuid::Uuid;
 
 pub trait DbRowType: HasSeaFields + for<'r> FromRow<'r, PgRow> + Unpin + Send {}
 
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Display)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum Id {
   I32(i32),
   I64(i64),
   String(String),
-  Uuid(Uuid),
+
+  Uuid(uuid::Uuid),
 }
 
 impl Id {
@@ -25,16 +22,17 @@ impl Id {
       Id::I32(id) => (col, *id).into(),
       Id::I64(id) => (col, *id).into(),
       Id::String(id) => (col, id).into(),
-      Id::Uuid(id) => (col, id.to_string()).into(),
+
+      Id::Uuid(id) => (col, id).into(),
     }
   }
 }
 
-#[derive(Debug, Default, Deserialize, FilterNodes)]
-pub struct IdUuidFilter {
-  #[modql(cast_as = "uuid")]
-  pub id: Option<OpValsString>,
-}
+// #[derive(Debug, Default, Deserialize, FilterNodes)]
+// pub struct IdUuidFilter {
+//   #[modql(cast_as = "uuid")]
+//   pub id: Option<OpValsString>,
+// }
 
 impl From<Id> for FilterNode {
   fn from(id: Id) -> Self {
@@ -77,14 +75,14 @@ impl From<&str> for Id {
   }
 }
 
-impl From<Uuid> for Id {
-  fn from(value: Uuid) -> Self {
+impl From<uuid::Uuid> for Id {
+  fn from(value: uuid::Uuid) -> Self {
     Id::Uuid(value)
   }
 }
 
-impl From<&Uuid> for Id {
-  fn from(value: &Uuid) -> Self {
+impl From<&uuid::Uuid> for Id {
+  fn from(value: &uuid::Uuid) -> Self {
     Id::Uuid(*value)
   }
 }
@@ -101,6 +99,8 @@ where
 mod tests {
   use super::*;
 
+  use uuid::Uuid;
+
   #[derive(PartialEq, Serialize, Deserialize)]
   struct TestModel {
     pub role_id: i32,
@@ -112,18 +112,13 @@ mod tests {
   #[test]
   fn test_id() -> anyhow::Result<()> {
     let id = Id::I32(32);
-    println!("id is {id}");
-    let order_id = Id::Uuid(Uuid::now_v7());
-    println!("order id is {order_id}");
+    println!("id is {id:?}");
+
+    let order_id = Uuid::now_v7();
     assert_eq!("32", serde_json::to_string(&id)?);
     assert_eq!(serde_json::to_string(&Id::String("abcdefg".into()))?, r#""abcdefg""#);
 
-    let tm = TestModel {
-      role_id: 53,
-      user_id: 2309457238947,
-      order_id: Uuid::now_v7(),
-      dict_id: "system.run.mode".to_string(),
-    };
+    let tm = TestModel { role_id: 53, user_id: 2309457238947, order_id, dict_id: "system.run.mode".to_string() };
 
     let v = serde_json::to_value(tm)?;
     let role_id: i32 = serde_json::from_value(v.get("role_id").unwrap().clone())?;

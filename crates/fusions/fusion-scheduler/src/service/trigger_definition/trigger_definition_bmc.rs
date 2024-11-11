@@ -1,7 +1,7 @@
 use chrono::Utc;
-use modql::field::HasSeaFields;
 use sea_query::{all, any, Expr, PostgresQueryBuilder, Query};
 use sea_query_binder::SqlxBinder;
+use ultimate_db::modql::field::HasSeaFields;
 use ultimate_db::{base::DbBmc, generate_common_bmc_fns, generate_filter_bmc_fns, ModelManager, Result};
 
 use crate::service::{

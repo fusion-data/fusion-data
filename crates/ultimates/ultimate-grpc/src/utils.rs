@@ -8,10 +8,9 @@ use tonic::{
   transport::{server::TcpIncoming, Server},
   Status,
 };
-use tower_http::trace::TraceLayer;
 use tracing::info;
 use ultimate::{
-  configuration::model::SecurityConf,
+  configuration::SecurityConfig,
   security::{jose::JwtPayload, SecurityUtils},
   DataError,
 };
@@ -24,6 +23,7 @@ use crate::{GrpcSettings, GrpcStartInfo};
 /// - rx: gRPC 服务启动信息
 /// - future: gRPC 服务 Future，调用 .await 进行（阻塞）执行循环
 ///
+#[allow(unused_mut)]
 pub async fn init_grpc_server(
   setting: GrpcSettings<'_>,
 ) -> ultimate::Result<(oneshot::Receiver<GrpcStartInfo>, impl Future<Output = ultimate::Result<()>>)> {
@@ -33,15 +33,22 @@ pub async fn init_grpc_server(
   let local_addr = tcp_listener.local_addr()?;
   let start_info = GrpcStartInfo { local_addr };
   match tx.send(start_info) {
-    Ok(_) => info!("Grpc server listening to {}", local_addr),
-    Err(e) => panic!("Init grpc server info failed: {:?}", e),
+    Ok(_) => info!("gRPC server listening to {}", local_addr),
+    Err(e) => panic!("Init gRPC server info failed: {:?}", e),
   };
 
   let mut routes = setting.routes;
-  let mut server = Server::builder().layer(TraceLayer::new_for_grpc());
+
+  #[cfg(not(feature = "opentelemetry"))]
+  let mut server = Server::builder().layer(tower_http::trace::TraceLayer::new_for_grpc());
+  #[cfg(feature = "opentelemetry")]
+  let mut server = Server::builder().layer(
+    tonic_tracing_opentelemetry::middleware::server::OtelGrpcLayer::default()
+      .filter(tonic_tracing_opentelemetry::middleware::filters::reject_healthcheck),
+  );
 
   #[cfg(feature = "tonic-web")]
-  let mut b = b.accept_http1(true).layer(tonic_web::GrpcWebLayer::new());
+  let mut server = server.accept_http1(true).layer(tonic_web::GrpcWebLayer::new());
 
   #[cfg(feature = "tonic-reflection")]
   {
@@ -60,7 +67,7 @@ pub async fn init_grpc_server(
 }
 
 pub fn extract_jwt_payload_from_metadata(
-  sc: &SecurityConf,
+  sc: &SecurityConfig,
   metadata: &MetadataMap,
 ) -> Result<JwtPayload, tonic::Status> {
   let token = extract_token_from_metadata(metadata)?;
@@ -82,7 +89,6 @@ pub fn field_mask_match_with(field_mask: &FieldMask, path: &str) -> bool {
   field_mask.paths.is_empty() || field_mask.paths.iter().any(|p| p.starts_with(path))
 }
 
-#[cfg(feature = "uuid")]
 pub fn parse_uuid(s: &str) -> core::result::Result<uuid::Uuid, Status> {
   uuid::Uuid::parse_str(s).map_err(|e| Status::invalid_argument(format!("Invalid uuid: {}", e)))
 }

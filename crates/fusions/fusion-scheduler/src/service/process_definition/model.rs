@@ -1,8 +1,4 @@
-use fusion_scheduler_api::v1::{self, process_definition::ProcessStatus, CreateProcessDefinitionRequest};
-use modql::{
-  field::Fields,
-  filter::{FilterNodes, OpValsInt32, OpValsValue},
-};
+use fusion_scheduler_api::v1::{self, process_definition::ProcessStatus, CreateProcessRequest};
 use sea_query::enum_def;
 use sqlx::FromRow;
 use ultimate::DataError;
@@ -12,16 +8,23 @@ use ultimate_db::{
   datetime_to_sea_value, try_into_op_vals_int32_opt, try_into_op_vals_value_opt_with_filter_int64,
   try_into_op_vals_value_opt_with_filter_string, uuid_to_sea_value, DbRowType,
 };
+use ultimate_db::{
+  modql::{
+    field::Fields,
+    filter::{FilterNodes, OpValsInt32, OpValsUuid, OpValsValue},
+  },
+  try_into_op_vals_uuid_with_filter_string,
+};
+use uuid::Uuid;
 
 use crate::pb::fusion_scheduler::v1::{PageProcessRequest, PageProcessResponse, ProcessFilterRequest, SchedProcessDto};
 
 #[derive(Debug, FromRow, Fields)]
 #[enum_def]
 pub struct ProcessDefinition {
-  pub id: i64,
+  pub id: Uuid,
   pub tenant_id: i32,
   pub namespace_id: i32,
-  pub key: String,
   pub description: Option<String>,
   pub tags: Vec<String>,
   pub variables: Option<serde_json::Value>,
@@ -37,8 +40,7 @@ impl DbRowType for ProcessDefinition {}
 impl From<ProcessDefinition> for SchedProcessDto {
   fn from(row: ProcessDefinition) -> Self {
     SchedProcessDto {
-      id: row.id,
-      key: row.key,
+      id: row.id.to_string(),
       description: row.description,
       tags: row.tags,
       data: row.data,
@@ -58,19 +60,19 @@ impl From<ProcessDefinition> for v1::ProcessDefinition {
 
 #[derive(Debug, Fields)]
 pub struct ProcessDefinitionForCreate {
-  pub key: String,
+  pub id: Uuid,
   pub description: Option<String>,
   pub tags: Vec<String>,
   // json object
   pub data: Option<serde_json::Value>,
 }
 
-impl From<CreateProcessDefinitionRequest> for ProcessDefinitionForCreate {
-  fn from(job: CreateProcessDefinitionRequest) -> Self {
+impl From<CreateProcessRequest> for ProcessDefinitionForCreate {
+  fn from(job: CreateProcessRequest) -> Self {
     Self {
-      key: job.process_key,
+      id: Uuid::now_v7(),
       description: job.description,
-      tags: job.tags,
+      tags: job.tags.map(|arr| arr.value).unwrap_or_default(),
       data: job.data.map(|bytes| serde_json::to_value(bytes).unwrap()),
     }
   }
@@ -86,8 +88,7 @@ pub struct ProcessDefinitionForUpdate {
 
 #[derive(Debug, Default, FilterNodes)]
 pub struct ProcessDefinitionFilter {
-  #[modql(to_sea_value_fn = "uuid_to_sea_value")]
-  pub id: Option<OpValsValue>,
+  pub id: Option<OpValsUuid>,
 
   pub status: Option<OpValsInt32>,
 
@@ -102,7 +103,7 @@ impl TryFrom<ProcessFilterRequest> for ProcessDefinitionFilter {
   type Error = DataError;
   fn try_from(value: ProcessFilterRequest) -> Result<Self, Self::Error> {
     let f = Self {
-      id: try_into_op_vals_value_opt_with_filter_string(value.id)?,
+      id: try_into_op_vals_uuid_with_filter_string(value.id)?,
       status: try_into_op_vals_int32_opt(value.status)?,
       ctime: try_into_op_vals_value_opt_with_filter_int64(value.ctime)?,
       mtime: try_into_op_vals_value_opt_with_filter_int64(value.mtime)?,

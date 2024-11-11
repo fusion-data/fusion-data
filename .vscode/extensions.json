@@ -2,5 +2,6 @@
     "recommendations": [
         "rust-lang.rust-analyzer",
         "fill-labs.dependi",
+        "ReneSaarsoo.sql-formatter-vsc"
     ]
 }
