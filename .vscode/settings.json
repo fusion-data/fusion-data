@@ -6,4 +6,14 @@
   "editor.formatOnSave": true,
   "rust-analyzer.cargo.buildScripts.enable": true,
   "accessibility.signalOptions.volume": 0,
+  "[sql]": {
+    "editor.defaultFormatter": "ReneSaarsoo.sql-formatter-vsc"
+  },
+  "SQL-Formatter-VSCode.ignoreTabSettings": true,
+  "SQL-Formatter-VSCode.dataTypeCase": "lower",
+  "SQL-Formatter-VSCode.dialect": "postgresql",
+  "SQL-Formatter-VSCode.expressionWidth": 80,
+  "SQL-Formatter-VSCode.functionCase": "lower",
+  "SQL-Formatter-VSCode.identifierCase": "lower",
+  "SQL-Formatter-VSCode.keywordCase": "lower",
 }

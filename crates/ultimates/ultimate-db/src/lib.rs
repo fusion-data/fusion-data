@@ -1,4 +1,9 @@
-use ultimate::configuration::model::DbConf;
+use async_trait::async_trait;
+use ultimate::{
+  application::ApplicationBuilder,
+  configuration::{ConfigRegistry, DbConfig},
+  plugin::Plugin,
+};
 
 pub mod acs;
 mod api_helpers;
@@ -7,6 +12,7 @@ mod error;
 mod id;
 mod macro_helpers;
 mod model_manager;
+pub mod modql;
 mod modql_utils;
 pub mod store;
 
@@ -22,12 +28,24 @@ pub struct DbState {
 }
 
 impl DbState {
-  pub fn from_config(db: &DbConf) -> Result<Self> {
+  pub fn from_config(db: &DbConfig) -> Result<Self> {
     let mm = ModelManager::new(db)?;
     Ok(DbState { mm })
   }
 
   pub fn mm(&self) -> &ModelManager {
     &self.mm
+  }
+}
+
+pub struct DbPlugin;
+
+#[async_trait]
+impl Plugin for DbPlugin {
+  async fn build(&self, app: &mut ApplicationBuilder) {
+    sqlx::any::install_default_drivers();
+    let config = app.get_config::<DbConfig>().expect("sqlx plugin config load failed");
+    let mm = ModelManager::new(&config).expect("Init db state failed");
+    app.add_component(mm);
   }
 }

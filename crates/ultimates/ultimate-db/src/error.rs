@@ -16,7 +16,7 @@ pub enum Error {
   #[error("Invalid argment, error message: {message}")]
   InvalidArgument { message: String },
 
-  #[error("Entity not found. entity: '{schema}.{entity}', id: {id}")]
+  #[error("Entity not found. entity: '{schema}.{entity}', id: {id:?}")]
   EntityNotFound { schema: &'static str, entity: &'static str, id: Id },
 
   #[error("Data not found. table is '{schema}.{table}'")]
@@ -51,7 +51,7 @@ pub enum Error {
   SeaQueryError(#[from] sea_query::error::Error),
 
   #[error(transparent)]
-  ModqlIntoSea(#[from] modql::filter::IntoSeaError),
+  ModqlIntoSea(#[from] crate::modql::filter::IntoSeaError),
 
   #[error(transparent)]
   JsonError(#[from] serde_json::Error),

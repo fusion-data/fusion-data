@@ -1,4 +1,4 @@
-use modql::field::{SeaField, SeaFields};
+use crate::modql::field::{SeaField, SeaFields};
 use sea_query::{DynIden, IntoIden};
 use ultimate::ctx::Ctx;
 

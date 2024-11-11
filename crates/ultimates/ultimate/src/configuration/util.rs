@@ -2,7 +2,7 @@ use std::{env, path::Path};
 
 use config::{builder::DefaultState, Config, ConfigBuilder, Environment, File, FileFormat};
 use log::trace;
-use tracing::info;
+use tracing::debug;
 use ultimate_common::runtime;
 
 use super::Result;
@@ -26,7 +26,7 @@ pub fn load_config() -> Result<Config> {
   } else {
     vec![]
   };
-  trace!("Load files: {:?}", profile_files);
+  debug!("Load profile files: {:?}", profile_files);
   b = load_from_files(&profile_files, b);
 
   // load from file of env, if exists
@@ -41,7 +41,7 @@ pub fn load_config() -> Result<Config> {
 
   let c = b.build()?;
 
-  info!("Load config file: {}", c.cache.to_string());
+  trace!("Load config file: {}", c.cache);
 
   Ok(c)
 }

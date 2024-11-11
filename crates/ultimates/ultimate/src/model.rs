@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
-#[cfg_attr(feature = "utoipa", derive(utoipa::ToSchema))]
+// #[cfg_attr(feature = "utoipa", derive(utoipa::ToSchema))]
 pub struct IdI64Result {
   pub id: i64,
 }
@@ -11,13 +11,12 @@ impl IdI64Result {
   }
 }
 
-#[cfg(feature = "uuid")]
 #[derive(Debug, Serialize, Deserialize)]
-#[cfg_attr(feature = "utoipa", derive(utoipa::ToSchema))]
+// #[cfg_attr(feature = "utoipa", derive(utoipa::ToSchema))]
 pub struct IdUuidResult {
   pub id: uuid::Uuid,
 }
-#[cfg(feature = "uuid")]
+
 impl IdUuidResult {
   pub fn new(id: uuid::Uuid) -> Self {
     Self { id }
@@ -25,7 +24,7 @@ impl IdUuidResult {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-#[cfg_attr(feature = "utoipa", derive(utoipa::ToSchema))]
+// #[cfg_attr(feature = "utoipa", derive(utoipa::ToSchema))]
 pub struct IdUlidResult {
   pub id: ulid::Ulid,
 }

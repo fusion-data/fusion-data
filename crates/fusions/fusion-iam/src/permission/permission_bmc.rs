@@ -1,6 +1,6 @@
-use modql::filter::{FilterGroups, ListOptions};
 use sea_query::{Condition, Expr, Query, SelectStatement};
 use ultimate_api::v1::{Page, PagePayload, Pagination};
+use ultimate_db::modql::filter::{FilterGroups, ListOptions};
 use ultimate_db::{
   base::{self, compute_list_options, DbBmc},
   generate_common_bmc_fns, ModelManager, Result,

@@ -1,3 +1,5 @@
+# FROM postgis/postgis:16-3.5 # nosupport arm64
+# FROM kartoza/postgis:16 # support arm64
 FROM postgres:16
 
 ENV LANG=zh_CN.utf8
@@ -8,6 +10,6 @@ RUN localedef -i zh_CN -c -f UTF-8 -A /usr/share/locale/locale.alias zh_CN.UTF-8
 
 EXPOSE $PGPORT
 
-COPY scripts/*.sql /docker-entrypoint-initdb.d/
+COPY sqls /sqls
 COPY --chmod=0755 scripts/*.sh /docker-entrypoint-initdb.d/
-COPY --chmod=0600 .pgpass /root/.pgpass
+COPY --chown=postgres --chmod=0600 .pgpass /var/lib/postgresql/.pgpass

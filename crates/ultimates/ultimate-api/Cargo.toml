@@ -17,8 +17,7 @@ serde_json = { workspace = true }
 serde_repr = { workspace = true }
 bytes = { workspace = true }
 prost = { workspace = true }
-utoipa = { workspace = true, optional = true }
-modql = { workspace = true, optional = true }
+uuid = { workspace = true }
 
 [build-dependencies]
 prost-build = { workspace = true }

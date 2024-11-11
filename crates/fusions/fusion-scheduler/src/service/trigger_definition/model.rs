@@ -1,16 +1,11 @@
 use std::time::Duration;
 
-use chrono::{DateTime, Local, Utc};
-use chrono_tz::Tz;
+use chrono::{DateTime, Utc};
 use croner::Cron;
 use duration_str::HumanFormat;
 use fusion_scheduler_api::v1::{
   trigger_definition::{Schedule as ProtoSchedule, TriggerKind},
   CronSchedule, SimpleSchedule,
-};
-use modql::{
-  field::Fields,
-  filter::{FilterNodes, OpValsInt32, OpValsInt64, OpValsString, OpValsValue},
 };
 use sea_query::enum_def;
 use serde::{Deserialize, Serialize};
@@ -19,6 +14,10 @@ use ulid::Ulid;
 use ultimate::DataError;
 use ultimate_api::v1::{PagePayload, Pagination};
 use ultimate_common::time::UtcDateTime;
+use ultimate_db::modql::{
+  field::Fields,
+  filter::{FilterNodes, OpValsInt32, OpValsInt64, OpValsString, OpValsValue},
+};
 use ultimate_db::{datetime_to_sea_value, DbRowType};
 
 use crate::pb::fusion_scheduler::v1::{PageTriggerRequest, PageTriggerResponse};
@@ -184,9 +183,7 @@ impl sqlx::Type<sqlx::Postgres> for TriggerSchedule {
 }
 
 impl sqlx::Decode<'_, sqlx::Postgres> for TriggerSchedule {
-  fn decode(
-    value: <sqlx::Postgres as sqlx::database::HasValueRef<'_>>::ValueRef,
-  ) -> Result<Self, sqlx::error::BoxDynError> {
+  fn decode(value: <sqlx::Postgres as sqlx::Database>::ValueRef<'_>) -> Result<Self, sqlx::error::BoxDynError> {
     let v = serde_json::from_slice(value.as_bytes()?)?;
     Ok(v)
   }

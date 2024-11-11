@@ -286,3 +286,6 @@ venv.bak/
 # Users
 ################
 .gitignore.bak
+# backup files, `.drawio` ect.
+.*.bkp
+.*.dtmp

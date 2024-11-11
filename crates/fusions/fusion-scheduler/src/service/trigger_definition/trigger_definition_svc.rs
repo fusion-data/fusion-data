@@ -1,6 +1,6 @@
 use chrono::{DateTime, Utc};
 use fusion_scheduler_api::v1::trigger_definition::TriggerStatus;
-use fusion_server::ctx::CtxW;
+use fusiondata_context::ctx::CtxW;
 use tracing::error;
 use ultimate::Result;
 use ultimate_api::v1::PagePayload;
@@ -40,35 +40,36 @@ impl TriggerDefinitionSvc {
 
   /// 计算下次触发时间，并返回更新实体
   fn compute_next_trigger_update(td: TriggerDefinition, now: &DateTime<Utc>) -> Option<TriggerDefinitionForUpdate> {
-    if td.status != TriggerStatus::Active as i32 {
+    if td.status != TriggerStatus::Enabled as i32 {
       return None;
     }
 
-    let mut u = TriggerDefinitionForUpdate::default();
+    let mut trigger_u = TriggerDefinitionForUpdate::default();
     if td.invalid_time.is_some_and(|d| &d >= now) {
       // 已到失效时间
-      u.status = Some(TriggerStatus::Completed as i32);
-      return Some(u);
+      trigger_u.status = Some(TriggerStatus::Completed as i32);
+      return Some(trigger_u);
     }
 
     match td.schedule {
       TriggerSchedule::Simple { interval, first_delay, execution_count } => {
         if execution_count.is_some_and(|ec| td.executed_count >= ec) {
           // 达到次数限制
-          u.status = Some(TriggerStatus::Completed as i32);
+          trigger_u.status = Some(TriggerStatus::Completed as i32);
         } else {
-          u.refresh_occurrence = Some(td.refresh_occurrence + first_delay.map(|d| d + interval).unwrap_or(interval));
+          trigger_u.refresh_occurrence =
+            Some(td.refresh_occurrence + first_delay.map(|d| d + interval).unwrap_or(interval));
         }
       }
       TriggerSchedule::Cron { cron, tz } => {
         match cron_to_next_occurrence(&cron, tz.as_deref(), now) {
-          Ok(d) => u.refresh_occurrence = Some(d),
+          Ok(d) => trigger_u.refresh_occurrence = Some(d),
           Err(e) => error!("Cron to next occurrence Error: {}", e),
         };
       }
       TriggerSchedule::Depend => {}
     }
 
-    Some(u)
+    Some(trigger_u)
   }
 }

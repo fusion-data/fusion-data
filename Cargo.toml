@@ -1,11 +1,16 @@
 [workspace]
-members = ["crates/fusions/*", "crates/ultimates/*"]
+members = ["crates/fusions/*", "crates/ultimates/*", "crates/samples/*"]
 resolver = "2"
+
+[profile.release]
+opt-level = 3
+codegen-units = 1
+lto = true
 
 [workspace.package]
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.80"
+rust-version = "1.82"
 description = "Rust libraries of The fusiondata"
 license = "Apache-2.0"
 repository = "https://github.com/fusion-data/fusion-data"
@@ -17,13 +22,15 @@ unsafe_code = "forbid"
 [workspace.dependencies]
 # -- projects begin
 ultimate-common = { version = "0.1.0", path = "./crates/ultimates/ultimate-common" }
+ultimate-macros = { version = "0.1.0", path = "./crates/ultimates/ultimate-macros" }
 ultimate = { version = "0.1.0", path = "./crates/ultimates/ultimate" }
 ultimate-api = { version = "0.1.0", path = "./crates/ultimates/ultimate-api" }
 ultimate-db = { version = "0.1.0", path = "./crates/ultimates/ultimate-db" }
+ultimate-db-macros = { version = "0.1.0", path = "./crates/ultimates/ultimate-db-macros" }
 ultimate-web = { version = "0.1.0", path = "./crates/ultimates/ultimate-web" }
 ultimate-grpc = { version = "0.1.0", path = "./crates/ultimates/ultimate-grpc" }
 fusiondata = { version = "0.1.0", path = "./crates/fusions/fusiondata" }
-fusion-server = { version = "0.1.0", path = "./crates/fusions/fusion-server" }
+fusiondata-context = { version = "0.1.0", path = "./crates/fusions/fusiondata-context" }
 fusion-scheduler-api = { version = "0.1.0", path = "./crates/fusions/fusion-scheduler-api" }
 # -- projects end
 # begin -- memory allocator
@@ -38,9 +45,11 @@ toml = "0.8"
 config = { version = "0.14", default-features = false, features = [
     "toml",
     "yaml",
+    "json5",
+    "json",
 ] }
 itertools = "0.13"
-regex = "1"
+regex = { version = "1", features = ["unicode-case"] }
 rand = "0.8"
 bytes = "1"
 ulid = { version = "1", features = ["serde", "uuid"] }
@@ -57,6 +66,9 @@ typed-builder = "0.20"
 derive-getters = "0.5"
 clap = { version = "4.5", features = ["derive"] }
 o2o = { version = "0.4" }
+secrecy = { version = "0.10", features = ["serde"] }
+dashmap = { version = "6.1" }
+inventory = { version = "0.3" }
 # Make retry like a built-in feature provided by Rust.
 backon = { version = "1.2" }
 # -- Helpful macros for working with enums and strings
@@ -65,6 +77,10 @@ strum = { version = "0.26", features = ["derive"] }
 # -- Error
 anyhow = "1"
 thiserror = "1"
+# -- Macros
+quote = "1"
+syn = { version = "2", features = ["full"] }
+proc-macro2 = "1"
 # -- Crypt & Encoding
 base16ct = { version = "0.2", features = ["alloc"] }
 base64ct = { version = "1", features = ["std", "alloc"] }
@@ -80,23 +96,30 @@ futures = "0.3"
 futures-util = "0.3"
 async-trait = "0.1"
 async-stream = "0.3"
-tokio = { version = "1", features = [
-    "rt",
-    "rt-multi-thread",
-    "net",
-    "macros",
-    "time",
-    "signal",
+tokio = { version = "1", default-features = false, features = [
+    "full",
+    "tracing",
 ] }
-tokio-stream = { version = "0.1", features = ["time"] }
+tokio-stream = { version = "0.1", features = ["full"] }
+tokio-util = { version = "0.7", features = ["full", "tracing"] }
+tokio-test = { version = "0.4" }
 # -- Logging
 log = "0.4"
 env_logger = "0.11"
 # -- Tracing
 tracing = { version = "0.1", features = ["log"] }
 tracing-log = "0.2"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-subscriber = { version = "0.3", features = [
+    "registry",
+    "env-filter",
+    "chrono",
+    "json",
+] }
 tracing-appender = "0.2"
+init-tracing-opentelemetry = { version = "0.23", features = [
+    "tracing_subscriber_ext",
+] }
+tracing-opentelemetry-instrumentation-sdk = "0.23"
 # -- Time
 chrono = { version = "0.4", default-features = false, features = [
     "std",
@@ -107,27 +130,27 @@ chrono-tz = "0.10"
 duration-str = "0.11"
 # -- scheduler
 croner = "2.0"
-hierarchical_hash_wheel_timer = "1.3"
+hierarchical_hash_wheel_timer = { version = "1.3", features = ["uuid"] }
 tokio-cron-scheduler = { version = "0.13", features = ["has_bytes", "signal"] }
 # -- Database
-sqlx = { version = "0.7", features = [
+sqlx = { version = "0.8", features = [
     "runtime-tokio",
     "postgres",
-    "uuid",
     "chrono",
     "rust_decimal",
     "json",
+    "uuid",
 ] }
-modql = { version = "0.4", features = ["with-sea-query"] }
-sea-query = { version = "0.31", features = ["attr"] }
-sea-query-binder = { version = "0.6", features = [
+sea-query = { version = "0.32", features = ["attr", "thread-safe"] }
+sea-query-binder = { version = "0.7", features = [
     "sqlx-postgres",
+    "postgres-array",
     "with-json",
-    "with-uuid",
     "with-chrono",
     "with-rust_decimal",
-    "postgres-array",
+    "with-uuid",
 ] }
+rusqlite = { version = "0.32", features = ["bundled"] }
 # -- Serde
 serde = { version = "1", features = ["derive"] }
 serde_with = { version = "3", features = ["chrono_0_4"] }
@@ -156,22 +179,23 @@ cookie = "0.18"
 axum = { version = "0.7", features = ["macros", "form"] }
 axum-extra = { version = "0.9", features = ["typed-header"] }
 axum-macros = { version = "0.4" }
-# openapi
-utoipa = { version = "5.0.0-beta", features = [
-    "axum_extras",
-    "chrono",
-    "decimal",
-    "uuid",
-    "repr",
-    "preserve_order",
-    "preserve_path_order",
-] }
-utoipa-scalar = { version = "0.2.0-beta", features = ["axum"] }
+axum-tracing-opentelemetry = "0.23"
+# # openapi
+# utoipa = { version = "5.1", features = [
+#     "axum_extras",
+#     "chrono",
+#     "decimal",
+#     "uuid",
+#     "repr",
+#     "preserve_order",
+#     "preserve_path_order",
+# ] }
+# utoipa-scalar = { version = "0.2", features = ["axum"] }
 # -- Dev/Test
 asserhttp = { version = "0.7", features = ["reqwest"] }
 dotenvy = "0.15"
 # -- Data Science
-polars = "0.43"
+polars = "0.44"
 # An Excel/OpenDocument Spreadsheets reader and deserializer in pure rust
 calamine = "0.26"
 # -- RPC
@@ -179,6 +203,7 @@ tonic = "0.12"
 tonic-types = "0.12"
 tonic-reflection = "0.12"
 tonic-web = "0.12"
+tonic-tracing-opentelemetry = "0.23"
 tonic-build = { version = "0.12", features = ["prost"] }
 prost = "0.13"
 prost-build = "0.13"

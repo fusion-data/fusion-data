@@ -11,14 +11,21 @@ repository.workspace = true
 workspace = true
 
 [features]
-uuid = ["dep:uuid", "ultimate/uuid"]
+# default = ["opentelemetry"]
+opentelemetry = [
+  "ultimate/opentelemetry",
+  "dep:tonic-tracing-opentelemetry",
+  "dep:init-tracing-opentelemetry",
+]
 
 [dependencies]
 ultimate = { workspace = true, features = ["tonic"] }
-uuid = { workspace = true, optional = true }
+uuid = { workspace = true }
 http = { workspace = true }
 futures = { workspace = true }
 tracing = { workspace = true }
+init-tracing-opentelemetry = { workspace = true, optional = true }
+tonic-tracing-opentelemetry = { workspace = true, optional = true }
 tokio = { workspace = true }
 tower-service = { workspace = true }
 tower-http = { workspace = true }

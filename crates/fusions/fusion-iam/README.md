@@ -20,16 +20,18 @@ grpcurl -plaintext -import-path ./crates/fusions/fusion-iam/proto \
   localhost:8889 fusion_iam.v1.Auth/Signin
 
 
-grpcurl -plaintext -import-path ./crates/fusion-iam/proto \
-  -proto fusion_iam/v1/user.proto \
-  -H 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiYWxnIjoiZGlyIn0.._QTBCD_ZH49y3Rh5teJQNQ.Tst-zxGVa4VjbRHqIp2VWgHvozCFlmBNANfqO2ljdrg.9CtL86ZhdUrFNleXaSaMhQ' \
+grpcurl -plaintext -proto fusion_iam/v1/user.proto \
+  -import-path ./crates/fusions/fusion-iam/proto \
+  -import-path ./crates/ultimates/ultimate-api/proto \
+  -H 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiYWxnIjoiZGlyIn0..iru12eF7KSCntUw3-d3fQg.WdhmXWkrIJr9eQ03Mrk4ByPgYXStVr35esIrV14RIO0.H-HkIh3rQQ17C_6efRye0A' \
   -d '{"id":1}' \
   localhost:8889 fusion_iam.v1.User/Find
 
 
-grpcurl -plaintext -import-path ./crates/fusion-iam/proto \
-  -proto fusion_iam/v1/role.proto \
-  -H 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiYWxnIjoiZGlyIn0.._QTBCD_ZH49y3Rh5teJQNQ.Tst-zxGVa4VjbRHqIp2VWgHvozCFlmBNANfqO2ljdrg.9CtL86ZhdUrFNleXaSaMhQ' \
+grpcurl -plaintext -proto fusion_iam/v1/role.proto \
+  -import-path ./crates/fusions/fusion-iam/proto \
+  -import-path ./crates/ultimates/ultimate-api/proto \
+  -H 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiYWxnIjoiZGlyIn0..iru12eF7KSCntUw3-d3fQg.WdhmXWkrIJr9eQ03Mrk4ByPgYXStVr35esIrV14RIO0.H-HkIh3rQQ17C_6efRye0A' \
   -d '{
        "field_mask":{ "paths": ["role", "permissions"]},
        "create_role": {
@@ -38,13 +40,14 @@ grpcurl -plaintext -import-path ./crates/fusion-iam/proto \
          "status":"ROLE_STATUS_DISABLED"
        },
        "permission_ids":[1,2]
-     }' \
+     }'
   localhost:8889 fusion_iam.v1.Role/Create
 
 
-grpcurl -plaintext -import-path ./crates/fusion-iam/proto \
-  -proto fusion_iam/v1/role.proto \
-  -H 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiYWxnIjoiZGlyIn0.._QTBCD_ZH49y3Rh5teJQNQ.Tst-zxGVa4VjbRHqIp2VWgHvozCFlmBNANfqO2ljdrg.9CtL86ZhdUrFNleXaSaMhQ' \
+grpcurl -plaintext -proto fusion_iam/v1/role.proto \
+  -import-path ./crates/fusions/fusion-iam/proto \
+  -import-path ./crates/ultimates/ultimate-api/proto \
+  -H 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiYWxnIjoiZGlyIn0..iru12eF7KSCntUw3-d3fQg.WdhmXWkrIJr9eQ03Mrk4ByPgYXStVr35esIrV14RIO0.H-HkIh3rQQ17C_6efRye0A' \
   -d '{
        "field_mask":{ "paths": ["permissions"]},
        "id": 1
@@ -52,20 +55,23 @@ grpcurl -plaintext -import-path ./crates/fusion-iam/proto \
   localhost:8889 fusion_iam.v1.Role/Get
 
 
-grpcurl -plaintext -import-path ./crates/fusion-iam/proto \
-  -proto fusion_iam/v1/access_control.proto \
-  -H 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiYWxnIjoiZGlyIn0.._QTBCD_ZH49y3Rh5teJQNQ.Tst-zxGVa4VjbRHqIp2VWgHvozCFlmBNANfqO2ljdrg.9CtL86ZhdUrFNleXaSaMhQ' \
+grpcurl -plaintext -proto fusion_iam/v1/access_control.proto \
+  -import-path ./crates/fusions/fusion-iam/proto \
+  -import-path ./crates/ultimates/ultimate-api/proto \
+  -H 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiYWxnIjoiZGlyIn0..iru12eF7KSCntUw3-d3fQg.WdhmXWkrIJr9eQ03Mrk4ByPgYXStVr35esIrV14RIO0.H-HkIh3rQQ17C_6efRye0A' \
   -d '{
        "policy": "{\"version\":\"v1.0\",\"statement\":[{\"effect\":\"Allow\",\"action\":[\"GET\"],\"resource\":[\"*\"]}]}"
      }' \
   localhost:8889 fusion_iam.v1.AccessControl/CreatePolicyStatement
 
 
-grpcurl -plaintext -import-path ./crates/fusion-iam/proto \
-  -proto fusion_iam/v1/access_control.proto \
-  -H 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiYWxnIjoiZGlyIn0.._QTBCD_ZH49y3Rh5teJQNQ.Tst-zxGVa4VjbRHqIp2VWgHvozCFlmBNANfqO2ljdrg.9CtL86ZhdUrFNleXaSaMhQ' \
+## 需要把 id 替换成正确的值（可以使用上一个 CreatePolicyStatement 的返回值）
+grpcurl -plaintext -proto fusion_iam/v1/access_control.proto \
+  -import-path ./crates/fusions/fusion-iam/proto \
+  -import-path ./crates/ultimates/ultimate-api/proto \
+  -H 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiYWxnIjoiZGlyIn0..iru12eF7KSCntUw3-d3fQg.WdhmXWkrIJr9eQ03Mrk4ByPgYXStVr35esIrV14RIO0.H-HkIh3rQQ17C_6efRye0A' \
   -d '{
-       "id": "0191efc2-b13b-7932-8468-8470648c17db"
+       "id": "<policy statement uuid>"
      }' \
   localhost:8889 fusion_iam.v1.AccessControl/GetPolicyStatement
 ```

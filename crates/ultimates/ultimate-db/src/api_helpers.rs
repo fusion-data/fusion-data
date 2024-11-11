@@ -1,8 +1,23 @@
-use modql::filter::{OpValInt32, OpValString, OpValValue, OpValsInt32, OpValsString, OpValsValue};
+use crate::modql::filter::{
+  OpValInt32, OpValString, OpValUuid, OpValValue, OpValsInt32, OpValsString, OpValsUuid, OpValsValue,
+};
 use ultimate::DataError;
 use ultimate_api::v1::{Null, OpNumber, OpString, ValInt32, ValInt64, ValString};
 
-/// 将 OpString 转换为 OpValsValue。通常用于可映射为字符串的数据类型，比如：UUID、DateTime(字符串格式化)、……
+/// 将 ValString 转换为 OpValsUuid。通常用于可映射为字符串的数据类型，比如：UUID、DateTime(字符串格式化)、……
+pub fn try_into_op_vals_uuid_with_filter_string(
+  value: impl IntoIterator<Item = ValString>,
+) -> Result<Option<OpValsUuid>, DataError> {
+  let mut vals = Vec::new();
+  for item in value {
+    let op_val = try_into_op_val_uuid(item)?;
+    vals.push(op_val);
+  }
+
+  Ok(if vals.is_empty() { None } else { Some(OpValsUuid(vals)) })
+}
+
+/// 将 ValString 转换为 OpValsValue。通常用于可映射为字符串的数据类型，比如：UUID、DateTime(字符串格式化)、……
 pub fn try_into_op_vals_value_opt_with_filter_string(
   value: impl IntoIterator<Item = ValString>,
 ) -> Result<Option<OpValsValue>, DataError> {
@@ -14,6 +29,7 @@ pub fn try_into_op_vals_value_opt_with_filter_string(
 
   Ok(if vals.is_empty() { None } else { Some(OpValsValue(vals)) })
 }
+
 /// 将 ValInt64 转换为 OpValsValue。通常用于可映射为字符串的数据类型，比如：epoch time 形式的时间戳、……
 pub fn try_into_op_vals_value_opt_with_filter_int64(
   value: impl IntoIterator<Item = ValInt64>,
@@ -41,6 +57,19 @@ fn try_into_op_val_value_with_int64(v: ValInt64) -> Result<OpValValue, DataError
   };
   Ok(op_val)
 }
+
+fn try_into_op_val_uuid(v: ValString) -> Result<OpValUuid, DataError> {
+  let op_val = match v.o() {
+    OpString::Eq => OpValUuid::Eq(v.try_into()?),
+    OpString::Not => OpValUuid::Not(v.try_into()?),
+    OpString::In => OpValUuid::In(v.try_into()?),
+    OpString::NotIn => OpValUuid::NotIn(v.try_into()?),
+    OpString::Null => OpValUuid::Null(Null::try_from(v)?.is_null()),
+    _ => return Err(DataError::bad_request(format!("Invalid Operator: {:?}", v.o()))),
+  };
+  Ok(op_val)
+}
+
 fn try_into_op_val_value(v: ValString) -> Result<OpValValue, DataError> {
   let op_val = match v.o() {
     OpString::Eq => OpValValue::Eq(v.try_into()?),
@@ -53,27 +82,6 @@ fn try_into_op_val_value(v: ValString) -> Result<OpValValue, DataError> {
     OpString::Lte => OpValValue::Lte(v.try_into()?),
     OpString::Null => OpValValue::Null(Null::try_from(v)?.is_null()),
     _ => return Err(DataError::bad_request(format!("Invalid Operator: {:?}", v.o()))),
-    // OpString::Contains => todo!(),
-    // OpString::NotContains => todo!(),
-    // OpString::ContainsAny => todo!(),
-    // OpString::NotContainsAny => todo!(),
-    // OpString::ContainsAll => todo!(),
-    // OpString::StartsWith => todo!(),
-    // OpString::NotStartsWith => todo!(),
-    // OpString::StartsWithAny => todo!(),
-    // OpString::NotStartsWithAny => todo!(),
-    // OpString::EndsWith => todo!(),
-    // OpString::NotEndsWith => todo!(),
-    // OpString::EndsWithAny => todo!(),
-    // OpString::NotEndsWithAny => todo!(),
-    // OpString::Empty => todo!(),
-    // OpString::ContainsCi => todo!(),
-    // OpString::NotContainsCi => todo!(),
-    // OpString::StartsWithCi => todo!(),
-    // OpString::NotStartsWithCi => todo!(),
-    // OpString::EndsWithCi => todo!(),
-    // OpString::NotEndsWithCi => todo!(),
-    // OpString::ILike => todo!(),
   };
   Ok(op_val)
 }

@@ -80,10 +80,7 @@ pub fn decode_jwt_hs256(
 #[cfg(test)]
 mod tests {
   use super::*;
-  use crate::configuration::{
-    load_config,
-    model::{KeyConf, SecurityConf},
-  };
+  use crate::configuration::{load_config, KeyConf, SecurityConfig};
   use std::{
     sync::OnceLock,
     time::{Duration, SystemTime},
@@ -178,10 +175,10 @@ mod tests {
   // static PRIVATE_KEY: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/data/pem/EC_P-256_private.pem");
   // static PUBLIC_KEY: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/data/pem/EC_P-256_public.pem");
   static EXPIRES_AT: OnceLock<SystemTime> = OnceLock::new();
-  static SECURITY_CONFIG: OnceLock<SecurityConf> = OnceLock::new();
-  fn helper() -> (&'static SecurityConf, &'static SystemTime) {
+  static SECURITY_CONFIG: OnceLock<SecurityConfig> = OnceLock::new();
+  fn helper() -> (&'static SecurityConfig, &'static SystemTime) {
     (
-      SECURITY_CONFIG.get_or_init(|| load_config().unwrap().get::<SecurityConf>("ultimate.security").unwrap()),
+      SECURITY_CONFIG.get_or_init(|| load_config().unwrap().get::<SecurityConfig>("ultimate.security").unwrap()),
       EXPIRES_AT.get_or_init(|| SystemTime::now().checked_add(Duration::from_secs(60 * 60 * 24 * 30)).unwrap()),
     )
   }
