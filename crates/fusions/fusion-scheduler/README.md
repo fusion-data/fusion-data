@@ -1,5 +1,11 @@
 # fusion-scheduler
 
+## 运行
+
+```sh
+cargo run-fusion-scheduler
+```
+
 ## grpcurl
 
 ```sh

@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use fusiondata_context::ctx::{CtxW, RequestMetadata};
 use tonic::{Request, Response, Status};
-use ultimate::{application::Application, ctx::Ctx};
+use ultimate::application::Application;
 
 use crate::pb::fusion_iam::v1::{
   auth_server::{Auth, AuthServer},

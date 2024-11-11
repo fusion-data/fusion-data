@@ -3,13 +3,13 @@ pub mod component;
 pub mod configuration;
 pub mod ctx;
 mod data_error;
+pub mod log;
 pub mod metas;
 mod model;
 pub mod plugin;
 mod run_mode;
 pub mod security;
 pub mod signal;
-pub mod tracing;
 pub mod utils;
 
 pub use async_trait::async_trait;

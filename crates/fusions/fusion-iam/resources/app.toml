@@ -10,11 +10,12 @@ default_pwd = "2024.Fusiondata"
 enable = true
 server_addr = "0.0.0.0:8888"
 
-[ultimate.tracing]
+[ultimate.log]
 enable = true
 log_writer = "both"
+with_span_events = ["new", "close"]
 
-[ultimate.tracing.otel]
+[ultimate.log.otel]
 # enable = true
 exporter_otlp_endpoint = "http://localhost:4317"
 traces_sample = "always_on"

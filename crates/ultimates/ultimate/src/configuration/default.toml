@@ -1,7 +1,8 @@
 [ultimate.app]
 run_mode = "dev"
 name = "ultimate"
-time_offset = "+08:00"
+# Example: `+08:00`
+time_offset = ""
 
 [ultimate.security.pwd]
 pwd_key = "0123456789ABCDEF0123456789ABCDEF"
@@ -26,17 +27,35 @@ NOJy7JbTpVxf9c6Ren/q+YggEVRdVZEQmZDLsQiE1czWoLLsezpIr3Ls
 enable = false
 server_addr = "0.0.0.0:9500"
 
-[ultimate.tracing]
-enable = true
-target = true
+[ultimate.log]
+with_target = true
+with_file = true
+with_thread_ids = false
+with_thread_names = true
+with_line_number = true
+# "new", "close"
+with_span_events = []
+time_format = ""
 log_level = "info"
+log_targets = [
+  "tower_http=debug",
+  "fusion_iam=debug",
+  "fusion_scheduler=debug",
+  "fusion_metadata=debug",
+  "fusiondata=debug",
+  "fusiondata_context=debug",
+  "ultimate_grpc=debug",
+  "ultimate_db=debug",
+  "ultimate=debug",
+  "ultimate_common=debug",
+]
 log_writer = "stdout"
 log_dir = "./logs/"
 
 # 默认 log_name 同 ultimate.app.name
 #log_name = ""
 
-[ultimate.tracing.otel]
+[ultimate.log.otel]
 enable = false
 traces_sample = "always_on"
 exporter_otlp_endpoint = "http://localhost:4317"

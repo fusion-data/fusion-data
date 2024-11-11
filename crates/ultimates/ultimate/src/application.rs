@@ -15,8 +15,8 @@ use ultimate_common::time::OffsetDateTime;
 use crate::{
   component::{auto_inject_component, ComponentRef, DynComponentRef},
   configuration::{ConfigRegistry, Configurable, UltimateConfig, UltimateConfigRegistry},
+  log::{init_tracing_guard, TracingPlugin},
   plugin::{Plugin, PluginRef},
-  tracing::{init_tracing_guard, TracingPlugin},
 };
 
 type Registry<T> = DashMap<String, T>;
@@ -115,6 +115,7 @@ pub struct ApplicationBuilder {
   shutdown_hooks: Vec<Box<Task<String>>>,
 
   _init_tracing_guard: Option<DefaultGuard>,
+  _original_rust_log: Option<String>,
 }
 
 unsafe impl Send for ApplicationBuilder {}
@@ -122,13 +123,14 @@ unsafe impl Sync for ApplicationBuilder {}
 
 impl Default for ApplicationBuilder {
   fn default() -> Self {
-    let _init_tracing_guard = init_tracing_guard();
+    let (init_tracing_guard, original_rust_log) = init_tracing_guard();
     Self {
       config_registry: Default::default(),
       plugin_registry: Default::default(),
       components: Default::default(),
       shutdown_hooks: Default::default(),
-      _init_tracing_guard: Some(_init_tracing_guard),
+      _init_tracing_guard: Some(init_tracing_guard),
+      _original_rust_log: original_rust_log,
     }
   }
 }
@@ -254,9 +256,15 @@ impl ApplicationBuilder {
     Ok(self.build_application())
   }
 
+  /// Initialize tracing for Application
   async fn build_plugins(&mut self) {
-    // Initialize tracing for Application
+    // 重置 RUST_LOG 为程序运行时的配置
+    match std::mem::take(&mut self._original_rust_log) {
+      Some(original_rust_log) => std::env::set_var("RUST_LOG", original_rust_log),
+      None => std::env::remove_var("RUST_LOG"),
+    };
     self.add_plugin(TracingPlugin);
+    // 移除初始化时的 tracing guard
     if let Some(g) = std::mem::take(&mut self._init_tracing_guard) {
       drop(g);
     }

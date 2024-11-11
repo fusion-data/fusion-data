@@ -6,13 +6,16 @@ use std::fmt::Display;
 use tracing::log::Level;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
-pub struct TracingConfig {
-  pub enable: bool,
-
-  pub target: bool,
-
+pub struct LogConfig {
+  pub with_target: bool,
+  pub with_file: bool,
+  pub with_thread_ids: bool,
+  pub with_thread_names: bool,
+  pub with_line_number: bool,
+  pub with_span_events: Vec<String>,
+  pub time_format: String,
   pub log_level: LogLevel,
-
+  pub log_targets: Vec<String>,
   pub log_writer: LogWriterType,
 
   /// 目录输出目录
@@ -24,7 +27,7 @@ pub struct TracingConfig {
   pub otel: OtelConfig,
 }
 
-impl TracingConfig {
+impl LogConfig {
   pub fn otel(&self) -> &OtelConfig {
     &self.otel
   }
@@ -54,6 +57,16 @@ pub enum LogWriterType {
   Stdout,
   File,
   Both,
+}
+
+impl LogWriterType {
+  pub fn is_stdout(&self) -> bool {
+    matches!(self, LogWriterType::Stdout | LogWriterType::Both)
+  }
+
+  pub fn is_file(&self) -> bool {
+    matches!(self, LogWriterType::File | LogWriterType::Both)
+  }
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug, Hash)]

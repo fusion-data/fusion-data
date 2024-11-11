@@ -3,7 +3,7 @@
 ## 运行
 
 ```sh
-cargo run -p fruitbox-iam --bin fruitbox-iam
+cargo run-fusion-iam
 ```
 
 ## grpc
