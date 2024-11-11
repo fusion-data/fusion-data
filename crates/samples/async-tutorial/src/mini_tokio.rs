@@ -80,6 +80,12 @@ pub struct MiniTokio {
   sender: mpsc::Sender<Arc<Task>>,
 }
 
+impl Default for MiniTokio {
+  fn default() -> Self {
+    Self::new()
+  }
+}
+
 impl MiniTokio {
   pub fn new() -> Self {
     let (sender, scheduled) = mpsc::channel();

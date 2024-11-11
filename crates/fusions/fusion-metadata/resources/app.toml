@@ -1,6 +1,6 @@
 [ultimate.app]
 run_mode = "DEV"
-name = "fusion-scheduler"
+name = "fusion-metadata"
 
 [ultimate.security.pwd]
 expires_in = 604800
@@ -8,11 +8,11 @@ default_pwd = "2024.Fusiondata"
 
 [ultimate.web]
 enable = true
-server_addr = "0.0.0.0:58040"
+server_addr = "0.0.0.0:58020"
 
 [ultimate.grpc]
 enable = true
-server_addr = "0.0.0.0:58050"
+server_addr = "0.0.0.0:58030"
 plaintext = true
 
 [ultimate.db]

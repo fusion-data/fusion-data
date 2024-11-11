@@ -26,7 +26,7 @@ brew install llvm
 
 Linux:
 
-- Rocky/Fedora, `sudo dnf install lld clang`
+- Rocky/Fedora/RHEL, `sudo dnf install lld clang`
 - Debian/Ubuntu, `sudo apt-get install lld clang`
 - Arch, `sudo pacman -S lld clang`
 
@@ -76,3 +76,17 @@ docker compose up -d
 ```
 
 > 根据需要，可以添加 `--build` 选项以重新构建 docker images。
+
+## IDE
+
+_需要提前安装好 Rust 编译环境，见：[Rust 开发环境](#rust-开发环境)_
+
+推荐使用 [VSCode](https://code.visualstudio.com/) 作为开发工具。使用 VSCode 打开项目时将会自动识别并安装依赖的插件。
+
+你也可以手动安装以下插件：
+
+- [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+- [dependi](https://marketplace.visualstudio.com/items?itemName=fill-labs.dependi)
+- [ReneSaarsoo.sql-formatter-vsc](https://marketplace.visualstudio.com/items?itemName=ReneSaarsoo.sql-formatter-vsc)（可选）
+
+> 也可以使用 [Jetbrains RustRover](https://www.jetbrains.com/rust/)，使用 RustRover 不需要额外安装插件。

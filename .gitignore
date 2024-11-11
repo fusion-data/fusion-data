@@ -285,6 +285,7 @@ venv.bak/
 ################
 # Users
 ################
+!scripts/.env
 .gitignore.bak
 # backup files, `.drawio` ect.
 .*.bkp
