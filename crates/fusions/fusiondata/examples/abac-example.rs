@@ -1,6 +1,5 @@
 use serde_json::json;
 use std::collections::HashMap;
-use uuid::Uuid;
 
 use fusiondata::ac::abac::{
   evaluate_policy,

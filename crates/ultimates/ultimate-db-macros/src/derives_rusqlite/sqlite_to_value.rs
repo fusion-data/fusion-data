@@ -25,12 +25,12 @@ pub fn derive_sqlite_to_value_inner(input: TokenStream) -> TokenStream {
 }
 
 /// For a type annotated like:
-/// ```rust,notest
-/// #[derive(modql::ToSqliteValue)]
+/// ```rust,no_test
+/// #[derive(ultimate_db::modql::ToSqliteValue)]
 /// struct SId(i64);
 /// ```
 /// Will generate something like:
-/// ```rust,notest
+/// ```rust,no_test
 /// impl rusqlite::types::ToSql for SId {
 ///   fn to_sql(&self) -> rusqlite::Result<rusqlite::types::ToSqlOutput<'_>> {
 ///     Ok(rusqlite::types::ToSqlOutput::Owned(self.0.into()))
@@ -60,16 +60,15 @@ fn process_struct(name: Ident, _data: DataStruct) -> proc_macro2::TokenStream {
 
 /// For an enum type annotated like:
 /// ```rust,notest
-/// #[derive(ToSqliteValue)]
+/// use crate::SqliteToValue
+/// #[derive(SqliteToValue)]
 /// pub enum DItemKind {
 ///   Md,
 ///   Pdf,
 ///   Unknown,
 /// }
-/// ```
-/// Will expand to something like:
-/// ```rust,notest
-/// impl ToSql for DItemKind {
+/// // Will expand to something like:
+/// impl rusqlite::types::ToSql for DItemKind {
 ///   fn to_sql(&self) -> rusqlite::Result<rusqlite::types::ToSqlOutput<'_>> {
 ///     let val = match self {
 ///       DItemKind::Md => "Md",
@@ -99,7 +98,6 @@ fn process_enum(name: Ident, data: DataEnum) -> proc_macro2::TokenStream {
   // Generate the final token stream
   #[rustfmt::skip]
 	let expanded = quote! {
-
 	  impl rusqlite::types::ToSql for #name {
       fn to_sql(&self) -> rusqlite::Result<rusqlite::types::ToSqlOutput<'_>> {
         let val = match self {

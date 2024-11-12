@@ -4,11 +4,17 @@ use sqlx::prelude::FromRow;
 use ultimate::{DataError, Result};
 use ultimate_api::v1::{Page, PagePayload, Pagination};
 use ultimate_common::{regex, time::UtcDateTime};
-use ultimate_db::modql::{
-  field::Fields,
-  filter::{FilterNodes, OpValInt32, OpValString, OpValsInt32, OpValsInt64, OpValsString, OpValsValue},
+use ultimate_db::{
+  datetime_to_sea_value,
+  modql::{
+    field::Fields,
+    filter::{FilterNodes, OpValsInt32, OpValsInt64, OpValsString, OpValsValue},
+  },
+  try_into_op_vals_string_opt,
 };
-use ultimate_db::{datetime_to_sea_value, DbRowType};
+use ultimate_db::{
+  try_into_op_vals_int32_opt, try_into_op_vals_int64_opt, try_into_op_values_with_string_opt, DbRowType,
+};
 
 use crate::pb::fusion_iam::v1::{
   CreateUserRequest, FilterUserRequest, Gender, PageUserRequest, PageUserResponse, UpdateUserRequest, UserDto,
@@ -191,11 +197,16 @@ impl From<PageUserRequest> for UserForPage {
 impl From<FilterUserRequest> for UserFilter {
   fn from(value: FilterUserRequest) -> Self {
     Self {
-      email: value.email.map(|email| OpValString::Eq(email).into()),
-      phone: value.phone.map(|phone| OpValString::Eq(phone).into()),
-      name: value.name.map(|name| OpValString::Contains(name).into()),
-      status: Some(OpValInt32::In(value.status).into()),
-      ..Default::default()
+      id: try_into_op_vals_int64_opt(value.id).unwrap(),
+      email: try_into_op_vals_string_opt(value.email).unwrap(),
+      phone: try_into_op_vals_string_opt(value.phone).unwrap(),
+      name: try_into_op_vals_string_opt(value.name).unwrap(),
+      status: try_into_op_vals_int32_opt(value.status).unwrap(),
+      gender: try_into_op_vals_int32_opt(value.gender).unwrap(),
+      cid: try_into_op_vals_int64_opt(value.cid).unwrap(),
+      ctime: try_into_op_values_with_string_opt(value.ctime).unwrap(),
+      mid: try_into_op_vals_int64_opt(value.mid).unwrap(),
+      mtime: try_into_op_values_with_string_opt(value.mtime).unwrap(),
     }
   }
 }

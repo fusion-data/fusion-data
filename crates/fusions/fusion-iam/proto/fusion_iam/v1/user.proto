@@ -3,6 +3,7 @@ syntax = "proto3";
 package fusion_iam.v1;
 
 import "ultimate_api/v1/page.proto";
+import "ultimate_api/v1/ql.proto";
 import "fusion_iam/v1/iam.proto";
 
 service User {
@@ -86,16 +87,16 @@ message PageUserRequest {
 }
 
 message FilterUserRequest {
-  // 支持模糊搜索
-  optional string name = 1;
-
-  optional string email = 2;
-
-  optional string phone = 3;
-
-  repeated int32 status = 4;
-
-  Gender gender = 5;
+  repeated ultimate_api.v1.ValString name = 1;
+  repeated ultimate_api.v1.ValString email = 2;
+  repeated ultimate_api.v1.ValString phone = 3;
+  repeated ultimate_api.v1.ValInt32 status = 4;
+  repeated ultimate_api.v1.ValInt32 gender = 5;
+  repeated ultimate_api.v1.ValInt64 cid = 6;
+  repeated ultimate_api.v1.ValString ctime = 7;
+  repeated ultimate_api.v1.ValInt64 id = 8;
+  repeated ultimate_api.v1.ValInt64 mid = 9;
+  repeated ultimate_api.v1.ValString mtime = 10;
 }
 
 message PageUserResponse {

@@ -10,5 +10,4 @@ pub use field_meta::*;
 pub use field_metas::*;
 pub use has_fields::*;
 pub use sea::*;
-pub use ultimate_db_macros::Fields;
-pub use ultimate_db_macros::SeaFieldValue;
+pub use ultimate_db_macros::{Fields, SeaFieldValue};

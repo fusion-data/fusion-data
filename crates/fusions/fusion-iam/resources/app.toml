@@ -18,9 +18,8 @@ plaintext = true
 [ultimate.log]
 enable = true
 log_writer = "both"
-with_span_events = ["new", "close"]
+with_span_events = []
 log_targets = [
-  "tower_http=debug",
   "fusion_iam=debug",
   "fusiondata=debug",
   "fusiondata_context=debug",

@@ -1,6 +1,11 @@
 # Backend
 
-开发环境设置
+开发环境设置，下载源码：
+
+```sh
+git clone https://github.com/fusion-data/fusion-data.git
+cd fusion-data/
+```
 
 ## Rust 开发环境
 
@@ -15,6 +20,10 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 Windows 下载 [rustup-init.exe](https://static.rust-lang.org/rustup/dist/x86_64-pc-windows-msvc/rustup-init.exe) 进行安装。
 
 > 更多 rustup-init 安装方法见：[Other Rust Installation Methods](https://forge.rust-lang.org/infra/other-installation-methods.html)
+
+#### 配置 rsproxy（可选）
+
+由于国内拉取 crates.io 以及安装 Rust 会面临流量出境不稳定的问题，可以使用字节提供的 rsproxy 有效缓解这个问题：[https://rsproxy.cn/](https://rsproxy.cn/) 。
 
 ### 安装 LLVM 编译器
 

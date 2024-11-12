@@ -151,6 +151,13 @@ sea-query-binder = { version = "0.7", features = [
     "with-uuid",
 ] }
 rusqlite = { version = "0.32", features = ["bundled"] }
+sea-query-rusqlite = { version = "0.7", features = [
+    "postgres-array",
+    "with-chrono",
+    "with-json",
+    "with-rust_decimal",
+    "with-uuid",
+] }
 # -- Serde
 serde = { version = "1", features = ["derive"] }
 serde_with = { version = "3", features = ["chrono_0_4"] }

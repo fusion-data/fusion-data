@@ -12,7 +12,11 @@ workspace = true
 
 [features]
 # utoipa = ["dep:utoipa", "ultimate-api/utoipa"]
-with-rusqlite = ["rusqlite"]
+with-rusqlite = [
+  "rusqlite",
+  "dep:sea-query-rusqlite",
+  "ultimate-db-macros/with-rusqlite",
+]
 with-ilike = []
 
 [dependencies]
@@ -33,6 +37,7 @@ uuid = { workspace = true }
 sqlx.workspace = true
 sea-query.workspace = true
 sea-query-binder.workspace = true
+sea-query-rusqlite = { workspace = true, optional = true }
 chrono = { workspace = true }
 rusqlite = { workspace = true, optional = true }
 # utoipa = { workspace = true, optional = true }

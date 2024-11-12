@@ -84,6 +84,12 @@ macro_rules! impl_filter_helpers {
         Ok(arr.value)
       }
     }
+
+    impl From<$S> for Vec<$S> {
+      fn from(value: $S) -> Self {
+        vec![value]
+      }
+    }
   };
 }
 

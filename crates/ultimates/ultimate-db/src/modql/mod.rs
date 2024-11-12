@@ -17,3 +17,5 @@ pub use sea_utils::*;
 
 #[cfg(feature = "with-rusqlite")]
 pub use sqlite::*;
+#[cfg(feature = "with-rusqlite")]
+pub use ultimate_db_macros::{FromSqliteRow, FromSqliteValue, ToSqliteValue};

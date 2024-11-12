@@ -30,36 +30,11 @@ pub fn derive_fields(input: TokenStream) -> TokenStream {
 /// For example:
 ///
 /// - On simple type and single element tuple struct
-/// ```rust,norun
-/// #[derive(modql::field::Field)]
-/// pub struct EpochTime(pub(in crate::time) i64);
-/// ```
-/// Will generate something like
-/// ```rust,norun
-/// impl From<EpochTime> for sea_query::Value {
-///   fn from(value: EpochTime) -> Self {
-///     Self::BigInt(Some(value.0))
-///   }
-/// }
-/// impl sea_query::Nullable for EpochTime {
-///   fn null() -> sea_query::Value {
-///     sea_query::Value::BigInt(None)
-///   }
-/// }
-/// ```
+///
 /// Notes:
 ///   - Supports only primitive types (no array yet)
 ///   - Supports only one tuple field.
 ///
-/// - On Simple enum (plain variant only).
-/// ```rust,norun
-/// #[derive(modql::field::SeaFieldValue)]
-/// pub enum Kind {
-///   Md,
-///   Pdf,
-///   Unknown,
-/// }
-/// ```
 /// Notes:
 ///   - Will be treated a sea_query::Value::String with the name of the variant.
 ///   - No rename for now.
@@ -86,15 +61,13 @@ pub fn derive_sqlite_from_row(input: TokenStream) -> TokenStream {
 /// For example:
 ///
 /// - For simple enum (with variant name only)
-/// ```rust,norun
+/// ```rust,no_run
 /// pub enum Kind {
 ///   Md,
 ///   Pdf,
 ///   Unknown,
 /// }
-/// ```
-/// Will generate something like:
-/// ```rust,norun
+/// // Will generate something like:
 ///  impl rusqlite::types::FromSql for Kind {
 ///    fn column_result(value: rusqlite::types::ValueRef<'_>) -> rusqlite::types::FromSqlResult<Self> {
 ///      let txt: String = rusqlite::types::FromSql::column_result(value)?;
@@ -111,12 +84,9 @@ pub fn derive_sqlite_from_row(input: TokenStream) -> TokenStream {
 /// ```
 ///
 /// - For simple tuple struct (one value that already implement the FromSqlt)
-/// ```rust,norun
-/// #[derive(modql::FromSqliteType)]
+/// ```rust,no_run
+/// #[derive(ultimate_db::modql::FromSqliteType)]
 /// pub struct EpochTime(i64);
-/// ```
-/// Will generate something like:
-/// ```rust,norun
 /// impl rusqlite::types::FromSql for EpochTime {
 ///   fn column_result(value: rusqlite::types::ValueRef<'_>) -> rusqlite::types::FromSqlResult<Self> {
 ///     let val = i64::column_result(value)?;

@@ -3,7 +3,11 @@
 ## 运行
 
 ```sh
-cargo run-fusion-scheduler
+# Master & Scheduler 节点
+cargo run -p fusion-scheduler
+
+# Worker 节点
+cargo run -p fusion-scheduler-worker
 ```
 
 ## grpcurl

@@ -3,7 +3,7 @@
 ## 运行
 
 ```sh
-cargo run-fusion-iam
+cargo run -p fusion-iam
 ```
 
 ## grpc

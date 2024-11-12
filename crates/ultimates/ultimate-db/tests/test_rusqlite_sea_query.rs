@@ -1,4 +1,4 @@
-#![cfg(all(feature = "with-rusqlite", feature = "with-sea-query"))]
+#![cfg(feature = "with-rusqlite")]
 #![allow(clippy::redundant_closure)]
 
 mod support;
