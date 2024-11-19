@@ -1,4 +1,5 @@
 use tonic::{Request, Response, Status};
+use ultimate::component::Component;
 use ultimate_grpc::GrpcServiceIntercepted;
 
 use crate::{
@@ -11,19 +12,25 @@ use crate::{
   util::grpc::interceptor::auth_interceptor,
 };
 
-use super::user_serv;
+use super::UserSvc;
 
-pub fn user_svc() -> GrpcServiceIntercepted<UserServer<UserService>> {
-  UserServer::with_interceptor(UserService, auth_interceptor)
+#[derive(Clone, Component)]
+pub struct UserRpc {
+  #[component]
+  user_svc: UserSvc,
 }
 
-pub struct UserService;
+impl UserRpc {
+  pub fn into_rpc(self) -> GrpcServiceIntercepted<UserServer<UserRpc>> {
+    UserServer::with_interceptor(self, auth_interceptor)
+  }
+}
 
 #[tonic::async_trait]
-impl User for UserService {
+impl User for UserRpc {
   async fn find(&self, request: Request<FindUserRequest>) -> Result<Response<UserResponse>, Status> {
     let ctx = request.extensions().try_into()?;
-    let user = user_serv::find_option_by_id(ctx, request.get_ref().id).await?.map(UserDto::from);
+    let user = self.user_svc.find_option_by_id(ctx, request.get_ref().id).await?.map(UserDto::from);
     Ok(Response::new(UserResponse { user }))
   }
 
@@ -32,10 +39,10 @@ impl User for UserService {
     let returining_payload = request.returining_payload;
 
     let ctx = (&exts).try_into()?;
-    let id = user_serv::create(ctx, request.try_into()?).await?;
+    let id = self.user_svc.create(ctx, request.try_into()?).await?;
 
     let data = if returining_payload {
-      let u = user_serv::find_by_id(ctx, id).await?;
+      let u = self.user_svc.find_by_id(ctx, id).await?;
       create_user_response::Data::User(u.into())
     } else {
       create_user_response::Data::Id(id)
@@ -49,10 +56,10 @@ impl User for UserService {
     let id = request.id;
     let returning_payload = request.returning_payload;
 
-    user_serv::update_by_id(ctx, id, request.try_into()?).await?;
+    self.user_svc.update_by_id(ctx, id, request.try_into()?).await?;
 
     let user = if returning_payload {
-      let u = user_serv::find_option_by_id(ctx, id).await?;
+      let u = self.user_svc.find_option_by_id(ctx, id).await?;
       u.map(UserDto::from)
     } else {
       None
@@ -64,7 +71,7 @@ impl User for UserService {
     let (_, exts, request) = request.into_parts();
     let ctx = (&exts).try_into()?;
 
-    let page = user_serv::page(ctx, request.into()).await?;
+    let page = self.user_svc.page(ctx, request.into()).await?;
     Ok(Response::new(page.into()))
   }
 
@@ -73,7 +80,7 @@ impl User for UserService {
     let ctx = (&exts).try_into()?;
 
     let id = request.id;
-    user_serv::delete_by_id(ctx, id).await?;
+    self.user_svc.delete_by_id(ctx, id).await?;
     Ok(Response::new(DeleteUserResponse {}))
   }
 
@@ -84,7 +91,7 @@ impl User for UserService {
     let user_id = request.user_id;
     let role_ids = request.role_ids;
 
-    user_serv::assign_role(ctx, user_id, role_ids).await?;
+    self.user_svc.assign_role(ctx, user_id, role_ids).await?;
     Ok(Response::new(Empty {}))
   }
 }

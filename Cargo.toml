@@ -74,6 +74,7 @@ backon = { version = "1.2" }
 # -- Helpful macros for working with enums and strings
 enum-iterator = "2"
 strum = { version = "0.26", features = ["derive"] }
+enum_dispatch = "0.3"
 # -- Error
 anyhow = "1"
 thiserror = "1"

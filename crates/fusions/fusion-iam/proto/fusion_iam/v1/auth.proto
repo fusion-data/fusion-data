@@ -3,7 +3,7 @@ syntax = "proto3";
 package fusion_iam.v1;
 
 service Auth {
-  rpc Signin(SigninRequest) returns (SigninReplay) {}
+  rpc Signin(SigninRequest) returns (SigninResponse) {}
 }
 
 message SigninRequest {
@@ -17,7 +17,7 @@ enum TokenKind {
   BEARER = 1;
 }
 
-message SigninReplay {
+message SigninResponse {
   string token = 1;
   TokenKind token_kind = 2;
 }

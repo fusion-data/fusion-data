@@ -1,5 +1,6 @@
 use tonic::{Request, Response, Status};
 use tracing::debug;
+use ultimate::component::Component;
 use ultimate_grpc::GrpcServiceIntercepted;
 use uuid::Uuid;
 
@@ -12,16 +13,22 @@ use crate::{
   util::grpc::interceptor::auth_interceptor,
 };
 
-use super::policy_serv;
+use super::PolicySvc;
 
-pub fn access_control_svc() -> GrpcServiceIntercepted<AccessControlServer<AccessControlService>> {
-  AccessControlServer::with_interceptor(AccessControlService, auth_interceptor)
+#[derive(Clone, Component)]
+pub struct AccessControlRpc {
+  #[component]
+  policy_svc: PolicySvc,
 }
 
-pub struct AccessControlService;
+impl AccessControlRpc {
+  pub fn into_rpc(self) -> GrpcServiceIntercepted<AccessControlServer<AccessControlRpc>> {
+    AccessControlServer::with_interceptor(self, auth_interceptor)
+  }
+}
 
 #[tonic::async_trait]
-impl AccessControl for AccessControlService {
+impl AccessControl for AccessControlRpc {
   async fn create_policy_statement(
     &self,
     request: Request<CreatePolicyRequest>,
@@ -30,7 +37,7 @@ impl AccessControl for AccessControlService {
     let ctx = (&exts).try_into()?;
     let policy = request.policy.parse().map_err(|_| Status::invalid_argument("Invalid policy structure"))?;
 
-    let id = policy_serv::create(ctx, policy, request.description).await?;
+    let id = self.policy_svc.create(ctx, policy, request.description).await?;
 
     Ok(Response::new(CreatePolicyResponse { id: id.to_string(), policy_statement: None }))
   }
@@ -43,7 +50,7 @@ impl AccessControl for AccessControlService {
     let ctx = (&exts).try_into()?;
 
     let id = request.id.parse::<Uuid>().map_err(|_| Status::invalid_argument("Invalid policy statement id"))?;
-    let policy_statement = policy_serv::find_by_id(ctx, id).await?;
+    let policy_statement = self.policy_svc.find_by_id(ctx, id).await?;
 
     Ok(Response::new(GetPolicyResponse { policy_statement: Some(policy_statement.try_into()?) }))
   }

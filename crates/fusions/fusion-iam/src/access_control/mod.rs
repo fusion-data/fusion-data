@@ -1,9 +1,10 @@
 //! 访问控制服务
 mod bmc;
-mod grpc;
 mod helper;
 mod model;
-mod policy_serv;
+mod policy_svc;
+mod rpc;
 
-pub use grpc::access_control_svc;
 pub use model::*;
+pub use policy_svc::PolicySvc;
+pub use rpc::AccessControlRpc;

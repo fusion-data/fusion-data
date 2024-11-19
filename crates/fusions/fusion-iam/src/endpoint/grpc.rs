@@ -8,9 +8,7 @@ use ultimate::{
 };
 use ultimate_grpc::{utils::init_grpc_server, GrpcSettings, GrpcStartInfo};
 
-use crate::{
-  access_control::access_control_svc, auth::auth_svc, permission::permission_svc, role::role_svc, user::grpc::user_svc,
-};
+use crate::{access_control::AccessControlRpc, auth::AuthRpc, permission::PermissionRpc, role::RoleRpc, user::UserRpc};
 
 pub async fn grpc_serve(
   app: &Application,
@@ -23,11 +21,11 @@ pub async fn grpc_serve(
   let encoded_file_descriptor_sets = vec![crate::pb::fusion_iam::v1::FILE_DESCRIPTOR_SET];
 
   let mut rb = RoutesBuilder::default();
-  rb.add_service(access_control_svc())
-    .add_service(permission_svc())
-    .add_service(role_svc())
-    .add_service(user_svc())
-    .add_service(auth_svc());
+  rb.add_service(app.component::<AccessControlRpc>().into_rpc())
+    .add_service(app.component::<PermissionRpc>().into_rpc())
+    .add_service(app.component::<RoleRpc>().into_rpc())
+    .add_service(app.component::<UserRpc>().into_rpc())
+    .add_service(app.component::<AuthRpc>().into_rpc());
 
   init_grpc_server(GrpcSettings { conf: &conf, encoded_file_descriptor_sets, routes: rb.routes() }).await
 }

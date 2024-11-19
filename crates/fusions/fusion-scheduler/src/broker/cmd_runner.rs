@@ -10,12 +10,12 @@ use crate::service::{sched_namespace::SchedNamespace, sched_node::SchedNodeSvc};
 use super::SchedCmd;
 
 pub struct CmdRunner {
-  app: Arc<Application>,
+  app: Application,
   rx: mpsc::Receiver<SchedCmd>,
 }
 
 impl CmdRunner {
-  pub fn new(app_state: Arc<Application>, rx: mpsc::Receiver<SchedCmd>) -> Self {
+  pub fn new(app_state: Application, rx: mpsc::Receiver<SchedCmd>) -> Self {
     Self { app: app_state, rx }
   }
 

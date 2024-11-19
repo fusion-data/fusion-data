@@ -1,9 +1,10 @@
-mod grpc;
+mod bmc;
 mod helper;
 mod model;
-mod role_bmc;
 pub mod role_permission;
-pub mod role_serv;
+mod rpc;
+mod svc;
 
-pub use grpc::role_svc;
 pub use model::*;
+pub use rpc::RoleRpc;
+pub use svc::RoleSvc;

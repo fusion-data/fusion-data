@@ -88,6 +88,7 @@ pretty_assertions.workspace = true
 hyper = { workspace = true }
 hyper-util = { workspace = true }
 tower = { workspace = true }
+ultimate-macros = { workspace = true }
 
 [build-dependencies]
 tonic-build = { workspace = true, features = ["prost"] }

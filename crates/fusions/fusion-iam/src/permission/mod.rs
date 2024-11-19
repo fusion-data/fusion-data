@@ -1,8 +1,9 @@
-mod grpc;
+mod bmc;
 mod helper;
 mod model;
-mod permission_bmc;
-pub mod permission_serv;
+mod rpc;
+mod svc;
 
-pub use grpc::permission_svc;
 pub use model::*;
+pub use rpc::PermissionRpc;
+pub use svc::PermissionSvc;
