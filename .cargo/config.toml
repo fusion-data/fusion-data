@@ -16,7 +16,7 @@ run-fusion-scheduler = "run -p fusion-scheduler --bin fusion-scheduler --feature
 panic = "abort"
 opt-level = 3
 # default-features = false
-# features = []
+features = ["tikv-jemallocator"]
 
 
 # On Windows

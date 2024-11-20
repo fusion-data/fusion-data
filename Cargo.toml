@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/fusions/*", "crates/ultimates/*", "crates/samples/*"]
+members = ["crates/fusions/*", "crates/ultimates/*"]
 resolver = "2"
 
 [profile.release]
@@ -77,7 +77,7 @@ strum = { version = "0.26", features = ["derive"] }
 enum_dispatch = "0.3"
 # -- Error
 anyhow = "1"
-thiserror = "1"
+thiserror = "2"
 # -- Macros
 quote = "1"
 syn = { version = "2", features = ["full"] }
@@ -117,10 +117,10 @@ tracing-subscriber = { version = "0.3", features = [
     "json",
 ] }
 tracing-appender = "0.2"
-init-tracing-opentelemetry = { version = "0.23", features = [
+init-tracing-opentelemetry = { version = "0.24", features = [
     "tracing_subscriber_ext",
 ] }
-tracing-opentelemetry-instrumentation-sdk = "0.23"
+tracing-opentelemetry-instrumentation-sdk = "0.24"
 # -- Time
 chrono = { version = "0.4", default-features = false, features = [
     "std",
@@ -187,7 +187,7 @@ cookie = "0.18"
 axum = { version = "0.7", features = ["macros", "form"] }
 axum-extra = { version = "0.9", features = ["typed-header"] }
 axum-macros = { version = "0.4" }
-axum-tracing-opentelemetry = "0.23"
+axum-tracing-opentelemetry = "0.24"
 # # openapi
 # utoipa = { version = "5.1", features = [
 #     "axum_extras",
@@ -211,7 +211,7 @@ tonic = "0.12"
 tonic-types = "0.12"
 tonic-reflection = "0.12"
 tonic-web = "0.12"
-tonic-tracing-opentelemetry = "0.23"
+tonic-tracing-opentelemetry = "0.24"
 tonic-build = { version = "0.12", features = ["prost"] }
 prost = "0.13"
 prost-build = "0.13"

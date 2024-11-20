@@ -69,29 +69,30 @@ inventory::collect!(&'static dyn ComponentRegistrar);
 /// auto_config
 #[macro_export]
 macro_rules! submit_component {
-  ($ty:ident) => {
+  ($ty:tt) => {
     ::ultimate::component::submit! {
-      &$ty as &dyn ::ultimate::component::ComponentRegistrar
+      &($ty) as &dyn ::ultimate::component::ComponentRegistrar
     }
   };
 }
 
 /// Find all ComponentRegistrar and install them into the application
 pub fn auto_inject_component(app: &mut ApplicationBuilder) -> crate::Result<()> {
-  let mut registrars = inventory::iter::<&dyn ComponentRegistrar>.into_iter().collect::<Vec<_>>();
+  let mut registrars: Vec<(&&dyn ComponentRegistrar, Vec<&str>)> =
+    inventory::iter::<&dyn ComponentRegistrar>.into_iter().map(|cr| (cr, cr.dependencies())).collect();
 
   while !registrars.is_empty() {
-    let mut next_round = vec![];
-    for registrar in registrars {
-      let deps: Vec<&str> = registrar.dependencies().into_iter().filter(|d| !app.components.contains_key(*d)).collect();
+    let mut unregistrars = vec![];
+    for (registrar, deps) in registrars {
+      let deps: Vec<&str> = deps.into_iter().filter(|d| !app.components.contains_key(*d)).collect();
       if deps.is_empty() {
         registrar.install_component(app)?;
       } else {
         debug!("Dependency does not exist, skip {:?}", deps);
-        next_round.push(registrar);
+        unregistrars.push((registrar, deps));
       }
     }
-    registrars = next_round;
+    registrars = unregistrars;
   }
   Ok(())
 }

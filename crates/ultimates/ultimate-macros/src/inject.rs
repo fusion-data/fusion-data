@@ -129,21 +129,13 @@ pub(crate) fn expand_derive(input: syn::DeriveInput) -> syn::Result<TokenStream>
   };
   let ident = input.ident;
   let component_registrar = syn::Ident::new(&format!("__ComponentRegistrarFor_{ident}"), ident.span());
+  // let static_component_registrar =
+  // syn::Ident::new(&format!("__COMPONENT_REGISTRAR_DEPENDENCIES_FOR_{ident}"), ident.span());
 
-  let dependencies: Vec<_> = component
-    .fields
-    .iter()
-    .map(|field| {
-      let type_path = field.ty.get_path();
-      // quote! {
-      //   std::any::type_name<#type_path>()
-      // }
-      type_path
-    })
-    .collect();
+  let dependencies: Vec<_> = component.fields.iter().map(|field| field.ty.get_path()).collect();
   // println!("\nComponent Name: {}, dependencies: {:?}", ident, dependencies);
 
-  let output = quote! {
+  let token_stream = quote! {
     impl ::ultimate::component::Component for #ident {
       fn build(app: &::ultimate::application::ApplicationBuilder) -> ::ultimate::Result<Self> {
         use ::ultimate::configuration::ConfigRegistry;
@@ -151,12 +143,18 @@ pub(crate) fn expand_derive(input: syn::DeriveInput) -> syn::Result<TokenStream>
       }
     }
 
+    // #[allow(non_upper_case_globals)]
+    // static #static_component_registrar: std::sync::LazyLock<Vec<&'static str>> = std::sync::LazyLock::new(|| {
+    //   vec![#(std::any::type_name::<#dependencies>()),*]
+    // });
+
     #[allow(non_camel_case_types)]
     struct #component_registrar;
 
     impl ::ultimate::component::ComponentRegistrar for #component_registrar {
       fn dependencies(&self) -> Vec<&str> {
         vec![#(std::any::type_name::<#dependencies>()),*]
+        // static_component_registrar.to_vec()
       }
 
       fn install_component(&self, app: &mut ::ultimate::application::ApplicationBuilder)->::ultimate::Result<()> {
@@ -166,10 +164,12 @@ pub(crate) fn expand_derive(input: syn::DeriveInput) -> syn::Result<TokenStream>
     }
     ::ultimate::submit_component!(#component_registrar);
   };
+  let output = token_stream;
 
   Ok(output)
 }
 
+#[allow(unused)]
 fn get_full_path(ty: &Type) -> Option<String> {
   if let Type::Path(type_path) = ty {
     let mut segments = type_path.path.segments.iter().map(|seg| seg.ident.to_string()).collect::<Vec<_>>();

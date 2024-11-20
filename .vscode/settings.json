@@ -12,7 +12,7 @@
   "SQL-Formatter-VSCode.ignoreTabSettings": true,
   "SQL-Formatter-VSCode.dataTypeCase": "lower",
   "SQL-Formatter-VSCode.dialect": "postgresql",
-  "SQL-Formatter-VSCode.expressionWidth": 80,
+  "SQL-Formatter-VSCode.expressionWidth": 120,
   "SQL-Formatter-VSCode.functionCase": "lower",
   "SQL-Formatter-VSCode.identifierCase": "lower",
   "SQL-Formatter-VSCode.keywordCase": "lower",
