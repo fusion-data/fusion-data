@@ -16,6 +16,6 @@ pub use async_trait::async_trait;
 pub use data_error::*;
 pub use model::*;
 pub use run_mode::*;
-// pub use ultimate_macros::*;
+pub use ultimate_macros::Builder;
 
 pub type Result<T> = core::result::Result<T, DataError>;

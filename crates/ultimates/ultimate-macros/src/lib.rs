@@ -1,6 +1,7 @@
 use proc_macro::TokenStream;
 use syn::DeriveInput;
 
+mod builder;
 mod configuration;
 mod helpers;
 mod inject;
@@ -19,4 +20,10 @@ pub fn derive_component(input: TokenStream) -> TokenStream {
   let input = syn::parse_macro_input!(input as DeriveInput);
 
   inject::expand_derive(input).unwrap_or_else(syn::Error::into_compile_error).into()
+}
+
+/// Builder
+#[proc_macro_derive(Builder)]
+pub fn derive_builder(item: TokenStream) -> TokenStream {
+  builder::create_builder(item.into()).into()
 }
