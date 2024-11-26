@@ -261,22 +261,17 @@ impl ApplicationBuilder {
   /// The `run` method is suitable for applications that contain scheduling logic,
   /// such as web, job, and stream.
   ///
-  pub async fn run(&mut self) {
-    match self.inner_run().await {
-      Err(e) => {
-        error!("{:?}", e);
-      }
-      Ok(app) => Application::set_global(app),
-    }
+  pub async fn run(&mut self) -> crate::Result<()> {
+    self.inner_run().await
   }
 
-  async fn inner_run(&mut self) -> crate::Result<Application> {
-    let app = self.build().await?;
+  async fn inner_run(&mut self) -> crate::Result<()> {
+    let _app = self.build().await?;
 
     // 4. schedule
     // self.schedule().await
 
-    Ok(app)
+    Ok(())
   }
 
   /// Unlike the [`run`] method, the `build` method is suitable for applications that do not contain scheduling logic.
@@ -291,7 +286,10 @@ impl ApplicationBuilder {
     // service dependency inject
     auto_inject_component(self)?;
 
-    Ok(self.build_application())
+    let app = self.build_application();
+    Application::set_global(app);
+
+    Ok(Application::global())
   }
 
   /// Initialize tracing for Application

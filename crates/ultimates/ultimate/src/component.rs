@@ -88,7 +88,7 @@ pub fn auto_inject_component(app: &mut ApplicationBuilder) -> crate::Result<()> 
       if deps.is_empty() {
         registrar.install_component(app)?;
       } else {
-        debug!("Dependency does not exist, skip {:?}", deps);
+        debug!("Dependency does not exist, waiting for the next round: [{:?}]", deps);
         unregistrars.push((registrar, deps));
       }
     }

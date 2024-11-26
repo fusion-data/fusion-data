@@ -34,9 +34,9 @@ pub struct Db {}
 
 #[tokio::main]
 async fn main() -> ultimate::Result<()> {
-  let app = Application::builder().build().await?;
+  Application::builder().build().await?;
 
-  let _auth_svc: AuthSvc = app.component();
+  let _auth_svc: AuthSvc = Application::global().component();
 
   // let _pwd_svc = PwdSvc2 { pwd_generator: Arc::default() };
   // println!("{:?}", _pwd_svc);
