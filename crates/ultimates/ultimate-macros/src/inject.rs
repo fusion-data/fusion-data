@@ -1,21 +1,57 @@
 use proc_macro2::{Span, TokenStream};
 use quote::{quote, ToTokens};
-use syn::{AngleBracketedGenericArguments, Attribute, GenericArgument, PathArguments, Type, TypePath};
+use syn::{
+  punctuated::Punctuated, AngleBracketedGenericArguments, Attribute, GenericArgument, PathArguments, Type, TypePath,
+};
 
 fn inject_error_tip() -> syn::Error {
-  syn::Error::new(Span::call_site(), "inject Service only support Named-field Struct")
+  syn::Error::new(Span::call_site(), "inject Component only support Named-field Struct")
 }
 
+// #[derive(Debug)]
 enum InjectableType {
   Component(syn::Path),
   Config(syn::Path),
   ComponentRef(syn::Path),
   ConfigRef(syn::Path),
+  Default,
+}
+
+impl InjectableType {
+  pub fn get_path(&self) -> syn::Path {
+    match self {
+      InjectableType::Component(p) => p.clone(),
+      InjectableType::Config(p) => p.clone(),
+      InjectableType::ComponentRef(p) => p.clone(),
+      InjectableType::ConfigRef(p) => p.clone(),
+      InjectableType::Default => build_default_path(),
+    }
+  }
+}
+
+fn build_default_path() -> syn::Path {
+  let mut segments = Punctuated::new();
+
+  // 构建 "Default" 路径段
+  let default_segment = syn::PathSegment {
+    ident: syn::Ident::new("Default", proc_macro2::Span::call_site()),
+    arguments: syn::PathArguments::None,
+  };
+  segments.push(default_segment);
+
+  // 构建 "default" 路径段，这里它是 "Default" 的一个关联函数
+  let default_fn_segment = syn::PathSegment {
+    ident: syn::Ident::new("default", proc_macro2::Span::call_site()),
+    arguments: syn::PathArguments::None,
+  };
+  segments.push(default_fn_segment);
+
+  syn::Path { leading_colon: None, segments }
 }
 
 struct Injectable {
-  ty: InjectableType,
-  field_name: syn::Ident,
+  pub ty: InjectableType,
+  pub field_name: syn::Ident,
 }
 
 impl Injectable {
@@ -41,8 +77,11 @@ impl Injectable {
     if last_path_segment.ident == "ConfigRef" {
       return Ok(InjectableType::ConfigRef(Self::get_argument_type(&last_path_segment.arguments)?));
     }
-    eprintln!("type path: {:?}, {:#?}", ty, last_path_segment);
-    Ok(InjectableType::Component(ty))
+
+    // Ok(InjectableType::Component(ty))
+    // XXX 非 config、component、ComponentRef、ConfigRef 类型，使用默认的 Default::default() 初始化
+    eprintln!("[Missing] type path: {:?}, {:#?}", ty.to_token_stream(), last_path_segment.to_token_stream());
+    Ok(InjectableType::Default)
   }
 
   fn get_argument_type(path_args: &PathArguments) -> syn::Result<syn::Path> {
@@ -60,42 +99,40 @@ impl ToTokens for Injectable {
   fn to_tokens(&self, tokens: &mut TokenStream) {
     let Self { ty, field_name } = self;
     match ty {
-      InjectableType::Component(type_path) => {
-        tokens.extend(quote! {
-            #field_name: app.get_component::<#type_path>().expect("")
-        });
-      }
-      InjectableType::Config(type_path) => {
-        tokens.extend(quote! {
-            #field_name: app.get_config::<#type_path>()?
-        });
-      }
-      InjectableType::ComponentRef(type_path) => {
-        tokens.extend(quote! {
-            #field_name: app.get_component_ref::<#type_path>().expect("")
-        });
-      }
-      InjectableType::ConfigRef(type_path) => {
-        tokens.extend(quote! {
-            #field_name: ::ultimate::config::ConfigRef::new(app.get_config::<#type_path>()?)
-        });
-      }
+      InjectableType::Component(type_path) => tokens.extend(quote! {
+        #field_name: app.component::<#type_path>()
+      }),
+      InjectableType::Config(type_path) => tokens.extend(quote! {
+        #field_name: app.get_config::<#type_path>()?
+      }),
+      InjectableType::ComponentRef(type_path) => tokens.extend(quote! {
+        #field_name: match app.get_component_ref::<#type_path>() {
+          Some(c) => c,
+          None => panic!("ComponentRef not found, field_name: {}, type_path: {}", stringify!(#field_name), stringify!(#type_path)),
+        }
+      }),
+      InjectableType::ConfigRef(type_path) => tokens.extend(quote! {
+        #field_name: ::ultimate::config::ConfigRef::new(app.get_config::<#type_path>()?)
+      }),
+      InjectableType::Default => tokens.extend(quote! {
+        #field_name: Default::default()
+      }),
     }
   }
 }
 
-struct Component {
+struct ComponentToTokens {
   fields: Vec<Injectable>,
 }
 
-impl Component {
+impl ComponentToTokens {
   fn new(fields: syn::Fields) -> syn::Result<Self> {
     let fields = fields.into_iter().map(Injectable::new).collect::<syn::Result<Vec<_>>>()?;
     Ok(Self { fields })
   }
 }
 
-impl ToTokens for Component {
+impl ToTokens for ComponentToTokens {
   fn to_tokens(&self, tokens: &mut TokenStream) {
     let fields = &self.fields;
     tokens.extend(quote! {
@@ -107,33 +144,73 @@ impl ToTokens for Component {
 }
 
 pub(crate) fn expand_derive(input: syn::DeriveInput) -> syn::Result<TokenStream> {
-  let service = if let syn::Data::Struct(data) = input.data {
-    Component::new(data.fields)?
+  let component = if let syn::Data::Struct(data) = input.data {
+    ComponentToTokens::new(data.fields)?
   } else {
     return Err(inject_error_tip());
   };
   let ident = input.ident;
-  let service_registrar = syn::Ident::new(&format!("__ComponentRegistrarFor_{ident}"), ident.span());
+  let component_registrar = syn::Ident::new(&format!("__ComponentRegistrarFor_{ident}"), ident.span());
+  // let static_component_registrar =
+  // syn::Ident::new(&format!("__COMPONENT_REGISTRAR_DEPENDENCIES_FOR_{ident}"), ident.span());
 
-  let output = quote! {
+  let dependencies: Vec<_> = component
+    .fields
+    .iter()
+    .filter(|f| match f.ty {
+      InjectableType::Default => false,
+      _ => true,
+    })
+    .map(|field| field.ty.get_path())
+    .collect();
+  // println!("\nComponent Name: {}, dependencies: {:?}", ident, dependencies);
+
+  let token_stream = quote! {
     impl ::ultimate::component::Component for #ident {
       fn build(app: &::ultimate::application::ApplicationBuilder) -> ::ultimate::Result<Self> {
         use ::ultimate::configuration::ConfigRegistry;
-        Ok(#service)
+        Ok(#component)
       }
     }
 
-    #[allow(non_camel_case_types)]
-    struct #service_registrar;
+    // #[allow(non_upper_case_globals)]
+    // static #static_component_registrar: std::sync::LazyLock<Vec<&'static str>> = std::sync::LazyLock::new(|| {
+    //   vec![#(std::any::type_name::<#dependencies>()),*]
+    // });
 
-    impl ::ultimate::component::ComponentRegistrar for #service_registrar{
+    #[allow(non_camel_case_types)]
+    struct #component_registrar;
+
+    impl ::ultimate::component::ComponentRegistrar for #component_registrar {
+      fn dependencies(&self) -> Vec<&str> {
+        vec![#(std::any::type_name::<#dependencies>()),*]
+        // static_component_registrar.to_vec()
+      }
+
       fn install_component(&self, app: &mut ::ultimate::application::ApplicationBuilder)->::ultimate::Result<()> {
-        app.add_component(#ident::build(app)?);
+        use ::ultimate::component::Component;
+        app.add_component(#ident::build(app).unwrap());
         Ok(())
       }
     }
-    ::ultimate::submit_component!(#service_registrar);
+    ::ultimate::submit_component!(#component_registrar);
   };
 
+  let output = token_stream;
   Ok(output)
+}
+
+#[allow(unused)]
+fn get_full_path(ty: &Type) -> Option<String> {
+  if let Type::Path(type_path) = ty {
+    let mut segments = type_path.path.segments.iter().map(|seg| seg.ident.to_string()).collect::<Vec<_>>();
+    if let Some(first_segment) = segments.first() {
+      if first_segment == "crate" {
+        segments.remove(0); // Remove "crate" from the path
+      }
+    }
+    Some(segments.join("::"))
+  } else {
+    None
+  }
 }

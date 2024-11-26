@@ -18,7 +18,7 @@ use crate::service::{
 use super::{CmdRunner, SchedCmd, SchedulerConfig, TimerRef};
 
 pub async fn loop_scheduler(
-  app: Arc<Application>,
+  app: Application,
   scheduler_config: SchedulerConfig,
   timer_ref: TimerRef,
   db_tx: mpsc::Sender<SchedCmd>,
@@ -36,7 +36,7 @@ pub async fn loop_scheduler(
 }
 
 pub struct Scheduler {
-  app: Arc<Application>,
+  app: Application,
   scheduler_config: SchedulerConfig,
   timer_ref: TimerRef,
   db_tx: mpsc::Sender<SchedCmd>,

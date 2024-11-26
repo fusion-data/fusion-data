@@ -72,8 +72,12 @@ where
   D: Deserializer<'de>,
 {
   let s: String = Deserialize::deserialize(deserializer)?;
-  FixedOffset::from_str(&s)
-    .map_err(|e| serde::de::Error::custom(format!("Invalid time offset error: {}, value is '{}'", e, s)))
+  if s.is_empty() {
+    Ok(*local_offset())
+  } else {
+    FixedOffset::from_str(&s)
+      .map_err(|e| serde::de::Error::custom(format!("Invalid time offset error: {}, value is '{}'", e, s)))
+  }
 }
 
 pub fn serialize_fixed_offset<S>(offset: &FixedOffset, serializer: S) -> core::result::Result<S::Ok, S::Error>

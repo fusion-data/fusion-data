@@ -30,7 +30,7 @@ enum MasterSchedulers {
 }
 
 pub fn spawn_loop(
-  app: Arc<Application>,
+  app: Application,
   grpc_sock_addr: SocketAddr,
   timer_ref: TimerRef,
 ) -> (JoinHandle<ultimate::Result<()>>, JoinHandle<ultimate::Result<Scheduler>>) {

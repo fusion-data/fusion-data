@@ -2,14 +2,14 @@
 //! and provides a very basic `sqlite::FromRow` based on the `Fields` derivation.
 //!
 
-pub use modql_macros::SqliteFromRow;
-pub use modql_macros::SqliteFromValue;
-pub use modql_macros::SqliteToValue;
+pub use ultimate_db_macros::SqliteFromRow;
+pub use ultimate_db_macros::SqliteFromValue;
+pub use ultimate_db_macros::SqliteToValue;
 
 // -- deprecated
-pub use modql_macros::FromSqliteRow;
-pub use modql_macros::FromSqliteValue;
-pub use modql_macros::ToSqliteValue;
+pub use ultimate_db_macros::FromSqliteRow;
+pub use ultimate_db_macros::FromSqliteValue;
+pub use ultimate_db_macros::ToSqliteValue;
 
 #[deprecated(note = "use SqliteFromRow")]
 pub trait FromSqliteRow: SqliteFromRow

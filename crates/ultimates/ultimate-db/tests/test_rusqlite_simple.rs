@@ -9,10 +9,10 @@ pub type Error = Box<dyn std::error::Error>; // For early dev.
 use crate::support::sqlite::{seed_agent, seed_module};
 use rusqlite::Connection;
 use std::result;
-use ultimate_db::modql::field::{Fields, HasFields};
+use ultimate_db::modql::field::{Fields, HasFields, SeaFieldValue};
 use ultimate_db::modql::{SqliteFromRow, SqliteFromValue, SqliteToValue};
 
-#[derive(Debug, Clone, SqliteFromValue, SqliteToValue, modql::field::SeaFieldValue)]
+#[derive(Debug, Clone, SqliteFromValue, SqliteToValue, SeaFieldValue)]
 pub struct Id(i64);
 
 impl Id {

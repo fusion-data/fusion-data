@@ -1,5 +1,6 @@
 use crate::modql::filter::{
-  OpValInt32, OpValString, OpValUuid, OpValValue, OpValsInt32, OpValsString, OpValsUuid, OpValsValue,
+  OpValInt32, OpValInt64, OpValString, OpValUuid, OpValValue, OpValsInt32, OpValsInt64, OpValsString, OpValsUuid,
+  OpValsValue,
 };
 use ultimate::DataError;
 use ultimate_api::v1::{Null, OpNumber, OpString, ValInt32, ValInt64, ValString};
@@ -68,6 +69,18 @@ fn try_into_op_val_uuid(v: ValString) -> Result<OpValUuid, DataError> {
     _ => return Err(DataError::bad_request(format!("Invalid Operator: {:?}", v.o()))),
   };
   Ok(op_val)
+}
+
+pub fn try_into_op_values_with_string_opt(
+  value: impl IntoIterator<Item = ValString>,
+) -> Result<Option<OpValsValue>, DataError> {
+  let mut vals = Vec::new();
+  for item in value {
+    let op_val = try_into_op_val_value(item)?;
+    vals.push(op_val);
+  }
+
+  Ok(if vals.is_empty() { None } else { Some(OpValsValue(vals)) })
 }
 
 fn try_into_op_val_value(v: ValString) -> Result<OpValValue, DataError> {
@@ -155,6 +168,31 @@ pub fn try_into_op_val_int32(v: ValInt32) -> Result<OpValInt32, DataError> {
     OpNumber::Gt => OpValInt32::Gt(v.try_into()?),
     OpNumber::Gte => OpValInt32::Gte(v.try_into()?),
     OpNumber::Null => OpValInt32::Null(Null::try_from(v)?.is_null()),
+  };
+  Ok(op_val)
+}
+
+pub fn try_into_op_vals_int64_opt(value: impl IntoIterator<Item = ValInt64>) -> Result<Option<OpValsInt64>, DataError> {
+  let mut vals = Vec::new();
+  for item in value {
+    let op_val = try_into_op_val_int64(item)?;
+    vals.push(op_val);
+  }
+
+  Ok(if vals.is_empty() { None } else { Some(OpValsInt64(vals)) })
+}
+
+pub fn try_into_op_val_int64(v: ValInt64) -> Result<OpValInt64, DataError> {
+  let op_val = match v.o() {
+    OpNumber::Eq => OpValInt64::Eq(v.try_into()?),
+    OpNumber::Not => OpValInt64::Not(v.try_into()?),
+    OpNumber::In => OpValInt64::In(v.try_into()?),
+    OpNumber::NotIn => OpValInt64::NotIn(v.try_into()?),
+    OpNumber::Lt => OpValInt64::Lt(v.try_into()?),
+    OpNumber::Lte => OpValInt64::Lte(v.try_into()?),
+    OpNumber::Gt => OpValInt64::Gt(v.try_into()?),
+    OpNumber::Gte => OpValInt64::Gte(v.try_into()?),
+    OpNumber::Null => OpValInt64::Null(Null::try_from(v)?.is_null()),
   };
   Ok(op_val)
 }

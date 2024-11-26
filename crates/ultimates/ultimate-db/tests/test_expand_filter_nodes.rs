@@ -1,4 +1,3 @@
-#![cfg(feature = "with-sea-query")]
 //! TODO: Add more tests
 
 pub type Result<T, E = Error> = core::result::Result<T, E>;
@@ -30,7 +29,7 @@ fn test_expand_filter_nodes_filter_rel() -> Result<()> {
   let filter = TaskFilter { id: Some(123.into()), title: Some("some title".into()), label: Some("Test".into()) };
 
   // -- Exec
-  let cond: Result<sea_query::Condition, modql::filter::IntoSeaError> = filter.try_into();
+  let cond: Result<sea_query::Condition, ultimate_db::modql::filter::IntoSeaError> = filter.try_into();
   let cond = cond?;
 
   let mut query = Query::select();
@@ -53,7 +52,7 @@ fn test_expand_filter_nodes_simple() -> Result<()> {
   let filter = ProjectFilter { id: Some(123.into()), label: Some("Test".into()), ..Default::default() };
 
   // -- Exec
-  let cond: Result<sea_query::Condition, modql::filter::IntoSeaError> = filter.try_into();
+  let cond: Result<sea_query::Condition, ultimate_db::modql::filter::IntoSeaError> = filter.try_into();
   let cond = cond?;
 
   let mut query = Query::select();

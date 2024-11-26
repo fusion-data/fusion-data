@@ -79,15 +79,16 @@ prost-types = { workspace = true }
 qrcode-rs = { workspace = true }
 image = { workspace = true }
 
-[target.'cfg(not(target_env = "msvc"))'.dependencies]
 # -- memory allocator
-tikv-jemallocator.workspace = true
+[target.'cfg(not(target_env = "msvc"))'.dependencies]
+tikv-jemallocator = { workspace = true, optional = true }
 
 [dev-dependencies]
 pretty_assertions.workspace = true
 hyper = { workspace = true }
 hyper-util = { workspace = true }
 tower = { workspace = true }
+ultimate-macros = { workspace = true }
 
 [build-dependencies]
 tonic-build = { workspace = true, features = ["prost"] }

@@ -1,6 +1,7 @@
-mod auth_serv;
-mod grpc;
 mod model;
+mod rpc;
+mod svc;
 pub mod utils;
 
-pub use grpc::auth_svc;
+pub use rpc::AuthRpc;
+pub use svc::AuthSvc;

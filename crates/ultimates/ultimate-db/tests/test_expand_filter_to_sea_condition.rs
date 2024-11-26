@@ -1,5 +1,3 @@
-#![cfg(feature = "with-sea-query")]
-
 //! Should compile. No test functions yet.
 pub type Result<T> = core::result::Result<T, Error>;
 pub type Error = Box<dyn std::error::Error>; // For early dev.

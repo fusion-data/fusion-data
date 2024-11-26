@@ -1,5 +1,4 @@
 #![allow(unused)] // For early development.
-#![cfg(feature = "with-sea-query")]
 
 use sea_query::{ColumnRef, ConditionExpression};
 use std::sync::Arc;

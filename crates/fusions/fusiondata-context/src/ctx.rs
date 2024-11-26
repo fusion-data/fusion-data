@@ -11,22 +11,22 @@ static X_DEVICE_ID: &str = "X-DEVICE-ID";
 
 #[derive(Clone)]
 pub struct CtxW {
-  app: Arc<Application>,
+  app: Application,
   mm: ModelManager,
   req_meta: Arc<RequestMetadata>,
 }
 
 impl CtxW {
-  pub fn new(app: Arc<Application>, ctx: Ctx, req_meta: Arc<RequestMetadata>) -> Self {
+  pub fn new(app: Application, ctx: Ctx, req_meta: Arc<RequestMetadata>) -> Self {
     let mm = app.get_component::<ModelManager>().expect("Component ModelManager not found").with_ctx(ctx);
     Self { app, mm, req_meta }
   }
 
-  pub fn new_with_app(app: Arc<Application>) -> Self {
+  pub fn new_with_app(app: Application) -> Self {
     Self::new(app, Ctx::new_super_admin(), Default::default())
   }
 
-  pub fn new_with_req_meta(app: Arc<Application>, req_meta: Arc<RequestMetadata>) -> Self {
+  pub fn new_with_req_meta(app: Application, req_meta: Arc<RequestMetadata>) -> Self {
     Self::new(app, Ctx::new_super_admin(), req_meta)
   }
 

@@ -1,9 +1,9 @@
 mod access_control;
 mod auth;
 mod endpoint;
-mod pb;
+pub mod pb;
 mod permission;
-mod role;
+pub mod role;
 pub mod start;
-mod user;
+pub mod user;
 mod util;

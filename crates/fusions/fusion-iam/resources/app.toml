@@ -8,21 +8,31 @@ default_pwd = "2024.Fusiondata"
 
 [ultimate.web]
 enable = true
-server_addr = "0.0.0.0:8888"
-
-[ultimate.tracing]
-enable = true
-log_writer = "both"
-
-[ultimate.tracing.otel]
-# enable = true
-exporter_otlp_endpoint = "http://localhost:4317"
-traces_sample = "always_on"
+server_addr = "0.0.0.0:58000"
 
 [ultimate.grpc]
 enable = true
-server_addr = "0.0.0.0:8889"
+server_addr = "0.0.0.0:58010"
 plaintext = true
+
+[ultimate.log]
+enable = true
+log_writer = "both"
+with_span_events = []
+log_targets = [
+  "fusion_iam=debug",
+  "fusiondata=debug",
+  "fusiondata_context=debug",
+  "ultimate_grpc=debug",
+  "ultimate_db=debug",
+  "ultimate=debug",
+  "ultimate_common=debug",
+]
+
+[ultimate.log.otel]
+# enable = true
+exporter_otlp_endpoint = "http://localhost:4317"
+traces_sample = "always_on"
 
 [ultimate.db]
 enable = true

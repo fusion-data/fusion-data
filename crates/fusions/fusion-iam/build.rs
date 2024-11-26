@@ -13,7 +13,7 @@ fn main() {
   let enums = ["UserStatus", "Gender", "RoleStatus"];
   // let messages = [
   //   "SigninRequest",
-  //   "SigninReplay",
+  //   "SigninResponse",
   //   "UserDto",
   //   "FindUserRequest",
   //   "CreateUserRequest",

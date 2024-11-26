@@ -1,5 +1,6 @@
 pub use inventory::submit;
 use std::{any::Any, ops::Deref, sync::Arc};
+use tracing::debug;
 pub use ultimate_macros::Component;
 
 use crate::application::ApplicationBuilder;
@@ -56,6 +57,9 @@ pub trait Component: Clone + Sized {
 }
 
 pub trait ComponentRegistrar: Send + Sync + 'static {
+  /// Get the dependencies of the Component
+  fn dependencies(&self) -> Vec<&str>;
+
   /// Install the Component into the Application
   fn install_component(&self, app: &mut ApplicationBuilder) -> crate::Result<()>;
 }
@@ -65,17 +69,30 @@ inventory::collect!(&'static dyn ComponentRegistrar);
 /// auto_config
 #[macro_export]
 macro_rules! submit_component {
-  ($ty:ident) => {
+  ($ty:tt) => {
     ::ultimate::component::submit! {
-      &$ty as &dyn ::ultimate::component::ComponentRegistrar
+      &($ty) as &dyn ::ultimate::component::ComponentRegistrar
     }
   };
 }
 
 /// Find all ComponentRegistrar and install them into the application
 pub fn auto_inject_component(app: &mut ApplicationBuilder) -> crate::Result<()> {
-  for registrar in inventory::iter::<&dyn ComponentRegistrar> {
-    registrar.install_component(app)?;
+  let mut registrars: Vec<(&&dyn ComponentRegistrar, Vec<&str>)> =
+    inventory::iter::<&dyn ComponentRegistrar>.into_iter().map(|cr| (cr, cr.dependencies())).collect();
+
+  while !registrars.is_empty() {
+    let mut unregistrars = vec![];
+    for (registrar, deps) in registrars {
+      let deps: Vec<&str> = deps.into_iter().filter(|d| !app.components.contains_key(*d)).collect();
+      if deps.is_empty() {
+        registrar.install_component(app)?;
+      } else {
+        debug!("Dependency does not exist, waiting for the next round: [{:?}]", deps);
+        unregistrars.push((registrar, deps));
+      }
+    }
+    registrars = unregistrars;
   }
   Ok(())
 }

@@ -1,6 +1,6 @@
 # 设置运行 cargo 时的系统环境变量
 [env]
-RUST_LOG = "info,tower_http=debug,fusion_iam=debug,fusion_scheduler=debug,fusiondata=debug,ultimate_web=debug,ultimate_db=debug,ultimate=debug,ultimate_common=debug,ultimate=debug"
+# RUST_LOG = "info"
 
 [alias]
 clippy-all = "clippy --all-features -- -D warnings"
@@ -16,7 +16,7 @@ run-fusion-scheduler = "run -p fusion-scheduler --bin fusion-scheduler --feature
 panic = "abort"
 opt-level = 3
 # default-features = false
-# features = []
+features = ["tikv-jemallocator"]
 
 
 # On Windows
