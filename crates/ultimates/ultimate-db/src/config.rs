@@ -4,9 +4,10 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use ultimate_common::model::sensitive::UriString;
 
-use ultimate::configuration::Configurable;
+use ultimate::configuration::{Configurable, Configuration};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Configuration)]
+#[config_prefix = "ultimate.db"]
 pub struct DbConfig {
   enable: bool,
 
@@ -120,10 +121,4 @@ impl DbConfig {
   }
 }
 
-impl Configurable for DbConfig {
-  fn config_prefix() -> &'static str {
-    "ultimate.db"
-  }
-}
-
-pub static DEFAULT_CONFIG_STR: &str = include_str!("../resources/default.toml");
+pub const DEFAULT_CONFIG_STR: &str = include_str!("../resources/default.toml");

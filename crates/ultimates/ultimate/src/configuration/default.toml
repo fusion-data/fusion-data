@@ -23,10 +23,6 @@ MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgbMlaUVhOz9IHvlxT
 NOJy7JbTpVxf9c6Ren/q+YggEVRdVZEQmZDLsQiE1czWoLLsezpIr3Ls
 -----END PRIVATE KEY-----"""
 
-[ultimate.web]
-enable = false
-server_addr = "0.0.0.0:9500"
-
 [ultimate.log]
 with_target = true
 with_file = true

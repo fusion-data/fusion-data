@@ -75,7 +75,6 @@ mod tests {
     assert_eq!(qc.security().token().secret_key(), b"8462b1ec9af827ebed13926f8f1e5409774fa1a21a1c8f726a4a34cf7dcabaf2");
 
     // 由默认配置文件提供
-    assert_eq!(qc.web().server_addr(), "0.0.0.0:8000");
     assert_eq!(qc.app().name(), "ultimate");
   }
 }

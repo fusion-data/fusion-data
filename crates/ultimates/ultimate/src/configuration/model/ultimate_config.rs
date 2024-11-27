@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::configuration::Configurable;
 
-use super::{AppConfig, LogConfig, SecurityConfig, WebConfig};
+use super::{AppConfig, LogConfig, SecurityConfig};
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct UltimateConfig {
@@ -12,8 +12,6 @@ pub struct UltimateConfig {
   security: SecurityConfig,
 
   log: LogConfig,
-
-  web: WebConfig,
 }
 
 impl Configurable for UltimateConfig {
@@ -25,10 +23,6 @@ impl Configurable for UltimateConfig {
 impl UltimateConfig {
   pub fn app(&self) -> &AppConfig {
     &self.app
-  }
-
-  pub fn web(&self) -> &WebConfig {
-    &self.web
   }
 
   pub fn security(&self) -> &SecurityConfig {

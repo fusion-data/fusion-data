@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use axum::Router;
 use tower_http::{
   compression::CompressionLayer,
@@ -8,16 +6,19 @@ use tower_http::{
 };
 use tracing::info;
 
-use ultimate::configuration::UltimateConfig;
+use ultimate::{application::Application, configuration::ConfigRegistry};
 
-pub async fn init_server(conf: Arc<UltimateConfig>, app: Router) -> ultimate::Result<()> {
-  let make_service = app
+use crate::config::WebConfig;
+
+pub async fn init_server(app: &Application, router: Router) -> ultimate::Result<()> {
+  let conf: WebConfig = app.get_config()?;
+  let make_service = router
     .layer(CompressionLayer::new())
     .layer(CorsLayer::new().allow_methods(cors::Any).allow_origin(cors::Any))
     .layer(TraceLayer::new_for_http())
     .into_make_service();
 
-  let listener = tokio::net::TcpListener::bind(conf.web().server_addr()).await.unwrap();
+  let listener = tokio::net::TcpListener::bind(conf.server_addr()).await.unwrap();
   let sock_addr = listener.local_addr()?;
   info!("The Web Server listening on {}", sock_addr);
 
