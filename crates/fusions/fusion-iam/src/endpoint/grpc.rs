@@ -2,11 +2,8 @@ use std::future::Future;
 
 use tokio::sync::oneshot;
 use tonic::service::RoutesBuilder;
-use ultimate::{
-  application::Application,
-  configuration::{ConfigRegistry, GrpcConfig},
-};
-use ultimate_grpc::{utils::init_grpc_server, GrpcSettings, GrpcStartInfo};
+use ultimate::{application::Application, configuration::ConfigRegistry};
+use ultimate_grpc::{config::GrpcConfig, utils::init_grpc_server, GrpcSettings, GrpcStartInfo};
 
 use crate::{access_control::AccessControlRpc, auth::AuthRpc, permission::PermissionRpc, role::RoleRpc, user::UserRpc};
 

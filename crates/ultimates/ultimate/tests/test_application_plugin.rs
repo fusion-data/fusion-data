@@ -64,7 +64,9 @@ e = "EA"
 "#,
     FileFormat::Toml,
   );
-  Application::builder().add_config_source(cs).add_plugin(MyPlugin).run().await;
+  Application::builder().add_config_source(cs).add_plugin(MyPlugin).run().await.unwrap();
   let app = Application::global();
   assert_eq!(app.ultimate_config().app().name(), "ultimate");
+  let c: Config = app.get_config().unwrap();
+  assert_eq!(c.c.g, "hello");
 }

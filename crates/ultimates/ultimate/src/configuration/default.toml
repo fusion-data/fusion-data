@@ -23,10 +23,6 @@ MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgbMlaUVhOz9IHvlxT
 NOJy7JbTpVxf9c6Ren/q+YggEVRdVZEQmZDLsQiE1czWoLLsezpIr3Ls
 -----END PRIVATE KEY-----"""
 
-[ultimate.web]
-enable = false
-server_addr = "0.0.0.0:9500"
-
 [ultimate.log]
 with_target = true
 with_file = true
@@ -59,15 +55,3 @@ log_dir = "./logs/"
 enable = false
 traces_sample = "always_on"
 exporter_otlp_endpoint = "http://localhost:4317"
-
-[ultimate.db]
-enable = false
-# url = "postgres://<username>:<password>@localhost:5432/<database>"
-
-[ultimate.grpc]
-enable = false
-server_addr = "0.0.0.0:9501"
-plaintext = true
-
-[ultimate.grpc.clients]
-# ultimate-iam = { addr = "http://127.0.0.1:9501", plaintext = true }

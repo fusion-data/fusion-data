@@ -3,10 +3,14 @@ use std::{
   time::Duration,
 };
 
-use config::Config;
 use serde::{Deserialize, Serialize};
+use ultimate::{
+  application::Application,
+  configuration::{ConfigRegistry, Configuration},
+};
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Configuration)]
+#[config_prefix = "fusion-scheduler"]
 pub struct SchedulerConfigInner {
   advertised_addr: Option<String>,
 
@@ -26,9 +30,12 @@ pub struct SchedulerConfig {
 }
 
 impl SchedulerConfig {
-  pub fn try_new(config: &Config, grpc_sock_addr: String) -> ultimate::Result<Self> {
-    let inner: SchedulerConfigInner = config.get("fusion-scheduler")?;
-    let advertised_addr = inner.advertised_addr.unwrap_or(grpc_sock_addr);
+  pub fn try_new(app: &Application) -> ultimate::Result<Self> {
+    let inner: SchedulerConfigInner = app.get_config()?;
+
+    let advertised_addr = inner
+      .advertised_addr
+      .unwrap_or_else(|| std::env::var("ULTIMATE__GRPC__SERVER_ADDR").expect("The gRPC server addr must be set"));
 
     let heartbeat_interval = match duration_str::parse_std(inner.heartbeat_interval) {
       Ok(d) => d,

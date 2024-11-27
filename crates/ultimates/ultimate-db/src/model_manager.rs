@@ -1,5 +1,6 @@
-use ultimate::{configuration::DbConfig, ctx::Ctx};
+use ultimate::ctx::Ctx;
 
+use crate::config::DbConfig;
 use crate::store::{dbx::new_db_pool_from_config, Dbx};
 
 use crate::{Error, Result};

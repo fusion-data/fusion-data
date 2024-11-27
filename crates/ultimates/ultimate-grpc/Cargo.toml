@@ -24,6 +24,8 @@ uuid = { workspace = true }
 http = { workspace = true }
 futures = { workspace = true }
 tracing = { workspace = true }
+config = { workspace = true }
+serde = { workspace = true }
 init-tracing-opentelemetry = { workspace = true, optional = true }
 tonic-tracing-opentelemetry = { workspace = true, optional = true }
 tokio = { workspace = true }

@@ -1164,7 +1164,6 @@ dependencies = [
  "fusiondata",
  "fusiondata-context",
  "futures",
- "hierarchical_hash_wheel_timer",
  "prost",
  "sea-query",
  "sea-query-binder",
@@ -4700,6 +4699,7 @@ dependencies = [
  "dashmap",
  "dotenvy",
  "futures",
+ "hierarchical_hash_wheel_timer",
  "init-tracing-opentelemetry",
  "inventory",
  "josekit",
@@ -4766,6 +4766,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "chrono",
+ "config",
  "derive_more",
  "log",
  "rusqlite",
@@ -4806,11 +4807,13 @@ dependencies = [
 name = "ultimate-grpc"
 version = "0.1.0"
 dependencies = [
+ "config",
  "futures",
  "http",
  "init-tracing-opentelemetry",
  "prost",
  "prost-types",
+ "serde",
  "tokio",
  "tonic",
  "tonic-reflection",
@@ -4839,6 +4842,7 @@ version = "0.1.0"
 dependencies = [
  "axum",
  "axum-extra",
+ "config",
  "hyper",
  "mime",
  "serde",

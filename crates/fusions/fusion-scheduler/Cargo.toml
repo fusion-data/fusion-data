@@ -49,7 +49,6 @@ tonic-web = { workspace = true, optional = true }
 fusiondata = { workspace = true }
 fusiondata-context = { workspace = true }
 fusion-scheduler-api = { workspace = true, features = ["with-db"] }
-hierarchical_hash_wheel_timer = { workspace = true }
 
 # -- misc
 config = { workspace = true }

@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
+use ultimate::configuration::Configuration;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Configuration)]
+#[config_prefix = "ultimate.web"]
 pub struct WebConfig {
   enable: bool,
   server_addr: String,
@@ -15,3 +17,5 @@ impl WebConfig {
     &self.server_addr
   }
 }
+
+pub const DEFAULT_CONFIG_STR: &str = include_str!("../resources/default.toml");

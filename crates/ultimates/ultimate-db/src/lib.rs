@@ -1,13 +1,12 @@
+use ::config::{File, FileFormat};
 use async_trait::async_trait;
-use ultimate::{
-  application::ApplicationBuilder,
-  configuration::{ConfigRegistry, DbConfig},
-  plugin::Plugin,
-};
+use config::{DbConfig, DEFAULT_CONFIG_STR};
+use ultimate::{application::ApplicationBuilder, configuration::ConfigRegistry, plugin::Plugin};
 
 pub mod acs;
 mod api_helpers;
 pub mod base;
+pub mod config;
 mod error;
 mod id;
 mod macro_helpers;
@@ -44,7 +43,8 @@ pub struct DbPlugin;
 impl Plugin for DbPlugin {
   async fn build(&self, app: &mut ApplicationBuilder) {
     sqlx::any::install_default_drivers();
-    let config = app.get_config::<DbConfig>().expect("sqlx plugin config load failed");
+    app.add_config_source(File::from_str(DEFAULT_CONFIG_STR, FileFormat::Toml));
+    let config: DbConfig = app.get_config().expect("sqlx plugin config load failed");
     let mm = ModelManager::new(&config).expect("Init db state failed");
     app.add_component(mm);
   }

@@ -7,7 +7,7 @@ pub struct SchedProcessTask {
   pub process_task: ProcessTask,
 }
 
-pub(in crate::broker) enum SchedCmd {
+pub enum SchedCmd {
   Stop,
   ListenNamespaces(Vec<SchedNamespace>),
   UnlistenNamespaces(Vec<SchedNamespace>),

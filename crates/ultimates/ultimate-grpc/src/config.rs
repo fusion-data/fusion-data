@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
-use crate::configuration::Configurable;
+use ultimate::configuration::Configurable;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(default)]
@@ -34,3 +34,5 @@ pub struct GrpcClientConfig {
 fn default_plaintext() -> bool {
   true
 }
+
+pub const DEFAULT_CONFIG_STR: &str = include_str!("../resources/default.toml");

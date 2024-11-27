@@ -31,6 +31,7 @@ pub async fn init_grpc_server(
   let (tx, rx) = oneshot::channel();
   let tcp_listener = TcpListener::bind(&conf.server_addr).await?;
   let local_addr = tcp_listener.local_addr()?;
+  std::env::set_var("ULTIMATE__GRPC__SERVER_ADDR", local_addr.to_string());
   let start_info = GrpcStartInfo { local_addr };
   match tx.send(start_info) {
     Ok(_) => info!("gRPC server listening to {}", local_addr),
