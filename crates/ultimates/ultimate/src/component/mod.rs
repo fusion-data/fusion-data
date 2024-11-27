@@ -1,9 +1,13 @@
+mod error;
+
 pub use inventory::submit;
 use std::{any::Any, ops::Deref, sync::Arc};
 use tracing::debug;
 pub use ultimate_macros::Component;
 
 use crate::application::ApplicationBuilder;
+
+pub use error::{Error, Result};
 
 /// Component's dyn trait reference
 #[derive(Debug, Clone)]
@@ -19,19 +23,22 @@ impl DynComponentRef {
   }
 
   /// Downcast to the specified type
-  pub fn downcast<T>(self) -> Option<ComponentRef<T>>
+  pub fn downcast<T>(self) -> Result<ComponentArc<T>>
   where
     T: Any + Send + Sync,
   {
-    self.0.downcast::<T>().ok().map(ComponentRef::new)
+    match self.0.downcast::<T>() {
+      Ok(item) => Ok(ComponentArc::new(item)),
+      Err(_) => Err(Error::ComponentTypeMismatch(std::any::type_name::<T>())),
+    }
   }
 }
 
 /// A component reference of a specified type
 #[derive(Debug, Clone)]
-pub struct ComponentRef<T>(Arc<T>);
+pub struct ComponentArc<T>(Arc<T>);
 
-impl<T> ComponentRef<T> {
+impl<T> ComponentArc<T> {
   fn new(target_ref: Arc<T>) -> Self {
     Self(target_ref)
   }
@@ -43,7 +50,7 @@ impl<T> ComponentRef<T> {
   }
 }
 
-impl<T> Deref for ComponentRef<T> {
+impl<T> Deref for ComponentArc<T> {
   type Target = T;
 
   fn deref(&self) -> &Self::Target {
@@ -56,7 +63,7 @@ pub trait Component: Clone + Sized {
   fn build(app: &ApplicationBuilder) -> crate::Result<Self>;
 }
 
-pub trait ComponentRegistrar: Send + Sync + 'static {
+pub trait ComponentInstaller: Send + Sync + 'static {
   /// Get the dependencies of the Component
   fn dependencies(&self) -> Vec<&str>;
 
@@ -64,22 +71,22 @@ pub trait ComponentRegistrar: Send + Sync + 'static {
   fn install_component(&self, app: &mut ApplicationBuilder) -> crate::Result<()>;
 }
 
-inventory::collect!(&'static dyn ComponentRegistrar);
+inventory::collect!(&'static dyn ComponentInstaller);
 
 /// auto_config
 #[macro_export]
 macro_rules! submit_component {
   ($ty:tt) => {
     ::ultimate::component::submit! {
-      &($ty) as &dyn ::ultimate::component::ComponentRegistrar
+      &($ty) as &dyn ::ultimate::component::ComponentInstaller
     }
   };
 }
 
-/// Find all ComponentRegistrar and install them into the application
+/// Find all ComponentInstaller and install them into the application
 pub fn auto_inject_component(app: &mut ApplicationBuilder) -> crate::Result<()> {
-  let mut registrars: Vec<(&&dyn ComponentRegistrar, Vec<&str>)> =
-    inventory::iter::<&dyn ComponentRegistrar>.into_iter().map(|cr| (cr, cr.dependencies())).collect();
+  let mut registrars: Vec<(&&dyn ComponentInstaller, Vec<&str>)> =
+    inventory::iter::<&dyn ComponentInstaller>.into_iter().map(|cr| (cr, cr.dependencies())).collect();
 
   while !registrars.is_empty() {
     let mut unregistrars = vec![];

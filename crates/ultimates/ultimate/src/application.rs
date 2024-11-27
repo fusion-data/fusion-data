@@ -9,11 +9,13 @@ use std::{
 use config::Config;
 use dashmap::DashMap;
 use serde::de::DeserializeOwned;
-use tracing::{debug, error, subscriber::DefaultGuard};
+use tracing::{debug, subscriber::DefaultGuard};
 use ultimate_common::time::OffsetDateTime;
 
 use crate::{
-  component::{auto_inject_component, ComponentRef, DynComponentRef},
+  component::{
+    auto_inject_component, ComponentArc, DynComponentRef, Error as ComponentError, Result as ComponentResult,
+  },
   configuration::{ConfigRegistry, Configurable, UltimateConfig, UltimateConfigRegistry},
   log::{init_tracing_guard, TracingPlugin},
   plugin::{Plugin, PluginRef},
@@ -57,12 +59,33 @@ impl Application {
   }
 
   /// Get the component reference of the specified type
-  pub fn get_component_ref<T>(&self) -> Option<ComponentRef<T>>
+  #[inline]
+  pub fn get_component_arc<T>(&self) -> ComponentResult<ComponentArc<T>>
+  where
+    T: Any + Send + Sync,
+  {
+    self.get_component_ref_by_name(std::any::type_name::<T>())
+  }
+
+  pub fn component_arc<T>(&self) -> ComponentArc<T>
   where
     T: Any + Send + Sync,
   {
     let component_name = std::any::type_name::<T>();
-    let pair = self.0.components.get(component_name)?;
+    match self.get_component_ref_by_name(component_name) {
+      Ok(c) => c,
+      Err(e) => panic!("{:?}", e),
+    }
+  }
+
+  pub fn get_component_ref_by_name<T>(&self, component_name: &str) -> ComponentResult<ComponentArc<T>>
+  where
+    T: Any + Send + Sync,
+  {
+    let pair = match self.0.components.get(component_name) {
+      Some(pair) => pair,
+      None => return Err(ComponentError::ComponentNotFound(component_name.to_string())),
+    };
     let component_ref = pair.value().clone();
     component_ref.downcast::<T>()
   }
@@ -71,30 +94,23 @@ impl Application {
   where
     T: Clone + Send + Sync + 'static,
   {
-    let component_name = std::any::type_name::<T>();
-    let pair = match self.0.components.get(component_name) {
-      Some(pair) => pair,
-      None => panic!("Component not found, name: {}", component_name),
-    };
-
-    let component_ref = pair.value().clone();
-    match component_ref.downcast::<T>() {
-      Some(c) => T::clone(&c),
-      None => panic!("Component type mismatch, type: {}", component_name),
+    match self.get_component() {
+      Ok(c) => c,
+      Err(e) => panic!("{:?}", e),
     }
   }
 
   /// Get the component of the specified type
-  pub fn get_component<T>(&self) -> Option<T>
+  pub fn get_component<T>(&self) -> ComponentResult<T>
   where
     T: Clone + Send + Sync + 'static,
   {
-    let component_ref = self.get_component_ref();
+    let component_ref = self.get_component_arc();
     component_ref.map(|c| T::clone(&c))
   }
 
   /// Get all built components. The return value is the full crate path of all components
-  pub fn get_components(&self) -> Vec<String> {
+  pub fn get_component_names(&self) -> Vec<String> {
     self.0.components.iter().map(|e| e.key().clone()).collect()
   }
 
@@ -213,12 +229,15 @@ impl ApplicationBuilder {
   }
 
   /// Get the component of the specified type
-  pub fn get_component_ref<T>(&self) -> Option<ComponentRef<T>>
+  pub fn get_component_ref<T>(&self) -> ComponentResult<ComponentArc<T>>
   where
     T: Any + Send + Sync,
   {
     let component_name = std::any::type_name::<T>();
-    let pair = self.components.get(component_name)?;
+    let pair = match self.components.get(component_name) {
+      Some(pair) => pair,
+      None => return Err(ComponentError::ComponentNotFound(component_name.to_string())),
+    };
     let component_ref = pair.value().clone();
     component_ref.downcast::<T>()
   }
@@ -227,21 +246,14 @@ impl ApplicationBuilder {
   where
     T: Clone + Send + Sync + 'static,
   {
-    let component_name = std::any::type_name::<T>();
-    let pair = match self.components.get(component_name) {
-      Some(pair) => pair,
-      None => panic!("AB Component not found, name: {}", component_name),
-    };
-
-    let component_ref = pair.value().clone();
-    match component_ref.downcast::<T>() {
-      Some(c) => T::clone(&c),
-      None => panic!("AB Component type mismatch, type: {}", component_name),
+    match self.get_component() {
+      Ok(c) => c,
+      Err(e) => panic!("{:?}", e),
     }
   }
 
   /// get cloned component
-  pub fn get_component<T>(&self) -> Option<T>
+  pub fn get_component<T>(&self) -> ComponentResult<T>
   where
     T: Clone + Send + Sync + 'static,
   {
@@ -357,7 +369,7 @@ mod tests {
 
   #[tokio::test]
   async fn test_application_run() {
-    Application::builder().run().await;
+    Application::builder().run().await.unwrap();
     let app = Application::global();
     assert_eq!(app.ultimate_config().app().name(), "ultimate");
   }

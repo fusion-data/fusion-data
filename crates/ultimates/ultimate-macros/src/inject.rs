@@ -181,7 +181,7 @@ pub(crate) fn expand_derive(input: syn::DeriveInput) -> syn::Result<TokenStream>
     #[allow(non_camel_case_types)]
     struct #component_registrar;
 
-    impl ::ultimate::component::ComponentRegistrar for #component_registrar {
+    impl ::ultimate::component::ComponentInstaller for #component_registrar {
       fn dependencies(&self) -> Vec<&str> {
         vec![#(std::any::type_name::<#dependencies>()),*]
         // static_component_registrar.to_vec()
