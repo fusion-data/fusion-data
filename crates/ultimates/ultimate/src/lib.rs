@@ -10,6 +10,7 @@ pub mod plugin;
 mod run_mode;
 pub mod security;
 pub mod signal;
+pub mod timer;
 pub mod utils;
 
 pub use async_trait::async_trait;

@@ -7,7 +7,6 @@ mod ultimate_config;
 mod web_config;
 
 pub use app_config::*;
-pub use db_config::*;
 pub use grpc_config::*;
 pub use log_config::*;
 pub use security_config::*;

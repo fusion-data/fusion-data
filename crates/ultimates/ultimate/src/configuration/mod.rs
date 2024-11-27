@@ -105,7 +105,7 @@ impl UltimateConfigRegistry {
   {
     let mut config = self.config.write().unwrap();
     let c = (**config).clone();
-    let b = Config::builder().add_source(c).add_source(source);
+    let b = Config::builder().add_source(source).add_source(c);
     *config = Arc::new(b.build()?);
     Ok(())
   }

@@ -1,12 +1,15 @@
-use std::{sync::Arc, time::Duration};
+use std::time::Duration;
 
 use chrono::Utc;
 use fusion_scheduler_api::v1::sched_node::NodeKind;
 use fusiondata_context::ctx::CtxW;
-use hierarchical_hash_wheel_timer::{ClosureTimer, TimerReturn};
 use tokio::sync::mpsc;
 use tracing::error;
-use ultimate::{application::Application, Result};
+use ultimate::{
+  application::Application,
+  timer::{TimerRef, TimerReturn},
+  Result,
+};
 use ultimate_db::modql::filter::OpValInt64;
 use uuid::Uuid;
 
@@ -15,15 +18,15 @@ use crate::service::{
   trigger_definition::TriggerDefinitionSvc,
 };
 
-use super::{CmdRunner, SchedCmd, SchedulerConfig, TimerRef};
+use super::{CmdRunner, SchedCmd, SchedulerConfig};
 
 pub async fn loop_scheduler(
   app: Application,
-  scheduler_config: SchedulerConfig,
   timer_ref: TimerRef,
   db_tx: mpsc::Sender<SchedCmd>,
   db_rx: mpsc::Receiver<SchedCmd>,
 ) -> Result<Scheduler> {
+  let scheduler_config = SchedulerConfig::try_new(&app)?;
   register(&scheduler_config, CtxW::new_with_app(app.clone())).await?;
 
   let cmd_runner_handle = tokio::spawn(CmdRunner::new(app.clone(), db_rx).run());
@@ -66,7 +69,7 @@ impl Scheduler {
     let node_id = self.scheduler_config.node_id();
     let ctx = CtxW::new_with_app(self.app.clone());
 
-    let triggers = TriggerDefinitionSvc::scan_next_triggers(&ctx, node_id).await?;
+    let _triggers = TriggerDefinitionSvc::scan_next_triggers(&ctx, node_id).await?;
 
     Ok(())
   }

@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use fusiondata_context::ctx::CtxW;
 use tokio::sync::mpsc;
 use tracing::{error, info};

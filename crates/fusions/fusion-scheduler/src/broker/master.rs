@@ -1,6 +1,5 @@
 use std::{
   collections::{BTreeMap, BTreeSet, VecDeque},
-  sync::Arc,
   time::Duration,
 };
 
@@ -17,17 +16,13 @@ use crate::service::{
   sched_node::{SchedNode, SchedNodeSvc},
 };
 
-use super::{SchedCmd, SchedulerConfig, TimerRef};
+use super::{SchedCmd, SchedulerConfig};
 
-pub async fn loop_master(
-  app: Application,
-  scheduler_config: SchedulerConfig,
-  timer_ref: TimerRef,
-  db_tx: mpsc::Sender<SchedCmd>,
-) -> Result<()> {
+pub async fn loop_master(app: Application, db_tx: mpsc::Sender<SchedCmd>) -> Result<()> {
+  let scheduler_config = SchedulerConfig::try_new(&app)?;
   let mut master_opt: Option<SchedNode> = None;
   while master_opt.is_none() {
-    let alive_timeout = *scheduler_config.alive_timeout();
+    let alive_timeout: Duration = *scheduler_config.alive_timeout();
     let ctx = CtxW::new_with_app(app.clone());
     let node_id = scheduler_config.node_id();
     let node = match SchedNodeSvc::find_active_master(&ctx, alive_timeout).await? {
@@ -41,7 +36,7 @@ pub async fn loop_master(
     }
   }
 
-  let master = Master::new(app, scheduler_config, timer_ref, db_tx);
+  let master = Master::new(app, scheduler_config, db_tx);
   loop {
     master.run().await;
     tokio::time::sleep(Duration::from_secs(60)).await;
@@ -51,19 +46,13 @@ pub async fn loop_master(
 pub struct Master {
   app: Application,
   config: SchedulerConfig,
-  timer_ref: TimerRef,
   cmd_tx: mpsc::Sender<SchedCmd>,
   schedulers: RwLock<Vec<SchedNode>>,
 }
 
 impl Master {
-  pub fn new(
-    app: Application,
-    scheduler_config: SchedulerConfig,
-    timer_ref: TimerRef,
-    db_tx: mpsc::Sender<SchedCmd>,
-  ) -> Self {
-    Self { app, config: scheduler_config, timer_ref, cmd_tx: db_tx, schedulers: RwLock::new(vec![]) }
+  pub fn new(app: Application, scheduler_config: SchedulerConfig, db_tx: mpsc::Sender<SchedCmd>) -> Self {
+    Self { app, config: scheduler_config, cmd_tx: db_tx, schedulers: RwLock::new(vec![]) }
   }
 
   pub async fn run(&self) {
@@ -215,9 +204,9 @@ async fn bind_or_get_master(ctx: &CtxW, node_id: i64) -> Result<SchedNode> {
   // 最多尝试 5 次
   let mut count = 5;
   while count > 0 {
-    let opt_path = GlobalPathSvc::find_unique(&ctx, GlobalPath::MASTER).await?;
+    let opt_path = GlobalPathSvc::find_unique(ctx, GlobalPath::MASTER).await?;
     let ret = GlobalPathSvc::obtain_optimistic_lock(
-      &ctx,
+      ctx,
       GlobalPath::MASTER,
       opt_path.map(|p| p.revision).unwrap_or_default(),
       Some(node_id.to_string()),
@@ -225,10 +214,10 @@ async fn bind_or_get_master(ctx: &CtxW, node_id: i64) -> Result<SchedNode> {
     .await?;
 
     if ret {
-      let node = SchedNodeSvc::heartbeat_and_return(&ctx, node_id).await?;
+      let node = SchedNodeSvc::heartbeat_and_return(ctx, node_id).await?;
       return Ok(node);
     } else {
-      match SchedNodeSvc::find_active_master(&ctx, Duration::from_secs(10)).await? {
+      match SchedNodeSvc::find_active_master(ctx, Duration::from_secs(10)).await? {
         Some(node) => return Ok(node),
         None => count -= 1,
       }

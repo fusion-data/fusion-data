@@ -10,11 +10,12 @@ use sqlx::query::{Query, QueryAs};
 use sqlx::{ConnectOptions, FromRow, IntoArguments, Pool, Postgres, Transaction};
 use tokio::sync::Mutex;
 use tracing::trace;
-use ultimate::configuration::DbConfig;
 
 mod error;
 
 pub use error::{Error, Result};
+
+use crate::config::DbConfig;
 
 // endregion: --- Modules
 

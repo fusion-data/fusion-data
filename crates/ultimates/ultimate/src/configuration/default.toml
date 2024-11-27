@@ -63,11 +63,3 @@ exporter_otlp_endpoint = "http://localhost:4317"
 [ultimate.db]
 enable = false
 # url = "postgres://<username>:<password>@localhost:5432/<database>"
-
-[ultimate.grpc]
-enable = false
-server_addr = "0.0.0.0:9501"
-plaintext = true
-
-[ultimate.grpc.clients]
-# ultimate-iam = { addr = "http://127.0.0.1:9501", plaintext = true }

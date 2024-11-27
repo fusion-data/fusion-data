@@ -1,12 +1,7 @@
 //! 调度员
 //!
-use std::{net::SocketAddr, sync::Arc};
-
-use hierarchical_hash_wheel_timer::{thread_timer, OneShotClosureState, PeriodicClosureState};
 use tokio::{sync::mpsc, task::JoinHandle};
-use ultimate::application::Application;
-
-use crate::service::sched_node::SchedNode;
+use ultimate::{application::Application, timer::Timer};
 
 mod cmd_runner;
 mod config;
@@ -15,38 +10,25 @@ mod model;
 mod scheduler;
 
 use cmd_runner::CmdRunner;
-use config::*;
-use master::*;
+pub use config::*;
+pub use master::*;
 pub use model::*;
-use scheduler::*;
+pub use scheduler::*;
 
-// pub type TimerCore = TimerWithThread<uuid::Uuid, OneShotClosureState<uuid::Uuid>, PeriodicClosureState<uuid::Uuid>>;
-pub type TimerRef =
-  thread_timer::TimerRef<uuid::Uuid, OneShotClosureState<uuid::Uuid>, PeriodicClosureState<uuid::Uuid>>;
+pub fn spawn_loop() -> (JoinHandle<ultimate::Result<()>>, JoinHandle<ultimate::Result<Scheduler>>) {
+  let app = Application::global();
 
-enum MasterSchedulers {
-  Master(SchedNode),
-  Schedulers(Vec<SchedNode>),
-}
-
-pub fn spawn_loop(
-  app: Application,
-  grpc_sock_addr: SocketAddr,
-  timer_ref: TimerRef,
-) -> (JoinHandle<ultimate::Result<()>>, JoinHandle<ultimate::Result<Scheduler>>) {
-  let scheduler_config = match SchedulerConfig::try_new(&app.underlying_config(), grpc_sock_addr.to_string()) {
-    Ok(c) => c,
-    Err(e) => panic!("Parse scheduler config failed: {}", e),
-  };
   let (db_tx, db_rx) = mpsc::channel(1024);
 
+  let timer: Timer = app.component();
+
   let master_handle = {
-    let f = loop_master(app.clone(), scheduler_config.clone(), timer_ref.clone(), db_tx.clone());
+    let f = loop_master(app.clone(), db_tx.clone());
     tokio::spawn(f)
   };
 
   let scheduler_handle = {
-    let f = loop_scheduler(app, scheduler_config, timer_ref, db_tx, db_rx);
+    let f = loop_scheduler(app, timer.timer_ref(), db_tx, db_rx);
     tokio::spawn(f)
   };
 
