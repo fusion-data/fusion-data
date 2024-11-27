@@ -1,8 +1,11 @@
 use std::net::SocketAddr;
 
+use ::config::{File, FileFormat};
+use config::{GrpcConfig, DEFAULT_CONFIG_STR};
 use tonic::service::{interceptor::InterceptedService, Routes};
-use ultimate::{configuration::GrpcConfig, plugin::Plugin};
+use ultimate::{application::ApplicationBuilder, async_trait, plugin::Plugin};
 
+pub mod config;
 pub mod utils;
 
 pub type GrpcServiceIntercepted<S> =
@@ -20,6 +23,11 @@ pub struct GrpcSettings<'b> {
   pub routes: Routes,
 }
 
-pub struct GrpcPlugin {}
+pub struct GrpcPlugin;
 
-impl Plugin for GrpcPlugin {}
+#[async_trait]
+impl Plugin for GrpcPlugin {
+  async fn build(&self, app: &mut ApplicationBuilder) {
+    app.add_config_source(File::from_str(DEFAULT_CONFIG_STR, FileFormat::Toml));
+  }
+}

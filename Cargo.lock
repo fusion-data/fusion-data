@@ -4807,11 +4807,13 @@ dependencies = [
 name = "ultimate-grpc"
 version = "0.1.0"
 dependencies = [
+ "config",
  "futures",
  "http",
  "init-tracing-opentelemetry",
  "prost",
  "prost-types",
+ "serde",
  "tokio",
  "tonic",
  "tonic-reflection",

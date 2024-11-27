@@ -1,10 +1,11 @@
 use ultimate::{application::Application, timer::TimerPlugin, utils::handle_join_error};
 use ultimate_db::DbPlugin;
+use ultimate_grpc::GrpcPlugin;
 
 use crate::{broker::spawn_loop, endpoint::grpc_serve};
 
 pub async fn fusion_scheduler_start() -> ultimate::Result<()> {
-  Application::builder().add_plugin(TimerPlugin).add_plugin(DbPlugin).run().await?;
+  Application::builder().add_plugin(TimerPlugin).add_plugin(DbPlugin).add_plugin(GrpcPlugin).run().await?;
 
   let app: Application = Application::global();
 

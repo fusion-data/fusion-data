@@ -126,12 +126,4 @@ impl Configurable for DbConfig {
   }
 }
 
-pub static DEFAULT_CONFIG_STR: &str = r#"
-[ultimate.grpc]
-enable = false
-server_addr = "0.0.0.0:9501"
-plaintext = true
-
-[ultimate.grpc.clients]
-# ultimate-iam = { addr = "http://127.0.0.1:9501", plaintext = true }
-"#;
+pub static DEFAULT_CONFIG_STR: &str = include_str!("../resources/default.toml");
