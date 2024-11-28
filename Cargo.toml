@@ -130,7 +130,7 @@ chrono = { version = "0.4", default-features = false, features = [
 chrono-tz = "0.10"
 duration-str = "0.11"
 # -- scheduler
-croner = "2.0"
+croner = "2.1"
 hierarchical_hash_wheel_timer = { version = "1.3", features = ["uuid"] }
 tokio-cron-scheduler = { version = "0.13", features = ["has_bytes", "signal"] }
 # -- Database

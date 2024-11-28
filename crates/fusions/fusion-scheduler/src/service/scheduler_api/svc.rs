@@ -1,8 +1,8 @@
 use fusion_scheduler_api::v1::{
   scheduler_api_server::{SchedulerApi, SchedulerApiServer},
   CreateProcessRequest, CreateProcessResponse, CreateTriggerRequest, CreateTriggerResponse, EventRequest,
-  EventResponse, PullJobRequest, PullJobResponse, RegisterWorkerRequest, RegisterWorkerResponse, UpdateTriggerRequest,
-  UpdateTriggerResponse,
+  EventResponse, ListSchedulersRequest, ListSchedulersResponse, PullJobRequest, PullJobResponse, SchedNode,
+  UpdateTriggerRequest, UpdateTriggerResponse,
 };
 use fusiondata_context::{ctx::CtxW, grpc::interceptor::auth_interceptor};
 use std::pin::Pin;
@@ -21,11 +21,13 @@ pub struct SchedulerApiGrpcSvc;
 
 #[tonic::async_trait]
 impl SchedulerApi for SchedulerApiGrpcSvc {
-  async fn register_worker(
+  async fn list_schedulers(
     &self,
-    request: Request<RegisterWorkerRequest>,
-  ) -> Result<Response<RegisterWorkerResponse>, Status> {
-    todo!()
+    _request: Request<ListSchedulersRequest>,
+  ) -> Result<Response<ListSchedulersResponse>, Status> {
+    let schedulers =
+      vec![SchedNode { node_id: "n01".to_string(), advertised_addr: "http://127.0.0.1:58050".to_string() }];
+    Ok(Response::new(ListSchedulersResponse { schedulers }))
   }
 
   async fn create_process(

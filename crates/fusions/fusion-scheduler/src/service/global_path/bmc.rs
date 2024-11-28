@@ -4,7 +4,6 @@ use super::{GlobalPath, GlobalPathFilter};
 
 pub struct GlobalPathBmc;
 impl DbBmc for GlobalPathBmc {
-  const SCHEMA: &'static str = "sched";
   const TABLE: &'static str = "global_path";
 
   fn has_creation_timestamps() -> bool {
@@ -30,24 +29,22 @@ impl GlobalPathBmc {
   ) -> ultimate_db::Result<bool> {
     let sql_str = if revision.is_some() {
       format!(
-        r#"INSERT INTO {}.{}(path, value)
+        r#"INSERT INTO {}(path, value)
            VALUES ($1, $2)
            ON CONFLICT(path)
            DO UPDATE SET value    = excluded.value,
                          revision = {}.revision + 1
            WHERE {}.revision = $3;"#,
-        Self::SCHEMA,
         Self::TABLE,
         Self::TABLE,
         Self::TABLE
       )
     } else {
       format!(
-        r#"INSERT INTO {}.{}(path, value)
+        r#"INSERT INTO {}(path, value)
            VALUES ($1, $2)
            ON CONFLICT(path)
            DO UPDATE SET value = excluded.value;"#,
-        Self::SCHEMA,
         Self::TABLE
       )
     };

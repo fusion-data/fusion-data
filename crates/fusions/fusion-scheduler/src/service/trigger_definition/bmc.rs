@@ -5,16 +5,12 @@ use ultimate_db::modql::field::HasSeaFields;
 use ultimate_db::{base::DbBmc, generate_common_bmc_fns, generate_filter_bmc_fns, ModelManager, Result};
 
 use crate::service::sched_namespace::SchedNamespaceIden;
-use crate::service::{
-  sched_node::{SchedNodeBmc, SchedNodeIden},
-  trigger_definition::TriggerDefinitionIden,
-};
+use crate::service::trigger_definition::TriggerDefinitionIden;
 
 use super::{TriggerDefinition, TriggerDefinitionFilter, TriggerDefinitionForCreate, TriggerDefinitionForUpdate};
 
 pub struct TriggerDefinitionBmc;
 impl DbBmc for TriggerDefinitionBmc {
-  const SCHEMA: &'static str = "sched";
   const TABLE: &'static str = "trigger_definition";
 }
 
@@ -39,7 +35,7 @@ impl TriggerDefinitionBmc {
       .from(Self::table_ref())
       .columns(TriggerDefinition::sea_column_refs_with_rel(TriggerDefinitionIden::Table))
       .inner_join(
-        SchedNodeBmc::table_ref(),
+        SchedNamespaceIden::Table,
         Expr::col((TriggerDefinitionIden::Table, TriggerDefinitionIden::NamespaceId))
           .eq(Expr::col((SchedNamespaceIden::Table, SchedNamespaceIden::Id))),
       )

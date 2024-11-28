@@ -4,7 +4,7 @@ use super::{Policy, PolicyForCreate, PolicyForUpdate};
 
 pub struct PolicyBmc;
 impl DbBmc for PolicyBmc {
-  const SCHEMA: &'static str = "iam";
+
   const TABLE: &'static str = "policy";
 }
 

@@ -53,17 +53,16 @@ fn init_subscribers(conf: &UltimateConfig) -> Result<()> {
   info!("init logging & tracing");
   info!("Loaded the LogConfig is:\n{}", toml::to_string(c).unwrap());
 
-  let otel_layer: Option<Box<dyn tracing_subscriber::Layer<_> + Send + Sync + 'static>> =
-    if cfg!(feature = "opentelemetry") && c.otel().enable {
-      std::env::set_var("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT", &c.otel().exporter_otlp_endpoint);
-      std::env::set_var("OTEL_TRACES_SAMPLER", &c.otel().traces_sample);
-      std::env::set_var("OTEL_SERVICE_NAME", conf.app().name());
-      let layer = init_tracing_opentelemetry::tracing_subscriber_ext::build_otel_layer()
-        .map_err(|e| crate::DataError::server_error(e.to_string()))?;
-      Some(Box::new(layer))
-    } else {
-      None
-    };
+  let otel_layer = if cfg!(feature = "opentelemetry") && c.otel().enable {
+    std::env::set_var("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT", &c.otel().exporter_otlp_endpoint);
+    std::env::set_var("OTEL_TRACES_SAMPLER", &c.otel().traces_sample);
+    std::env::set_var("OTEL_SERVICE_NAME", conf.app().name());
+    let (layer, _guard) = init_tracing_opentelemetry::tracing_subscriber_ext::build_otel_layer()
+      .map_err(|e| crate::DataError::server_error(e.to_string()))?;
+    Some(Box::new(layer))
+  } else {
+    None
+  };
 
   let subscriber = tracing_subscriber::registry()
     .with(otel_layer)

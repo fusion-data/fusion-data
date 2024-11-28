@@ -14,7 +14,7 @@ use ultimate_common::time::OffsetDateTime;
 
 use crate::{
   component::{
-    auto_inject_component, ComponentArc, DynComponentRef, Error as ComponentError, Result as ComponentResult,
+    auto_inject_component, ComponentArc, DynComponentArc, Error as ComponentError, Result as ComponentResult,
   },
   configuration::{ConfigRegistry, Configurable, UltimateConfig, UltimateConfigRegistry},
   log::{init_tracing_guard, TracingPlugin},
@@ -26,7 +26,7 @@ type Task<T> = dyn FnOnce(Application) -> Box<dyn Future<Output = crate::Result<
 
 pub(crate) struct ApplicationInner {
   config_registry: UltimateConfigRegistry,
-  components: Registry<DynComponentRef>,
+  components: Registry<DynComponentArc>,
   init_time: OffsetDateTime,
 }
 
@@ -122,7 +122,7 @@ impl Application {
     if self.0.components.contains_key(component_name) {
       panic!("Error adding component {component_name}: component was already added in application")
     }
-    self.0.components.insert(component_name.to_string(), DynComponentRef::new(component));
+    self.0.components.insert(component_name.to_string(), DynComponentArc::new(component));
 
     debug!("added component: {}", component_name);
   }
@@ -159,7 +159,7 @@ pub struct ApplicationBuilder {
   pub(crate) plugin_registry: Registry<PluginRef>,
 
   /// Components
-  pub(crate) components: Registry<DynComponentRef>,
+  pub(crate) components: Registry<DynComponentArc>,
 
   /// Tasks
   shutdown_hooks: Vec<Box<Task<String>>>,
@@ -235,7 +235,7 @@ impl ApplicationBuilder {
     if self.components.contains_key(component_name) {
       panic!("Error adding component {component_name}: component was already added in application builder")
     }
-    self.components.insert(component_name.to_string(), DynComponentRef::new(component));
+    self.components.insert(component_name.to_string(), DynComponentArc::new(component));
 
     debug!("added component: {}", component_name);
     self

@@ -12,17 +12,15 @@ use super::{SchedNode, SchedNodeFilter, SchedNodeForCreate, SchedNodeForUpdate};
 
 pub struct SchedNodeBmc;
 impl DbBmc for SchedNodeBmc {
-  const SCHEMA: &'static str = "sched";
   const TABLE: &'static str = "sched_node";
 }
 
 impl SchedNodeBmc {
   pub async fn find_active_master(mm: &ModelManager, valid_check_time: UtcDateTime) -> Result<Option<SchedNode>> {
     let sql = format!(
-      r#"SELECT sn.* FROM {}.{} sn
-         INNER JOIN sched.global_path g ON sn.id = g.value
+      r#"SELECT sn.* FROM {} sn
+         INNER JOIN global_path g ON sn.id = g.value
          WHERE sn.last_check_time > $1"#,
-      Self::SCHEMA,
       Self::TABLE
     );
     let query = sqlx::query_as::<_, SchedNode>(&sql).bind(valid_check_time);
@@ -62,13 +60,12 @@ impl SchedNodeBmc {
 
   pub(crate) async fn register(mm: &ModelManager, entity_c: SchedNodeForCreate) -> Result<()> {
     let sql = format!(
-      r#"insert into {}.{}(id, kind, addr, status, last_check_time, cid, ctime)
+      r#"insert into {}(id, kind, addr, status, last_check_time, cid, ctime)
       values ($1, $2, $3, $4, $5, $6, $7)
       on conflict (id)
           do update set last_check_time = excluded.last_check_time,
                         mid             = $6,
                         mtime           = $7;"#,
-      Self::SCHEMA,
       Self::TABLE
     );
     let query = sqlx::query(&sql)

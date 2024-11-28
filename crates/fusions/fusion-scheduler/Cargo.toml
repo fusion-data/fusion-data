@@ -16,10 +16,6 @@ workspace = true
 name = "fusion-scheduler"
 path = "src/bin/fusion-scheduler.rs"
 
-[[bin]]
-name = "fusion-scheduler-worker"
-path = "src/bin/fusion-scheduler-worker.rs"
-
 [features]
 default = ["tonic-reflection", "tonic-web"]
 tonic-reflection = ["dep:tonic-reflection", "ultimate-grpc/tonic-reflection"]

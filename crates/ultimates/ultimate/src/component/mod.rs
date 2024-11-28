@@ -11,9 +11,9 @@ pub use error::{Error, Result};
 
 /// Component's dyn trait reference
 #[derive(Debug, Clone)]
-pub struct DynComponentRef(Arc<dyn Any + Send + Sync>);
+pub struct DynComponentArc(Arc<dyn Any + Send + Sync>);
 
-impl DynComponentRef {
+impl DynComponentArc {
   /// constructor
   pub fn new<T>(component: T) -> Self
   where

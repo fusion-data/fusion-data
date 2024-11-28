@@ -8,8 +8,8 @@ use ultimate_api::v1::PagePayload;
 use crate::service::trigger_definition::TriggerSchedule;
 
 use super::{
-  trigger_definition_bmc::TriggerDefinitionBmc, util::cron_to_next_occurrence, TriggerDefinition,
-  TriggerDefinitionForCreate, TriggerDefinitionForPage, TriggerDefinitionForUpdate,
+  bmc::TriggerDefinitionBmc, util::cron_to_next_occurrence, TriggerDefinition, TriggerDefinitionForCreate,
+  TriggerDefinitionForPage, TriggerDefinitionForUpdate,
 };
 
 pub struct TriggerDefinitionSvc;

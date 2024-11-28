@@ -4,7 +4,7 @@ use ultimate_api::v1::PagePayload;
 use uuid::Uuid;
 
 use crate::service::{
-  process_definition::process_definition_bmc::ProcessDefinitionBmc,
+  process_definition::bmc::ProcessDefinitionBmc,
   process_trigger_rel::{ProcessTriggerRelBmc, ProcessTriggerRelForCreate},
 };
 

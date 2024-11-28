@@ -13,9 +13,9 @@ pub struct ModelManager {
 
 impl ModelManager {
   /// Constructor
-  pub fn new(db_config: &DbConfig) -> Result<Self> {
-    let db_pool =
-      new_db_pool_from_config(db_config).map_err(|ex| Error::CantCreateModelManagerProvider(ex.to_string()))?;
+  pub fn new(db_config: &DbConfig, application_name: Option<&str>) -> Result<Self> {
+    let db_pool = new_db_pool_from_config(db_config, application_name)
+      .map_err(|ex| Error::CantCreateModelManagerProvider(ex.to_string()))?;
     let dbx = Dbx::new(db_pool, false);
     Ok(ModelManager { dbx, ctx: None })
   }

@@ -4,7 +4,7 @@ use super::{User, UserFilter, UserForCreate, UserForUpdate};
 
 pub struct UserBmc;
 impl DbBmc for UserBmc {
-  const SCHEMA: &'static str = "iam";
+
   const TABLE: &'static str = "user";
 }
 

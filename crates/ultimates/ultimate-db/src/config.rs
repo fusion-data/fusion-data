@@ -50,6 +50,8 @@ pub struct DbConfig {
 
   /// Schema search path (PostgreSQL only)
   schema_search_path: Option<String>,
+
+  application_name: Option<String>,
 }
 
 impl DbConfig {
@@ -118,6 +120,10 @@ impl DbConfig {
 
   pub fn schema_search_path(&self) -> Option<&str> {
     self.schema_search_path.as_deref()
+  }
+
+  pub fn application_name(&self) -> Option<&str> {
+    self.application_name.as_deref()
   }
 }
 

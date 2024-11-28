@@ -1,4 +1,4 @@
-use fusion_scheduler::start::fusion_scheduler_worker_start;
+use fusion_scheduler_worker::start::fusion_scheduler_worker_start;
 
 #[tokio::main]
 async fn main() -> ultimate::Result<()> {

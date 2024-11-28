@@ -4,7 +4,7 @@ use super::{SchedNamespace, SchedNamespaceFilter, SchedNamespaceForUpdate};
 
 pub struct SchedNamespaceBmc;
 impl DbBmc for SchedNamespaceBmc {
-  const SCHEMA: &'static str = "sched";
+
   const TABLE: &'static str = "sched_namespace";
 }
 

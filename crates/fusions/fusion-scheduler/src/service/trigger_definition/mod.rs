@@ -1,9 +1,9 @@
 //! 调度作业触发规则管理
 //!
+mod bmc;
 mod model;
-mod trigger_definition_bmc;
-mod trigger_definition_svc;
+mod svc;
 pub mod util;
 
 pub use model::*;
-pub use trigger_definition_svc::TriggerDefinitionSvc;
+pub use svc::TriggerDefinitionSvc;

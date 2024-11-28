@@ -4,7 +4,7 @@ use super::{UserCredential, UserCredentialFilter, UserCredentialForCreate, UserC
 
 pub struct UserCredentialBmc;
 impl DbBmc for UserCredentialBmc {
-  const SCHEMA: &'static str = "iam";
+
   const TABLE: &'static str = "user_credential";
 }
 

@@ -25,7 +25,7 @@ pub struct UserRoleForUpdate {
 
 pub struct UserRoleBmc;
 impl DbBmc for UserRoleBmc {
-  const SCHEMA: &'static str = "iam";
+
   const TABLE: &'static str = "user_role";
 }
 

@@ -16,11 +16,11 @@ pub enum Error {
   #[error("Invalid argment, error message: {message}")]
   InvalidArgument { message: String },
 
-  #[error("Entity not found. entity: '{schema}.{entity}', id: {id:?}")]
-  EntityNotFound { schema: &'static str, entity: &'static str, id: Id },
+  #[error("Entity not found. entity: '{schema:?}.{entity}', id: {id:?}")]
+  EntityNotFound { schema: Option<&'static str>, entity: &'static str, id: Id },
 
-  #[error("Data not found. table is '{schema}.{table}'")]
-  NotFound { schema: &'static str, table: &'static str, sql: String },
+  #[error("Data not found. table is '{schema:?}.{table}'")]
+  NotFound { schema: Option<&'static str>, table: &'static str, sql: String },
 
   #[error("List limit over max. max: {max}, actual: {actual}")]
   ListLimitOverMax { max: i64, actual: i64 },

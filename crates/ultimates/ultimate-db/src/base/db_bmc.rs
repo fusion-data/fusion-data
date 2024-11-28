@@ -10,16 +10,19 @@ use sea_query::{IntoIden, TableRef};
 ///       common default CRUD BMC functions for a given Bmc/Entity.
 pub trait DbBmc {
   const TABLE: &'static str;
-  const SCHEMA: &'static str = "public";
+  const SCHEMA: Option<&'static str> = None;
   const LIST_LIMIT_DEFAULT: i64 = super::LIST_LIMIT_DEFAULT;
   const LIST_LIMIT_MAX: i64 = super::LIST_LIMIT_MAX;
 
   fn table_ref() -> TableRef {
-    TableRef::SchemaTable(SIden(Self::SCHEMA).into_iden(), SIden(Self::TABLE).into_iden())
+    match Self::SCHEMA {
+      Some(schema) => TableRef::SchemaTable(SIden(schema).into_iden(), SIden(Self::TABLE).into_iden()),
+      None => TableRef::Table(SIden(Self::TABLE).into_iden()),
+    }
   }
 
   fn qualified_table() -> (&'static str, &'static str) {
-    (Self::SCHEMA, Self::TABLE)
+    (Self::SCHEMA.unwrap_or("public"), Self::TABLE)
   }
 
   /// Specifies that the table for this Bmc has timestamps (cid, ctime, mid, mtime) columns.

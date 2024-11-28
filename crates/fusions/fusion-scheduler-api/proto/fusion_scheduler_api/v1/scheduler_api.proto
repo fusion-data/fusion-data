@@ -9,8 +9,8 @@ option go_package = "./;pb";
 import "ultimate_api/v1/types.proto";
 
 service SchedulerApi {
-  // 注册 Worker 节点到 Master
-  rpc RegisterWorker(RegisterWorkerRequest) returns (RegisterWorkerResponse);
+  // 获取所有 schedulers
+  rpc ListSchedulers(ListSchedulersRequest) returns (ListSchedulersResponse);
 
   // 创建流程定义
   rpc CreateProcess(CreateProcessRequest) returns (CreateProcessResponse);
@@ -23,6 +23,12 @@ service SchedulerApi {
 
   rpc EventListener(stream EventRequest) returns (stream EventResponse);
   rpc PullJob(PullJobRequest) returns (PullJobResponse);
+}
+
+message ListSchedulersRequest {}
+
+message ListSchedulersResponse {
+  repeated SchedNode schedulers = 1;
 }
 
 // ---------------- process types ----------------
@@ -243,22 +249,12 @@ message SchedNode {
     SCHEDULER = 1;
     WORKER = 2;
   }
+
+  string node_id = 1;
+  string advertised_addr = 2;
 }
 
 // ----
-
-
-message RegisterWorkerRequest {
-  // 注册的当前节点 ID(uuid)，需要在集群内全局唯一
-  string worker_id = 1;
-
-  // 节点关联的命名空间列表。若设置，则只有匹配命名空间下的 job 可以被此节点执行
-  repeated string namespaces = 2;
-}
-
-message RegisterWorkerResponse {
-  MasterInfo master_info = 1;
-}
 
 message MasterInfo {
   string master_id = 1;

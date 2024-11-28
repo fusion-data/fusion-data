@@ -1,0 +1,23 @@
+[ultimate.app]
+run_mode = "DEV"
+name = "fusion-scheduler"
+
+[ultimate.grpc]
+enable = false
+
+[ultimate.log]
+log_targets = [
+  "fusion_scheduler_worker=debug",
+  "fusiondata=debug",
+  "fusiondata_context=debug",
+  "ultimate_grpc=debug",
+  "ultimate_db=debug",
+  "ultimate=debug",
+  "ultimate_common=debug",
+]
+
+[fusion.scheduler.worker]
+node_seeds = ["http://localhost:58050"]
+heartbeat_interval = "10s"
+namespaces = []
+token = "eyJ0eXAiOiJKV1QiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiYWxnIjoiZGlyIn0..DFkPViGpz_GvcsRNxGbx7A.wIQRi-9uXA-r-Ur4SsQtxEzmVY20n9mRpJDdm8AzZvU._2izRMfJUJZffrOASMwZww"

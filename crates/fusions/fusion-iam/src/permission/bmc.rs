@@ -12,7 +12,7 @@ use super::{Permission, PermissionFilters, PermissionForCreate, PermissionForUpd
 
 pub struct PermissionBmc;
 impl DbBmc for PermissionBmc {
-  const SCHEMA: &'static str = "iam";
+
   const TABLE: &'static str = "permission";
 }
 

@@ -1,8 +1,8 @@
 //! 调度作业定义、管理
 //!
+mod bmc;
 mod model;
-mod process_definition_bmc;
-mod process_definition_svc;
+mod svc;
 
 pub use model::*;
-pub use process_definition_svc::ProcessDefinitionSvc;
+pub use svc::ProcessDefinitionSvc;
