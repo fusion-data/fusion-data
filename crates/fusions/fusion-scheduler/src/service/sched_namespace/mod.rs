@@ -1,7 +1,7 @@
+mod bmc;
 mod model;
-mod sched_namespace_bmc;
-mod sched_namespace_svc;
+mod svc;
 
+use bmc::*;
 pub use model::*;
-use sched_namespace_bmc::*;
-pub use sched_namespace_svc::SchedNamespaceSvc;
+pub use svc::SchedNamespaceSvc;

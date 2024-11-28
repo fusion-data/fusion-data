@@ -1,7 +1,7 @@
-mod global_path_bmc;
-mod global_path_svc;
+mod bmc;
 mod model;
+mod svc;
 
-use global_path_bmc::GlobalPathBmc;
-pub use global_path_svc::GlobalPathSvc;
+use bmc::GlobalPathBmc;
 pub use model::*;
+pub use svc::GlobalPathSvc;

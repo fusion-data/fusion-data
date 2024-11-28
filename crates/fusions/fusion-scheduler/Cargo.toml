@@ -27,10 +27,10 @@ tonic-web = ["dep:tonic-web", "ultimate-grpc/tonic-web"]
 opentelemetry = ["ultimate/opentelemetry"]
 
 [dependencies]
-ultimate = { workspace = true }
 # -- ultimates
-ultimate-common = { workspace = true }
+ultimate-common = { workspace = true, features = ["prost"] }
 ultimate-api = { workspace = true }
+ultimate = { workspace = true }
 
 # -- db
 ultimate-db = { workspace = true, features = ["tonic"] }

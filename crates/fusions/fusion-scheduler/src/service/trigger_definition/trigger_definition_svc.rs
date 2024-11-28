@@ -24,7 +24,7 @@ impl TriggerDefinitionSvc {
     TriggerDefinitionBmc::create(ctx.mm(), entity_c).await.map_err(Into::into)
   }
 
-  pub async fn scan_next_triggers(ctx: &CtxW, node_id: i64) -> Result<()> {
+  pub async fn scan_and_compute_next_triggers(ctx: &CtxW, node_id: &str) -> Result<()> {
     let triggers = TriggerDefinitionBmc::scan_next_triggers(ctx.mm(), node_id).await?;
     let now = Utc::now();
 

@@ -5,8 +5,7 @@ use ultimate::DataError;
 use ultimate_api::v1::{PagePayload, Pagination};
 use ultimate_common::time::UtcDateTime;
 use ultimate_db::{
-  datetime_to_sea_value, try_into_op_vals_int32_opt, try_into_op_vals_value_opt_with_filter_int64,
-  try_into_op_vals_value_opt_with_filter_string, uuid_to_sea_value, DbRowType,
+  datetime_to_sea_value, try_into_op_vals_int32_opt, try_into_op_vals_value_opt_with_filter_int64, DbRowType,
 };
 use ultimate_db::{
   modql::{
@@ -24,7 +23,7 @@ use crate::pb::fusion_scheduler::v1::{PageProcessRequest, PageProcessResponse, P
 pub struct ProcessDefinition {
   pub id: Uuid,
   pub tenant_id: i32,
-  pub namespace_id: i32,
+  pub namespace_id: i64,
   pub description: Option<String>,
   pub tags: Vec<String>,
   pub variables: Option<serde_json::Value>,

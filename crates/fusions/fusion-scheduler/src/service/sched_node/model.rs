@@ -4,18 +4,19 @@ use sqlx::FromRow;
 use ultimate_common::time::UtcDateTime;
 use ultimate_db::modql::{
   field::Fields,
-  filter::{FilterNodes, OpValsInt32, OpValsInt64, OpValsString, OpValsValue},
+  filter::{FilterNodes, OpValsInt32, OpValsString, OpValsValue},
 };
 use ultimate_db::{datetime_to_sea_value, DbRowType};
 
 #[derive(Debug, Clone, FromRow, Fields)]
 #[enum_def]
 pub struct SchedNode {
-  pub id: i64,
+  pub id: String,
   pub kind: NodeKind,
   pub addr: String,
   pub status: NodeStatus,
   pub unhealth_count: i32,
+  pub last_check_time: Option<UtcDateTime>,
   pub cid: i64,
   pub ctime: UtcDateTime,
   pub mid: Option<i64>,
@@ -28,8 +29,8 @@ pub struct SchedNodeForCreate {
   pub id: String,
   pub kind: NodeKind,
   pub addr: String,
-  pub status: Option<i32>,
-  pub last_check_time: Option<UtcDateTime>,
+  pub status: i32,
+  pub last_check_time: UtcDateTime,
 }
 
 #[derive(Default, Fields)]
@@ -42,7 +43,7 @@ pub struct SchedNodeForUpdate {
 
 #[derive(Default, FilterNodes)]
 pub struct SchedNodeFilter {
-  pub id: Option<OpValsInt64>,
+  pub id: Option<OpValsString>,
   pub kind: Option<OpValsInt32>,
   pub status: Option<OpValsInt32>,
   pub addr: Option<OpValsString>,

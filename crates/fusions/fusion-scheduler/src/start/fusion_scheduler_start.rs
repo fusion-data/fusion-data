@@ -2,7 +2,7 @@ use ultimate::{application::Application, timer::TimerPlugin, utils::handle_join_
 use ultimate_db::DbPlugin;
 use ultimate_grpc::GrpcPlugin;
 
-use crate::{broker::spawn_loop, endpoint::grpc_serve};
+use crate::{broker::Broker, endpoint::grpc_serve};
 
 pub async fn fusion_scheduler_start() -> ultimate::Result<()> {
   Application::builder().add_plugin(TimerPlugin).add_plugin(DbPlugin).add_plugin(GrpcPlugin).run().await?;
@@ -12,7 +12,7 @@ pub async fn fusion_scheduler_start() -> ultimate::Result<()> {
   let (_rx, grpc_serve_fut) = grpc_serve(&app).await?;
   let grpc_serve_handle = tokio::spawn(grpc_serve_fut);
 
-  let (master_handle, scheduler_handle) = spawn_loop();
+  let (master_handle, scheduler_handle) = app.component::<Broker>().spawn_loop().await?;
 
   let (master_ret, scheduler_ret, grpc_ret) = tokio::join!(master_handle, scheduler_handle, grpc_serve_handle);
 

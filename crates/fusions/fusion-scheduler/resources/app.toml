@@ -22,6 +22,7 @@ port = 45432
 database = "fusiondata"
 username = "fusiondata"
 password = "2024.Fusiondata"
+schema_search_path = "sched"
 
 [ultimate.log]
 log_targets = [
@@ -35,7 +36,7 @@ log_targets = [
   "tower_http=debug",
 ]
 
-[fusion-scheduler]
-node_id = "node-1"
+[fusion.scheduler]
+node_id = "n01"
 heartbeat_interval = "10s"
-namespaces = ["default"]
+alive_timeout = "30s"

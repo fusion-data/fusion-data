@@ -207,7 +207,7 @@ polars = "0.44"
 # An Excel/OpenDocument Spreadsheets reader and deserializer in pure rust
 calamine = "0.26"
 # -- Valkey & Redis client
-fred = { workspace = "9" }
+fred = { version = "9" }
 # -- RPC
 tonic = "0.12"
 tonic-types = "0.12"

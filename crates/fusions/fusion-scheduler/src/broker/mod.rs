@@ -1,7 +1,8 @@
 //! 调度员
 //!
+use fusiondata_context::ctx::CtxW;
 use tokio::{sync::mpsc, task::JoinHandle};
-use ultimate::{application::Application, timer::Timer};
+use ultimate::{application::Application, component::Component, timer::Timer};
 
 mod cmd_runner;
 mod config;
@@ -15,22 +16,35 @@ pub use master::*;
 pub use model::*;
 pub use scheduler::*;
 
-pub fn spawn_loop() -> (JoinHandle<ultimate::Result<()>>, JoinHandle<ultimate::Result<Scheduler>>) {
-  let app = Application::global();
+use crate::service::sched_node::SchedNodeSvc;
 
-  let (db_tx, db_rx) = mpsc::channel(1024);
+#[derive(Clone, Component)]
+pub struct Broker {
+  #[component]
+  sched_node_svc: SchedNodeSvc,
 
-  let timer: Timer = app.component();
+  #[component]
+  timer: Timer,
+}
 
-  let master_handle = {
-    let f = loop_master(app.clone(), db_tx.clone());
-    tokio::spawn(f)
-  };
+impl Broker {
+  pub async fn spawn_loop(
+    &self,
+  ) -> ultimate::Result<(JoinHandle<ultimate::Result<()>>, JoinHandle<ultimate::Result<Scheduler>>)> {
+    let (db_tx, db_rx) = mpsc::channel(1024);
 
-  let scheduler_handle = {
-    let f = loop_scheduler(app, timer.timer_ref(), db_tx, db_rx);
-    tokio::spawn(f)
-  };
+    self.sched_node_svc.register(&CtxW::new_with_app(Application::global())).await?;
 
-  (master_handle, scheduler_handle)
+    let master_handle = {
+      let f = loop_master(Application::global());
+      tokio::spawn(f)
+    };
+
+    let scheduler_handle = {
+      let f = loop_scheduler(Application::global(), self.timer.timer_ref(), db_tx, db_rx);
+      tokio::spawn(f)
+    };
+
+    Ok((master_handle, scheduler_handle))
+  }
 }

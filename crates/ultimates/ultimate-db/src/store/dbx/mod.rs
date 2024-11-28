@@ -60,13 +60,16 @@ pub fn new_db_pool_from_config(c: &DbConfig) -> Result<Db> {
         o = o.socket(socket);
       }
       if let Some(database) = c.database() {
-        o = o.database(database)
+        o = o.database(database);
       }
       if let Some(username) = c.username() {
-        o = o.username(username)
+        o = o.username(username);
       }
       if let Some(password) = c.password() {
-        o = o.password(password)
+        o = o.password(password);
+      }
+      if let Some(search_path) = c.schema_search_path() {
+        o = o.options([("search_path", search_path)]);
       }
       o
     }

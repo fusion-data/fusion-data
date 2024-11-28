@@ -157,7 +157,13 @@ pub(crate) fn expand_derive(input: syn::DeriveInput) -> syn::Result<TokenStream>
   let dependencies: Vec<_> = component
     .fields
     .iter()
-    .filter(|f| !matches!(f.ty, InjectableType::Default))
+    .filter(|f| match f.ty {
+      InjectableType::Component(_) => true,
+      InjectableType::Config(_) => false,
+      InjectableType::ComponentRef(_) => true,
+      InjectableType::ConfigRef(_) => false,
+      InjectableType::Default => false,
+    })
     .map(|field| field.ty.get_path())
     .collect();
   // println!("\nComponent Name: {}, dependencies: {:?}", ident, dependencies);

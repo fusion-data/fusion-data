@@ -26,16 +26,16 @@ impl GlobalPathBmc {
     mm: &ModelManager,
     path: &str,
     value: Option<String>,
-    version: Option<i64>,
+    revision: Option<i64>,
   ) -> ultimate_db::Result<bool> {
-    let sql_str = if version.is_some() {
+    let sql_str = if revision.is_some() {
       format!(
         r#"INSERT INTO {}.{}(path, value)
-           VALUES (?, ?)
+           VALUES ($1, $2)
            ON CONFLICT(path)
            DO UPDATE SET value    = excluded.value,
                          revision = {}.revision + 1
-           WHERE {}.revision = ?;"#,
+           WHERE {}.revision = $3;"#,
         Self::SCHEMA,
         Self::TABLE,
         Self::TABLE,
@@ -44,7 +44,7 @@ impl GlobalPathBmc {
     } else {
       format!(
         r#"INSERT INTO {}.{}(path, value)
-           VALUES (?, ?)
+           VALUES ($1, $2)
            ON CONFLICT(path)
            DO UPDATE SET value = excluded.value;"#,
         Self::SCHEMA,
@@ -52,8 +52,8 @@ impl GlobalPathBmc {
       )
     };
 
-    let mut query = sqlx::query(&sql_str).bind(value).bind(path);
-    if let Some(version) = version {
+    let mut query = sqlx::query(&sql_str).bind(path).bind(value);
+    if let Some(version) = revision {
       query = query.bind(version);
     }
 

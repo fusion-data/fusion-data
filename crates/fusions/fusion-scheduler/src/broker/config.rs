@@ -3,59 +3,51 @@ use std::{
   time::Duration,
 };
 
+use duration_str::deserialize_duration;
 use serde::{Deserialize, Serialize};
-use ultimate::{
-  application::Application,
-  configuration::{ConfigRegistry, Configuration},
-};
+use ultimate::configuration::Configuration;
+use ultimate_common::time::ser::serialize_duration;
 
-#[derive(Clone, Serialize, Deserialize, Configuration)]
-#[config_prefix = "fusion-scheduler"]
-pub struct SchedulerConfigInner {
+#[derive(Debug, Clone, Serialize, Deserialize, Configuration)]
+#[config_prefix = "fusion.scheduler"]
+pub struct SchedulerConfig {
+  node_id: Option<String>,
+
   advertised_addr: Option<String>,
 
-  #[serde(default = "default_heartbeat_interval")]
-  heartbeat_interval: String,
-
-  #[serde(default = "default_alive_timeout")]
-  alive_timeout: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SchedulerConfig {
-  advertised_addr: String,
+  #[serde(
+    deserialize_with = "deserialize_duration",
+    serialize_with = "serialize_duration",
+    default = "default_heartbeat_interval"
+  )]
   heartbeat_interval: Duration,
+
+  #[serde(
+    deserialize_with = "deserialize_duration",
+    serialize_with = "serialize_duration",
+    default = "default_alive_timeout"
+  )]
   alive_timeout: Duration,
-  node_id: i64,
 }
 
 impl SchedulerConfig {
-  pub fn try_new(app: &Application) -> ultimate::Result<Self> {
-    let inner: SchedulerConfigInner = app.get_config()?;
-
-    let advertised_addr = inner
+  pub fn advertised_addr(&self) -> String {
+    self
       .advertised_addr
-      .unwrap_or_else(|| std::env::var("ULTIMATE__GRPC__SERVER_ADDR").expect("The gRPC server addr must be set"));
-
-    let heartbeat_interval = match duration_str::parse_std(inner.heartbeat_interval) {
-      Ok(d) => d,
-      Err(e) => panic!("Invalid heartbeat_interval: {}", e),
-    };
-
-    let alive_timeout = match duration_str::parse_std(inner.alive_timeout) {
-      Ok(d) => d,
-      Err(e) => panic!("Invalid alive_timeout: {}", e),
-    };
-
-    let mut hasher = DefaultHasher::new();
-    advertised_addr.hash(&mut hasher);
-    let node_id = hasher.finish() as i64;
-
-    Ok(SchedulerConfig { advertised_addr, heartbeat_interval, alive_timeout, node_id })
+      .clone()
+      .unwrap_or_else(|| std::env::var("ULTIMATE__GRPC__SERVER_ADDR").expect("The gRPC server addr must be set"))
   }
 
-  pub fn advertised_addr(&self) -> &str {
-    &self.advertised_addr
+  pub fn node_id(&self) -> String {
+    match self.node_id.as_deref() {
+      Some(ni) => ni.to_string(),
+      None => {
+        let advertised_addr = self.advertised_addr();
+        let mut hasher = DefaultHasher::new();
+        advertised_addr.hash(&mut hasher);
+        hasher.finish().to_string()
+      }
+    }
   }
 
   pub fn heartbeat_interval(&self) -> &Duration {
@@ -65,16 +57,12 @@ impl SchedulerConfig {
   pub fn alive_timeout(&self) -> &Duration {
     &self.alive_timeout
   }
-
-  pub fn node_id(&self) -> i64 {
-    self.node_id
-  }
 }
 
-fn default_heartbeat_interval() -> String {
-  "10s".to_string()
+fn default_heartbeat_interval() -> Duration {
+  Duration::from_secs(10)
 }
 
-fn default_alive_timeout() -> String {
-  "30s".to_string()
+fn default_alive_timeout() -> Duration {
+  Duration::from_secs(30)
 }

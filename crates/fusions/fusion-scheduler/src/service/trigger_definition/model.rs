@@ -29,7 +29,7 @@ use super::util::cron_to_next_occurrence;
 pub struct TriggerDefinition {
   pub id: i64,
   pub tenant_id: i32,
-  pub namespace_id: i32,
+  pub namespace_id: i64,
   pub key: String,
   pub trigger_kind: i32,
   pub schedule: TriggerSchedule,
@@ -66,7 +66,7 @@ impl TriggerDefinition {
 pub struct TriggerDefinitionFilter {
   pub id: Option<OpValsInt64>,
   pub tenant_id: Option<OpValsInt32>,
-  pub namespace_id: Option<OpValsInt32>,
+  pub namespace_id: Option<OpValsInt64>,
   pub key: Option<OpValsString>,
   pub trigger_kind: Option<OpValsInt32>,
   pub status: Option<OpValsInt32>,

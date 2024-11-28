@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use ultimate_common::model::sensitive::UriString;
 
-use ultimate::configuration::{Configurable, Configuration};
+use ultimate::configuration::Configuration;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Configuration)]
 #[config_prefix = "ultimate.db"]

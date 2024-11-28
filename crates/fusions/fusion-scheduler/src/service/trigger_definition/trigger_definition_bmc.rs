@@ -4,6 +4,7 @@ use sea_query_binder::SqlxBinder;
 use ultimate_db::modql::field::HasSeaFields;
 use ultimate_db::{base::DbBmc, generate_common_bmc_fns, generate_filter_bmc_fns, ModelManager, Result};
 
+use crate::service::sched_namespace::SchedNamespaceIden;
 use crate::service::{
   sched_node::{SchedNodeBmc, SchedNodeIden},
   trigger_definition::TriggerDefinitionIden,
@@ -31,7 +32,7 @@ generate_filter_bmc_fns!(
 );
 
 impl TriggerDefinitionBmc {
-  pub async fn scan_next_triggers(mm: &ModelManager, node_id: i64) -> Result<Vec<TriggerDefinition>> {
+  pub async fn scan_next_triggers(mm: &ModelManager, node_id: &str) -> Result<Vec<TriggerDefinition>> {
     let now = Utc::now();
     let mut query = Query::select();
     query
@@ -39,11 +40,11 @@ impl TriggerDefinitionBmc {
       .columns(TriggerDefinition::sea_column_refs_with_rel(TriggerDefinitionIden::Table))
       .inner_join(
         SchedNodeBmc::table_ref(),
-        Expr::col((SchedNodeIden::Table, SchedNodeIden::Id))
-          .eq(Expr::col((TriggerDefinitionIden::Table, TriggerDefinitionIden::NamespaceId))),
+        Expr::col((TriggerDefinitionIden::Table, TriggerDefinitionIden::NamespaceId))
+          .eq(Expr::col((SchedNamespaceIden::Table, SchedNamespaceIden::Id))),
       )
       .cond_where(all![
-        Expr::col((SchedNodeIden::Table, SchedNodeIden::Id)).eq(node_id),
+        Expr::col((SchedNamespaceIden::Table, SchedNamespaceIden::NodeId)).eq(node_id),
         Expr::col((TriggerDefinitionIden::Table, TriggerDefinitionIden::Status)).eq(100),
         Expr::col((TriggerDefinitionIden::Table, TriggerDefinitionIden::RefreshOccurrence)).lte(now),
         any![

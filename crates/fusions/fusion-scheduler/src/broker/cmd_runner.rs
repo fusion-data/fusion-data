@@ -10,17 +10,19 @@ use super::SchedCmd;
 pub struct CmdRunner {
   app: Application,
   rx: mpsc::Receiver<SchedCmd>,
+  sched_node_svc: SchedNodeSvc,
 }
 
 impl CmdRunner {
-  pub fn new(app_state: Application, rx: mpsc::Receiver<SchedCmd>) -> Self {
-    Self { app: app_state, rx }
+  pub fn new(app: Application, rx: mpsc::Receiver<SchedCmd>) -> Self {
+    let sched_node_svc = app.component();
+    Self { app, rx, sched_node_svc }
   }
 
   pub async fn run(mut self) {
     while let Some(msg) = self.rx.recv().await {
       match msg {
-        SchedCmd::Heartbeat(node_id) => self.heartbeat(node_id).await,
+        SchedCmd::Heartbeat(node_id) => self.heartbeat(&node_id).await,
         SchedCmd::ListenNamespaces(sn) => self.compute_process_tasks(sn).await,
         SchedCmd::UnlistenNamespaces(_) => todo!(),
         SchedCmd::Stop => {
@@ -35,9 +37,9 @@ impl CmdRunner {
     todo!()
   }
 
-  async fn heartbeat(&self, node_id: i64) {
+  async fn heartbeat(&self, node_id: &str) {
     let ctx = CtxW::new_with_app(self.app.clone());
-    match SchedNodeSvc::heartbeat(&ctx, node_id).await {
+    match self.sched_node_svc.heartbeat(&ctx, node_id).await {
       Ok(_) => {}
       Err(e) => error!("Failed to heartbeat to scheduler: {}", e),
     };

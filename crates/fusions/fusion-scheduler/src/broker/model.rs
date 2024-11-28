@@ -11,5 +11,6 @@ pub enum SchedCmd {
   Stop,
   ListenNamespaces(Vec<SchedNamespace>),
   UnlistenNamespaces(Vec<SchedNamespace>),
-  Heartbeat(i64),
+  /// node_id
+  Heartbeat(String),
 }

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use ::log::Level;
-use tracing::{info, subscriber::DefaultGuard, Subscriber};
+use tracing::{debug, info, subscriber::DefaultGuard, Subscriber};
 use tracing_subscriber::{
   filter::EnvFilter,
   fmt::{
@@ -99,7 +99,7 @@ pub fn build_loglevel_filter_layer(c: &LogConfig) -> (EnvFilter, Option<String>)
   // let value = format!("{},{},{}", rust_log.unwrap_or_else(|_| c.log_level.to_string()), otel, libraries);
   let log_value = if value.ends_with(',') { &value[..value.len() - 1] } else { &value[..] };
 
-  println!("ORIGINAL RUST_LOG: {:?}; NEW RUST_LOG: {}", original_rust_log, log_value);
+  debug!("ORIGINAL RUST_LOG: {:?}; NEW RUST_LOG: {}", original_rust_log, log_value);
 
   std::env::set_var("RUST_LOG", log_value);
   (EnvFilter::from_default_env(), original_rust_log)
