@@ -16,17 +16,21 @@ fn main() {
     c.enum_attribute(format!("{}.{}", BASE_PACKAGE, en), SERDE_REPR_ATTR);
   });
 
-  ["ValString.value", "ValBool.value", "ValDouble.value", "ValInt32.value", "ValInt64.value"].into_iter().for_each(
-    |m| {
+  ["ValString.value", "ValBool.value", "ValDouble.value", "ValInt32.value", "ValInt64.value"]
+    .into_iter()
+    .for_each(|m| {
       c.type_attribute(format!("{}.{}", BASE_PACKAGE, m), SERDE_ATTR);
-    },
-  );
+    });
 
   // let modql_messages = ["CreateProcessRequest", "CreateTriggerRequest"];
   // b = modql_messages.iter().fold(b, |b, m| b.message_attribute(format!("{}.{}", BASE_PACKAGE, m), MODQL_MESSAGE_ATTR));
 
   c.compile_protos(
-    &["proto/ultimate_api/v1/types.proto", "proto/ultimate_api/v1/page.proto", "proto/ultimate_api/v1/ql.proto"],
+    &[
+      "proto/ultimate_api/v1/types.proto",
+      "proto/ultimate_api/v1/page.proto",
+      "proto/ultimate_api/v1/ql.proto",
+    ],
     &["proto"],
   )
   .unwrap();

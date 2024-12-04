@@ -44,7 +44,9 @@ impl UserSvc {
 
   #[tracing::instrument(skip(self, ctx, req))]
   pub async fn get_fetch_credential(&self, ctx: &CtxW, req: UserFilter) -> Result<(User, UserCredential)> {
-    let u = UserBmc::find_unique(ctx.mm(), vec![req]).await?.ok_or_else(|| DataError::not_found("User not exists."))?;
+    let u = UserBmc::find_unique(ctx.mm(), vec![req])
+      .await?
+      .ok_or_else(|| DataError::not_found("User not exists."))?;
     let uc = UserCredentialBmc::find_by_id(ctx.mm(), u.id).await?;
     Ok((u, uc))
   }

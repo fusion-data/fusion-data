@@ -50,5 +50,8 @@ pub fn b64u_decode(b64u: &str) -> Result<Vec<u8>, Error> {
 }
 
 pub fn b64u_decode_to_string(b64u: &str) -> Result<String, Error> {
-  b64u_decode(b64u).ok().and_then(|r| String::from_utf8(r).ok()).ok_or(Error::FailToB64uDecode(b64u.to_string()))
+  b64u_decode(b64u)
+    .ok()
+    .and_then(|r| String::from_utf8(r).ok())
+    .ok_or(Error::FailToB64uDecode(b64u.to_string()))
 }

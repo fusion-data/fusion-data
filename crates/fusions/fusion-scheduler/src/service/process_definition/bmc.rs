@@ -4,7 +4,6 @@ use super::{ProcessDefinition, ProcessDefinitionFilter, ProcessDefinitionForCrea
 
 pub struct ProcessDefinitionBmc;
 impl DbBmc for ProcessDefinitionBmc {
-
   const TABLE: &'static str = "process_definition";
 }
 

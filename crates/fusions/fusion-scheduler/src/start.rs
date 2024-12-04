@@ -5,7 +5,12 @@ use ultimate_grpc::GrpcPlugin;
 use crate::{broker::Broker, endpoint::grpc_serve};
 
 pub async fn fusion_scheduler_start() -> ultimate::Result<()> {
-  Application::builder().add_plugin(TimerPlugin).add_plugin(DbPlugin).add_plugin(GrpcPlugin).run().await?;
+  Application::builder()
+    .add_plugin(TimerPlugin)
+    .add_plugin(DbPlugin)
+    .add_plugin(GrpcPlugin)
+    .run()
+    .await?;
 
   let app: Application = Application::global();
 

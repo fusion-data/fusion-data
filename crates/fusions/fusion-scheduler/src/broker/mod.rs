@@ -31,9 +31,7 @@ impl Broker {
   pub async fn spawn_loop(
     &self,
   ) -> ultimate::Result<(JoinHandle<ultimate::Result<()>>, JoinHandle<ultimate::Result<Scheduler>>)> {
-    let (db_tx, db_rx) = mpsc::channel(1024);
-
-    self.sched_node_svc.register(&CtxW::new_with_app(Application::global())).await?;
+    self.sched_node_svc.register(&CtxW::new_super_admin(Application::global().component())).await?;
 
     let master_handle = {
       let f = loop_master(Application::global());
@@ -41,6 +39,7 @@ impl Broker {
     };
 
     let scheduler_handle = {
+      let (db_tx, db_rx) = mpsc::channel(1024);
       let f = loop_scheduler(Application::global(), self.timer.timer_ref(), db_tx, db_rx);
       tokio::spawn(f)
     };

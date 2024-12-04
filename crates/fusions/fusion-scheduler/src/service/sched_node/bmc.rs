@@ -41,7 +41,11 @@ impl SchedNodeBmc {
     // -- Build query
     let fields = fields.for_sea_update();
     let mut query = Query::update();
-    query.table(Self::table_ref()).values(fields).and_where(Expr::col(CommonIden::Id).eq(id)).returning_all();
+    query
+      .table(Self::table_ref())
+      .values(fields)
+      .and_where(Expr::col(CommonIden::Id).eq(id))
+      .returning_all();
 
     // -- Execute query
     let (sql, values) = query.build_sqlx(PostgresQueryBuilder);

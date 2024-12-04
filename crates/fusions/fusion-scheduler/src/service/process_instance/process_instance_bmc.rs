@@ -4,7 +4,6 @@ use super::*;
 
 pub struct ProcessInstanceBmc;
 impl DbBmc for ProcessInstanceBmc {
-
   const TABLE: &'static str = "process_instance";
 }
 

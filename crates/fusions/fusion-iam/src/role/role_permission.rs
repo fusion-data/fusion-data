@@ -34,7 +34,6 @@ pub struct RolePermissionFilter {
 
 pub struct RolePermissionBmc;
 impl DbBmc for RolePermissionBmc {
-
   const TABLE: &'static str = "role_permission";
 
   fn has_modification_timestamps() -> bool {

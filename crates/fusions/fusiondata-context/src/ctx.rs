@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use tonic::{metadata::MetadataMap, Extensions, Status};
+use tracing::error;
 use ultimate::{application::Application, ctx::Ctx};
 use ultimate_common::time::now_utc;
 use ultimate_db::ModelManager;
@@ -11,23 +12,18 @@ static X_DEVICE_ID: &str = "X-DEVICE-ID";
 
 #[derive(Clone)]
 pub struct CtxW {
-  app: Application,
+  // app: Application,
   mm: ModelManager,
   req_meta: Arc<RequestMetadata>,
 }
 
 impl CtxW {
-  pub fn new(app: Application, ctx: Ctx, req_meta: Arc<RequestMetadata>) -> Self {
-    let mm = app.get_component::<ModelManager>().expect("Component ModelManager not found").with_ctx(ctx);
-    Self { app, mm, req_meta }
+  pub fn new(mm: ModelManager, req_meta: Arc<RequestMetadata>) -> Self {
+    Self { mm, req_meta }
   }
 
-  pub fn new_with_app(app: Application) -> Self {
-    Self::new(app, Ctx::new_super_admin(), Default::default())
-  }
-
-  pub fn new_with_req_meta(app: Application, req_meta: Arc<RequestMetadata>) -> Self {
-    Self::new(app, Ctx::new_super_admin(), req_meta)
+  pub fn new_super_admin(mm: ModelManager) -> Self {
+    Self::new(mm.with_ctx(Ctx::new_super_admin()), Default::default())
   }
 
   // pub fn ctx(&self) -> &Ctx {
@@ -35,8 +31,8 @@ impl CtxW {
   //   &self.ctx
   // }
 
-  pub fn app(&self) -> &Application {
-    &self.app
+  pub fn app(&self) -> Application {
+    Application::global()
   }
 
   pub fn mm(&self) -> &ModelManager {
@@ -48,7 +44,7 @@ impl CtxW {
   }
 
   pub fn into_tx_mm_ctx(self) -> CtxW {
-    let mm = self.mm.get_or_clone_with_txn();
+    let mm = self.mm.get_txn_clone();
     self.with_mm(mm)
   }
 
@@ -70,7 +66,14 @@ impl TryFrom<&MetadataMap> for CtxW {
     let request_id = metadata.get("request_id").and_then(|v| v.to_str().ok().map(|s| s.to_string()));
 
     let ctx = Ctx::new_with_jwt_payload(payload, Some(req_time), request_id)?;
-    Ok(CtxW::new(app, ctx, Arc::new(req_meta)))
+    let mm = app
+      .get_component::<ModelManager>()
+      .map_err(|e| {
+        error!("ModelManager not found, error: {:?}", e);
+        Status::internal("ModelManager not found.")
+      })?
+      .with_ctx(ctx);
+    Ok(CtxW::new(mm, Arc::new(req_meta)))
   }
 }
 

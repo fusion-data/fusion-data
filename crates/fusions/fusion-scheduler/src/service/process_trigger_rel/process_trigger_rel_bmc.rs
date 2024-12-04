@@ -9,7 +9,6 @@ use super::{ProcessTriggerRel, ProcessTriggerRelFilter, ProcessTriggerRelForCrea
 
 pub struct ProcessTriggerRelBmc;
 impl DbBmc for ProcessTriggerRelBmc {
-
   const TABLE: &'static str = "process_trigger_rel";
 
   fn has_modification_timestamps() -> bool {

@@ -74,12 +74,16 @@ impl SchedNodeSvc {
 
   /// 更新节点心跳
   pub async fn heartbeat(&self, ctx: &CtxW, node_id: &str) -> Result<()> {
-    SchedNodeBmc::update_by_id(ctx.mm(), node_id, update_node_with_heartbeat()).await.map_err(Into::into)
+    SchedNodeBmc::update_by_id(ctx.mm(), node_id, update_node_with_heartbeat())
+      .await
+      .map_err(Into::into)
   }
 
   /// 更新节点心跳并返回节点信息
   pub async fn heartbeat_and_return(&self, ctx: &CtxW, node_id: &str) -> Result<SchedNode> {
-    SchedNodeBmc::update_and_return(ctx.mm(), node_id, update_node_with_heartbeat()).await.map_err(Into::into)
+    SchedNodeBmc::update_and_return(ctx.mm(), node_id, update_node_with_heartbeat())
+      .await
+      .map_err(Into::into)
   }
 
   pub async fn update(&self, ctx: &CtxW, vec: Vec<SchedNodeFilter>, entity_u: SchedNodeForUpdate) -> Result<u64> {

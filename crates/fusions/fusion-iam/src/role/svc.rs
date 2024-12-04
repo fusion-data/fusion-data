@@ -19,8 +19,10 @@ impl RoleSvc {
     let role_id = RoleBmc::create(mm, entity_c).await?;
 
     if !permission_ids.is_empty() {
-      let data =
-        permission_ids.into_iter().map(|permission_id| RolePermissionForCreate { role_id, permission_id }).collect();
+      let data = permission_ids
+        .into_iter()
+        .map(|permission_id| RolePermissionForCreate { role_id, permission_id })
+        .collect();
       RolePermissionBmc::insert_many(mm, data).await.unwrap();
     }
 
@@ -50,7 +52,10 @@ impl RoleSvc {
   pub async fn assign_permissions(&self, ctx: &CtxW, role_id: i64, permission_ids: Vec<i64>) -> Result<()> {
     RolePermissionBmc::insert_many(
       ctx.mm(),
-      permission_ids.into_iter().map(|permission_id| RolePermissionForCreate { role_id, permission_id }).collect(),
+      permission_ids
+        .into_iter()
+        .map(|permission_id| RolePermissionForCreate { role_id, permission_id })
+        .collect(),
     )
     .await?;
     Ok(())

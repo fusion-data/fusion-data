@@ -20,16 +20,18 @@ impl ModelManager {
     Ok(ModelManager { dbx, ctx: None })
   }
 
-  pub fn clone_with_txn(&self) -> ModelManager {
+  /// 返回一个新的事务
+  pub fn txn_cloned(&self) -> ModelManager {
     let dbx = Dbx::new(self.dbx.db().clone(), true);
     ModelManager { dbx, ctx: self.ctx.clone() }
   }
 
-  pub fn get_or_clone_with_txn(&self) -> ModelManager {
+  /// 若当前 ModelManager 已开启事务，则返回self的克隆，否则返回一个新的事务。
+  pub fn get_txn_clone(&self) -> ModelManager {
     if self.dbx().is_txn() {
       self.clone()
     } else {
-      self.clone_with_txn()
+      self.txn_cloned()
     }
   }
 

@@ -9,7 +9,10 @@ use tokio::sync::RwLock;
 use tracing::{debug, error, info, warn};
 use ultimate::{application::Application, component::Component, Result};
 use ultimate_api::v1::{Pagination, SortBy, SortDirection};
-use ultimate_db::modql::filter::{OpValInt32, OpValInt64};
+use ultimate_db::{
+  modql::filter::{OpValInt32, OpValInt64},
+  ModelManager,
+};
 
 use crate::service::{
   global_path::{GlobalPath, GlobalPathSvc},
@@ -37,10 +40,16 @@ pub async fn loop_master(app: Application) -> Result<()> {
 pub struct Master {
   #[config]
   scheduler_config: SchedulerConfig,
+
+  #[component]
+  mm: ModelManager,
+
   #[component]
   sched_namespace_svc: SchedNamespaceSvc,
+
   #[component]
   sched_node_svc: SchedNodeSvc,
+
   #[component]
   global_path_svc: GlobalPathSvc,
 
@@ -64,7 +73,7 @@ impl Master {
   /// # Returns:
   ///   - `true`: 需要重新平衡 namespaces
   async fn scan_schedulers(&self) -> Result<bool> {
-    let ctx = CtxW::new_with_app(Application::global());
+    let ctx = CtxW::new_super_admin(self.mm.clone());
     let healthy_schedulers =
       self.sched_node_svc.check_healthy_schedulers(&ctx, *self.scheduler_config.alive_timeout()).await?;
 
@@ -91,7 +100,7 @@ impl Master {
       return Ok(());
     }
 
-    let ctx = CtxW::new_with_app(Application::global());
+    let ctx = CtxW::new_super_admin(self.mm.clone());
     let ns_len = self
       .sched_namespace_svc
       .count(&ctx, vec![SchedNamespaceFilter { status: Some(OpValInt32::Eq(100).into()), ..Default::default() }])
@@ -173,7 +182,7 @@ impl Master {
   }
 
   async fn get_batch_namespace(&self, batch_size: i64, cursor_id: Option<i64>) -> Result<VecDeque<SchedNamespace>> {
-    let ctx = CtxW::new_with_app(Application::global());
+    let ctx = CtxW::new_super_admin(self.mm.clone());
     let items = self
       .sched_namespace_svc
       .find_many(
@@ -206,7 +215,7 @@ impl Master {
   ///    - 2.2. 注册失败，则 sleep
   pub async fn attempt_bind_master(&self) -> Result<SchedNode> {
     let alive_timeout: Duration = *self.scheduler_config.alive_timeout();
-    let ctx = CtxW::new_with_app(Application::global());
+    let ctx = CtxW::new_super_admin(self.mm.clone());
     let node_id = self.scheduler_config.node_id();
 
     loop {
@@ -232,8 +241,12 @@ impl Master {
   async fn bind_or_get_master(&self, ctx: &CtxW, node_id: &str) -> Result<Option<SchedNode>> {
     let mut count = 5; // 最多尝试 5 次
     while count > 0 {
-      let revision =
-        self.global_path_svc.find_unique(ctx, GlobalPath::MASTER).await?.map(|p| p.revision).unwrap_or_default();
+      let revision = self
+        .global_path_svc
+        .find_unique(ctx, GlobalPath::MASTER)
+        .await?
+        .map(|p| p.revision)
+        .unwrap_or_default();
 
       if self
         .global_path_svc

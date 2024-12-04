@@ -26,7 +26,9 @@ impl JobWorker {
 
     let token = self.worker_config.token.clone();
     let mut client = SchedulerApiClient::with_interceptor(channel, move |mut req: Request<()>| {
-      req.metadata_mut().append("authorization", format!("Bearer {}", token).parse().expect("Invalid Bearer token"));
+      req
+        .metadata_mut()
+        .append("authorization", format!("Bearer {}", token).parse().expect("Invalid Bearer token"));
       Ok(req)
     });
 

@@ -2,21 +2,23 @@ use fusiondata_context::ctx::CtxW;
 use tokio::sync::mpsc;
 use tracing::{error, info};
 use ultimate::application::Application;
+use ultimate_db::ModelManager;
 
 use crate::service::{sched_namespace::SchedNamespace, sched_node::SchedNodeSvc};
 
 use super::SchedCmd;
 
 pub struct CmdRunner {
-  app: Application,
-  rx: mpsc::Receiver<SchedCmd>,
+  mm: ModelManager,
   sched_node_svc: SchedNodeSvc,
+  rx: mpsc::Receiver<SchedCmd>,
 }
 
 impl CmdRunner {
   pub fn new(app: Application, rx: mpsc::Receiver<SchedCmd>) -> Self {
+    let mm = app.component();
     let sched_node_svc = app.component();
-    Self { app, rx, sched_node_svc }
+    Self { mm, sched_node_svc, rx }
   }
 
   pub async fn run(mut self) {
@@ -38,7 +40,7 @@ impl CmdRunner {
   }
 
   async fn heartbeat(&self, node_id: &str) {
-    let ctx = CtxW::new_with_app(self.app.clone());
+    let ctx = CtxW::new_super_admin(self.mm.clone());
     match self.sched_node_svc.heartbeat(&ctx, node_id).await {
       Ok(_) => {}
       Err(e) => error!("Failed to heartbeat to scheduler: {}", e),

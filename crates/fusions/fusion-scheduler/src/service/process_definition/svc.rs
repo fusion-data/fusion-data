@@ -19,15 +19,17 @@ impl ProcessDefinitionSvc {
   }
 
   pub async fn create(ctx: &CtxW, entity_c: ProcessDefinitionForCreate, rel_triggers: Vec<Uuid>) -> Result<Uuid> {
-    let mm = ctx.mm().get_or_clone_with_txn();
+    let mm = ctx.mm().get_txn_clone();
     mm.dbx().begin_txn().await?;
 
     let process_id = entity_c.id;
     ProcessDefinitionBmc::insert(&mm, entity_c).await?;
 
     if !rel_triggers.is_empty() {
-      let data =
-        rel_triggers.into_iter().map(|trigger_id| ProcessTriggerRelForCreate { process_id, trigger_id }).collect();
+      let data = rel_triggers
+        .into_iter()
+        .map(|trigger_id| ProcessTriggerRelForCreate { process_id, trigger_id })
+        .collect();
       ProcessTriggerRelBmc::insert_many(&mm, data).await?;
     }
 

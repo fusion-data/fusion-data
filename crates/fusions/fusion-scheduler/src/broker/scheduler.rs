@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{sync::Arc, time::Duration};
 
 use fusiondata_context::ctx::CtxW;
 use tokio::sync::mpsc;
@@ -14,6 +14,17 @@ use uuid::Uuid;
 use crate::service::trigger_definition::TriggerDefinitionSvc;
 
 use super::{CmdRunner, SchedCmd, SchedulerConfig};
+
+pub struct SchedCmdMpsc {
+  pub(crate) tx: mpsc::Sender<SchedCmd>,
+  pub(crate) rx: Arc<mpsc::Receiver<SchedCmd>>,
+}
+impl Default for SchedCmdMpsc {
+  fn default() -> Self {
+    let (tx, rx) = mpsc::channel(1024);
+    SchedCmdMpsc { tx, rx: Arc::new(rx) }
+  }
+}
 
 pub async fn loop_scheduler(
   app: Application,
@@ -61,7 +72,7 @@ impl Scheduler {
   // 扫描触发器，计算下一次待执行任务并存储到数据库中
   async fn scan_triggers(&mut self) -> Result<()> {
     let node_id = self.scheduler_config.node_id();
-    let ctx = CtxW::new_with_app(self.app.clone());
+    let ctx = CtxW::new_super_admin(self.app.component());
 
     TriggerDefinitionSvc::scan_and_compute_next_triggers(&ctx, &node_id).await?;
 

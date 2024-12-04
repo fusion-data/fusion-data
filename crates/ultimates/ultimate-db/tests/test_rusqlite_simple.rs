@@ -80,8 +80,11 @@ fn test_sqlite_select_partial() -> Result<()> {
   // -- Build the Sql
   // note: Here we could use filed_metas().sql_col_refs_for(prop_names)
   let metas = Agent::field_metas();
-  let cols =
-    metas.iter().filter(|m| only_props.contains(&m.prop_name)).map(|meta| meta.sql_col_ref()).collect::<Vec<_>>();
+  let cols = metas
+    .iter()
+    .filter(|m| only_props.contains(&m.prop_name))
+    .map(|meta| meta.sql_col_ref())
+    .collect::<Vec<_>>();
   let cols = cols.join(", ");
   let sql = format!("SELECT {cols} FROM agent");
 

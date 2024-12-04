@@ -77,8 +77,9 @@ pub fn extract_jwt_payload_from_metadata(
 }
 
 pub fn extract_token_from_metadata(metadata: &MetadataMap) -> Result<&str, tonic::Status> {
-  let auth_header =
-    metadata.get("authorization").ok_or_else(|| Status::unauthenticated("Missing authorization header"))?;
+  let auth_header = metadata
+    .get("authorization")
+    .ok_or_else(|| Status::unauthenticated("Missing authorization header"))?;
   let auth_str = auth_header.to_str().map_err(|_| Status::unauthenticated("Invalid authorization header"))?;
   let offset = if auth_str.starts_with("Bearer ") { 7 } else { 0 };
 
