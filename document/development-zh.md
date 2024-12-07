@@ -11,7 +11,7 @@ cd fusion-data/
 
 ### 安装 Rust
 
-Linux、MacOS 使用以下命案安装：
+Linux、MacOS 使用以下命令安装：
 
 ```
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
@@ -65,9 +65,9 @@ docker compose up -d
 
 > 在开发阶段，也许你不需要启动所有服务依赖。比如：jaeger 和 opentelemetry。这时可以使用 `docker compose up -d db` 命令只启动数据库。
 
-### Opentelemetry
+### Open Telemetry
 
-docker compose 默认将启动 jaeger 作为 opentelemetry 的 collector，端口为 4317。在 Rust 服务中要启用 opentelemtry 功能需要启用 `tracing.otel` 模块，在 `app.toml` 中添加以下配置：
+docker compose 默认将启动 jaeger 作为 open telemetry 的 collector，端口为 4317。在 Rust 服务中要启用 open telemetry 功能需要启用 `tracing.otel` 模块，在 `app.toml` 中添加以下配置：
 
 ```toml
 [ultimate.log.otel]

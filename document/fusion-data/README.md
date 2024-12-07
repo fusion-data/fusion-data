@@ -10,15 +10,15 @@
 
 ### 通用库 fusiondata-common
 
-数据库访问，缓存系统，消息系统，WEB/gRPC 等的实际工具封装库
+数据库访问、缓存系统、消息系统、WEB/gRPC 等的实际工具封装库
 
 ### 系统监控 fusiondata-system
 
 ### IAM fusiondata-iam
 
-作为主应用模块，负责认证和授权，菜单，权限，路由配置，系统监控功能?
+作为主应用模块，负责认证和授权、菜单、权限、路由配置、系统监控功能?
 
-### 任务调度 fusiodata-scheduler
+### 任务调度 fusiondata-scheduler
 
 批量/定时任务
 
@@ -60,7 +60,7 @@ email、phone、站内消息、……
 
 商业智能应用: 报表、可视化
 
-### 流程编排 fusiodata-workflow
+### 流程编排 fusiondata-workflow
 
 对业务流进行编排，通常会由“任务调度”子系统进行调度执行
 
