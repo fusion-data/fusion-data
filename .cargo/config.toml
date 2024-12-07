@@ -35,7 +35,7 @@ rustflags = ["-C", "link-arg=-fuse-ld=lld"]
 [target.x86_64-unknown-linux-gnu]
 rustflags = ["-C", "linker=clang", "-C", "link-arg=-fuse-ld=lld"]
 
-# On MacOS, `brew install michaeleisel/zld/zld` 构建需要Xcode，默认关闭linker
+# On MacOS, `brew install michaeleisel/zld/zld` 构建需要Xcode，zld Mac适配差，默认关闭linker
 #rustflags = ["-C", "link-arg=-fuse-ld=/usr/local/bin/zld"]
 #rustflags = ["-C", "link-arg=-fuse-ld=/usr/local/bin/zld"]
 #[target.x86_64-apple-darwin]

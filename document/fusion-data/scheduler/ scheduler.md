@@ -106,13 +106,13 @@ TaskInstance -- TaskJob ： 执行 >
 
 技术上，fusion-scheduler 采用了 Rust 语言和 PostgreSQL 作为主要开发语言和数据库。计划用到的主要库和框架有：
 
-- [tokio](https：//crates.io/crates/tokio)： 异步执行库
-- [axum](https：//crates.io/crates/axum)/[tower](https：//crates.io/crates/tower)/[hyper](https：//crates.io/crates/hyper)： HTTP 服务框架
-- [tonic](https：//crates.io/crates/tonic)/[prost](https：//crates.io/crates/prost)/[nice-grpc-web](https：//github.com/deeplay-io/nice-grpc/tree/master/packages/nice-grpc-web)（gRPC-Web 客户端库）： gRPC 通信
-- [sqlx](https：//crates.io/crates/sqlx)/[sea-query](https：//crates.io/crates/sea-query)： 数据库访问
-- [react](https：//react.dev/)/[ant.desigin](https：//ant-design.antgroup.com/)： 前端框架和 UI 库
-- [PostgreSQL](https：//www.postgresql.org/)： 数据存储、集群状态
-- [sqlite](https：//sqlite.org/)： 计划用于 Worker 节点本地缓存和持久化数据（日志）存储
+- [tokio](https://crates.io/crates/tokio)： 异步执行库
+- [axum](https://crates.io/crates/axum)/[tower](https://crates.io/crates/tower)/[hyper](https://crates.io/crates/hyper)： HTTP 服务框架
+- [tonic](https://crates.io/crates/tonic)/[prost](https://crates.io/crates/prost)/[nice-grpc-web](https://github.com/deeplay-io/nice-grpc/tree/master/packages/nice-grpc-web)（gRPC-Web 客户端库）： gRPC 通信
+- [sqlx](https://crates.io/crates/sqlx)/[sea-query](https://crates.io/crates/sea-query)： 数据库访问
+- [react](https://react.dev/)/[ant.desigin](https://ant-design.antgroup.com/)： 前端框架和 UI 库
+- [PostgreSQL](https://www.postgresql.org/)： 数据存储、集群状态
+- [sqlite](https://sqlite.org/)： 计划用于 Worker 节点本地缓存和持久化数据（日志）存储
 
 调度系统集群将主要有 3 个（服务）角色：
 
@@ -160,4 +160,4 @@ namespace 可作为任务的分组，以方便管理类似业务的所有流程�
 
 ## 小结
 
-市面上已有很多优秀的分布式调度库/框架/系统，如：[Quartz](https：//www.quartz-scheduler.org/)、[DolphinScheduler](https：//dolphinscheduler.apache.org/)、[Airflow](https：//airflow.apache.org/)、[PowerJob](http：//www.powerjob.tech/)、[Xxl-Job](https：//www.xuxueli.com/xxl-job/) 等。这些系统都给了我设计上的思路和帮助，在此表达感谢。
+市面上已有很多优秀的分布式调度库/框架/系统，如：[Quartz](https://www.quartz-scheduler.org/)、[DolphinScheduler](https://dolphinscheduler.apache.org/)、[Airflow](https://airflow.apache.org/)、[PowerJob](http://www.powerjob.tech/)、[Xxl-Job](https://www.xuxueli.com/xxl-job/) 等。这些系统都给了我设计上的思路和帮助，在此表达感谢。
