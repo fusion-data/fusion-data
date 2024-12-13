@@ -202,6 +202,8 @@ axum-tracing-opentelemetry = "0.24"
 # -- Dev/Test
 asserhttp = { version = "0.7", features = ["reqwest"] }
 dotenvy = "0.15"
+# -- Template Engin
+minijinja = { version = "2.5" }
 # -- Data Science
 polars = "0.44"
 # An Excel/OpenDocument Spreadsheets reader and deserializer in pure rust
