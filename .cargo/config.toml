@@ -6,7 +6,7 @@
 clippy-all = "clippy --all-features -- -D warnings"
 check-all = "check --all-features"
 run-fusion-iam = "run -p fusion-iam --bin fusion-iam --features tonic-reflection,opentelemetry"
-run-fusion-scheduler = "run -p fusion-scheduler --bin fusion-scheduler --features tonic-reflection"
+run-fusion-flow = "run -p fusion-flow --bin fusion-flow --features tonic-reflection"
 
 # 设置 rustc 编译器参数
 # [build]

@@ -1,0 +1,51 @@
+[package]
+name = "fusion-flow-worker"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lints]
+workspace = true
+
+[[bin]]
+name = "fusion-flow-worker"
+path = "src/bin/fusion-flow-worker.rs"
+
+[features]
+default = ["tonic-reflection"]
+
+[dependencies]
+# -- ultimates
+ultimate-common = { workspace = true, features = ["prost"] }
+ultimate-api = { workspace = true }
+ultimate = { workspace = true }
+
+# -- grpc
+ultimate-grpc = { workspace = true }
+prost = { workspace = true }
+tonic = { workspace = true }
+tonic-reflection = { workspace = true, optional = true }
+
+# -- fusions
+fusiondata = { workspace = true }
+fusiondata-context = { workspace = true }
+fusion-flow-api = { workspace = true }
+
+# -- async
+tokio = { workspace = true }
+tokio-stream = { workspace = true }
+futures = { workspace = true }
+
+# -- tracing
+tracing = { workspace = true }
+
+# -- misc
+config = { workspace = true }
+serde = { workspace = true }
+duration-str = { workspace = true }
+
+# [build-dependencies]
+# tonic-build = { workspace = true }
