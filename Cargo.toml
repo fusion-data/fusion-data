@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/fusions/*", "crates/ultimates/*"]
+members = ["crates/fusions/*", "crates/llm/*", "crates/ultimates/*"]
 resolver = "2"
 
 [profile.release]
@@ -10,7 +10,7 @@ lto = true
 [workspace.package]
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.82"
+rust-version = "1.84"
 description = "Rust libraries of The fusiondata"
 license = "Apache-2.0"
 repository = "https://github.com/fusion-data/fusion-data"
@@ -41,15 +41,15 @@ tikv-jemallocator = "0.6"
 qrcode-rs = { version = "0.1" }
 image = { version = "0.25" }
 # -- Misc
-derive_more = { version = "1.0", features = ["from", "display"] }
+derive_more = { version = "2.0", features = ["from", "display"] }
 toml = "0.8"
-config = { version = "0.14", default-features = false, features = [
+config = { version = "0.15", default-features = false, features = [
     "toml",
     "yaml",
     "json5",
     "json",
 ] }
-itertools = "0.13"
+itertools = "0.14"
 regex = { version = "1", features = ["unicode-case"] }
 rand = "0.8"
 bytes = "1"
@@ -66,7 +66,7 @@ rust_decimal_macros = "1"
 typed-builder = "0.20"
 derive-getters = "0.5"
 clap = { version = "4.5", features = ["derive"] }
-o2o = { version = "0.4" }
+o2o = { version = "0.5" }
 secrecy = { version = "0.10", features = ["serde"] }
 dashmap = { version = "6.1" }
 inventory = { version = "0.3" }
@@ -74,7 +74,7 @@ inventory = { version = "0.3" }
 backon = { version = "1.2" }
 # -- Helpful macros for working with enums and strings
 enum-iterator = "2"
-strum = { version = "0.26", features = ["derive"] }
+strum = { version = "0.27", features = ["derive"] }
 enum_dispatch = "0.3"
 # -- Error
 anyhow = "1"
@@ -118,7 +118,7 @@ tracing-subscriber = { version = "0.3", features = [
     "json",
 ] }
 tracing-appender = "0.2"
-init-tracing-opentelemetry = { version = "0.24", features = [
+init-tracing-opentelemetry = { version = "0.25", features = [
     "tracing_subscriber_ext",
 ] }
 tracing-opentelemetry-instrumentation-sdk = "0.24"
@@ -129,7 +129,7 @@ chrono = { version = "0.4", default-features = false, features = [
     "serde",
 ] }
 chrono-tz = "0.10"
-duration-str = "0.11"
+duration-str = "0.12"
 # -- scheduler
 croner = "2.1"
 hierarchical_hash_wheel_timer = { version = "1.3", features = ["uuid"] }
@@ -183,7 +183,7 @@ tower-http = { version = "0.6", features = [
     "compression-full",
 ] }
 tower-service = { version = "0.3" }
-tower-cookies = "0.10"
+tower-cookies = "0.11"
 cookie = "0.18"
 axum = { version = "0.7", features = ["macros", "form"] }
 axum-extra = { version = "0.9", features = ["typed-header"] }
@@ -206,11 +206,11 @@ dotenvy = "0.15"
 # -- Template Engin
 minijinja = { version = "2.5" }
 # -- Data Science
-polars = "0.44"
+polars = "0.46"
 # An Excel/OpenDocument Spreadsheets reader and deserializer in pure rust
 calamine = "0.26"
 # -- Valkey & Redis client
-fred = { version = "9" }
+fred = { version = "10" }
 # -- RPC
 tonic = "0.12"
 tonic-types = "0.12"
@@ -221,8 +221,11 @@ tonic-build = { version = "0.12", features = ["prost"] }
 prost = "0.13"
 prost-build = "0.13"
 prost-types = "0.13"
-
 # -- opendal
-opendal = { version = "0.50", features = ["services-obs"] }
+opendal = { version = "0.51", features = ["services-obs"] }
+# -- LLM
+pgvector = { version = "0.4" }
+rig-core = { version = "0.8", features = ["derive"] }
+rig-postgres = { version = "0.1" }
 
 pretty_assertions = "1.4"

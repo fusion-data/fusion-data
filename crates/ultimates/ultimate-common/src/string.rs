@@ -44,7 +44,7 @@ where
   D: Deserializer<'de>,
 {
   struct StrToVecU8;
-  impl<'d> Visitor<'d> for StrToVecU8 {
+  impl Visitor<'_> for StrToVecU8 {
     type Value = Vec<u8>;
 
     fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {

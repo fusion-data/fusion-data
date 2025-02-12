@@ -4,7 +4,7 @@ use std::net::ToSocketAddrs;
 use std::ops::{Deref, DerefMut};
 use std::sync::Arc;
 
-use sqlx::postgres::any::AnyConnectionBackend;
+// use sqlx::postgres::any::AnyConnectionBackend;
 use sqlx::postgres::{PgConnectOptions, PgPoolOptions};
 use sqlx::query::{Query, QueryAs};
 use sqlx::{ConnectOptions, FromRow, IntoArguments, Pool, Postgres, Transaction};
@@ -166,8 +166,9 @@ impl Dbx {
       // so we can commit.
       if counter == 0 {
         // here we take the txh out of the option
-        if let Some(mut txn) = txh_g.take() {
-          txn.txn.as_mut().commit().await?;
+        if let Some(txn) = txh_g.take() {
+          txn.txn.commit().await?;
+          // txn.txn.as_mut().commit().await?;
         } // TODO: Might want to add a warning on the else.
       } // TODO: Might want to add a warning on the else.
 
