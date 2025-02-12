@@ -36,12 +36,14 @@ where
     let m: Mime = content_type.into();
 
     let res = if mime::APPLICATION_JSON == m {
-      let axum::Json(res): axum::Json<T> =
-        FromRequest::<S>::from_request(req, state).await.map_err(|ex: JsonRejection| AppError::new(ex.body_text()))?;
+      let axum::Json(res): axum::Json<T> = FromRequest::<S>::from_request(req, state)
+        .await
+        .map_err(|ex: JsonRejection| AppError::new(ex.body_text()))?;
       res
     } else if mime::APPLICATION_WWW_FORM_URLENCODED == m {
-      let Form(res): Form<T> =
-        FromRequest::<S>::from_request(req, state).await.map_err(|ex: FormRejection| AppError::new(ex.body_text()))?;
+      let Form(res): Form<T> = FromRequest::<S>::from_request(req, state)
+        .await
+        .map_err(|ex: FormRejection| AppError::new(ex.body_text()))?;
       res
     } else {
       return Err(AppError::new("Extract TokenReq from HttpRequest error."));

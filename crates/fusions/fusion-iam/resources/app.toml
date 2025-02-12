@@ -41,3 +41,4 @@ port = 45432
 database = "fusiondata"
 username = "fusiondata"
 password = "2024.Fusiondata"
+schema_search_path = "fusiondata"

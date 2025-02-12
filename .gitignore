@@ -290,3 +290,5 @@ venv.bak/
 # backup files, `.drawio` ect.
 .*.bkp
 .*.dtmp
+var/
+!var/.gitkeep

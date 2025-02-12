@@ -12,8 +12,8 @@ fn inject_error_tip() -> syn::Error {
 enum InjectableType {
   Component(syn::Path),
   Config(syn::Path),
-  ComponentRef(syn::Path),
-  ConfigRef(syn::Path),
+  ComponentArc(syn::Path),
+  ConfigArc(syn::Path),
   Default,
 }
 
@@ -22,8 +22,8 @@ impl InjectableType {
     match self {
       InjectableType::Component(p) => p.clone(),
       InjectableType::Config(p) => p.clone(),
-      InjectableType::ComponentRef(p) => p.clone(),
-      InjectableType::ConfigRef(p) => p.clone(),
+      InjectableType::ComponentArc(p) => p.clone(),
+      InjectableType::ConfigArc(p) => p.clone(),
       InjectableType::Default => build_default_path(),
     }
   }
@@ -71,15 +71,15 @@ impl Injectable {
       }
     }
     let last_path_segment = ty.segments.last().ok_or_else(inject_error_tip)?;
-    if last_path_segment.ident == "ComponentRef" {
-      return Ok(InjectableType::ComponentRef(Self::get_argument_type(&last_path_segment.arguments)?));
+    if last_path_segment.ident == "ComponentArc" {
+      return Ok(InjectableType::ComponentArc(Self::get_argument_type(&last_path_segment.arguments)?));
     }
-    if last_path_segment.ident == "ConfigRef" {
-      return Ok(InjectableType::ConfigRef(Self::get_argument_type(&last_path_segment.arguments)?));
+    if last_path_segment.ident == "ConfigArc" {
+      return Ok(InjectableType::ConfigArc(Self::get_argument_type(&last_path_segment.arguments)?));
     }
 
     // Ok(InjectableType::Component(ty))
-    // XXX 非 config、component、ComponentRef、ConfigRef 类型，使用默认的 Default::default() 初始化
+    // XXX 非 config、component、ComponentArc、ConfigArc 类型，使用默认的 Default::default() 初始化
     eprintln!("[Missing] type path: {:?}, {:#?}", ty.to_token_stream(), last_path_segment.to_token_stream());
     Ok(InjectableType::Default)
   }
@@ -105,14 +105,14 @@ impl ToTokens for Injectable {
       InjectableType::Config(type_path) => tokens.extend(quote! {
         #field_name: app.get_config::<#type_path>()?
       }),
-      InjectableType::ComponentRef(type_path) => tokens.extend(quote! {
+      InjectableType::ComponentArc(type_path) => tokens.extend(quote! {
         #field_name: match app.get_component_ref::<#type_path>() {
           Some(c) => c,
-          None => panic!("ComponentRef not found, field_name: {}, type_path: {}", stringify!(#field_name), stringify!(#type_path)),
+          None => panic!("ComponentArc not found, field_name: {}, type_path: {}", stringify!(#field_name), stringify!(#type_path)),
         }
       }),
-      InjectableType::ConfigRef(type_path) => tokens.extend(quote! {
-        #field_name: ::ultimate::config::ConfigRef::new(app.get_config::<#type_path>()?)
+      InjectableType::ConfigArc(type_path) => tokens.extend(quote! {
+        #field_name: ::ultimate::config::ConfigArc::new(app.get_config::<#type_path>()?)
       }),
       InjectableType::Default => tokens.extend(quote! {
         #field_name: Default::default()
@@ -157,7 +157,13 @@ pub(crate) fn expand_derive(input: syn::DeriveInput) -> syn::Result<TokenStream>
   let dependencies: Vec<_> = component
     .fields
     .iter()
-    .filter(|f| !matches!(f.ty, InjectableType::Default))
+    .filter(|f| match f.ty {
+      InjectableType::Component(_) => true,
+      InjectableType::Config(_) => false,
+      InjectableType::ComponentArc(_) => true,
+      InjectableType::ConfigArc(_) => false,
+      InjectableType::Default => false,
+    })
     .map(|field| field.ty.get_path())
     .collect();
   // println!("\nComponent Name: {}, dependencies: {:?}", ident, dependencies);

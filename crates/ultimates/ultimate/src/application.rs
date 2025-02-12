@@ -9,12 +9,12 @@ use std::{
 use config::Config;
 use dashmap::DashMap;
 use serde::de::DeserializeOwned;
-use tracing::{debug, subscriber::DefaultGuard};
+use tracing::{debug, info, subscriber::DefaultGuard};
 use ultimate_common::time::OffsetDateTime;
 
 use crate::{
   component::{
-    auto_inject_component, ComponentArc, DynComponentRef, Error as ComponentError, Result as ComponentResult,
+    auto_inject_component, ComponentArc, DynComponentArc, Error as ComponentError, Result as ComponentResult,
   },
   configuration::{ConfigRegistry, Configurable, UltimateConfig, UltimateConfigRegistry},
   log::{init_tracing_guard, TracingPlugin},
@@ -26,7 +26,7 @@ type Task<T> = dyn FnOnce(Application) -> Box<dyn Future<Output = crate::Result<
 
 pub(crate) struct ApplicationInner {
   config_registry: UltimateConfigRegistry,
-  components: Registry<DynComponentRef>,
+  components: Registry<DynComponentArc>,
   init_time: OffsetDateTime,
 }
 
@@ -114,6 +114,19 @@ impl Application {
     self.0.components.iter().map(|e| e.key().clone()).collect()
   }
 
+  pub fn add_component<T>(&self, component: T)
+  where
+    T: Clone + Any + Send + Sync,
+  {
+    let component_name = std::any::type_name::<T>();
+    if self.0.components.contains_key(component_name) {
+      panic!("Error adding component {component_name}: component was already added in application")
+    }
+    self.0.components.insert(component_name.to_string(), DynComponentArc::new(component));
+
+    debug!("added component: {}", component_name);
+  }
+
   pub fn ultimate_config(&self) -> &UltimateConfig {
     self.0.config_registry.ultimate_config()
   }
@@ -146,7 +159,7 @@ pub struct ApplicationBuilder {
   pub(crate) plugin_registry: Registry<PluginRef>,
 
   /// Components
-  pub(crate) components: Registry<DynComponentRef>,
+  pub(crate) components: Registry<DynComponentArc>,
 
   /// Tasks
   shutdown_hooks: Vec<Box<Task<String>>>,
@@ -220,9 +233,9 @@ impl ApplicationBuilder {
   {
     let component_name = std::any::type_name::<T>();
     if self.components.contains_key(component_name) {
-      panic!("Error adding component {component_name}: component was already added in application")
+      panic!("Error adding component {component_name}: component was already added in application builder")
     }
-    self.components.insert(component_name.to_string(), DynComponentRef::new(component));
+    self.components.insert(component_name.to_string(), DynComponentArc::new(component));
 
     debug!("added component: {}", component_name);
     self
@@ -330,7 +343,7 @@ impl ApplicationBuilder {
         if deps.iter().all(|dep| registered.contains(*dep)) {
           plugin.build(self).await;
           registered.insert(plugin.name().to_string());
-          log::info!("{} plugin registered", plugin.name());
+          info!("{} plugin registered", plugin.name());
           progress = true;
         } else {
           next_round.push(plugin);

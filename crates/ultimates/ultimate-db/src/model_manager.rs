@@ -13,23 +13,25 @@ pub struct ModelManager {
 
 impl ModelManager {
   /// Constructor
-  pub fn new(db_config: &DbConfig) -> Result<Self> {
-    let db_pool =
-      new_db_pool_from_config(db_config).map_err(|ex| Error::CantCreateModelManagerProvider(ex.to_string()))?;
+  pub fn new(db_config: &DbConfig, application_name: Option<&str>) -> Result<Self> {
+    let db_pool = new_db_pool_from_config(db_config, application_name)
+      .map_err(|ex| Error::CantCreateModelManagerProvider(ex.to_string()))?;
     let dbx = Dbx::new(db_pool, false);
     Ok(ModelManager { dbx, ctx: None })
   }
 
-  pub fn clone_with_txn(&self) -> ModelManager {
+  /// 返回一个新的事务
+  pub fn txn_cloned(&self) -> ModelManager {
     let dbx = Dbx::new(self.dbx.db().clone(), true);
     ModelManager { dbx, ctx: self.ctx.clone() }
   }
 
-  pub fn get_or_clone_with_txn(&self) -> ModelManager {
+  /// 若当前 ModelManager 已开启事务，则返回self的克隆，否则返回一个新的事务。
+  pub fn get_txn_clone(&self) -> ModelManager {
     if self.dbx().is_txn() {
       self.clone()
     } else {
-      self.clone_with_txn()
+      self.txn_cloned()
     }
   }
 

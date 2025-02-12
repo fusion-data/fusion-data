@@ -9,7 +9,7 @@ use sqlx::postgres::{PgConnectOptions, PgPoolOptions};
 use sqlx::query::{Query, QueryAs};
 use sqlx::{ConnectOptions, FromRow, IntoArguments, Pool, Postgres, Transaction};
 use tokio::sync::Mutex;
-use tracing::trace;
+use tracing::{debug, trace};
 
 mod error;
 
@@ -21,7 +21,7 @@ use crate::config::DbConfig;
 
 pub type Db = Pool<Postgres>;
 
-pub fn new_db_pool_from_config(c: &DbConfig) -> Result<Db> {
+pub fn new_db_pool_from_config(c: &DbConfig, application_name: Option<&str>) -> Result<Db> {
   if !c.enable() {
     return Err(Error::ConfigInvalid("Need set ultimate.db.enable = true"));
   }
@@ -60,17 +60,24 @@ pub fn new_db_pool_from_config(c: &DbConfig) -> Result<Db> {
         o = o.socket(socket);
       }
       if let Some(database) = c.database() {
-        o = o.database(database)
+        o = o.database(database);
       }
       if let Some(username) = c.username() {
-        o = o.username(username)
+        o = o.username(username);
       }
       if let Some(password) = c.password() {
-        o = o.password(password)
+        o = o.password(password);
+      }
+      if let Some(an) = c.application_name().or(application_name) {
+        o = o.application_name(an);
+      }
+      if let Some(search_path) = c.schema_search_path() {
+        o = o.options([("search_path", search_path)]);
       }
       o
     }
   };
+  debug!("Pg connect options: {:?}", opts);
 
   // TODO 若 opts.host 是域名，需要进行DNS查找将期转换为 ip addr
   let non_ip_addr = opts.get_host().parse::<std::net::IpAddr>().is_err();
@@ -84,6 +91,7 @@ pub fn new_db_pool_from_config(c: &DbConfig) -> Result<Db> {
   opts = opts.log_statements(level);
 
   let db = opt.connect_lazy_with(opts);
+  debug!("Connect to database: {:?}", db);
   Ok(db)
 }
 

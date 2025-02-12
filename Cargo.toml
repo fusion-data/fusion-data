@@ -31,7 +31,8 @@ ultimate-web = { version = "0.1.0", path = "./crates/ultimates/ultimate-web" }
 ultimate-grpc = { version = "0.1.0", path = "./crates/ultimates/ultimate-grpc" }
 fusiondata = { version = "0.1.0", path = "./crates/fusions/fusiondata" }
 fusiondata-context = { version = "0.1.0", path = "./crates/fusions/fusiondata-context" }
-fusion-scheduler-api = { version = "0.1.0", path = "./crates/fusions/fusion-scheduler-api" }
+fusion-flow-api = { version = "0.1.0", path = "./crates/fusions/fusion-flow-api" }
+fusion-flow = { version = "0.1.0", path = "./crates/fusions/fusion-flow" }
 # -- projects end
 # begin -- memory allocator
 tikv-jemallocator = "0.6"
@@ -130,7 +131,7 @@ chrono = { version = "0.4", default-features = false, features = [
 chrono-tz = "0.10"
 duration-str = "0.11"
 # -- scheduler
-croner = "2.0"
+croner = "2.1"
 hierarchical_hash_wheel_timer = { version = "1.3", features = ["uuid"] }
 tokio-cron-scheduler = { version = "0.13", features = ["has_bytes", "signal"] }
 # -- Database
@@ -202,12 +203,14 @@ axum-tracing-opentelemetry = "0.24"
 # -- Dev/Test
 asserhttp = { version = "0.7", features = ["reqwest"] }
 dotenvy = "0.15"
+# -- Template Engin
+minijinja = { version = "2.5" }
 # -- Data Science
 polars = "0.44"
 # An Excel/OpenDocument Spreadsheets reader and deserializer in pure rust
 calamine = "0.26"
 # -- Valkey & Redis client
-fred = { workspace = "9" }
+fred = { version = "9" }
 # -- RPC
 tonic = "0.12"
 tonic-types = "0.12"

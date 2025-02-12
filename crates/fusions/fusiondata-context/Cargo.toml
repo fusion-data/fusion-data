@@ -16,5 +16,6 @@ ultimate = { workspace = true }
 ultimate-db = { workspace = true }
 ultimate-grpc = { workspace = true }
 fusiondata = { workspace = true }
+tracing = { workspace = true }
 tokio = { workspace = true }
 tonic = { workspace = true }

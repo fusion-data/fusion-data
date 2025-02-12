@@ -14,27 +14,35 @@ services:
       - fusiondata
     ports:
       - "45432:45432"
-  jaeger:
-    image: jaegertracing/all-in-one:1.62.0
-    restart: unless-stopped
-    networks:
-      - fusiondata
-    environment:
-      - COLLECTOR_ZIPKIN_HOST_PORT=:9411
-    ports:
-      - 6831:6831/udp
-      - 6832:6832/udp
-      - 5778:5778
-      - 16686:16686
-      - 4317:4317
-      - 4318:4318
-      - 14250:14250
-      - 14268:14268
-      - 14269:14269
-      - 9411:9411
+  # jaeger:
+  #   image: jaegertracing/all-in-one:1.62.0
+  #   restart: unless-stopped
+  #   networks:
+  #     - fusiondata
+  #   environment:
+  #     - COLLECTOR_ZIPKIN_HOST_PORT=:9411
+  #   ports:
+  #     - 6831:6831/udp
+  #     - 6832:6832/udp
+  #     - 5778:5778
+  #     - 16686:16686
+  #     - 4317:4317
+  #     - 4318:4318
+  #     - 14250:14250
+  #     - 14268:14268
+  #     - 14269:14269
+  #     - 9411:9411
+  # rocky_9_x86_64:
+  #   image: rockylinux:9
+  #   platform: linux/amd64
+  #   container_name: "rocky_9_x86_64"
+  #   command: ["tail", "-f", "/dev/null"]
+  #   volumes:
+  #     - x86_64:/data
 
 networks:
   fusiondata:
 
 volumes:
   postgres-data:
+  x86_64:

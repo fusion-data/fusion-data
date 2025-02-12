@@ -15,7 +15,6 @@ use super::{
 
 pub struct RoleBmc;
 impl DbBmc for RoleBmc {
-  const SCHEMA: &'static str = "iam";
   const TABLE: &'static str = "role";
 }
 

@@ -17,8 +17,12 @@ impl FieldMetas {
   }
 
   pub fn sql_col_refs_for(&self, prop_names: &[&str]) -> String {
-    let cols =
-      self.0.iter().filter(|m| prop_names.contains(&m.prop_name)).map(|meta| meta.sql_col_ref()).collect::<Vec<_>>();
+    let cols = self
+      .0
+      .iter()
+      .filter(|m| prop_names.contains(&m.prop_name))
+      .map(|meta| meta.sql_col_ref())
+      .collect::<Vec<_>>();
     cols.join(", ")
   }
 }

@@ -1,7 +1,7 @@
 mod error;
 
 pub use inventory::submit;
-use std::{any::Any, ops::Deref, sync::Arc};
+use std::{any::Any, collections::HashSet, ops::Deref, sync::Arc};
 use tracing::debug;
 pub use ultimate_macros::Component;
 
@@ -11,9 +11,9 @@ pub use error::{Error, Result};
 
 /// Component's dyn trait reference
 #[derive(Debug, Clone)]
-pub struct DynComponentRef(Arc<dyn Any + Send + Sync>);
+pub struct DynComponentArc(Arc<dyn Any + Send + Sync>);
 
-impl DynComponentRef {
+impl DynComponentArc {
   /// constructor
   pub fn new<T>(component: T) -> Self
   where
@@ -88,7 +88,11 @@ pub fn auto_inject_component(app: &mut ApplicationBuilder) -> crate::Result<()> 
   let mut registrars: Vec<(&&dyn ComponentInstaller, Vec<&str>)> =
     inventory::iter::<&dyn ComponentInstaller>.into_iter().map(|cr| (cr, cr.dependencies())).collect();
 
-  while !registrars.is_empty() {
+  // TODO 当存在未注册的组件时，限制循环次数
+  let mut epoch = 0;
+  let mut last_unregister_len = 0;
+
+  while !registrars.is_empty() && epoch < 10 {
     let mut unregistrars = vec![];
     for (registrar, deps) in registrars {
       let deps: Vec<&str> = deps.into_iter().filter(|d| !app.components.contains_key(*d)).collect();
@@ -99,7 +103,17 @@ pub fn auto_inject_component(app: &mut ApplicationBuilder) -> crate::Result<()> 
         unregistrars.push((registrar, deps));
       }
     }
+    if last_unregister_len == unregistrars.len() {
+      epoch += 1;
+    } else {
+      epoch = 0;
+      last_unregister_len = unregistrars.len();
+    }
     registrars = unregistrars;
+  }
+  if epoch != 0 {
+    let deps: HashSet<&str> = registrars.iter().flat_map(|(_, deps)| deps).copied().collect();
+    panic!("Component registration failed, please check the component dependency relationship. Unregistered Components: {:?}", deps);
   }
   Ok(())
 }

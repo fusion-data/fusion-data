@@ -24,7 +24,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
   assert_eq!(TokenKind::Bearer, resp.get_ref().token_kind());
 
   let mut user_client = UserClient::with_interceptor(channel.clone(), |mut request: Request<()>| {
-    request.metadata_mut().insert("authorization", format!("Bearer {}", resp.get_ref().token).parse().unwrap());
+    request
+      .metadata_mut()
+      .insert("authorization", format!("Bearer {}", resp.get_ref().token).parse().unwrap());
     Ok(request)
   });
   let page_req = PageUserRequest {

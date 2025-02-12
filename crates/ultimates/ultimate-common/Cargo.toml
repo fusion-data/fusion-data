@@ -20,6 +20,7 @@ base64ct.workspace = true
 base16ct.workspace = true
 # -- Date & Time
 chrono.workspace = true
+duration-str.workspace = true
 # chrono-tz = { version = "0.9" }
 rand.workspace = true
 regex.workspace = true
