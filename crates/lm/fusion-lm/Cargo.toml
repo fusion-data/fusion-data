@@ -1,5 +1,5 @@
 [package]
-name = "llm-box"
+name = "fusion-lm"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

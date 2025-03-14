@@ -13,8 +13,10 @@ run-fusion-flow = "run -p fusion-flow --bin fusion-flow --features tonic-reflect
 # rustflags = ["-C", "force-unwind-tables"]
 
 [profile.release]
-panic = "abort"
 opt-level = 3
+codegen-units = 1
+lto = true
+panic = "abort"
 # default-features = false
 # features = ["tikv-jemallocator"]
 

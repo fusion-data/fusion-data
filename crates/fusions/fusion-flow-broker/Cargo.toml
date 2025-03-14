@@ -49,7 +49,7 @@ fusion-flow = { workspace = true }
 # -- misc
 config = { workspace = true }
 chrono = { workspace = true }
-chrono-tz = { workspace = true }
+# chrono-tz = { workspace = true }
 duration-str = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

@@ -1,6 +1,5 @@
-# FROM postgis/postgis:16-3.5 # nosupport arm64
-# FROM kartoza/postgis:16 # support arm64
-FROM postgres:16
+# FROM postgres:16
+FROM pgvector/pgvector:pg16
 
 ENV LANG=zh_CN.utf8
 ENV TZ=Asia/Chongqing

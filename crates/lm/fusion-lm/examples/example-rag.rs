@@ -24,8 +24,8 @@ async fn main() -> Result<(), Box<dyn core::error::Error>> {
   // const MODEL_NAME: &str = "deepseek-r1";
   // const MODEL_NAME: &str = "deepseek-llm";
   // const EMBEDDING_MODEL: &str = TEXT_EMBEDDING_ADA_002;
-  const EMBEDDING_MODEL: &str = "nomic-embed-text";
-  // const EMBEDDING_MODEL: &str = "qwen2.5";
+  // const EMBEDDING_MODEL: &str = "nomic-embed-text";
+  const EMBEDDING_MODEL: &str = "aroxima/gte-qwen2-1.5b-instruct";
 
   let client = providers::openai::Client::from_url("ollama", "http://localhost:11434/v1");
 
@@ -70,10 +70,7 @@ async fn main() -> Result<(), Box<dyn core::error::Error>> {
 
   let rag_agent = client
     .agent(MODEL_NAME)
-    .preamble(
-      "您是这里的词典助理，帮助用户理解单词的含义。
-          您将在下面找到其他可能有用的非标准单词定义。",
-    )
+    .preamble("您是这里的词典助理，帮助用户理解单词的含义。\n您将在下面找到其他可能有用的非标准单词定义。")
     .dynamic_context(1, index)
     .build();
 
