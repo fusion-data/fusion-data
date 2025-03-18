@@ -11,7 +11,7 @@ repository.workspace = true
 workspace = true
 
 [features]
-# default = ["opentelemetry"]
+default = ["opentelemetry"]
 opentelemetry = [
   "ultimate/opentelemetry",
   "dep:tonic-tracing-opentelemetry",

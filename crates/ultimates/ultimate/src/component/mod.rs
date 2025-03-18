@@ -1,3 +1,4 @@
+#![doc = include_str!("../../DI.md")]
 mod error;
 
 pub use inventory::submit;
@@ -58,7 +59,7 @@ impl<T> Deref for ComponentArc<T> {
   }
 }
 
-pub trait Component: Clone + Sized {
+pub trait Component: Clone + Sized + 'static {
   /// Construct the Component
   fn build(app: &ApplicationBuilder) -> crate::Result<Self>;
 }

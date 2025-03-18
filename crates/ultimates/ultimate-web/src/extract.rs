@@ -1,5 +1,4 @@
 use axum::{
-  async_trait,
   body::Body,
   extract::{
     rejection::{FormRejection, JsonRejection},
@@ -11,6 +10,7 @@ use axum::{
 use axum_extra::headers::ContentType;
 use mime::Mime;
 use serde::de::DeserializeOwned;
+use ultimate::async_trait;
 
 use crate::AppError;
 

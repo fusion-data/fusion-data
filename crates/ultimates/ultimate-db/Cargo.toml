@@ -38,6 +38,7 @@ config = { workspace = true }
 sqlx.workspace = true
 sea-query.workspace = true
 sea-query-binder.workspace = true
+pgvector = { workspace = true }
 sea-query-rusqlite = { workspace = true, optional = true }
 chrono = { workspace = true }
 rusqlite = { workspace = true, optional = true }

@@ -15,11 +15,6 @@ path = "src/bin/fusion-iam.rs"
 [lints]
 workspace = true
 
-[profile.release]
-lto = true
-codegen-units = 1
-panic = "abort"
-
 [features]
 default = ["tonic-reflection", "tonic-web"]
 tonic-reflection = ["dep:tonic-reflection", "ultimate-grpc/tonic-reflection"]

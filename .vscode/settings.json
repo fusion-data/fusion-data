@@ -5,6 +5,9 @@
   "editor.tabSize": 2,
   "editor.formatOnSave": true,
   "rust-analyzer.cargo.buildScripts.enable": true,
+  "rust-analyzer.linkedProjects": [
+    "crates/Cargo.toml"
+  ],
   "accessibility.signalOptions.volume": 0,
   "[sql]": {
     "editor.defaultFormatter": "ReneSaarsoo.sql-formatter-vsc"
@@ -16,5 +19,5 @@
   "SQL-Formatter-VSCode.functionCase": "lower",
   "SQL-Formatter-VSCode.identifierCase": "lower",
   "SQL-Formatter-VSCode.keywordCase": "lower",
-  "python.terminal.activateEnvironment": false,
+  "python.terminal.activateEnvironment": false
 }
