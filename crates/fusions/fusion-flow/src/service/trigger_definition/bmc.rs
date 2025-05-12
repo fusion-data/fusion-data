@@ -1,8 +1,8 @@
 use chrono::Utc;
+use modelsql::field::HasSeaFields;
+use modelsql::{base::DbBmc, generate_common_bmc_fns, generate_filter_bmc_fns, ModelManager, Result};
 use sea_query::{all, any, Expr, PostgresQueryBuilder, Query};
 use sea_query_binder::SqlxBinder;
-use ultimate_db::modql::field::HasSeaFields;
-use ultimate_db::{base::DbBmc, generate_common_bmc_fns, generate_filter_bmc_fns, ModelManager, Result};
 
 use crate::service::sched_namespace::SchedNamespaceIden;
 use crate::service::trigger_definition::TriggerDefinitionIden;

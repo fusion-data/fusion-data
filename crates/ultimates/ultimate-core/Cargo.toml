@@ -1,0 +1,64 @@
+[package]
+name = "ultimate-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lints]
+# workspace = true
+[lints.rust]
+unsafe_code = "allow"
+
+[features]
+default = ["opentelemetry"]
+tonic = ["dep:tonic", "dep:prost", "dep:ultimate-api"]
+opentelemetry = [
+  "dep:init-tracing-opentelemetry",
+  "dep:tracing-opentelemetry-instrumentation-sdk",
+]
+
+[dependencies]
+ultimate-common.workspace = true
+ultimate-core-macros = { workspace = true }
+ultimate-api = { workspace = true, optional = true }
+thiserror = { workspace = true }
+dashmap = { workspace = true }
+inventory = { workspace = true }
+async-trait = { workspace = true }
+regex.workspace = true
+futures.workspace = true
+tokio.workspace = true
+toml.workspace = true
+config.workspace = true
+strum.workspace = true
+uuid = { workspace = true }
+ulid = { workspace = true }
+hierarchical_hash_wheel_timer = { workspace = true }
+log.workspace = true
+tracing.workspace = true
+# tracing-log.workspace = true
+tracing-subscriber.workspace = true
+tracing-appender = { workspace = true }
+init-tracing-opentelemetry = { workspace = true, optional = true }
+tracing-opentelemetry-instrumentation-sdk = { workspace = true, optional = true }
+rand.workspace = true
+argon2.workspace = true
+josekit.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+serde_with.workspace = true
+serde_repr.workspace = true
+# utoipa = { workspace = true, optional = true }
+tonic = { workspace = true, optional = true }
+prost = { workspace = true, optional = true }
+modelsql = { workspace = true, optional = true }
+
+[dev-dependencies]
+dotenvy.workspace = true
+anyhow.workspace = true
+
+[build-dependencies]
+prost-build = { workspace = true }

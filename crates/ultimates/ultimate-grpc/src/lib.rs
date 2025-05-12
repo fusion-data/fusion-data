@@ -3,7 +3,7 @@ use std::net::SocketAddr;
 use ::config::{File, FileFormat};
 use config::{GrpcConfig, DEFAULT_CONFIG_STR};
 use tonic::service::{interceptor::InterceptedService, Routes};
-use ultimate::{application::ApplicationBuilder, async_trait, plugin::Plugin};
+use ultimate_core::{application::ApplicationBuilder, async_trait, plugin::Plugin};
 
 pub mod config;
 pub mod utils;

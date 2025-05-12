@@ -12,18 +12,13 @@ workspace = true
 
 [features]
 # utoipa = ["dep:utoipa", "ultimate-api/utoipa"]
-with-rusqlite = [
-  "rusqlite",
-  "dep:sea-query-rusqlite",
-  "ultimate-db-macros/with-rusqlite",
-]
 with-ilike = []
 
 [dependencies]
 ultimate-common.workspace = true
-ultimate.workspace = true
-ultimate-api = { workspace = true }
-ultimate-db-macros = { workspace = true }
+ultimate-core = { workspace = true, features = ["modelsql"] }
+ultimate-api = { workspace = true, features = ["modelsql"] }
+modelsql = { workspace = true }
 async-trait.workspace = true
 derive_more.workspace = true
 serde.workspace = true
@@ -39,9 +34,7 @@ sqlx.workspace = true
 sea-query.workspace = true
 sea-query-binder.workspace = true
 pgvector = { workspace = true }
-sea-query-rusqlite = { workspace = true, optional = true }
 chrono = { workspace = true }
-rusqlite = { workspace = true, optional = true }
 # utoipa = { workspace = true, optional = true }
 tonic = { workspace = true, optional = true }
 

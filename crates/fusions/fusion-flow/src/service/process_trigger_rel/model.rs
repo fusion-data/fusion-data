@@ -1,10 +1,11 @@
-use sqlx::prelude::FromRow;
-use ultimate_common::time::UtcDateTime;
-use ultimate_db::modql::{
+use modelsql::{
   field::Fields,
   filter::{FilterNodes, OpValsInt64, OpValsUuid, OpValsValue},
+  utils::datetime_to_sea_value,
+  DbRowType,
 };
-use ultimate_db::{datetime_to_sea_value, DbRowType};
+use sqlx::prelude::FromRow;
+use ultimate_common::time::UtcDateTime;
 use uuid::Uuid;
 
 #[derive(Debug, FromRow, Fields)]
@@ -30,6 +31,6 @@ pub struct ProcessTriggerRelFilter {
 
   pub cid: Option<OpValsInt64>,
 
-  #[modql(to_sea_value_fn = "datetime_to_sea_value")]
+  #[modelsql(to_sea_value_fn = "datetime_to_sea_value")]
   pub ctime: Option<OpValsValue>,
 }

@@ -1,5 +1,5 @@
 use fusiondata_context::ctx::CtxW;
-use ultimate::Result;
+use ultimate_core::Result;
 use uuid::Uuid;
 
 pub struct SchedulerSvc;

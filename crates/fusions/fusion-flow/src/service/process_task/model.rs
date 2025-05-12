@@ -1,12 +1,13 @@
-use sqlx::FromRow;
-use ultimate::DataError;
-use ultimate_api::v1::{Page, Pagination};
-use ultimate_common::time::UtcDateTime;
-use ultimate_db::modql::{
+use modelsql::{
   field::Fields,
   filter::{FilterNodes, OpValsInt32, OpValsInt64, OpValsValue},
+  utils::{datetime_to_sea_value, uuid_to_sea_value},
+  DbRowType,
 };
-use ultimate_db::{datetime_to_sea_value, uuid_to_sea_value, DbRowType};
+use sqlx::FromRow;
+use ultimate_api::v1::{Page, Pagination};
+use ultimate_common::time::UtcDateTime;
+use ultimate_core::DataError;
 use uuid::Uuid;
 
 use crate::pb::fusion_flow::v1::{PageProcessTaskRequest, PageProcessTaskResponse};
@@ -27,7 +28,7 @@ impl DbRowType for ProcessTask {}
 
 #[derive(Debug, Default, FilterNodes)]
 pub struct ProcessTaskFilter {
-  #[modql(to_sea_value_fn = "uuid_to_sea_value")]
+  #[modelsql(to_sea_value_fn = "uuid_to_sea_value")]
   pub id: Option<OpValsValue>,
 
   pub process_id: Option<OpValsInt64>,
@@ -38,10 +39,10 @@ pub struct ProcessTaskFilter {
 
   pub retry_count: Option<OpValsInt32>,
 
-  #[modql(to_sea_value_fn = "datetime_to_sea_value")]
+  #[modelsql(to_sea_value_fn = "datetime_to_sea_value")]
   pub execute_begin_time: Option<OpValsValue>,
 
-  #[modql(to_sea_value_fn = "datetime_to_sea_value")]
+  #[modelsql(to_sea_value_fn = "datetime_to_sea_value")]
   pub execute_end_time: Option<OpValsValue>,
 }
 

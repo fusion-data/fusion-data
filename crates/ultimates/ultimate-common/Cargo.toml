@@ -14,18 +14,18 @@ prost = ["dep:prost-types"]
 [dependencies]
 thiserror.workspace = true
 serde.workspace = true
+serde_json.workspace = true
 sha2.workspace = true
 hmac.workspace = true
+ulid.workspace = true
 base64ct.workspace = true
 base16ct.workspace = true
-# -- Date & Time
 chrono.workspace = true
 duration-str.workspace = true
-# chrono-tz = { version = "0.9" }
 rand.workspace = true
 regex.workspace = true
 prost-types = { workspace = true, optional = true }
+tracing = { workspace = true, optional = true }
 
 [dev-dependencies]
 dotenvy.workspace = true
-serde_json.workspace = true

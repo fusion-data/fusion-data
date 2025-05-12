@@ -6,7 +6,7 @@ use tonic::{
   Request,
 };
 use tracing::{debug, info};
-use ultimate::{component::Component, timer::Timer, DataError, Result};
+use ultimate_core::{component::Component, timer::Timer, DataError, Result};
 
 use crate::config::WorkerConfig;
 

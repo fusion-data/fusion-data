@@ -1,10 +1,10 @@
 use serde_json::json;
-use ultimate::DataError;
 
 use super::{
   val_bool, val_double, val_int32, val_int64, val_string, ArrayBool, ArrayDouble, ArrayInt32, ArrayInt64, ArrayString,
   Null, OpBool, OpNumber, OpString, ValBool, ValDouble, ValInt32, ValInt64, ValString,
 };
+use crate::Error;
 
 macro_rules! impl_filter_helpers {
   ($S:ty, $Op:ty, $op_v:expr, $t:ty, $arr_t:ty, $v_package:ident) => {
@@ -27,31 +27,29 @@ macro_rules! impl_filter_helpers {
     }
 
     impl TryFrom<$S> for Null {
-      type Error = DataError;
+      type Error = Error;
 
       fn try_from(value: $S) -> Result<Self, Self::Error> {
-        let v = value.value.ok_or_else(|| {
-          DataError::bad_request(format!("Invalid From<{}> for Null, missing field 'v'", stringify!($S)))
-        })?;
+        let v = value
+          .value
+          .ok_or_else(|| Error::bad_request(format!("Invalid From<{}> for Null, missing field 'v'", stringify!($S))))?;
         match v {
           $v_package::Value::N(v) => Ok(v.try_into()?),
-          _ => {
-            Err(DataError::bad_request(format!("Invalid From<{}> for Null, missing field 'is_null'", stringify!($S))))
-          }
+          _ => Err(Error::bad_request(format!("Invalid From<{}> for Null, missing field 'is_null'", stringify!($S)))),
         }
       }
     }
 
     impl TryFrom<$S> for $t {
-      type Error = DataError;
+      type Error = Error;
 
       fn try_from(value: $S) -> Result<Self, Self::Error> {
         let v = value.value.ok_or_else(|| {
-          DataError::bad_request(format!("Invalid From<{}> for {}, missing field 'v'", stringify!($S), stringify!($t)))
+          Error::bad_request(format!("Invalid From<{}> for {}, missing field 'v'", stringify!($S), stringify!($t)))
         })?;
         match v {
           $v_package::Value::V(v) => Ok(v),
-          _ => Err(DataError::bad_request(format!(
+          _ => Err(Error::bad_request(format!(
             "Invalid From<{}> for {}, missing field 'value'",
             stringify!($S),
             stringify!($t)
@@ -61,15 +59,15 @@ macro_rules! impl_filter_helpers {
     }
 
     impl TryFrom<$S> for $arr_t {
-      type Error = DataError;
+      type Error = Error;
 
       fn try_from(value: $S) -> Result<Self, Self::Error> {
         let v = value.value.ok_or_else(|| {
-          DataError::bad_request(format!("Invalid From<{}> for {}, missing field 'v'", stringify!($S), stringify!($t)))
+          Error::bad_request(format!("Invalid From<{}> for {}, missing field 'v'", stringify!($S), stringify!($t)))
         })?;
         match v {
           $v_package::Value::Vs(v) => Ok(v),
-          _ => Err(DataError::bad_request(
+          _ => Err(Error::bad_request(
             (format!("Invalid From<{}> for {}, missing field 'values'", stringify!($S), stringify!($arr_t))),
           )),
         }
@@ -77,7 +75,7 @@ macro_rules! impl_filter_helpers {
     }
 
     impl TryFrom<$S> for Vec<$t> {
-      type Error = DataError;
+      type Error = Error;
 
       fn try_from(value: $S) -> Result<Self, Self::Error> {
         let arr: $arr_t = value.try_into()?;
@@ -96,27 +94,27 @@ macro_rules! impl_filter_helpers {
 macro_rules! impl_filter_serde_helpers {
   ($S:ty, $v_package:ident) => {
     impl TryFrom<$S> for serde_json::Value {
-      type Error = DataError;
+      type Error = Error;
 
       fn try_from(value: $S) -> Result<Self, Self::Error> {
         let v = value.value.ok_or_else(|| {
-          DataError::bad_request(format!("Invalid From<{}> for serde_json::Value, missing field 'v'", stringify!($S)))
+          Error::bad_request(format!("Invalid From<{}> for serde_json::Value, missing field 'v'", stringify!($S)))
         })?;
         match v {
           $v_package::Value::V(v) => Ok(json!(v)),
-          _ => Err(DataError::bad_request("Invalid filter string, need field 'value")),
+          _ => Err(Error::bad_request("Invalid filter string, need field 'value")),
         }
       }
     }
 
     impl TryFrom<$S> for Vec<serde_json::Value> {
-      type Error = DataError;
+      type Error = Error;
 
       fn try_from(value: $S) -> Result<Self, Self::Error> {
-        let v = value.value.ok_or_else(|| DataError::bad_request("Missing field 'v'"))?;
+        let v = value.value.ok_or_else(|| Error::bad_request("Missing field 'v'"))?;
         match v {
           $v_package::Value::Vs(v) => Ok(v.value.into_iter().map(|v| json!(v)).collect()),
-          _ => Err(DataError::bad_request(
+          _ => Err(Error::bad_request(
             (format!("Invalid From<{}> for Vec<serde_json::Value>, missing field 'values'", stringify!($S))),
           )),
         }
@@ -149,24 +147,24 @@ impl_filter_helpers!(ValDouble, OpNumber, OpNumber::Null, f64, ArrayDouble, val_
 
 // -- Uuid begin
 impl TryFrom<ValString> for uuid::Uuid {
-  type Error = DataError;
+  type Error = Error;
 
   fn try_from(value: ValString) -> Result<Self, Self::Error> {
     let v = value.value.ok_or_else(|| {
-      DataError::bad_request(format!("Invalid From<{}> for serde_json::Value, missing field 'v'", stringify!($S)))
+      Error::bad_request(format!("Invalid From<{}> for serde_json::Value, missing field 'v'", stringify!($S)))
     })?;
     match v {
       val_string::Value::V(v) => Ok(v.parse()?),
-      _ => Err(DataError::bad_request("Invalid filter string, need field 'value")),
+      _ => Err(Error::bad_request("Invalid filter string, need field 'value")),
     }
   }
 }
 
 impl TryFrom<ValString> for Vec<uuid::Uuid> {
-  type Error = DataError;
+  type Error = Error;
 
   fn try_from(value: ValString) -> Result<Self, Self::Error> {
-    let v = value.value.ok_or_else(|| DataError::bad_request("Missing field 'v'"))?;
+    let v = value.value.ok_or_else(|| Error::bad_request("Missing field 'v'"))?;
     match v {
       val_string::Value::Vs(v) => {
         let mut vs = Vec::with_capacity(v.value.len());
@@ -175,10 +173,9 @@ impl TryFrom<ValString> for Vec<uuid::Uuid> {
         }
         Ok(vs)
       }
-      _ => Err(DataError::bad_request(format!(
-        "Invalid From<{}> for Vec<uuid::Uuid>, missing field 'values'",
-        stringify!($S)
-      ))),
+      _ => {
+        Err(Error::bad_request(format!("Invalid From<{}> for Vec<uuid::Uuid>, missing field 'values'", stringify!($S))))
+      }
     }
   }
 }

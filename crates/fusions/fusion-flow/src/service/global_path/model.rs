@@ -1,9 +1,9 @@
-use sqlx::prelude::FromRow;
-use ultimate_db::modql::{
+use modelsql::{
   field::Fields,
   filter::{FilterNodes, OpValsInt64, OpValsString},
+  DbRowType,
 };
-use ultimate_db::DbRowType;
+use sqlx::prelude::FromRow;
 
 #[derive(Debug, FromRow, Fields)]
 pub struct GlobalPath {

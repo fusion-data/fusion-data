@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use ultimate::configuration::Configuration;
+use ultimate_core::configuration::Configuration;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Configuration)]
 #[config_prefix = "ultimate.web"]

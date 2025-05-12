@@ -3,8 +3,8 @@ use std::time::Duration;
 use chrono::Utc;
 use fusion_flow_api::v1::sched_node::{NodeKind, NodeStatus};
 use fusiondata_context::ctx::CtxW;
-use ultimate::{component::Component, Result};
-use ultimate_db::modql::filter::{OpValInt32, OpValValue};
+use ultimate_core::{component::Component, Result};
+use modelsql::filter::{OpValInt32, OpValValue};
 
 use crate::core::config::SchedulerConfig;
 

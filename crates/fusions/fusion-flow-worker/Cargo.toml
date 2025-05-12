@@ -21,7 +21,7 @@ default = ["tonic-reflection"]
 # -- ultimates
 ultimate-common = { workspace = true, features = ["prost"] }
 ultimate-api = { workspace = true }
-ultimate = { workspace = true }
+ultimate-core = { workspace = true }
 
 # -- grpc
 ultimate-grpc = { workspace = true }

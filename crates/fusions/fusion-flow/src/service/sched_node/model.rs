@@ -1,12 +1,13 @@
 use fusion_flow_api::v1::sched_node::{NodeKind, NodeStatus};
+use modelsql::{
+  field::Fields,
+  filter::{FilterNodes, OpValsInt32, OpValsString, OpValsValue},
+  utils::datetime_to_sea_value,
+  DbRowType,
+};
 use sea_query::enum_def;
 use sqlx::FromRow;
 use ultimate_common::time::UtcDateTime;
-use ultimate_db::modql::{
-  field::Fields,
-  filter::{FilterNodes, OpValsInt32, OpValsString, OpValsValue},
-};
-use ultimate_db::{datetime_to_sea_value, DbRowType};
 
 #[derive(Debug, Clone, FromRow, Fields)]
 #[enum_def]
@@ -47,6 +48,6 @@ pub struct SchedNodeFilter {
   pub kind: Option<OpValsInt32>,
   pub status: Option<OpValsInt32>,
   pub addr: Option<OpValsString>,
-  #[modql(to_sea_value_fn = "datetime_to_sea_value")]
+  #[modelsql(to_sea_value_fn = "datetime_to_sea_value")]
   pub last_check_time: Option<OpValsValue>,
 }

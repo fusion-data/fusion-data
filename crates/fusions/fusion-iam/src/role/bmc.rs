@@ -1,10 +1,10 @@
-use sea_query::{Condition, Expr, Query, SelectStatement};
-use ultimate_api::v1::{Page, PagePayload, Pagination};
-use ultimate_db::modql::filter::{FilterGroups, ListOptions};
-use ultimate_db::{
+use modelsql::{
   base::{self, compute_list_options, DbBmc},
+  filter::{FilterGroups, ListOptions},
   generate_common_bmc_fns, ModelManager, Result,
 };
+use sea_query::{Condition, Expr, Query, SelectStatement};
+use ultimate_api::v1::{Page, PagePayload, Pagination};
 
 use crate::{pb::fusion_iam::v1::CreateRoleDto, role::RoleIden};
 
@@ -29,7 +29,7 @@ impl RoleBmc {
   pub async fn page(mm: &ModelManager, filters: RoleFilters, pagination: Pagination) -> Result<PagePayload<Role>> {
     let total_size = Self::count(mm, filters.clone()).await?;
     let items = Self::find_many(mm, filters, Some((&pagination).into())).await?;
-    Ok(PagePayload::new(Page::new(&pagination, total_size), items))
+    Ok(PagePayload::new(Page::new(total_size), items))
   }
 
   async fn count(mm: &ModelManager, filters: RoleFilters) -> Result<i64> {

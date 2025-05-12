@@ -1,5 +1,6 @@
 //! crate: ultimate_common
 //! 常用 Rust 工具库。
+pub mod ctx;
 pub mod digest;
 pub mod env;
 mod error;

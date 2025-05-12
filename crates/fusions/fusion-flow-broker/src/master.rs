@@ -5,14 +5,14 @@ use std::{
 };
 
 use fusiondata_context::ctx::CtxW;
-use tokio::sync::RwLock;
-use tracing::{debug, error, info, warn};
-use ultimate::{application::Application, component::Component, Result};
-use ultimate_api::v1::{Pagination, SortBy, SortDirection};
-use ultimate_db::{
-  modql::filter::{OpValInt32, OpValInt64},
+use modelsql::{
+  filter::{OpValInt32, OpValInt64},
   ModelManager,
 };
+use tokio::sync::RwLock;
+use tracing::{debug, error, info, warn};
+use ultimate_api::v1::{Pagination, SortBy, SortDirection};
+use ultimate_core::{application::Application, component::Component, Result};
 
 use fusion_flow::{
   core::config::SchedulerConfig,

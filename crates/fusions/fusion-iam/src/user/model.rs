@@ -1,19 +1,19 @@
+use modelsql::{
+  field::Fields,
+  filter::{FilterNodes, ListOptions, OpValsInt32, OpValsInt64, OpValsString, OpValsValue},
+  page::PageResult,
+  utils::datetime_to_sea_value,
+  DbRowType,
+};
 use sea_query::enum_def;
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
-use ultimate::{DataError, Result};
-use ultimate_api::v1::{Page, PagePayload, Pagination};
+use ultimate_api::v1::{Page, Pagination};
 use ultimate_common::{regex, time::UtcDateTime};
+use ultimate_core::{DataError, Result};
 use ultimate_db::{
-  datetime_to_sea_value,
-  modql::{
-    field::Fields,
-    filter::{FilterNodes, OpValsInt32, OpValsInt64, OpValsString, OpValsValue},
-  },
-  try_into_op_vals_string_opt,
-};
-use ultimate_db::{
-  try_into_op_vals_int32_opt, try_into_op_vals_int64_opt, try_into_op_values_with_string_opt, DbRowType,
+  try_into_op_vals_int32_opt, try_into_op_vals_int64_opt, try_into_op_vals_string_opt,
+  try_into_op_values_with_string_opt,
 };
 
 use crate::pb::fusion_iam::v1::{
@@ -130,24 +130,24 @@ pub struct UserFilter {
 
   pub cid: Option<OpValsInt64>,
 
-  #[modql(to_sea_value_fn = "datetime_to_sea_value")]
+  #[modelsql(to_sea_value_fn = "datetime_to_sea_value")]
   pub ctime: Option<OpValsValue>,
 
   pub mid: Option<OpValsInt64>,
 
-  #[modql(to_sea_value_fn = "datetime_to_sea_value")]
+  #[modelsql(to_sea_value_fn = "datetime_to_sea_value")]
   pub mtime: Option<OpValsValue>,
 }
 
 #[derive(Debug, Serialize)]
 pub struct UserPage {
-  pub page: Page,
+  pub page: modelsql::page::Page,
   pub items: Vec<User>,
 }
 
-impl From<PagePayload<User>> for UserPage {
-  fn from(value: PagePayload<User>) -> Self {
-    Self { page: value.page, items: value.items }
+impl From<PageResult<User>> for UserPage {
+  fn from(value: PageResult<User>) -> Self {
+    Self { page: value.page, items: value.result }
   }
 }
 
@@ -214,6 +214,6 @@ impl From<FilterUserRequest> for UserFilter {
 impl From<UserPage> for PageUserResponse {
   fn from(value: UserPage) -> Self {
     let items = value.items.into_iter().map(UserDto::from).collect();
-    Self { page: Some(value.page), items }
+    Self { page: Some(Page::new(value.page.total)), items }
   }
 }

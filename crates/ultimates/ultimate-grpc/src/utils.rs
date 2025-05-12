@@ -9,7 +9,8 @@ use tonic::{
   Status,
 };
 use tracing::info;
-use ultimate::{
+use ultimate_common::ctx::CtxPayload;
+use ultimate_core::{
   configuration::SecurityConfig,
   security::{jose::JwtPayload, SecurityUtils},
   DataError,
@@ -26,7 +27,7 @@ use crate::{GrpcSettings, GrpcStartInfo};
 #[allow(unused_mut)]
 pub async fn init_grpc_server(
   setting: GrpcSettings<'_>,
-) -> ultimate::Result<(oneshot::Receiver<GrpcStartInfo>, impl Future<Output = ultimate::Result<()>>)> {
+) -> ultimate_core::Result<(oneshot::Receiver<GrpcStartInfo>, impl Future<Output = ultimate_core::Result<()>>)> {
   let conf = &setting.conf;
   let (tx, rx) = oneshot::channel();
   let tcp_listener = TcpListener::bind(&conf.server_addr).await?;
@@ -43,10 +44,12 @@ pub async fn init_grpc_server(
   #[cfg(not(feature = "opentelemetry"))]
   let mut server = Server::builder().layer(tower_http::trace::TraceLayer::new_for_grpc());
   #[cfg(feature = "opentelemetry")]
-  let mut server = Server::builder().layer(
-    tonic_tracing_opentelemetry::middleware::server::OtelGrpcLayer::default()
-      .filter(tonic_tracing_opentelemetry::middleware::filters::reject_healthcheck),
-  );
+  let mut server = Server::builder();
+
+  // .layer(
+  //   tonic_tracing_opentelemetry::middleware::server::OtelGrpcLayer::default()
+  //     .filter(tonic_tracing_opentelemetry::middleware::filters::reject_healthcheck),
+  // );
 
   #[cfg(feature = "tonic-web")]
   let mut server = server.accept_http1(true).layer(tonic_web::GrpcWebLayer::new());
@@ -61,16 +64,14 @@ pub async fn init_grpc_server(
     routes = routes.add_service(service);
   }
 
-  let tcp_incoming = TcpIncoming::from_listener(tcp_listener, false, Some(Duration::from_secs(30)))
-    .map_err(|_| DataError::server_error("Bind tcp listener failed"))?;
+  let tcp_incoming = TcpIncoming::from(tcp_listener)
+    .with_keepalive(Some(Duration::from_secs(30)))
+    .with_nodelay(Some(false));
 
   Ok((rx, server.add_routes(routes).serve_with_incoming(tcp_incoming).map_err(DataError::from)))
 }
 
-pub fn extract_jwt_payload_from_metadata(
-  sc: &SecurityConfig,
-  metadata: &MetadataMap,
-) -> Result<JwtPayload, tonic::Status> {
+pub fn extract_payload_from_metadata(sc: &SecurityConfig, metadata: &MetadataMap) -> Result<CtxPayload, tonic::Status> {
   let token = extract_token_from_metadata(metadata)?;
   let (payload, _) = SecurityUtils::decrypt_jwt(sc.pwd(), token).map_err(|e| Status::unauthenticated(e.to_string()))?;
   Ok(payload)

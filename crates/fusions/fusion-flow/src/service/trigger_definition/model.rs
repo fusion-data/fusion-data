@@ -7,20 +7,22 @@ use fusion_flow_api::v1::{
   trigger_definition::{Schedule as ProtoSchedule, TriggerKind},
   CronSchedule, SimpleSchedule,
 };
+use modelsql::{
+  field::Fields,
+  filter::{FilterNodes, ListOptions, OpValsInt32, OpValsInt64, OpValsString, OpValsValue},
+  page::PageResult,
+  utils::datetime_to_sea_value,
+  DbRowType,
+};
 use sea_query::enum_def;
 use serde::{Deserialize, Serialize};
 use sqlx::{postgres::PgTypeInfo, FromRow};
 use ulid::Ulid;
-use ultimate::DataError;
-use ultimate_api::v1::{PagePayload, Pagination};
+use ultimate_api::v1::{Page, PagePayload, Pagination};
 use ultimate_common::time::UtcDateTime;
-use ultimate_db::modql::{
-  field::Fields,
-  filter::{FilterNodes, OpValsInt32, OpValsInt64, OpValsString, OpValsValue},
-};
-use ultimate_db::{datetime_to_sea_value, DbRowType};
+use ultimate_core::DataError;
 
-use crate::pb::fusion_flow::v1::{PageTriggerRequest, PageTriggerResponse};
+use crate::pb::fusion_flow::v1::{PageTriggerRequest, PageTriggerResponse, SchedTriggerDto};
 
 use super::util::cron_to_next_occurrence;
 
@@ -71,16 +73,16 @@ pub struct TriggerDefinitionFilter {
   pub trigger_kind: Option<OpValsInt32>,
   pub status: Option<OpValsInt32>,
 
-  #[modql(to_sea_value_fn = "datetime_to_sea_value")]
+  #[modelsql(to_sea_value_fn = "datetime_to_sea_value")]
   pub refresh_occurrence: Option<OpValsValue>,
-  #[modql(to_sea_value_fn = "datetime_to_sea_value")]
+  #[modelsql(to_sea_value_fn = "datetime_to_sea_value")]
   pub valid_time: Option<OpValsValue>,
-  #[modql(to_sea_value_fn = "datetime_to_sea_value")]
+  #[modelsql(to_sea_value_fn = "datetime_to_sea_value")]
   pub invalid_time: Option<OpValsValue>,
 
-  #[modql(to_sea_value_fn = "datetime_to_sea_value")]
+  #[modelsql(to_sea_value_fn = "datetime_to_sea_value")]
   pub ctime: Option<OpValsValue>,
-  #[modql(to_sea_value_fn = "datetime_to_sea_value")]
+  #[modelsql(to_sea_value_fn = "datetime_to_sea_value")]
   pub mtime: Option<OpValsValue>,
 }
 
@@ -100,7 +102,7 @@ pub struct TriggerDefinitionForCreate {
 }
 
 impl TriggerDefinitionForCreate {
-  pub fn improve(mut self) -> ultimate::Result<Self> {
+  pub fn improve(mut self) -> ultimate_core::Result<Self> {
     let begin = self.valid_time.unwrap_or(Utc::now());
     match &self.schedule {
       TriggerSchedule::Cron { cron, tz } => {
@@ -138,7 +140,7 @@ pub struct TriggerDefinitionForUpdate {
 }
 
 pub struct TriggerDefinitionForPage {
-  pub pagination: Pagination,
+  pub pagination: ListOptions,
   pub filter: Vec<TriggerDefinitionFilter>,
 }
 
@@ -150,9 +152,25 @@ impl TryFrom<PageTriggerRequest> for TriggerDefinitionForPage {
   }
 }
 
-impl From<PagePayload<TriggerDefinition>> for PageTriggerResponse {
-  fn from(value: PagePayload<TriggerDefinition>) -> Self {
-    todo!()
+impl From<PageResult<TriggerDefinition>> for PageTriggerResponse {
+  fn from(value: PageResult<TriggerDefinition>) -> Self {
+    Self { page: Some(Page::new(value.page.total)), items: value.result.into_iter().map(Into::into).collect() }
+  }
+}
+
+impl From<TriggerDefinition> for SchedTriggerDto {
+  fn from(value: TriggerDefinition) -> Self {
+    Self {
+      id: value.key,
+      kind: value.trigger_kind,
+      description: value.description,
+      tags: value.tags,
+      data: value.variables.map(|v| serde_json::to_vec(&v).unwrap()),
+      cid: value.cid,
+      ctime: value.ctime.timestamp_millis(),
+      mid: value.mid,
+      mtime: value.mtime.map(|t| t.timestamp_millis()),
+    }
   }
 }
 

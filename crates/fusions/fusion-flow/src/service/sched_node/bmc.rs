@@ -1,12 +1,11 @@
+use modelsql::{
+  base::{self, prep_fields_for_update, CommonIden, DbBmc},
+  field::HasSeaFields,
+  generate_common_bmc_fns, generate_filter_bmc_fns, ModelManager, Result, SqlError,
+};
 use sea_query::{Expr, PostgresQueryBuilder, Query};
 use sea_query_binder::SqlxBinder;
 use ultimate_common::time::{now, UtcDateTime};
-use ultimate_db::modql::field::HasSeaFields;
-use ultimate_db::Error;
-use ultimate_db::{
-  base::{self, prep_fields_for_update, CommonIden, DbBmc},
-  generate_common_bmc_fns, generate_filter_bmc_fns, ModelManager, Result,
-};
 
 use super::{SchedNode, SchedNodeFilter, SchedNodeForCreate, SchedNodeForUpdate};
 
@@ -50,7 +49,7 @@ impl SchedNodeBmc {
     // -- Execute query
     let (sql, values) = query.build_sqlx(PostgresQueryBuilder);
     let sqlx_query = sqlx::query_as_with::<_, SchedNode, _>(&sql, values);
-    let node = mm.dbx().fetch_optional(sqlx_query).await?.ok_or_else(|| Error::EntityNotFound {
+    let node = mm.dbx().fetch_optional(sqlx_query).await?.ok_or_else(|| SqlError::EntityNotFound {
       schema: Self::SCHEMA,
       entity: Self::TABLE,
       id: id.into(),

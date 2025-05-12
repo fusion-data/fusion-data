@@ -1,7 +1,7 @@
-use ultimate_db::modql::filter::OpValUuid;
-use ultimate_db::{
+use modelsql::{
   base::{self, DbBmc},
-  Error, ModelManager, Result,
+  filter::OpValUuid,
+  ModelManager, Result, SqlError,
 };
 use uuid::Uuid;
 
@@ -19,7 +19,7 @@ impl DbBmc for ProcessTriggerRelBmc {
 impl ProcessTriggerRelBmc {
   pub async fn delete_by(mm: &ModelManager, process_id: Option<Uuid>, trigger_id: Option<Uuid>) -> Result<u64> {
     if process_id.is_none() && trigger_id.is_none() {
-      return Err(Error::InvalidArgument {
+      return Err(SqlError::InvalidArgument {
         message: "At least one of 'process_id' and 'trigger_id' is required".to_string(),
       });
     }

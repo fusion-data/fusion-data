@@ -1,5 +1,5 @@
 use fusiondata_context::ctx::CtxW;
-use ultimate::{component::Component, security::pwd::verify_pwd, Result};
+use ultimate_core::{component::Component, security::pwd::verify_pwd, Result};
 
 use crate::{
   pb::fusion_iam::v1::{SigninRequest, SigninResponse, TokenKind},

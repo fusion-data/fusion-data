@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use fusiondata_context::ctx::{CtxW, RequestMetadata};
 use tonic::{Request, Response, Status};
-use ultimate::component::Component;
+use ultimate_core::component::Component;
 use ultimate_db::ModelManager;
 
 use crate::pb::fusion_iam::v1::{

@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use duration_str::deserialize_duration;
 use serde::{Deserialize, Serialize};
-use ultimate::configuration::Configuration;
+use ultimate_core::configuration::Configuration;
 use ultimate_common::time::ser::serialize_duration;
 
 #[derive(Clone, Serialize, Deserialize, Configuration)]

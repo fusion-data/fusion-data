@@ -1,6 +1,7 @@
-use ultimate::component::Component;
-use ultimate::{application::Application, component::ComponentArc};
-use ultimate_db::{DbPlugin, ModelManager};
+use modelsql::ModelManager;
+use ultimate_core::component::Component;
+use ultimate_core::{application::Application, component::ComponentArc};
+use ultimate_db::DbPlugin;
 
 #[derive(Clone, Component)]
 struct TestService {
@@ -9,7 +10,7 @@ struct TestService {
 }
 
 impl TestService {
-  pub async fn test(&self) -> ultimate::Result<String> {
+  pub async fn test(&self) -> ultimate_core::Result<String> {
     let _mm = &self.mm;
     Ok(String::from("test service"))
   }

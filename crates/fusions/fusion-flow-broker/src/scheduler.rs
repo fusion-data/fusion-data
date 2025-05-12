@@ -3,7 +3,7 @@ use std::{sync::Arc, time::Duration};
 use fusiondata_context::ctx::CtxW;
 use tokio::sync::mpsc;
 use tracing::error;
-use ultimate::{
+use ultimate_core::{
   application::Application,
   configuration::ConfigRegistry,
   timer::{TimerRef, TimerReturn},

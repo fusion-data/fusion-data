@@ -6,11 +6,11 @@ use tower_http::{
 };
 use tracing::info;
 
-use ultimate::{application::Application, configuration::ConfigRegistry};
+use ultimate_core::{application::Application, configuration::ConfigRegistry};
 
 use crate::config::WebConfig;
 
-pub async fn init_server(app: &Application, router: Router) -> ultimate::Result<()> {
+pub async fn init_server(app: &Application, router: Router) -> ultimate_core::Result<()> {
   let conf: WebConfig = app.get_config()?;
   let make_service = router
     .layer(CompressionLayer::new())

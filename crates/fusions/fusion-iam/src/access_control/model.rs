@@ -1,7 +1,7 @@
+use modelsql::field::Fields;
+use modelsql::DbRowType;
 use sqlx::prelude::FromRow;
 use ultimate_common::time::UtcDateTime;
-use ultimate_db::modql::field::Fields;
-use ultimate_db::DbRowType;
 use uuid::Uuid;
 
 #[derive(Debug, Default, FromRow, Fields)]

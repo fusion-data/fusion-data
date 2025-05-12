@@ -1,6 +1,6 @@
 use fusiondata_context::ctx::CtxW;
-use ultimate::{component::Component, Result};
 use ultimate_api::v1::Pagination;
+use ultimate_core::{component::Component, Result};
 
 use super::{SchedNamespace, SchedNamespaceBmc, SchedNamespaceFilter, SchedNamespaceForUpdate};
 
@@ -14,7 +14,9 @@ impl SchedNamespaceSvc {
     filter: Vec<SchedNamespaceFilter>,
     pagination: Option<&Pagination>,
   ) -> Result<Vec<SchedNamespace>> {
-    SchedNamespaceBmc::find_many(ctx.mm(), filter, pagination).await.map_err(Into::into)
+    SchedNamespaceBmc::find_many(ctx.mm(), filter, pagination.map(|p| p.into()))
+      .await
+      .map_err(Into::into)
   }
 
   pub async fn update(

@@ -1,4 +1,4 @@
 #[tokio::main]
-async fn main() -> ultimate::Result<()> {
+async fn main() -> ultimate_core::Result<()> {
   Ok(())
 }

@@ -1,11 +1,14 @@
 use std::sync::Arc;
 
+use modelsql::ModelManager;
 use tonic::{metadata::MetadataMap, Extensions, Status};
 use tracing::error;
-use ultimate::{application::Application, ctx::Ctx};
-use ultimate_common::time::now_utc;
-use ultimate_db::ModelManager;
-use ultimate_grpc::utils::extract_jwt_payload_from_metadata;
+use ultimate_common::{
+  ctx::{Ctx, CtxPayload},
+  time::now_utc,
+};
+use ultimate_core::application::Application;
+use ultimate_grpc::utils::extract_payload_from_metadata;
 
 static X_APP_VERSION: &str = "X-APP-VARSION";
 static X_DEVICE_ID: &str = "X-DEVICE-ID";
@@ -61,11 +64,11 @@ impl TryFrom<&MetadataMap> for CtxW {
     let sc = app.ultimate_config().security();
     let req_time = now_utc();
 
-    let payload = extract_jwt_payload_from_metadata(sc, metadata)?;
+    let payload = extract_payload_from_metadata(sc, metadata)?;
     let req_meta = RequestMetadata::from(metadata);
     let request_id = metadata.get("request_id").and_then(|v| v.to_str().ok().map(|s| s.to_string()));
 
-    let ctx = Ctx::new_with_jwt_payload(payload, Some(req_time), request_id)?;
+    let ctx = Ctx::new(payload, Some(req_time), request_id);
     let mm = app
       .get_component::<ModelManager>()
       .map_err(|e| {

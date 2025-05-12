@@ -1,7 +1,7 @@
 use fusiondata_context::ctx::CtxW;
 use prost_types::FieldMask;
 use tonic::{Request, Response, Status};
-use ultimate::component::Component;
+use ultimate_core::component::Component;
 use ultimate_grpc::GrpcServiceIntercepted;
 
 use crate::{

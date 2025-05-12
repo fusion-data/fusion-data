@@ -10,6 +10,6 @@
 
 Borrowed a lot of inspiration and code from the following projects:
 
-- [modql](https://crates.io/crates/modql)
+- [modelsql](https://crates.io/crates/modelsql)
 - [spring](https://crates.io/crates/spring)
 - [Hash Wheel Timer](https://crates.io/crates/hierarchical_hash_wheel_timer)

@@ -7,11 +7,11 @@ use axum_extra::headers::{Authorization, HeaderMapExt};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use ulid::Ulid;
-use ultimate::configuration::SecurityConfig;
-use ultimate::ctx::Ctx;
-use ultimate::security::{AccessToken, SecurityUtils};
-use ultimate::{DataError, IdI64Result, IdUlidResult};
+use ultimate_common::ctx::{Ctx, CtxPayload};
 use ultimate_common::time;
+use ultimate_core::configuration::SecurityConfig;
+use ultimate_core::security::{AccessToken, SecurityUtils};
+use ultimate_core::{DataError, IdI64Result, IdUlidResult};
 
 use crate::error::AppError;
 use crate::AppResult;
@@ -32,8 +32,8 @@ pub fn ok_ulid(id: Ulid) -> AppResult<IdUlidResult> {
 }
 
 #[inline]
-pub fn ok_uuid(id: uuid::Uuid) -> AppResult<ultimate::IdUuidResult> {
-  Ok(ultimate::IdUuidResult::new(id).into())
+pub fn ok_uuid(id: uuid::Uuid) -> AppResult<ultimate_core::IdUuidResult> {
+  Ok(ultimate_core::IdUuidResult::new(id).into())
 }
 
 pub fn unauthorized_app_error(msg: impl Into<String>) -> (StatusCode, Json<AppError>) {
@@ -55,7 +55,8 @@ pub fn extract_session(parts: &Parts, sc: &SecurityConfig) -> Result<Ctx, DataEr
   let (payload, _) =
     SecurityUtils::decrypt_jwt(sc.pwd(), &token).map_err(|_e| DataError::unauthorized("Failed decode jwt"))?;
 
-  Ctx::new_with_jwt_payload(payload, Some(req_time), None)
+  let ctx = Ctx::new(payload, Some(req_time), None);
+  Ok(ctx)
 }
 
 pub fn opt_to_app_result<T>(opt: Option<T>) -> AppResult<T>

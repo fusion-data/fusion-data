@@ -1,9 +1,9 @@
 use chrono::{DateTime, Utc};
 use fusion_flow_api::v1::trigger_definition::TriggerStatus;
 use fusiondata_context::ctx::CtxW;
+use modelsql::page::PageResult;
 use tracing::error;
-use ultimate::Result;
-use ultimate_api::v1::PagePayload;
+use ultimate_core::Result;
 
 use crate::service::trigger_definition::TriggerSchedule;
 
@@ -15,8 +15,10 @@ use super::{
 pub struct TriggerDefinitionSvc;
 
 impl TriggerDefinitionSvc {
-  pub async fn page(ctx: &CtxW, for_page: TriggerDefinitionForPage) -> Result<PagePayload<TriggerDefinition>> {
-    TriggerDefinitionBmc::page(ctx.mm(), for_page.filter, for_page.pagination).await.map_err(Into::into)
+  pub async fn page(ctx: &CtxW, for_page: TriggerDefinitionForPage) -> Result<PageResult<TriggerDefinition>> {
+    TriggerDefinitionBmc::page(ctx.mm(), for_page.filter, for_page.pagination.into())
+      .await
+      .map_err(Into::into)
   }
 
   pub async fn create(ctx: &CtxW, entity_c: TriggerDefinitionForCreate) -> Result<i64> {

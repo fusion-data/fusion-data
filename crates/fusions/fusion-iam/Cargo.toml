@@ -19,7 +19,7 @@ workspace = true
 default = ["tonic-reflection", "tonic-web"]
 tonic-reflection = ["dep:tonic-reflection", "ultimate-grpc/tonic-reflection"]
 tonic-web = ["dep:tonic-web", "ultimate-grpc/tonic-web"]
-opentelemetry = ["ultimate/opentelemetry", "ultimate-grpc/opentelemetry"]
+opentelemetry = ["ultimate-core/opentelemetry", "ultimate-grpc/opentelemetry"]
 
 [dependencies]
 # -- misc
@@ -37,10 +37,11 @@ uuid = { workspace = true }
 
 # -- ultimates
 ultimate-common = { workspace = true }
-ultimate = { workspace = true, features = ["tonic"] }
+ultimate-core = { workspace = true, features = ["tonic"] }
 ultimate-api = { workspace = true }
 ultimate-grpc = { workspace = true }
 ultimate-db = { workspace = true }
+modelsql = { workspace = true }
 
 # -- fusions
 fusiondata = { workspace = true }
@@ -83,7 +84,7 @@ pretty_assertions.workspace = true
 hyper = { workspace = true }
 hyper-util = { workspace = true }
 tower = { workspace = true }
-ultimate-macros = { workspace = true }
+ultimate-core-macros = { workspace = true }
 
 [build-dependencies]
 tonic-build = { workspace = true, features = ["prost"] }

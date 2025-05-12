@@ -1,4 +1,4 @@
-use ultimate_db::{base::DbBmc, generate_filter_bmc_fns, ModelManager};
+use modelsql::{base::DbBmc, generate_filter_bmc_fns, ModelManager};
 
 use super::{GlobalPath, GlobalPathFilter};
 
@@ -26,7 +26,7 @@ impl GlobalPathBmc {
     path: &str,
     value: Option<String>,
     revision: Option<i64>,
-  ) -> ultimate_db::Result<bool> {
+  ) -> modelsql::Result<bool> {
     let sql_str = if revision.is_some() {
       format!(
         r#"INSERT INTO {}(path, value)

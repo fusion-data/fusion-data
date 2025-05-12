@@ -12,11 +12,11 @@ workspace = true
 
 [features]
 # default = ["with-uuid"]
-tonic = ["dep:tonic", "ultimate/tonic"]
+tonic = ["dep:tonic", "ultimate-core/tonic"]
 
 [dependencies]
 ultimate-common.workspace = true
-ultimate.workspace = true
+ultimate-core.workspace = true
 ultimate-api.workspace = true
 tokio.workspace = true
 tracing.workspace = true

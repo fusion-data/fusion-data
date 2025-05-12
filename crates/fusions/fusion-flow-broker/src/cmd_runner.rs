@@ -1,7 +1,7 @@
 use fusiondata_context::ctx::CtxW;
 use tokio::sync::mpsc;
 use tracing::{error, info};
-use ultimate::application::Application;
+use ultimate_core::application::Application;
 use ultimate_db::ModelManager;
 
 use fusion_flow::service::{sched_namespace::SchedNamespace, sched_node::SchedNodeSvc};

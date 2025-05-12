@@ -1,10 +1,11 @@
-use sqlx::FromRow;
-use ultimate_common::time::UtcDateTime;
-use ultimate_db::modql::{
+use modelsql::{
   field::Fields,
   filter::{FilterNodes, OpValsInt64, OpValsValue},
+  utils::datetime_to_sea_value,
+  DbRowType,
 };
-use ultimate_db::{datetime_to_sea_value, DbRowType};
+use sqlx::FromRow;
+use ultimate_common::time::UtcDateTime;
 
 #[derive(FromRow, Fields)]
 pub struct UserCredential {
@@ -35,11 +36,11 @@ pub struct UserCredentialFilter {
 
   pub cid: Option<OpValsInt64>,
 
-  #[modql(to_sea_value_fn = "datetime_to_sea_value")]
+  #[modelsql(to_sea_value_fn = "datetime_to_sea_value")]
   pub ctime: Option<OpValsValue>,
 
   pub mid: Option<OpValsInt64>,
 
-  #[modql(to_sea_value_fn = "datetime_to_sea_value")]
+  #[modelsql(to_sea_value_fn = "datetime_to_sea_value")]
   pub mtime: Option<OpValsValue>,
 }

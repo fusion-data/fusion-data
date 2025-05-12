@@ -1,4 +1,4 @@
-use ultimate_db::{base::DbBmc, generate_filter_bmc_fns};
+use modelsql::{base::DbBmc, generate_filter_bmc_fns};
 
 use super::{SchedNamespace, SchedNamespaceFilter, SchedNamespaceForUpdate};
 

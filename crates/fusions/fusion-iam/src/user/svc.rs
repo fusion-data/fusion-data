@@ -1,6 +1,6 @@
 use fusiondata_context::ctx::CtxW;
-use ultimate::{component::Component, DataError, Result};
-use ultimate_db::modql::filter::OpValInt64;
+use modelsql::filter::OpValInt64;
+use ultimate_core::{component::Component, DataError, Result};
 
 use super::{
   user_role::{UserRoleBmc, UserRoleForCreate},
@@ -17,7 +17,7 @@ impl UserSvc {
   }
 
   pub async fn page(&self, ctx: &CtxW, req: UserForPage) -> Result<UserPage> {
-    let page = UserBmc::page(ctx.mm(), req.filter, req.page).await?;
+    let page = UserBmc::page(ctx.mm(), req.filter, req.page.into()).await?;
     Ok(page.into())
   }
 

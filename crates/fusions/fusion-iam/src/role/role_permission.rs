@@ -1,14 +1,12 @@
+use modelsql::{
+  base::{self, DbBmc},
+  field::Fields,
+  filter::{FilterNodes, OpValsInt64},
+  DbRowType, ModelManager, Result,
+};
 use sea_query::enum_def;
 use sqlx::FromRow;
 use ultimate_common::time::UtcDateTime;
-use ultimate_db::modql::{
-  field::Fields,
-  filter::{FilterNodes, OpValsInt64},
-};
-use ultimate_db::{
-  base::{self, DbBmc},
-  DbRowType, ModelManager, Result,
-};
 
 #[derive(Debug, FromRow, Fields)]
 #[enum_def]

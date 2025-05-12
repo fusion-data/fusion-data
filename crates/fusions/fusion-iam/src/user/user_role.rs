@@ -1,6 +1,5 @@
+use modelsql::{base::DbBmc, field::Fields, generate_common_bmc_fns, DbRowType};
 use sqlx::prelude::FromRow;
-use ultimate_db::modql::field::Fields;
-use ultimate_db::{base::DbBmc, generate_common_bmc_fns, DbRowType};
 
 #[derive(Debug, FromRow, Fields)]
 pub struct UserRole {

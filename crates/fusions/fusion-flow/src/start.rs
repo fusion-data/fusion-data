@@ -1,4 +1,4 @@
-use ultimate::{
+use ultimate_core::{
   application::{Application, ApplicationBuilder},
   utils::handle_join_error,
 };
@@ -8,11 +8,11 @@ use crate::endpoint::grpc_serve;
 pub struct FusionFlowStart {}
 
 impl FusionFlowStart {
-  pub async fn init(_app_builder: &mut ApplicationBuilder) -> ultimate::Result<Self> {
+  pub async fn init(_app_builder: &mut ApplicationBuilder) -> ultimate_core::Result<Self> {
     Ok(Self {})
   }
 
-  pub async fn start(self) -> ultimate::Result<()> {
+  pub async fn start(self) -> ultimate_core::Result<()> {
     let app: Application = Application::global();
 
     let (_rx, grpc_serve_fut) = grpc_serve(&app).await?;

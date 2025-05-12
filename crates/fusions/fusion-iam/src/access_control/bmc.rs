@@ -1,4 +1,4 @@
-use ultimate_db::{base::DbBmc, generate_common_bmc_fns};
+use modelsql::{base::DbBmc, generate_common_bmc_fns};
 
 use super::{Policy, PolicyForCreate, PolicyForUpdate};
 
