@@ -1,5 +1,5 @@
 use ultimate_common::ctx::CtxPayload;
-use ultimate_core::{configuration::SecurityConfig, security::SecurityUtils, DataError, Result};
+use ultimate_core::{DataError, Result, configuration::SecurityConfig, security::SecurityUtils};
 
 pub fn make_token(sc: &SecurityConfig, uid: i64) -> Result<String> {
   let mut payload = CtxPayload::default();

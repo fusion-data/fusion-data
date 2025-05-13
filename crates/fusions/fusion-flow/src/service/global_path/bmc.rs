@@ -1,4 +1,4 @@
-use modelsql::{base::DbBmc, generate_pg_bmc_filter, ModelManager};
+use modelsql::{ModelManager, base::DbBmc, generate_pg_bmc_filter};
 
 use super::{GlobalPath, GlobalPathFilter};
 

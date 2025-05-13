@@ -1,8 +1,8 @@
 use fusion_flow_api::v1::process_instance::InstanceStatus;
+use modelsql::field::Fields;
 use sea_query::enum_def;
 use sqlx::prelude::FromRow;
 use ultimate_common::time::UtcDateTime;
-use modelsql::field::Fields;
 use uuid::Uuid;
 
 #[derive(FromRow, Fields)]

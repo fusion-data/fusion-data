@@ -28,11 +28,7 @@ impl FieldMeta {
   /// (if prop_name != name, it will return prop_name)
   pub fn alias(&self) -> Option<&'static str> {
     let attr_name = self.attr_name?;
-    if self.prop_name != attr_name {
-      Some(self.prop_name)
-    } else {
-      None
-    }
+    if self.prop_name != attr_name { Some(self.prop_name) } else { None }
   }
 
   /// Return the quote column ref with the eventual ref and eventual

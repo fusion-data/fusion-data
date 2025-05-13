@@ -1,4 +1,4 @@
-use rig::{completion::Prompt, embeddings::EmbeddingsBuilder, providers, Embed};
+use rig::{Embed, completion::Prompt, embeddings::EmbeddingsBuilder, providers};
 use rig_postgres::PostgresVectorStore;
 use serde::Serialize;
 use sqlx::postgres::PgPoolOptions;

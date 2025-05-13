@@ -1,7 +1,7 @@
 use proc_macro::TokenStream;
 use proc_macro2::Ident;
 use quote::quote;
-use syn::{parse_macro_input, DataEnum, DataStruct, DeriveInput, Fields, Type};
+use syn::{DataEnum, DataStruct, DeriveInput, Fields, Type, parse_macro_input};
 
 // TODO: Needs to assert that variants do not have any data
 pub(crate) fn derive_field_sea_value_inner(input: TokenStream) -> TokenStream {

@@ -3,12 +3,12 @@ use std::time::Duration;
 use chrono::Utc;
 use fusion_flow_api::v1::sched_node::{NodeKind, NodeStatus};
 use fusiondata_context::ctx::CtxW;
-use ultimate_core::{component::Component, Result};
 use modelsql::filter::{OpValInt32, OpValValue};
+use ultimate_core::{Result, component::Component};
 
 use crate::core::config::SchedulerConfig;
 
-use super::{bmc::SchedNodeBmc, SchedNode, SchedNodeFilter, SchedNodeForCreate, SchedNodeForUpdate};
+use super::{SchedNode, SchedNodeFilter, SchedNodeForCreate, SchedNodeForUpdate, bmc::SchedNodeBmc};
 
 #[derive(Clone, Component)]
 pub struct SchedNodeSvc {

@@ -1,7 +1,7 @@
 use ultimate_common::ctx::Ctx;
 
 use crate::config::DbConfig;
-use crate::store::{create_dbx, Dbx};
+use crate::store::{Dbx, create_dbx};
 use crate::{Result, SqlError};
 
 #[derive(Debug, Clone)]
@@ -25,11 +25,7 @@ impl ModelManager {
 
   /// 若当前 ModelManager 已开启事务，则返回self的克隆，否则返回一个新的事务。
   pub fn get_txn_clone(&self) -> ModelManager {
-    if self.dbx().is_txn() {
-      self.clone()
-    } else {
-      self.txn_cloned()
-    }
+    if self.dbx().is_txn() { self.clone() } else { self.txn_cloned() }
   }
 
   pub fn dbx(&self) -> &Dbx {

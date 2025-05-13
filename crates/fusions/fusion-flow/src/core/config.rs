@@ -5,8 +5,8 @@ use std::{
 
 use duration_str::deserialize_duration;
 use serde::{Deserialize, Serialize};
-use ultimate_core::configuration::Configuration;
 use ultimate_common::time::ser::serialize_duration;
+use ultimate_core::configuration::Configuration;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Configuration)]
 #[config_prefix = "fusion.flow"]

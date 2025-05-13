@@ -1,8 +1,8 @@
 use serde_json::json;
 
 use super::{
-  val_bool, val_double, val_int32, val_int64, val_string, ArrayBool, ArrayDouble, ArrayInt32, ArrayInt64, ArrayString,
-  Null, OpBool, OpNumber, OpString, ValBool, ValDouble, ValInt32, ValInt64, ValString,
+  ArrayBool, ArrayDouble, ArrayInt32, ArrayInt64, ArrayString, Null, OpBool, OpNumber, OpString, ValBool, ValDouble,
+  ValInt32, ValInt64, ValString, val_bool, val_double, val_int32, val_int64, val_string,
 };
 use crate::Error;
 

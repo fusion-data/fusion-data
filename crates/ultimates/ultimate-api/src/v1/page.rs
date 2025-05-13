@@ -16,19 +16,11 @@ impl<T> PagePayload<T> {
 
 impl Pagination {
   pub fn get_page(&self) -> Option<i64> {
-    if self.page > 0 {
-      Some(self.page)
-    } else {
-      None
-    }
+    if self.page > 0 { Some(self.page) } else { None }
   }
 
   pub fn get_page_size(&self) -> Option<i64> {
-    if self.page_size > 0 {
-      Some(self.page_size)
-    } else {
-      None
-    }
+    if self.page_size > 0 { Some(self.page_size) } else { None }
   }
 
   pub fn get_offset(&self) -> Option<i64> {

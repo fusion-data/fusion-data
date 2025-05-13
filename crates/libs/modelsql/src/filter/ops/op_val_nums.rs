@@ -177,7 +177,7 @@ impl OpValueToOpValType for $ov {
 // region:    --- with-sea-query
 mod with_sea_query {
   use super::*;
-  use crate::filter::{sea_is_col_value_null, FilterNodeOptions, SeaResult};
+  use crate::filter::{FilterNodeOptions, SeaResult, sea_is_col_value_null};
   use crate::into_node_value_expr;
   use sea_query::{BinOper, ColumnRef, ConditionExpression, SimpleExpr};
 

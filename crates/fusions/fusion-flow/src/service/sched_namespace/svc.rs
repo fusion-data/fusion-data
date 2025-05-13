@@ -1,6 +1,6 @@
 use fusiondata_context::ctx::CtxW;
 use ultimate_api::v1::Pagination;
-use ultimate_core::{component::Component, Result};
+use ultimate_core::{Result, component::Component};
 
 use super::{SchedNamespace, SchedNamespaceBmc, SchedNamespaceFilter, SchedNamespaceForUpdate};
 

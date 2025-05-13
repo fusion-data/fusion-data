@@ -1,11 +1,12 @@
 use modelsql::{
-  base::{self, prep_fields_for_update, CommonIden, DbBmc},
+  ModelManager, Result, SqlError,
+  base::{self, CommonIden, DbBmc, prep_fields_for_update},
   field::HasSeaFields,
-  generate_pg_bmc_common, generate_pg_bmc_filter, ModelManager, Result, SqlError,
+  generate_pg_bmc_common, generate_pg_bmc_filter,
 };
 use sea_query::{Expr, PostgresQueryBuilder, Query};
 use sea_query_binder::SqlxBinder;
-use ultimate_common::time::{now, UtcDateTime};
+use ultimate_common::time::{UtcDateTime, now};
 
 use super::{SchedNode, SchedNodeFilter, SchedNodeForCreate, SchedNodeForUpdate};
 

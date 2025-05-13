@@ -1,6 +1,6 @@
+use crate::SIden;
 use crate::field::{Error, Result};
 use crate::sea_utils::StringIden;
-use crate::SIden;
 use sea_query::{ColumnRef, DynIden, SimpleExpr, Value};
 use sea_query::{IntoIden, ValueType};
 
@@ -13,11 +13,7 @@ pub struct SeaField {
 
 impl SeaField {
   pub fn sea_value(&self) -> Option<&Value> {
-    if let SimpleExpr::Value(value) = &self.value {
-      Some(value)
-    } else {
-      None
-    }
+    if let SimpleExpr::Value(value) = &self.value { Some(value) } else { None }
   }
 
   pub fn value_into<T>(self) -> Result<T>

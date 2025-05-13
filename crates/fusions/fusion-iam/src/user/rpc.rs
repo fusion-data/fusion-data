@@ -4,10 +4,9 @@ use ultimate_grpc::GrpcServiceIntercepted;
 
 use crate::{
   pb::fusion_iam::v1::{
-    create_user_response,
-    user_server::{User, UserServer},
     AssignUserToRolesRequest, CreateUserRequest, CreateUserResponse, DeleteUserResponse, Empty, FindUserRequest,
-    PageUserRequest, PageUserResponse, UpdateUserRequest, UserDto, UserResponse,
+    PageUserRequest, PageUserResponse, UpdateUserRequest, UserDto, UserResponse, create_user_response,
+    user_server::{User, UserServer},
   },
   util::grpc::interceptor::auth_interceptor,
 };

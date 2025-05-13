@@ -1,6 +1,6 @@
 use std::{env, path::Path};
 
-use config::{builder::DefaultState, Config, ConfigBuilder, Environment, File, FileFormat};
+use config::{Config, ConfigBuilder, Environment, File, FileFormat, builder::DefaultState};
 use log::trace;
 use tracing::debug;
 use ultimate_common::runtime;

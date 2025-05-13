@@ -6,9 +6,9 @@ use uuid::Uuid;
 
 use crate::{
   pb::fusion_iam::v1::{
-    access_control_server::{AccessControl, AccessControlServer},
     CreatePolicyRequest, CreatePolicyResponse, DeletePolicyRequest, DeletePolicyResponse, GetPolicyRequest,
     GetPolicyResponse, UpdatePolicyRequest, UpdatePolicyResponse,
+    access_control_server::{AccessControl, AccessControlServer},
   },
   util::grpc::interceptor::auth_interceptor,
 };

@@ -2,9 +2,9 @@ use tonic::{Request, Response, Status};
 
 use crate::{
   pb::fusion_flow::v1::{
-    scheduler_server::Scheduler, HealthCheckRequest, HealthCheckResponse, PageProcessRequest, PageProcessResponse,
-    PageProcessTaskRequest, PageProcessTaskResponse, PageTriggerRequest, PageTriggerResponse, TriggerProcessRequest,
-    TriggerProcessResponse,
+    HealthCheckRequest, HealthCheckResponse, PageProcessRequest, PageProcessResponse, PageProcessTaskRequest,
+    PageProcessTaskResponse, PageTriggerRequest, PageTriggerResponse, TriggerProcessRequest, TriggerProcessResponse,
+    scheduler_server::Scheduler,
   },
   service::{
     process_definition::ProcessDefinitionSvc, process_task::ProcessTaskSvc, trigger_definition::TriggerDefinitionSvc,

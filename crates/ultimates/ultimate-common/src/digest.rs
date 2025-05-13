@@ -1,12 +1,12 @@
 use base64ct::{Base64UrlUnpadded, Encoding};
 pub use hmac::digest::InvalidLength;
 use hmac::{
-  digest::{
-    generic_array::GenericArray,
-    typenum::{UInt, UTerm, B0, B1},
-    CtOutput,
-  },
   Hmac, Mac,
+  digest::{
+    CtOutput,
+    generic_array::GenericArray,
+    typenum::{B0, B1, UInt, UTerm},
+  },
 };
 use sha2::{Digest, Sha256};
 

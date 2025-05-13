@@ -1,11 +1,11 @@
 use serde_json::json;
 use std::collections::HashMap;
 
+use fusiondata::ac::Effect;
 use fusiondata::ac::abac::{
   evaluate_policy,
   policy::{AccessRequest, Policy},
 };
-use fusiondata::ac::Effect;
 
 fn main() {
   let policy = Policy {

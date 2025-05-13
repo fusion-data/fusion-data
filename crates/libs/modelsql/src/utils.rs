@@ -30,9 +30,5 @@ pub fn datetime_to_sea_value(v: serde_json::Value) -> SeaResult<sea_query::Value
 }
 
 pub(crate) fn as_positive_u64(num: i64) -> u64 {
-  if num < 0 {
-    0
-  } else {
-    num as u64
-  }
+  if num < 0 { 0 } else { num as u64 }
 }

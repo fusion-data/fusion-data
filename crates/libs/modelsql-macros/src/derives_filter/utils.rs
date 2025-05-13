@@ -1,6 +1,6 @@
 use crate::utils::{get_field_attribute, get_meta_value_string};
-use syn::punctuated::Punctuated;
 use syn::Field;
+use syn::punctuated::Punctuated;
 use syn::{Meta, Token};
 
 pub struct MoqlFilterFieldAttr {

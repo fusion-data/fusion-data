@@ -114,7 +114,10 @@ pub fn auto_inject_component(app: &mut ApplicationBuilder) -> crate::Result<()> 
   }
   if epoch != 0 {
     let deps: HashSet<&str> = registrars.iter().flat_map(|(_, deps)| deps).copied().collect();
-    panic!("Component registration failed, please check the component dependency relationship. Unregistered Components: {:?}", deps);
+    panic!(
+      "Component registration failed, please check the component dependency relationship. Unregistered Components: {:?}",
+      deps
+    );
   }
   Ok(())
 }

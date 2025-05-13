@@ -19,7 +19,7 @@ mod util;
 
 pub(crate) use self::util::load_config;
 pub use effect::*;
-pub use error::{ConfigureResult, ConfigureError};
+pub use error::{ConfigureError, ConfigureResult};
 pub use model::*;
 
 /// The Configurable trait marks whether the struct can read configuration from the [ConfigRegistry]

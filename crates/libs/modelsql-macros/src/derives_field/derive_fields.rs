@@ -1,10 +1,10 @@
 use crate::utils::modql_field::ModqlFieldProp;
-use crate::utils::struct_modql_attr::{get_struct_modql_props, StructModqlFieldProps};
+use crate::utils::struct_modql_attr::{StructModqlFieldProps, get_struct_modql_props};
 use crate::utils::{get_struct_fields, modql_field};
 use proc_macro::TokenStream;
 use proc_macro2::{Ident, Span};
 use quote::quote;
-use syn::{parse_macro_input, DeriveInput};
+use syn::{DeriveInput, parse_macro_input};
 
 pub(crate) fn derive_fields_inner(input: TokenStream) -> TokenStream {
   let ast = parse_macro_input!(input as DeriveInput);

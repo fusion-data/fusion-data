@@ -1,4 +1,4 @@
-use josekit::{jwe::JweHeader, jwt::JwtPayload, JoseError};
+use josekit::{JoseError, jwe::JweHeader, jwt::JwtPayload};
 use ultimate_common::ctx::CtxPayload;
 
 use crate::configuration::KeyConf;

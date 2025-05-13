@@ -2,8 +2,8 @@ use std::time::Duration;
 
 use duration_str::deserialize_duration;
 use serde::{Deserialize, Serialize};
-use ultimate_core::configuration::Configuration;
 use ultimate_common::time::ser::serialize_duration;
+use ultimate_core::configuration::Configuration;
 
 #[derive(Clone, Serialize, Deserialize, Configuration)]
 #[config_prefix = "fusion.scheduler.worker"]

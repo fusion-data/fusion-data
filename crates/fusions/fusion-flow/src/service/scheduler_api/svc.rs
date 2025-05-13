@@ -1,8 +1,8 @@
 use fusion_flow_api::v1::{
-  scheduler_api_server::{SchedulerApi, SchedulerApiServer},
   CreateProcessRequest, CreateProcessResponse, CreateTriggerRequest, CreateTriggerResponse, EventRequest,
   EventResponse, ListSchedulersRequest, ListSchedulersResponse, PullJobRequest, PullJobResponse, SchedNode,
   UpdateTriggerRequest, UpdateTriggerResponse,
+  scheduler_api_server::{SchedulerApi, SchedulerApiServer},
 };
 use fusiondata_context::{ctx::CtxW, grpc::interceptor::auth_interceptor};
 use std::pin::Pin;

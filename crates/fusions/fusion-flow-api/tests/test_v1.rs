@@ -2,7 +2,7 @@ use uuid::Uuid;
 
 use fusion_flow_api::v1::task::TaskKind;
 use fusion_flow_api::v1::{
-  update_trigger_request, CronSchedule, ProcessDefinition, SimpleSchedule, UpdateTriggerRequest,
+  CronSchedule, ProcessDefinition, SimpleSchedule, UpdateTriggerRequest, update_trigger_request,
 };
 
 #[test]

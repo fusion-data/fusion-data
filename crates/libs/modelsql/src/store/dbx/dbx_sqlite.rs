@@ -5,9 +5,9 @@ use std::{
 
 use log::LevelFilter;
 use sqlx::{
+  ConnectOptions, FromRow, IntoArguments, Pool, Transaction,
   query::{Query, QueryAs},
   sqlite::{Sqlite, SqliteConnectOptions, SqlitePoolOptions},
-  ConnectOptions, FromRow, IntoArguments, Pool, Transaction,
 };
 
 use tokio::sync::Mutex;

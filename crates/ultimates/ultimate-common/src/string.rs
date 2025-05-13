@@ -1,6 +1,6 @@
 use base64ct::{Base64UrlUnpadded, Encoding};
-use rand::{distributions::Alphanumeric, thread_rng, Rng};
-use serde::{de::Visitor, Deserializer, Serializer};
+use rand::{Rng, distributions::Alphanumeric, thread_rng};
+use serde::{Deserializer, Serializer, de::Visitor};
 
 use crate::{Error, Result};
 

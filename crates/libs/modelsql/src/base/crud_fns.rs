@@ -3,12 +3,12 @@ use sea_query_binder::SqlxBinder;
 use sqlx::Row;
 
 use crate::base::utils::{build_sqlx_for_delete, build_sqlx_for_update};
-use crate::base::{prep_fields_for_create, prep_fields_for_update, CommonIden, DbBmc};
+use crate::base::{CommonIden, DbBmc, prep_fields_for_create, prep_fields_for_update};
 use crate::field::{HasSeaFields, SeaField, SeaFields};
 use crate::filter::FilterGroups;
 use crate::id::Id;
-use crate::store::dbx::DbxTypeTrait;
 use crate::store::Dbx;
+use crate::store::dbx::DbxTypeTrait;
 use crate::{ModelManager, Result, SqlError};
 
 /// Create a new entity。需要自增主键ID
@@ -420,9 +420,5 @@ fn _check_result<MC>(count: u64, id: Id) -> Result<()>
 where
   MC: DbBmc,
 {
-  if count == 0 {
-    Err(SqlError::EntityNotFound { schema: MC::SCHEMA, entity: MC::TABLE, id })
-  } else {
-    Ok(())
-  }
+  if count == 0 { Err(SqlError::EntityNotFound { schema: MC::SCHEMA, entity: MC::TABLE, id }) } else { Ok(()) }
 }

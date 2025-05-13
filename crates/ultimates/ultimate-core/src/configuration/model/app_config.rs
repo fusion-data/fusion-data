@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use ultimate_common::time::{
-  deser::deserialize_fixed_offset, ser::serialize_fixed_offset, DateTime, FixedOffset, Local,
+  DateTime, FixedOffset, Local, deser::deserialize_fixed_offset, ser::serialize_fixed_offset,
 };
 
 use crate::RunMode;

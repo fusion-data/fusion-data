@@ -1,16 +1,16 @@
 use crate::{
+  SqlError,
   field::{SeaField, SeaFields},
   filter::ListOptions,
   store::dbx::DbxType,
-  SqlError,
 };
 use sea_query::{DeleteStatement, DynIden, InsertStatement, IntoIden, SelectStatement, UpdateStatement, WithQuery};
 use sea_query_binder::{SqlxBinder, SqlxValues};
 use ultimate_common::ctx::Ctx;
 
 use crate::{
-  base::{CommonIden, DbBmc, TimestampIden},
   Result,
+  base::{CommonIden, DbBmc, TimestampIden},
 };
 
 pub fn build_sqlx_for_update(dbx_type: &DbxType, query: UpdateStatement) -> (String, SqlxValues) {
@@ -113,11 +113,7 @@ pub fn prep_fields_for_update<MC>(fields: SeaFields, ctx: &Ctx) -> SeaFields
 where
   MC: DbBmc,
 {
-  if MC::has_creation_timestamps() {
-    add_timestamps_for_update(fields, ctx)
-  } else {
-    fields
-  }
+  if MC::has_creation_timestamps() { add_timestamps_for_update(fields, ctx) } else { fields }
 }
 
 pub fn clear_id_from_fields<MC>(fields: SeaFields) -> SeaFields {

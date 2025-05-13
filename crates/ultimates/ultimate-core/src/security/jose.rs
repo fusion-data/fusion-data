@@ -1,8 +1,8 @@
 pub use josekit::{
-  jwe::{alg::direct::DirectJweAlgorithm::Dir, JweHeader, ECDH_ES},
-  jws::{JwsHeader, ES256, HS256},
-  jwt::{self, JwtPayload},
   JoseError,
+  jwe::{ECDH_ES, JweHeader, alg::direct::DirectJweAlgorithm::Dir},
+  jws::{ES256, HS256, JwsHeader},
+  jwt::{self, JwtPayload},
 };
 
 pub fn encrypt_jwe_ecdh_es(public_key: impl AsRef<[u8]>, payload: &JwtPayload) -> Result<String, JoseError> {
@@ -80,7 +80,7 @@ pub fn decode_jwt_hs256(
 #[cfg(test)]
 mod tests {
   use super::*;
-  use crate::configuration::{load_config, KeyConf, SecurityConfig};
+  use crate::configuration::{KeyConf, SecurityConfig, load_config};
   use std::{
     sync::OnceLock,
     time::{Duration, SystemTime},

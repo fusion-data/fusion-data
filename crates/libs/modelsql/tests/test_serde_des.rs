@@ -1,8 +1,8 @@
 pub type Result<T> = core::result::Result<T, Error>;
 pub type Error = Box<dyn std::error::Error>; // For early dev.
+use modelsql::filter::{FilterNodes, IntoFilterNodes, OpValsInt64, OpValsString};
 use serde::Deserialize;
 use serde_json::Value;
-use modelsql::filter::{FilterNodes, IntoFilterNodes, OpValsInt64, OpValsString};
 
 #[derive(Deserialize, Debug, FilterNodes)]
 struct MyFilter {

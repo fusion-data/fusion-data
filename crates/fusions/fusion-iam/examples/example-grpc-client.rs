@@ -3,9 +3,9 @@
 /// cargo run -p fruitbox-iam --example grpc-web --features tonic-web
 /// ``
 use fusion_iam::pb::fusion_iam::v1::{
-  auth_client::AuthClient, user_client::UserClient, FilterUserRequest, PageUserRequest, SigninRequest, TokenKind,
+  FilterUserRequest, PageUserRequest, SigninRequest, TokenKind, auth_client::AuthClient, user_client::UserClient,
 };
-use tonic::{transport::Channel, Request};
+use tonic::{Request, transport::Channel};
 use ultimate_api::v1::{OpNumber, OpString, Pagination, ValInt32, ValString};
 
 #[tokio::main]

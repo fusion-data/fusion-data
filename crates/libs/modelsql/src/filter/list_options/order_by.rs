@@ -46,11 +46,7 @@ impl From<&String> for OrderBy {
 
 impl From<String> for OrderBy {
   fn from(value: String) -> Self {
-    if let Some(stripped) = value.strip_prefix('!') {
-      OrderBy::Desc(stripped.to_string())
-    } else {
-      OrderBy::Asc(value)
-    }
+    if let Some(stripped) = value.strip_prefix('!') { OrderBy::Desc(stripped.to_string()) } else { OrderBy::Asc(value) }
   }
 }
 

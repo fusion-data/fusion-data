@@ -1,7 +1,7 @@
 use std::sync::OnceLock;
 
 use argon2::password_hash::SaltString;
-use argon2::{password_hash, Argon2, PasswordHash, PasswordHasher, PasswordVerifier};
+use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier, password_hash};
 use regex::Regex;
 use tracing::{error, trace};
 
@@ -16,11 +16,7 @@ pub async fn generate_pwd(password: &str) -> Result<String> {
 
 pub async fn verify_pwd(password: &str, hashed_pwd: &str) -> Result<u16> {
   let (version, hash) = split_pwd_version(hashed_pwd);
-  if verify(password.as_bytes(), hash).await? {
-    Ok(version)
-  } else {
-    Err(Error::InvalidPassword)
-  }
+  if verify(password.as_bytes(), hash).await? { Ok(version) } else { Err(Error::InvalidPassword) }
 }
 
 pub(crate) async fn try_to_hash(password: &str) -> Result<String> {

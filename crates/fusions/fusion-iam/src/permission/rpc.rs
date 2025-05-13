@@ -6,10 +6,10 @@ use ultimate_grpc::GrpcServiceIntercepted;
 
 use crate::{
   pb::fusion_iam::v1::{
-    permission_server::{Permission, PermissionServer},
     AssignPermmissionToRolesRequest, CreatePermissionRequest, DeletePermissionRequest, DeletePermissionResponse, Empty,
     GetPermissionRequest, PagePermissionRequest, PagePermissionResponse, PermissionDto, PermissionResponse,
     UpdatePermissionRequest,
+    permission_server::{Permission, PermissionServer},
   },
   util::grpc::interceptor::auth_interceptor,
 };

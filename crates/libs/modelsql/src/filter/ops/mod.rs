@@ -82,10 +82,6 @@ mod with_sea_query {
   use sea_query::{ColumnRef, ConditionExpression, Expr};
 
   pub fn sea_is_col_value_null(col: ColumnRef, null: bool) -> ConditionExpression {
-    if null {
-      Expr::col(col).is_null().into()
-    } else {
-      Expr::col(col).is_not_null().into()
-    }
+    if null { Expr::col(col).is_null().into() } else { Expr::col(col).is_not_null().into() }
   }
 }

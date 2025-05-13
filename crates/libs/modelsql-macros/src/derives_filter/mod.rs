@@ -5,7 +5,7 @@ use crate::utils::struct_modql_attr::get_struct_modql_props;
 use crate::utils::{get_struct_fields, get_type_name};
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, DeriveInput, Ident};
+use syn::{DeriveInput, Ident, parse_macro_input};
 
 pub fn derive_filter_nodes_inner(input: TokenStream) -> TokenStream {
   let ast = parse_macro_input!(input as DeriveInput);

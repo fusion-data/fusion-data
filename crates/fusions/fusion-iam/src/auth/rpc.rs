@@ -6,8 +6,8 @@ use ultimate_core::component::Component;
 use ultimate_db::ModelManager;
 
 use crate::pb::fusion_iam::v1::{
-  auth_server::{Auth, AuthServer},
   SigninRequest, SigninResponse,
+  auth_server::{Auth, AuthServer},
 };
 
 use super::AuthSvc;
