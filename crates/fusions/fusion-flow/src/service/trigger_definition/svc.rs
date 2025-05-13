@@ -8,17 +8,15 @@ use ultimate_core::Result;
 use crate::service::trigger_definition::TriggerSchedule;
 
 use super::{
-  bmc::TriggerDefinitionBmc, util::cron_to_next_occurrence, TriggerDefinition, TriggerDefinitionForCreate,
-  TriggerDefinitionForPage, TriggerDefinitionForUpdate,
+  TriggerDefinition, TriggerDefinitionForCreate, TriggerDefinitionForPage, TriggerDefinitionForUpdate,
+  bmc::TriggerDefinitionBmc, util::cron_to_next_occurrence,
 };
 
 pub struct TriggerDefinitionSvc;
 
 impl TriggerDefinitionSvc {
   pub async fn page(ctx: &CtxW, for_page: TriggerDefinitionForPage) -> Result<PageResult<TriggerDefinition>> {
-    TriggerDefinitionBmc::page(ctx.mm(), for_page.filter, for_page.pagination.into())
-      .await
-      .map_err(Into::into)
+    TriggerDefinitionBmc::page(ctx.mm(), for_page.filter, for_page.pagination).await.map_err(Into::into)
   }
 
   pub async fn create(ctx: &CtxW, entity_c: TriggerDefinitionForCreate) -> Result<i64> {

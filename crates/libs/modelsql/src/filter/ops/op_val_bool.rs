@@ -62,7 +62,6 @@ impl From<&bool> for OpVal {
 
 // region:    --- json
 mod json {
-  use super::*;
   use crate::filter::json::OpValueToOpValType;
   use crate::filter::{Error, OpValBool, Result};
   use serde_json::Value;

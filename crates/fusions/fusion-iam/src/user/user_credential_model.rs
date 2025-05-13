@@ -1,8 +1,8 @@
 use modelsql::{
   field::Fields,
   filter::{FilterNodes, OpValsInt64, OpValsValue},
+  postgres::PgRowType,
   utils::datetime_to_sea_value,
-  DbRowType,
 };
 use sqlx::FromRow;
 use ultimate_common::time::UtcDateTime;
@@ -16,7 +16,7 @@ pub struct UserCredential {
   pub mid: Option<i64>,
   pub mtime: Option<UtcDateTime>,
 }
-impl DbRowType for UserCredential {}
+impl PgRowType for UserCredential {}
 
 #[derive(Fields)]
 pub struct UserCredentialForCreate {

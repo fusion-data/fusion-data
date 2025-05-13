@@ -1,6 +1,6 @@
 use serde::{
-  de::{Unexpected, Visitor},
   Deserialize, Deserializer, Serialize,
+  de::{Unexpected, Visitor},
 };
 use std::fmt::Display;
 use tracing::log::Level;
@@ -91,7 +91,7 @@ impl<'de> Deserialize<'de> for LogLevel {
   {
     const MSG: &str = "attempted to convert a string that doesn't match an existing log level";
     struct StrToLogLevel;
-    impl<'d> Visitor<'d> for StrToLogLevel {
+    impl Visitor<'_> for StrToLogLevel {
       type Value = LogLevel;
 
       fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -140,7 +140,7 @@ impl<'de> Deserialize<'de> for LogWriterType {
     const MSG: &str = "expect in ('stdout', 'file', 'both').";
 
     struct StrToLogWriterType;
-    impl<'d> Visitor<'d> for StrToLogWriterType {
+    impl Visitor<'_> for StrToLogWriterType {
       type Value = LogWriterType;
 
       fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {

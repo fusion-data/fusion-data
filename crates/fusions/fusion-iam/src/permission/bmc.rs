@@ -1,7 +1,7 @@
 use modelsql::{
   base::{self, compute_list_options, DbBmc},
   filter::{FilterGroups, ListOptions},
-  generate_common_bmc_fns, ModelManager, Result,
+  generate_pg_bmc_common, ModelManager, Result,
 };
 use sea_query::{Condition, Expr, Query, SelectStatement};
 use ultimate_api::v1::{Page, PagePayload, Pagination};
@@ -15,7 +15,7 @@ impl DbBmc for PermissionBmc {
   const TABLE: &'static str = "permission";
 }
 
-generate_common_bmc_fns!(
+generate_pg_bmc_common!(
   Bmc: PermissionBmc,
   Entity: Permission,
   ForCreate: PermissionForCreate,
@@ -44,7 +44,8 @@ impl PermissionBmc {
     list_options: Option<ListOptions>,
   ) -> Result<Vec<Permission>> {
     let items =
-      base::find_many_on::<Self, _, _>(mm, |query| Self::make_select_statement(query, filters, list_options)).await?;
+      base::pg_find_many_on::<Self, _, _>(mm, |query| Self::make_select_statement(query, filters, list_options))
+        .await?;
     Ok(items)
   }
 

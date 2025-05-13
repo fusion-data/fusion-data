@@ -1,8 +1,8 @@
 use modelsql::{
   field::Fields,
   filter::{FilterNodes, OpValsInt32, OpValsInt64, OpValsValue},
+  postgres::PgRowType,
   utils::{datetime_to_sea_value, uuid_to_sea_value},
-  DbRowType,
 };
 use sqlx::FromRow;
 use ultimate_api::v1::{Page, Pagination};
@@ -24,7 +24,7 @@ pub struct ProcessTask {
   pub mid: Option<i64>,
   pub mtime: Option<UtcDateTime>,
 }
-impl DbRowType for ProcessTask {}
+impl PgRowType for ProcessTask {}
 
 #[derive(Debug, Default, FilterNodes)]
 pub struct ProcessTaskFilter {
@@ -54,7 +54,7 @@ pub struct JobTaskForPage {
 impl TryFrom<PageProcessTaskRequest> for JobTaskForPage {
   type Error = DataError;
 
-  fn try_from(value: PageProcessTaskRequest) -> Result<Self, Self::Error> {
+  fn try_from(_value: PageProcessTaskRequest) -> Result<Self, Self::Error> {
     todo!()
   }
 }
@@ -65,7 +65,7 @@ pub struct JobTaskPage {
 }
 
 impl From<JobTaskPage> for PageProcessTaskResponse {
-  fn from(value: JobTaskPage) -> Self {
+  fn from(_value: JobTaskPage) -> Self {
     todo!()
   }
 }

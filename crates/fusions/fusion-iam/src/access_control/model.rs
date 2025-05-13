@@ -1,5 +1,5 @@
 use modelsql::field::Fields;
-use modelsql::DbRowType;
+use modelsql::postgres::PgRowType;
 use sqlx::prelude::FromRow;
 use ultimate_common::time::UtcDateTime;
 use uuid::Uuid;
@@ -15,7 +15,7 @@ pub struct Policy {
   pub mid: Option<i64>,
   pub mtime: Option<UtcDateTime>,
 }
-impl DbRowType for Policy {}
+impl PgRowType for Policy {}
 
 #[derive(Debug, Default, Fields)]
 pub struct PolicyForCreate {

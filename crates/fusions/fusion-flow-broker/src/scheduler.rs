@@ -4,10 +4,10 @@ use fusiondata_context::ctx::CtxW;
 use tokio::sync::mpsc;
 use tracing::error;
 use ultimate_core::{
+  Result,
   application::Application,
   configuration::ConfigRegistry,
   timer::{TimerRef, TimerReturn},
-  Result,
 };
 use uuid::Uuid;
 
@@ -16,13 +16,13 @@ use fusion_flow::{core::config::SchedulerConfig, service::trigger_definition::Tr
 use super::{CmdRunner, SchedCmd};
 
 pub struct SchedCmdMpsc {
-  pub(crate) tx: mpsc::Sender<SchedCmd>,
-  pub(crate) rx: Arc<mpsc::Receiver<SchedCmd>>,
+  pub(crate) _tx: mpsc::Sender<SchedCmd>,
+  pub(crate) _rx: Arc<mpsc::Receiver<SchedCmd>>,
 }
 impl Default for SchedCmdMpsc {
   fn default() -> Self {
     let (tx, rx) = mpsc::channel(1024);
-    SchedCmdMpsc { tx, rx: Arc::new(rx) }
+    SchedCmdMpsc { _tx: tx, _rx: Arc::new(rx) }
   }
 }
 

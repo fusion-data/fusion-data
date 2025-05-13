@@ -24,8 +24,12 @@ ultimate-api = { workspace = true }
 ultimate-core = { workspace = true }
 
 # -- db
-ultimate-db = { workspace = true, features = ["tonic"] }
-modelsql = { workspace = true }
+ultimate-db = { workspace = true, features = [
+  "tonic",
+  "with-postgres",
+  "with-uuid",
+] }
+modelsql = { workspace = true, features = ["with-postgres", "with-uuid"] }
 sqlx = { workspace = true }
 sea-query = { workspace = true }
 sea-query-binder = { workspace = true }

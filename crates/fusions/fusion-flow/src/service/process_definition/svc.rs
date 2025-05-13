@@ -1,6 +1,5 @@
 use fusiondata_context::ctx::CtxW;
 use modelsql::page::PageResult;
-use ultimate_api::v1::PagePayload;
 use ultimate_core::Result;
 use uuid::Uuid;
 

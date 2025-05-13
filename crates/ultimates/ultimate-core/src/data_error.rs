@@ -1,7 +1,7 @@
 use std::{net::AddrParseError, num::ParseIntError};
 
 use config::ConfigError;
-use serde::{ser::SerializeMap, Serialize};
+use serde::{Serialize, ser::SerializeMap};
 use thiserror::Error;
 use tracing::{error, subscriber::SetGlobalDefaultError};
 
@@ -73,11 +73,11 @@ impl From<ultimate_common::Error> for DataError {
   }
 }
 
+#[cfg(feature = "ultimate-api")]
 impl From<ultimate_api::Error> for DataError {
   fn from(value: ultimate_api::Error) -> Self {
     match value {
       ultimate_api::Error::BizError { code, msg } => DataError::BizError { code, msg },
-      _ => DataError::server_error(value.to_string()),
     }
   }
 }

@@ -1,4 +1,4 @@
-use modelsql::{base::DbBmc, generate_filter_bmc_fns};
+use modelsql::{base::DbBmc, generate_pg_bmc_filter};
 
 use super::{SchedNamespace, SchedNamespaceFilter, SchedNamespaceForUpdate};
 
@@ -7,7 +7,7 @@ impl DbBmc for SchedNamespaceBmc {
   const TABLE: &'static str = "sched_namespace";
 }
 
-generate_filter_bmc_fns!(
+generate_pg_bmc_filter!(
   Bmc: SchedNamespaceBmc,
   Entity: SchedNamespace,
   Filter: SchedNamespaceFilter,

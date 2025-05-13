@@ -5,6 +5,12 @@ pub struct Page {
   pub total: i64,
 }
 
+impl Page {
+  pub fn new(total: i64) -> Self {
+    Self { total }
+  }
+}
+
 #[derive(Debug)]
 pub struct PageResult<T> {
   pub page: Page,

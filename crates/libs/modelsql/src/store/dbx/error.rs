@@ -4,6 +4,12 @@ pub type Result<T> = core::result::Result<T, DbxError>;
 
 #[derive(Debug, Error)]
 pub enum DbxError {
+  #[error("Count fail")]
+  CountFail,
+
+  #[error("UnsupportedDatabase({0})")]
+  UnsupportedDatabase(&'static str),
+
   #[error("TxnCantCommitNoOpenTxn")]
   TxnCantCommitNoOpenTxn,
 

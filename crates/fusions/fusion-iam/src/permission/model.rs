@@ -1,7 +1,7 @@
 use modelsql::{
   field::Fields,
   filter::{FilterNodes, OpValString, OpValsInt64, OpValsString},
-  DbRowType,
+  postgres::PgRowType,
 };
 use o2o::o2o;
 use sea_query::enum_def;
@@ -28,7 +28,7 @@ pub struct Permission {
   pub mid: Option<i64>,
   pub mtime: Option<UtcDateTime>,
 }
-impl DbRowType for Permission {}
+impl PgRowType for Permission {}
 
 #[derive(Debug, Fields, o2o)]
 #[from_owned(CreatePermissionDto)]

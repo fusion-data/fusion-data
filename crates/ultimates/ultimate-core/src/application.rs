@@ -6,18 +6,18 @@ use std::{
   sync::{Arc, OnceLock},
 };
 
-use config::{Config, ConfigError};
+use config::Config;
 use dashmap::DashMap;
 use serde::de::DeserializeOwned;
 use tracing::{debug, info, subscriber::DefaultGuard};
 use ultimate_common::time::OffsetDateTime;
 
 use crate::{
-  component::{auto_inject_component, ComponentArc, ComponentError, ComponentResult, DynComponentArc},
-  configuration::{ConfigRegistry, Configurable, ConfigureResult, UltimateConfig, UltimateConfigRegistry},
-  log::{init_tracing_guard, TracingPlugin},
-  plugin::{Plugin, PluginRef},
   Result,
+  component::{ComponentArc, ComponentError, ComponentResult, DynComponentArc, auto_inject_component},
+  configuration::{ConfigRegistry, Configurable, ConfigureResult, UltimateConfig, UltimateConfigRegistry},
+  log::{TracingPlugin, init_tracing_guard},
+  plugin::{Plugin, PluginRef},
 };
 
 type Registry<T> = DashMap<String, T>;
@@ -327,8 +327,8 @@ impl ApplicationBuilder {
   async fn build_plugins(&mut self) {
     // 重置 RUST_LOG 为程序运行时的配置
     match std::mem::take(&mut self._original_rust_log) {
-      Some(original_rust_log) => std::env::set_var("RUST_LOG", original_rust_log),
-      None => std::env::remove_var("RUST_LOG"),
+      Some(original_rust_log) => unsafe { std::env::set_var("RUST_LOG", original_rust_log) },
+      None => unsafe { std::env::remove_var("RUST_LOG") },
     };
     self.add_plugin(TracingPlugin);
     // 移除初始化时的 tracing guard

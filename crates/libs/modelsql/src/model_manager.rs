@@ -1,10 +1,10 @@
 use ultimate_common::ctx::Ctx;
 
 use crate::config::DbConfig;
-use crate::store::{dbx::new_db_pool_from_config, Dbx};
+use crate::store::{create_dbx, Dbx};
 use crate::{Result, SqlError};
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct ModelManager {
   dbx: Dbx,
   ctx: Option<Ctx>,
@@ -13,15 +13,13 @@ pub struct ModelManager {
 impl ModelManager {
   /// Constructor
   pub fn new(db_config: &DbConfig, application_name: Option<&str>) -> Result<Self> {
-    let db_pool = new_db_pool_from_config(db_config, application_name)
-      .map_err(|ex| SqlError::CantCreateModelManagerProvider(ex.to_string()))?;
-    let dbx = Dbx::new(db_pool, false);
+    let dbx = create_dbx(db_config, application_name)?;
     Ok(ModelManager { dbx, ctx: None })
   }
 
   /// 返回一个新的事务
   pub fn txn_cloned(&self) -> ModelManager {
-    let dbx = Dbx::new(self.dbx.db().clone(), true);
+    let dbx = self.dbx.txn_cloned();
     ModelManager { dbx, ctx: self.ctx.clone() }
   }
 

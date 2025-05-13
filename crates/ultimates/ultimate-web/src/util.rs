@@ -1,20 +1,20 @@
-use axum::extract::Query;
-use axum::http::request::Parts;
-use axum::http::StatusCode;
 use axum::Json;
+use axum::extract::Query;
+use axum::http::StatusCode;
+use axum::http::request::Parts;
 use axum_extra::headers::authorization::Bearer;
 use axum_extra::headers::{Authorization, HeaderMapExt};
-use serde::de::DeserializeOwned;
 use serde::Serialize;
+use serde::de::DeserializeOwned;
 use ulid::Ulid;
-use ultimate_common::ctx::{Ctx, CtxPayload};
+use ultimate_common::ctx::Ctx;
 use ultimate_common::time;
 use ultimate_core::configuration::SecurityConfig;
 use ultimate_core::security::{AccessToken, SecurityUtils};
 use ultimate_core::{DataError, IdI64Result, IdUlidResult};
 
-use crate::error::AppError;
 use crate::AppResult;
+use crate::error::AppError;
 
 #[inline]
 pub fn ok<T: Serialize>(v: T) -> AppResult<T> {
@@ -63,9 +63,5 @@ pub fn opt_to_app_result<T>(opt: Option<T>) -> AppResult<T>
 where
   T: DeserializeOwned,
 {
-  if let Some(v) = opt {
-    Ok(Json(v))
-  } else {
-    Err(Box::new(AppError::new_with_code(404, "Not found.")))
-  }
+  if let Some(v) = opt { Ok(Json(v)) } else { Err(Box::new(AppError::new_with_code(404, "Not found."))) }
 }

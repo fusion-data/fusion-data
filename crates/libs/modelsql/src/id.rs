@@ -1,8 +1,7 @@
-use crate::{field::HasSeaFields, filter::FilterNode};
-
 use sea_query::SimpleExpr;
 use serde::{Deserialize, Serialize};
-use sqlx::{postgres::PgRow, FromRow};
+
+use crate::filter::FilterNode;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
@@ -10,7 +9,7 @@ pub enum Id {
   I32(i32),
   I64(i64),
   String(String),
-
+  #[cfg(feature = "with-uuid")]
   Uuid(uuid::Uuid),
 }
 
@@ -20,7 +19,7 @@ impl Id {
       Id::I32(id) => (col, *id).into(),
       Id::I64(id) => (col, *id).into(),
       Id::String(id) => (col, id).into(),
-
+      #[cfg(feature = "with-uuid")]
       Id::Uuid(id) => (col, id).into(),
     }
   }
@@ -44,6 +43,7 @@ impl From<Id> for SimpleExpr {
       Id::I32(id) => SimpleExpr::Value(id.into()),
       Id::I64(id) => SimpleExpr::Value(id.into()),
       Id::String(id) => SimpleExpr::Value(id.into()),
+      #[cfg(feature = "with-uuid")]
       Id::Uuid(id) => SimpleExpr::Value(id.into()),
     }
   }
@@ -73,12 +73,14 @@ impl From<&str> for Id {
   }
 }
 
+#[cfg(feature = "with-uuid")]
 impl From<uuid::Uuid> for Id {
   fn from(value: uuid::Uuid) -> Self {
     Id::Uuid(value)
   }
 }
 
+#[cfg(feature = "with-uuid")]
 impl From<&uuid::Uuid> for Id {
   fn from(value: &uuid::Uuid) -> Self {
     Id::Uuid(*value)
@@ -97,13 +99,17 @@ where
 mod tests {
   use super::*;
 
+  #[cfg(feature = "with-uuid")]
   use uuid::Uuid;
 
   #[derive(PartialEq, Serialize, Deserialize)]
   struct TestModel {
     pub role_id: i32,
     pub user_id: i64,
+    #[cfg(feature = "with-uuid")]
     pub order_id: Uuid,
+    #[cfg(not(feature = "with-uuid"))]
+    pub order_id: String,
     pub dict_id: String,
   }
 
@@ -112,7 +118,10 @@ mod tests {
     let id = Id::I32(32);
     println!("id is {id:?}");
 
+    #[cfg(feature = "with-uuid")]
     let order_id = Uuid::now_v7();
+    #[cfg(not(feature = "with-uuid"))]
+    let order_id = "1234567890".to_ascii_lowercase();
     assert_eq!("32", serde_json::to_string(&id)?);
     assert_eq!(serde_json::to_string(&Id::String("abcdefg".into()))?, r#""abcdefg""#);
 

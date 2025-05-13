@@ -121,8 +121,14 @@ mod with_sea_query {
       // Note: this will fail on first, error found
       let exprs: SeaResult<Vec<Vec<ConditionExpression>>> =
         val.into_iter().map(|node| node.into_sea_cond_expr_list()).collect();
+      let exprs = exprs?;
+
+      // if exprs.is_empty() {
+      //   return Err(IntoSeaError::EmptyParameters);
+      // }
+
       // We flattlen the Vec<Vec<ConditionExpression>> to a Vec<ConditionExpression>
-      let exprs_flat = exprs?.into_iter().flatten();
+      let exprs_flat = exprs.into_iter().flatten();
 
       let mut cond = Condition::all();
       for cond_item in exprs_flat {

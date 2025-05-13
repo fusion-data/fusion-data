@@ -1,7 +1,6 @@
+use crate::application::ApplicationBuilder;
 use async_trait::async_trait;
 use std::{any::Any, ops::Deref, sync::Arc};
-
-use crate::application::ApplicationBuilder;
 
 /// Plugin Reference
 #[derive(Clone)]

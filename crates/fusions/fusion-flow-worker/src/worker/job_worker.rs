@@ -1,12 +1,12 @@
 use std::time::Duration;
 
-use fusion_flow_api::v1::{scheduler_api_client::SchedulerApiClient, ListSchedulersRequest};
+use fusion_flow_api::v1::{ListSchedulersRequest, scheduler_api_client::SchedulerApiClient};
 use tonic::{
-  transport::{Channel, Endpoint, Uri},
   Request,
+  transport::{Channel, Endpoint, Uri},
 };
 use tracing::{debug, info};
-use ultimate_core::{component::Component, timer::Timer, DataError, Result};
+use ultimate_core::{DataError, Result, component::Component, timer::Timer};
 
 use crate::config::WorkerConfig;
 
@@ -17,7 +17,7 @@ pub struct JobWorker {
   worker_config: WorkerConfig,
 
   #[component]
-  timer: Timer,
+  _timer: Timer,
 }
 
 impl JobWorker {

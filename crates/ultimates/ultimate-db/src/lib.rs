@@ -2,9 +2,8 @@ mod api_helpers;
 mod macro_helpers;
 
 use ::config::{File, FileFormat};
-use async_trait::async_trait;
 pub use modelsql::{DbConfig, ModelManager};
-use ultimate_core::{application::ApplicationBuilder, configuration::ConfigRegistry, plugin::Plugin};
+use ultimate_core::{application::ApplicationBuilder, async_trait, configuration::ConfigRegistry, plugin::Plugin};
 
 pub mod acs;
 pub use api_helpers::*;

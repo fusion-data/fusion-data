@@ -1,7 +1,7 @@
 use proc_macro2::{Span, TokenStream};
-use quote::{quote, ToTokens};
+use quote::{ToTokens, quote};
 use syn::{
-  punctuated::Punctuated, AngleBracketedGenericArguments, Attribute, GenericArgument, PathArguments, Type, TypePath,
+  AngleBracketedGenericArguments, Attribute, GenericArgument, PathArguments, Type, TypePath, punctuated::Punctuated,
 };
 
 fn inject_error_tip() -> syn::Error {
@@ -78,9 +78,11 @@ impl Injectable {
       return Ok(InjectableType::ConfigArc(Self::get_argument_type(&last_path_segment.arguments)?));
     }
 
-    // Ok(InjectableType::Component(ty))
-    // XXX 非 config、component、ComponentArc、ConfigArc 类型，使用默认的 Default::default() 初始化
-    eprintln!("[Missing] type path: {:?}, {:#?}", ty.to_token_stream(), last_path_segment.to_token_stream());
+    // println!(
+    //   "Non-config, component, ComponentArc, ConfigArc type, using default initialization with Default::default(): {:#?}",
+    //   last_path_segment.to_token_stream()
+    // );
+    // Non-config, component, ComponentArc, ConfigArc type, using default initialization with Default::default()
     Ok(InjectableType::Default)
   }
 

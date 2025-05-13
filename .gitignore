@@ -297,3 +297,4 @@ venv.bak/
 .*.dtmp
 var/
 !var/.gitkeep
+crates/data/

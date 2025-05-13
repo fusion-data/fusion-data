@@ -1,4 +1,4 @@
-use modelsql::{base::DbBmc, generate_common_bmc_fns};
+use modelsql::{base::DbBmc, generate_pg_bmc_common};
 
 use super::{Policy, PolicyForCreate, PolicyForUpdate};
 
@@ -7,7 +7,7 @@ impl DbBmc for PolicyBmc {
   const TABLE: &'static str = "policy";
 }
 
-generate_common_bmc_fns!(
+generate_pg_bmc_common!(
   Bmc: PolicyBmc,
   Entity: Policy,
   ForCreate: PolicyForCreate,

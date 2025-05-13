@@ -2,6 +2,9 @@ use crate::filter::{IntoSeaError, OpValsValue, SeaResult};
 use serde::{Deserialize, Serialize};
 use ultimate_common::time::{Duration, UtcDateTime};
 
+#[cfg(feature = "with-uuid")]
+use uuid::Uuid;
+
 pub fn try_into_op_vals_value_opt<V: Serialize>(value: V) -> Result<Option<OpValsValue>, serde_json::Error> {
   let value = serde_json::to_value(value)?;
 
@@ -10,8 +13,9 @@ pub fn try_into_op_vals_value_opt<V: Serialize>(value: V) -> Result<Option<OpVal
   Ok(if values.0.is_empty() { None } else { Some(values) })
 }
 
+#[cfg(feature = "with-uuid")]
 pub fn uuid_to_sea_value(json_value: serde_json::Value) -> SeaResult<sea_query::Value> {
-  Ok(uuid::Uuid::deserialize(json_value)?.into())
+  Ok(Uuid::deserialize(json_value)?.into())
 }
 
 pub fn datetime_to_sea_value(v: serde_json::Value) -> SeaResult<sea_query::Value> {

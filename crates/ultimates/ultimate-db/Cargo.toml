@@ -13,29 +13,26 @@ workspace = true
 [features]
 # utoipa = ["dep:utoipa", "ultimate-api/utoipa"]
 with-ilike = []
+with-postgres = ["modelsql/with-postgres"]
+with-sqlite = ["modelsql/with-sqlite"]
+with-uuid = ["modelsql/with-uuid"]
 
 [dependencies]
 ultimate-common.workspace = true
-ultimate-core = { workspace = true, features = ["modelsql"] }
+ultimate-core = { workspace = true, features = ["modelsql", "ultimate-api"] }
 ultimate-api = { workspace = true, features = ["modelsql"] }
 modelsql = { workspace = true }
-async-trait.workspace = true
-derive_more.workspace = true
 serde.workspace = true
-serde_with.workspace = true
 serde_json.workspace = true
 log.workspace = true
 thiserror.workspace = true
 tokio.workspace = true
 tracing.workspace = true
-uuid = { workspace = true }
+uuid = { workspace = true, optional = true }
 config = { workspace = true }
 sqlx.workspace = true
 sea-query.workspace = true
 sea-query-binder.workspace = true
-pgvector = { workspace = true }
-chrono = { workspace = true }
-# utoipa = { workspace = true, optional = true }
 tonic = { workspace = true, optional = true }
 
 [dev-dependencies]

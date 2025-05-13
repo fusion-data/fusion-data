@@ -2,13 +2,13 @@ use std::{sync::Arc, time::Duration};
 
 use async_trait::async_trait;
 use hierarchical_hash_wheel_timer::{
-  thread_timer::{self, TimerWithThread},
   ClosureTimer, Timer as _,
+  thread_timer::{self, TimerWithThread},
 };
 pub use hierarchical_hash_wheel_timer::{OneShotClosureState, PeriodicClosureState, TimerReturn};
 use uuid::Uuid;
 
-use crate::{application::ApplicationBuilder, plugin::Plugin, DataError};
+use crate::{DataError, application::ApplicationBuilder, plugin::Plugin};
 
 pub type TimerCore = TimerWithThread<Uuid, OneShotClosureState<Uuid>, PeriodicClosureState<Uuid>>;
 

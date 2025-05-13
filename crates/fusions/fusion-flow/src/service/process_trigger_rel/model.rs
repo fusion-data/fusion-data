@@ -1,8 +1,8 @@
 use modelsql::{
   field::Fields,
   filter::{FilterNodes, OpValsInt64, OpValsUuid, OpValsValue},
+  postgres::PgRowType,
   utils::datetime_to_sea_value,
-  DbRowType,
 };
 use sqlx::prelude::FromRow;
 use ultimate_common::time::UtcDateTime;
@@ -15,7 +15,7 @@ pub struct ProcessTriggerRel {
   pub cid: i64,
   pub ctime: UtcDateTime,
 }
-impl DbRowType for ProcessTriggerRel {}
+impl PgRowType for ProcessTriggerRel {}
 
 #[derive(Debug, Fields)]
 pub struct ProcessTriggerRelForCreate {

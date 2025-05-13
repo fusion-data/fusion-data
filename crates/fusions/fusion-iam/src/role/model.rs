@@ -1,7 +1,7 @@
 use modelsql::{
   field::Fields,
   filter::{FilterNodes, OpValsInt32, OpValsString},
-  DbRowType,
+  postgres::PgRowType,
 };
 use sea_query::enum_def;
 use sqlx::prelude::FromRow;
@@ -23,7 +23,7 @@ pub struct Role {
   pub mid: Option<i64>,
   pub mtime: Option<UtcDateTime>,
 }
-impl DbRowType for Role {}
+impl PgRowType for Role {}
 
 impl From<RoleStatus> for sea_query::Value {
   fn from(value: RoleStatus) -> Self {

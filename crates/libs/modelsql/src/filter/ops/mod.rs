@@ -4,6 +4,7 @@ pub mod op_val_bool;
 pub mod op_val_nums;
 pub mod op_val_string;
 
+#[cfg(feature = "with-uuid")]
 pub mod op_val_uuid;
 pub mod op_val_value;
 
@@ -12,6 +13,7 @@ pub mod op_val_value;
 pub enum OpVal {
   String(OpValString),
 
+  #[cfg(feature = "with-uuid")]
   Uuid(OpValUuid),
 
   Int64(OpValInt64),
@@ -69,7 +71,7 @@ impl_from_for_opvals!(
 );
 
 // Uuid
-
+#[cfg(feature = "with-uuid")]
 impl_from_for_opvals!(OpValUuid, OpValsUuid);
 
 // endregion: --- From [Type]OpVal & Vec<[Type]OpVal> to [Type]OpVals

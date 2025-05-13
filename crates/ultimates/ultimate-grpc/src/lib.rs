@@ -1,8 +1,8 @@
 use std::net::SocketAddr;
 
 use ::config::{File, FileFormat};
-use config::{GrpcConfig, DEFAULT_CONFIG_STR};
-use tonic::service::{interceptor::InterceptedService, Routes};
+use config::{DEFAULT_CONFIG_STR, GrpcConfig};
+use tonic::service::{Routes, interceptor::InterceptedService};
 use ultimate_core::{application::ApplicationBuilder, async_trait, plugin::Plugin};
 
 pub mod config;
@@ -16,10 +16,10 @@ pub struct GrpcStartInfo {
   pub local_addr: SocketAddr,
 }
 
-pub struct GrpcSettings<'b> {
-  pub conf: &'b GrpcConfig,
+pub struct GrpcSettings {
+  pub conf: GrpcConfig,
   /// tonic generated file descriptor sets
-  pub encoded_file_descriptor_sets: Vec<&'b [u8]>,
+  pub encoded_file_descriptor_sets: Vec<&'static [u8]>,
   pub routes: Routes,
 }
 

@@ -2,7 +2,7 @@
 /// Note: If custom functionality is required, use the code below as foundational
 ///       code for the custom implementations.
 #[macro_export]
-macro_rules! generate_common_bmc_fns {
+macro_rules! generate_sqlite_bmc_common {
 	(
 		Bmc: $struct_name:ident,
 		Entity: $entity:ty,
@@ -46,7 +46,7 @@ macro_rules! generate_common_bmc_fns {
 				mm: &modelsql::ModelManager,
 				id: impl Into<modelsql::id::Id>,
 			) -> modelsql::Result<$entity> {
-				modelsql::base::find_by_id::<Self, _>(mm, id.into()).await
+				modelsql::base::sqlite_find_by_id::<Self, _>(mm, id.into()).await
 			}
 
 			$(
@@ -82,7 +82,7 @@ macro_rules! generate_common_bmc_fns {
 }
 
 #[macro_export]
-macro_rules! generate_filter_bmc_fns {
+macro_rules! generate_sqlite_bmc_filter {
 	(
 		Bmc: $struct_name:ident,
 		Entity: $entity:ty,
@@ -94,7 +94,7 @@ macro_rules! generate_filter_bmc_fns {
 				mm: &modelsql::ModelManager,
 				filter: Vec<$filter>,
 			) -> modelsql::Result<Option<$entity>> {
-				modelsql::base::find_unique::<Self, _, _>(mm, filter).await
+				modelsql::base::sqlite_find_unique::<Self, _, _>(mm, filter).await
 			}
 
 			pub async fn find_many(
@@ -102,7 +102,7 @@ macro_rules! generate_filter_bmc_fns {
 				filter: Vec<$filter>,
 				list_options: Option<modelsql::filter::ListOptions>,
 			) -> modelsql::Result<Vec<$entity>> {
-				modelsql::base::find_many::<Self, _, _>(mm, filter, list_options).await
+				modelsql::base::sqlite_find_many::<Self, _, _>(mm, filter, list_options).await
 			}
 
 			pub async fn count(
@@ -117,7 +117,7 @@ macro_rules! generate_filter_bmc_fns {
 				filter: Vec<$filter>,
 				list_options: modelsql::filter::ListOptions,
 			) -> modelsql::Result<modelsql::page::PageResult<$entity>> {
-				modelsql::base::page::<Self, _, _>(mm, filter, list_options).await
+				modelsql::base::sqlite_page::<Self, _, _>(mm, filter, list_options).await
 			}
 
 			$(

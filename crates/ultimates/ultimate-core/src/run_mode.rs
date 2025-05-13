@@ -1,6 +1,6 @@
 use serde::{
-  de::{Unexpected, Visitor},
   Deserialize, Deserializer, Serialize,
+  de::{Unexpected, Visitor},
 };
 use strum::AsRefStr;
 
@@ -39,7 +39,7 @@ impl<'de> Deserialize<'de> for RunMode {
 
     struct StrToRunMode;
 
-    impl<'d> Visitor<'d> for StrToRunMode {
+    impl Visitor<'_> for StrToRunMode {
       type Value = RunMode;
 
       fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {

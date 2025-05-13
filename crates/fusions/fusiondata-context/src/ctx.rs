@@ -1,12 +1,9 @@
 use std::sync::Arc;
 
 use modelsql::ModelManager;
-use tonic::{metadata::MetadataMap, Extensions, Status};
+use tonic::{Extensions, Status, metadata::MetadataMap};
 use tracing::error;
-use ultimate_common::{
-  ctx::{Ctx, CtxPayload},
-  time::now_utc,
-};
+use ultimate_common::{ctx::Ctx, time::now_utc};
 use ultimate_core::application::Application;
 use ultimate_grpc::utils::extract_payload_from_metadata;
 

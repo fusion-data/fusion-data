@@ -2179,6 +2179,7 @@ version = "0.30.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2e99fb7a497b1e3339bc746195567ed8d3e24945ecd636e3619d20b9de9e9149"
 dependencies = [
+ "cc",
  "pkg-config",
  "vcpkg",
 ]
@@ -2322,6 +2323,7 @@ dependencies = [
  "log",
  "modelsql-macros",
  "pgvector",
+ "rust_decimal",
  "sea-query",
  "sea-query-binder",
  "serde",
@@ -4531,9 +4533,9 @@ dependencies = [
 
 [[package]]
 name = "tokio-cron-scheduler"
-version = "0.13.0"
+version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6a5597b569b4712cf78aa0c9ae29742461b7bda1e49c2a5fdad1d79bf022f8f0"
+checksum = "5c71ce8f810abc9fabebccc30302a952f9e89c6cf246fafaf170fef164063141"
 dependencies = [
  "chrono",
  "croner",
@@ -5105,18 +5107,13 @@ name = "ultimate-db"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "async-trait",
- "chrono",
  "config",
- "derive_more",
  "log",
  "modelsql",
- "pgvector",
  "sea-query",
  "sea-query-binder",
  "serde",
  "serde_json",
- "serde_with",
  "sqlx",
  "thiserror 2.0.12",
  "tokio",

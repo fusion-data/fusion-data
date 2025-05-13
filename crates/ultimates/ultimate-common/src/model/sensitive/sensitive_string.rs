@@ -1,6 +1,6 @@
 use core::{fmt, ops::Deref};
 
-use serde::{de::Visitor, Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::Visitor};
 
 use crate::string;
 
@@ -125,7 +125,7 @@ impl<'de> Deserialize<'de> for SensitiveString {
     D: serde::Deserializer<'de>,
   {
     struct SensitiveStringVisitor;
-    impl<'de> Visitor<'de> for SensitiveStringVisitor {
+    impl Visitor<'_> for SensitiveStringVisitor {
       type Value = SensitiveString;
 
       fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {

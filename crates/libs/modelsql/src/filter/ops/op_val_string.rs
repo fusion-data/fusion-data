@@ -105,8 +105,8 @@ impl From<&str> for OpVal {
 // endregion: --- Primitive to OpVal::String(StringOpVal::Eq)
 
 mod json {
-  use crate::filter::json::OpValueToOpValType;
   use crate::filter::OpValString;
+  use crate::filter::json::OpValueToOpValType;
   use crate::filter::{Error, Result};
   use serde_json::Value;
 
@@ -191,7 +191,7 @@ mod json {
 // region:    --- with-sea-query
 mod with_sea_query {
   use super::*;
-  use crate::filter::{sea_is_col_value_null, FilterNodeOptions, SeaResult};
+  use crate::filter::{FilterNodeOptions, SeaResult, sea_is_col_value_null};
   use crate::into_node_value_expr;
   use sea_query::{BinOper, ColumnRef, Condition, ConditionExpression, Expr, Func, SimpleExpr};
 
@@ -234,8 +234,8 @@ mod with_sea_query {
 
       let case_insensitive_fn = |op: BinOper, v: String| {
         let vxpr = SimpleExpr::Value(v.into());
-        let col_expr = SimpleExpr::FunctionCall(Func::lower(Expr::col(col.clone())).into());
-        let value_expr = SimpleExpr::FunctionCall(Func::lower(vxpr).into());
+        let col_expr = SimpleExpr::FunctionCall(Func::lower(Expr::col(col.clone())));
+        let value_expr = SimpleExpr::FunctionCall(Func::lower(vxpr));
         ConditionExpression::SimpleExpr(SimpleExpr::binary(col_expr, op, value_expr))
       };
 

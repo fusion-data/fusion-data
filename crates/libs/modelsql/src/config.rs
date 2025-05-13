@@ -4,6 +4,8 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use ultimate_common::model::sensitive::UriString;
 
+use crate::store::dbx::DbxType;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DbConfig {
   enable: bool,
@@ -121,5 +123,20 @@ impl DbConfig {
 
   pub fn application_name(&self) -> Option<&str> {
     self.application_name.as_deref()
+  }
+
+  pub fn database_type(&self) -> DbxType {
+    if let Some(url) = self.url() {
+      #[cfg(feature = "with-postgres")]
+      if url.starts_with("postgres://") {
+        return DbxType::Postgres;
+      }
+      #[cfg(feature = "with-sqlite")]
+      if url.starts_with("file:") || url.starts_with("sqlite:") {
+        return DbxType::Sqlite;
+      }
+    }
+
+    panic!("Unsupported database type: {:?}", self);
   }
 }

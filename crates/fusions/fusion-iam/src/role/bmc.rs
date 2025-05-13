@@ -1,7 +1,7 @@
 use modelsql::{
   base::{self, compute_list_options, DbBmc},
   filter::{FilterGroups, ListOptions},
-  generate_common_bmc_fns, ModelManager, Result,
+  generate_pg_bmc_common, ModelManager, Result,
 };
 use sea_query::{Condition, Expr, Query, SelectStatement};
 use ultimate_api::v1::{Page, PagePayload, Pagination};
@@ -18,7 +18,7 @@ impl DbBmc for RoleBmc {
   const TABLE: &'static str = "role";
 }
 
-generate_common_bmc_fns!(
+generate_pg_bmc_common!(
   Bmc: RoleBmc,
   Entity: Role,
   ForCreate: CreateRoleDto,
@@ -39,7 +39,7 @@ impl RoleBmc {
 
   async fn find_many(mm: &ModelManager, filters: RoleFilters, list_options: Option<ListOptions>) -> Result<Vec<Role>> {
     let items =
-      base::find_many_on::<Self, Role, _>(mm, |query| Self::select_statement(query, filters, list_options)).await?;
+      base::pg_find_many_on::<Self, Role, _>(mm, |query| Self::select_statement(query, filters, list_options)).await?;
     Ok(items)
   }
 

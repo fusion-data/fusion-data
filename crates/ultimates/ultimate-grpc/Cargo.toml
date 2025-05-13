@@ -8,7 +8,9 @@ license.workspace = true
 repository.workspace = true
 
 [lints]
-workspace = true
+# workspace = true
+[lints.rust]
+unsafe_code = "allow"
 
 [features]
 default = ["opentelemetry"]

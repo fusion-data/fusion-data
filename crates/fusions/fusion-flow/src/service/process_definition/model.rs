@@ -1,14 +1,14 @@
-use fusion_flow_api::v1::{self, process_definition::ProcessStatus, CreateProcessRequest};
+use fusion_flow_api::v1::{self, CreateProcessRequest, process_definition::ProcessStatus};
 use modelsql::{
   field::Fields,
   filter::{FilterNodes, OpValsInt32, OpValsUuid, OpValsValue},
   page::PageResult,
+  postgres::PgRowType,
   utils::datetime_to_sea_value,
-  DbRowType,
 };
 use sea_query::enum_def;
 use sqlx::FromRow;
-use ultimate_api::v1::{Page, PagePayload, Pagination};
+use ultimate_api::v1::{Page, Pagination};
 use ultimate_common::time::UtcDateTime;
 use ultimate_core::DataError;
 use ultimate_db::{
@@ -35,7 +35,7 @@ pub struct ProcessDefinition {
   pub mid: Option<i64>,
   pub mtime: Option<UtcDateTime>,
 }
-impl DbRowType for ProcessDefinition {}
+impl PgRowType for ProcessDefinition {}
 
 impl From<ProcessDefinition> for SchedProcessDto {
   fn from(row: ProcessDefinition) -> Self {
@@ -53,7 +53,7 @@ impl From<ProcessDefinition> for SchedProcessDto {
 }
 
 impl From<ProcessDefinition> for v1::ProcessDefinition {
-  fn from(value: ProcessDefinition) -> Self {
+  fn from(_value: ProcessDefinition) -> Self {
     todo!()
   }
 }

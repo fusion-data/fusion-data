@@ -1,4 +1,4 @@
-use modelsql::{base::DbBmc, generate_common_bmc_fns, generate_filter_bmc_fns};
+use modelsql::{base::DbBmc, generate_pg_bmc_common, generate_pg_bmc_filter};
 
 use super::{UserCredential, UserCredentialFilter, UserCredentialForCreate, UserCredentialForUpdate};
 
@@ -7,14 +7,14 @@ impl DbBmc for UserCredentialBmc {
   const TABLE: &'static str = "user_credential";
 }
 
-generate_common_bmc_fns!(
+generate_pg_bmc_common!(
   Bmc: UserCredentialBmc,
   Entity: UserCredential,
   ForCreate: UserCredentialForCreate,
   ForUpdate: UserCredentialForUpdate,
 );
 
-generate_filter_bmc_fns!(
+generate_pg_bmc_filter!(
   Bmc: UserCredentialBmc,
   Entity: UserCredential,
   Filter: UserCredentialFilter,

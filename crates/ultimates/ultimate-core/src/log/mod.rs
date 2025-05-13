@@ -1,11 +1,11 @@
 mod init_tracing;
 mod utils;
 
+use async_trait::async_trait;
 pub(crate) use init_tracing::*;
 pub use utils::*;
 
 use crate::{application::ApplicationBuilder, plugin::Plugin};
-use async_trait::async_trait;
 
 pub struct TracingPlugin;
 

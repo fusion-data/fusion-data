@@ -4,17 +4,13 @@ use futures::TryFutureExt;
 use prost_types::FieldMask;
 use tokio::{net::TcpListener, sync::oneshot};
 use tonic::{
-  metadata::MetadataMap,
-  transport::{server::TcpIncoming, Server},
   Status,
+  metadata::MetadataMap,
+  transport::{Server, server::TcpIncoming},
 };
 use tracing::info;
 use ultimate_common::ctx::CtxPayload;
-use ultimate_core::{
-  configuration::SecurityConfig,
-  security::{jose::JwtPayload, SecurityUtils},
-  DataError,
-};
+use ultimate_core::{DataError, configuration::SecurityConfig, security::SecurityUtils};
 
 use crate::{GrpcSettings, GrpcStartInfo};
 
@@ -26,13 +22,15 @@ use crate::{GrpcSettings, GrpcStartInfo};
 ///
 #[allow(unused_mut)]
 pub async fn init_grpc_server(
-  setting: GrpcSettings<'_>,
+  setting: GrpcSettings,
 ) -> ultimate_core::Result<(oneshot::Receiver<GrpcStartInfo>, impl Future<Output = ultimate_core::Result<()>>)> {
   let conf = &setting.conf;
   let (tx, rx) = oneshot::channel();
   let tcp_listener = TcpListener::bind(&conf.server_addr).await?;
   let local_addr = tcp_listener.local_addr()?;
-  std::env::set_var("ULTIMATE__GRPC__SERVER_ADDR", local_addr.to_string());
+  unsafe {
+    std::env::set_var("ULTIMATE__GRPC__SERVER_ADDR", local_addr.to_string());
+  }
   let start_info = GrpcStartInfo { local_addr };
   match tx.send(start_info) {
     Ok(_) => info!("gRPC server listening to {}", local_addr),

@@ -11,6 +11,15 @@ pub enum SqlError {
   #[error("Unauthorized: {0}")]
   Unauthorized(String),
 
+  #[error("Execute fail. entity: '{schema:?}.{entity}'")]
+  ExecuteFail { schema: Option<&'static str>, entity: &'static str },
+
+  #[error("Count fail. table: '{schema:?}.{table}'")]
+  CountFail { schema: Option<&'static str>, table: &'static str },
+
+  #[error("Invalid database. database: {0}")]
+  InvalidDatabase(&'static str),
+
   #[error("Invalid argment, error message: {message}")]
   InvalidArgument { message: String },
 
@@ -28,9 +37,6 @@ pub enum SqlError {
 
   #[error("List page under min. min: {min}, actual: {actual}")]
   ListPageUnderMin { min: i64, actual: i64 },
-
-  #[error("Count fail")]
-  CountFail,
 
   // -- DB
   #[error("User already exists. {key}: '{value}'")]

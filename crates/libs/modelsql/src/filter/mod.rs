@@ -20,6 +20,7 @@ pub use ops::op_val_nums::*;
 pub use ops::op_val_string::*;
 
 pub use modelsql_macros::FilterNodes;
+#[cfg(feature = "with-uuid")]
 pub use ops::op_val_uuid::*;
 pub use ops::op_val_value::*;
 pub use ops::*;

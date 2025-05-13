@@ -1,9 +1,9 @@
 use modelsql::{
   field::Fields,
-  filter::{FilterNodes, ListOptions, OpValsInt32, OpValsInt64, OpValsString, OpValsValue},
+  filter::{FilterNodes, OpValsInt32, OpValsInt64, OpValsString, OpValsValue},
   page::PageResult,
+  postgres::PgRowType,
   utils::datetime_to_sea_value,
-  DbRowType,
 };
 use sea_query::enum_def;
 use serde::{Deserialize, Serialize};
@@ -35,7 +35,7 @@ pub struct User {
   pub mid: Option<i64>,
   pub mtime: Option<UtcDateTime>,
 }
-impl DbRowType for User {}
+impl PgRowType for User {}
 
 impl From<User> for UserDto {
   fn from(user: User) -> Self {

@@ -35,7 +35,7 @@ impl CmdRunner {
     }
   }
 
-  async fn compute_process_tasks(&self, sn: Vec<SchedNamespace>) {
+  async fn compute_process_tasks(&self, _sn: Vec<SchedNamespace>) {
     todo!()
   }
 

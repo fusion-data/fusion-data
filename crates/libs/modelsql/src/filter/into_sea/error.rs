@@ -7,6 +7,9 @@ pub enum IntoSeaError {
   #[error("Custom error: {0}")]
   Custom(String),
 
+  #[error("Empty parameters")]
+  EmptyParameters,
+
   #[error(transparent)]
   SerdeJson(#[from] serde_json::Error),
 }
@@ -14,5 +17,9 @@ pub enum IntoSeaError {
 impl IntoSeaError {
   pub fn custom(message: impl Into<String>) -> Self {
     IntoSeaError::Custom(message.into())
+  }
+
+  pub fn empty_parameters() -> Self {
+    IntoSeaError::EmptyParameters
   }
 }

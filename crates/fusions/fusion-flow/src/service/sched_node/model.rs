@@ -2,8 +2,8 @@ use fusion_flow_api::v1::sched_node::{NodeKind, NodeStatus};
 use modelsql::{
   field::Fields,
   filter::{FilterNodes, OpValsInt32, OpValsString, OpValsValue},
+  postgres::PgRowType,
   utils::datetime_to_sea_value,
-  DbRowType,
 };
 use sea_query::enum_def;
 use sqlx::FromRow;
@@ -23,7 +23,7 @@ pub struct SchedNode {
   pub mid: Option<i64>,
   pub mtime: Option<UtcDateTime>,
 }
-impl DbRowType for SchedNode {}
+impl PgRowType for SchedNode {}
 
 #[derive(Fields)]
 pub struct SchedNodeForCreate {

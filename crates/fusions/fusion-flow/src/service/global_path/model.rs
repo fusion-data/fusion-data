@@ -1,7 +1,7 @@
 use modelsql::{
   field::Fields,
   filter::{FilterNodes, OpValsInt64, OpValsString},
-  DbRowType,
+  postgres::PgRowType,
 };
 use sqlx::prelude::FromRow;
 
@@ -11,7 +11,7 @@ pub struct GlobalPath {
   pub value: Option<String>,
   pub revision: i64,
 }
-impl DbRowType for GlobalPath {}
+impl PgRowType for GlobalPath {}
 
 impl GlobalPath {
   pub const MASTER: &str = "/master";

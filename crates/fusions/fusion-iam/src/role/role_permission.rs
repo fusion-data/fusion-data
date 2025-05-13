@@ -2,7 +2,8 @@ use modelsql::{
   base::{self, DbBmc},
   field::Fields,
   filter::{FilterNodes, OpValsInt64},
-  DbRowType, ModelManager, Result,
+  postgres::PgRowType,
+  ModelManager, Result,
 };
 use sea_query::enum_def;
 use sqlx::FromRow;
@@ -16,7 +17,7 @@ pub struct RolePermission {
   cid: i64,
   ctime: UtcDateTime,
 }
-impl DbRowType for RolePermission {}
+impl PgRowType for RolePermission {}
 
 #[derive(Debug, Fields)]
 pub struct RolePermissionForCreate {

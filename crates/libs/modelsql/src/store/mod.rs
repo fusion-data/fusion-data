@@ -1,3 +1,3 @@
 pub(crate) mod dbx;
 
-pub use dbx::{Db, Dbx, DbxError};
+pub use dbx::{create_dbx, Dbx, DbxError};

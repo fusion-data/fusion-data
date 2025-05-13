@@ -1,7 +1,7 @@
 use modelsql::{
   base::{self, prep_fields_for_update, CommonIden, DbBmc},
   field::HasSeaFields,
-  generate_common_bmc_fns, generate_filter_bmc_fns, ModelManager, Result, SqlError,
+  generate_pg_bmc_common, generate_pg_bmc_filter, ModelManager, Result, SqlError,
 };
 use sea_query::{Expr, PostgresQueryBuilder, Query};
 use sea_query_binder::SqlxBinder;
@@ -24,7 +24,13 @@ impl SchedNodeBmc {
     );
     let query = sqlx::query_as::<_, SchedNode>(&sql).bind(valid_check_time);
 
-    let node = mm.dbx().fetch_optional(query).await?;
+    let node = mm
+      .dbx()
+      .use_postgres(async |dbx| {
+        let node = dbx.fetch_optional(query).await?;
+        Ok(node)
+      })
+      .await?;
     Ok(node)
   }
 
@@ -49,11 +55,14 @@ impl SchedNodeBmc {
     // -- Execute query
     let (sql, values) = query.build_sqlx(PostgresQueryBuilder);
     let sqlx_query = sqlx::query_as_with::<_, SchedNode, _>(&sql, values);
-    let node = mm.dbx().fetch_optional(sqlx_query).await?.ok_or_else(|| SqlError::EntityNotFound {
-      schema: Self::SCHEMA,
-      entity: Self::TABLE,
-      id: id.into(),
-    })?;
+    let node = mm
+      .dbx()
+      .use_postgres(async |dbx| {
+        let node = dbx.fetch_optional(sqlx_query).await?;
+        Ok(node)
+      })
+      .await?
+      .ok_or_else(|| SqlError::EntityNotFound { schema: Self::SCHEMA, entity: Self::TABLE, id: id.into() })?;
     Ok(node)
   }
 
@@ -80,19 +89,24 @@ impl SchedNodeBmc {
       .bind(mm.ctx_ref()?.uid())
       .bind(now());
 
-    mm.dbx().execute(query).await?;
+    mm.dbx()
+      .use_postgres(async |dbx| {
+        dbx.execute(query).await?;
+        Ok(())
+      })
+      .await?;
     Ok(())
   }
 }
 
-generate_common_bmc_fns!(
+generate_pg_bmc_common!(
   Bmc: SchedNodeBmc,
   Entity: SchedNode,
   ForCreate: SchedNodeForCreate,
   ForUpdate: SchedNodeForUpdate,
 );
 
-generate_filter_bmc_fns!(
+generate_pg_bmc_filter!(
   Bmc: SchedNodeBmc,
   Entity: SchedNode,
   Filter: SchedNodeFilter,

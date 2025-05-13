@@ -4,21 +4,21 @@ use chrono::{DateTime, Utc};
 use croner::Cron;
 use duration_str::HumanFormat;
 use fusion_flow_api::v1::{
-  trigger_definition::{Schedule as ProtoSchedule, TriggerKind},
   CronSchedule, SimpleSchedule,
+  trigger_definition::{Schedule as ProtoSchedule, TriggerKind},
 };
 use modelsql::{
   field::Fields,
   filter::{FilterNodes, ListOptions, OpValsInt32, OpValsInt64, OpValsString, OpValsValue},
   page::PageResult,
+  postgres::PgRowType,
   utils::datetime_to_sea_value,
-  DbRowType,
 };
 use sea_query::enum_def;
 use serde::{Deserialize, Serialize};
-use sqlx::{postgres::PgTypeInfo, FromRow};
+use sqlx::{FromRow, postgres::PgTypeInfo};
 use ulid::Ulid;
-use ultimate_api::v1::{Page, PagePayload, Pagination};
+use ultimate_api::v1::Page;
 use ultimate_common::time::UtcDateTime;
 use ultimate_core::DataError;
 
@@ -48,7 +48,7 @@ pub struct TriggerDefinition {
   pub mid: Option<i64>,
   pub mtime: Option<UtcDateTime>,
 }
-impl DbRowType for TriggerDefinition {}
+impl PgRowType for TriggerDefinition {}
 
 impl TriggerDefinition {
   pub fn is_valid_time(&self, now: &DateTime<Utc>) -> bool {
@@ -147,7 +147,7 @@ pub struct TriggerDefinitionForPage {
 impl TryFrom<PageTriggerRequest> for TriggerDefinitionForPage {
   type Error = DataError;
 
-  fn try_from(value: PageTriggerRequest) -> Result<Self, Self::Error> {
+  fn try_from(_value: PageTriggerRequest) -> Result<Self, Self::Error> {
     todo!()
   }
 }

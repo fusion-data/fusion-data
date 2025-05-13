@@ -19,6 +19,7 @@ opentelemetry = [
   "dep:init-tracing-opentelemetry",
   "dep:tracing-opentelemetry-instrumentation-sdk",
 ]
+ultimate-api = ["dep:ultimate-api"]
 
 [dependencies]
 ultimate-common.workspace = true

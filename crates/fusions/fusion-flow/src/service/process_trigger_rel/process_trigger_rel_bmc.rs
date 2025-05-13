@@ -1,7 +1,7 @@
 use modelsql::{
+  ModelManager, Result, SqlError,
   base::{self, DbBmc},
   filter::OpValUuid,
-  ModelManager, Result, SqlError,
 };
 use uuid::Uuid;
 
@@ -17,6 +17,7 @@ impl DbBmc for ProcessTriggerRelBmc {
 }
 
 impl ProcessTriggerRelBmc {
+  #[allow(unused)]
   pub async fn delete_by(mm: &ModelManager, process_id: Option<Uuid>, trigger_id: Option<Uuid>) -> Result<u64> {
     if process_id.is_none() && trigger_id.is_none() {
       return Err(SqlError::InvalidArgument {
@@ -39,7 +40,8 @@ impl ProcessTriggerRelBmc {
     base::insert_many::<Self, _>(mm, data).await
   }
 
+  #[allow(unused)]
   pub async fn find_many(mm: &ModelManager, filter: ProcessTriggerRelFilter) -> Result<Vec<ProcessTriggerRel>> {
-    base::find_many::<Self, _, _>(mm, filter, None).await
+    base::pg_find_many::<Self, _, _>(mm, filter, None).await
   }
 }
