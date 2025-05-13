@@ -1,13 +1,13 @@
+use modelsql::{
+  field::Fields,
+  filter::{FilterNodes, OpValString, OpValsInt64, OpValsString},
+  postgres::PgRowType,
+};
 use o2o::o2o;
 use sea_query::enum_def;
 use sqlx::prelude::FromRow;
 use ultimate_api::v1::PagePayload;
 use ultimate_common::time::UtcDateTime;
-use ultimate_db::modql::{
-  field::Fields,
-  filter::{FilterNodes, OpValString, OpValsInt64, OpValsString},
-};
-use ultimate_db::DbRowType;
 
 use crate::{
   pb::fusion_iam::v1::{CreatePermissionDto, FilterPermissionDto, PagePermissionResponse, UpdatePermissionDto},
@@ -28,7 +28,7 @@ pub struct Permission {
   pub mid: Option<i64>,
   pub mtime: Option<UtcDateTime>,
 }
-impl DbRowType for Permission {}
+impl PgRowType for Permission {}
 
 #[derive(Debug, Fields, o2o)]
 #[from_owned(CreatePermissionDto)]

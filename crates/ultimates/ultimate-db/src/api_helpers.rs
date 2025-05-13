@@ -1,11 +1,13 @@
-use crate::modql::filter::{
-  OpValInt32, OpValInt64, OpValString, OpValUuid, OpValValue, OpValsInt32, OpValsInt64, OpValsString, OpValsUuid,
-  OpValsValue,
+use modelsql::filter::{
+  OpValInt32, OpValInt64, OpValString, OpValValue, OpValsInt32, OpValsInt64, OpValsString, OpValsValue,
 };
-use ultimate::DataError;
+#[cfg(feature = "with-uuid")]
+use modelsql::filter::{OpValUuid, OpValsUuid};
 use ultimate_api::v1::{Null, OpNumber, OpString, ValInt32, ValInt64, ValString};
+use ultimate_core::DataError;
 
 /// 将 ValString 转换为 OpValsUuid。通常用于可映射为字符串的数据类型，比如：UUID、DateTime(字符串格式化)、……
+#[cfg(feature = "with-uuid")]
 pub fn try_into_op_vals_uuid_with_filter_string(
   value: impl IntoIterator<Item = ValString>,
 ) -> Result<Option<OpValsUuid>, DataError> {
@@ -59,6 +61,7 @@ fn try_into_op_val_value_with_int64(v: ValInt64) -> Result<OpValValue, DataError
   Ok(op_val)
 }
 
+#[cfg(feature = "with-uuid")]
 fn try_into_op_val_uuid(v: ValString) -> Result<OpValUuid, DataError> {
   let op_val = match v.o() {
     OpString::Eq => OpValUuid::Eq(v.try_into()?),

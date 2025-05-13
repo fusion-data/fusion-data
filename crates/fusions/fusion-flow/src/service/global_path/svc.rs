@@ -1,6 +1,6 @@
 use fusiondata_context::ctx::CtxW;
-use ultimate::{component::Component, Result};
-use ultimate_db::modql::filter::OpValString;
+use ultimate_core::{component::Component, Result};
+use modelsql::filter::OpValString;
 
 use super::{GlobalPath, GlobalPathBmc, GlobalPathFilter};
 

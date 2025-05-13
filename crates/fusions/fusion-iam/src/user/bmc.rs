@@ -1,4 +1,4 @@
-use ultimate_db::{base::DbBmc, generate_common_bmc_fns, generate_filter_bmc_fns};
+use modelsql::{base::DbBmc, generate_pg_bmc_common, generate_pg_bmc_filter};
 
 use super::{User, UserFilter, UserForCreate, UserForUpdate};
 
@@ -7,14 +7,14 @@ impl DbBmc for UserBmc {
   const TABLE: &'static str = "user";
 }
 
-generate_common_bmc_fns!(
+generate_pg_bmc_common!(
   Bmc: UserBmc,
   Entity: User,
   ForCreate: UserForCreate,
   ForUpdate: UserForUpdate,
 );
 
-generate_filter_bmc_fns!(
+generate_pg_bmc_filter!(
   Bmc: UserBmc,
   Entity: User,
   Filter: UserFilter,

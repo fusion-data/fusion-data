@@ -1,13 +1,13 @@
 use chrono::{Duration, Utc};
 use fusion_flow::pb::fusion_flow::v1::ProcessFilterRequest;
-use sea_query::Condition;
-use ultimate::DataError;
-use ultimate_api::v1::{OpNumber, OpString, ValInt64, ValString};
-use ultimate_db::modql::filter::{FilterGroups, FilterNodes, OpValsValue};
-use ultimate_db::{
-  datetime_to_sea_value, try_into_op_vals_value_opt_with_filter_int64, try_into_op_vals_value_opt_with_filter_string,
-  uuid_to_sea_value,
+use modelsql::{
+  filter::{FilterGroups, FilterNodes, OpValsValue},
+  utils::{datetime_to_sea_value, uuid_to_sea_value},
 };
+use sea_query::Condition;
+use ultimate_api::v1::{OpNumber, OpString, ValInt64, ValString};
+use ultimate_core::DataError;
+use ultimate_db::{try_into_op_vals_value_opt_with_filter_int64, try_into_op_vals_value_opt_with_filter_string};
 use uuid::Uuid;
 
 fn main() {
@@ -35,10 +35,10 @@ fn main() {
 
 #[derive(Debug, Default, FilterNodes)]
 struct ProcessFilter {
-  #[modql(to_sea_value_fn = "uuid_to_sea_value")]
+  #[modelsql(to_sea_value_fn = "uuid_to_sea_value")]
   job_id: Option<OpValsValue>,
 
-  #[modql(to_sea_value_fn = "datetime_to_sea_value")]
+  #[modelsql(to_sea_value_fn = "datetime_to_sea_value")]
   ctime: Option<OpValsValue>,
 }
 

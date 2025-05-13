@@ -3,7 +3,7 @@ use std::{env, path::PathBuf};
 // static BASE_PACKAGE: &str = ".fusion_metadata.v1";
 
 // static MESSAGE_ATTR: &str = "#[derive(serde::Serialize, serde::Deserialize)]";
-// static MODQL_MESSAGE_ATTR: &str = "#[derive(ultimate_db::modql::field::Fields)]";
+// static MODQL_MESSAGE_ATTR: &str = "#[derive(modelsql::field::Fields)]";
 
 fn main() {
   let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());

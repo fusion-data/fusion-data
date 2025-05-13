@@ -15,28 +15,28 @@ impl<T> PagePayload<T> {
 }
 
 impl Pagination {
-  pub fn page(&self) -> i64 {
-    self.page
+  pub fn get_page(&self) -> Option<i64> {
+    if self.page > 0 {
+      Some(self.page)
+    } else {
+      None
+    }
   }
 
-  pub fn page_size(&self) -> i64 {
-    self.page_size
+  pub fn get_page_size(&self) -> Option<i64> {
+    if self.page_size > 0 {
+      Some(self.page_size)
+    } else {
+      None
+    }
+  }
+
+  pub fn get_offset(&self) -> Option<i64> {
+    self.offset
   }
 
   pub fn sort_bys(&self) -> Vec<&SortBy> {
     self.sort_bys.iter().collect()
-  }
-
-  pub fn offset_value(&self) -> i64 {
-    if let Some(offset) = self.offset {
-      return offset;
-    }
-    let page = self.page();
-    let page_size = self.page_size();
-    if page < 2 {
-      return 0;
-    }
-    page_size * (page - 1)
   }
 
   pub fn new_default() -> Self {
@@ -56,11 +56,8 @@ impl SortBy {
 }
 
 impl Page {
-  pub fn new(pagination: &Pagination, total_size: i64) -> Self {
-    let page = pagination.page;
-    let page_size = pagination.page_size;
-    let total_page = if total_size == 0 { 0 } else { (total_size + page_size - 1) / page_size };
-    Self { page, page_size, total_size, total_page }
+  pub fn new(total_size: i64) -> Self {
+    Self { total_size }
   }
 }
 

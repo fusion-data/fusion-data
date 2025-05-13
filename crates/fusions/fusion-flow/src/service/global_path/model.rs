@@ -1,9 +1,9 @@
-use sqlx::prelude::FromRow;
-use ultimate_db::modql::{
+use modelsql::{
   field::Fields,
   filter::{FilterNodes, OpValsInt64, OpValsString},
+  postgres::PgRowType,
 };
-use ultimate_db::DbRowType;
+use sqlx::prelude::FromRow;
 
 #[derive(Debug, FromRow, Fields)]
 pub struct GlobalPath {
@@ -11,7 +11,7 @@ pub struct GlobalPath {
   pub value: Option<String>,
   pub revision: i64,
 }
-impl DbRowType for GlobalPath {}
+impl PgRowType for GlobalPath {}
 
 impl GlobalPath {
   pub const MASTER: &str = "/master";

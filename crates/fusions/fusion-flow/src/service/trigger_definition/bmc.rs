@@ -1,8 +1,8 @@
 use chrono::Utc;
-use sea_query::{all, any, Expr, PostgresQueryBuilder, Query};
+use modelsql::field::HasSeaFields;
+use modelsql::{ModelManager, Result, base::DbBmc, generate_pg_bmc_common, generate_pg_bmc_filter};
+use sea_query::{Expr, PostgresQueryBuilder, Query, all, any};
 use sea_query_binder::SqlxBinder;
-use ultimate_db::modql::field::HasSeaFields;
-use ultimate_db::{base::DbBmc, generate_common_bmc_fns, generate_filter_bmc_fns, ModelManager, Result};
 
 use crate::service::sched_namespace::SchedNamespaceIden;
 use crate::service::trigger_definition::TriggerDefinitionIden;
@@ -14,14 +14,14 @@ impl DbBmc for TriggerDefinitionBmc {
   const TABLE: &'static str = "trigger_definition";
 }
 
-generate_common_bmc_fns!(
+generate_pg_bmc_common!(
   Bmc: TriggerDefinitionBmc,
   Entity: TriggerDefinition,
   ForCreate: TriggerDefinitionForCreate,
   ForUpdate: TriggerDefinitionForUpdate,
 );
 
-generate_filter_bmc_fns!(
+generate_pg_bmc_filter!(
   Bmc: TriggerDefinitionBmc,
   Entity: TriggerDefinition,
   Filter: TriggerDefinitionFilter,
@@ -52,10 +52,16 @@ impl TriggerDefinitionBmc {
           Expr::col((TriggerDefinitionIden::Table, TriggerDefinitionIden::InvalidTime)).gte(now)
         ]
       ]);
-
     let (sql, values) = query.build_sqlx(PostgresQueryBuilder);
     let sqlx_query = sqlx::query_as_with::<_, TriggerDefinition, _>(&sql, values);
-    let list = mm.dbx().fetch_all(sqlx_query).await?;
+
+    let list = mm
+      .dbx()
+      .use_postgres(async |dbx| {
+        let items = dbx.fetch_all(sqlx_query).await?;
+        Ok(items)
+      })
+      .await?;
     Ok(list)
   }
 }

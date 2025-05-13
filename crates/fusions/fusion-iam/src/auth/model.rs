@@ -1,4 +1,4 @@
-use ultimate_db::modql::filter::OpValString;
+use modelsql::filter::OpValString;
 
 use crate::{pb::fusion_iam::v1::SigninRequest, user::UserFilter};
 

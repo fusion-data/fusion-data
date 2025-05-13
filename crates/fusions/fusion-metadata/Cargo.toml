@@ -14,14 +14,14 @@ workspace = true
 default = ["tonic-reflection", "tonic-web"]
 tonic-reflection = ["dep:tonic-reflection", "ultimate-grpc/tonic-reflection"]
 tonic-web = ["dep:tonic-web", "ultimate-grpc/tonic-web"]
-opentelemetry = ["ultimate/opentelemetry"]
+opentelemetry = ["ultimate-core/opentelemetry"]
 
 [[bin]]
 name = "fusion-metadata"
 path = "src/bin/fusion-metadata.rs"
 
 [dependencies]
-ultimate = { workspace = true }
+ultimate-core = { workspace = true }
 # -- ultimates
 ultimate-common = { workspace = true }
 ultimate-api = { workspace = true }

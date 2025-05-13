@@ -1,5 +1,5 @@
 use fusiondata_context::ctx::CtxW;
-use ultimate::{component::Component, Result};
+use ultimate_core::{component::Component, Result};
 use ultimate_api::v1::{PagePayload, Pagination};
 
 use crate::role::role_permission::{RolePermissionBmc, RolePermissionForCreate};

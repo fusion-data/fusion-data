@@ -2,7 +2,7 @@
 //!
 use fusiondata_context::ctx::CtxW;
 use tokio::{sync::mpsc, task::JoinHandle};
-use ultimate::{application::Application, component::Component, timer::Timer};
+use ultimate_core::{application::Application, component::Component, timer::Timer};
 
 mod cmd_runner;
 mod master;
@@ -29,7 +29,7 @@ pub struct Broker {
 impl Broker {
   pub async fn spawn_loop(
     &self,
-  ) -> ultimate::Result<(JoinHandle<ultimate::Result<()>>, JoinHandle<ultimate::Result<Scheduler>>)> {
+  ) -> ultimate_core::Result<(JoinHandle<ultimate_core::Result<()>>, JoinHandle<ultimate_core::Result<Scheduler>>)> {
     self.sched_node_svc.register(&CtxW::new_super_admin(Application::global().component())).await?;
 
     let master_handle = {

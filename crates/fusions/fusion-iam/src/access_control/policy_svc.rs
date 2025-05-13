@@ -1,6 +1,6 @@
 use fusiondata::ac::abac::policy::PolicyStatement;
 use fusiondata_context::ctx::CtxW;
-use ultimate::{component::Component, Result};
+use ultimate_core::{component::Component, Result};
 use uuid::Uuid;
 
 use crate::access_control::{bmc::PolicyBmc, PolicyForCreate};

@@ -1,11 +1,11 @@
+use modelsql::{
+  field::Fields,
+  filter::{FilterNodes, OpValsInt32, OpValsInt64, OpValsString},
+  postgres::PgRowType,
+};
 use sea_query::enum_def;
 use sqlx::FromRow;
 use ultimate_common::time::UtcDateTime;
-use ultimate_db::modql::{
-  field::Fields,
-  filter::{FilterNodes, OpValsInt32, OpValsInt64, OpValsString},
-};
-use ultimate_db::DbRowType;
 
 /// 调度命名空间。
 #[derive(Debug, FromRow, Fields)]
@@ -21,7 +21,7 @@ pub struct SchedNamespace {
   pub mid: Option<i64>,
   pub mtime: Option<UtcDateTime>,
 }
-impl DbRowType for SchedNamespace {}
+impl PgRowType for SchedNamespace {}
 
 #[derive(Default, FilterNodes)]
 pub struct SchedNamespaceFilter {

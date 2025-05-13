@@ -1,3 +1,8 @@
+###############
+Mac
+###############
+.DS_Store
+
 ################
 # VisualStudioCode template
 ################
@@ -292,3 +297,4 @@ venv.bak/
 .*.dtmp
 var/
 !var/.gitkeep
+crates/data/

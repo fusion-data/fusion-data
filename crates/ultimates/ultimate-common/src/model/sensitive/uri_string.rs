@@ -2,7 +2,7 @@ use core::{fmt, ops::Deref};
 use std::borrow::Cow;
 
 use regex::Regex;
-use serde::{de::Visitor, Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::Visitor};
 
 use super::{AsUnderlying, ToSensitive};
 
@@ -75,7 +75,7 @@ impl<'de> Deserialize<'de> for UriString {
     D: serde::Deserializer<'de>,
   {
     struct UriStringVisitor;
-    impl<'de> Visitor<'de> for UriStringVisitor {
+    impl Visitor<'_> for UriStringVisitor {
       type Value = UriString;
 
       fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {

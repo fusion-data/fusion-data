@@ -3,4 +3,7 @@
 mod scheduler_grpc_svc;
 mod scheduler_svc;
 
-use scheduler_svc::SchedulerSvc;
+#[allow(unused_imports)]
+pub use scheduler_grpc_svc::SchedulerGrpcSvc;
+#[allow(unused_imports)]
+pub use scheduler_svc::SchedulerSvc;

@@ -1,6 +1,6 @@
 use serde::{
-  de::{Unexpected, Visitor},
   Deserialize, Deserializer, Serialize,
+  de::{Unexpected, Visitor},
 };
 use strum::AsRefStr;
 
@@ -23,7 +23,7 @@ impl<'de> Deserialize<'de> for Effect {
 
     struct StrToEffect;
 
-    impl<'d> Visitor<'d> for StrToEffect {
+    impl Visitor<'_> for StrToEffect {
       type Value = Effect;
 
       fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {

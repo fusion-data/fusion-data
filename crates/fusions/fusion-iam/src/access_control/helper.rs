@@ -1,4 +1,4 @@
-use ultimate::DataError;
+use ultimate_core::DataError;
 
 use crate::pb::fusion_iam::v1::PolicyStatementDto;
 

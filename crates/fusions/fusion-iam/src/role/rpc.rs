@@ -1,8 +1,8 @@
 use fusiondata_context::ctx::CtxW;
 use prost_types::FieldMask;
 use tonic::{Request, Response, Status};
-use ultimate::component::Component;
-use ultimate_db::modql::filter::OpValInt64;
+use ultimate_core::component::Component;
+use modelsql::filter::OpValInt64;
 use ultimate_grpc::{utils::field_mask_match_with, GrpcServiceIntercepted};
 
 use crate::{

@@ -1,14 +1,13 @@
+use modelsql::{
+  base::{self, DbBmc},
+  field::Fields,
+  filter::{FilterNodes, OpValsInt64},
+  postgres::PgRowType,
+  ModelManager, Result,
+};
 use sea_query::enum_def;
 use sqlx::FromRow;
 use ultimate_common::time::UtcDateTime;
-use ultimate_db::modql::{
-  field::Fields,
-  filter::{FilterNodes, OpValsInt64},
-};
-use ultimate_db::{
-  base::{self, DbBmc},
-  DbRowType, ModelManager, Result,
-};
 
 #[derive(Debug, FromRow, Fields)]
 #[enum_def]
@@ -18,7 +17,7 @@ pub struct RolePermission {
   cid: i64,
   ctime: UtcDateTime,
 }
-impl DbRowType for RolePermission {}
+impl PgRowType for RolePermission {}
 
 #[derive(Debug, Fields)]
 pub struct RolePermissionForCreate {

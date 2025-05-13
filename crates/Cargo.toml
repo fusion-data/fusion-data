@@ -4,8 +4,8 @@ resolver = "2"
 
 [workspace.package]
 version = "0.1.0"
-edition = "2021"
-rust-version = "1.85"
+edition = "2024"
+rust-version = "1.86"
 description = "Rust libraries of The fusiondata"
 license = "Apache-2.0"
 repository = "https://github.com/fusion-data/fusion-data"
@@ -16,14 +16,16 @@ unsafe_code = "forbid"
 
 [workspace.dependencies]
 # -- projects begin
+modelsql = { version = "0.1.0", path = "./libs/modelsql" }
+modelsql-macros = { version = "0.1.0", path = "./libs/modelsql-macros" }
 ultimate-common = { version = "0.1.0", path = "./ultimates/ultimate-common" }
-ultimate-macros = { version = "0.1.0", path = "./ultimates/ultimate-macros" }
-ultimate = { version = "0.1.0", path = "./ultimates/ultimate" }
+ultimate-core-macros = { version = "0.1.0", path = "./ultimates/ultimate-core-macros" }
+ultimate-core = { version = "0.1.0", path = "./ultimates/ultimate-core" }
 ultimate-api = { version = "0.1.0", path = "./ultimates/ultimate-api" }
 ultimate-db = { version = "0.1.0", path = "./ultimates/ultimate-db" }
-ultimate-db-macros = { version = "0.1.0", path = "./ultimates/ultimate-db-macros" }
 ultimate-web = { version = "0.1.0", path = "./ultimates/ultimate-web" }
 ultimate-grpc = { version = "0.1.0", path = "./ultimates/ultimate-grpc" }
+ultimate = { version = "0.1.0", path = "./ultimates/ultimate" }
 fusiondata = { version = "0.1.0", path = "./fusions/fusiondata" }
 fusiondata-context = { version = "0.1.0", path = "./fusions/fusiondata-context" }
 fusion-flow-api = { version = "0.1.0", path = "./fusions/fusion-flow-api" }
@@ -40,18 +42,18 @@ image = { version = "0.25" }
 dotenvy = "0.15"
 derive_more = { version = "2.0", features = ["from", "display"] }
 toml = "0.8"
-config = { version = "0.15.11", default-features = false, features = [
+config = { version = "0.15", default-features = false, features = [
     "toml",
     "yaml",
     "json5",
     "json",
 ] }
-itertools = "0.14.0"
+itertools = "0.14"
 regex = { version = "1", features = ["unicode-case"] }
-rand = "0.8.5"
-bytes = "1.10.1"
+rand = "0.8"
+bytes = "1.10"
 ulid = { version = "1", features = ["serde", "uuid"] }
-uuid = { version = "1.15.1", features = [
+uuid = { version = "1.15", features = [
     "v4",
     "v7",
     "fast-rng",
@@ -60,30 +62,30 @@ uuid = { version = "1.15.1", features = [
 ] }
 rust_decimal = { version = "1", features = ["serde-str"] }
 rust_decimal_macros = "1"
-typed-builder = "0.20"
+typed-builder = "0.21"
 derive-getters = "0.5"
 clap = { version = "4.5", features = ["derive"] }
 o2o = { version = "0.5" }
 secrecy = { version = "0.10", features = ["serde"] }
 dashmap = { version = "6.1" }
 # 用于实现依赖注入。提供了一种方法，可以设置一个插件注册表，从任何链接到应用程序的源文件中都可以进行注册。不需要有一个所有插件的中央列表。
-inventory = { version = "0.3.20" }
+inventory = { version = "0.3" }
 # Make retry like a built-in feature provided by Rust.
 backon = { version = "1.2" }
 # -- Helpful macros for working with enums and strings
 enum-iterator = "2"
-strum = { version = "0.27.1", features = ["derive"] }
+strum = { version = "0.27", features = ["derive"] }
 enum_dispatch = "0.3"
 # -- Error
-anyhow = "1.0.97"
-thiserror = "2.0.12"
+anyhow = "1"
+thiserror = "2"
 # -- Macros
 quote = "1.0.40"
-syn = { version = "2.0.100", features = ["full"] }
-proc-macro2 = "1.0.94"
+syn = { version = "2", features = ["full"] }
+proc-macro2 = "1"
 # -- Crypt & Encoding
 base16ct = { version = "0.2", features = ["alloc"] }
-base64ct = { version = "1.7.1", features = ["std", "alloc"] }
+base64ct = { version = "1.7", features = ["std", "alloc"] }
 aes-gcm = "0.10"
 hmac = "0.12"
 sha2 = "0.10"
@@ -94,17 +96,14 @@ aliri = "0.6"
 # -- Async
 futures = "0.3"
 futures-util = "0.3"
-async-trait = "0.1.87"
+async-trait = "0.1"
 async-stream = "0.3"
-tokio = { version = "1.44.0", default-features = false, features = [
-    "full",
-    "tracing",
-] }
+tokio = { version = "1", features = ["full"] }
 tokio-stream = { version = "0.1", features = ["full"] }
 tokio-util = { version = "0.7", features = ["full", "tracing"] }
 tokio-test = { version = "0.4" }
 # -- Logging
-log = "0.4.26"
+log = "0.4"
 env_logger = "0.11"
 # -- Tracing
 tracing = { version = "0.1", features = ["log"] }
@@ -116,75 +115,40 @@ tracing-subscriber = { version = "0.3", features = [
     "json",
 ] }
 tracing-appender = "0.2"
-init-tracing-opentelemetry = { version = "0.27.1", features = [
+init-tracing-opentelemetry = { version = "0.28", features = [
     "tracing_subscriber_ext",
 ] }
-tracing-opentelemetry-instrumentation-sdk = "0.26.0"
+tracing-opentelemetry-instrumentation-sdk = "0.28"
 # -- Time
-chrono = { version = "0.4.40", default-features = false, features = [
+chrono = { version = "0.4", default-features = false, features = [
     "std",
     "clock",
     "serde",
 ] }
-chrono-tz = "0.10.1"
-duration-str = "0.16"
+chrono-tz = "0.10"
+duration-str = "0.17"
 # -- scheduler
 croner = "2.1"
 hierarchical_hash_wheel_timer = { version = "1.3", features = ["uuid"] }
-tokio-cron-scheduler = { version = "0.13", features = ["has_bytes", "signal"] }
+tokio-cron-scheduler = { version = "0.14", features = ["has_bytes", "signal"] }
 # -- Database
-sqlx = { version = "0.8", features = [
-    "runtime-tokio",
-    "postgres",
-    "chrono",
-    "rust_decimal",
-    "json",
-    "uuid",
-] }
-sea-query = { version = "0.32.2", features = ["attr", "thread-safe"] }
-# with sqlx
-sea-query-binder = { version = "0.7", features = [
-    "sqlx-postgres",
-    "postgres-array",
-    "with-json",
-    "with-chrono",
-    "with-rust_decimal",
-    "with-uuid",
-] }
-# with postgres
-postgres = "0.19"
-pgvector = { version = "0.4", features = ["postgres"] }
-sea-query-postgres = { version = "0.5", features = [
-    "with-uuid",
-    "with-chrono",
-    "with-json",
-    "with-time",
-    "with-rust_decimal",
-    "postgres-array",
-    "postgres-vector",
-] }
-# with rusqlite
-sea-query-rusqlite = { version = "0.7", features = [
-    "postgres-array",
-    "with-chrono",
-    "with-json",
-    "with-rust_decimal",
-    "with-uuid",
-] }
-rusqlite = { version = "0.32.1", features = ["bundled"] }
+sqlx = { version = "0.8", features = ["runtime-tokio", "chrono", "json"] }
+sea-query = { version = "0.32", features = ["attr", "thread-safe"] }
+sea-query-binder = { version = "0.7", features = ["with-json", "with-chrono"] }
+pgvector = { version = "0.4", features = ["sqlx"] }
 # -- Serde
-serde = { version = "1.0.219", features = ["derive"] }
+serde = { version = "1.0", features = ["derive"] }
 serde_with = { version = "3.12", features = ["chrono_0_4"] }
-serde_json = { version = "1.0.140" }
-serde_repr = "0.1.20"
+serde_json = { version = "1.0" }
+serde_repr = "0.1"
 # -- Web
 url = "2.4"
-urlencoding = "2.1.3"
+urlencoding = "2.1"
 serde_urlencoded = "0.7"
 headers = "0.4"
 mime = "0.3"
-http = "1.3.1"
-reqwest = { version = "0.12.14", features = ["json"] }
+http = "1"
+reqwest = { version = "0.12", features = ["json"] }
 hyper = "1"
 hyper-util = "0.1"
 tower = "0.5"
@@ -197,10 +161,21 @@ tower-http = { version = "0.6", features = [
 tower-service = { version = "0.3" }
 tower-cookies = "0.11"
 cookie = "0.18"
-axum = { version = "0.7.9", features = ["macros", "form"] }
-axum-extra = { version = "0.9.6", features = ["typed-header"] }
-axum-macros = { version = "0.4.2" }
-axum-tracing-opentelemetry = "0.24.2"
+axum = { version = "0.8", features = ["macros", "form"] }
+axum-extra = { version = "0.10", features = ["typed-header"] }
+axum-macros = { version = "0.5" }
+axum-tracing-opentelemetry = "0.28"
+# -- gRPC
+tonic = "0.13"
+tonic-types = "0.13"
+tonic-reflection = "0.13"
+tonic-web = "0.13"
+# tonic-tracing-opentelemetry = "0.28"
+tonic-build = { version = "0.13", features = ["prost"] }
+# -- Protocol Buffers
+prost = "0.13"
+prost-build = "0.13"
+prost-types = "0.13"
 # # openapi
 # utoipa = { version = "5.1", features = [
 #     "axum_extras",
@@ -212,30 +187,27 @@ axum-tracing-opentelemetry = "0.24.2"
 #     "preserve_path_order",
 # ] }
 # utoipa-scalar = { version = "0.2", features = ["axum"] }
-
 # -- Template Engin
 minijinja = { version = "2.5" }
 # -- Data Science
-polars = "0.46"
+polars = "0.47"
 # An Excel/OpenDocument Spreadsheets reader and deserializer in pure rust
-calamine = "0.26"
+calamine = "0.27"
 # -- Valkey & Redis client
 fred = { version = "10" }
-# -- RPC
-tonic = "0.12"
-tonic-types = "0.12"
-tonic-reflection = "0.12"
-tonic-web = "0.12"
-tonic-tracing-opentelemetry = "0.26.1"
-tonic-build = { version = "0.12", features = ["prost"] }
-prost = "0.13.5"
-prost-build = "0.13.5"
-prost-types = "0.13.5"
-# -- opendal
-opendal = { version = "0.52", features = ["services-obs"] }
+
+# -- cloud storage access
+opendal = { version = "0.53", features = [
+    "services-oss",
+    "services-obs",
+    "services-s3",
+] }
+minio = { version = "0.1" }
+# Documents
+
 # -- LLM
-rig-core = { version = "0.9", features = ["derive"] }
-rig-postgres = { version = "0.1.4" }
+rig-core = { version = "0.12", features = ["derive"] }
+rig-postgres = { version = "0.1" }
 
 # -- Dev/Test
 pretty_assertions = "1.4"

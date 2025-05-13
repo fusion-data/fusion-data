@@ -10,13 +10,11 @@ use axum::{
 use axum_extra::headers::ContentType;
 use mime::Mime;
 use serde::de::DeserializeOwned;
-use ultimate::async_trait;
 
 use crate::AppError;
 
 pub struct JsonOrForm<T>(pub T);
 
-#[async_trait]
 impl<S, T> FromRequest<S> for JsonOrForm<T>
 where
   S: Send + Sync,
@@ -36,12 +34,12 @@ where
     let m: Mime = content_type.into();
 
     let res = if mime::APPLICATION_JSON == m {
-      let axum::Json(res): axum::Json<T> = FromRequest::<S>::from_request(req, state)
+      let axum::Json(res) = axum::Json::<T>::from_request(req, state)
         .await
         .map_err(|ex: JsonRejection| AppError::new(ex.body_text()))?;
       res
     } else if mime::APPLICATION_WWW_FORM_URLENCODED == m {
-      let Form(res): Form<T> = FromRequest::<S>::from_request(req, state)
+      let Form(res) = Form::<T>::from_request(req, state)
         .await
         .map_err(|ex: FormRejection| AppError::new(ex.body_text()))?;
       res

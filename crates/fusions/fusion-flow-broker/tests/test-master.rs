@@ -1,7 +1,7 @@
 use std::{process::exit, time::Duration};
 
 use fusion_flow_broker::loop_master;
-use ultimate::{application::Application, timer::TimerPlugin};
+use ultimate_core::{application::Application, timer::TimerPlugin};
 use ultimate_db::DbPlugin;
 
 #[tokio::test]

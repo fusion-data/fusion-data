@@ -1,4 +1,4 @@
-use ultimate_db::{base::DbBmc, generate_filter_bmc_fns, ModelManager};
+use modelsql::{base::DbBmc, generate_pg_bmc_filter, ModelManager};
 
 use super::{GlobalPath, GlobalPathFilter};
 
@@ -14,7 +14,7 @@ impl DbBmc for GlobalPathBmc {
     false
   }
 }
-generate_filter_bmc_fns!(
+generate_pg_bmc_filter!(
   Bmc: GlobalPathBmc,
   Entity: GlobalPath,
   Filter: GlobalPathFilter,
@@ -26,7 +26,7 @@ impl GlobalPathBmc {
     path: &str,
     value: Option<String>,
     revision: Option<i64>,
-  ) -> ultimate_db::Result<bool> {
+  ) -> modelsql::Result<bool> {
     let sql_str = if revision.is_some() {
       format!(
         r#"INSERT INTO {}(path, value)
@@ -54,7 +54,7 @@ impl GlobalPathBmc {
       query = query.bind(version);
     }
 
-    let ret = mm.dbx().execute(query).await?;
+    let ret = mm.dbx().use_postgres(async |dbx| dbx.execute(query).await).await?;
     Ok(ret == 1)
   }
 }

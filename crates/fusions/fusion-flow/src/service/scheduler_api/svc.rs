@@ -72,12 +72,12 @@ impl SchedulerApi for SchedulerApiGrpcSvc {
 
   async fn event_listener(
     &self,
-    request: Request<Streaming<EventRequest>>,
+    _request: Request<Streaming<EventRequest>>,
   ) -> Result<Response<Self::EventListenerStream>, Status> {
     todo!()
   }
 
-  async fn pull_job(&self, request: Request<PullJobRequest>) -> Result<Response<PullJobResponse>, Status> {
+  async fn pull_job(&self, _request: Request<PullJobRequest>) -> Result<Response<PullJobResponse>, Status> {
     todo!()
   }
 }

@@ -1,6 +1,6 @@
 use fusiondata_context::ctx::CtxW;
-use ultimate::Result;
-use ultimate_api::v1::PagePayload;
+use modelsql::page::PageResult;
+use ultimate_core::Result;
 use uuid::Uuid;
 
 use crate::service::{
@@ -37,8 +37,8 @@ impl ProcessDefinitionSvc {
     Ok(process_id)
   }
 
-  pub async fn page(ctx: &CtxW, for_page: SchedProcessForPage) -> Result<PagePayload<ProcessDefinition>> {
-    let page = ProcessDefinitionBmc::page(ctx.mm(), for_page.filter, for_page.pagination).await?;
+  pub async fn page(ctx: &CtxW, for_page: SchedProcessForPage) -> Result<PageResult<ProcessDefinition>> {
+    let page = ProcessDefinitionBmc::page(ctx.mm(), for_page.filter, for_page.pagination.into()).await?;
     Ok(page)
   }
 }

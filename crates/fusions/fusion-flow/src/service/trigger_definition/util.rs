@@ -1,7 +1,7 @@
 use chrono::{DateTime, Local, Utc};
 use chrono_tz::Tz;
 use croner::Cron;
-use ultimate::{DataError, Result};
+use ultimate_core::{DataError, Result};
 use ultimate_common::time::UtcDateTime;
 
 /// 计算 cron 表达式并返回下一个触发时间。表达式格式为 `* * * * * *`，对应：`秒 分 时 日 月 周`

@@ -8,19 +8,21 @@ license.workspace = true
 repository.workspace = true
 
 [lints]
-workspace = true
+# workspace = true
+[lints.rust]
+unsafe_code = "allow"
 
 [features]
 default = ["opentelemetry"]
 opentelemetry = [
-  "ultimate/opentelemetry",
-  "dep:tonic-tracing-opentelemetry",
+  "ultimate-core/opentelemetry",
+  # "dep:tonic-tracing-opentelemetry",
   "dep:init-tracing-opentelemetry",
 ]
 
 [dependencies]
 ultimate-common = { workspace = true, features = ["prost"] }
-ultimate = { workspace = true, features = ["tonic"] }
+ultimate-core = { workspace = true, features = ["tonic"] }
 uuid = { workspace = true }
 http = { workspace = true }
 futures = { workspace = true }
@@ -28,7 +30,7 @@ tracing = { workspace = true }
 config = { workspace = true }
 serde = { workspace = true }
 init-tracing-opentelemetry = { workspace = true, optional = true }
-tonic-tracing-opentelemetry = { workspace = true, optional = true }
+# tonic-tracing-opentelemetry = { workspace = true, optional = true }
 tokio = { workspace = true }
 tower-service = { workspace = true }
 tower-http = { workspace = true }

@@ -1,10 +1,10 @@
+use modelsql::{
+  base::{self, compute_list_options, DbBmc},
+  filter::{FilterGroups, ListOptions},
+  generate_pg_bmc_common, ModelManager, Result,
+};
 use sea_query::{Condition, Expr, Query, SelectStatement};
 use ultimate_api::v1::{Page, PagePayload, Pagination};
-use ultimate_db::modql::filter::{FilterGroups, ListOptions};
-use ultimate_db::{
-  base::{self, compute_list_options, DbBmc},
-  generate_common_bmc_fns, ModelManager, Result,
-};
 
 use crate::role::role_permission::{RolePermissionBmc, RolePermissionIden};
 
@@ -15,7 +15,7 @@ impl DbBmc for PermissionBmc {
   const TABLE: &'static str = "permission";
 }
 
-generate_common_bmc_fns!(
+generate_pg_bmc_common!(
   Bmc: PermissionBmc,
   Entity: Permission,
   ForCreate: PermissionForCreate,
@@ -30,7 +30,7 @@ impl PermissionBmc {
   ) -> Result<PagePayload<Permission>> {
     let total_size = Self::count(mm, filters.clone()).await?;
     let items = Self::find_many(mm, filters, Some((&pagination).into())).await?;
-    Ok(PagePayload::new(Page::new(&pagination, total_size), items))
+    Ok(PagePayload::new(Page::new(total_size), items))
   }
 
   pub async fn count(mm: &ModelManager, filters: PermissionFilters) -> Result<i64> {
@@ -44,7 +44,8 @@ impl PermissionBmc {
     list_options: Option<ListOptions>,
   ) -> Result<Vec<Permission>> {
     let items =
-      base::find_many_on::<Self, _, _>(mm, |query| Self::make_select_statement(query, filters, list_options)).await?;
+      base::pg_find_many_on::<Self, _, _>(mm, |query| Self::make_select_statement(query, filters, list_options))
+        .await?;
     Ok(items)
   }
 

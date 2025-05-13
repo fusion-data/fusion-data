@@ -12,10 +12,11 @@ workspace = true
 
 [dependencies]
 ultimate-common = { workspace = true }
-ultimate = { workspace = true }
+ultimate-core = { workspace = true }
 ultimate-db = { workspace = true }
 ultimate-grpc = { workspace = true }
 fusiondata = { workspace = true }
+modelsql = { workspace = true }
 tracing = { workspace = true }
 tokio = { workspace = true }
 tonic = { workspace = true }

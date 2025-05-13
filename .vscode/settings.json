@@ -19,5 +19,8 @@
   "SQL-Formatter-VSCode.functionCase": "lower",
   "SQL-Formatter-VSCode.identifierCase": "lower",
   "SQL-Formatter-VSCode.keywordCase": "lower",
-  "python.terminal.activateEnvironment": false
+  "python.terminal.activateEnvironment": false,
+  "cSpell.words": [
+    "Sched"
+  ]
 }

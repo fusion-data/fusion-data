@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
-use ultimate::configuration::Configurable;
+use ultimate_core::configuration::Configurable;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(default)]

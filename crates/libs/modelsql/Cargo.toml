@@ -1,0 +1,60 @@
+[package]
+name = "modelsql"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lints]
+workspace = true
+
+
+[features]
+# default = ["with-postgres", "with-sqlite"]
+with-ilike = []
+with-postgres = [
+  "sqlx/postgres",
+  "sea-query-binder/sqlx-postgres",
+  "sea-query-binder/postgres-array",
+]
+with-sqlite = ["sqlx/sqlite", "sea-query-binder/sqlx-sqlite"]
+with-uuid = ["dep:uuid", "sea-query-binder/with-uuid"]
+with-rust_decimal = [
+  "dep:rust_decimal",
+  "sqlx/rust_decimal",
+  "sea-query-binder/with-rust_decimal",
+]
+with-pgvector = ["dep:pgvector"]
+
+[[example]]
+name = "example-sqlite"
+path = "examples/example-sqlite.rs"
+required-features = ["with-sqlite"]
+
+[dependencies]
+ultimate-common.workspace = true
+modelsql-macros = { workspace = true }
+async-trait.workspace = true
+derive_more.workspace = true
+serde.workspace = true
+serde_with.workspace = true
+serde_json.workspace = true
+log.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+uuid = { workspace = true, optional = true }
+rust_decimal = { workspace = true, optional = true }
+config = { workspace = true }
+sqlx = { workspace = true }
+sea-query.workspace = true
+sea-query-binder.workspace = true
+pgvector = { workspace = true, optional = true }
+chrono = { workspace = true }
+tonic = { workspace = true, optional = true }
+
+[dev-dependencies]
+anyhow.workspace = true
+tracing-subscriber.workspace = true

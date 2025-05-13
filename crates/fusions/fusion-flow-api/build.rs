@@ -3,7 +3,7 @@ use std::{env, path::PathBuf};
 static BASE_PACKAGE: &str = ".fusion_flow_api.v1";
 
 static MESSAGE_ATTR: &str = "#[derive(serde::Serialize, serde::Deserialize)]";
-// static MODQL_MESSAGE_ATTR: &str = "#[derive(ultimate_db::modql::field::Fields)]";
+// static MODQL_MESSAGE_ATTR: &str = "#[derive(modelsql::field::Fields)]";
 static ENUM_ATTR: &str = "#[derive(serde_repr::Serialize_repr, serde_repr::Deserialize_repr)]";
 static ENUM_ITERATOR_ATTR: &str = r#"#[cfg_attr(feature = "enum-iterator", derive(enum_iterator::Sequence))]"#;
 static ENUM_SQLX_ATTR: &str = r#"#[cfg_attr(feature = "sqlx", derive(sqlx::Type))]"#;

@@ -1,19 +1,20 @@
-use fusion_flow_api::v1::{self, process_definition::ProcessStatus, CreateProcessRequest};
+use fusion_flow_api::v1::{self, CreateProcessRequest, process_definition::ProcessStatus};
+use modelsql::{
+  field::Fields,
+  filter::{FilterNodes, OpValsInt32, OpValsUuid, OpValsValue},
+  page::PageResult,
+  postgres::PgRowType,
+  utils::datetime_to_sea_value,
+};
 use sea_query::enum_def;
 use sqlx::FromRow;
-use ultimate::DataError;
-use ultimate_api::v1::{PagePayload, Pagination};
+use ultimate_api::v1::{Page, Pagination};
 use ultimate_common::time::UtcDateTime;
+use ultimate_core::DataError;
 use ultimate_db::{
-  datetime_to_sea_value, try_into_op_vals_int32_opt, try_into_op_vals_value_opt_with_filter_int64, DbRowType,
+  try_into_op_vals_int32_opt, try_into_op_vals_uuid_with_filter_string, try_into_op_vals_value_opt_with_filter_int64,
 };
-use ultimate_db::{
-  modql::{
-    field::Fields,
-    filter::{FilterNodes, OpValsInt32, OpValsUuid, OpValsValue},
-  },
-  try_into_op_vals_uuid_with_filter_string,
-};
+
 use uuid::Uuid;
 
 use crate::pb::fusion_flow::v1::{PageProcessRequest, PageProcessResponse, ProcessFilterRequest, SchedProcessDto};
@@ -34,7 +35,7 @@ pub struct ProcessDefinition {
   pub mid: Option<i64>,
   pub mtime: Option<UtcDateTime>,
 }
-impl DbRowType for ProcessDefinition {}
+impl PgRowType for ProcessDefinition {}
 
 impl From<ProcessDefinition> for SchedProcessDto {
   fn from(row: ProcessDefinition) -> Self {
@@ -52,7 +53,7 @@ impl From<ProcessDefinition> for SchedProcessDto {
 }
 
 impl From<ProcessDefinition> for v1::ProcessDefinition {
-  fn from(value: ProcessDefinition) -> Self {
+  fn from(_value: ProcessDefinition) -> Self {
     todo!()
   }
 }
@@ -91,10 +92,10 @@ pub struct ProcessDefinitionFilter {
 
   pub status: Option<OpValsInt32>,
 
-  #[modql(to_sea_value_fn = "datetime_to_sea_value")]
+  #[modelsql(to_sea_value_fn = "datetime_to_sea_value")]
   pub ctime: Option<OpValsValue>,
 
-  #[modql(to_sea_value_fn = "datetime_to_sea_value")]
+  #[modelsql(to_sea_value_fn = "datetime_to_sea_value")]
   pub mtime: Option<OpValsValue>,
 }
 
@@ -129,8 +130,8 @@ impl TryFrom<PageProcessRequest> for SchedProcessForPage {
   }
 }
 
-impl From<PagePayload<ProcessDefinition>> for PageProcessResponse {
-  fn from(value: PagePayload<ProcessDefinition>) -> Self {
-    Self { page: Some(value.page), items: value.items.into_iter().map(Into::into).collect() }
+impl From<PageResult<ProcessDefinition>> for PageProcessResponse {
+  fn from(value: PageResult<ProcessDefinition>) -> Self {
+    Self { page: Some(Page::new(value.page.total)), items: value.result.into_iter().map(Into::into).collect() }
   }
 }

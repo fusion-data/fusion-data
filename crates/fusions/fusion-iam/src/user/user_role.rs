@@ -1,6 +1,5 @@
+use modelsql::{base::DbBmc, field::Fields, generate_pg_bmc_common, postgres::PgRowType};
 use sqlx::prelude::FromRow;
-use ultimate_db::modql::field::Fields;
-use ultimate_db::{base::DbBmc, generate_common_bmc_fns, DbRowType};
 
 #[derive(Debug, FromRow, Fields)]
 pub struct UserRole {
@@ -9,7 +8,7 @@ pub struct UserRole {
   pub ctime: i64,
   pub mtime: i64,
 }
-impl DbRowType for UserRole {}
+impl PgRowType for UserRole {}
 
 #[derive(Debug, Fields)]
 pub struct UserRoleForCreate {
@@ -28,7 +27,7 @@ impl DbBmc for UserRoleBmc {
   const TABLE: &'static str = "user_role";
 }
 
-generate_common_bmc_fns!(
+generate_pg_bmc_common!(
   Bmc: UserRoleBmc,
   Entity: UserRole,
   ForCreate: UserRoleForCreate,

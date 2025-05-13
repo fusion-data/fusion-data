@@ -1,4 +1,4 @@
-use ultimate::{
+use ultimate_core::{
   application::{Application, ApplicationBuilder},
   utils::handle_join_error,
 };
@@ -8,11 +8,11 @@ use crate::Broker;
 pub struct FusionFlowBroker {}
 
 impl FusionFlowBroker {
-  pub async fn init(_app_builder: &mut ApplicationBuilder) -> ultimate::Result<Self> {
+  pub async fn init(_app_builder: &mut ApplicationBuilder) -> ultimate_core::Result<Self> {
     Ok(Self {})
   }
 
-  pub async fn start(self) -> ultimate::Result<()> {
+  pub async fn start(self) -> ultimate_core::Result<()> {
     let app = Application::global();
     let (master_handle, scheduler_handle) = app.component::<Broker>().spawn_loop().await?;
 

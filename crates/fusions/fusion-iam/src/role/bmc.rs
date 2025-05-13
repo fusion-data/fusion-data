@@ -1,10 +1,10 @@
+use modelsql::{
+  base::{self, compute_list_options, DbBmc},
+  filter::{FilterGroups, ListOptions},
+  generate_pg_bmc_common, ModelManager, Result,
+};
 use sea_query::{Condition, Expr, Query, SelectStatement};
 use ultimate_api::v1::{Page, PagePayload, Pagination};
-use ultimate_db::modql::filter::{FilterGroups, ListOptions};
-use ultimate_db::{
-  base::{self, compute_list_options, DbBmc},
-  generate_common_bmc_fns, ModelManager, Result,
-};
 
 use crate::{pb::fusion_iam::v1::CreateRoleDto, role::RoleIden};
 
@@ -18,7 +18,7 @@ impl DbBmc for RoleBmc {
   const TABLE: &'static str = "role";
 }
 
-generate_common_bmc_fns!(
+generate_pg_bmc_common!(
   Bmc: RoleBmc,
   Entity: Role,
   ForCreate: CreateRoleDto,
@@ -29,7 +29,7 @@ impl RoleBmc {
   pub async fn page(mm: &ModelManager, filters: RoleFilters, pagination: Pagination) -> Result<PagePayload<Role>> {
     let total_size = Self::count(mm, filters.clone()).await?;
     let items = Self::find_many(mm, filters, Some((&pagination).into())).await?;
-    Ok(PagePayload::new(Page::new(&pagination, total_size), items))
+    Ok(PagePayload::new(Page::new(total_size), items))
   }
 
   async fn count(mm: &ModelManager, filters: RoleFilters) -> Result<i64> {
@@ -39,7 +39,7 @@ impl RoleBmc {
 
   async fn find_many(mm: &ModelManager, filters: RoleFilters, list_options: Option<ListOptions>) -> Result<Vec<Role>> {
     let items =
-      base::find_many_on::<Self, Role, _>(mm, |query| Self::select_statement(query, filters, list_options)).await?;
+      base::pg_find_many_on::<Self, Role, _>(mm, |query| Self::select_statement(query, filters, list_options)).await?;
     Ok(items)
   }
 

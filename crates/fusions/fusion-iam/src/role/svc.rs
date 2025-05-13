@@ -1,5 +1,5 @@
 use fusiondata_context::ctx::CtxW;
-use ultimate::{component::Component, Result};
+use ultimate_core::{component::Component, Result};
 use ultimate_api::v1::{PagePayload, Pagination};
 
 use crate::{pb::fusion_iam::v1::CreateRoleDto, role::bmc::RoleBmc};

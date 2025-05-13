@@ -15,10 +15,20 @@ run-fusion-flow = "run -p fusion-flow --bin fusion-flow --features tonic-reflect
 [profile.release]
 opt-level = 3
 codegen-units = 1
-lto = true
+lto = "fat"
 panic = "abort"
+strip = true
 # default-features = false
 # features = ["tikv-jemallocator"]
+
+[profile.dev]
+opt-level = 1
+debug = true
+
+[profile.bench]
+lto = "fat"
+codegen-units = 1
+opt-level = 3
 
 
 # On Windows
@@ -42,6 +52,6 @@ rustflags = ["-C", "linker=clang", "-C", "link-arg=-fuse-ld=lld"]
 #rustflags = ["-C", "link-arg=-fuse-ld=/usr/local/bin/zld"]
 [target.x86_64-apple-darwin]
 rustflags = ["-C", "linker=clang", "-C", "link-arg=-fuse-ld=lld"]
-
 [target.aarch64-apple-darwin]
 rustflags = ["-C", "linker=clang", "-C", "link-arg=-fuse-ld=lld"]
+
