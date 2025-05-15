@@ -15,12 +15,12 @@ workspace = true
 with-ilike = []
 with-postgres = ["modelsql/with-postgres"]
 with-sqlite = ["modelsql/with-sqlite"]
-with-uuid = ["modelsql/with-uuid"]
+with-uuid = ["modelsql/with-uuid", "dep:uuid"]
 
 [dependencies]
 ultimate-common.workspace = true
 ultimate-core = { workspace = true, features = ["modelsql", "ultimate-api"] }
-ultimate-api = { workspace = true, features = ["modelsql"] }
+ultimate-api = { workspace = true, features = ["modelsql"], optional = true }
 modelsql = { workspace = true }
 serde.workspace = true
 serde_json.workspace = true

@@ -1,3 +1,4 @@
+#[cfg(feature = "ultimate-api")]
 mod api_helpers;
 mod macro_helpers;
 
@@ -6,6 +7,7 @@ pub use modelsql::{DbConfig, ModelManager};
 use ultimate_core::{application::ApplicationBuilder, async_trait, configuration::ConfigRegistry, plugin::Plugin};
 
 pub mod acs;
+#[cfg(feature = "ultimate-api")]
 pub use api_helpers::*;
 
 pub const DEFAULT_CONFIG_STR: &str = include_str!("../resources/default.toml");

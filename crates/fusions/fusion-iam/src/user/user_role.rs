@@ -32,4 +32,5 @@ generate_pg_bmc_common!(
   Entity: UserRole,
   ForCreate: UserRoleForCreate,
   ForUpdate: UserRoleForUpdate,
+  ForInsert: UserRoleForCreate,
 );

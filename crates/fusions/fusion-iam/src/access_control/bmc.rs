@@ -12,4 +12,5 @@ generate_pg_bmc_common!(
   Entity: Policy,
   ForCreate: PolicyForCreate,
   ForUpdate: PolicyForUpdate,
+  ForInsert: PolicyForCreate,
 );

@@ -12,6 +12,7 @@ generate_pg_bmc_common!(
   Entity: ProcessDefinition,
   ForCreate: ProcessDefinitionForCreate,
   ForUpdate: ProcessDefinitionForUpdate,
+  ForInsert: ProcessDefinitionForCreate,
 );
 
 generate_pg_bmc_filter!(

@@ -8,6 +8,7 @@ macro_rules! generate_sqlite_bmc_common {
 		Entity: $entity:ty,
 		$(ForCreate: $for_create:ty,)?
 		$(ForUpdate: $for_update:ty,)?
+		$(ForInsert: $for_insert:ty,)?
 	) => {
 		impl $struct_name {
 			$(
@@ -29,16 +30,16 @@ macro_rules! generate_sqlite_bmc_common {
 			$(
 					pub async fn insert(
 						mm: &modelsql::ModelManager,
-						entity_c: $for_create,
+						entity_i: $for_insert,
 					) -> modelsql::Result<()> {
-						modelsql::base::insert::<Self, _>(mm, entity_c).await
+						modelsql::base::insert::<Self, _>(mm, entity_i).await
 					}
 
 					pub async fn insert_many(
 						mm: &modelsql::ModelManager,
-						entity_c: Vec<$for_create>,
+						entity_i: Vec<$for_insert>,
 					) -> modelsql::Result<u64> {
-						modelsql::base::insert_many::<Self, _>(mm, entity_c).await
+						modelsql::base::insert_many::<Self, _>(mm, entity_i).await
 					}
 			)?
 

@@ -15,6 +15,20 @@ impl DbBmc for SchedNodeBmc {
   const TABLE: &'static str = "sched_node";
 }
 
+generate_pg_bmc_common!(
+  Bmc: SchedNodeBmc,
+  Entity: SchedNode,
+  ForCreate: SchedNodeForCreate,
+  ForUpdate: SchedNodeForUpdate,
+  ForInsert: SchedNodeForCreate,
+);
+
+generate_pg_bmc_filter!(
+  Bmc: SchedNodeBmc,
+  Entity: SchedNode,
+  Filter: SchedNodeFilter,
+);
+
 impl SchedNodeBmc {
   pub async fn find_active_master(mm: &ModelManager, valid_check_time: UtcDateTime) -> Result<Option<SchedNode>> {
     let sql = format!(
@@ -99,16 +113,3 @@ impl SchedNodeBmc {
     Ok(())
   }
 }
-
-generate_pg_bmc_common!(
-  Bmc: SchedNodeBmc,
-  Entity: SchedNode,
-  ForCreate: SchedNodeForCreate,
-  ForUpdate: SchedNodeForUpdate,
-);
-
-generate_pg_bmc_filter!(
-  Bmc: SchedNodeBmc,
-  Entity: SchedNode,
-  Filter: SchedNodeFilter,
-);
