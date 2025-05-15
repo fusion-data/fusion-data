@@ -1,6 +1,6 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Page {
   pub total: i64,
 }
@@ -11,7 +11,7 @@ impl Page {
   }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
 pub struct PageResult<T> {
   pub page: Page,
   pub result: Vec<T>,

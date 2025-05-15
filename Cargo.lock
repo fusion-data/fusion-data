@@ -5020,13 +5020,11 @@ dependencies = [
 name = "ultimate-api"
 version = "0.1.1"
 dependencies = [
- "bytes",
  "modelsql",
  "prost",
  "prost-build",
  "serde",
  "serde_json",
- "serde_repr",
  "thiserror 2.0.12",
  "uuid",
 ]

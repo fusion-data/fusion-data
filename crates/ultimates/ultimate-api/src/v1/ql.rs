@@ -146,6 +146,7 @@ impl_filter_helpers!(ValDouble, OpNumber, OpNumber::Null, f64, ArrayDouble, val_
 // -- ValDouble end
 
 // -- Uuid begin
+#[cfg(feature = "uuid")]
 impl TryFrom<ValString> for uuid::Uuid {
   type Error = Error;
 
@@ -160,6 +161,7 @@ impl TryFrom<ValString> for uuid::Uuid {
   }
 }
 
+#[cfg(feature = "uuid")]
 impl TryFrom<ValString> for Vec<uuid::Uuid> {
   type Error = Error;
 

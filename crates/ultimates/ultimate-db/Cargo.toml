@@ -15,7 +15,7 @@ workspace = true
 with-ilike = []
 with-postgres = ["modelsql/with-postgres"]
 with-sqlite = ["modelsql/with-sqlite"]
-with-uuid = ["modelsql/with-uuid", "dep:uuid"]
+with-uuid = ["dep:uuid", "modelsql/with-uuid", "ultimate-api/uuid"]
 
 [dependencies]
 ultimate-common.workspace = true

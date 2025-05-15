@@ -22,6 +22,7 @@ impl From<UnknownEnumValue> for Error {
   }
 }
 
+#[cfg(feature = "uuid")]
 impl From<uuid::Error> for Error {
   fn from(e: uuid::Error) -> Self {
     Self::BizError { code: 400, msg: e.to_string() }

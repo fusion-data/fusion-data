@@ -10,9 +10,7 @@ repository.workspace = true
 [lints]
 workspace = true
 
-
 [features]
-# default = ["with-postgres", "with-sqlite"]
 with-ilike = []
 with-postgres = [
   "sqlx/postgres",

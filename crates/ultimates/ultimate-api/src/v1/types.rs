@@ -32,18 +32,21 @@ impl_array_from!(i64, ArrayInt64);
 impl_array_from!(f64, ArrayDouble);
 impl_array_from!(String, ArrayString);
 
+#[cfg(feature = "uuid")]
 impl From<uuid::Uuid> for ArrayString {
   fn from(value: uuid::Uuid) -> Self {
     Self { value: vec![value.to_string()] }
   }
 }
 
+#[cfg(feature = "uuid")]
 impl From<Vec<uuid::Uuid>> for ArrayString {
   fn from(value: Vec<uuid::Uuid>) -> Self {
     Self { value: value.into_iter().map(|v| v.to_string()).collect() }
   }
 }
 
+#[cfg(feature = "uuid")]
 impl TryFrom<ArrayString> for Vec<uuid::Uuid> {
   type Error = uuid::Error;
 
