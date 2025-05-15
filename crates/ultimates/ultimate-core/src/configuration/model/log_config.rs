@@ -5,6 +5,10 @@ use serde::{
 use std::fmt::Display;
 use tracing::log::Level;
 
+fn default_log_dir() -> String {
+  std::option_env!("ULTIMATE__LOG_DIR").unwrap_or_else(|| "./var/logs/").to_string()
+}
+
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct LogConfig {
   pub with_target: bool,
@@ -19,6 +23,7 @@ pub struct LogConfig {
   pub log_writer: LogWriterType,
 
   /// 目录输出目录
+  #[serde(default = "default_log_dir")]
   pub log_dir: String,
 
   /// 目标文件名，默认为 <app name>.log

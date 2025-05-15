@@ -1,9 +1,9 @@
 [workspace]
-members = ["fusions/*", "lm/*", "ultimates/*"]
+members = ["crates/fusions/*", "crates/lm/*", "crates/ultimates/*"]
 resolver = "2"
 
 [workspace.package]
-version = "0.1.0"
+version = "0.1.1"
 edition = "2024"
 rust-version = "1.86"
 description = "Rust libraries of The fusiondata"
@@ -16,21 +16,21 @@ unsafe_code = "forbid"
 
 [workspace.dependencies]
 # -- projects begin
-modelsql = { version = "0.1.0", path = "./libs/modelsql" }
-modelsql-macros = { version = "0.1.0", path = "./libs/modelsql-macros" }
-ultimate-common = { version = "0.1.0", path = "./ultimates/ultimate-common" }
-ultimate-core-macros = { version = "0.1.0", path = "./ultimates/ultimate-core-macros" }
-ultimate-core = { version = "0.1.0", path = "./ultimates/ultimate-core" }
-ultimate-api = { version = "0.1.0", path = "./ultimates/ultimate-api" }
-ultimate-db = { version = "0.1.0", path = "./ultimates/ultimate-db" }
-ultimate-web = { version = "0.1.0", path = "./ultimates/ultimate-web" }
-ultimate-grpc = { version = "0.1.0", path = "./ultimates/ultimate-grpc" }
-ultimate = { version = "0.1.0", path = "./ultimates/ultimate" }
-fusiondata = { version = "0.1.0", path = "./fusions/fusiondata" }
-fusiondata-context = { version = "0.1.0", path = "./fusions/fusiondata-context" }
-fusion-flow-api = { version = "0.1.0", path = "./fusions/fusion-flow-api" }
-fusion-flow = { version = "0.1.0", path = "./fusions/fusion-flow" }
-fusion-lm = { version = "0.1.0", path = "./lm/fusion-lm" }
+modelsql = { version = "0.1.1", path = "crates/libs/modelsql" }
+modelsql-macros = { version = "0.1.1", path = "crates/libs/modelsql-macros" }
+ultimate-common = { version = "0.1.1", path = "crates/ultimates/ultimate-common" }
+ultimate-core-macros = { version = "0.1.1", path = "crates/ultimates/ultimate-core-macros" }
+ultimate-core = { version = "0.1.1", path = "crates/ultimates/ultimate-core" }
+ultimate-api = { version = "0.1.1", path = "crates/ultimates/ultimate-api" }
+ultimate-db = { version = "0.1.1", path = "crates/ultimates/ultimate-db" }
+ultimate-web = { version = "0.1.1", path = "crates/ultimates/ultimate-web" }
+ultimate-grpc = { version = "0.1.1", path = "crates/ultimates/ultimate-grpc" }
+ultimate = { version = "0.1.1", path = "crates/ultimates/ultimate" }
+fusiondata = { version = "0.1.1", path = "crates/fusions/fusiondata" }
+fusiondata-context = { version = "0.1.1", path = "crates/fusions/fusiondata-context" }
+fusion-flow-api = { version = "0.1.1", path = "crates/fusions/fusion-flow-api" }
+fusion-flow = { version = "0.1.1", path = "crates/fusions/fusion-flow" }
+fusion-lm = { version = "0.1.1", path = "crates/lm/fusion-lm" }
 # -- projects end
 # begin -- memory allocator
 tikv-jemallocator = "0.6"

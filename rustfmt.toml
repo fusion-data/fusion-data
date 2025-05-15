@@ -1,6 +1,6 @@
 # rustfmt doc - https://rust-lang.github.io/rustfmt/
 
-#edition = "2021"
+style_edition = "2024"
 hard_tabs = false
 tab_spaces = 2
 max_width = 120

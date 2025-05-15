@@ -46,7 +46,8 @@ log_targets = [
   "ultimate_common=debug",
 ]
 log_writer = "stdout"
-log_dir = "./logs/"
+# 默认为 "./var/logs/"，可以通过环境变量设置 ULTIMATE__LOG_DIR 覆盖。当同时设置时，环境变量优先级更高。
+# log_dir =
 
 # 默认 log_name 同 ultimate.app.name
 #log_name = ""

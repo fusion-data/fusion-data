@@ -29,7 +29,7 @@ pub(crate) fn init_tracing_guard() -> (DefaultGuard, Option<String>) {
     with_target: true,
     log_level: LogLevel(Level::Trace),
     log_writer: LogWriterType::Stdout,
-    log_dir: "./logs/".to_string(),
+    log_dir: std::option_env!("ULTIMATE__LOG_DIR").unwrap_or_else(|| "./var/logs/").to_string(),
     ..Default::default()
   };
   let fixed_offset = time::local_offset();
