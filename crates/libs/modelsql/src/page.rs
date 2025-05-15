@@ -11,7 +11,7 @@ impl Page {
   }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize)]
 pub struct PageResult<T> {
   pub page: Page,
   pub result: Vec<T>,
