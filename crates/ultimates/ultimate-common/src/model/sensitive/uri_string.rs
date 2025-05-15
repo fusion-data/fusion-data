@@ -63,6 +63,12 @@ impl Serialize for UriString {
   }
 }
 
+impl From<&str> for UriString {
+  fn from(v: &str) -> Self {
+    Self(v.to_string())
+  }
+}
+
 /// 替换 <username>:<password> 部分
 fn replace_uri_username_password(v: &str) -> Cow<'_, str> {
   let r: Regex = Regex::new(r#"://(.+):(.+)@"#).unwrap();

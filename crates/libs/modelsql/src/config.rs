@@ -1,12 +1,13 @@
 use std::borrow::Cow;
 
+use duration_str::deserialize_option_duration;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use ultimate_common::model::sensitive::UriString;
 
 use crate::store::dbx::DbxType;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct DbConfig {
   enable: bool,
 
@@ -28,14 +29,16 @@ pub struct DbConfig {
   /// Minimum number of connections for a pool
   min_connections: Option<u32>,
 
-  /// Maximum idle time for a particular connection to prevent
-  /// network resource exhaustion
+  /// Maximum idle time for a particular connection to prevent network resource exhaustion
+  #[serde(default, deserialize_with = "deserialize_option_duration")]
   idle_timeout: Option<Duration>,
 
   /// Set the maximum amount of time to spend waiting for acquiring a connection
+  #[serde(default, deserialize_with = "deserialize_option_duration")]
   acquire_timeout: Option<Duration>,
 
   /// Set the maximum lifetime of individual connections
+  #[serde(default, deserialize_with = "deserialize_option_duration")]
   max_lifetime: Option<Duration>,
 
   /// Enable SQLx statement logging
@@ -138,5 +141,29 @@ impl DbConfig {
     }
 
     panic!("Unsupported database type: {:?}", self);
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn test_db_config() {
+    println!("test_db_config");
+    let config = DbConfig {
+      enable: true,
+      url: Some("postgres://user:pass@localhost:5432/db".into()),
+      idle_timeout: Some(Duration::from_secs(10)),
+      acquire_timeout: Some(Duration::from_secs(10)),
+      max_lifetime: Some(Duration::from_secs(10)),
+      sqlx_logging: Some(true),
+      sqlx_logging_level: Some("debug".into()),
+      ..Default::default()
+    };
+    let value = serde_json::to_value(config).unwrap();
+    let json_str = serde_json::to_string_pretty(&value).unwrap();
+    eprintln!("{}", json_str);
+    assert!(!json_str.is_empty());
   }
 }

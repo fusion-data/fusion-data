@@ -2320,6 +2320,7 @@ dependencies = [
  "chrono",
  "config",
  "derive_more",
+ "duration-str",
  "log",
  "modelsql-macros",
  "pgvector",
