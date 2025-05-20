@@ -69,12 +69,14 @@ pub async fn init_grpc_server(
   Ok((rx, server.add_routes(routes).serve_with_incoming(tcp_incoming).map_err(DataError::from)))
 }
 
+#[allow(clippy::result_large_err)]
 pub fn extract_payload_from_metadata(sc: &SecurityConfig, metadata: &MetadataMap) -> Result<CtxPayload, tonic::Status> {
   let token = extract_token_from_metadata(metadata)?;
   let (payload, _) = SecurityUtils::decrypt_jwt(sc.pwd(), token).map_err(|e| Status::unauthenticated(e.to_string()))?;
   Ok(payload)
 }
 
+#[allow(clippy::result_large_err)]
 pub fn extract_token_from_metadata(metadata: &MetadataMap) -> Result<&str, tonic::Status> {
   let auth_header = metadata
     .get("authorization")
@@ -90,6 +92,7 @@ pub fn field_mask_match_with(field_mask: &FieldMask, path: &str) -> bool {
   field_mask.paths.is_empty() || field_mask.paths.iter().any(|p| p.starts_with(path))
 }
 
+#[allow(clippy::result_large_err)]
 pub fn parse_uuid(s: &str) -> core::result::Result<uuid::Uuid, Status> {
   uuid::Uuid::parse_str(s).map_err(|e| Status::invalid_argument(format!("Invalid uuid: {}", e)))
 }

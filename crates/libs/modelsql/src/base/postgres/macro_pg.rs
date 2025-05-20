@@ -121,6 +121,13 @@ macro_rules! generate_pg_bmc_filter {
 				modelsql::base::pg_page::<Self, _, _>(mm, filter, list_options).await
 			}
 
+			pub async fn delete(
+				mm: &modelsql::ModelManager,
+				filter: Vec<$filter>,
+			) -> modelsql::Result<u64> {
+				modelsql::base::delete::<Self, _>(mm, filter).await
+			}
+
 			$(
 				pub async fn update(
 					mm: &modelsql::ModelManager,
