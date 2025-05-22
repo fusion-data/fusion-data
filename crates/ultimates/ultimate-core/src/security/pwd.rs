@@ -1,6 +1,6 @@
 use std::sync::OnceLock;
 
-use argon2::password_hash::SaltString;
+use argon2::password_hash::{SaltString, rand_core::OsRng};
 use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier, password_hash};
 use regex::Regex;
 use tracing::{error, trace};
@@ -20,7 +20,7 @@ pub async fn verify_pwd(password: &str, hashed_pwd: &str) -> Result<u16> {
 }
 
 pub(crate) async fn try_to_hash(password: &str) -> Result<String> {
-  let salt = SaltString::generate(rand::thread_rng());
+  let salt = SaltString::generate(&mut OsRng);
   let hash = Argon2::default()
     .hash_password(password.as_bytes(), &salt)
     .map_err(|e| {

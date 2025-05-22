@@ -1,5 +1,5 @@
 use base64ct::{Base64UrlUnpadded, Encoding};
-use rand::{Rng, distributions::Alphanumeric, thread_rng};
+use rand::{Rng, distr::Alphanumeric, rng};
 use serde::{Deserializer, Serializer, de::Visitor};
 
 use crate::{Error, Result};
@@ -21,7 +21,7 @@ pub fn repeat_char(c: char, n: usize) -> String {
 }
 
 pub fn random_string(n: usize) -> String {
-  thread_rng().sample_iter(&Alphanumeric).take(n).map(char::from).collect()
+  rng().sample_iter(Alphanumeric).take(n).map(char::from).collect()
 }
 
 pub fn b64u_encode(content: impl AsRef<[u8]>) -> String {

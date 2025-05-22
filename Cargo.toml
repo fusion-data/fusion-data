@@ -50,7 +50,7 @@ config = { version = "0.15", default-features = false, features = [
 ] }
 itertools = "0.14"
 regex = { version = "1", features = ["unicode-case"] }
-rand = "0.8"
+rand = "0.9"
 bytes = "1.10"
 ulid = { version = "1", features = ["serde", "uuid"] }
 uuid = { version = "1.15", features = [
@@ -190,7 +190,7 @@ prost-types = "0.13"
 # -- Template Engin
 minijinja = { version = "2.5" }
 # -- Data Science
-polars = "0.47"
+polars = "0.48"
 # An Excel/OpenDocument Spreadsheets reader and deserializer in pure rust
 calamine = "0.27"
 # -- Valkey & Redis client
@@ -202,12 +202,14 @@ opendal = { version = "0.53", features = [
     "services-obs",
     "services-s3",
 ] }
-minio = { version = "0.1" }
+minio = { version = "0.2" }
 # Documents
 
 # -- LLM
-rig-core = { version = "0.12", features = ["derive"] }
-rig-postgres = { version = "0.1" }
+rig-core = { git = "https://gitee.com/yangbajing/rig.git", features = [
+    "derive",
+] }
+rig-postgres = { git = "https://gitee.com/yangbajing/rig.git" }
 
 # -- Dev/Test
 pretty_assertions = "1.4"

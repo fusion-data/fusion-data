@@ -1,5 +1,5 @@
-# FROM postgres:16
-FROM pgvector/pgvector:pg16
+# FROM postgres:17
+FROM pgvector/pgvector:pg17
 
 ENV LANG=zh_CN.utf8
 ENV TZ=Asia/Chongqing
