@@ -13,4 +13,4 @@ workspace = true
 [dependencies]
 tokio = { workspace = true }
 rig-core = { workspace = true }
-
+rmcp = { workspace = true }

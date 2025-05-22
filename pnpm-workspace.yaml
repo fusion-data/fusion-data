@@ -1,0 +1,5 @@
+packages:
+  # 所有在 packages 目录下的包
+  - 'packages/*'
+  # guixu web
+  - 'guixu/web'

@@ -22,10 +22,15 @@
   "python.terminal.activateEnvironment": false,
   "cSpell.words": [
     "asserhttp",
+    "croner",
     "fusiondata",
+    "guixus",
     "minijinja",
     "modelsql",
     "opendal",
-    "Sched"
+    "Sched",
+    "timestamptz",
+    "unplugin",
+    "varchar"
   ]
 }

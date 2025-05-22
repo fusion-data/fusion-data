@@ -1,0 +1,12 @@
+{
+  "name": "fusion-data",
+  "version": "0.1.1",
+  "private": true,
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=10.0.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}

@@ -1,5 +1,11 @@
 [workspace]
-members = ["crates/fusions/*", "crates/lm/*", "crates/ultimates/*"]
+members = [
+    "crates/fusions/*",
+    "crates/lm/*",
+    "crates/ultimates/*",
+    "crates/libs/*",
+    "guixu/guixu",
+]
 resolver = "2"
 
 [workspace.package]
@@ -210,6 +216,7 @@ rig-core = { git = "https://gitee.com/yangbajing/rig.git", features = [
     "derive",
 ] }
 rig-postgres = { git = "https://gitee.com/yangbajing/rig.git" }
+rmcp = { version = "0.1" }
 
 # -- Dev/Test
 pretty_assertions = "1.4"
