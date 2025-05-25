@@ -1,0 +1,296 @@
+# Cursor Rules for Fusion Data Rust Project
+
+## 项目架构
+
+这是一个基于 Cargo workspace 的多 crate Rust 项目，使用领域驱动设计 (DDD) 架构模式。
+
+### Workspace 结构
+- `crates/ultimates/` - 核心基础库
+- `fusion/` - 业务融合层
+- `crates/libs/` - 通用库
+- `crates/lm/` - 语言模型相关
+- `guixu/` - 主应用程序
+
+### 领域模型组织
+每个领域模块使用目录结构：
+```
+domain/
+├── user/
+│   ├── mod.rs
+│   └── user_model.rs
+├── auth/
+│   ├── mod.rs
+│   └── auth_model.rs
+└── ...
+```
+
+## 代码风格规范
+
+### 数据库模型定义
+所有数据库模型必须遵循以下模式：
+
+```rust
+use modelsql::field::Fields;
+use sea_query::enum_def;
+use serde::{Deserialize, Serialize};
+use sqlx::FromRow;
+use ultimate_common::time::UtcDateTime;
+
+/// 表注释
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow, Fields)]
+#[enum_def(table_name = "表名")]
+pub struct ModelName {
+  pub id: String, // 或 Uuid, i32 等
+  pub name: String,
+  pub ctime: UtcDateTime,
+  pub mtime: Option<UtcDateTime>,
+  // 其他字段...
+}
+```
+
+### 必需的 derive 宏
+数据库模型必须包含：
+- `Debug` - 调试输出
+- `Clone` - 克隆能力
+- `Serialize, Deserialize` - JSON 序列化
+- `FromRow` - sqlx 行映射
+- `Fields` - modelsql 字段映射
+
+### 字段命名规范
+- 主键：通常使用 `id`
+- 创建时间：`ctime: UtcDateTime`
+- 修改时间：`mtime: Option<UtcDateTime>`
+- 外键：使用 `{关联表}_id` 格式
+- JSON 字段：使用 `serde_json::Value` 或 `Option<serde_json::Value>`
+- 枚举字段：使用整数存储，提供 `From<i32>` 转换
+
+### SQL 关键字处理
+当字段名是 SQL 关键字时，使用 `#[serde(rename = "type")]` 重命名：
+```rust
+#[serde(rename = "type")]
+pub node_type: String,
+```
+
+### UUID 使用
+- 用户相关表使用 `uuid::Uuid` 类型
+- 其他表根据需要选择 `String` 或其他类型
+
+### 可选字段
+- 所有可为 NULL 的数据库字段必须使用 `Option<T>`
+- 修改时间字段通常为可选：`mtime: Option<UtcDateTime>`
+
+## 模块组织
+
+### 模块声明
+每个领域模块的 `mod.rs` 文件格式：
+```rust
+mod {module}_model;
+
+pub use {module}_model::*;
+```
+
+### 测试组织
+每个模型文件必须包含测试：
+```rust
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn test_{module}_models() {
+    assert_eq!(TableNameIden::Table.as_ref(), "table_name");
+    // 其他断言...
+  }
+}
+```
+
+## 依赖管理
+
+### Workspace 依赖
+优先使用 workspace 中定义的依赖：
+```toml
+dependency = { workspace = true }
+```
+
+### 必需 features
+sqlx 必须包含所需的 features：
+```toml
+sqlx = { workspace = true, features = [
+  "runtime-tokio",  # 运行时
+  "postgres",       # 数据库驱动
+  "uuid",           # UUID 支持
+  "chrono",         # 时间处理
+  "json",           # JSON 支持
+] }
+```
+
+## 错误处理
+
+### 错误类型
+- 使用 `thiserror` 定义自定义错误
+- 数据库错误使用 `sqlx::Error`
+- 序列化错误使用 `serde_json::Error`
+
+### Result 类型
+函数返回值使用明确的 Result 类型：
+```rust
+pub async fn function() -> Result<ReturnType, ErrorType> {
+  // 实现
+}
+```
+
+## 数据库规范
+
+### 时间字段
+- 统一使用 `timestamptz` 类型存储时间
+- Rust 中使用 `ultimate_common::time::UtcDateTime`
+- 创建时间：`ctime` (不可为空)
+- 修改时间：`mtime` (可为空)
+
+### JSON 字段
+- PostgreSQL 中使用 `json` 或 `jsonb` 类型
+- Rust 中使用 `serde_json::Value`
+- 可选的 JSON 字段使用 `Option<serde_json::Value>`
+
+### 外键约束
+- 必须定义适当的外键约束
+- 使用有意义的约束名称
+- 考虑级联删除策略
+
+## 性能优化
+
+### 索引策略
+- 为外键字段创建索引
+- 为查询频繁的字段创建索引
+- 为唯一约束创建唯一索引
+
+### 查询优化
+- 使用 sea-query 构建类型安全的查询
+- 避免 N+1 查询问题
+- 合理使用连接查询
+
+## 安全规范
+
+### 数据验证
+- 所有用户输入必须验证
+- 使用类型系统防止无效数据
+- 敏感数据使用适当的类型包装
+
+### 认证授权
+- 使用 JWT 进行身份验证
+- 实现基于角色的访问控制 (RBAC)
+- 敏感操作需要额外验证
+
+## 文档规范
+
+### 代码注释
+- 所有公共 API 必须有文档注释
+- 复杂业务逻辑需要详细说明
+- 数据库表和字段添加中文注释
+
+### README 文件
+- 每个 crate 需要 README.md
+- 包含安装、配置、使用说明
+- 提供示例代码
+
+## 项目特定规范
+
+### Workflow 系统
+- 工作流数据使用 JSON 格式存储在 `nodes` 和 `connections` 字段
+- 工作流状态字段：`active: bool`
+- 版本控制：`version_id: Option<String>`
+- 元数据：`meta: Option<serde_json::Value>`
+
+### 用户系统
+- 用户 ID 使用 UUID v7 生成
+- 支持多因素认证 (MFA)
+- 用户状态：100(正常), 99(禁用)
+- 手机号存储完整格式（含国家码）
+
+### 项目管理
+- 项目支持文件夹层级结构
+- 标签系统支持多对多关联
+- 共享机制支持角色权限
+
+### 测试系统
+- 支持测试定义、运行、指标收集
+- 测试用例执行状态跟踪
+- 支持测试评估工作流
+
+### 洞察系统
+- 性能指标分类：时间节省、运行时长、成功/失败统计
+- 支持按小时/天/周聚合数据
+- 原始数据和聚合数据分别存储
+
+## 枚举类型规范
+
+### 标准枚举模式
+```rust
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub enum StatusType {
+  Active = 100,
+  Disabled = 99,
+}
+
+impl From<i32> for StatusType {
+  fn from(value: i32) -> Self {
+    match value {
+      100 => StatusType::Active,
+      99 => StatusType::Disabled,
+      _ => StatusType::Active, // 默认值
+    }
+  }
+}
+
+impl From<StatusType> for i32 {
+  fn from(value: StatusType) -> Self {
+    value as i32
+  }
+}
+```
+
+## AI 助手指导
+
+当协助开发时，请：
+
+1. **遵循现有模式** - 参考项目中已有的代码模式和风格
+2. **保持一致性** - 确保新代码与现有代码风格一致
+3. **使用项目依赖** - 优先使用 workspace 中已定义的依赖
+4. **添加适当测试** - 为新功能添加单元测试
+5. **考虑性能** - 优化数据库查询和内存使用
+6. **注重安全** - 验证输入，防止注入攻击
+7. **完善文档** - 为新功能添加文档和注释
+
+### 常用命令模式
+- 编译检查：`cargo check -p {package_name}`
+- 运行测试：`cargo test -p {package_name}`
+- 格式化代码：`cargo fmt`
+- 代码检查：`cargo clippy`
+
+### 数据库迁移
+- 使用 SQL 文件定义数据库结构
+- 保持迁移文件的向前兼容性
+- 测试迁移的回滚能力
+
+### 代码生成
+- 使用 `enum_def` 宏自动生成表标识符
+- 使用 `Fields` derive 宏生成字段访问器
+- 保持生成代码与手写代码的一致性
+
+### 新模块创建清单
+创建新的领域模块时，确保：
+1. 创建目录结构：`domain/{module}/`
+2. 创建 `mod.rs` 和 `{module}_model.rs`
+3. 在 `domain/mod.rs` 中声明模块
+4. 添加必要的导入和 derive 宏
+5. 编写单元测试验证表名映射
+6. 添加中文注释说明表用途
+7. 考虑字段索引和约束需求
+
+### 最佳实践提醒
+- 避免在生产代码中使用 `unwrap()`，使用适当的错误处理
+- 使用类型系统确保数据一致性
+- 定期运行 `cargo clippy` 检查代码质量
+- 保持模块间的低耦合高内聚
+- 优先使用 `&str` 而不是 `String` 作为函数参数
+- 合理使用 `Clone` vs `&` 引用传递

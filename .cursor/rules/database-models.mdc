@@ -1,0 +1,92 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# 数据库模型规范
+
+## 模型定义模式
+所有数据库模型必须遵循以下模式：
+
+```rust
+use modelsql::field::Fields;
+use sea_query::enum_def;
+use serde::{Deserialize, Serialize};
+use sqlx::FromRow;
+use ultimate_common::time::UtcDateTime;
+
+/// 表注释
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow, Fields)]
+#[enum_def(table_name = "表名")]
+pub struct ModelName {
+  pub id: Uuid, // 或 Uuid, i32, i64, String 等
+  pub name: String,
+  pub ctime: UtcDateTime,
+  pub cid: Uuid
+  pub mtime: Option<UtcDateTime>,
+  // 其他字段...
+}
+```
+
+## 必需的 derive 宏
+数据库模型必须包含：
+- `Debug` - 调试输出
+- `Clone` - 克隆能力
+- `Serialize, Deserialize` - JSON 序列化
+- `FromRow` - sqlx 行映射
+- `Fields` - modelsql 字段映射
+
+## 字段命名规范
+- 主键：通常使用 `id`
+- 创建时间：`ctime: UtcDateTime`
+- 创建人：`cid: Uuid`
+- 修改时间：`mtime: Option<UtcDateTime>`
+- 修改人：`mid: Uuid`
+- 外键：使用 `{关联表}_id` 格式
+- JSONB 字段：使用 `serde_json::Value` 或 `Option<serde_json::Value>`
+- 枚举字段：使用整数存储，相关的枚举类型使用 `#[derive(Serialize_repr, Deserialize_repr]` 和 `#[repr(i32)]` 定义为 `i32` 类型
+
+## SQL 关键字处理
+当字段名是 SQL 关键字时，使用 `#[serde(rename = "type")]` 重命名：
+```rust
+#[serde(rename = "type")]
+pub node_type: String,
+```
+
+## UUID 使用
+- 用户相关表使用 `uuid::Uuid` 类型
+- 其他表根据需要选择 `String` 或其他类型
+
+## 可选字段
+- 所有可为 NULL 的数据库字段必须使用 `Option<T>`
+- 修改时间字段通常为可选：`mtime: Option<UtcDateTime>`
+
+## 数据库字段规范
+### 时间字段
+- 统一使用 `timestamptz` 类型存储时间
+- Rust 中使用 `ultimate_common::time::UtcDateTime`
+- 创建时间：`ctime` (不可为空)
+- 创建人：`cid`（不可为空）
+- 修改时间：`mtime` (可为空)
+- 修改者：`mid`（可为空）
+
+### JSON 字段
+- PostgreSQL 中优先使用 `jsonb` 类型
+- Rust 中使用 `serde_json::Value`
+- 可选的 JSON 字段使用 `Option<serde_json::Value>`
+
+### 外键约束
+- 必须定义适当的外键约束
+- 使用有意义的约束名称
+- 考虑级联删除策略
+
+## 枚举类型规范
+### 标准枚举模式
+```rust
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize_repr, Deserialize_repr)]
+#[repr(i32)]
+pub enum StatusKind {
+  Invalid = 99,
+  Valid = 100,
+}
+```

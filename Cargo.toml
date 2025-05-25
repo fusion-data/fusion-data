@@ -1,10 +1,14 @@
 [workspace]
 members = [
-    "crates/fusions/*",
     "crates/lm/*",
     "crates/ultimates/*",
     "crates/libs/*",
-    "guixu/guixu", "guixu/guixu-core",
+    "fusion/fusion-iam",
+    "fusion/fusion-metadata",
+    "fusion/fusiondata",
+    "fusion/fusiondata-context",
+    "guixu/guixu",
+    "guixu/guixu-core",
 ]
 resolver = "2"
 
@@ -32,10 +36,10 @@ ultimate-db = { version = "0.1.1", path = "crates/ultimates/ultimate-db" }
 ultimate-web = { version = "0.1.1", path = "crates/ultimates/ultimate-web" }
 ultimate-grpc = { version = "0.1.1", path = "crates/ultimates/ultimate-grpc" }
 ultimate = { version = "0.1.1", path = "crates/ultimates/ultimate" }
-fusiondata = { version = "0.1.1", path = "crates/fusions/fusiondata" }
-fusiondata-context = { version = "0.1.1", path = "crates/fusions/fusiondata-context" }
-fusion-flow-api = { version = "0.1.1", path = "crates/fusions/fusion-flow-api" }
-fusion-flow = { version = "0.1.1", path = "crates/fusions/fusion-flow" }
+fusiondata = { version = "0.1.1", path = "fusion/fusiondata" }
+fusiondata-context = { version = "0.1.1", path = "fusion/fusiondata-context" }
+fusion-flow-api = { version = "0.1.1", path = "fusion/fusion-flow-api" }
+fusion-flow = { version = "0.1.1", path = "fusion/fusion-flow" }
 fusion-lm = { version = "0.1.1", path = "crates/lm/fusion-lm" }
 # -- projects end
 # begin -- memory allocator

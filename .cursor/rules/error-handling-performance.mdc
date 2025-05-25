@@ -1,0 +1,41 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# 错误处理和性能优化
+
+## 错误处理
+
+### 错误类型
+- 使用 `thiserror` 定义自定义错误
+- 数据库错误使用 `sqlx::Error`
+- 序列化错误使用 `serde_json::Error`
+
+### Result 类型
+函数返回值使用明确的 Result 类型：
+```rust
+pub async fn function() -> Result<ReturnType, ErrorType> {
+  // 实现
+}
+```
+
+## 性能优化
+
+### 索引策略
+- 为外键字段创建索引
+- 为查询频繁的字段创建索引
+- 为唯一约束创建唯一索引
+
+### 查询优化
+- 使用 sea-query 构建类型安全的查询
+- 避免 N+1 查询问题
+- 合理使用连接查询
+
+## 最佳实践提醒
+- 避免在生产代码中使用 `unwrap()`，使用适当的错误处理
+- 使用类型系统确保数据一致性
+- 定期运行 `cargo clippy` 检查代码质量
+- 保持模块间的低耦合高内聚
+- 优先使用 `&str` 而不是 `String` 作为函数参数
+- 合理使用 `Clone` vs `&` 引用传递
