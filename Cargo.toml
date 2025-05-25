@@ -4,7 +4,7 @@ members = [
     "crates/lm/*",
     "crates/ultimates/*",
     "crates/libs/*",
-    "guixu/guixu",
+    "guixu/guixu", "guixu/guixu-core",
 ]
 resolver = "2"
 

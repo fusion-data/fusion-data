@@ -2,6 +2,7 @@ use chrono::{DateTime, Duration, Utc};
 use serde_json::{Map, Value};
 use std::{ops::Deref, sync::Arc};
 use thiserror::Error;
+#[cfg(feature = "ulid")]
 use ulid::Ulid;
 
 #[derive(Debug, Error)]
@@ -122,7 +123,14 @@ impl Ctx {
     Self(Arc::new(CtxInner {
       payload,
       req_time: req_time.unwrap_or_else(Utc::now),
-      req_id: req_id.unwrap_or_else(|| Ulid::new().to_string()),
+      req_id: req_id.unwrap_or_else(|| {
+        #[cfg(feature = "ulid")]
+        {
+          Ulid::new().to_string()
+        }
+        #[cfg(not(feature = "ulid"))]
+        Default::default()
+      }),
     }))
   }
 

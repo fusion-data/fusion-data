@@ -17,7 +17,7 @@ serde.workspace = true
 serde_json.workspace = true
 sha2.workspace = true
 hmac.workspace = true
-ulid.workspace = true
+ulid = { workspace = true, optional = true }
 base64ct.workspace = true
 base16ct.workspace = true
 chrono.workspace = true

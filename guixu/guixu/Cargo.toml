@@ -16,14 +16,34 @@ ultimate-common = { workspace = true }
 ultimate-core = { workspace = true }
 ultimate-web = { workspace = true }
 
+uuid = { workspace = true }
+rust_decimal = { workspace = true }
+
 # -- db
 ultimate-db = { workspace = true, features = ["with-postgres", "with-uuid"] }
-modelsql = { workspace = true, features = ["with-postgres", "with-uuid"] }
-sqlx = { workspace = true, features = ["postgres"] }
+modelsql = { workspace = true, features = [
+  "with-postgres",
+  "with-uuid",
+  "with-rust_decimal",
+  "with-pgvector",
+  "with-ilike",
+] }
+sqlx = { workspace = true, features = [
+  "runtime-tokio",
+  "postgres",
+  "uuid",
+  "json",
+  "chrono",
+  "rust_decimal",
+] }
 sea-query = { workspace = true }
 sea-query-binder = { workspace = true, features = [
   "sqlx-postgres",
   "postgres-array",
+  "with-uuid",
+  "with-json",
+  "with-chrono",
+  "with-rust_decimal",
 ] }
 
 # -- tokio & async

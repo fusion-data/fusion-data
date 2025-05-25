@@ -11,8 +11,6 @@ repository.workspace = true
 workspace = true
 
 [features]
-# utoipa = ["dep:utoipa", "ultimate-api/utoipa"]
-with-ilike = []
 with-postgres = ["modelsql/with-postgres"]
 with-sqlite = ["modelsql/with-sqlite"]
 with-uuid = ["dep:uuid", "modelsql/with-uuid", "ultimate-api/uuid"]

@@ -1,0 +1,64 @@
+{
+  "id": "OnItfAkJaqbO7GXK",
+  "versionId": "efb90aa1-618b-4d9c-8acd-69b116394f64",
+  "settings": { "executionOrder": "v1" },
+  "meta": { "templateCredsSetupCompleted": true },
+  "nodes": [
+    {
+      "parameters": { "public": true, "options": {} },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [0, 0],
+      "id": "dff00ca2-dd08-448c-83ea-6d50857fb6dd",
+      "name": "When chat message received",
+      "webhookId": "ca8c100f-f79c-4139-a887-33ba79f9142b"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.6,
+      "position": [220, 0],
+      "id": "9c6b7e82-1423-46ba-b665-e19d7d90cdc8",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": { "options": {} },
+      "type": "@n8n/n8n-nodes-langchain.lmChatDeepSeek",
+      "typeVersion": 1,
+      "position": [320, 220],
+      "id": "6635cdde-9f67-41d8-aae7-21fe20a646ca",
+      "name": "DeepSeek Chat Model",
+      "credentials": { "deepSeekApi": { "id": "PANf8QLgqkSq1LyQ", "name": "DeepSeek account" } }
+    },
+    {
+      "parameters": { "operation": "write", "fileName": "/tmp/tmp.txt", "options": {} },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [940, -20],
+      "id": "222514c7-2dc8-43e7-8e73-d0eb62bdcc2e",
+      "name": "Read/Write Files from Disk",
+      "alwaysOutputData": false,
+      "executeOnce": false,
+      "retryOnFail": false,
+      "notesInFlow": true,
+      "notes": "写入到文件"
+    },
+    {
+      "parameters": { "operation": "toText", "sourceProperty": "text", "options": {} },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [640, 0],
+      "id": "1911fb2c-3a3e-4c90-ae47-edda6bf331e9",
+      "name": "Convert to File"
+    }
+  ],
+  "connections": {
+    "When chat message received": { "main": [[{ "node": "Basic LLM Chain", "type": "main", "index": 0 }]] },
+    "DeepSeek Chat Model": {
+      "ai_languageModel": [[{ "node": "Basic LLM Chain", "type": "ai_languageModel", "index": 0 }]]
+    },
+    "Basic LLM Chain": { "main": [[{ "node": "Convert to File", "type": "main", "index": 0 }]] },
+    "Read/Write Files from Disk": { "main": [[]] },
+    "Convert to File": { "main": [[{ "node": "Read/Write Files from Disk", "type": "main", "index": 0 }]] }
+  }
+}
