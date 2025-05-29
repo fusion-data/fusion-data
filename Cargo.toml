@@ -1,6 +1,5 @@
 [workspace]
 members = [
-    "crates/lm/*",
     "crates/ultimates/*",
     "crates/libs/*",
     "fusion/fusion-iam",
@@ -8,7 +7,7 @@ members = [
     "fusion/fusiondata",
     "fusion/fusiondata-context",
     "guixu/guixu",
-    "guixu/guixu-core",
+    "guixu/guixu-core", "guixu/guixu-nodes",
 ]
 resolver = "2"
 
@@ -19,6 +18,7 @@ rust-version = "1.87"
 description = "Rust libraries of The fusiondata"
 license = "Apache-2.0"
 repository = "https://github.com/fusion-data/fusion-data"
+authors = ["杨景 <yang.xunjing@qq.com>"]
 
 [workspace.lints.rust]
 unsafe_code = "forbid"
@@ -40,7 +40,6 @@ fusiondata = { version = "0.1.1", path = "fusion/fusiondata" }
 fusiondata-context = { version = "0.1.1", path = "fusion/fusiondata-context" }
 fusion-flow-api = { version = "0.1.1", path = "fusion/fusion-flow-api" }
 fusion-flow = { version = "0.1.1", path = "fusion/fusion-flow" }
-fusion-lm = { version = "0.1.1", path = "crates/lm/fusion-lm" }
 # -- projects end
 # begin -- memory allocator
 tikv-jemallocator = "0.6"
@@ -63,7 +62,7 @@ regex = { version = "1", features = ["unicode-case"] }
 rand = "0.9"
 bytes = "1.10"
 ulid = { version = "1", features = ["serde", "uuid"] }
-uuid = { version = "1.15", features = [
+uuid = { version = "1.17", features = [
     "v4",
     "v7",
     "fast-rng",
@@ -108,7 +107,7 @@ futures = "0.3"
 futures-util = "0.3"
 async-trait = "0.1"
 async-stream = "0.3"
-tokio = { version = "1", features = ["full"] }
+tokio = { version = "1.45.1", features = ["full"] }
 tokio-stream = { version = "0.1", features = ["full"] }
 tokio-util = { version = "0.7", features = ["full", "tracing"] }
 tokio-test = { version = "0.4" }

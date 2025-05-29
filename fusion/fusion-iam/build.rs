@@ -62,7 +62,7 @@ fn main() {
         "proto/fusion_iam/v1/permission.proto",
         "proto/fusion_iam/v1/access_control.proto",
       ],
-      &["proto", "../../ultimates/ultimate-api/proto"],
+      &["proto", "../../crates/ultimates/ultimate-api/proto"],
     )
     .unwrap();
 }

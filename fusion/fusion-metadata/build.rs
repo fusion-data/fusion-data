@@ -18,6 +18,9 @@ fn main() {
   // let modql_messages = ["CreateProcessRequest", "CreateTriggerRequest"];
   // b = modql_messages.iter().fold(b, |b, m| b.message_attribute(format!("{}.{}", BASE_PACKAGE, m), MODQL_MESSAGE_ATTR));
 
-  b.compile_protos(&["proto/fusion_metadata/v1/metadata.proto"], &["proto", "../../ultimates/ultimate-api/proto"])
-    .unwrap();
+  b.compile_protos(
+    &["proto/fusion_metadata/v1/metadata.proto"],
+    &["proto", "../../crates/ultimates/ultimate-api/proto"],
+  )
+  .unwrap();
 }
