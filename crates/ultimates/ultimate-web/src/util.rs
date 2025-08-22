@@ -2,46 +2,57 @@ use axum::Json;
 use axum::extract::Query;
 use axum::http::StatusCode;
 use axum::http::request::Parts;
-use axum_extra::headers::authorization::Bearer;
-use axum_extra::headers::{Authorization, HeaderMapExt};
-use serde::Serialize;
+use headers::authorization::Bearer;
+use headers::{Authorization, HeaderMapExt};
 use serde::de::DeserializeOwned;
+#[cfg(feature = "with-ulid")]
 use ulid::Ulid;
 use ultimate_common::ctx::Ctx;
 use ultimate_common::time;
+#[cfg(feature = "with-ulid")]
+use ultimate_core::IdUlidResult;
 use ultimate_core::configuration::SecurityConfig;
+use ultimate_core::log::get_trace_id;
 use ultimate_core::security::{AccessToken, SecurityUtils};
-use ultimate_core::{DataError, IdI64Result, IdUlidResult};
+use ultimate_core::{DataError, IdI64Result};
 
-use crate::AppResult;
-use crate::error::AppError;
+use crate::WebResult;
+use crate::error::WebError;
 
-#[inline]
-pub fn ok<T: Serialize>(v: T) -> AppResult<T> {
-  Ok(Json(v))
+/// ok_json! 宏：支持无参数（返回 Ok(Json(()))）或一个参数（返回 Ok(Json(v))）
+#[macro_export]
+macro_rules! ok_json {
+  () => {
+    Ok(axum::Json(().into()))
+  };
+  ($v:expr) => {
+    Ok(axum::Json($v))
+  };
 }
 
 #[inline]
-pub fn ok_id(id: i64) -> AppResult<IdI64Result> {
+pub fn ok_id(id: i64) -> WebResult<IdI64Result> {
   Ok(IdI64Result::new(id).into())
 }
 
+#[cfg(feature = "with-ulid")]
 #[inline]
-pub fn ok_ulid(id: Ulid) -> AppResult<IdUlidResult> {
+pub fn ok_ulid(id: Ulid) -> WebResult<IdUlidResult> {
   Ok(IdUlidResult::new(id).into())
 }
 
+#[cfg(feature = "with-uuid")]
 #[inline]
-pub fn ok_uuid(id: uuid::Uuid) -> AppResult<ultimate_core::IdUuidResult> {
+pub fn ok_uuid(id: uuid::Uuid) -> WebResult<ultimate_core::IdUuidResult> {
   Ok(ultimate_core::IdUuidResult::new(id).into())
 }
 
-pub fn unauthorized_app_error(msg: impl Into<String>) -> (StatusCode, Json<AppError>) {
-  (StatusCode::UNAUTHORIZED, Json(AppError::new(msg).with_err_code(401)))
+pub fn unauthorized_app_error(msg: impl Into<String>) -> (StatusCode, Json<WebError>) {
+  (StatusCode::UNAUTHORIZED, Json(WebError::new_with_msg(msg).with_err_code(401)))
 }
 
-/// 从 Http Request Parts 中获取 [SessionCtx]
-pub fn extract_session(parts: &Parts, sc: &SecurityConfig) -> Result<Ctx, DataError> {
+/// 从 Http Request Parts 中获取 [Ctx]
+pub fn extract_ctx(parts: &Parts, sc: &SecurityConfig) -> Result<Ctx, DataError> {
   let req_time = time::now();
 
   let token = if let Some(Authorization(bearer)) = parts.headers.typed_get::<Authorization<Bearer>>() {
@@ -55,13 +66,13 @@ pub fn extract_session(parts: &Parts, sc: &SecurityConfig) -> Result<Ctx, DataEr
   let (payload, _) =
     SecurityUtils::decrypt_jwt(sc.pwd(), &token).map_err(|_e| DataError::unauthorized("Failed decode jwt"))?;
 
-  let ctx = Ctx::new(payload, Some(req_time), None);
+  let ctx = Ctx::try_new(payload, Some(req_time), get_trace_id())?;
   Ok(ctx)
 }
 
-pub fn opt_to_app_result<T>(opt: Option<T>) -> AppResult<T>
+pub fn opt_to_app_result<T>(opt: Option<T>) -> WebResult<T>
 where
   T: DeserializeOwned,
 {
-  if let Some(v) = opt { Ok(Json(v)) } else { Err(Box::new(AppError::new_with_code(404, "Not found."))) }
+  if let Some(v) = opt { Ok(Json(v)) } else { Err(WebError::new_with_code(404, "Not found.")) }
 }

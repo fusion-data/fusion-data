@@ -7,15 +7,17 @@ max_width = 120
 chain_width = 100
 array_width = 100
 
-comment_width = 120
+
+# unstable features are only available in nightly channel
 format_code_in_doc_comments = true
 format_macro_bodies = true
 format_macro_matchers = true
 group_imports = "StdExternalCrate"
 imports_granularity = "Module"
-wrap_comments = true
 
-# unstable_feature = true
+wrap_comments = true
+comment_width = 120
+
 indent_style = "Visual"
 imports_layout = "HorizontalVertical"
 reorder_imports = true

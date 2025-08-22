@@ -1,5 +1,5 @@
+use log::error;
 use tokio::task::JoinError;
-use tracing::error;
 
 #[inline]
 pub fn handle_join_error<T, E>(ret: Result<Result<T, E>, JoinError>, task_name: &str)

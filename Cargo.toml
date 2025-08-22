@@ -1,46 +1,57 @@
 [workspace]
 members = [
-    "crates/ultimates/*",
-    "crates/libs/*",
-    "fusion/fusion-iam",
-    "fusion/fusion-metadata",
-    "fusion/fusiondata",
-    "fusion/fusiondata-context",
-    "guixu/guixu",
-    "guixu/guixu-core", "guixu/guixu-nodes",
+  "crates/ultimates/*",
+  "crates/libs/*",
+  # "fusion/fusion-iam",
+  "hetuflow/hetuflow-server",
+  "hetuflow/hetuflow-agent",
+  "hetuflow/hetuflow-core",
+  "hetuflow/hetuflow-docs",
+  "hetumind/hetumind-core",
+  "hetumind/hetumind-cli",
+  "hetumind/hetumind-context",
+  "hetumind/hetumind-nodes",
+  "hetumind/hetumind-studio",
+  "hetumind/hetumind-docs",
 ]
 resolver = "2"
 
 [workspace.package]
 version = "0.1.1"
 edition = "2024"
-rust-version = "1.87"
-description = "Rust libraries of The fusiondata"
+rust-version = "1.89"
+description = "A data fusion platform with scheduler, ai agent studio and core libraries"
 license = "Apache-2.0"
 repository = "https://github.com/fusion-data/fusion-data"
 authors = ["杨景 <yang.xunjing@qq.com>"]
+publish = false
 
 [workspace.lints.rust]
 unsafe_code = "forbid"
 #unused = "allow" # For experimental dev
 
+[workspace.lints.clippy]
+uninlined_format_args = "allow"
+
 [workspace.dependencies]
 # -- projects begin
 modelsql = { version = "0.1.1", path = "crates/libs/modelsql" }
+modelsql-core = { version = "0.1.1", path = "crates/libs/modelsql-core" }
 modelsql-macros = { version = "0.1.1", path = "crates/libs/modelsql-macros" }
 ultimate-common = { version = "0.1.1", path = "crates/ultimates/ultimate-common" }
 ultimate-core-macros = { version = "0.1.1", path = "crates/ultimates/ultimate-core-macros" }
 ultimate-core = { version = "0.1.1", path = "crates/ultimates/ultimate-core" }
-ultimate-api = { version = "0.1.1", path = "crates/ultimates/ultimate-api" }
 ultimate-db = { version = "0.1.1", path = "crates/ultimates/ultimate-db" }
 ultimate-web = { version = "0.1.1", path = "crates/ultimates/ultimate-web" }
 ultimate-grpc = { version = "0.1.1", path = "crates/ultimates/ultimate-grpc" }
 ultimate = { version = "0.1.1", path = "crates/ultimates/ultimate" }
-fusiondata = { version = "0.1.1", path = "fusion/fusiondata" }
-fusiondata-context = { version = "0.1.1", path = "fusion/fusiondata-context" }
-fusion-flow-api = { version = "0.1.1", path = "fusion/fusion-flow-api" }
-fusion-flow = { version = "0.1.1", path = "fusion/fusion-flow" }
+hetuflow-core = { version = "0.1.1", path = "hetuflow/hetuflow-core" }
+hetumind-core = { version = "0.1.1", path = "hetumind/hetumind-core" }
+hetumind-context = { version = "0.1.1", path = "hetumind/hetumind-context" }
+hetumind-nodes = { version = "0.1.1", path = "hetumind/hetumind-nodes" }
 # -- projects end
+mdbook = "0.4"
+mdbook-mermaid = "0.15"
 # begin -- memory allocator
 tikv-jemallocator = "0.6"
 # end   -- memory allocator
@@ -49,34 +60,41 @@ qrcode-rs = { version = "0.1" }
 image = { version = "0.25" }
 # -- Misc
 dotenvy = "0.15"
-derive_more = { version = "2.0", features = ["from", "display"] }
-toml = "0.8"
+zeroize = { version = "1.8", features = ["derive"] }
+derive_more = { version = "2.0", features = [
+  "from",
+  "display",
+  "constructor",
+  "into",
+  "as_ref",
+] }
+toml = "0.9"
 config = { version = "0.15", default-features = false, features = [
-    "toml",
-    "yaml",
-    "json5",
-    "json",
+  "toml",
+  "yaml",
+  "json5",
+  "json",
 ] }
 itertools = "0.14"
 regex = { version = "1", features = ["unicode-case"] }
-rand = "0.9"
+rand = { version = "0.9", default-features = false, features = ["thread_rng"] }
 bytes = "1.10"
 ulid = { version = "1", features = ["serde", "uuid"] }
-uuid = { version = "1.17", features = [
-    "v4",
-    "v7",
-    "fast-rng",
-    "serde",
-    #    "macro-diagnostics", # Enable better diagnostics for compile-time UUIDs
+uuid = { version = "1", features = [
+  "v4",
+  "v7",
+  "fast-rng",
+  "serde",
+  #    "macro-diagnostics", # Enable better diagnostics for compile-time UUIDs
 ] }
 rust_decimal = { version = "1", features = ["serde-str"] }
 rust_decimal_macros = "1"
 typed-builder = "0.21"
+derive_builder = "0.20"
 derive-getters = "0.5"
 clap = { version = "4.5", features = ["derive"] }
 o2o = { version = "0.5" }
 secrecy = { version = "0.10", features = ["serde"] }
-dashmap = { version = "6.1" }
 # 用于实现依赖注入。提供了一种方法，可以设置一个插件注册表，从任何链接到应用程序的源文件中都可以进行注册。不需要有一个所有插件的中央列表。
 inventory = { version = "0.3" }
 # Make retry like a built-in feature provided by Rust.
@@ -89,55 +107,65 @@ enum_dispatch = "0.3"
 anyhow = "1"
 thiserror = "2"
 # -- Macros
-quote = "1.0.40"
-syn = { version = "2", features = ["full"] }
+quote = "1.0"
+syn = { version = "2.0", features = ["full"] }
 proc-macro2 = "1"
 # -- Crypt & Encoding
-base16ct = { version = "0.2", features = ["alloc"] }
-base64ct = { version = "1.7", features = ["std", "alloc"] }
+base16ct = { version = "0.3", features = ["alloc"] }
+base64ct = { version = "1.8", features = ["std", "alloc"] }
 aes-gcm = "0.10"
 hmac = "0.12"
 sha2 = "0.10"
-argon2 = "0.5"
+argon2 = { version = "0.5", default-features = false, features = [
+  "alloc",
+  "password-hash",
+] }
+# A non-cryptographic hash function using AES-NI for high performance, provides AHashMap and AHashSet
+# 胜在小键值（如 HashMap 键）的极低延迟
+ahash = { version = "0.8", features = ["serde"] }
+# This crate is a native Rust port of Google’s HighwayHash, which is a fast, keyed, and strong hash function, whose output is hardware independent.
+# 胜在流式大文件的吞吐量（如文件校验）
+highway = { version = "1.3" }
 # -- JWT & JWE
 josekit = "0.10"
 aliri = "0.6"
-# -- Async
+# -- Async & Concurrent/Parallel & Atomic
 futures = "0.3"
 futures-util = "0.3"
 async-trait = "0.1"
 async-stream = "0.3"
-tokio = { version = "1.45.1", features = ["full"] }
+tokio = { version = "1.47", features = [
+  "macros",          # #[tokio::main] and #[tokio::test]
+  "rt-multi-thread", # Multi-threaded runtime
+  "signal",          # Signal handling for graceful shutdown
+  "net",             # Network primitives
+  "fs",              # File system operations
+  "time",            # Time utilities
+  "sync",            # Synchronization primitives
+] }
+tokio-tungstenite = { version = "0.27" }
 tokio-stream = { version = "0.1", features = ["full"] }
-tokio-util = { version = "0.7", features = ["full", "tracing"] }
+tokio-util = { version = "0.7", features = ["full"] }
 tokio-test = { version = "0.4" }
+tokio-mpmc = { version = "0.2" }
+arc-swap = { version = "1.7", features = ["serde"] }
+dashmap = { version = "6.1" }
 # -- Logging
 log = "0.4"
-env_logger = "0.11"
+logforth = "0.27"
 # -- Tracing
-tracing = { version = "0.1", features = ["log"] }
-tracing-log = "0.2"
-tracing-subscriber = { version = "0.3", features = [
-    "registry",
-    "env-filter",
-    "chrono",
-    "json",
-] }
-tracing-appender = "0.2"
-init-tracing-opentelemetry = { version = "0.28", features = [
-    "tracing_subscriber_ext",
-] }
-tracing-opentelemetry-instrumentation-sdk = "0.28"
+fastrace = { version = "0.7" }
+metrics = "0.24"
 # -- Time
 chrono = { version = "0.4", default-features = false, features = [
-    "std",
-    "clock",
-    "serde",
+  "std",
+  "clock",
+  "serde",
 ] }
 chrono-tz = "0.10"
 duration-str = "0.17"
 # -- scheduler
-croner = "2.1"
+croner = "3.0"
 hierarchical_hash_wheel_timer = { version = "1.3", features = ["uuid"] }
 tokio-cron-scheduler = { version = "0.14", features = ["has_bytes", "signal"] }
 # -- Database
@@ -146,10 +174,15 @@ sea-query = { version = "0.32", features = ["attr", "thread-safe"] }
 sea-query-binder = { version = "0.7", features = ["with-json", "with-chrono"] }
 pgvector = { version = "0.4", features = ["sqlx"] }
 # -- Serde
-serde = { version = "1.0", features = ["derive"] }
-serde_with = { version = "3.12", features = ["chrono_0_4"] }
+serde = { version = "1.0", features = ["derive", "rc"] }
+serde_with = { version = "3.14", features = ["chrono_0_4"] }
 serde_json = { version = "1.0" }
+serde_json5 = { version = "0.2" }
+json-five = { version = "0.3" }
 serde_repr = "0.1"
+jsonpath-rust = { version = "1.0" }
+json-patch = { version = "4" }
+nom = "8.0"
 # -- Web
 url = "2.4"
 urlencoding = "2.1"
@@ -157,70 +190,91 @@ serde_urlencoded = "0.7"
 headers = "0.4"
 mime = "0.3"
 http = "1"
-reqwest = { version = "0.12", features = ["json"] }
+http-body-util = "0.1"
+# async http client
+reqwest = { version = "0.12", features = [
+  "rustls-tls-webpki-roots",
+  "json",
+  "gzip",
+] }
+# lightweight sync http client
+ureq = { version = "3.0", features = ["json", "charset"] }
 hyper = "1"
 hyper-util = "0.1"
 tower = "0.5"
 tower-http = { version = "0.6", features = [
-    "fs",
-    "trace",
-    "cors",
-    "compression-full",
+  "fs",
+  "trace",
+  "cors",
+  "compression-full",
+  "sensitive-headers",
+  "validate-request",
+  "auth",
 ] }
 tower-service = { version = "0.3" }
 tower-cookies = "0.11"
 cookie = "0.18"
-axum = { version = "0.8", features = ["macros", "form"] }
+axum = { version = "0.8", features = [
+  "macros",
+  "form",
+  "tokio",
+  "http1",
+  "http2",
+] }
+axum-core = { version = "0.5" }
 axum-extra = { version = "0.10", features = ["typed-header"] }
 axum-macros = { version = "0.5" }
-axum-tracing-opentelemetry = "0.28"
+axum-test = { version = "18", features = ["reqwest", "typed-routing", "ws"] }
+# -- validator
+garde = { version = "0.22", features = ["derive"] }
+axum-valid = { version = "0.24", default-features = false, features = [
+  "basic",
+  "garde",
+] }
+test-context = { version = "0.4" }
+insta = { version = "1" }
+once_cell = { version = "1" }
+
 # -- gRPC
-tonic = "0.13"
-tonic-types = "0.13"
-tonic-reflection = "0.13"
-tonic-web = "0.13"
-# tonic-tracing-opentelemetry = "0.28"
-tonic-build = { version = "0.13", features = ["prost"] }
+tonic = "0.14"
+tonic-types = "0.14"
+tonic-reflection = "0.14"
+tonic-web = "0.14"
+tonic-build = { version = "0.14" }
 # -- Protocol Buffers
-prost = "0.13"
-prost-build = "0.13"
-prost-types = "0.13"
-# # openapi
-# utoipa = { version = "5.1", features = [
-#     "axum_extras",
-#     "chrono",
-#     "decimal",
-#     "uuid",
-#     "repr",
-#     "preserve_order",
-#     "preserve_path_order",
-# ] }
-# utoipa-scalar = { version = "0.2", features = ["axum"] }
+protobuf = "3"
+protobuf-codegen = "3"
+protobuf-json-mapping = "3"
+protobuf-parse = "3"
+# protoc-bin-vendored = "3"
 # -- Template Engin
 minijinja = { version = "2.5" }
 # -- Data Science
-polars = "0.48"
+polars = "0.50"
 # An Excel/OpenDocument Spreadsheets reader and deserializer in pure rust
-calamine = "0.27"
-# -- Valkey & Redis client
+calamine = "0.30"
+# -- Redis & Valkey client
 fred = { version = "10" }
-
 # -- cloud storage access
-opendal = { version = "0.53", features = [
-    "services-oss",
-    "services-obs",
-    "services-s3",
+opendal = { version = "0.54", features = [
+  "services-oss",
+  "services-obs",
+  "services-s3",
+  "services-fs",
 ] }
-minio = { version = "0.2" }
-# Documents
-
+minio = { version = "0.3" }
 # -- LLM
-rig-core = { git = "https://gitee.com/yangbajing/rig.git", features = [
-    "derive",
-] }
-rig-postgres = { git = "https://gitee.com/yangbajing/rig.git" }
-rmcp = { version = "0.1" }
+rig-core = { version = "0.18", features = ["derive"] }
+rig-postgres = { version = "0.1" }
+rmcp = { version = "0.6" }
+# -- Plugins
+extism = { version = "1.11" }
 
 # -- Dev/Test
 pretty_assertions = "1.4"
 asserhttp = { version = "0.7", features = ["reqwest"] }
+
+# [workspace.target.'cfg(target_arch = "x86_64")'.dependencies]
+# sha2 = { version = "0.10", features = ["asm"] }
+# [workspace.target.'cfg(target_arch = "aarch64")'.dependencies]
+# sha2 = { version = "0.10", features = ["asm-aarch64"] }

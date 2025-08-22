@@ -5,9 +5,10 @@ mod field_metas;
 mod has_fields;
 mod sea;
 
-pub use self::error::{Error, Result};
+pub use error::{Error, Result};
 pub use field_meta::*;
 pub use field_metas::*;
 pub use has_fields::*;
+pub use modelsql_core::field::*;
 pub use modelsql_macros::{Fields, SeaFieldValue};
 pub use sea::*;

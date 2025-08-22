@@ -1,6 +1,6 @@
 # FROM postgres:17
-# FROM pgvector/pgvector:pg17
-FROM tensorchord/vchord-postgres:pg17-v0.4.1
+# FROM tensorchord/vchord-postgres:pg17-v0.5.0
+FROM pgvector/pgvector:pg17
 
 ENV LANG=zh_CN.utf8
 ENV TZ=Asia/Chongqing

@@ -6,6 +6,7 @@ rust-version.workspace = true
 description.workspace = true
 license.workspace = true
 repository.workspace = true
+publish = true
 
 [lints]
 workspace = true
@@ -13,23 +14,28 @@ workspace = true
 [features]
 # default = ["with-uuid"]
 tonic = ["dep:tonic", "ultimate-core/tonic"]
+with-uuid = ["dep:uuid", "ultimate-core/with-uuid"]
+with-ulid = ["dep:ulid", "ultimate-core/with-ulid"]
 
 [dependencies]
 ultimate-common.workspace = true
 ultimate-core.workspace = true
-ultimate-api.workspace = true
+futures.workspace = true
 tokio.workspace = true
-tracing.workspace = true
+log.workspace = true
+bytes.workspace = true
+config.workspace = true
 mime.workspace = true
 hyper.workspace = true
+tower.workspace = true
 tower-http.workspace = true
-config.workspace = true
+http.workspace = true
+headers.workspace = true
 axum.workspace = true
-axum-extra.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 serde_with.workspace = true
-ulid.workspace = true
-uuid = { workspace = true }
+ulid = { workspace = true, optional = true }
+uuid = { workspace = true, optional = true }
 # utoipa = { workspace = true, optional = true }
 tonic = { workspace = true, optional = true }

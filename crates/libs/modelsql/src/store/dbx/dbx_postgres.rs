@@ -2,42 +2,51 @@ use std::net::ToSocketAddrs;
 use std::ops::{Deref, DerefMut};
 use std::sync::Arc;
 
-// use sqlx::postgres::any::AnyConnectionBackend;
+use log::{debug, info, warn};
+use sqlx::Executor;
 use sqlx::postgres::{PgConnectOptions, PgPoolOptions, Postgres};
 use sqlx::query::{Query, QueryAs};
 use sqlx::{ConnectOptions, FromRow, IntoArguments, Pool, Transaction};
 use tokio::sync::Mutex;
-use tracing::{debug, trace};
 
 use crate::DbConfig;
 
-use super::{DbxError, DbxType, DbxTypeTrait, Result};
+use super::{DbxError, Result};
 
 pub type Db = Pool<Postgres>;
 
-pub fn new_pg_pool_from_config(c: &DbConfig, application_name: Option<&str>) -> Result<Db> {
+pub async fn new_pg_pool_from_config(c: &DbConfig, application_name: Option<&str>) -> Result<Db> {
   if !c.enable() {
     return Err(DbxError::ConfigInvalid("Need set ultimate.db.enable = true"));
   }
 
-  let mut opt = PgPoolOptions::new();
+  let mut pool = PgPoolOptions::new();
   if let Some(v) = c.max_connections() {
-    opt = opt.max_connections(v);
+    pool = pool.max_connections(v);
   }
   if let Some(v) = c.min_connections() {
-    opt = opt.min_connections(v);
+    pool = pool.min_connections(v);
   }
   if let Some(v) = c.acquire_timeout() {
-    opt = opt.acquire_timeout(*v);
+    pool = pool.acquire_timeout(*v);
   }
   if let Some(v) = c.idle_timeout() {
-    opt = opt.idle_timeout(*v);
+    pool = pool.idle_timeout(*v);
   }
   if let Some(v) = c.max_lifetime() {
-    opt = opt.max_lifetime(*v);
+    pool = pool.max_lifetime(*v);
   }
+  if let Some(v) = c.after_connect() {
+    let query = v.to_string();
 
-  trace!("Postgres pool options are: {:?}", opt);
+    pool = pool.after_connect(move |conn, _| {
+      let query = query.clone();
+      Box::pin(async move {
+        conn.execute(query.as_str()).await?;
+        Ok(())
+      })
+    });
+  }
 
   let level = log::LevelFilter::Debug;
   let mut opts: PgConnectOptions = match c.url() {
@@ -62,30 +71,31 @@ pub fn new_pg_pool_from_config(c: &DbConfig, application_name: Option<&str>) -> 
       if let Some(password) = c.password() {
         o = o.password(password);
       }
-      if let Some(an) = c.application_name().or(application_name) {
-        o = o.application_name(an);
-      }
-      if let Some(search_path) = c.schema_search_path() {
-        o = o.options([("search_path", search_path)]);
-      }
       o
     }
   };
-  debug!("Postgres connect options: {:?}", opts);
+  if let Some(an) = c.application_name().or(application_name) {
+    opts = opts.application_name(an);
+  }
+  if let Some(search_path) = c.schema_search_path() {
+    opts = opts.options([("search_path", search_path)]);
+  }
 
-  // TODO 若 opts.host 是域名，需要进行DNS查找将期转换为 ip addr
-  let non_ip_addr = opts.get_host().parse::<std::net::IpAddr>().is_err();
+  // 若 opts.host 是域名，需要进行DNS查找将期转换为 ip addr
+  let non_ip_addr = opts.get_host() != "localhost" && opts.get_host().parse::<std::net::IpAddr>().is_err();
   if non_ip_addr {
     let original_host = format!("{}:{}", opts.get_host(), opts.get_port());
     let sock_addr = original_host.to_socket_addrs().unwrap().next().unwrap();
     opts = opts.host(&sock_addr.ip().to_string());
-    trace!("Resolve original host, from {} to {}", original_host, opts.get_host());
+    debug!("Resolve original host, from {} to {}", original_host, opts.get_host());
   }
 
   opts = opts.log_statements(level);
+  let log_opts = opts.clone().password("<password>");
+  info!("Postgres connect options: {:?}", log_opts);
 
-  let db = opt.connect_lazy_with(opts);
-  debug!("Connect to Postgres pool: {:?}", db);
+  let db = pool.connect_with(opts).await?;
+  info!("Connect to Postgres pool: {:?}", db);
   Ok(db)
 }
 
@@ -94,12 +104,6 @@ pub struct DbxPostgres {
   db_pool: Db,
   txn_holder: Arc<Mutex<Option<TxnHolder>>>,
   txn: bool,
-}
-
-impl DbxTypeTrait for DbxPostgres {
-  fn dbx_type(&self) -> &DbxType {
-    &DbxType::Postgres
-  }
 }
 
 impl DbxPostgres {
@@ -167,14 +171,24 @@ impl DbxPostgres {
         // here we take the txh out of the option
         if let Some(txh) = txh_g.take() {
           txh.txn.commit().await?;
-          // txn.txn.as_mut().commit().await?;
-        } // TODO: Might want to add a warning on the else.
-      } // TODO: Might want to add a warning on the else.
+        } else {
+          // 计数为 0 但持有者为空，理论上不可能发生，记录警告以便排查
+          warn!(
+            "DbxPostgres.commit_txn: counter reached 0 but txn_holder was None; possible logic error, commit skipped"
+          );
+        }
+      } else {
+        // 嵌套事务场景，未到最外层提交，记录警告以帮助定位不匹配的 begin/commit 次数
+        // 如果 counter < 0，说明出现了计数下溢，强烈提示修复调用逻辑
+        warn!(
+          "DbxPostgres.commit_txn: nested commit called with depth {}; transaction will not be committed until it reaches 0",
+          counter
+        );
+      }
 
       Ok(())
-    }
-    // Ohterwise, we have an error
-    else {
+    } else {
+      // Ohterwise, we have an error
       Err(DbxError::TxnCantCommitNoOpenTxn)
     }
   }

@@ -6,19 +6,25 @@ rust-version.workspace = true
 description.workspace = true
 license.workspace = true
 repository.workspace = true
+publish = true
 
 [lints]
 workspace = true
 
 [features]
-with-ilike = []
+default = ["with-postgres"]
+with-ilike = ["modelsql-core/with-ilike"]
 with-postgres = [
   "sqlx/postgres",
   "sea-query-binder/sqlx-postgres",
   "sea-query-binder/postgres-array",
 ]
 with-sqlite = ["sqlx/sqlite", "sea-query-binder/sqlx-sqlite"]
-with-uuid = ["dep:uuid", "sea-query-binder/with-uuid"]
+with-uuid = [
+  "dep:uuid",
+  "sea-query-binder/with-uuid",
+  "modelsql-core/with-uuid",
+]
 with-rust_decimal = [
   "dep:rust_decimal",
   "sqlx/rust_decimal",
@@ -39,6 +45,7 @@ required-features = ["with-sqlite"]
 [dependencies]
 ultimate-common.workspace = true
 modelsql-macros = { workspace = true }
+modelsql-core = { workspace = true, features = ["with-sea-query"] }
 async-trait.workspace = true
 derive_more.workspace = true
 serde.workspace = true
@@ -47,7 +54,6 @@ serde_json.workspace = true
 log.workspace = true
 thiserror.workspace = true
 tokio.workspace = true
-tracing.workspace = true
 uuid = { workspace = true, optional = true }
 rust_decimal = { workspace = true, optional = true }
 config = { workspace = true }
@@ -61,4 +67,4 @@ tonic = { workspace = true, optional = true }
 
 [dev-dependencies]
 anyhow.workspace = true
-tracing-subscriber.workspace = true
+logforth.workspace = true

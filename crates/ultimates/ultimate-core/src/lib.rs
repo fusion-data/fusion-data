@@ -9,6 +9,7 @@ pub mod plugin;
 mod run_mode;
 pub mod security;
 pub mod signal;
+#[cfg(feature = "with-uuid")]
 pub mod timer;
 pub mod utils;
 

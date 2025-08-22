@@ -4,12 +4,12 @@ use ultimate_core::{application::Application, component::ComponentArc};
 use ultimate_db::DbPlugin;
 
 #[derive(Clone, Component)]
-struct TestService {
+struct TestSvc {
   #[component]
   mm: ModelManager,
 }
 
-impl TestService {
+impl TestSvc {
   pub async fn test(&self) -> ultimate_core::Result<String> {
     let _mm = &self.mm;
     Ok(String::from("test service"))
@@ -18,17 +18,18 @@ impl TestService {
 
 #[tokio::main]
 async fn main() {
-  tracing_subscriber::fmt::init();
+  logforth::stdout().apply();
+
   let mut ab = Application::builder();
   ab.add_plugin(DbPlugin);
-  ab.run().await;
+  ab.run().await.unwrap();
   let app = Application::global();
   let mm: ComponentArc<ModelManager> = app.get_component_arc().unwrap();
 
   let addr: *const ModelManager = &*mm;
   println!("ModelManager address: {:p}", addr);
 
-  let test_serv = app.get_component_arc::<TestService>().unwrap();
-  let ret = test_serv.test().await.unwrap();
+  let test_svc = app.get_component_arc::<TestSvc>().unwrap();
+  let ret = test_svc.test().await.unwrap();
   assert_eq!(ret, "test service");
 }

@@ -2,8 +2,8 @@
 mod error;
 
 pub use inventory::submit;
+use log::debug;
 use std::{any::Any, collections::HashSet, ops::Deref, sync::Arc};
-use tracing::debug;
 pub use ultimate_core_macros::Component;
 
 use crate::application::ApplicationBuilder;
@@ -85,38 +85,40 @@ macro_rules! submit_component {
 }
 
 /// Find all ComponentInstaller and install them into the application
-pub fn auto_inject_component(app: &mut ApplicationBuilder) -> crate::Result<()> {
+pub fn auto_inject_component(app_builder: &mut ApplicationBuilder) -> crate::Result<()> {
   let mut registrars: Vec<(&&dyn ComponentInstaller, Vec<&str>)> =
     inventory::iter::<&dyn ComponentInstaller>.into_iter().map(|cr| (cr, cr.dependencies())).collect();
 
   // TODO 当存在未注册的组件时，限制循环次数
   let mut epoch = 0;
-  let mut last_unregister_len = 0;
+  let mut last_pending_len = 0;
 
   while !registrars.is_empty() && epoch < 10 {
-    let mut unregistrars = vec![];
+    let mut pending_registrars = vec![];
     for (registrar, deps) in registrars {
-      let deps: Vec<&str> = deps.into_iter().filter(|d| !app.components.contains_key(*d)).collect();
+      let deps: Vec<&str> = deps.into_iter().filter(|d| !app_builder.components.contains_key(*d)).collect();
       if deps.is_empty() {
-        registrar.install_component(app)?;
+        registrar.install_component(app_builder)?;
       } else {
         debug!("Dependency does not exist, waiting for the next round: [{:?}]", deps);
-        unregistrars.push((registrar, deps));
+        pending_registrars.push((registrar, deps));
       }
     }
-    if last_unregister_len == unregistrars.len() {
-      epoch += 1;
-    } else {
+    registrars = pending_registrars;
+
+    let pending_len = registrars.len();
+    if pending_len == 0 || last_pending_len != pending_len {
       epoch = 0;
-      last_unregister_len = unregistrars.len();
+      last_pending_len = pending_len;
+    } else {
+      epoch += 1;
     }
-    registrars = unregistrars;
   }
   if epoch != 0 {
     let deps: HashSet<&str> = registrars.iter().flat_map(|(_, deps)| deps).copied().collect();
     panic!(
-      "Component registration failed, please check the component dependency relationship. Unregistered Components: {:?}",
-      deps
+      "Component registration failed, please check the component dependency relationship. Unregistered Components: {:?}, epoch: {}",
+      deps, epoch
     );
   }
   Ok(())

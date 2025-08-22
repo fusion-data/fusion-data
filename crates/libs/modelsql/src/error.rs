@@ -1,8 +1,10 @@
 use std::borrow::Cow;
 
-use crate::{filter::IntoSeaError, id::Id};
+use modelsql_core::filter::IntoSeaError;
 use sqlx::error::DatabaseError;
 use thiserror::Error;
+
+use crate::id::Id;
 
 pub type Result<T> = core::result::Result<T, SqlError>;
 
@@ -11,8 +13,11 @@ pub enum SqlError {
   #[error("Unauthorized: {0}")]
   Unauthorized(String),
 
-  #[error("Execute fail. entity: '{schema:?}.{entity}'")]
-  ExecuteFail { schema: Option<&'static str>, entity: &'static str },
+  #[error("Execute error. table: {table}, message: {message}")]
+  ExecuteError { table: String, message: String },
+
+  #[error("Execute fail. table: '{schema:?}.{table}'")]
+  ExecuteFail { schema: Option<&'static str>, table: &'static str },
 
   #[error("Count fail. table: '{schema:?}.{table}'")]
   CountFail { schema: Option<&'static str>, table: &'static str },
@@ -20,7 +25,7 @@ pub enum SqlError {
   #[error("Invalid database. database: {0}")]
   InvalidDatabase(&'static str),
 
-  #[error("Invalid argment, error message: {message}")]
+  #[error("Invalid argument, error message: {message}")]
   InvalidArgument { message: String },
 
   #[error("Entity not found. entity: '{schema:?}.{entity}', id: {id:?}")]
@@ -30,13 +35,13 @@ pub enum SqlError {
   NotFound { schema: Option<&'static str>, table: &'static str, sql: String },
 
   #[error("List limit over max. max: {max}, actual: {actual}")]
-  ListLimitOverMax { max: i64, actual: i64 },
+  ListLimitOverMax { max: u64, actual: u64 },
 
   #[error("List limit under min. min: {min}, actual: {actual}")]
-  ListLimitUnderMin { min: i64, actual: i64 },
+  ListLimitUnderMin { min: u64, actual: u64 },
 
   #[error("List page under min. min: {min}, actual: {actual}")]
-  ListPageUnderMin { min: i64, actual: i64 },
+  ListPageUnderMin { min: u64, actual: u64 },
 
   // -- DB
   #[error("User already exists. {key}: '{value}'")]
@@ -61,6 +66,9 @@ pub enum SqlError {
 
   #[error(transparent)]
   DbxError(#[from] crate::store::dbx::DbxError),
+
+  #[error(transparent)]
+  Sqlx(#[from] sqlx::Error),
 }
 
 impl SqlError {

@@ -1,0 +1,48 @@
+[book]
+title = "河图流动项目文档"
+authors = ["fusion-data Team"]
+language = "zh"
+multilingual = false
+src = "src"
+
+[build]
+build-dir = "book"
+create-missing = true
+use-default-preprocessors = true
+
+[preprocessor.mermaid]
+command = "mdbook-mermaid"
+
+[output.html]
+default-theme = "light"
+preferred-dark-theme = "navy"
+smart-punctuation = true
+mathjax-support = true
+copy-fonts = true
+no-section-label = false
+git-repository-url = "https://github.com/fusion-data/fusion-data"
+edit-url-template = "https://github.com/fusion-data/fusion-data/edit/main/hetuflow/hetuflow-docs/{path}"
+site-url = "/hetuflow-docs/"
+additional-js = ["mermaid.min.js", "mermaid-init.js"]
+
+[output.html.print]
+enable = true
+
+[output.html.search]
+enable = true
+limit-results = 30
+teaser-word-count = 30
+use-boolean-and = true
+boost-title = 2
+boost-hierarchy = 1
+boost-paragraph = 1
+expand = true
+heading-split-level = 3
+copy-js = true
+
+[output.html.playground]
+editable = false
+copyable = true
+copy-js = true
+line-numbers = false
+runnable = false

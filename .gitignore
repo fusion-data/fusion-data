@@ -298,3 +298,5 @@ venv.bak/
 var/
 !var/.gitkeep
 crates/data/
+
+crates/guixu/guixu-cli/test-workflow.json

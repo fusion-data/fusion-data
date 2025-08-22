@@ -1,0 +1,34 @@
+[package]
+name = "hetumind-context"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+hetumind-core = { workspace = true, features = ["with-db"] }
+
+ultimate-common = { workspace = true, features = ["with-uuid"] }
+ultimate-core = { workspace = true, features = ["with-uuid", "modelsql"] }
+ultimate-web = { workspace = true }
+
+log = { workspace = true }
+thiserror = { workspace = true }
+modelsql = { workspace = true }
+http = { workspace = true }
+axum = { workspace = true }
+sqlx = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+ahash = { workspace = true }
+dashmap = { workspace = true }
+async-trait = { workspace = true }
+
+[dev-dependencies]
+async-trait = { workspace = true }

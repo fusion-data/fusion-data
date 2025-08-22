@@ -8,6 +8,9 @@ pub trait HasSeaFields: HasFields {
   /// Returns the `Fields` containing all of the `Field`.
   fn all_sea_fields(self) -> SeaFields;
 
+  /// Returns the `Fields` containing all of the `Field` that are in the mask.
+  fn sea_fields_with_mask(self) -> SeaFields;
+
   /// Return the sea_query::DynIden for each field (just matching the field name)
   fn sea_idens() -> Vec<DynIden>;
 

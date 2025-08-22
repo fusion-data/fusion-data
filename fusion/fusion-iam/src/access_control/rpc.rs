@@ -1,5 +1,5 @@
 use tonic::{Request, Response, Status};
-use tracing::debug;
+use log::debug;
 use ultimate_core::component::Component;
 use ultimate_grpc::GrpcServiceIntercepted;
 use uuid::Uuid;

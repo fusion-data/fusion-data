@@ -1,8 +1,9 @@
 use serde::{Deserialize, Serialize};
 use ultimate_common::{
-  string::{deser_str_to_vecu8, ser_vecu8_to_str},
+  string::{deser_str_to_vec_u8, ser_vec_u8_to_str},
   time::{self, Duration, UtcDateTime},
 };
+use zeroize::ZeroizeOnDrop;
 
 #[derive(Clone, Deserialize, Serialize)]
 pub struct SecurityConfig {
@@ -25,18 +26,18 @@ pub trait KeyConf {
   fn expires_at(&self) -> UtcDateTime;
 }
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize, ZeroizeOnDrop)]
 pub struct PwdConf {
-  #[serde(deserialize_with = "deser_str_to_vecu8", serialize_with = "ser_vecu8_to_str")]
+  #[serde(deserialize_with = "deser_str_to_vec_u8", serialize_with = "ser_vec_u8_to_str")]
   secret_key: Vec<u8>,
 
   /// 密码过期秒数
   expires_in: i64,
 
-  #[serde(deserialize_with = "deser_str_to_vecu8", serialize_with = "ser_vecu8_to_str")]
+  #[serde(deserialize_with = "deser_str_to_vec_u8", serialize_with = "ser_vec_u8_to_str")]
   pwd_key: Vec<u8>,
 
-  /// 创建新用户时的默认密码（未未指定）
+  /// 创建新用户时的默认密码
   default_pwd: String,
 }
 
@@ -64,17 +65,17 @@ impl KeyConf for PwdConf {
   }
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, ZeroizeOnDrop)]
 pub struct TokenConf {
-  #[serde(deserialize_with = "deser_str_to_vecu8", serialize_with = "ser_vecu8_to_str")]
+  #[serde(deserialize_with = "deser_str_to_vec_u8", serialize_with = "ser_vec_u8_to_str")]
   pub(crate) secret_key: Vec<u8>,
 
   pub(crate) expires_in: i64,
 
-  #[serde(deserialize_with = "deser_str_to_vecu8", serialize_with = "ser_vecu8_to_str")]
+  #[serde(deserialize_with = "deser_str_to_vec_u8", serialize_with = "ser_vec_u8_to_str")]
   pub(crate) public_key: Vec<u8>,
 
-  #[serde(deserialize_with = "deser_str_to_vecu8", serialize_with = "ser_vecu8_to_str")]
+  #[serde(deserialize_with = "deser_str_to_vec_u8", serialize_with = "ser_vec_u8_to_str")]
   pub(crate) private_key: Vec<u8>,
 }
 

@@ -12,8 +12,8 @@ pub struct ModelManager {
 
 impl ModelManager {
   /// Constructor
-  pub fn new(db_config: &DbConfig, application_name: Option<&str>) -> Result<Self> {
-    let dbx = create_dbx(db_config, application_name)?;
+  pub async fn new(db_config: &DbConfig, application_name: Option<&str>) -> Result<Self> {
+    let dbx = create_dbx(db_config, application_name).await?;
     Ok(ModelManager { dbx, ctx: None })
   }
 

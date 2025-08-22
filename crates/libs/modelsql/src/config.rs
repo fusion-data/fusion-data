@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 use ultimate_common::model::sensitive::UriString;
 
-use crate::store::dbx::DbxType;
+use crate::store::dbx::DbxProvider;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct DbConfig {
@@ -14,12 +14,14 @@ pub struct DbConfig {
   /// The URI of the database
   url: Option<UriString>,
 
+  /// The type of the database, available values are `postgres` and `sqlite`.
+  /// When not using a `url`, this value needs to be set.
+  provider: Option<DbxProvider>,
   host: Option<String>,
   port: Option<u16>,
   socket: Option<String>,
   database: Option<String>,
   username: Option<String>,
-
   #[serde(skip_serializing)]
   password: Option<String>,
 
@@ -36,6 +38,9 @@ pub struct DbConfig {
   /// Set the maximum amount of time to spend waiting for acquiring a connection
   #[serde(default, deserialize_with = "deserialize_option_duration")]
   acquire_timeout: Option<Duration>,
+
+  /// Set the query to execute after connecting to the database
+  after_connect: Option<String>,
 
   /// Set the maximum lifetime of individual connections
   #[serde(default, deserialize_with = "deserialize_option_duration")]
@@ -108,6 +113,10 @@ impl DbConfig {
     self.max_lifetime.as_ref()
   }
 
+  pub fn after_connect(&self) -> Option<&str> {
+    self.after_connect.as_deref()
+  }
+
   pub fn sqlx_logging(&self) -> Option<bool> {
     self.sqlx_logging
   }
@@ -128,15 +137,19 @@ impl DbConfig {
     self.application_name.as_deref()
   }
 
-  pub fn database_type(&self) -> DbxType {
+  pub fn dbx_type(&self) -> DbxProvider {
+    if let Some(provider) = self.provider {
+      return provider;
+    }
+
     if let Some(url) = self.url() {
       #[cfg(feature = "with-postgres")]
-      if url.starts_with("postgres://") {
-        return DbxType::Postgres;
+      if url.starts_with("postgresql://") || url.starts_with("postgres://") {
+        return DbxProvider::Postgres;
       }
       #[cfg(feature = "with-sqlite")]
       if url.starts_with("file:") || url.starts_with("sqlite:") {
-        return DbxType::Sqlite;
+        return DbxProvider::Sqlite;
       }
     }
 

@@ -1,0 +1,54 @@
+[ultimate.app]
+run_mode = "dev"
+name = "hetuflow-server"
+time_offset = "+08:00"
+
+[ultimate.log]
+enable = true
+with_target = true
+with_file = false
+log_level = "info"
+log_targets = [
+  "tower_http=debug",
+  "fusion_iam=debug",
+  "fusion_flow=debug",
+  "fusion_metadata=debug",
+  "hetumind=debug",
+  "hetumind_context=debug",
+  "ultimate_grpc=debug",
+  "ultimate_db=debug",
+  "ultimate=debug",
+  "ultimate_common=debug",
+]
+
+[ultimate.db]
+enable = true
+url = "postgres://fusiondata:2025.Fusiondata@localhost:5432/fusiondata"
+
+[ultimate.web]
+enable = true
+server_addr = "0.0.0.0:9500"
+
+[hetuflow]
+# 整个集群最大同时运行的任务数量
+max_concurrent_tasks = 1000
+# 历史记录保留时间
+history_ttl = "30d"
+
+[hetuflow.server]
+server_id = "019888ad-965d-7871-8d47-562ac1e1e5ac"
+server_name = "hetuflow-server"
+# 是否允许参与 leader 选举
+allow_leader_election = true
+# 任务轮询间隔
+task_poll_interval = "30s"
+# Job 检查间隔
+job_check_interval = "30s"
+# Job 检查持续时间
+job_check_duration = "3m"
+# Agent 心跳检查间隔
+agent_heartbeat_interval = "10s"
+# Agent 心跳检查超时
+agent_heartbeat_ttl = "60s"
+# 负载均衡间隔
+load_balance_interval = "30s"

@@ -39,7 +39,7 @@ pub fn b64u_decode_to_string(b64u: &str) -> Result<String> {
     .ok_or(Error::FailToB64uDecode(format!("Input string: {b64u}")))
 }
 
-pub fn deser_str_to_vecu8<'de, D>(d: D) -> core::result::Result<Vec<u8>, D::Error>
+pub fn deser_str_to_vec_u8<'de, D>(d: D) -> core::result::Result<Vec<u8>, D::Error>
 where
   D: Deserializer<'de>,
 {
@@ -62,7 +62,7 @@ where
   d.deserialize_str(StrToVecU8)
 }
 
-pub fn ser_vecu8_to_str<S>(v: &[u8], s: S) -> core::result::Result<S::Ok, S::Error>
+pub fn ser_vec_u8_to_str<S>(v: &[u8], s: S) -> core::result::Result<S::Ok, S::Error>
 where
   S: Serializer,
 {

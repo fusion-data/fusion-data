@@ -3,19 +3,19 @@ use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use serde::Serialize;
 use serde_json::Value;
-use ulid::Ulid;
 use ultimate_core::DataError;
-use ultimate_core::security;
 
-pub type AppResult<T> = core::result::Result<Json<T>, Box<AppError>>;
+pub type WebResult<T> = core::result::Result<Json<T>, WebError>;
 
 /// A default error response for most API errors.
 #[derive(Debug, Serialize)]
 // #[cfg_attr(feature = "utoipa", derive(utoipa::ToSchema))]
-pub struct AppError {
+pub struct WebError {
   /// A unique error ID.
-  pub err_id: Ulid,
+  // TODO 应从 tracing 中获取
+  // pub err_id: Ulid,
 
+  /// A unique error code.
   pub err_code: i32,
 
   /// An error message.
@@ -23,16 +23,24 @@ pub struct AppError {
 
   /// Optional Additional error details.
   #[serde(skip_serializing_if = "Option::is_none")]
-  pub err_msg_detail: Option<Value>,
+  pub err_detail: Option<Box<Value>>,
 }
 
-impl AppError {
-  pub fn new(error: impl Into<String>) -> Self {
-    Self { err_id: Ulid::new(), err_code: 500, err_msg: error.into(), err_msg_detail: None }
+impl WebError {
+  pub fn new(err_code: i32, err_msg: impl Into<String>, err_detail: Option<Box<Value>>) -> Self {
+    Self { err_code, err_msg: err_msg.into(), err_detail }
+  }
+
+  pub fn new_with_msg(err_msg: impl Into<String>) -> Self {
+    Self::new(500, err_msg, None)
   }
 
   pub fn new_with_code(err_code: i32, err_msg: impl Into<String>) -> Self {
-    Self { err_id: Ulid::new(), err_code, err_msg: err_msg.into(), err_msg_detail: None }
+    Self::new(err_code, err_msg, None)
+  }
+
+  pub fn server_error_with_detail(err_msg: impl Into<String>, err_detail: Box<Value>) -> Self {
+    Self::new(500, err_msg, Some(err_detail))
   }
 
   pub fn with_err_code(mut self, err_code: i32) -> Self {
@@ -40,17 +48,22 @@ impl AppError {
     self
   }
 
-  pub fn with_details(mut self, details: Value) -> Self {
-    if details == Value::Null {
-      self.err_msg_detail = None
+  pub fn with_details(mut self, details: Box<Value>) -> Self {
+    if *details == Value::Null {
+      self.err_detail = None
     } else {
-      self.err_msg_detail = Some(details);
+      self.err_detail = Some(details);
     }
+    self
+  }
+
+  pub fn with_err_msg(mut self, err_msg: impl Into<String>) -> Self {
+    self.err_msg = err_msg.into();
     self
   }
 }
 
-impl IntoResponse for AppError {
+impl IntoResponse for WebError {
   fn into_response(self) -> axum::response::Response {
     let status = StatusCode::from_u16(self.err_code as u16).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
     let mut res = axum::Json(self).into_response();
@@ -59,45 +72,30 @@ impl IntoResponse for AppError {
   }
 }
 
-impl From<DataError> for AppError {
+impl From<DataError> for WebError {
   fn from(err: DataError) -> Self {
     match err {
-      DataError::BizError { code, msg } => Self::new(msg).with_err_code(code),
-      DataError::InternalError { code, msg, .. } => Self::new(msg).with_err_code(code),
-      DataError::SecurityError(e) => convert_security_error(e),
-      DataError::SystemTimeError(e) => Self::new(e.to_string()),
-      DataError::ParseIntError(e) => Self::new(e.to_string()).with_err_code(400),
-      DataError::IoError(e) => Self::new(e.to_string()),
-      DataError::JsonError(e) => Self::new(e.to_string()),
+      DataError::BizError { code, msg, detail } => {
+        let error = Self::new_with_msg(msg).with_err_code(code);
+        if let Some(v) = detail { error.with_details(v) } else { error }
+      }
+      DataError::InternalError { code, msg, .. } => Self::new_with_msg(msg).with_err_code(code),
+      DataError::SystemTimeError(e) => Self::new_with_msg(e.to_string()),
+      DataError::ParseIntError(e) => Self::new_with_msg(e.to_string()).with_err_code(400),
+      DataError::IoError(e) => Self::new_with_msg(e.to_string()),
+      DataError::JsonError(e) => Self::new_with_msg(e.to_string()),
     }
   }
 }
 
-impl From<hyper::Error> for AppError {
+impl From<hyper::Error> for WebError {
   fn from(value: hyper::Error) -> Self {
-    AppError::new_with_code(500, value.to_string())
+    WebError::new_with_code(500, value.to_string())
   }
 }
 
-impl From<serde_json::Error> for AppError {
+impl From<serde_json::Error> for WebError {
   fn from(value: serde_json::Error) -> Self {
-    AppError::new_with_code(500, value.to_string())
+    WebError::new_with_code(500, value.to_string())
   }
-}
-
-fn convert_security_error(e: security::Error) -> AppError {
-  // match e {
-  //     security::Error::HmacFailNewFromSlice => todo!(),
-  //     security::Error::InvalidFormat => todo!(),
-  //     security::Error::CannotDecodeIdent => todo!(),
-  //     security::Error::CannotDecodeExp => todo!(),
-  //     security::Error::SignatureNotMatching => todo!(),
-  //     security::Error::ExpNotIso => todo!(),
-  //     security::Error::Expired => todo!(),
-  //     security::Error::JoseError(_) => todo!(),
-  //     security::Error::FailedToHashPassword => todo!(),
-  //     security::Error::InvalidPassword => todo!(),
-  //     security::Error::FailedToVerifyPassword => todo!(),
-  // }
-  AppError::new(e.to_string())
 }

@@ -21,7 +21,7 @@ pub fn create_builder(item: TokenStream) -> TokenStream {
   });
   let builder_hints = fields.iter().map(|f| {
     let field_name = &f.ident;
-    quote! { #field_name: Default::default() }
+    quote! { #field_name: None }
   });
   let builder_methods = fields.iter().map(|f| {
     let field_name = &f.ident;
@@ -37,8 +37,7 @@ pub fn create_builder(item: TokenStream) -> TokenStream {
     let field_name = &f.ident;
     let field_name_as_string = field_name.as_ref().unwrap().to_string();
     quote! {
-      // #field_name: self.#field_name.expect(&format!("field '{}' not set", #field_name_as_string))
-      #field_name: self.#field_name.as_ref().expect(&format!("field '{}' not set", #field_name_as_string)).to_string()
+      #field_name: self.#field_name.as_ref().expect(&format!("field '{}' not set", #field_name_as_string)).clone()
     }
   });
 
@@ -77,13 +76,13 @@ mod tests {
       struct StructWithNoFields {}
     };
 
-    let expected = quote! {
-      struct StructWithNoFieldsBuilder {}
-    };
-
     let actual = create_builder(input);
+    let actual_string = actual.to_string();
 
-    assert_eq!(actual.to_string(), expected.to_string());
+    // 检查生成的代码包含 builder 结构体
+    assert!(actual_string.contains("struct StructWithNoFieldsBuilder"));
+    assert!(actual_string.contains("impl StructWithNoFieldsBuilder"));
+    assert!(actual_string.contains("impl StructWithNoFields"));
   }
 
   #[test]
@@ -94,8 +93,15 @@ mod tests {
 
     let actual = create_builder(input);
 
-    let derived: DeriveInput = syn::parse2(actual).unwrap();
-    let name = derived.ident;
-    assert_eq!(name.to_string(), "StructWithNoFieldsBuilder");
+    // 生成的代码包含多个项目，不能直接解析为单个 DeriveInput
+    // 而是应该解析为多个项目，检查第一个是否为 builder 结构体
+    let parsed: syn::File = syn::parse2(quote! { #actual }).unwrap();
+
+    // 获取第一个项目（应该是 builder 结构体）
+    if let Some(syn::Item::Struct(struct_item)) = parsed.items.first() {
+      assert_eq!(struct_item.ident.to_string(), "StructWithNoFieldsBuilder");
+    } else {
+      panic!("第一个项目应该是 builder 结构体");
+    }
   }
 }

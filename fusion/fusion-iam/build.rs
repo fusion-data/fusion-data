@@ -42,6 +42,7 @@ fn main() {
   let field_messages = ["CreateRoleDto"];
 
   let mut iam_b = tonic_build::configure()
+    .protobuf(true)
     .emit_rerun_if_changed(true)
     .file_descriptor_set_path(out_dir.join("fusion_iam_descriptor.bin"))
     // .compile_well_known_types(true)
@@ -62,7 +63,7 @@ fn main() {
         "proto/fusion_iam/v1/permission.proto",
         "proto/fusion_iam/v1/access_control.proto",
       ],
-      &["proto", "../../crates/ultimates/ultimate-api/proto"],
+      &["proto"],
     )
     .unwrap();
 }

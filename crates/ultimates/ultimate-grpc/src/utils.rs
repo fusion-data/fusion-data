@@ -1,15 +1,15 @@
 use std::{future::Future, time::Duration};
 
 use futures::TryFutureExt;
-use prost_types::FieldMask;
+use log::info;
+use protobuf::well_known_types::field_mask::FieldMask;
 use tokio::{net::TcpListener, sync::oneshot};
 use tonic::{
   Status,
   metadata::MetadataMap,
   transport::{Server, server::TcpIncoming},
 };
-use tracing::info;
-use ultimate_common::ctx::CtxPayload;
+use ultimate_common::{ctx::CtxPayload, env::set_env};
 use ultimate_core::{DataError, configuration::SecurityConfig, security::SecurityUtils};
 
 use crate::{GrpcSettings, GrpcStartInfo};
@@ -28,9 +28,8 @@ pub async fn init_grpc_server(
   let (tx, rx) = oneshot::channel();
   let tcp_listener = TcpListener::bind(&conf.server_addr).await?;
   let local_addr = tcp_listener.local_addr()?;
-  unsafe {
-    std::env::set_var("ULTIMATE__GRPC__SERVER_ADDR", local_addr.to_string());
-  }
+  set_env("ULTIMATE__GRPC__SERVER_ADDR", &local_addr.to_string())
+    .unwrap_or_else(|_| panic!("Failed to set ULTIMATE__GRPC__SERVER_ADDR, value: {}", local_addr));
   let start_info = GrpcStartInfo { local_addr };
   match tx.send(start_info) {
     Ok(_) => info!("gRPC server listening to {}", local_addr),
@@ -43,11 +42,6 @@ pub async fn init_grpc_server(
   let mut server = Server::builder().layer(tower_http::trace::TraceLayer::new_for_grpc());
   #[cfg(feature = "opentelemetry")]
   let mut server = Server::builder();
-
-  // .layer(
-  //   tonic_tracing_opentelemetry::middleware::server::OtelGrpcLayer::default()
-  //     .filter(tonic_tracing_opentelemetry::middleware::filters::reject_healthcheck),
-  // );
 
   #[cfg(feature = "tonic-web")]
   let mut server = server.accept_http1(true).layer(tonic_web::GrpcWebLayer::new());

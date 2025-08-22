@@ -1,0 +1,149 @@
+use modelsql_core::{
+  field::FieldMask,
+  filter::{OpValsDateTime, OpValsInt32, OpValsString, OpValsUuid, Page},
+};
+use serde::{Deserialize, Serialize};
+use ultimate_common::time::OffsetDateTime;
+use uuid::Uuid;
+
+use crate::types::TaskStatus;
+
+use super::JobConfig;
+
+/// 任务执行指标
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct TaskMetrics {
+  pub start_time: i64,       // 开始时间
+  pub end_time: Option<i64>, // 结束时间
+  pub cpu_time: f64,         // CPU 时间
+  pub memory_peak: u64,      // 内存峰值
+  pub disk_read: u64,        // 磁盘读取量
+  pub disk_write: u64,       // 磁盘写入量
+  pub network_in: u64,       // 网络接收量
+  pub network_out: u64,      // 网络发送量
+}
+
+/// TaskEntity 数据模型
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(
+  feature = "with-db",
+  derive(modelsql::Fields, sqlx::FromRow),
+  sea_query::enum_def(table_name = "sched_task")
+)]
+pub struct TaskEntity {
+  pub id: Uuid,
+  pub job_id: Uuid,
+  pub schedule_id: Option<Uuid>,
+  pub agent_id: Option<Uuid>,
+  pub server_id: Option<Uuid>,
+  pub namespace_id: Uuid,
+  /// 任务优先级，数值越大优先级越高
+  pub priority: i32,
+  pub status: TaskStatus,
+  pub scheduled_at: OffsetDateTime,
+  pub completed_at: Option<OffsetDateTime>,
+
+  /// 任务参数，需要为 JSON Object
+  pub parameters: serde_json::Value,
+
+  /// 任务标签。可用于限制哪些 Agent 允许执行该任务
+  pub tags: Vec<String>,
+
+  /// 任务环境变量，可能来自 JobEntity 或由事件/手动触发执行传入
+  pub environment: Option<serde_json::Value>,
+
+  /// 保存 Job.config
+  pub job_config: Option<JobConfig>,
+
+  pub retry_count: i32,
+  pub max_retries: i32,
+  pub dependencies: Option<serde_json::Value>,
+  pub locked_at: Option<OffsetDateTime>,
+  pub lock_version: i32,
+  pub created_by: i64,
+  pub created_at: OffsetDateTime,
+  pub updated_by: Option<i64>,
+  pub updated_at: Option<OffsetDateTime>,
+}
+
+/// TaskEntity 创建模型
+#[derive(Debug, Default, Deserialize)]
+#[cfg_attr(feature = "with-db", derive(modelsql::Fields))]
+pub struct TaskForCreate {
+  #[serde(default = "Uuid::now_v7")]
+  pub id: Uuid,
+  pub job_id: Uuid,
+  pub namespace_id: Uuid,
+  /// 关联的 Schedule ID，若为 None 则表示为通过事件或手动触发创建的任务
+  pub schedule_id: Option<Uuid>,
+  pub server_id: Option<Uuid>,
+  pub priority: i32,
+  pub scheduled_at: OffsetDateTime,
+  pub status: TaskStatus,
+  pub parameters: serde_json::Value,
+  pub tags: Vec<String>,
+  pub environment: Option<serde_json::Value>,
+  pub job_config: Option<JobConfig>,
+  #[serde(default = "default_retry_count")]
+  pub retry_count: i32,
+  #[serde(default = "default_max_retries")]
+  pub max_retries: i32,
+  pub dependencies: Option<serde_json::Value>,
+  pub locked_at: Option<OffsetDateTime>,
+  pub lock_version: i32,
+}
+
+fn default_max_retries() -> i32 {
+  3
+}
+fn default_retry_count() -> i32 {
+  0
+}
+
+/// TaskEntity 更新模型
+#[derive(Debug, Clone, Default, Deserialize)]
+#[cfg_attr(feature = "with-db", derive(modelsql::Fields))]
+pub struct TaskForUpdate {
+  pub agent_id: Option<Uuid>,
+  pub server_id: Option<Uuid>,
+  pub priority: Option<i32>,
+  pub namespace_id: Option<Uuid>,
+  pub status: Option<TaskStatus>,
+  pub scheduled_at: Option<OffsetDateTime>,
+  pub completed_at: Option<OffsetDateTime>,
+  pub parameters: Option<serde_json::Value>,
+  pub tags: Option<Vec<String>>,
+  pub environment: Option<serde_json::Value>,
+  pub job_config: Option<JobConfig>,
+  pub retry_count: Option<i32>,
+  pub max_retries: Option<i32>,
+  pub dependencies: Option<serde_json::Value>,
+  pub locked_at: Option<OffsetDateTime>,
+  pub lock_version: Option<i32>,
+  pub update_mask: Option<FieldMask>,
+}
+
+/// TaskEntity 查询请求
+#[derive(Default, Deserialize)]
+pub struct TaskForQuery {
+  pub filter: TaskFilter,
+  pub page: Page,
+}
+
+/// TaskEntity 过滤器
+#[derive(Default, Deserialize)]
+#[cfg_attr(feature = "with-db", derive(modelsql::FilterNodes))]
+pub struct TaskFilter {
+  pub id: Option<OpValsUuid>,
+  pub job_id: Option<OpValsUuid>,
+  pub schedule_id: Option<OpValsUuid>,
+  pub namespace_id: Option<OpValsUuid>,
+  pub agent_id: Option<OpValsString>,
+  pub server_id: Option<OpValsUuid>,
+  pub tags: Option<OpValsString>,
+  pub status: Option<OpValsInt32>,
+  pub scheduled_at: Option<OpValsDateTime>,
+  pub locked_at: Option<OpValsDateTime>,
+  pub created_at: Option<OpValsDateTime>,
+  pub updated_at: Option<OpValsDateTime>,
+}

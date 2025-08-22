@@ -6,6 +6,7 @@ rust-version.workspace = true
 description.workspace = true
 license.workspace = true
 repository.workspace = true
+publish = true
 
 [lints]
 workspace = true
@@ -13,19 +14,17 @@ workspace = true
 [features]
 with-postgres = ["modelsql/with-postgres"]
 with-sqlite = ["modelsql/with-sqlite"]
-with-uuid = ["dep:uuid", "modelsql/with-uuid", "ultimate-api/uuid"]
+with-uuid = ["dep:uuid", "modelsql/with-uuid"]
 
 [dependencies]
 ultimate-common.workspace = true
-ultimate-core = { workspace = true, features = ["modelsql", "ultimate-api"] }
-ultimate-api = { workspace = true, features = ["modelsql"], optional = true }
+ultimate-core = { workspace = true, features = ["modelsql"] }
 modelsql = { workspace = true }
 serde.workspace = true
 serde_json.workspace = true
 log.workspace = true
 thiserror.workspace = true
 tokio.workspace = true
-tracing.workspace = true
 uuid = { workspace = true, optional = true }
 config = { workspace = true }
 sqlx.workspace = true
@@ -35,4 +34,4 @@ tonic = { workspace = true, optional = true }
 
 [dev-dependencies]
 anyhow.workspace = true
-tracing-subscriber.workspace = true
+logforth.workspace = true

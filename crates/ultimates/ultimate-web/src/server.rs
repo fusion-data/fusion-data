@@ -1,27 +1,20 @@
 use axum::Router;
-use tower_http::{
-  compression::CompressionLayer,
-  cors::{self, CorsLayer},
-  trace::TraceLayer,
-};
-use tracing::info;
+use log::info;
 
-use ultimate_core::{application::Application, configuration::ConfigRegistry};
+use ultimate_core::{DataError, application::Application, configuration::ConfigRegistry};
 
 use crate::config::WebConfig;
 
-pub async fn init_server(app: &Application, router: Router) -> ultimate_core::Result<()> {
+pub async fn init_server(router: Router) -> ultimate_core::Result<()> {
+  let app = Application::global();
   let conf: WebConfig = app.get_config()?;
-  let make_service = router
-    .layer(CompressionLayer::new())
-    .layer(CorsLayer::new().allow_methods(cors::Any).allow_origin(cors::Any))
-    .layer(TraceLayer::new_for_http())
-    .into_make_service();
+  init_server_with_config(&conf, router).await
+}
 
+pub async fn init_server_with_config(conf: &WebConfig, router: Router) -> ultimate_core::Result<()> {
+  let make_service = router.into_make_service();
   let listener = tokio::net::TcpListener::bind(conf.server_addr()).await.unwrap();
   let sock_addr = listener.local_addr()?;
   info!("The Web Server listening on {}", sock_addr);
-
-  axum::serve(listener, make_service).await?;
-  Ok(())
+  axum::serve(listener, make_service).await.map_err(DataError::from)
 }

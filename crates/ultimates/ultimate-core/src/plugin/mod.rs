@@ -23,7 +23,7 @@ pub trait Plugin: Any + Send + Sync {
     std::any::type_name::<Self>()
   }
 
-  /// A list of plugins to depend on. The plugin will be built after the plugins in this list.
+  /// A list of plugin names to depend on. The plugin will be built after the plugins in this list.
   fn dependencies(&self) -> Vec<&str> {
     vec![]
   }

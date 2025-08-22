@@ -51,7 +51,7 @@ impl FieldMeta {
 // when with-sea-query
 mod with_sea_query {
   use super::*;
-  use crate::SIden;
+  use modelsql_core::sea_utils::SIden;
   use sea_query::{Alias, ColumnRef, IntoIden, SelectStatement};
 
   impl FieldMeta {

@@ -1,8 +1,8 @@
-use crate::SIden;
-use crate::field::{Error, Result};
-use crate::sea_utils::StringIden;
+use modelsql_core::sea_utils::{SIden, StringIden};
 use sea_query::{ColumnRef, DynIden, SimpleExpr, Value};
 use sea_query::{IntoIden, ValueType};
+
+use crate::field::{Error, Result};
 
 #[derive(Debug, Clone)]
 pub struct SeaField {

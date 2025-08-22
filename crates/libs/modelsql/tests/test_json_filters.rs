@@ -2,8 +2,8 @@
 
 pub type Result<T> = core::result::Result<T, Error>;
 pub type Error = Box<dyn std::error::Error>; // For early dev.
-use modelsql::SIden;
-use modelsql::filter::{FilterGroups, FilterNode, IntoFilterNodes, OpValsBool, OpValsInt64, OpValsString};
+use modelsql_core::filter::{FilterGroups, FilterNode, IntoFilterNodes, OpValsBool, OpValsInt64, OpValsString};
+use modelsql_core::sea_utils::SIden;
 use modelsql_macros::FilterNodes;
 use sea_query::{Condition, PostgresQueryBuilder, Query};
 use serde::{Deserialize, Serialize};

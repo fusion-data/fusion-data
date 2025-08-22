@@ -3,6 +3,7 @@
         "rust-lang.rust-analyzer",
         "fill-labs.dependi",
         "Vue.volar",
-        "ReneSaarsoo.sql-formatter-vsc"
+        "ReneSaarsoo.sql-formatter-vsc",
+        "shd101wyy.markdown-preview-enhanced",
     ]
 }

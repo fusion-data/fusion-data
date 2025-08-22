@@ -1,0 +1,56 @@
+[package]
+name = "hetuflow-server"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+publish = false
+
+[lints]
+workspace = true
+
+[[bin]]
+name = "hetuflow-server"
+path = "bin/hetuflow-server.rs"
+
+[dependencies]
+hetuflow-core = { workspace = true, features = ["with-db", "with-cli"] }
+ultimate-common = { workspace = true, features = ["with-uuid"] }
+ultimate-core = { workspace = true, features = ["with-uuid"] }
+ultimate-web = { workspace = true }
+ultimate-db = { workspace = true, features = ["with-postgres", "with-uuid"] }
+modelsql = { workspace = true, features = ["with-uuid"] }
+sqlx = { workspace = true, features = [
+  "runtime-tokio",
+  "chrono",
+  "json",
+  "postgres",
+  "uuid",
+  "macros",
+] }
+sea-query = { workspace = true }
+sea-query-binder = { workspace = true }
+async-trait = { workspace = true }
+tokio = { workspace = true }
+futures-util = { workspace = true }
+# tokio-tungstenite = { workspace = true }
+log = { workspace = true }
+logforth = { workspace = true }
+fastrace = { workspace = true }
+thiserror = { workspace = true }
+uuid = { workspace = true }
+axum = { workspace = true, features = ["ws"] }
+axum-extra = { workspace = true }
+garde = { workspace = true }
+axum-valid = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }
+rand = { workspace = true }
+croner = { workspace = true }
+duration-str = { workspace = true }
+config = { workspace = true }
+toml = { workspace = true }

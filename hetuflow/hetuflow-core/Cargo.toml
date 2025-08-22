@@ -1,0 +1,46 @@
+[package]
+name = "hetuflow-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+publish = true
+
+[lints]
+workspace = true
+
+[features]
+with-db = ["modelsql", "sqlx", "sea-query", "modelsql-core/with-sea-query"]
+with-cli = ["clap"]
+
+[dependencies]
+ultimate-common = { workspace = true, features = ["with-uuid"] }
+ultimate-core = { workspace = true, features = ["with-uuid"] }
+hierarchical_hash_wheel_timer = { workspace = true }
+croner = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_repr = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+strum = { workspace = true }
+log = { workspace = true }
+modelsql = { workspace = true, optional = true, features = [
+  "with-uuid",
+  "with-postgres",
+] }
+modelsql-core = { workspace = true, features = ["with-uuid"] }
+sqlx = { workspace = true, optional = true }
+sea-query = { workspace = true, optional = true }
+clap = { workspace = true, optional = true, features = ["derive", "string"] }
+derive_builder = { workspace = true }
+garde = { workspace = true }
+duration-str = { workspace = true }
+
+[dev-dependencies]
+tokio-test = { workspace = true }

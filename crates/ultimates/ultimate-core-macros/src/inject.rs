@@ -209,10 +209,10 @@ pub(crate) fn expand_derive(input: syn::DeriveInput) -> syn::Result<TokenStream>
 fn get_full_path(ty: &Type) -> Option<String> {
   if let Type::Path(type_path) = ty {
     let mut segments = type_path.path.segments.iter().map(|seg| seg.ident.to_string()).collect::<Vec<_>>();
-    if let Some(first_segment) = segments.first() {
-      if first_segment == "crate" {
-        segments.remove(0); // Remove "crate" from the path
-      }
+    if let Some(first_segment) = segments.first()
+      && first_segment == "crate"
+    {
+      segments.remove(0); // Remove "crate" from the path
     }
     Some(segments.join("::"))
   } else {

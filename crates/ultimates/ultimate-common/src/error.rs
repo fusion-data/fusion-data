@@ -18,10 +18,16 @@ pub enum Error {
   PwdNotMatching,
 
   #[error("Missing env: {0}")]
-  MissingEnv(&'static str),
+  MissingEnv(String),
 
   #[error("Wrong format: {0}")]
-  WrongFormat(&'static str),
+  WrongFormat(String),
+
+  #[error("Failed to set env: {0}, value: {1}, error: {2}")]
+  FailedToSetEnv(String, String, String),
+
+  #[error("Failed to remove env: {0}, error: {1}")]
+  FailedToRemoveEnv(String, String),
 }
 
 impl From<chrono::ParseError> for Error {

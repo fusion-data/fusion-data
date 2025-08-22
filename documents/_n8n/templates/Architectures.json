@@ -1,0 +1,2817 @@
+{
+  "name": "Architectures",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You're a helpful agent equipped with tools that helps the user achieve his goals.\n\nIf asked about emails, first:\n1. Get contacts from Google sheet\n2. Send email to the contact\n\nIf asked about Jira, first, before making the request plan your work. You typically perform two steps:\n1. List available tools in Jira\n2. Execute selected tool (e.g., jira_search) you got before. Do not guess.\n\nNext execute without asking for user confirmation, while using memory to understand your progress.\n\nUser request: \n{{ $json.query.request_to_jira }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        -3960,
+        1280
+      ],
+      "id": "d6e78389-174d-4ee4-9fe8-b66a1bd15486",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $execution.id }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -4040,
+        1520
+      ],
+      "id": "59e596c3-333f-4407-b49a-c603ff703718",
+      "name": "Simple Memory1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -4160,
+        1520
+      ],
+      "id": "c3ec373a-9192-48bc-ab62-a1349f682b62",
+      "name": "OpenAI1",
+      "credentials": {
+        "openAiApi": {
+          "id": "lAOtymRvgIwfling",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "path": "f3ea7d20-feea-49b6-89b4-7834f46f0105",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -4160,
+        1280
+      ],
+      "id": "611e4fef-0386-48e7-9e1b-a4436522b7ad",
+      "name": "Webhook1",
+      "webhookId": "f3ea7d20-feea-49b6-89b4-7834f46f0105",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "OtDP3d5m24PqEPTL",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# Single Agent + Human in the Loop + Tools",
+        "height": 480,
+        "width": 1110,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -4240,
+        1220
+      ],
+      "typeVersion": 1,
+      "id": "3ece6051-de95-4a97-8a80-e00e167f2025",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -3360,
+        1280
+      ],
+      "id": "237cae7b-1264-479e-b23a-6f6967120090",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "304f2bc8-5316-4fda-ad75-3908e0a723fd",
+              "leftValue": "={{ $('Webhook1').item.json.query.request_to_jira }}",
+              "rightValue": "eeher",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -3620,
+        1500
+      ],
+      "id": "3e7a4a3e-4f0c-43dc-ac2f-af392b410b76",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "table": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Table', ``, 'string') }}",
+        "columns": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Columns', ``, 'string') }}"
+      },
+      "type": "n8n-nodes-base.microsoftSqlTool",
+      "typeVersion": 1.1,
+      "position": [
+        -3900,
+        1520
+      ],
+      "id": "4cc68bcd-5798-4cb2-8442-5ceb448627cd",
+      "name": "Microsoft SQL",
+      "credentials": {
+        "microsoftSql": {
+          "id": "iyd6jtvBRlT7YDli",
+          "name": "Microsoft SQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -3360,
+        1500
+      ],
+      "id": "907e4282-c4c7-4b25-bfe5-842c34411133",
+      "name": "Respond to Webhook2"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You're a helpful agent equipped with tools that helps the user achieve his goals.\n\nIf asked about emails, first:\n1. Get contacts from Google sheet\n2. Send email to the contact\n\nIf asked about Jira, first, before making the request plan your work. You typically perform two steps:\n1. List available tools in Jira\n2. Execute selected tool (e.g., jira_search) you got before. Do not guess.\n\nNext execute without asking for user confirmation, while using memory to understand your progress.\n\nUser request: \n{{ $json.query.request_to_jira }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        -2800,
+        260
+      ],
+      "id": "4a19672c-7bf5-4161-aec2-5dfee8f9ba3d",
+      "name": "AI Agent2"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -2260,
+        840
+      ],
+      "id": "4af58393-a008-4eba-84d0-81f466447f83",
+      "name": "OpenAI2",
+      "credentials": {
+        "openAiApi": {
+          "id": "lAOtymRvgIwfling",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "path": "f3ea7d20-feea-49b6-89b4-7834f46f0105",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -3000,
+        260
+      ],
+      "id": "dad7b5e3-4477-4226-b9e1-b0730b6fcf6c",
+      "name": "Webhook2",
+      "webhookId": "f3ea7d20-feea-49b6-89b4-7834f46f0105",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "OtDP3d5m24PqEPTL",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# Agents Hierarchy + Shared Tools + Pararell",
+        "height": 840,
+        "width": 1390,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -3080,
+        180
+      ],
+      "typeVersion": 1,
+      "id": "aaf1c7ec-b7a8-4ec3-865b-11129f5248fe",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "ca7b524d-3c05-4973-80cc-39e3e32d87f1"
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "allMatchingOutputs": true
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -2460,
+        460
+      ],
+      "id": "01407aec-4198-4cc7-a82d-640071ecbfb0",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "ykyyku",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        -2300,
+        260
+      ],
+      "id": "67fb036b-8914-4352-a4ec-0c2cdb33e141",
+      "name": "AI Agent4"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        -2300,
+        640
+      ],
+      "id": "961141ff-9864-4182-b890-fb8206174ab6",
+      "name": "AI Agent3"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -1900,
+        460
+      ],
+      "id": "b0e82edd-4296-40e1-90a7-dbbd321ea8b0",
+      "name": "Respond to Webhook3"
+    },
+    {
+      "parameters": {
+        "content": "# Sequential + MCP Servers + Tools",
+        "height": 500,
+        "width": 1390,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -3080,
+        -360
+      ],
+      "typeVersion": 1,
+      "id": "c0044734-5d3d-46f8-95d8-c452c6904999",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You're a helpful agent equipped with tools that helps the user achieve his goals.\n\nIf asked about emails, first:\n1. Get contacts from Google sheet\n2. Send email to the contact\n\nIf asked about Jira, first, before making the request plan your work. You typically perform two steps:\n1. List available tools in Jira\n2. Execute selected tool (e.g., jira_search) you got before. Do not guess.\n\nNext execute without asking for user confirmation, while using memory to understand your progress.\n\nUser request: \n{{ $json.query.request_to_jira }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        -2340,
+        -280
+      ],
+      "id": "277561b2-efed-4aa7-914e-a3773c8cc8f0",
+      "name": "AI Agent5"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -1920,
+        -280
+      ],
+      "id": "f8248433-c8b5-49eb-8c1a-b55a9f676718",
+      "name": "Respond to Webhook4"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Use this tool to send email. Format email body as HTML.",
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', ``, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        -2140,
+        -40
+      ],
+      "id": "b030b8f6-26f6-45a9-a5b2-83ecac7f3b15",
+      "name": "Gmail1",
+      "webhookId": "e008c667-4adc-4cd4-b165-795f99870cd1",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Ollcr4zAoyUcYE9i",
+          "name": "Gmail account pawel.huryn@gmail.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -2360,
+        -40
+      ],
+      "id": "d95d56b3-225a-4c91-a4aa-085694cc1479",
+      "name": "OpenAI3",
+      "credentials": {
+        "openAiApi": {
+          "id": "lAOtymRvgIwfling",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Use this tool to get information about email contacts. This will help you get email by name.",
+        "documentId": {
+          "__rl": true,
+          "value": "1plvRlghLiEakExG06hw-wUapeeO6ydap93MWSZ57T8Q",
+          "mode": "list",
+          "cachedResultName": "n8n Contacts",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1plvRlghLiEakExG06hw-wUapeeO6ydap93MWSZ57T8Q/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1plvRlghLiEakExG06hw-wUapeeO6ydap93MWSZ57T8Q/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.5,
+      "position": [
+        -2580,
+        -40
+      ],
+      "id": "1274b67e-3813-43ab-b2c2-fcd47c3d36a0",
+      "name": "Contacts1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "5SQEDfOXhu76N1S7",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "path": "f3ea7d20-feea-49b6-89b4-7834f46f0105",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -3000,
+        -280
+      ],
+      "id": "f4012ec3-8b9b-4d14-8b88-88a3203f6245",
+      "name": "Webhook3",
+      "webhookId": "f3ea7d20-feea-49b6-89b4-7834f46f0105",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "OtDP3d5m24PqEPTL",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        -2780,
+        -280
+      ],
+      "id": "7e5348f6-fb25-40df-934b-590dfefac776",
+      "name": "AI Agent6"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -2820,
+        -40
+      ],
+      "id": "7dc3b780-ce81-4a64-a73a-398e04954385",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "lAOtymRvgIwfling",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -2800,
+        480
+      ],
+      "id": "9f8e4eaa-8707-45b9-aed0-dcebbbf4c911",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "lAOtymRvgIwfling",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You're a helpful agent equipped with tools that helps the user achieve his goals.\n\nIf asked about emails, first:\n1. Get contacts from Google sheet\n2. Send email to the contact\n\nIf asked about Jira, first, before making the request plan your work. You typically perform two steps:\n1. List available tools in Jira\n2. Execute selected tool (e.g., jira_search) you got before. Do not guess.\n\nNext execute without asking for user confirmation, while using memory to understand your progress.\n\nUser request: \n{{ $json.query.request_to_jira }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        -2800,
+        1140
+      ],
+      "id": "99288a98-fcc3-405d-8cdb-ed4b6e1f6962",
+      "name": "AI Agent7"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -2320,
+        1920
+      ],
+      "id": "f6a5ca99-cffa-4140-afba-981fcb6a6108",
+      "name": "OpenAI4",
+      "credentials": {
+        "openAiApi": {
+          "id": "lAOtymRvgIwfling",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "path": "f3ea7d20-feea-49b6-89b4-7834f46f0105",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -3000,
+        1140
+      ],
+      "id": "209864ce-5ad1-4edf-a5c8-0504564443f5",
+      "name": "Webhook4",
+      "webhookId": "f3ea7d20-feea-49b6-89b4-7834f46f0105",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "OtDP3d5m24PqEPTL",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# Agents Hierarchy + Loop + Pararell + Shared RAG",
+        "height": 1200,
+        "width": 1390,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -3080,
+        1060
+      ],
+      "typeVersion": 1,
+      "id": "6b1fb5ea-9b30-4768-9e1a-0845721dc4ee",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "ca7b524d-3c05-4973-80cc-39e3e32d87f1"
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "allMatchingOutputs": true
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -2500,
+        1140
+      ],
+      "id": "17a2ff70-e1d1-4f7a-b74e-1af3482c784c",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "ykyyku",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        -2300,
+        1280
+      ],
+      "id": "fe5c7258-6aa9-4df2-a84a-1415f8db5226",
+      "name": "AI Agent8"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        -2300,
+        1700
+      ],
+      "id": "853bb057-ef03-4447-9940-762772d9ec07",
+      "name": "AI Agent9"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -1900,
+        1140
+      ],
+      "id": "de6ecc35-106e-43e8-99e1-39706070914e",
+      "name": "Respond to Webhook5"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        -1900,
+        1480
+      ],
+      "id": "9c95c2fa-52a6-40bc-8e2c-53ed07d49a61",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -2980,
+        1380
+      ],
+      "id": "846eb042-6d96-4f18-89fa-7d852fe895d0",
+      "name": "OpenAI Chat Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "lAOtymRvgIwfling",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "root",
+          "cachedResultName": "/ (Root folder)"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTool",
+      "typeVersion": 3,
+      "position": [
+        -2160,
+        1920
+      ],
+      "id": "66317b16-2f97-4745-a381-c395f998f2ff",
+      "name": "Google Drive",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "dSbCvwCpajWnqyVa",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "query": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Query', ``, 'string') }}"
+      },
+      "type": "n8n-nodes-base.microsoftOneDriveTool",
+      "typeVersion": 1,
+      "position": [
+        -2160,
+        1500
+      ],
+      "id": "00ba1ebe-d979-44d1-846f-1cd3b66a52f5",
+      "name": "Microsoft OneDrive",
+      "credentials": {
+        "microsoftOneDriveOAuth2Api": {
+          "id": "irIQoUtHzC7Sbs7p",
+          "name": "Microsoft Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [
+        -2620,
+        1380
+      ],
+      "id": "597101dd-a380-4769-b2f2-2ccbb109a7de",
+      "name": "Calculator"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You're a helpful agent equipped with tools that helps the user achieve his goals.\n\nIf asked about emails, first:\n1. Get contacts from Google sheet\n2. Send email to the contact\n\nIf asked about Jira, first, before making the request plan your work. You typically perform two steps:\n1. List available tools in Jira\n2. Execute selected tool (e.g., jira_search) you got before. Do not guess.\n\nNext execute without asking for user confirmation, while using memory to understand your progress.\n\nUser request: \n{{ $json.query.request_to_jira }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        -3960,
+        760
+      ],
+      "id": "702ab44a-2e30-470a-8f5a-1b5b9a3c2f3e",
+      "name": "AI Agent10"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $execution.id }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -4040,
+        1000
+      ],
+      "id": "3410176e-e940-4c28-9d5d-fd92653b57dc",
+      "name": "Simple Memory4"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -3360,
+        760
+      ],
+      "id": "7dac436a-6e96-4148-98e9-73d28beae343",
+      "name": "Respond to Webhook6"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -4160,
+        1000
+      ],
+      "id": "301b7abc-f6ff-450c-9b13-0c4e676e6ead",
+      "name": "OpenAI5",
+      "credentials": {
+        "openAiApi": {
+          "id": "lAOtymRvgIwfling",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "path": "f3ea7d20-feea-49b6-89b4-7834f46f0105",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -4160,
+        760
+      ],
+      "id": "8cc6ab10-5293-4f47-9eb3-4e15cd61f78f",
+      "name": "Webhook5",
+      "webhookId": "f3ea7d20-feea-49b6-89b4-7834f46f0105",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "OtDP3d5m24PqEPTL",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# Single Agent + Tools + Router",
+        "height": 500,
+        "width": 1110,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -4240,
+        680
+      ],
+      "typeVersion": 1,
+      "id": "de2075b2-24e9-4398-9e2a-c1df7cc81c8b",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "pageId": {
+          "__rl": true,
+          "mode": "url",
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Parent_Page', ``, 'string') }}"
+        },
+        "title": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Title', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notionTool",
+      "typeVersion": 2.2,
+      "position": [
+        -3880,
+        1000
+      ],
+      "id": "1cde3a2e-33a8-405a-94bc-150960d6476b",
+      "name": "Notion",
+      "credentials": {
+        "notionApi": {
+          "id": "eJQpcC7r1fBcW26b",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a434b46f-b602-4e4b-b7fa-59ab6c182eac",
+              "leftValue": "=1",
+              "rightValue": "1",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -3580,
+        860
+      ],
+      "id": "b1b13391-d805-49de-a42a-04010a653dec",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -3360,
+        940
+      ],
+      "id": "556d75a6-b21f-434a-81a0-4d75577c4fd8",
+      "name": "Respond to Webhook7"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolName": "dfnf",
+        "toolDescription": "fdfddfdmf",
+        "tableName": {
+          "__rl": true,
+          "value": "4",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.1,
+      "position": [
+        -2000,
+        1920
+      ],
+      "id": "74b779f1-ec03-4817-b84e-27d9443d712b",
+      "name": "Vector Store",
+      "credentials": {
+        "supabaseApi": {
+          "id": "hx9oNQ8GS0DeluZ1",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "owner": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Project_Owner', ``, 'string') }}",
+        "repository": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Project_Name', ``, 'string') }}",
+        "title": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Title', ``, 'string') }}",
+        "body": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Body', ``, 'string') }}",
+        "labels": [],
+        "assignee_ids": []
+      },
+      "type": "n8n-nodes-base.gitlabTool",
+      "typeVersion": 1,
+      "position": [
+        -3760,
+        1000
+      ],
+      "id": "affaeca9-7ca8-40f1-ad6d-99260b2ee2b9",
+      "name": "GitLab",
+      "credentials": {
+        "gitlabApi": {
+          "id": "FIVBZLhmffpkbqeZ",
+          "name": "GitLab account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "email": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Email', ``, 'string') }}",
+        "additionalFields": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.hubspotTool",
+      "typeVersion": 2.1,
+      "position": [
+        -3780,
+        1520
+      ],
+      "id": "303b6797-5cc5-4bc9-a73e-eb9b1d014673",
+      "name": "HubSpot",
+      "credentials": {
+        "hubspotApi": {
+          "id": "ijO0eGolgtlzRqk6",
+          "name": "HubSpot account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -2300,
+        1500
+      ],
+      "id": "f59d596f-6746-4c79-a1a0-eb4a92ee35ca",
+      "name": "OpenAI6",
+      "credentials": {
+        "openAiApi": {
+          "id": "lAOtymRvgIwfling",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You're a helpful agent equipped with tools that helps the user achieve his goals.\n\nIf asked about emails, first:\n1. Get contacts from Google sheet\n2. Send email to the contact\n\nIf asked about Jira, first, before making the request plan your work. You typically perform two steps:\n1. List available tools in Jira\n2. Execute selected tool (e.g., jira_search) you got before. Do not guess.\n\nNext execute without asking for user confirmation, while using memory to understand your progress.\n\nUser request: \n{{ $json.query.request_to_jira }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        -3920,
+        1820
+      ],
+      "id": "fbc6e25e-d97b-4b30-9ee8-73639040fc7a",
+      "name": "AI Agent11"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $execution.id }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -4040,
+        2080
+      ],
+      "id": "742ed582-6310-406b-b835-66de96deb906",
+      "name": "Simple Memory5"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -4160,
+        2080
+      ],
+      "id": "be1f4e40-f1ec-4639-a223-4247415046b0",
+      "name": "OpenAI7",
+      "credentials": {
+        "openAiApi": {
+          "id": "lAOtymRvgIwfling",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "path": "f3ea7d20-feea-49b6-89b4-7834f46f0105",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -4160,
+        1820
+      ],
+      "id": "f00db6b9-ef9b-4f0c-bfa8-e3bc94f4beb2",
+      "name": "Webhook6",
+      "webhookId": "f3ea7d20-feea-49b6-89b4-7834f46f0105",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "OtDP3d5m24PqEPTL",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# Single Agent + Dynamically Call Other Agents",
+        "height": 520,
+        "width": 1110,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -4240,
+        1740
+      ],
+      "typeVersion": 1,
+      "id": "67418eba-aa30-459c-90c3-cc8059f1d506",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -3360,
+        1820
+      ],
+      "id": "d28395d1-4756-4cb5-80ce-721283d112f1",
+      "name": "Respond to Webhook8"
+    },
+    {
+      "parameters": {
+        "table": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Table', ``, 'string') }}",
+        "columns": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Columns', ``, 'string') }}"
+      },
+      "type": "n8n-nodes-base.microsoftSqlTool",
+      "typeVersion": 1.1,
+      "position": [
+        -3760,
+        2080
+      ],
+      "id": "219050ae-9b02-4520-86d1-4be97ec9b4d6",
+      "name": "Microsoft SQL1",
+      "credentials": {
+        "microsoftSql": {
+          "id": "iyd6jtvBRlT7YDli",
+          "name": "Microsoft SQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "email": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Email', ``, 'string') }}",
+        "additionalFields": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.hubspotTool",
+      "typeVersion": 2.1,
+      "position": [
+        -3640,
+        2080
+      ],
+      "id": "cc4d9f07-6f5d-41fa-a0e6-884d2da2a471",
+      "name": "HubSpot1",
+      "credentials": {
+        "hubspotApi": {
+          "id": "ijO0eGolgtlzRqk6",
+          "name": "HubSpot account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "base": {
+          "__rl": true,
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Base', ``, 'string') }}",
+          "mode": "id"
+        },
+        "table": {
+          "__rl": true,
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Table', ``, 'string') }}",
+          "mode": "id"
+        },
+        "id": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Record_ID', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtableTool",
+      "typeVersion": 2.1,
+      "position": [
+        -3880,
+        2080
+      ],
+      "id": "2b8b33a1-dbf2-4dbd-8341-244513d48444",
+      "name": "Airtable",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "WQn47xJclaByXElQ",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "Call_Agent",
+        "workflowId": {
+          "__rl": true,
+          "value": "MJrFESQgzsFq52WG",
+          "mode": "list",
+          "cachedResultName": "Architectures"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.1,
+      "position": [
+        -3460,
+        2080
+      ],
+      "id": "c15620c3-5d0d-4aea-ae62-a80061d07a01",
+      "name": "Call another Agent"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -2780,
+        1380
+      ],
+      "id": "0cc8804e-f83a-4351-9632-a49d8e22a3f1",
+      "name": "Simple Memory3"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -1880,
+        2080
+      ],
+      "id": "e497bbd2-47ae-4b10-80e6-684f7e7cb838",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "lAOtymRvgIwfling",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You're a helpful agent equipped with tools that helps the user achieve his goals.\n\nIf asked about emails, first:\n1. Get contacts from Google sheet\n2. Send email to the contact\n\nIf asked about Jira, first, before making the request plan your work. You typically perform two steps:\n1. List available tools in Jira\n2. Execute selected tool (e.g., jira_search) you got before. Do not guess.\n\nNext execute without asking for user confirmation, while using memory to understand your progress.\n\nUser request: \n{{ $json.query.request_to_jira }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        -3880,
+        240
+      ],
+      "id": "43ce97cc-c642-4350-a615-2d941e3277e4",
+      "name": "AI Agent12"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $execution.id }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -4040,
+        480
+      ],
+      "id": "3a635dee-fa65-4b79-a53e-be15373de0e1",
+      "name": "Simple Memory6"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -3360,
+        240
+      ],
+      "id": "50ecd6d4-b3e2-42de-9573-6384a9be7dfc",
+      "name": "Respond to Webhook9"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Use this tool to send email. Format email body as HTML.",
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', ``, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        -3340,
+        480
+      ],
+      "id": "8034efc9-564b-4f8f-b3db-cdc221038746",
+      "name": "Gmail2",
+      "webhookId": "e008c667-4adc-4cd4-b165-795f99870cd1",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Ollcr4zAoyUcYE9i",
+          "name": "Gmail account pawel.huryn@gmail.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -4160,
+        480
+      ],
+      "id": "23d97ff4-78d7-4ffc-bf2a-d69824cc8831",
+      "name": "OpenAI8",
+      "credentials": {
+        "openAiApi": {
+          "id": "lAOtymRvgIwfling",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "This tool allows you to get the list of supported tools from Jira."
+      },
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [
+        -3900,
+        480
+      ],
+      "id": "4bcd95b7-9602-42e5-848f-e8a6a5bf4ebc",
+      "name": "Atlassian Tools2",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "xU92eUpIv8Mr8SHz",
+          "name": "MCP Client Attlasian (STDIO) account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "This tools allows you to execute tools from Jira. Use this tool only if you know the exact tool name and its description.",
+        "operation": "executeTool",
+        "toolName": "={{ $fromAI(\"toolName\") }}",
+        "toolParameters": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Tool_Parameters', ``, 'json') }}"
+      },
+      "type": "n8n-nodes-mcp.mcpClientTool",
+      "typeVersion": 1,
+      "position": [
+        -3760,
+        480
+      ],
+      "id": "85d59615-7a14-4862-a788-a13bd276d268",
+      "name": "Atlassian Execute2",
+      "credentials": {
+        "mcpClientApi": {
+          "id": "xU92eUpIv8Mr8SHz",
+          "name": "MCP Client Attlasian (STDIO) account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Use this tool to get information about email contacts. This will help you get email by name.",
+        "documentId": {
+          "__rl": true,
+          "value": "1plvRlghLiEakExG06hw-wUapeeO6ydap93MWSZ57T8Q",
+          "mode": "list",
+          "cachedResultName": "n8n Contacts",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1plvRlghLiEakExG06hw-wUapeeO6ydap93MWSZ57T8Q/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1plvRlghLiEakExG06hw-wUapeeO6ydap93MWSZ57T8Q/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.5,
+      "position": [
+        -3580,
+        480
+      ],
+      "id": "e27b3afe-3949-4cc1-a13f-8df40810913e",
+      "name": "Contacts2",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "5SQEDfOXhu76N1S7",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "path": "f3ea7d20-feea-49b6-89b4-7834f46f0105",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -4160,
+        240
+      ],
+      "id": "8e614d00-62b6-4828-98b2-f7895058c267",
+      "name": "Webhook7",
+      "webhookId": "f3ea7d20-feea-49b6-89b4-7834f46f0105",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "OtDP3d5m24PqEPTL",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# Single Agent + MCP Servers + Tools",
+        "height": 480,
+        "width": 1110,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -4240,
+        160
+      ],
+      "typeVersion": 1,
+      "id": "0940631c-9c99-4a0f-9155-dd1cc5000df9",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $execution.id }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -3900,
+        -40
+      ],
+      "id": "ed2d8b1c-267f-4275-ab3b-ba65ed0afbc7",
+      "name": "Simple Memory7"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Use this tool to send email. Format email body as HTML.",
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', ``, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        -3460,
+        -40
+      ],
+      "id": "4786238e-b4eb-495a-954e-a2b03b5b4d16",
+      "name": "Gmail3",
+      "webhookId": "e008c667-4adc-4cd4-b165-795f99870cd1",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Ollcr4zAoyUcYE9i",
+          "name": "Gmail account pawel.huryn@gmail.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -4040,
+        -40
+      ],
+      "id": "d0e931ff-5378-40f5-86e4-713f3819de50",
+      "name": "OpenAI9",
+      "credentials": {
+        "openAiApi": {
+          "id": "lAOtymRvgIwfling",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Use this tool to get information about email contacts. This will help you get email by name.",
+        "documentId": {
+          "__rl": true,
+          "value": "1plvRlghLiEakExG06hw-wUapeeO6ydap93MWSZ57T8Q",
+          "mode": "list",
+          "cachedResultName": "n8n Contacts",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1plvRlghLiEakExG06hw-wUapeeO6ydap93MWSZ57T8Q/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1plvRlghLiEakExG06hw-wUapeeO6ydap93MWSZ57T8Q/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.5,
+      "position": [
+        -3700,
+        -40
+      ],
+      "id": "1b09ca17-8264-4129-9aab-ec353bbe7229",
+      "name": "Contacts3",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "5SQEDfOXhu76N1S7",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# Single Agent + Tools",
+        "height": 480,
+        "width": 1110,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -4240,
+        -360
+      ],
+      "typeVersion": 1,
+      "id": "945a9169-17e7-45ab-8547-30ff424dd79f",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -4160,
+        -280
+      ],
+      "id": "e7fb9a23-1a5c-4dcb-9319-e34a192a1a1d",
+      "name": "When chat message received",
+      "webhookId": "ef61ff48-3906-4319-b3a6-a49d8b69a31f"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You're a helpful agent equipped with tools that helps the user achieve his goals.\n\nIf asked about emails, first:\n1. Get contacts from Google sheet\n2. Send email to the contact\n\nIf asked about Jira, first, before making the request plan your work. You typically perform two steps:\n1. List available tools in Jira\n2. Execute selected tool (e.g., jira_search) you got before. Do not guess.\n\nNext execute without asking for user confirmation, while using memory to understand your progress.\n\nUser request: \n{{ $json.query.request_to_jira }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        -3900,
+        -280
+      ],
+      "id": "b025ba27-f857-4986-847a-818c541270ae",
+      "name": "AI Agent 0"
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Calendar', ``, 'string') }}",
+          "mode": "id",
+          "__regex": "(^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)"
+        },
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        -3580,
+        -40
+      ],
+      "id": "178a9f63-16ca-4c8b-a5a7-1bc294c22752",
+      "name": "Google Calendar",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "eLnytiTVnUqSeoTP",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "user": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "message": "jtrmrtmtrrmtrtmtrmrtmrmmrtmrttrmrtmrtmrmttrmrmtmtr",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        -3620,
+        1280
+      ],
+      "id": "c1cfdfd1-d969-4d32-be31-d99c92ec8eed",
+      "name": "Slack Approval",
+      "webhookId": "d87fbd40-686b-4106-9ef2-7e17fa26c9fb",
+      "credentials": {
+        "slackApi": {
+          "id": "pGsZ9nks7DvjdRYz",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "from": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('From', ``, 'string') }}",
+        "to": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', ``, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.twilioTool",
+      "typeVersion": 1,
+      "position": [
+        -1960,
+        840
+      ],
+      "id": "eb16f62e-26fd-4181-8553-763d33cd644a",
+      "name": "Twilio1",
+      "credentials": {
+        "twilioApi": {
+          "id": "c6wvyO9ETSLZ9KyP",
+          "name": "Twilio account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -2260,
+        460
+      ],
+      "id": "81012424-754a-4651-84d4-7b57cf61fc1e",
+      "name": "OpenAI Chat Model3",
+      "credentials": {
+        "openAiApi": {
+          "id": "lAOtymRvgIwfling",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', ``, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        -2080,
+        840
+      ],
+      "id": "2b56fc91-6511-47cb-a26b-f536d8e8b795",
+      "name": "Gmail",
+      "webhookId": "fb2b1128-6d95-41d8-8def-88397cf2e4f1",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Ollcr4zAoyUcYE9i",
+          "name": "Gmail account pawel.huryn@gmail.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Calendar', ``, 'string') }}",
+          "mode": "id",
+          "__regex": "(^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\\.[a-zA-Z0-9-]+)*)"
+        },
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        -3460,
+        480
+      ],
+      "id": "d32a60bb-a47f-4758-acad-3a2c10cc1206",
+      "name": "Google Calendar1",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "eLnytiTVnUqSeoTP",
+          "name": "Google Calendar account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Webhook1": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n-newsletter-u38841.vm.elestio.app",
+            "x-real-ip": "34.67.146.145",
+            "x-forwarded-for": "34.67.146.145",
+            "x-forwarded-proto": "https",
+            "x-forwarded-port": "443",
+            "connection": "close",
+            "token": "78c54c4e-7655-406f-85c7-364f83607dee",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "user-agent": "Python/3.12 aiohttp/3.11.16"
+          },
+          "params": {},
+          "query": {
+            "request_to_jira": "What are the current items in progress in TMP in Jira?"
+          },
+          "body": {},
+          "webhookUrl": "https://n8n-newsletter-u38841.vm.elestio.app/webhook-test/f430539d-f735-49e9-8b01-983d3ace5584",
+          "executionMode": "test"
+        }
+      }
+    ],
+    "Webhook2": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n-newsletter-u38841.vm.elestio.app",
+            "x-real-ip": "34.67.146.145",
+            "x-forwarded-for": "34.67.146.145",
+            "x-forwarded-proto": "https",
+            "x-forwarded-port": "443",
+            "connection": "close",
+            "token": "78c54c4e-7655-406f-85c7-364f83607dee",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "user-agent": "Python/3.12 aiohttp/3.11.16"
+          },
+          "params": {},
+          "query": {
+            "request_to_jira": "What are the current items in progress in TMP in Jira?"
+          },
+          "body": {},
+          "webhookUrl": "https://n8n-newsletter-u38841.vm.elestio.app/webhook-test/f430539d-f735-49e9-8b01-983d3ace5584",
+          "executionMode": "test"
+        }
+      }
+    ],
+    "Webhook3": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n-newsletter-u38841.vm.elestio.app",
+            "x-real-ip": "34.67.146.145",
+            "x-forwarded-for": "34.67.146.145",
+            "x-forwarded-proto": "https",
+            "x-forwarded-port": "443",
+            "connection": "close",
+            "token": "78c54c4e-7655-406f-85c7-364f83607dee",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "user-agent": "Python/3.12 aiohttp/3.11.16"
+          },
+          "params": {},
+          "query": {
+            "request_to_jira": "What are the current items in progress in TMP in Jira?"
+          },
+          "body": {},
+          "webhookUrl": "https://n8n-newsletter-u38841.vm.elestio.app/webhook-test/f430539d-f735-49e9-8b01-983d3ace5584",
+          "executionMode": "test"
+        }
+      }
+    ],
+    "Webhook4": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n-newsletter-u38841.vm.elestio.app",
+            "x-real-ip": "34.67.146.145",
+            "x-forwarded-for": "34.67.146.145",
+            "x-forwarded-proto": "https",
+            "x-forwarded-port": "443",
+            "connection": "close",
+            "token": "78c54c4e-7655-406f-85c7-364f83607dee",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "user-agent": "Python/3.12 aiohttp/3.11.16"
+          },
+          "params": {},
+          "query": {
+            "request_to_jira": "What are the current items in progress in TMP in Jira?"
+          },
+          "body": {},
+          "webhookUrl": "https://n8n-newsletter-u38841.vm.elestio.app/webhook-test/f430539d-f735-49e9-8b01-983d3ace5584",
+          "executionMode": "test"
+        }
+      }
+    ],
+    "Webhook5": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n-newsletter-u38841.vm.elestio.app",
+            "x-real-ip": "34.67.146.145",
+            "x-forwarded-for": "34.67.146.145",
+            "x-forwarded-proto": "https",
+            "x-forwarded-port": "443",
+            "connection": "close",
+            "token": "78c54c4e-7655-406f-85c7-364f83607dee",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "user-agent": "Python/3.12 aiohttp/3.11.16"
+          },
+          "params": {},
+          "query": {
+            "request_to_jira": "What are the current items in progress in TMP in Jira?"
+          },
+          "body": {},
+          "webhookUrl": "https://n8n-newsletter-u38841.vm.elestio.app/webhook-test/f430539d-f735-49e9-8b01-983d3ace5584",
+          "executionMode": "test"
+        }
+      }
+    ],
+    "Webhook6": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n-newsletter-u38841.vm.elestio.app",
+            "x-real-ip": "34.67.146.145",
+            "x-forwarded-for": "34.67.146.145",
+            "x-forwarded-proto": "https",
+            "x-forwarded-port": "443",
+            "connection": "close",
+            "token": "78c54c4e-7655-406f-85c7-364f83607dee",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "user-agent": "Python/3.12 aiohttp/3.11.16"
+          },
+          "params": {},
+          "query": {
+            "request_to_jira": "What are the current items in progress in TMP in Jira?"
+          },
+          "body": {},
+          "webhookUrl": "https://n8n-newsletter-u38841.vm.elestio.app/webhook-test/f430539d-f735-49e9-8b01-983d3ace5584",
+          "executionMode": "test"
+        }
+      }
+    ],
+    "Webhook7": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n-newsletter-u38841.vm.elestio.app",
+            "x-real-ip": "34.67.146.145",
+            "x-forwarded-for": "34.67.146.145",
+            "x-forwarded-proto": "https",
+            "x-forwarded-port": "443",
+            "connection": "close",
+            "token": "78c54c4e-7655-406f-85c7-364f83607dee",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "user-agent": "Python/3.12 aiohttp/3.11.16"
+          },
+          "params": {},
+          "query": {
+            "request_to_jira": "What are the current items in progress in TMP in Jira?"
+          },
+          "body": {},
+          "webhookUrl": "https://n8n-newsletter-u38841.vm.elestio.app/webhook-test/f430539d-f735-49e9-8b01-983d3ace5584",
+          "executionMode": "test"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Slack Approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Microsoft SQL": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent2": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent3",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook2": {
+      "main": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "AI Agent4",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "AI Agent3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent4": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent3": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent5": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent5",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent5",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contacts1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent6",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook3": {
+      "main": [
+        [
+          {
+            "node": "AI Agent6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent6": {
+      "main": [
+        [
+          {
+            "node": "AI Agent5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent6",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent7": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent9",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook4": {
+      "main": [
+        [
+          {
+            "node": "AI Agent7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent8",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "AI Agent9",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Respond to Webhook5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent8": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent9": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent7",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent9",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Microsoft OneDrive": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent8",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculator": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent7",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent10": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory4": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent10",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI5": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent10",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook5": {
+      "main": [
+        [
+          {
+            "node": "AI Agent10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notion": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent10",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook6",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent9",
+            "type": "ai_tool",
+            "index": 0
+          },
+          {
+            "node": "AI Agent8",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitLab": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent10",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI6": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent8",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent11": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory5": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent11",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI7": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent11",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook6": {
+      "main": [
+        [
+          {
+            "node": "AI Agent11",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Microsoft SQL1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent11",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HubSpot1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent11",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent11",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call another Agent": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent11",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory3": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent7",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook7": {
+      "main": [
+        [
+          {
+            "node": "AI Agent12",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contacts2": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent12",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atlassian Execute2": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent12",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atlassian Tools2": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent12",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI8": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent12",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail2": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent12",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent12": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory6": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent12",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory7": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent 0",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail3": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent 0",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI9": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent 0",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contacts3": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent 0",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent 0",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent 0": {
+      "main": [
+        []
+      ]
+    },
+    "Google Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent 0",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack Approval": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Twilio1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent4",
+            "type": "ai_tool",
+            "index": 0
+          },
+          {
+            "node": "AI Agent3",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent4",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent3",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Calendar1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent12",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "5c90f48d-d365-46f0-b416-37b5b715ba4e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "417669c7dd92eb1383e1cb3c6720b2e361eaa36216b87be3c60c8a28e71718b5"
+  },
+  "id": "MJrFESQgzsFq52WG",
+  "tags": []
+}

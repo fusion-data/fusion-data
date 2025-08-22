@@ -23,11 +23,8 @@ pub enum Error {
   #[error("Exp not iso")]
   ExpNotIso,
 
-  #[error("Expired")]
-  Expired,
-
-  #[error(transparent)]
-  JoseError(#[from] josekit::JoseError),
+  #[error("Token expired")]
+  TokenExpired,
 
   #[error("Failed to hash password")]
   FailedToHashPassword,
@@ -37,6 +34,9 @@ pub enum Error {
 
   #[error("Failed to verify password")]
   FailedToVerifyPassword,
+
+  #[error(transparent)]
+  JoseError(#[from] josekit::JoseError),
 }
 
 impl Serialize for Error {

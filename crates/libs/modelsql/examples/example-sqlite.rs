@@ -1,9 +1,15 @@
 use anyhow::{Result, anyhow};
 use chrono::{DateTime, Utc};
+use log::info;
 use modelsql::base::DbBmc;
 use modelsql::store::Dbx;
 use modelsql::{DbConfig, ModelManager, generate_sqlite_bmc_common, generate_sqlite_bmc_filter};
-use modelsql::{field::Fields, filter::ListOptions, page::PageResult, sqlite::SqliteRowType};
+use modelsql::{
+  field::{FieldMask, Fields},
+  filter::Page,
+  page::PageResult,
+  sqlite::SqliteRowType,
+};
 use modelsql_macros::FilterNodes;
 use sea_query::enum_def;
 use serde::{Deserialize, Serialize};
@@ -11,7 +17,6 @@ use serde_json::json;
 use sqlx::FromRow;
 use std::env;
 use std::time::Duration;
-use tracing::info;
 use ultimate_common::ctx::Ctx;
 
 #[derive(Debug, Serialize, Deserialize, FromRow, Fields)]
@@ -20,8 +25,8 @@ pub struct User {
   pub id: i64,
   pub name: String,
   pub status: i32,
-  pub ctime: DateTime<Utc>,
-  pub cid: i64,
+  pub created_at: DateTime<Utc>,
+  pub created_by: i64,
 }
 impl SqliteRowType for User {}
 
@@ -41,6 +46,7 @@ pub struct UserForCreate {
 pub struct UserForUpdate {
   pub name: Option<String>,
   pub status: Option<i32>,
+  pub update_mask: FieldMask,
 }
 
 pub struct UserBmc;
@@ -66,7 +72,10 @@ impl SqliteModel {
       "acquire_timeout": Duration::from_secs(10),
     }))?;
 
-    let db = ModelManager::new(&db_config, Some("example-sqlite"))?.with_ctx(Ctx::new_super_admin());
+    let db = ModelManager::new(&db_config, Some("example-sqlite"))
+      .await
+      .unwrap()
+      .with_ctx(Ctx::new_super_admin());
 
     // 创建表
     match db.dbx() {
@@ -77,8 +86,8 @@ impl SqliteModel {
               id INTEGER PRIMARY KEY AUTOINCREMENT,
               name TEXT NOT NULL,
               status INT NOT NULL,
-              ctime DATETIME NOT NULL,
-              cid BIGINT NOT NULL
+              created_at DATETIME NOT NULL,
+              created_by BIGINT NOT NULL
           )
           "#,
         )
@@ -107,15 +116,15 @@ impl SqliteModel {
     UserBmc::delete_by_id(&self.db, id).await.map_err(|e| anyhow!(e))
   }
 
-  async fn list(&self, filter: UserFilter, list_options: ListOptions) -> Result<PageResult<User>> {
-    UserBmc::page(&self.db, vec![filter], list_options).await.map_err(|e| anyhow!(e))
+  async fn list(&self, filter: UserFilter, page: Page) -> Result<PageResult<User>> {
+    UserBmc::page(&self.db, vec![filter], page).await.map_err(|e| anyhow!(e))
   }
 }
 
 #[tokio::main]
 async fn main() -> Result<()> {
   // 初始化日志
-  tracing_subscriber::fmt::init();
+  logforth::stdout().apply();
 
   // 获取当前目录的绝对路径
   let current_dir = env::current_dir()?;
@@ -137,7 +146,10 @@ async fn main() -> Result<()> {
 
   // 更新用户
   let updated = user_model
-    .update(user_id, UserForUpdate { name: Some("张三(已更新)".to_string()), status: Some(2) })
+    .update(
+      user_id,
+      UserForUpdate { name: Some("张三(已更新)".to_string()), status: Some(2), update_mask: FieldMask::default() },
+    )
     .await
     .ok();
   info!("更新用户结果: {:?}", updated);
@@ -156,7 +168,7 @@ async fn main() -> Result<()> {
   let page_result = user_model
     .list(
       UserFilter { name: Some("李四".to_string()), status: Some(1) },
-      ListOptions { limit: Some(10), page: Some(1), ..Default::default() },
+      Page { limit: Some(10), page: Some(1), ..Default::default() },
     )
     .await?;
   info!("分页查询结果: 总数 {}, 当前页数据: {:?}", page_result.page.total, page_result.result);

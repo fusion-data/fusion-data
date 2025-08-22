@@ -1,0 +1,17 @@
+[package]
+name = "hetuflow-docs"
+description = "河图流动项目文档构建工具"
+publish = false
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+mdbook = { workspace = true }
+mdbook-mermaid = { workspace = true }

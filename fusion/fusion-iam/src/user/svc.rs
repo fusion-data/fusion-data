@@ -42,7 +42,6 @@ impl UserSvc {
     Ok(())
   }
 
-  #[tracing::instrument(skip(self, ctx, req))]
   pub async fn get_fetch_credential(&self, ctx: &CtxW, req: UserFilter) -> Result<(User, UserCredential)> {
     let u = UserBmc::find_unique(ctx.mm(), vec![req])
       .await?

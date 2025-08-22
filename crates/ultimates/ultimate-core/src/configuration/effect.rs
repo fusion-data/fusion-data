@@ -55,21 +55,23 @@ impl Visitor<'_> for StrToApiValidEffect {
 
 #[cfg(test)]
 mod tests {
+  use ultimate_common::env::set_env;
+
   use crate::configuration::{UltimateConfig, model::KeyConf, util::load_config};
 
   #[test]
   fn test_config_load() {
     // 两个下划线作为层级分隔符
-    unsafe {
-      std::env::set_var("ULTIMATE__WEB__SERVER_ADDR", "0.0.0.0:8000");
+    set_env("ULTIMATE__WEB__SERVER_ADDR", "0.0.0.0:8000").unwrap();
 
-      std::env::set_var(
-        "ULTIMATE__SECURITY__TOKEN__SECRET_KEY",
-        "8462b1ec9af827ebed13926f8f1e5409774fa1a21a1c8f726a4a34cf7dcabaf2",
-      );
-      std::env::set_var("ULTIMATE__SECURITY__PWD__PWD_KEY", "80c9a35c0f231219ca14c44fe10c728d");
-      std::env::set_var("ULTIMATE__APP__NAME", "ultimate");
-    }
+    set_env(
+      "ULTIMATE__SECURITY__TOKEN__SECRET_KEY",
+      "8462b1ec9af827ebed13926f8f1e5409774fa1a21a1c8f726a4a34cf7dcabaf2",
+    )
+    .unwrap();
+    set_env("ULTIMATE__SECURITY__PWD__PWD_KEY", "80c9a35c0f231219ca14c44fe10c728d").unwrap();
+    set_env("ULTIMATE__APP__NAME", "ultimate").unwrap();
+
     let c = load_config().unwrap();
     let qc: UltimateConfig = c.get("ultimate").unwrap();
 

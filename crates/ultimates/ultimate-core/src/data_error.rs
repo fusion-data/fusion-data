@@ -3,20 +3,17 @@ use std::{net::AddrParseError, num::ParseIntError};
 use config::ConfigError;
 use serde::{Serialize, ser::SerializeMap};
 use thiserror::Error;
-use tracing::{error, subscriber::SetGlobalDefaultError};
+use ultimate_common::ctx::CtxError;
 
 use crate::{configuration::ConfigureError, security::Error as SecurityError};
 
 #[derive(Error, Debug)]
 pub enum DataError {
   #[error("Biz error. code: {code}, msg: {msg}")]
-  BizError { code: i32, msg: String },
+  BizError { code: i32, msg: String, detail: Option<Box<serde_json::Value>> },
 
   #[error("Internal error: {code} {msg}")]
-  InternalError { code: i32, msg: String, cause: Option<Box<dyn std::error::Error + Send + Sync>> },
-
-  #[error(transparent)]
-  SecurityError(#[from] SecurityError),
+  InternalError { code: i32, msg: String, cause: Option<Box<dyn std::error::Error + Send>> },
 
   #[error(transparent)]
   SystemTimeError(#[from] std::time::SystemTimeError),
@@ -33,52 +30,37 @@ pub enum DataError {
 
 impl DataError {
   pub fn bad_request(msg: impl Into<String>) -> Self {
-    DataError::BizError { code: 400, msg: msg.into() }
+    DataError::BizError { code: 400, msg: msg.into(), detail: None }
   }
 
   pub fn not_found(msg: impl Into<String>) -> Self {
-    DataError::BizError { code: 404, msg: msg.into() }
+    DataError::BizError { code: 404, msg: msg.into(), detail: None }
   }
 
   pub fn conflicted(msg: impl Into<String>) -> Self {
-    DataError::BizError { code: 409, msg: msg.into() }
+    DataError::BizError { code: 409, msg: msg.into(), detail: None }
   }
 
   pub fn server_error(msg: impl Into<String>) -> Self {
-    DataError::BizError { code: 500, msg: msg.into() }
+    DataError::BizError { code: 500, msg: msg.into(), detail: None }
   }
 
   pub fn unauthorized(msg: impl Into<String>) -> Self {
-    DataError::BizError { code: 401, msg: msg.into() }
+    DataError::BizError { code: 401, msg: msg.into(), detail: None }
   }
 
   pub fn forbidden(msg: impl Into<String>) -> Self {
-    DataError::BizError { code: 403, msg: msg.into() }
+    DataError::BizError { code: 403, msg: msg.into(), detail: None }
   }
 
-  pub fn ok(msg: impl Into<String>) -> Self {
-    DataError::BizError { code: 0, msg: msg.into() }
-  }
-}
-
-impl From<SetGlobalDefaultError> for DataError {
-  fn from(value: SetGlobalDefaultError) -> Self {
-    DataError::InternalError { code: 500, msg: value.to_string(), cause: None }
+  pub fn internal(code: i32, msg: impl Into<String>, cause: Option<Box<dyn std::error::Error + Send>>) -> Self {
+    DataError::InternalError { code, msg: msg.into(), cause }
   }
 }
 
 impl From<ultimate_common::Error> for DataError {
   fn from(value: ultimate_common::Error) -> Self {
     DataError::server_error(value.to_string())
-  }
-}
-
-#[cfg(feature = "ultimate-api")]
-impl From<ultimate_api::Error> for DataError {
-  fn from(value: ultimate_api::Error) -> Self {
-    match value {
-      ultimate_api::Error::BizError { code, msg } => DataError::BizError { code, msg },
-    }
   }
 }
 
@@ -115,6 +97,16 @@ impl From<AddrParseError> for DataError {
   }
 }
 
+impl From<CtxError> for DataError {
+  fn from(value: CtxError) -> Self {
+    match value {
+      CtxError::Unauthorized(msg) => DataError::unauthorized(msg),
+      CtxError::InvalidPayload => DataError::unauthorized("Invalid ctx payload"),
+    }
+  }
+}
+
+#[cfg(feature = "with-uuid")]
 impl From<uuid::Error> for DataError {
   fn from(value: uuid::Error) -> Self {
     DataError::InternalError { code: 500, msg: value.to_string(), cause: None }
@@ -140,9 +132,9 @@ impl From<ConfigureError> for DataError {
 }
 
 #[cfg(feature = "tonic")]
-impl From<prost::UnknownEnumValue> for DataError {
-  fn from(value: prost::UnknownEnumValue) -> Self {
-    DataError::BizError { code: 400, msg: format!("Unknown enum value: {}", value) }
+impl From<protobuf::Error> for DataError {
+  fn from(value: protobuf::Error) -> Self {
+    DataError::BizError { code: 400, msg: format!("Protobuf error: {}", value), detail: None }
   }
 }
 
@@ -159,7 +151,6 @@ impl From<tonic::Status> for DataError {
     // TODO 更精细的 gRPC 状态转换
     let msg = value.message();
     match value.code() {
-      tonic::Code::Ok => DataError::ok(msg),
       tonic::Code::Cancelled => DataError::server_error(msg),
       tonic::Code::Unknown => DataError::server_error(msg),
       tonic::Code::InvalidArgument => DataError::bad_request(msg),
@@ -176,6 +167,8 @@ impl From<tonic::Status> for DataError {
       tonic::Code::Unavailable => DataError::server_error(msg),
       tonic::Code::DataLoss => DataError::server_error(msg),
       tonic::Code::Unauthenticated => DataError::unauthorized(msg),
+      // TODO 存在 Ok -> DataError::internal 的转换吗？
+      tonic::Code::Ok => DataError::internal(0, "", None),
     }
   }
 }
@@ -184,9 +177,8 @@ impl From<tonic::Status> for DataError {
 impl From<DataError> for tonic::Status {
   fn from(value: DataError) -> Self {
     match value {
-      DataError::BizError { code, msg } => make_tonic_status(code, msg),
+      DataError::BizError { code, msg, .. } => make_tonic_status(code, msg),
       DataError::InternalError { code, msg, .. } => make_tonic_status(code, msg),
-      DataError::SecurityError(_) => tonic::Status::unauthenticated("Token error"),
       DataError::SystemTimeError(ex) => tonic::Status::from_error(ex.into()),
       DataError::ParseIntError(ex) => tonic::Status::from_error(ex.into()),
       DataError::IoError(e) => tonic::Status::internal(e.to_string()),
@@ -231,7 +223,33 @@ fn make_tonic_status(code: i32, msg: String) -> tonic::Status {
 #[cfg(feature = "modelsql")]
 impl From<modelsql::SqlError> for DataError {
   fn from(value: modelsql::SqlError) -> Self {
-    DataError::server_error(value.to_string())
+    match value {
+      modelsql::SqlError::Unauthorized(e) => DataError::unauthorized(e),
+      modelsql::SqlError::InvalidArgument { message } => DataError::bad_request(format!("InvalidArgument, {message}")),
+      modelsql::SqlError::EntityNotFound { schema, entity, id } => {
+        DataError::not_found(format!("EntityNotFound, {}:{}:{}", schema.unwrap_or_default(), entity, id))
+      }
+      modelsql::SqlError::NotFound { schema, table, sql } => {
+        log::debug!("NotFound, schema: {}, table: {}, sql: {}", schema.unwrap_or_default(), table, sql);
+        DataError::not_found(format!("NotFound, {}:{}", schema.unwrap_or_default(), table))
+      }
+      modelsql::SqlError::ListLimitOverMax { max, actual } => {
+        DataError::bad_request(format!("ListLimitOverMax, max: {max}, actual: {actual}"))
+      }
+      modelsql::SqlError::ListLimitUnderMin { min, actual } => {
+        DataError::bad_request(format!("ListLimitUnderMin, min: {min}, actual: {actual}"))
+      }
+      modelsql::SqlError::ListPageUnderMin { min, actual } => {
+        DataError::bad_request(format!("ListPageUnderMin, min: {min}, actual: {actual}"))
+      }
+      modelsql::SqlError::UserAlreadyExists { key, value } => {
+        DataError::conflicted(format!("UserAlreadyExists, {key}:{value}"))
+      }
+      modelsql::SqlError::UniqueViolation { table, constraint } => {
+        DataError::conflicted(format!("UniqueViolation, {table}:{constraint}"))
+      }
+      _ => DataError::server_error(value.to_string()),
+    }
   }
 }
 
@@ -239,5 +257,23 @@ impl From<modelsql::SqlError> for DataError {
 impl From<modelsql::store::DbxError> for DataError {
   fn from(value: modelsql::store::DbxError) -> Self {
     DataError::server_error(value.to_string())
+  }
+}
+
+impl From<SecurityError> for DataError {
+  fn from(value: SecurityError) -> Self {
+    match value {
+      SecurityError::TokenExpired => DataError::unauthorized("Token expired"),
+      SecurityError::SignatureNotMatching => DataError::unauthorized("Signature not matching"),
+      SecurityError::InvalidPassword => DataError::unauthorized("Invalid password"),
+      SecurityError::FailedToVerifyPassword => DataError::unauthorized("Failed to verify password"),
+      // SecurityError::HmacFailNewFromSlice => todo!(),
+      // SecurityError::InvalidFormat => todo!(),
+      // SecurityError::CannotDecodeIdent => todo!(),
+      // SecurityError::CannotDecodeExp => todo!(),
+      // SecurityError::ExpNotIso => todo!(),
+      // SecurityError::FailedToHashPassword => todo!(),
+      _ => DataError::server_error(value.to_string()),
+    }
   }
 }

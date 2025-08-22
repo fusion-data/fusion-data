@@ -50,6 +50,13 @@ macro_rules! generate_sqlite_bmc_common {
 				modelsql::base::sqlite_find_by_id::<Self, _>(mm, id.into()).await
 			}
 
+			pub async fn get_by_id(
+				mm: &modelsql::ModelManager,
+				id: impl Into<modelsql::id::Id>,
+			) -> modelsql::Result<Option<$entity>> {
+				modelsql::base::sqlite_get_by_id::<Self, _>(mm, id.into()).await
+			}
+
 			$(
 				pub async fn update_by_id(
 					mm: &modelsql::ModelManager,
@@ -63,7 +70,7 @@ macro_rules! generate_sqlite_bmc_common {
 			pub async fn delete_by_id(
 				mm: &modelsql::ModelManager,
 				id: impl Into<modelsql::id::Id>,
-			) -> modelsql::Result<()> {
+			) -> modelsql::Result<bool> {
 				modelsql::base::delete_by_id::<Self>(mm, id.into()).await
 			}
 
@@ -101,24 +108,24 @@ macro_rules! generate_sqlite_bmc_filter {
 			pub async fn find_many(
 				mm: &modelsql::ModelManager,
 				filter: Vec<$filter>,
-				list_options: Option<modelsql::filter::ListOptions>,
+				page: Option<modelsql::filter::Page>,
 			) -> modelsql::Result<Vec<$entity>> {
-				modelsql::base::sqlite_find_many::<Self, _, _>(mm, filter, list_options).await
+				modelsql::base::sqlite_find_many::<Self, _, _>(mm, filter, page).await
 			}
 
 			pub async fn count(
 				mm: &modelsql::ModelManager,
 				filter: Vec<$filter>,
-			) -> modelsql::Result<i64> {
+			) -> modelsql::Result<u64> {
 				modelsql::base::count::<Self, _>(mm, filter).await
 			}
 
 			pub async fn page(
 				mm: &modelsql::ModelManager,
 				filter: Vec<$filter>,
-				list_options: modelsql::filter::ListOptions,
+				page: modelsql::filter::Page,
 			) -> modelsql::Result<modelsql::page::PageResult<$entity>> {
-				modelsql::base::sqlite_page::<Self, _, _>(mm, filter, list_options).await
+				modelsql::base::sqlite_page::<Self, _, _>(mm, filter, page).await
 			}
 
 			pub async fn delete(

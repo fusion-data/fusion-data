@@ -1,0 +1,20 @@
+mod agents;
+mod gateway;
+mod jobs;
+mod system;
+mod task_instances;
+mod tasks;
+
+use ultimate_web::Router;
+
+use crate::application::ServerApplication;
+
+pub fn routes() -> Router<ServerApplication> {
+  Router::new()
+    .nest("/agents", agents::routes())
+    .nest("/jobs", jobs::routes())
+    .nest("/tasks", tasks::routes())
+    .nest("/task-instances", task_instances::routes())
+    .nest("/system", system::routes())
+    .nest("/gateway", gateway::routes())
+}

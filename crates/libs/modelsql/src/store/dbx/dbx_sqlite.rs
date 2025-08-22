@@ -10,12 +10,12 @@ use sqlx::{
   sqlite::{Sqlite, SqliteConnectOptions, SqlitePoolOptions},
 };
 
+use log::{debug, trace};
 use tokio::sync::Mutex;
-use tracing::{debug, trace};
 
 use crate::DbConfig;
 
-use super::{DbxError, DbxType, DbxTypeTrait, Result};
+use super::{DbxError, Result};
 
 type Db = Pool<Sqlite>;
 
@@ -56,12 +56,6 @@ pub struct DbxSqlite {
   db_pool: Db,
   txn_holder: Arc<Mutex<Option<TxnHolder>>>,
   txn: bool,
-}
-
-impl DbxTypeTrait for DbxSqlite {
-  fn dbx_type(&self) -> &DbxType {
-    &DbxType::Sqlite
-  }
 }
 
 impl DbxSqlite {

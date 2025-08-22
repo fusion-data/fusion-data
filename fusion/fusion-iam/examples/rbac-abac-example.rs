@@ -38,8 +38,8 @@ struct Database {
 
 impl Database {
   fn new() -> Self {
-    let mut users = HashMap::new();
-    let mut roles = HashMap::new();
+    let mut users = HashMap::default();
+    let mut roles = HashMap::default();
 
     // 创建用户和角色
     users.insert(1, User { id: 1, roles: vec![1, 2].into_iter().collect() });
@@ -124,7 +124,7 @@ fn main() {
     resource: "document".to_string(),
     action: "read".to_string(),
     attributes: {
-      let mut map = HashMap::new();
+      let mut map = HashMap::default();
       map.insert("user.clearance_level".to_string(), json!(5));
       map.insert("resource.classification".to_string(), json!("confidential"));
       map.insert("environment.time".to_string(), json!("14:00"));

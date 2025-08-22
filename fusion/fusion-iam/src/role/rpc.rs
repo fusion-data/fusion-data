@@ -1,6 +1,6 @@
 use fusiondata_context::ctx::CtxW;
 use modelsql::filter::OpValInt64;
-use prost_types::FieldMask;
+use protobuf::FieldMask;
 use tonic::{Request, Response, Status};
 use ultimate_core::component::Component;
 use ultimate_grpc::{GrpcServiceIntercepted, utils::field_mask_match_with};

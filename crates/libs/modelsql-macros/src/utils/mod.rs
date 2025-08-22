@@ -29,10 +29,10 @@ pub fn get_dinput_attribute<'a>(dinput: &'a DeriveInput, name: &str) -> Option<&
 }
 
 pub fn get_meta_value_string(nv: MetaNameValue) -> Option<String> {
-  if let Expr::Lit(exp_lit) = nv.value {
-    if let Lit::Str(lit_str) = exp_lit.lit {
-      return Some(lit_str.value());
-    }
+  if let Expr::Lit(exp_lit) = nv.value
+    && let Lit::Str(lit_str) = exp_lit.lit
+  {
+    return Some(lit_str.value());
   }
   None
 }

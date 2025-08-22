@@ -15,7 +15,6 @@ pub struct AuthSvc {
 }
 
 impl AuthSvc {
-  #[tracing::instrument(skip(self, ctx, req))]
   pub async fn signin(&self, ctx: CtxW, req: SigninRequest) -> Result<SigninResponse> {
     let (u, uc) = self.user_svc.get_fetch_credential(&ctx, UserFilter::from(&req)).await?;
     verify_pwd(&req.password, &uc.encrypted_pwd).await?;

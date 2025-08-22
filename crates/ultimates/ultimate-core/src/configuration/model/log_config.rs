@@ -1,9 +1,9 @@
+use log::Level;
 use serde::{
   Deserialize, Deserializer, Serialize,
   de::{Unexpected, Visitor},
 };
 use std::fmt::Display;
-use tracing::log::Level;
 
 fn default_log_dir() -> String {
   std::option_env!("ULTIMATE__LOG_DIR").unwrap_or_else(|| "./var/logs/").to_string()
@@ -11,6 +11,7 @@ fn default_log_dir() -> String {
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct LogConfig {
+  pub enable: bool,
   pub with_target: bool,
   pub with_file: bool,
   pub with_thread_ids: bool,
@@ -35,6 +36,10 @@ pub struct LogConfig {
 impl LogConfig {
   pub fn otel(&self) -> &OtelConfig {
     &self.otel
+  }
+
+  pub fn enable(&self) -> bool {
+    self.enable
   }
 }
 

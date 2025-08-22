@@ -16,12 +16,12 @@ pub use postgres::*;
 pub use sqlite::*;
 pub use utils::*;
 
-pub const LIST_LIMIT_DEFAULT: i64 = 1000;
-pub const LIST_LIMIT_MAX: i64 = 5000;
+pub const LIST_LIMIT_DEFAULT: u64 = 500;
+pub const LIST_LIMIT_MAX: u64 = 5000;
 
 #[derive(Iden)]
 pub enum CommonIden {
-  Id,
+  // Id,
   OwnerId,
   LogiscalDeletion,
   OptimisticLock,

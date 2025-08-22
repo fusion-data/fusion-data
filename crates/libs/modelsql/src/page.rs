@@ -1,24 +1,24 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Page {
-  pub total: i64,
+pub struct Paged {
+  pub total: u64,
 }
 
-impl Page {
-  pub fn new(total: i64) -> Self {
+impl Paged {
+  pub fn new(total: u64) -> Self {
     Self { total }
   }
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct PageResult<T> {
-  pub page: Page,
+  pub page: Paged,
   pub result: Vec<T>,
 }
 
 impl<T> PageResult<T> {
-  pub fn new(total: i64, result: Vec<T>) -> Self {
-    Self { page: Page { total }, result }
+  pub fn new(total: u64, result: Vec<T>) -> Self {
+    Self { page: Paged { total }, result }
   }
 }

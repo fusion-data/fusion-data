@@ -1,87 +1,85 @@
-use crate::{
-  SqlError,
-  field::{SeaField, SeaFields},
-  filter::ListOptions,
-  store::dbx::DbxType,
-};
-use sea_query::{DeleteStatement, DynIden, InsertStatement, IntoIden, SelectStatement, UpdateStatement, WithQuery};
+use modelsql_core::filter::Page;
+use sea_query::{DeleteStatement, InsertStatement, IntoIden, SelectStatement, UpdateStatement, WithQuery};
+#[cfg(any(feature = "with-postgres", feature = "with-sqlite"))]
 use sea_query_binder::{SqlxBinder, SqlxValues};
 use ultimate_common::ctx::Ctx;
 
 use crate::{
-  Result,
+  Result, SqlError,
   base::{CommonIden, DbBmc, TimestampIden},
+  field::{SeaField, SeaFields},
+  store::dbx::DbxProvider,
 };
 
-pub fn build_sqlx_for_update(dbx_type: &DbxType, query: UpdateStatement) -> (String, SqlxValues) {
+pub fn build_sqlx_for_update(dbx_type: &DbxProvider, query: UpdateStatement) -> (String, SqlxValues) {
   match dbx_type {
     #[cfg(feature = "with-postgres")]
-    DbxType::Postgres => {
+    DbxProvider::Postgres => {
       let (sql, values) = query.build_sqlx(sea_query::PostgresQueryBuilder);
       (sql, values)
     }
     #[cfg(feature = "with-sqlite")]
-    DbxType::Sqlite => {
+    DbxProvider::Sqlite => {
       let (sql, values) = query.build_sqlx(sea_query::SqliteQueryBuilder);
       (sql, values)
     }
   }
 }
 
-pub fn build_sqlx_for_select(dbx_type: &DbxType, query: SelectStatement) -> (String, SqlxValues) {
+pub fn build_sqlx_for_select(dbx_type: &DbxProvider, query: SelectStatement) -> (String, SqlxValues) {
   match dbx_type {
     #[cfg(feature = "with-postgres")]
-    DbxType::Postgres => {
+    DbxProvider::Postgres => {
       let (sql, values) = query.build_sqlx(sea_query::PostgresQueryBuilder);
       (sql, values)
     }
     #[cfg(feature = "with-sqlite")]
-    DbxType::Sqlite => {
+    DbxProvider::Sqlite => {
       let (sql, values) = query.build_sqlx(sea_query::SqliteQueryBuilder);
       (sql, values)
     }
   }
 }
 
-pub fn build_sqlx_for_query(dbx_type: &DbxType, query: WithQuery) -> (String, SqlxValues) {
+pub fn build_sqlx_for_query(dbx_type: &DbxProvider, query: WithQuery) -> (String, SqlxValues) {
   match dbx_type {
     #[cfg(feature = "with-postgres")]
-    DbxType::Postgres => {
+    DbxProvider::Postgres => {
       let (sql, values) = query.build_sqlx(sea_query::PostgresQueryBuilder);
       (sql, values)
     }
     #[cfg(feature = "with-sqlite")]
-    DbxType::Sqlite => {
+    DbxProvider::Sqlite => {
       let (sql, values) = query.build_sqlx(sea_query::SqliteQueryBuilder);
       (sql, values)
     }
   }
 }
 
-pub fn build_sqlx_for_delete(dbx_type: &DbxType, query: DeleteStatement) -> (String, SqlxValues) {
+pub fn build_sqlx_for_delete(dbx_type: &DbxProvider, query: DeleteStatement) -> (String, SqlxValues) {
   match dbx_type {
     #[cfg(feature = "with-postgres")]
-    DbxType::Postgres => {
+    DbxProvider::Postgres => {
       let (sql, values) = query.build_sqlx(sea_query::PostgresQueryBuilder);
       (sql, values)
     }
     #[cfg(feature = "with-sqlite")]
-    DbxType::Sqlite => {
+    DbxProvider::Sqlite => {
       let (sql, values) = query.build_sqlx(sea_query::SqliteQueryBuilder);
       (sql, values)
     }
   }
 }
 
-pub fn build_sqlx_for_insert(dbx_type: &DbxType, query: InsertStatement) -> (String, SqlxValues) {
+pub fn build_sqlx_for_insert(dbx_type: &DbxProvider, query: InsertStatement) -> (String, SqlxValues) {
   match dbx_type {
     #[cfg(feature = "with-postgres")]
-    DbxType::Postgres => {
+    DbxProvider::Postgres => {
       let (sql, values) = query.build_sqlx(sea_query::PostgresQueryBuilder);
       (sql, values)
     }
     #[cfg(feature = "with-sqlite")]
-    DbxType::Sqlite => {
+    DbxProvider::Sqlite => {
       let (sql, values) = query.build_sqlx(sea_query::SqliteQueryBuilder);
       (sql, values)
     }
@@ -93,74 +91,71 @@ pub fn prep_fields_for_create<MC>(mut fields: SeaFields, ctx: &Ctx) -> SeaFields
 where
   MC: DbBmc,
 {
-  if MC::has_owner_id() {
-    fields.push(SeaField::new(CommonIden::OwnerId.into_iden(), ctx.uid()));
-  }
+  fill_creations::<MC>(&mut fields, ctx);
 
-  if MC::has_creation_timestamps() {
-    fields = add_timestamps_for_create(fields, ctx);
-  }
-
-  if MC::filter_column_id() {
-    fields = SeaFields::new(fields.into_iter().filter(|f| f.iden.to_string() != "id").collect());
+  if MC::ID_GENERATED_BY_DB {
+    fields = SeaFields::new(fields.into_iter().filter(|f| f.iden.to_string() != MC::COLUMN_ID).collect());
   }
 
   fields
 }
 
-/// This method must be calledwhen a Model Controller plans to update its entity.
-pub fn prep_fields_for_update<MC>(fields: SeaFields, ctx: &Ctx) -> SeaFields
+/// This method must be called when a Model Controller plans to update its entity.
+pub fn prep_fields_for_update<MC>(mut fields: SeaFields, ctx: &Ctx) -> SeaFields
 where
   MC: DbBmc,
 {
-  if MC::has_creation_timestamps() { add_timestamps_for_update(fields, ctx) } else { fields }
+  fill_modifications::<MC>(&mut fields, ctx);
+  fields
 }
 
-pub fn clear_id_from_fields<MC>(fields: SeaFields) -> SeaFields {
+pub fn clear_id_from_fields<MC>(fields: SeaFields) -> SeaFields
+where
+  MC: DbBmc,
+{
   let mut fields = fields.into_vec();
-  fields.retain(|f| f.iden != CommonIden::Id.into_iden());
+  fields.retain(|f| f.iden != MC::COLUMN_ID.into_iden());
   SeaFields::new(fields)
 }
 
-fn _exists_in_fields(fields: &[SeaField], iden: DynIden) -> bool {
-  // let iden = iden.into_iden();
-  fields.iter().any(|f| f.iden == iden)
-}
-
-/// Update the timestamps info for create
-/// (e.g., cid, ctime, and mid, mtime will be updated with the same values)
-fn add_timestamps_for_create(fields: SeaFields, ctx: &Ctx) -> SeaFields {
-  let mut fields = fields.into_vec();
-  if !_exists_in_fields(&fields, TimestampIden::Cid.into_iden()) {
+/// Update the creations info for create
+/// (e.g., created_by, created_at, and updated_by, updated_at will be updated with the same values)
+fn fill_creations<MC>(fields: &mut SeaFields, ctx: &Ctx)
+where
+  MC: DbBmc,
+{
+  if MC::_has_owner_id() {
+    fields.push(SeaField::new(CommonIden::OwnerId.into_iden(), ctx.uid()));
+  }
+  if MC::_has_creation_id() && !fields.exists(TimestampIden::Cid.into_iden()) {
     fields.push(SeaField::new(TimestampIden::Cid, ctx.uid()));
   }
-  if !_exists_in_fields(&fields, TimestampIden::Ctime.into_iden()) {
+  if MC::_has_creation_timestamps() && !fields.exists(TimestampIden::Ctime.into_iden()) {
     fields.push(SeaField::new(TimestampIden::Ctime, *ctx.req_time()));
   }
-  SeaFields::new(fields)
 }
 
-/// Update the timestamps info only for update.
-/// (.e.g., only mid, mtime will be udpated)
-fn add_timestamps_for_update(fields: SeaFields, ctx: &Ctx) -> SeaFields {
-  let mut fields = fields.into_vec();
-  if !_exists_in_fields(&fields, TimestampIden::Mid.into_iden()) {
-    fields.push(SeaField::new(TimestampIden::Mid, ctx.uid()));
-  }
-  if !_exists_in_fields(&fields, TimestampIden::Mtime.into_iden()) {
-    fields.push(SeaField::new(TimestampIden::Mtime, *ctx.req_time()));
-  }
-  SeaFields::new(fields)
-}
-
-// #[tracing::instrument(skip(list_options))]
-pub fn compute_list_options<MC>(list_options: Option<ListOptions>) -> Result<ListOptions>
+/// Update the modifications info only for update.
+/// (.e.g., only updated_by, updated_at will be updated)
+fn fill_modifications<MC>(fields: &mut SeaFields, ctx: &Ctx)
 where
   MC: DbBmc,
 {
-  if let Some(mut list_options) = list_options {
+  if MC::_has_modification_id() && !fields.exists(TimestampIden::Mid.into_iden()) {
+    fields.push(SeaField::new(TimestampIden::Mid, ctx.uid()));
+  }
+  if MC::_has_modification_timestamps() && !fields.exists(TimestampIden::Mtime.into_iden()) {
+    fields.push(SeaField::new(TimestampIden::Mtime, *ctx.req_time()));
+  }
+}
+
+pub fn compute_page<MC>(page: Option<Page>) -> Result<Page>
+where
+  MC: DbBmc,
+{
+  if let Some(mut page) = page {
     // Validate the limit.
-    if let Some(limit) = list_options.limit {
+    if let Some(limit) = page.limit {
       if limit > MC::LIST_LIMIT_MAX {
         return Err(SqlError::ListLimitOverMax { max: MC::LIST_LIMIT_MAX, actual: limit });
       } else if limit < 1 {
@@ -168,17 +163,17 @@ where
       }
     } else {
       // Set the default limit if no limit
-      list_options.limit = Some(MC::LIST_LIMIT_DEFAULT);
+      page.limit = Some(MC::LIST_LIMIT_DEFAULT);
     }
-    if let Some(page) = list_options.page {
-      if page < 1 {
-        return Err(SqlError::ListPageUnderMin { min: 1, actual: page });
-      }
+    if let Some(page) = page.page
+      && page < 1
+    {
+      return Err(SqlError::ListPageUnderMin { min: 1, actual: page });
     }
-    Ok(list_options)
+    Ok(page)
   } else {
     // When None, return default
-    Ok(ListOptions { limit: Some(MC::LIST_LIMIT_DEFAULT), ..Default::default() })
+    Ok(Page { limit: Some(MC::LIST_LIMIT_DEFAULT), ..Default::default() })
   }
 }
 

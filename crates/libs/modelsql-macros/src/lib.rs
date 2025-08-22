@@ -14,7 +14,7 @@ pub fn derive_filter_nodes(input: TokenStream) -> TokenStream {
   derive_filter_nodes_inner(input)
 }
 
-// region:    --- with-seaquery
+// region:    --- with-sea-query
 
 #[proc_macro_derive(Fields, attributes(field, modelsql))]
 pub fn derive_fields(input: TokenStream) -> TokenStream {
@@ -43,4 +43,4 @@ pub fn derive_field_sea_value(input: TokenStream) -> TokenStream {
   derives_field::derive_field_sea_value_inner(input)
 }
 
-// endregion: --- with-seaquery
+// endregion: --- with-sea-query

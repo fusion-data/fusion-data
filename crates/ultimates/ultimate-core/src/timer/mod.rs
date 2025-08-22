@@ -33,7 +33,7 @@ impl TimerRef {
   ///
   /// The first time, the `state` will be trigerreed after `delay` expires,
   /// and then again every `timeout` time units after, unless the
-  /// [TimerReturn](TimerReturn) given specifies otherwise.
+  /// [TimerReturn] given specifies otherwise.
   ///
   /// # Note
   ///

@@ -79,12 +79,14 @@ pub fn decode_jwt_hs256(
 
 #[cfg(test)]
 mod tests {
-  use super::*;
-  use crate::configuration::{KeyConf, SecurityConfig, load_config};
   use std::{
     sync::OnceLock,
     time::{Duration, SystemTime},
   };
+
+  use crate::configuration::{KeyConf, SecurityConfig, load_config};
+
+  use super::*;
 
   #[test]
   fn test_jwe_ecdh_es() -> anyhow::Result<()> {
@@ -139,7 +141,7 @@ mod tests {
 
     // Signing JWT
     let jwt = encode_jwt_es256(sc.token().private_key(), &jwt_payload)?;
-    println!("ES256 JWT signre is: {}", jwt);
+    println!("ES256 JWT signer is: {}", jwt);
 
     // Verifing JWT
     let (payload, header) = decode_jwt_es256(sc.token().public_key(), jwt)?;

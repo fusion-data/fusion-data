@@ -10,7 +10,7 @@ pub struct ProjectFilter {
   name: Option<OpValsString>,
 
   #[modelsql(to_sea_condition_fn = "my_to_sea_condition")]
-  ctime: Option<OpValsValue>,
+  created_at: Option<OpValsValue>,
 }
 
 fn my_to_sea_condition(col: &ColumnRef, op_val_value: OpValValue) -> SeaResult<ConditionExpression> {
@@ -38,7 +38,7 @@ fn my_to_sea_condition(col: &ColumnRef, op_val_value: OpValValue) -> SeaResult<C
 fn test_expand_filter_nodes() -> Result<()> {
   let _filter = ProjectFilter {
     id: Some(123.into()),
-    ctime: Some(OpValValue::Eq(serde_json::Value::from("some-date")).into()),
+    created_at: Some(OpValValue::Eq(serde_json::Value::from("some-date")).into()),
     ..Default::default()
   };
 

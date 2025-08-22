@@ -29,7 +29,6 @@ impl AuthRpc {
 
 #[tonic::async_trait]
 impl Auth for AuthRpc {
-  #[tracing::instrument(skip(self, request))]
   async fn signin(&self, request: Request<SigninRequest>) -> Result<Response<SigninResponse>, Status> {
     let req_meta = RequestMetadata::from(request.metadata());
     let ctx = CtxW::new(self.mm.clone(), Arc::new(req_meta));

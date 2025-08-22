@@ -1,52 +1,70 @@
 use std::sync::OnceLock;
 
-use argon2::password_hash::{SaltString, rand_core::OsRng};
+use argon2::password_hash::SaltString;
 use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier, password_hash};
+use log::{error, trace};
+use rand::RngCore;
 use regex::Regex;
-use tracing::{error, trace};
 
-use super::{Error, Result};
+use super::{Error, INVARIANT_VIOLATED_MSG, RECOMMENDED_LENGTH, Result};
 
 const CUR_PWD_VERSION: u16 = 1;
 
+/// 生成密码。密码格式为：#<version>#<hash>
 pub async fn generate_pwd(password: &str) -> Result<String> {
-  let hash = try_to_hash(password).await?;
+  let hash = try_to_hash(password.to_owned()).await?;
   Ok(format!("#{}#{}", CUR_PWD_VERSION, hash))
 }
 
+/// 验证密码。成功返回密码版本，失败返回错误。
 pub async fn verify_pwd(password: &str, hashed_pwd: &str) -> Result<u16> {
   let (version, hash) = split_pwd_version(hashed_pwd);
-  if verify(password.as_bytes(), hash).await? { Ok(version) } else { Err(Error::InvalidPassword) }
+  if verify(password.to_owned(), hash.to_owned()).await? { Ok(version) } else { Err(Error::InvalidPassword) }
 }
 
-pub(crate) async fn try_to_hash(password: &str) -> Result<String> {
-  let salt = SaltString::generate(&mut OsRng);
-  let hash = Argon2::default()
-    .hash_password(password.as_bytes(), &salt)
-    .map_err(|e| {
-      error!("Failed to hash password: {}", e.to_string());
-      Error::FailedToHashPassword
-    })?
-    .to_string();
-  Ok(hash)
+pub(crate) async fn try_to_hash(plain_pwd: String) -> Result<String> {
+  tokio::task::spawn_blocking(move || {
+    let salt = generate_salt();
+    let hash = Argon2::default()
+      .hash_password(plain_pwd.as_bytes(), &salt)
+      .map_err(|e| {
+        error!("Failed to hash password: {}", e);
+        Error::FailedToHashPassword
+      })?
+      .to_string();
+    Ok(hash)
+  })
+  .await
+  .unwrap()
 }
 
-pub(crate) async fn verify(password: &[u8], hash: &str) -> Result<bool> {
-  let hash = PasswordHash::new(hash).map_err(|e| {
-    error!("BUG: password hash invalid: {}", e.to_string());
-    Error::InvalidFormat
-  })?;
+fn generate_salt() -> SaltString {
+  let mut rng = rand::rng();
+  let mut bytes = [0u8; RECOMMENDED_LENGTH];
+  rng.fill_bytes(&mut bytes);
+  SaltString::encode_b64(&bytes).expect(INVARIANT_VIOLATED_MSG)
+}
 
-  let res = Argon2::default().verify_password(password, &hash);
+pub(crate) async fn verify(plain_pwd: String, hashed_pwd: String) -> Result<bool> {
+  tokio::task::spawn_blocking(move || {
+    let hash = PasswordHash::new(&hashed_pwd).map_err(|e| {
+      error!("BUG: password hash invalid: {}", e);
+      Error::InvalidFormat
+    })?;
 
-  match res {
-    Ok(()) => Ok(true),
-    Err(password_hash::Error::Password) => Ok(false),
-    Err(e) => {
-      error!("Failed to verify password: {}", e.to_string());
-      Err(Error::FailedToVerifyPassword)
+    let res = Argon2::default().verify_password(plain_pwd.as_bytes(), &hash);
+
+    match res {
+      Ok(()) => Ok(true),
+      Err(password_hash::Error::Password) => Ok(false),
+      Err(e) => {
+        error!("Failed to verify password: {}", e);
+        Err(Error::FailedToVerifyPassword)
+      }
     }
-  }
+  })
+  .await
+  .unwrap()
 }
 
 static SPLIT_PWD_RE: OnceLock<Regex> = OnceLock::new();

@@ -1,8 +1,7 @@
 use std::{env, path::Path};
 
 use config::{Config, ConfigBuilder, Environment, File, FileFormat, builder::DefaultState};
-use log::trace;
-use tracing::debug;
+use log::{debug, trace};
 use ultimate_common::runtime;
 
 use super::ConfigureResult;
@@ -10,7 +9,7 @@ use super::ConfigureResult;
 /// 加载配置
 ///
 /// [crate::RunModel]
-pub fn load_config() -> ConfigureResult<Config> {
+pub(crate) fn load_config() -> ConfigureResult<Config> {
   let mut b = Config::builder().add_source(load_default_source());
 
   // load from default files, if exists
@@ -37,7 +36,7 @@ pub fn load_config() -> ConfigureResult<Config> {
     }
   }
 
-  b = add_enviroment(b);
+  b = add_environment(b);
 
   let c = b.build()?;
 
@@ -48,11 +47,11 @@ pub fn load_config() -> ConfigureResult<Config> {
 
 fn load_from_files(files: &[String], mut b: ConfigBuilder<DefaultState>) -> ConfigBuilder<DefaultState> {
   for file in files {
-    if let Ok(path) = runtime::cargo_manifest_dir().map(|dir| dir.join("resources").join(file)) {
-      if path.exists() {
-        b = b.add_source(File::from(path));
-        break;
-      }
+    if let Ok(path) = runtime::cargo_manifest_dir().map(|dir| dir.join("resources").join(file))
+      && path.exists()
+    {
+      b = b.add_source(File::from(path));
+      break;
     }
   }
 
@@ -72,7 +71,7 @@ pub fn load_default_source() -> File<config::FileSourceString, FileFormat> {
   File::from_str(text, FileFormat::Toml)
 }
 
-pub fn add_enviroment(b: ConfigBuilder<DefaultState>) -> ConfigBuilder<DefaultState> {
+pub fn add_environment(b: ConfigBuilder<DefaultState>) -> ConfigBuilder<DefaultState> {
   let mut env = Environment::default();
   env = env.separator("__");
   b.add_source(env)

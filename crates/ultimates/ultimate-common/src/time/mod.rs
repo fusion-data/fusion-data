@@ -3,13 +3,13 @@ pub mod ser;
 
 use std::sync::OnceLock;
 
-use chrono::TimeZone;
-pub use chrono::{DateTime, Duration, FixedOffset, Local, Utc};
+pub use chrono::{DateTime, Duration, FixedOffset, Local, NaiveDate, NaiveTime, Offset, TimeDelta, TimeZone, Utc};
 
 use super::Result;
 
 pub type OffsetDateTime = DateTime<FixedOffset>;
 pub type UtcDateTime = DateTime<Utc>;
+pub type LocalDateTime = DateTime<Local>;
 
 static LOCAL_OFFSET: OnceLock<FixedOffset> = OnceLock::new();
 
@@ -18,7 +18,7 @@ pub fn local_offset() -> &'static FixedOffset {
 }
 
 fn _local_offset() -> FixedOffset {
-  FixedOffset::east_opt(3600 * 8).unwrap()
+  Local::now().offset().fix()
 }
 
 #[inline]
@@ -27,13 +27,13 @@ pub fn now_utc() -> UtcDateTime {
 }
 
 #[inline]
-pub fn now_local() -> OffsetDateTime {
+pub fn now_offset() -> OffsetDateTime {
   Local::now().with_timezone(local_offset())
 }
 
 #[inline]
-pub fn now() -> UtcDateTime {
-  Utc::now()
+pub fn now() -> OffsetDateTime {
+  now_offset()
 }
 
 pub fn now_epoch_millis() -> i64 {
@@ -60,23 +60,17 @@ pub fn now_utc_plus_sec_str(sec: u64) -> Result<String> {
   format_time(new_time)
 }
 
-pub fn from_milliseconds(milliseconds: i64) -> DateTime<Utc> {
+pub fn utc_from_millis(milliseconds: i64) -> DateTime<Utc> {
   DateTime::<Utc>::MIN_UTC + Duration::milliseconds(milliseconds)
+}
+
+pub fn datetime_from_millis(milliseconds: i64) -> DateTime<FixedOffset> {
+  utc_from_millis(milliseconds).with_timezone(local_offset())
 }
 
 pub fn parse_utc(moment: &str) -> Result<UtcDateTime> {
   let time = moment.parse::<UtcDateTime>()?;
   Ok(time)
-}
-
-#[cfg(feature = "prost")]
-pub fn to_prost_timestamp(d: &UtcDateTime) -> prost_types::Timestamp {
-  prost_types::Timestamp { seconds: d.timestamp(), nanos: d.timestamp_subsec_nanos() as i32 }
-}
-
-#[cfg(feature = "prost")]
-pub fn from_prost_timestamp(t: &prost_types::Timestamp) -> Option<UtcDateTime> {
-  DateTime::from_timestamp(t.seconds, t.nanos as u32)
 }
 
 #[cfg(test)]
@@ -86,9 +80,15 @@ mod tests {
   #[test]
   fn test_convert_std() {
     let now_utc = now_utc();
-    println!("now is: {}", now_utc);
+    println!("now utc is:\t{}", now_utc);
 
-    let now_local = now();
-    println!("now is {}", now_local);
+    let now_offset = now_offset();
+    println!("now offset is:\t{}", now_offset);
+
+    let now = now();
+    println!("now is:\t\t{}", now);
+
+    let offset_datetime: LocalDateTime = "2025-06-04T03:58:19.117041+00:00".parse().unwrap();
+    println!("Offset DateTime is {}", offset_datetime);
   }
 }

@@ -1,10 +1,10 @@
-use crate::utils::modql_field::ModqlFieldProp;
-use crate::utils::struct_modql_attr::{StructModqlFieldProps, get_struct_modql_props};
+use crate::utils::modql_field::ModelsqlFieldProp;
+use crate::utils::struct_modql_attr::{StructModqlFieldProps, get_struct_modelsql_props};
 use crate::utils::{get_struct_fields, modql_field};
 use proc_macro::TokenStream;
 use proc_macro2::{Ident, Span};
 use quote::quote;
-use syn::{DeriveInput, parse_macro_input};
+use syn::{DeriveInput, Field, parse_macro_input};
 
 pub(crate) fn derive_fields_inner(input: TokenStream) -> TokenStream {
   let ast = parse_macro_input!(input as DeriveInput);
@@ -14,21 +14,24 @@ pub(crate) fn derive_fields_inner(input: TokenStream) -> TokenStream {
 
   // -- Collect Elements
   // Properties for all fields (with potential additional info with #[field(...)])
-  let field_props = modql_field::get_modql_field_props(fields);
-  let struct_modql_prop = get_struct_modql_props(&ast).unwrap();
+  let modelsql_fields_and_skips = modql_field::get_modelsql_field_props_and_skips(fields);
+  let field_props = modelsql_fields_and_skips.modelsql_fields; //modql_field::get_modelsql_field_props(fields);
+  let field_mask_field = modelsql_fields_and_skips.field_mask_field;
+
+  let struct_modelsql_prop = get_struct_modelsql_props(&ast).unwrap();
 
   // Will be "" if none (this if for the struct #[modelsql(table = ...)])
 
-  let impl_has_fields = impl_has_fields(struct_name, &struct_modql_prop, &field_props);
+  let impl_has_fields = impl_has_fields(struct_name, &struct_modelsql_prop, &field_props);
 
-  let impl_names_as_consts = if let Some(names_as_consts) = struct_modql_prop.names_as_consts.as_deref() {
+  let impl_names_as_consts = if let Some(names_as_consts) = struct_modelsql_prop.names_as_consts.as_deref() {
     //
     impl_names_as_consts(struct_name, &field_props, names_as_consts)
   } else {
     quote! {}
   };
 
-  let impl_sea_fields = impl_has_sea_fields(struct_name, &struct_modql_prop, &field_props);
+  let impl_sea_fields = impl_has_sea_fields(struct_name, &struct_modelsql_prop, &field_props, field_mask_field);
 
   let output = quote! {
     #impl_has_fields
@@ -43,7 +46,7 @@ pub(crate) fn derive_fields_inner(input: TokenStream) -> TokenStream {
 
 fn impl_names_as_consts(
   struct_name: &Ident,
-  field_props: &[ModqlFieldProp<'_>],
+  field_props: &[ModelsqlFieldProp<'_>],
   prop_name_prefix: &str,
 ) -> proc_macro2::TokenStream {
   // If prefix not empty, amek sure it ends with `_`
@@ -74,7 +77,7 @@ fn impl_names_as_consts(
 fn impl_has_fields(
   struct_name: &Ident,
   struct_modql_prop: &StructModqlFieldProps,
-  field_props: &[ModqlFieldProp<'_>],
+  field_props: &[ModelsqlFieldProp<'_>],
 ) -> proc_macro2::TokenStream {
   let props_all_names: Vec<&String> = field_props.iter().map(|p| &p.name).collect();
 
@@ -168,7 +171,8 @@ fn impl_has_fields(
 fn impl_has_sea_fields(
   struct_name: &Ident,
   struct_modql_prop: &StructModqlFieldProps,
-  field_props: &[ModqlFieldProp<'_>],
+  field_props: &[ModelsqlFieldProp<'_>],
+  field_mask_field: Option<&Field>,
 ) -> proc_macro2::TokenStream {
   let prop_all_names: Vec<&String> = field_props.iter().map(|p| &p.name).collect();
 
@@ -183,7 +187,7 @@ fn impl_has_sea_fields(
     })
     .collect();
 
-  fn field_options_quote(mfield_prop: &ModqlFieldProp) -> proc_macro2::TokenStream {
+  fn field_options_quote(mfield_prop: &ModelsqlFieldProp) -> proc_macro2::TokenStream {
     if let Some(cast_as) = &mfield_prop.cast_as {
       quote! { modelsql::field::FieldOptions { cast_as: Some(#cast_as.to_string()) } }
     } else {
@@ -212,17 +216,78 @@ fn impl_has_sea_fields(
 
     if p.is_option {
       quote! {
-          if let Some(val) = self.#ident {
-            ff.push(
-              modelsql::field::SeaField::new_with_options(modelsql::SIden(#name), val.into(), #field_options_q)
-            );
-          }
+        if let Some(val) = self.#ident {
+          ff.push(
+            modelsql::field::SeaField::new_with_options(modelsql::SIden(#name), val.into(), #field_options_q)
+          );
+        }
       }
     } else {
       quote! {
-          ff.push(
-            modelsql::field::SeaField::new_with_options(modelsql::SIden(#name), self.#ident.into(), #field_options_q)
-          );
+        ff.push(
+          modelsql::field::SeaField::new_with_options(modelsql::SIden(#name), self.#ident.into(), #field_options_q)
+        );
+      }
+    }
+  });
+
+  // -- The sea_fields_with_mask quotes!
+  let field_mask_ident = field_mask_field.and_then(|f| f.ident.clone());
+  let is_option_field_mask = field_mask_field.is_some_and(|f| match &f.ty {
+    syn::Type::Path(type_path) => type_path.path.segments.last().is_some_and(|segment| segment.ident == "Option"),
+    _ => false,
+  });
+  let sea_fields_with_mask_quotes = field_props.iter().map(|p| {
+    let name = &p.name;
+    let field_options_q = field_options_quote(p);
+    let ident = p.ident;
+
+    // 生成推送字段的表达式
+    let create_field_expr = |value_expr: proc_macro2::TokenStream| {
+      quote! {
+        ff.push(
+          modelsql::field::SeaField::new_with_options(modelsql::SIden(#name), #value_expr.into(), #field_options_q)
+        );
+      }
+    };
+
+    match (field_mask_ident.as_ref(), is_option_field_mask, p.is_option) {
+      // 没有 field mask
+      (None, _, true) => {
+        let field_expr = create_field_expr(quote! { val });
+        quote! {
+          if let Some(val) = self.#ident {
+            #field_expr
+          }
+        }
+      }
+      (None, _, false) => create_field_expr(quote! { self.#ident }),
+
+      // 有 field mask，且是 Option<FieldMask>
+      (Some(mask_ident), true, p_is_option) => {
+        let field_expr_set_value = create_field_expr(quote! { val });
+        let field_expr = create_field_expr(quote! { self.#ident });
+        quote! {
+          if self.#mask_ident.is_none() && #p_is_option {
+            if let Some(val) = self.#ident {
+              #field_expr_set_value
+            }
+          } else {
+            if self.#mask_ident.as_ref().map_or(true, |mask| mask.hit(#name)) {
+              #field_expr
+            }
+          }
+        }
+      }
+
+      // 有 field mask，且不是 Option (直接是 FieldMask)
+      (Some(mask_ident), false, _) => {
+        let field_expr = create_field_expr(quote! { self.#ident });
+        quote! {
+          if self.#mask_ident.hit(#name) {
+            #field_expr
+          }
+        }
       }
     }
   });
@@ -235,6 +300,12 @@ fn impl_has_sea_fields(
       fn not_none_sea_fields(self) -> modelsql::field::SeaFields {
         let mut ff: Vec<modelsql::field::SeaField> = Vec::new();
         #(#not_none_fields_quotes)*
+        modelsql::field::SeaFields::new(ff)
+      }
+
+      fn sea_fields_with_mask(self) -> modelsql::field::SeaFields {
+        let mut ff: Vec<modelsql::field::SeaField> = Vec::new();
+        #(#sea_fields_with_mask_quotes)*
         modelsql::field::SeaFields::new(ff)
       }
 

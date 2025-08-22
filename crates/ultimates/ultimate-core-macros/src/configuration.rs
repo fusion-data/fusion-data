@@ -19,12 +19,11 @@ pub(crate) fn expand_derive(input: syn::DeriveInput) -> syn::Result<TokenStream>
 fn get_prefix(input: &syn::DeriveInput) -> syn::Result<syn::LitStr> {
   let attr = input.attrs.iter().filter(|attr| attr.path().is_ident("config_prefix")).next_back();
 
-  if let Some(syn::Attribute { meta: syn::Meta::NameValue(name_value), .. }) = attr {
-    if name_value.path.is_ident("config_prefix") {
-      if let syn::Expr::Lit(syn::ExprLit { lit: syn::Lit::Str(lit), .. }) = &name_value.value {
-        return Ok(lit.clone());
-      }
-    }
+  if let Some(syn::Attribute { meta: syn::Meta::NameValue(name_value), .. }) = attr
+    && name_value.path.is_ident("config_prefix")
+    && let syn::Expr::Lit(syn::ExprLit { lit: syn::Lit::Str(lit), .. }) = &name_value.value
+  {
+    return Ok(lit.clone());
   }
 
   Err(syn::Error::new(Span::call_site(), "missing attribute for Configuration, expected: #[config_prefix=\"prefix\"]"))

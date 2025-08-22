@@ -129,7 +129,7 @@ impl<'de> Deserialize<'de> for SensitiveString {
       type Value = SensitiveString;
 
       fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-        formatter.write_str("Unsupport type, need string.")
+        formatter.write_str("Unsupported type, need string.")
       }
 
       fn visit_string<E>(self, v: String) -> Result<Self::Value, E>

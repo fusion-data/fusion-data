@@ -9,13 +9,13 @@ services:
     env_file:
       - ./scripts/.env
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - fusiondata-pg-data:/var/lib/postgresql/data
     networks:
       - fusiondata
     ports:
       - "45432:45432"
   # jaeger:
-  #   image: jaegertracing/all-in-one:1.62.0
+  #   image: jaegertracing/all-in-one:latest
   #   restart: unless-stopped
   #   networks:
   #     - fusiondata
@@ -32,17 +32,9 @@ services:
   #     - 14268:14268
   #     - 14269:14269
   #     - 9411:9411
-  # rocky_9_x86_64:
-  #   image: rockylinux:9
-  #   platform: linux/amd64
-  #   container_name: "rocky_9_x86_64"
-  #   command: ["tail", "-f", "/dev/null"]
-  #   volumes:
-  #     - x86_64:/data
 
 networks:
   fusiondata:
 
 volumes:
-  postgres-data:
-  x86_64:
+  fusiondata-pg-data:

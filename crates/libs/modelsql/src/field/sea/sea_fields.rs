@@ -55,6 +55,10 @@ impl SeaFields {
   pub fn zip(self) -> impl Iterator<Item = (DynIden, SimpleExpr)> {
     self.0.into_iter().map(|f| (f.iden, f.value))
   }
+
+  pub fn exists(&self, iden: DynIden) -> bool {
+    self.0.iter().any(|f| f.iden == iden)
+  }
 }
 
 impl IntoIterator for SeaFields {
