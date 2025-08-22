@@ -256,7 +256,7 @@ impl LoadBalancer {
     let namespaces_per_server = all_namespaces.len().div_ceil(servers.len()); // 向上取整
 
     // 分配 namespaces 到服务器
-    let mut namespace_assignments: HashMap<Uuid, Vec<Uuid>> = HashMap::new();
+    let mut namespace_assignments: HashMap<Uuid, Vec<Uuid>> = HashMap::default();
 
     for (i, namespace_id) in all_namespaces.iter().enumerate() {
       let server_index = i / namespaces_per_server;

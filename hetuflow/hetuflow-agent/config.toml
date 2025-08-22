@@ -1,0 +1,113 @@
+# HetuFlow Agent 配置文件示例
+# 此文件展示了所有可用的配置选项及其默认值
+
+[agent]
+# Agent 基本信息
+id = "agent-001"                    # Agent 唯一标识符
+name = "HetuFlow Agent 001"          # Agent 显示名称
+labels = ["linux", "x86_64", "dev"] # Agent 标签，用于任务调度
+version = "1.0.0"                   # Agent 版本
+
+[connection]
+# 连接管理配置
+gateway_url = "ws://localhost:8080/agent/ws"  # Gateway WebSocket 地址
+connection_timeout = 30                       # 连接超时时间（秒）
+heartbeat_interval = 30                       # 心跳间隔（秒）
+reconnect_interval = 5                        # 重连间隔（秒）
+max_reconnect_attempts = 10                   # 最大重连次数
+message_buffer_size = 1000                    # 消息缓冲区大小
+
+[polling]
+# 任务轮询配置
+interval = 10                        # 轮询间隔（秒）
+max_concurrent_tasks = 5             # 最大并发任务数
+capacity_cpu_weight = 0.6           # CPU 容量权重
+capacity_memory_weight = 0.4        # 内存容量权重
+load_factor_threshold = 0.8         # 负载因子阈值
+task_timeout = 3600                 # 任务超时时间（秒）
+
+[retry]
+# 重试机制配置
+max_attempts = 3                    # 最大重试次数
+backoff_strategy = "exponential"    # 退避策略：fixed, linear, exponential
+base_delay = 1000                   # 基础延迟（毫秒）
+max_delay = 60000                   # 最大延迟（毫秒）
+jitter = true                       # 是否启用抖动
+
+# 重试条件配置
+[retry.conditions]
+exit_codes = [1, 2, 130]           # 触发重试的退出码
+timeout = true                      # 超时是否重试
+process_killed = true               # 进程被杀死是否重试
+resource_insufficient = true        # 资源不足是否重试
+network_error = true                # 网络错误是否重试
+
+[process]
+# 进程管理配置
+max_processes = 10                  # 最大进程数
+cleanup_interval = 60               # 僵尸进程清理间隔（秒）
+resource_check_interval = 30        # 资源检查间隔（秒）
+work_directory = "/tmp/hetuflow"     # 工作目录
+output_buffer_size = 1048576        # 输出缓冲区大小（字节）
+
+# 环境变量配置
+[process.environment]
+PATH = "/usr/local/bin:/usr/bin:/bin"
+HOME = "/tmp/hetuflow"
+TMPDIR = "/tmp"
+
+# 资源限制配置
+[process.limits]
+max_memory = 2147483648             # 最大内存使用（字节，2GB）
+max_cpu_time = 7200                 # 最大CPU时间（秒，2小时）
+max_file_size = 1073741824          # 最大文件大小（字节，1GB）
+max_open_files = 1024               # 最大打开文件数
+
+[task]
+# 任务执行配置
+default_timeout = 1800              # 默认任务超时时间（秒，30分钟）
+max_output_size = 10485760          # 最大输出大小（字节，10MB）
+kill_timeout = 30                   # 强制杀死进程超时时间（秒）
+status_report_interval = 10         # 状态上报间隔（秒）
+
+[logging]
+# 日志配置
+level = "info"                      # 日志级别：trace, debug, info, warn, error
+target = "console"                  # 日志输出目标：console, file, both
+file_path = "logs/hetuflow-agent.log"  # 日志文件路径
+max_file_size = 104857600           # 最大日志文件大小（字节，100MB）
+max_files = 10                      # 最大日志文件数量
+rotation = "daily"                  # 日志轮转策略：daily, hourly, size
+
+# 日志格式配置
+[logging.format]
+timestamp = true                    # 是否包含时间戳
+level = true                        # 是否包含日志级别
+target = true                       # 是否包含目标模块
+thread_id = false                   # 是否包含线程ID
+file_line = false                   # 是否包含文件和行号
+
+# 高级配置
+[advanced]
+# 性能调优
+worker_threads = 4                  # 工作线程数（0表示使用CPU核心数）
+max_blocking_threads = 512          # 最大阻塞线程数
+thread_stack_size = 2097152         # 线程栈大小（字节，2MB）
+
+# 监控配置
+metrics_enabled = true              # 是否启用指标收集
+metrics_interval = 60               # 指标收集间隔（秒）
+health_check_port = 8081            # 健康检查端口
+
+# 安全配置
+[security]
+# TLS 配置（如果需要）
+enable_tls = false                  # 是否启用TLS
+cert_file = ""                      # 证书文件路径
+key_file = ""                       # 私钥文件路径
+ca_file = ""                        # CA证书文件路径
+verify_peer = true                  # 是否验证对等证书
+
+# 认证配置
+auth_token = ""                     # 认证令牌
+auth_method = "token"               # 认证方法：token, cert, none

@@ -31,7 +31,7 @@ create table sched_agent (
   host varchar(255) not null,
   port int not null,
   status int not null default 100, -- 见 AgentStatus
-  capabilities jsonb, -- Agent 能力描述
+  capabilities jsonb not null, -- Agent 能力描述
   last_heartbeat timestamptz default now(),
   created_by bigint not null,
   created_at timestamptz not null default now(),

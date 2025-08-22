@@ -51,21 +51,12 @@ pub struct AgentEntity {
   pub host: String,
   pub port: i32,
   pub status: AgentStatus,
-  pub capabilities: Option<AgentCapabilities>,
+  pub capabilities: AgentCapabilities,
   pub last_heartbeat: OffsetDateTime,
   pub created_by: i64,
   pub created_at: OffsetDateTime,
   pub updated_by: Option<i64>,
   pub updated_at: Option<OffsetDateTime>,
-}
-
-impl AgentEntity {
-  pub fn capabilities(&self) -> AgentCapabilities {
-    match self.capabilities.as_ref() {
-      Some(capabilities) => capabilities.clone(),
-      None => AgentCapabilities::default(),
-    }
-  }
 }
 
 /// Agent 创建模型
@@ -85,7 +76,7 @@ pub struct AgentForCreate {
   #[garde(skip)]
   pub status: AgentStatus,
   #[garde(skip)]
-  pub capabilities: Option<serde_json::Value>,
+  pub capabilities: AgentCapabilities,
 }
 
 /// Agent 更新模型
@@ -97,7 +88,7 @@ pub struct AgentForUpdate {
   pub host: Option<String>,
   pub port: Option<i32>,
   pub status: Option<AgentStatus>,
-  pub capabilities: Option<serde_json::Value>,
+  pub capabilities: Option<AgentCapabilities>,
   pub last_heartbeat: Option<OffsetDateTime>,
   pub update_mask: Option<FieldMask>,
 }

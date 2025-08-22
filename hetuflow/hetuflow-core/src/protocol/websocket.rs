@@ -72,12 +72,24 @@ pub struct WebSocketEvent {
 }
 
 impl WebSocketEvent {
-  pub fn new(kind: EventKind, payload: serde_json::Value) -> Self {
-    Self { event_id: Uuid::now_v7(), timestamp: now_epoch_millis(), kind, payload, metadata: HashMap::default() }
+  pub fn new<T: Serialize>(kind: EventKind, payload: T) -> Self {
+    Self {
+      event_id: Uuid::now_v7(),
+      timestamp: now_epoch_millis(),
+      kind,
+      payload: serde_json::to_value(payload).unwrap(),
+      metadata: HashMap::default(),
+    }
   }
 
-  pub fn new_with_id(event_id: Uuid, message_kind: EventKind, payload: serde_json::Value) -> Self {
-    Self { event_id, timestamp: now_epoch_millis(), kind: message_kind, payload, metadata: HashMap::default() }
+  pub fn new_with_id<T: Serialize>(event_id: Uuid, kind: EventKind, payload: T) -> Self {
+    Self {
+      event_id,
+      timestamp: now_epoch_millis(),
+      kind,
+      payload: serde_json::to_value(payload).unwrap(),
+      metadata: HashMap::default(),
+    }
   }
 
   pub fn with_metadata(mut self, metadata: HashMap<String, String>) -> Self {

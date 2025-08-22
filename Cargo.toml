@@ -142,6 +142,7 @@ tokio = { version = "1.47", features = [
   "fs",              # File system operations
   "time",            # Time utilities
   "sync",            # Synchronization primitives
+  "process",         # Process primitives
 ] }
 tokio-tungstenite = { version = "0.27" }
 tokio-stream = { version = "0.1", features = ["full"] }

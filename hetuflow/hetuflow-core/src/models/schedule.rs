@@ -33,7 +33,7 @@ pub struct ScheduleEntity {
   pub interval_secs: Option<i32>,
 
   /// ScheduleKind::Interval 时有效
-  /// 最大执行次数，为 1 时表示只执行一次，为 None 时表示无限执行
+  /// 最大执行次数，为 1 时表示只执行一次，为 None 时表示无限执行。
   pub max_count: Option<i32>,
 
   pub created_by: i64,

@@ -95,6 +95,88 @@ pub struct TaskPollResponse {
   pub next_poll_interval: u32,         // 下次拉取间隔(秒)
 }
 
+/// 创建任务实例请求
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct CreateTaskInstanceRequest {
+  pub task_id: Uuid,          // 任务ID
+  pub agent_id: Uuid,         // Agent ID
+  pub retry_count: i32,       // 重试次数
+  pub reason: Option<String>, // 创建原因
+}
+
+/// 创建任务实例响应
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct CreateTaskInstanceResponse {
+  pub success: bool,             // 是否成功
+  pub instance_id: Option<Uuid>, // 任务实例ID
+  pub message: String,           // 响应消息
+}
+
+/// 退避策略
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub enum BackoffStrategy {
+  /// 固定间隔
+  Fixed,
+  /// 线性退避
+  Linear,
+  /// 指数退避
+  Exponential,
+  /// 带抖动的指数退避
+  ExponentialWithJitter,
+}
+
+impl Default for BackoffStrategy {
+  fn default() -> Self {
+    Self::ExponentialWithJitter
+  }
+}
+
+/// 任务执行结果
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct TaskExecutionResult {
+  pub task_id: Uuid,                 // 任务ID
+  pub instance_id: Uuid,             // 任务实例ID
+  pub success: bool,                 // 是否成功
+  pub exit_code: Option<i32>,        // 退出码
+  pub output: Option<String>,        // 输出内容
+  pub error_message: Option<String>, // 错误信息
+  pub metrics: Option<TaskMetrics>,  // 执行指标
+  pub duration_ms: u64,              // 执行时长(毫秒)
+}
+
+/// 任务执行错误
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct TaskExecutionError {
+  pub task_id: Uuid,                      // 任务ID
+  pub instance_id: Option<Uuid>,          // 任务实例ID
+  pub error_type: TaskExecutionErrorType, // 错误类型
+  pub message: String,                    // 错误消息
+  pub retry_count: i32,                   // 当前重试次数
+  pub max_retries: i32,                   // 最大重试次数
+  pub timestamp: i64,                     // 错误时间戳
+}
+
+/// 任务执行错误类型
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub enum TaskExecutionErrorType {
+  /// 任务被取消
+  Cancelled,
+  /// 进程启动失败
+  ProcessStartFailed,
+  /// 进程执行超时
+  ProcessTimeout,
+  /// 进程被杀死
+  ProcessKilled,
+  /// 资源不足
+  ResourceExhausted,
+  /// 依赖检查失败
+  DependencyCheckFailed,
+  /// 配置错误
+  ConfigurationError,
+  /// 网络错误
+  NetworkError,
+}
+
 #[cfg(test)]
 mod tests {
   use super::*;

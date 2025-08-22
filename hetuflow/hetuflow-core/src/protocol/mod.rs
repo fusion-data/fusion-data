@@ -1,10 +1,12 @@
 mod agent;
 mod heartbeat;
+mod process;
 mod task;
 mod websocket;
 
 pub use agent::*;
 pub use heartbeat::*;
+pub use process::*;
 pub use task::*;
 pub use websocket::*;
 
@@ -62,12 +64,6 @@ pub struct AckMessage {
 pub enum GatewayCommand {
   Send { command: WebSocketCommand, agent_id: Uuid },
   Broadcast { command: WebSocketCommand },
-}
-
-#[derive(Debug)]
-pub enum SchedulerEvent {
-  TaskDispatched { task_id: Uuid, agent_id: Uuid },
-  TaskCompleted { task_id: Uuid, agent_id: Uuid, success: bool },
 }
 
 #[cfg(test)]
