@@ -59,6 +59,7 @@ pub struct AckMessage {
   pub details: Option<String>,
 }
 
+/// 数据流动方向: Server -> Agent
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum GatewayCommand {

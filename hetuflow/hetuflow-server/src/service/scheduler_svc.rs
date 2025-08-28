@@ -16,19 +16,19 @@ use hetuflow_core::types::ServerStatus;
 
 use crate::infra::bmc::ServerBmc;
 use crate::service::TaskGenerationSvc;
-use crate::setting::ServerSetting;
+use crate::setting::ServerConfig;
 
 /// 调度器服务
 pub struct SchedulerSvc {
   mm: ModelManager,
-  server_config: Arc<ServerSetting>,
+  server_config: Arc<ServerConfig>,
   task_generation_svc: Arc<TaskGenerationSvc>,
   shutdown_tx: broadcast::Sender<()>,
 }
 
 impl SchedulerSvc {
   /// 创建新的调度器服务
-  pub fn new(mm: ModelManager, server_config: Arc<ServerSetting>, shutdown_tx: broadcast::Sender<()>) -> Self {
+  pub fn new(mm: ModelManager, server_config: Arc<ServerConfig>, shutdown_tx: broadcast::Sender<()>) -> Self {
     let task_generation_svc = Arc::new(TaskGenerationSvc::new(mm.clone()));
     Self { mm, server_config, task_generation_svc, shutdown_tx }
   }

@@ -1,47 +1,17 @@
+use std::{sync::Arc, time::Duration};
+
+use duration_str::deserialize_duration;
+use hetuflow_core::utils::config::write_app_config;
 use serde::{Deserialize, Serialize};
 use ultimate_common::ahash::HashMap;
-
-/// Agent 配置
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct AgentSetting {
-  /// Agent 基本信息
-  pub agent: AgentConfig,
-
-  /// 连接配置
-  pub connection: ConnectionConfig,
-
-  /// 轮询配置
-  pub polling: PollingConfig,
-
-  /// 重试配置
-  pub retry: RetryConfig,
-
-  /// 进程管理配置
-  pub process: ProcessConfig,
-
-  /// 任务执行配置
-  pub task: TaskConfig,
-
-  /// 日志配置
-  pub logging: LoggingConfig,
-
-  /// 其他配置项（向后兼容）
-  pub settings: HashMap<String, String>,
-
-  // 向后兼容的字段
-  #[serde(default = "default_heartbeat_interval")]
-  pub heartbeat_interval: u32,
-
-  #[serde(default = "default_task_timeout")]
-  pub task_timeout: u32,
-
-  #[serde(default = "default_max_output_size")]
-  pub max_output_size: u64,
-}
+use ultimate_core::{DataError, configuration::UltimateConfigRegistry};
+use uuid::Uuid;
 
 /// Agent 基本配置
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct AgentConfig {
+  pub agent_id: Uuid,
+
   /// Agent 名称
   pub name: String,
 
@@ -52,7 +22,7 @@ pub struct AgentConfig {
   pub capabilities: Vec<String>,
 
   /// Agent 标签
-  pub tags: HashMap<String, String>,
+  pub tags: Vec<String>,
 
   /// 工作目录
   pub work_dir: String,
@@ -65,16 +35,19 @@ pub struct AgentConfig {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ConnectionConfig {
   /// Gateway URL
-  pub gateway_url: String,
+  pub gateway_base_url: String,
 
   /// 连接超时时间（秒）
-  pub connect_timeout_seconds: u64,
+  #[serde(deserialize_with = "deserialize_duration")]
+  pub connect_timeout: Duration,
 
   /// 心跳间隔（秒）
-  pub heartbeat_interval_seconds: u64,
+  #[serde(deserialize_with = "deserialize_duration")]
+  pub heartbeat_interval: Duration,
 
   /// 重连间隔（秒）
-  pub reconnect_interval_seconds: u64,
+  #[serde(deserialize_with = "deserialize_duration")]
+  pub reconnect_interval: Duration,
 
   /// 最大重连次数
   pub max_reconnect_attempts: u32,
@@ -87,6 +60,13 @@ pub struct ConnectionConfig {
 
   /// TLS 证书路径
   pub tls_cert_path: Option<String>,
+}
+
+impl ConnectionConfig {
+  pub fn gateway_url(&self) -> String {
+    let path = if self.gateway_base_url.ends_with('/') { "api/v1/gateway/ws" } else { "/api/v1/gateway/ws" };
+    format!("{}{}", self.gateway_base_url, path)
+  }
 }
 
 /// 轮询配置
@@ -232,31 +212,6 @@ pub struct TaskConfig {
   pub cleanup_temp_files: bool,
 }
 
-/// 日志配置
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct LoggingConfig {
-  /// 日志级别
-  pub level: String,
-
-  /// 日志格式
-  pub format: String,
-
-  /// 日志输出目标
-  pub target: LogTarget,
-
-  /// 日志文件路径
-  pub file_path: Option<String>,
-
-  /// 日志文件最大大小（字节）
-  pub max_file_size: Option<u64>,
-
-  /// 日志文件保留数量
-  pub max_files: Option<u32>,
-
-  /// 启用结构化日志
-  pub enable_structured_logging: bool,
-}
-
 /// 日志输出目标
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum LogTarget {
@@ -283,129 +238,55 @@ fn default_max_output_size() -> u64 {
   10 * 1024 * 1024 // 10MB
 }
 
-// 默认实现
-impl Default for AgentSetting {
-  fn default() -> Self {
-    Self {
-      agent: AgentConfig::default(),
-      connection: ConnectionConfig::default(),
-      polling: PollingConfig::default(),
-      retry: RetryConfig::default(),
-      process: ProcessConfig::default(),
-      task: TaskConfig::default(),
-      logging: LoggingConfig::default(),
-      settings: HashMap::default(),
-      heartbeat_interval: default_heartbeat_interval(),
-      task_timeout: default_task_timeout(),
-      max_output_size: default_max_output_size(),
-    }
-  }
-}
+/// Agent 配置
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct HetuflowAgentSetting {
+  /// Agent 基本信息
+  pub agent: Arc<AgentConfig>,
 
-impl Default for AgentConfig {
-  fn default() -> Self {
-    Self {
-      name: "hetuflow-agent".to_string(),
-      version: "1.0.0".to_string(),
-      capabilities: vec!["shell".to_string(), "python".to_string()],
-      tags: HashMap::default(),
-      work_dir: "/tmp/hetuflow-agent".to_string(),
-      env_vars: HashMap::default(),
-    }
-  }
-}
+  /// 连接配置
+  pub connection: Arc<ConnectionConfig>,
 
-impl Default for ConnectionConfig {
-  fn default() -> Self {
-    Self {
-      gateway_url: "ws://localhost:8080/agent".to_string(),
-      connect_timeout_seconds: 30,
-      heartbeat_interval_seconds: 30,
-      reconnect_interval_seconds: 5,
-      max_reconnect_attempts: 10,
-      message_buffer_size: 1000,
-      enable_tls: false,
-      tls_cert_path: None,
-    }
-  }
-}
+  /// 轮询配置
+  pub polling: Arc<PollingConfig>,
 
-impl Default for PollingConfig {
-  fn default() -> Self {
-    Self {
-      interval_seconds: 10,
-      max_concurrent_tasks: 10,
-      capacity_weight: 1.0,
-      load_factor_threshold: 0.8,
-      enable_adaptive_polling: true,
-      min_interval_seconds: 5,
-      max_interval_seconds: 60,
-    }
-  }
-}
+  /// 重试配置
+  pub retry: Arc<RetryConfig>,
 
-impl Default for RetryConfig {
-  fn default() -> Self {
-    Self {
-      max_attempts: 3,
-      backoff_strategy: BackoffStrategy::Exponential,
-      base_delay_ms: 1000,
-      max_delay_ms: 30000,
-      retry_conditions: vec![RetryCondition::ExitCode(1), RetryCondition::Timeout, RetryCondition::NetworkError],
-      enable_jitter: true,
-    }
-  }
-}
+  /// 进程管理配置
+  pub process: Arc<ProcessConfig>,
 
-impl Default for ProcessConfig {
-  fn default() -> Self {
-    Self {
-      cleanup_interval_seconds: 60,
-      zombie_check_interval_seconds: 30,
-      process_timeout_seconds: 3600,
-      max_concurrent_processes: 50,
-      default_resource_limits: ResourceLimits::default(),
-      enable_resource_monitoring: true,
-      resource_monitor_interval_seconds: 10,
-    }
-  }
-}
+  /// 任务执行配置
+  pub task: Arc<TaskConfig>,
 
-impl Default for ResourceLimits {
-  fn default() -> Self {
-    Self {
-      max_memory_bytes: Some(1024 * 1024 * 1024), // 1GB
-      max_cpu_percent: Some(80.0),
-      max_execution_time_seconds: Some(3600), // 1 hour
-      max_file_descriptors: Some(1024),
-    }
-  }
-}
+  /// 其他配置项（向后兼容）
+  pub settings: HashMap<String, String>,
 
-impl Default for TaskConfig {
-  fn default() -> Self {
-    Self {
-      default_timeout_seconds: 3600,
-      max_concurrent_tasks: 10,
-      output_buffer_size: 8192,
-      max_output_size: 10 * 1024 * 1024, // 10MB
-      enable_task_isolation: true,
-      work_dir_template: "/tmp/hetuflow-task-{task_id}".to_string(),
-      cleanup_temp_files: true,
-    }
-  }
-}
+  // 向后兼容的字段
+  #[serde(default = "default_heartbeat_interval")]
+  pub heartbeat_interval: u32,
 
-impl Default for LoggingConfig {
-  fn default() -> Self {
-    Self {
-      level: "info".to_string(),
-      format: "json".to_string(),
-      target: LogTarget::Stdout,
-      file_path: None,
-      max_file_size: Some(100 * 1024 * 1024), // 100MB
-      max_files: Some(10),
-      enable_structured_logging: true,
+  #[serde(default = "default_task_timeout")]
+  pub task_timeout: u32,
+
+  #[serde(default = "default_max_output_size")]
+  pub max_output_size: u64,
+}
+const KEY_PATH_AGENT_ID: &str = "hetuflow.agent.agent_id";
+
+impl HetuflowAgentSetting {
+  pub fn load(config_registry: &UltimateConfigRegistry) -> Result<Self, DataError> {
+    let config = config_registry.config();
+    // Check if server_id not exists or invalid uuid in config
+    if let Err(_e) = config.get::<Uuid>(KEY_PATH_AGENT_ID) {
+      // Generate new UUID and write to config file
+      let agent_id = Uuid::new_v4();
+      write_app_config("app.toml".into(), KEY_PATH_AGENT_ID, &agent_id.to_string())?;
+      // Reload config registry
+      config_registry.reload()?;
     }
+
+    let setting = config_registry.get_config_by_path("hetuflow")?;
+    Ok(setting)
   }
 }

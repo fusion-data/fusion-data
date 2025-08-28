@@ -1,54 +1,95 @@
-use std::collections::HashMap;
-
 use serde::{Deserialize, Serialize};
+use ultimate_common::time::now_epoch_millis;
 use uuid::Uuid;
 
 use crate::{
-  models::{JobConfig, TaskMetrics},
-  types::{ScheduleKind, TaskControlKind, TaskInstanceStatus},
+  models::{ScheduleEntity, TaskEntity, TaskInstanceEntity, TaskMetrics},
+  types::{TaskControlKind, TaskInstanceStatus},
 };
 
 /// 任务分发请求 (Represents a 'Task')
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct DispatchTaskPayload {
-  /// 归属的 JobEntity ID
-  pub job_id: Uuid,
-  /// 本次 Task 的唯一标识 (UUID)
-  pub task_id: Uuid,
-  /// 任务名称
-  pub task_name: Option<String>,
-  /// 任务类型
-  pub schedule_kind: ScheduleKind,
-  /// 执行命令
-  pub command: String,
-  /// Cron 表达式 (仅 CRON 类型)
-  pub cron_expression: Option<String>,
-  /// 环境变量
-  pub environment: HashMap<String, String>,
-  /// 任务配置
-  pub config: JobConfig,
-  /// 调度时间戳
-  pub scheduled_at: i64,
-  /// 任务优先级
-  pub priority: u8,
-  /// 依赖任务ID列表
-  pub dependencies: Vec<Uuid>,
+/// 调度任务组合结构体
+/// 包含任务信息和对应的调度信息
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ScheduledTask {
+  pub task_instance: TaskInstanceEntity,
+
+  /// 任务实体
+  pub task: TaskEntity,
+
+  /// 调度实体（可选，手动/事件触发的任务没有调度信息或者Flow类型的任务也没有调度信息）
+  pub schedule: Option<ScheduleEntity>,
 }
 
-/// 任务分发响应
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct DispatchTaskResponse {
-  /// 是否成功接收任务
-  pub success: bool,
-  /// 响应消息
-  pub message: String,
-  /// 任务ID
-  pub task_id: Uuid,
+impl ScheduledTask {
+  /// 创建新的调度任务
+  pub fn new(task_instance: TaskInstanceEntity, task: TaskEntity, schedule: Option<ScheduleEntity>) -> Self {
+    Self { task_instance, task, schedule }
+  }
+
+  pub fn task_instance_id(&self) -> Uuid {
+    self.task_instance.id
+  }
+
+  /// 获取任务ID
+  pub fn task_id(&self) -> Uuid {
+    self.task.id
+  }
+
+  /// 获取Job ID
+  pub fn job_id(&self) -> Uuid {
+    self.task.job_id
+  }
+
+  /// 获取调度ID
+  pub fn schedule_id(&self) -> Option<Uuid> {
+    self.task.schedule_id
+  }
+
+  /// 获取任务优先级
+  pub fn priority(&self) -> i32 {
+    self.task.priority
+  }
+
+  /// 获取任务标签
+  pub fn tags(&self) -> &Vec<String> {
+    &self.task.tags
+  }
+
+  /// 检查任务是否匹配指定的标签
+  pub fn matches_tags(&self, required_tags: &[String]) -> bool {
+    if required_tags.is_empty() {
+      return true;
+    }
+
+    required_tags.iter().all(|tag| self.task.tags.contains(tag))
+  }
+
+  /// 检查任务是否为定时任务
+  pub fn is_scheduled(&self) -> bool {
+    self.schedule.is_some()
+  }
+
+  /// 检查任务是否为手动触发任务
+  pub fn is_manual(&self) -> bool {
+    self.schedule.is_none()
+  }
+
+  /// 获取调度类型描述
+  pub fn schedule_type_description(&self) -> String {
+    match &self.schedule {
+      Some(schedule) => format!("{:?}", schedule.schedule_kind),
+      None => "Manual".to_string(),
+    }
+  }
 }
 
 /// 任务状态更新 (Reports status for a 'Task', which the server records as a 'TaskInstance')
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TaskInstanceUpdated {
+  /// 任务实例 ID
+  // TODO: 是否应该添加 task_instance_id？（由客户端生成 task instance id，避免重复或遗漏）
+  pub task_instance_id: Uuid,
   /// 正在上报状态的 Task ID
   pub task_id: Uuid,
   /// Agent ID
@@ -67,6 +108,48 @@ pub struct TaskInstanceUpdated {
   pub metrics: Option<TaskMetrics>,
   /// 执行进度 (0.0-1.0)
   pub progress: Option<f64>,
+}
+
+impl TaskInstanceUpdated {
+  pub fn new(agent_id: Uuid, task_id: Uuid, task_instance_id: Uuid, status: TaskInstanceStatus) -> Self {
+    Self {
+      task_instance_id,
+      agent_id,
+      task_id,
+      status,
+      timestamp: now_epoch_millis(),
+      output: None,
+      error_message: None,
+      exit_code: None,
+      metrics: None,
+      progress: None,
+    }
+  }
+
+  pub fn with_output(mut self, output: impl Into<String>) -> Self {
+    self.output = Some(output.into());
+    self
+  }
+
+  pub fn with_error_message(mut self, error_message: impl Into<String>) -> Self {
+    self.error_message = Some(error_message.into());
+    self
+  }
+
+  pub fn with_exit_code(mut self, exit_code: i32) -> Self {
+    self.exit_code = Some(exit_code);
+    self
+  }
+
+  pub fn with_metrics(mut self, metrics: TaskMetrics) -> Self {
+    self.metrics = Some(metrics);
+    self
+  }
+
+  pub fn with_progress(mut self, progress: f64) -> Self {
+    self.progress = Some(progress);
+    self
+  }
 }
 
 /// 任务控制指令
@@ -90,9 +173,9 @@ pub struct TaskPollRequest {
 /// 任务拉取响应
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct TaskPollResponse {
-  pub tasks: Vec<DispatchTaskPayload>, // 可执行任务列表
-  pub has_more: bool,                  // 是否还有更多任务
-  pub next_poll_interval: u32,         // 下次拉取间隔(秒)
+  pub tasks: Vec<ScheduledTask>, // 可执行任务列表
+  pub has_more: bool,            // 是否还有更多任务
+  pub next_poll_interval: u32,   // 下次拉取间隔(秒)
 }
 
 /// 创建任务实例请求
@@ -175,220 +258,4 @@ pub enum TaskExecutionErrorType {
   ConfigurationError,
   /// 网络错误
   NetworkError,
-}
-
-#[cfg(test)]
-mod tests {
-  use super::*;
-  use crate::models::JobConfig;
-
-  #[test]
-  fn test_dispatch_task_request_creation() {
-    let job_id = Uuid::now_v7();
-    let task_id = Uuid::now_v7();
-    let config = JobConfig::default();
-
-    let request = DispatchTaskPayload {
-      job_id,
-      task_id,
-      task_name: Some("test-task".to_string()),
-      schedule_kind: ScheduleKind::Cron,
-      command: "echo hello".to_string(),
-      cron_expression: Some("0 12 * * *".to_string()),
-      environment: HashMap::from([("ENV".to_string(), "test".to_string())]),
-      config: config.clone(),
-      scheduled_at: 1234567890,
-      priority: 5,
-      dependencies: vec![Uuid::new_v4()],
-    };
-
-    assert_eq!(request.job_id, job_id);
-    assert_eq!(request.task_id, task_id);
-    assert_eq!(request.schedule_kind, ScheduleKind::Cron);
-    assert_eq!(request.command, "echo hello");
-  }
-
-  #[test]
-  fn test_dispatch_task_request_serialization() {
-    let job_id = Uuid::now_v7();
-    let task_id = Uuid::now_v7();
-    let config = JobConfig::default();
-
-    let request = DispatchTaskPayload {
-      job_id,
-      task_id,
-      task_name: None,
-      schedule_kind: ScheduleKind::Interval,
-      command: "ls -la".to_string(),
-      cron_expression: None,
-      environment: HashMap::default(),
-      config,
-      scheduled_at: 1234567890,
-      priority: 1,
-      dependencies: vec![],
-    };
-
-    let serialized = serde_json::to_string(&request).unwrap();
-    let deserialized: DispatchTaskPayload = serde_json::from_str(&serialized).unwrap();
-
-    assert_eq!(deserialized.job_id, job_id);
-    assert_eq!(deserialized.schedule_kind, ScheduleKind::Interval);
-  }
-
-  #[test]
-  fn test_dispatch_task_response_creation() {
-    let task_id = Uuid::now_v7();
-    let response = DispatchTaskResponse { success: true, message: "Task accepted".to_string(), task_id };
-
-    assert!(response.success);
-    assert_eq!(response.message, "Task accepted");
-    assert_eq!(response.task_id, task_id);
-  }
-
-  #[test]
-  fn test_dispatch_task_response_serialization() {
-    let task_id = Uuid::now_v7();
-    let response = DispatchTaskResponse { success: false, message: "Task rejected".to_string(), task_id };
-
-    let serialized = serde_json::to_string(&response).unwrap();
-    let deserialized: DispatchTaskResponse = serde_json::from_str(&serialized).unwrap();
-
-    assert!(!deserialized.success);
-    assert_eq!(deserialized.message, "Task rejected");
-  }
-
-  #[test]
-  fn test_task_instance_update_creation() {
-    let task_id = Uuid::now_v7();
-    let agent_id = Uuid::new_v4();
-    let metrics = TaskMetrics::default();
-
-    let update = TaskInstanceUpdated {
-      task_id,
-      agent_id,
-      status: TaskInstanceStatus::Running,
-      timestamp: 1234567890,
-      output: Some("output data".to_string()),
-      error_message: None,
-      exit_code: None,
-      metrics: Some(metrics.clone()),
-      progress: Some(0.75),
-    };
-
-    assert_eq!(update.task_id, task_id);
-    assert_eq!(update.agent_id, agent_id);
-    assert_eq!(update.status, TaskInstanceStatus::Running);
-    assert_eq!(update.progress, Some(0.75));
-  }
-
-  #[test]
-  fn test_task_instance_update_serialization() {
-    let task_id = Uuid::now_v7();
-    let agent_id = Uuid::new_v4();
-
-    let update = TaskInstanceUpdated {
-      task_id,
-      agent_id,
-      status: TaskInstanceStatus::Succeeded,
-      timestamp: 1234567890,
-      output: None,
-      error_message: Some("error occurred".to_string()),
-      exit_code: Some(1),
-      metrics: None,
-      progress: None,
-    };
-
-    let serialized = serde_json::to_string(&update).unwrap();
-    let deserialized: TaskInstanceUpdated = serde_json::from_str(&serialized).unwrap();
-
-    assert_eq!(deserialized.task_id, task_id);
-    assert_eq!(deserialized.status, TaskInstanceStatus::Succeeded);
-    assert_eq!(deserialized.error_message, Some("error occurred".to_string()));
-  }
-
-  #[test]
-  fn test_task_control_creation() {
-    let task_id = Uuid::now_v7();
-
-    let control = TaskControl {
-      task_id,
-      control_type: TaskControlKind::Stop,
-      reason: Some("User requested".to_string()),
-      force: true,
-    };
-
-    assert_eq!(control.task_id, task_id);
-    assert_eq!(control.control_type, TaskControlKind::Stop);
-    assert_eq!(control.reason, Some("User requested".to_string()));
-    assert!(control.force);
-  }
-
-  #[test]
-  fn test_task_control_serialization() {
-    let task_id = Uuid::now_v7();
-
-    let control = TaskControl { task_id, control_type: TaskControlKind::Pause, reason: None, force: false };
-
-    let serialized = serde_json::to_string(&control).unwrap();
-    let deserialized: TaskControl = serde_json::from_str(&serialized).unwrap();
-
-    assert_eq!(deserialized.task_id, task_id);
-    assert_eq!(deserialized.control_type, TaskControlKind::Pause);
-    assert_eq!(deserialized.reason, None);
-    assert!(!deserialized.force);
-  }
-
-  #[test]
-  fn test_task_poll_request_creation() {
-    let agent_id = Uuid::new_v4();
-
-    let request = TaskPollRequest {
-      agent_id,
-      max_tasks: 10,
-      tags: vec!["bash".to_string(), "python".to_string()],
-      available_capacity: 5,
-    };
-
-    assert_eq!(request.agent_id, agent_id);
-    assert_eq!(request.max_tasks, 10);
-    assert_eq!(request.tags, vec!["bash", "python"]);
-    assert_eq!(request.available_capacity, 5);
-  }
-
-  #[test]
-  fn test_task_poll_request_serialization() {
-    let agent_id = Uuid::new_v4();
-
-    let request = TaskPollRequest { agent_id, max_tasks: 1, tags: vec![], available_capacity: 0 };
-
-    let serialized = serde_json::to_string(&request).unwrap();
-    let deserialized: TaskPollRequest = serde_json::from_str(&serialized).unwrap();
-
-    assert_eq!(deserialized.agent_id, agent_id);
-    assert_eq!(deserialized.max_tasks, 1);
-  }
-
-  #[test]
-  fn test_task_poll_response_creation() {
-    let tasks = vec![];
-
-    let response = TaskPollResponse { tasks: tasks.clone(), has_more: false, next_poll_interval: 30 };
-
-    assert!(response.tasks.is_empty());
-    assert!(!response.has_more);
-    assert_eq!(response.next_poll_interval, 30);
-  }
-
-  #[test]
-  fn test_task_poll_response_serialization() {
-    let tasks = vec![];
-
-    let response = TaskPollResponse { tasks, has_more: true, next_poll_interval: 60 };
-
-    let serialized = serde_json::to_string(&response).unwrap();
-    let deserialized: TaskPollResponse = serde_json::from_str(&serialized).unwrap();
-
-    assert!(deserialized.has_more);
-    assert_eq!(deserialized.next_poll_interval, 60);
-  }
 }

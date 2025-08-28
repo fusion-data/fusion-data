@@ -6,7 +6,7 @@ use uuid::Uuid;
 
 use crate::types::{CommandKind, EventKind};
 
-/// 服务器下发的指令
+/// 服务器下发的指令。 Server -> Agent
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct WebSocketCommand {
   /// 指令ID，全局唯一。可选参数，默认使用 UUID v7

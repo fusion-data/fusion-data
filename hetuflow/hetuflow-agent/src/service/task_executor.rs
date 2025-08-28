@@ -9,23 +9,24 @@ use std::{
 };
 
 use hetuflow_core::{
-  models::{ScheduledTask, TaskMetrics},
+  models::TaskMetrics,
   protocol::{
-    BackoffStrategy, ProcessInfo, ProcessStatus, TaskExecutionError, TaskExecutionErrorType, TaskExecutionResult,
+    BackoffStrategy, ProcessInfo, ScheduledTask, TaskExecutionError, TaskExecutionErrorType, TaskExecutionResult,
     TaskInstanceUpdated, WebSocketEvent,
   },
   types::{EventKind, TaskInstanceStatus},
 };
-use log::{debug, error, info, warn};
+use log::{debug, info, warn};
 use tokio::{
   process::Command,
-  sync::{RwLock, mpsc},
-  time::{sleep, timeout},
+  sync::{RwLock, broadcast},
+  time::sleep,
 };
-use ultimate_common::time::{OffsetDateTime, now_epoch_millis, now_offset};
+use ultimate_common::time::now_epoch_millis;
+use ultimate_core::DataError;
 use uuid::Uuid;
 
-use crate::service::ProcessManager;
+use crate::service::{ConnectionManager, ProcessManager};
 
 /// 重试配置
 #[derive(Debug, Clone)]
@@ -42,24 +43,6 @@ impl Default for RetryConfig {
   fn default() -> Self {
     Self { base_delay_ms: 1000, max_delay_ms: 60000, backoff_strategy: BackoffStrategy::Exponential }
   }
-}
-
-/// 任务执行器
-/// 负责执行具体的任务，包括进程管理、重试机制和状态上报
-#[derive(Debug)]
-pub struct TaskExecutor {
-  /// Agent ID
-  agent_id: Uuid,
-  /// 进程管理器
-  process_manager: Arc<ProcessManager>,
-  /// 活跃任务执行
-  active_executions: Arc<RwLock<HashMap<Uuid, TaskExecution>>>,
-  /// 事件发送器
-  event_sender: mpsc::UnboundedSender<WebSocketEvent>,
-  /// 重试配置
-  retry_config: RetryConfig,
-  /// 停止标志
-  stop_flag: Arc<AtomicBool>,
 }
 
 /// 任务执行状态
@@ -83,32 +66,52 @@ pub struct TaskExecution {
   pub cancelled: Arc<AtomicBool>,
 }
 
+/// 任务执行器。负责执行具体的任务，包括进程管理、重试机制和状态上报
+#[derive(Clone)]
+pub struct TaskExecutor {
+  /// Agent ID
+  agent_id: Uuid,
+  shutdown_rx: Arc<broadcast::Receiver<()>>,
+  /// 进程管理器
+  process_manager: Arc<ProcessManager>,
+  /// 活跃任务执行
+  active_executions: Arc<RwLock<HashMap<Uuid, TaskExecution>>>,
+  /// 连接管理器
+  connection_manager: Arc<ConnectionManager>,
+  /// 重试配置
+  retry_config: RetryConfig,
+  /// 停止标志
+  stop_flag: Arc<AtomicBool>,
+}
+
 impl TaskExecutor {
   /// 创建新的任务执行器
   pub fn new(
     agent_id: Uuid,
+    shutdown_rx: Arc<broadcast::Receiver<()>>,
     process_manager: Arc<ProcessManager>,
-    event_sender: mpsc::UnboundedSender<WebSocketEvent>,
+    connection_manager: Arc<ConnectionManager>,
     retry_config: Option<RetryConfig>,
   ) -> Self {
     Self {
       agent_id,
+      shutdown_rx,
       process_manager,
       active_executions: Arc::new(RwLock::new(HashMap::new())),
-      event_sender,
+      connection_manager,
       retry_config: retry_config.unwrap_or_default(),
       stop_flag: Arc::new(AtomicBool::new(false)),
     }
   }
 
   /// 启动任务执行器
-  pub async fn start(&self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+  pub async fn start(&self) -> Result<(), DataError> {
     info!("Starting TaskExecutor for agent {}", self.agent_id);
     Ok(())
   }
 
   /// 停止任务执行器
-  pub async fn stop(&self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+  pub async fn stop(&self) -> Result<(), DataError> {
     info!("Stopping TaskExecutor for agent {}", self.agent_id);
     self.stop_flag.store(true, Ordering::SeqCst);
 
@@ -136,7 +139,7 @@ impl TaskExecutor {
 
   /// 执行任务
   pub async fn execute_task(&self, task: ScheduledTask) -> Result<TaskExecutionResult, TaskExecutionError> {
-    let instance_id = Uuid::new_v4();
+    let instance_id = Uuid::now_v7();
     let execution = TaskExecution {
       instance_id,
       task: task.clone(),
@@ -161,7 +164,7 @@ impl TaskExecutor {
   }
 
   /// 取消任务
-  pub async fn cancel_task(&self, instance_id: Uuid) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+  pub async fn cancel_task(&self, instance_id: Uuid) -> Result<(), DataError> {
     let executions = self.active_executions.read().await;
     if let Some(execution) = executions.get(&instance_id) {
       execution.cancelled.store(true, Ordering::SeqCst);
@@ -200,9 +203,10 @@ impl TaskExecutor {
         Ok(result) => {
           // 发送成功事件
           let ret = result.clone();
-          let _ = self.event_sender.send(WebSocketEvent::new(
+          let _ = self.connection_manager.send_event(WebSocketEvent::new(
             EventKind::TaskChangedEvent,
             TaskInstanceUpdated {
+              task_instance_id: execution.instance_id,
               task_id: execution.task.task.id,
               agent_id: self.agent_id,
               timestamp: now_epoch_millis() as i64,
@@ -222,14 +226,15 @@ impl TaskExecutor {
           // 检查是否还能重试
           if execution.retry_count >= max_retries {
             // 发送失败事件
-            let _ = self.event_sender.send(WebSocketEvent::new(
+            let _ = self.connection_manager.send_event(WebSocketEvent::new(
               EventKind::TaskChangedEvent,
               TaskInstanceUpdated {
+                task_instance_id: execution.instance_id,
                 task_id: execution.task.task.id,
                 agent_id: self.agent_id,
                 timestamp: now_epoch_millis() as i64,
                 output: None,
-                error_message: Some(error.message),
+                error_message: Some(error.message.clone()),
                 exit_code: None,
                 metrics: None,
                 progress: None,
@@ -342,6 +347,7 @@ impl TaskExecutor {
 
     // 发送任务状态更新
     let task_update = TaskInstanceUpdated {
+      task_instance_id: execution.instance_id,
       task_id: execution.task.task.id,
       agent_id: self.agent_id,
       status: execution.status.clone(),

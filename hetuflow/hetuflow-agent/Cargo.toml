@@ -32,7 +32,8 @@ clap = { workspace = true }
 log = { workspace = true }
 logforth = { workspace = true }
 uuid = { workspace = true }
-rand = "0.8"
+rand = { workspace = true }
+duration-str = { workspace = true }
 
 [target.'cfg(unix)'.dependencies]
-nix = { version = "0.27", features = ["signal"] }
+nix = { version = "0.30", features = ["signal"] }

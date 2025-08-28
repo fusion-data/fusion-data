@@ -14,6 +14,7 @@ pub type TimerCore = TimerWithThread<Uuid, OneShotClosureState<Uuid>, PeriodicCl
 
 pub type ITimerRef = thread_timer::TimerRef<Uuid, OneShotClosureState<Uuid>, PeriodicClosureState<Uuid>>;
 
+#[derive(Clone)]
 pub struct TimerRef(ITimerRef);
 impl TimerRef {
   /// Schedule the `state` to be triggered once after the `timeout` expires

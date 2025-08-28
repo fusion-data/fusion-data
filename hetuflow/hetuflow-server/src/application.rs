@@ -20,12 +20,12 @@ use crate::{
   infra::bmc::DistributedLockBmc,
   model::DistributedLockIds,
 };
-use crate::{model::HealthStatus, setting::FusionSchedulerConfig};
+use crate::{model::HealthStatus, setting::HetuflowServerSetting};
 
 /// Hetuflow 应用容器
 #[derive(Clone)]
 pub struct ServerApplication {
-  pub(crate) config: Arc<FusionSchedulerConfig>,
+  pub(crate) config: Arc<HetuflowServerSetting>,
   pub(crate) is_leader: Arc<AtomicBool>,
   shutdown_tx: broadcast::Sender<()>,
   pub(crate) mm: ModelManager,
@@ -43,7 +43,7 @@ impl ServerApplication {
     // 构建底层 Application 与插件
     let application = Application::builder().add_plugin(DbPlugin).build().await?;
 
-    let config = Arc::new(FusionSchedulerConfig::load(application.config_registry())?);
+    let config = Arc::new(HetuflowServerSetting::load(application.config_registry())?);
 
     // 获取 ModelManager
     let mm = application.get_component::<ModelManager>()?;

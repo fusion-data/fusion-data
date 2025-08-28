@@ -75,6 +75,7 @@ create table sched_schedule (
   cron_expression varchar(100), -- ScheduleKind::Cron 时有效
   interval_secs int, -- ScheduleKind::Interval 时有效
   max_count int, -- ScheduleKind::Interval 时有效
+  next_run_at timestamptz, -- 计算出的下一次执行时间
   created_by bigint not null,
   created_at timestamptz not null default now(),
   updated_by bigint,
@@ -126,7 +127,7 @@ create table sched_task_instance (
   server_id uuid not null references sched_server (id), -- 绑定的服务器 ID，用于任务分发
   agent_id uuid not null references sched_agent (id), -- 绑定的 Agent ID，用于任务执行
   status int not null default 1, -- 见 TaskInstanceStatus 枚举
-  started_at timestamptz,
+  started_at timestamptz not null, -- 任务实例开始（计划）时间，实际运行时可能会有微小的偏差
   completed_at timestamptz,
   output text,
   error_message text,

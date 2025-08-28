@@ -1,5 +1,20 @@
+use std::sync::{Arc, Mutex, RwLock};
+
+use futures_util::{FutureExt, SinkExt, StreamExt, pin_mut};
+use hetuflow_core::protocol::{TaskPollResponse, WebSocketCommand, WebSocketEvent};
+use log::{error, info, warn};
+use tokio::{
+  sync::{broadcast, mpsc},
+  task::JoinHandle,
+};
+use tokio_tungstenite::tungstenite::Message;
 use ultimate_common::time::OffsetDateTime;
-use uuid::Uuid;
+use ultimate_core::DataError;
+
+use crate::{
+  service::WsHandler,
+  setting::{ConnectionConfig, HetuflowAgentSetting},
+};
 
 /// WebSocket 连接状态
 #[derive(Debug, Clone, PartialEq)]
@@ -14,45 +29,6 @@ pub enum ConnectionState {
   Registered,
   /// 连接错误
   Error(String),
-}
-
-/// 连接管理器配置
-#[derive(Debug, Clone)]
-pub struct ConnectionManagerConfig {
-  /// WebSocket 服务器 URL
-  pub server_url: String,
-  /// Agent ID
-  pub agent_id: Uuid,
-  /// Agent 名称
-  pub agent_name: String,
-  /// Agent 标签
-  pub agent_tags: Vec<String>,
-  /// 心跳间隔（秒）
-  pub heartbeat_interval_seconds: u64,
-  /// 连接超时（秒）
-  pub connection_timeout_seconds: u64,
-  /// 重连间隔（秒）
-  pub reconnect_interval_seconds: u64,
-  /// 最大重连次数
-  pub max_reconnect_attempts: u32,
-  /// 消息队列大小
-  pub message_queue_size: usize,
-}
-
-impl Default for ConnectionManagerConfig {
-  fn default() -> Self {
-    Self {
-      server_url: "ws://localhost:8080/ws/agent".to_string(),
-      agent_id: Uuid::new_v4(),
-      agent_name: "hetuflow-agent".to_string(),
-      agent_tags: vec![],
-      heartbeat_interval_seconds: 30,
-      connection_timeout_seconds: 10,
-      reconnect_interval_seconds: 5,
-      max_reconnect_attempts: 10,
-      message_queue_size: 1000,
-    }
-  }
 }
 
 /// 连接统计信息
@@ -78,12 +54,68 @@ pub struct ConnectionStats {
 
 /// 连接管理器
 /// 负责与 HetuFlow Gateway 的连接管理、心跳机制和消息传输
-#[derive(Debug)]
-pub struct ConnectionManager {}
+pub struct ConnectionManager {
+  setting: Arc<HetuflowAgentSetting>,
+  shutdown_tx: broadcast::Sender<()>,
+  event_tx: RwLock<Option<mpsc::UnboundedSender<WebSocketEvent>>>,
+  task_poll_resp_tx: mpsc::UnboundedSender<TaskPollResponse>,
+  websocket_handle: Mutex<Option<JoinHandle<()>>>,
+}
 
 impl ConnectionManager {
   /// 创建新的连接管理器
-  pub fn new() -> Self {
-    Self {}
+  pub fn new(
+    setting: Arc<HetuflowAgentSetting>,
+    shutdown_tx: broadcast::Sender<()>,
+    task_poll_resp_tx: mpsc::UnboundedSender<TaskPollResponse>,
+  ) -> Self {
+    Self { setting, shutdown_tx, event_tx: RwLock::new(None), task_poll_resp_tx, websocket_handle: Mutex::new(None) }
+  }
+
+  pub fn send_event(&self, event: WebSocketEvent) -> Result<(), DataError> {
+    let guard = self.event_tx.read().unwrap();
+    if let Some(event_tx) = &*guard {
+      event_tx.send(event)?;
+    }
+    Ok(())
+  }
+
+  /// 连接到 Hetuflow Server
+  pub async fn start(&self) -> Result<(), DataError> {
+    info!("Connecting to Hetuflow Server: {}", self.setting.connection.gateway_url());
+
+    self.start_websocket();
+
+    Ok(())
+  }
+
+  fn start_websocket(&self) {
+    let (event_tx, event_rx) = mpsc::unbounded_channel();
+    self.set_event_tx(event_tx);
+    let mut ws_handler =
+      WsHandler::new(self.setting.clone(), self.task_poll_resp_tx.clone(), event_rx, self.shutdown_tx.subscribe());
+    let handle = tokio::spawn(async move { ws_handler.start_loop().await });
+    let mut websocket_handle = self.websocket_handle.lock().unwrap();
+    *websocket_handle = Some(handle);
+  }
+
+  fn set_event_tx(&self, event_tx: mpsc::UnboundedSender<WebSocketEvent>) {
+    let mut guard = self.event_tx.write().unwrap();
+    guard.replace(event_tx);
+  }
+
+  pub async fn wait_closed(&self) -> Result<(), DataError> {
+    if let Some(websocket_handle) = self.take_websocket_handle()
+      && let Err(e) = websocket_handle.await
+    {
+      error!("Stop websocket receive loop error: {}", e);
+    }
+
+    Ok(())
+  }
+
+  fn take_websocket_handle(&self) -> Option<JoinHandle<()>> {
+    let mut websocket_handle_guard = self.websocket_handle.lock().unwrap();
+    websocket_handle_guard.take()
   }
 }

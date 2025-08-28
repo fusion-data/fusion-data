@@ -40,7 +40,10 @@ pub struct TaskEntity {
   /// 任务优先级，数值越大优先级越高
   pub priority: i32,
   pub status: TaskStatus,
+  /// 下一次调度时间。
+  /// TODO: 考虑使用 ScheduleEntity next_run_at
   pub scheduled_at: OffsetDateTime,
+  /// 任务完成时间。当次任务完成或者所有 Schedule 的配置均已到期
   pub completed_at: Option<OffsetDateTime>,
 
   /// 任务参数，需要为 JSON Object

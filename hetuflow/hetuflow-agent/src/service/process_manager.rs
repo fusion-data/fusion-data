@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::process::{Child, Command, Stdio};
 use std::sync::Arc;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use hetuflow_core::protocol::{
   ProcessEvent, ProcessEventType, ProcessInfo, ProcessStatus, ResourceLimits, ResourceUsage, ResourceViolation,
@@ -9,44 +9,19 @@ use hetuflow_core::protocol::{
 };
 use log::{debug, error, info, warn};
 use serde_json::json;
-use tokio::sync::{RwLock, mpsc};
-use tokio::time::sleep;
-use ultimate_common::time::{OffsetDateTime, datetime_from_millis, now_offset};
+use tokio::sync::{RwLock, broadcast, mpsc};
+use ultimate_common::time::now_offset;
+use ultimate_core::DataError;
 use uuid::Uuid;
 
-/// 进程管理器配置
-#[derive(Debug, Clone)]
-pub struct ProcessManagerConfig {
-  /// 清理循环间隔（秒）
-  pub cleanup_interval_seconds: u64,
-  /// 僵尸进程检测间隔（秒）
-  pub zombie_check_interval_seconds: u64,
-  /// 进程超时时间（秒）
-  pub process_timeout_seconds: u64,
-  /// 最大并发进程数
-  pub max_concurrent_processes: usize,
-  /// 默认资源限制
-  pub default_resource_limits: ResourceLimits,
-}
+use crate::setting::ProcessConfig;
 
-impl Default for ProcessManagerConfig {
-  fn default() -> Self {
-    Self {
-      cleanup_interval_seconds: 30,
-      zombie_check_interval_seconds: 10,
-      process_timeout_seconds: 3600, // 1小时
-      max_concurrent_processes: 10,
-      default_resource_limits: ResourceLimits::default(),
-    }
-  }
-}
-
-/// 进程管理器
-/// 负责管理活跃进程、处理进程事件和后台清理僵尸进程
+/// 进程管理器。负责管理活跃进程、处理进程事件和后台清理僵尸进程
 #[derive(Debug)]
 pub struct ProcessManager {
   /// 配置
-  config: ProcessManagerConfig,
+  process_config: Arc<ProcessConfig>,
+  shutdown_rx: Arc<broadcast::Receiver<()>>,
   /// 活跃进程映射
   active_processes: Arc<RwLock<HashMap<Uuid, ProcessInfo>>>,
   /// 进程句柄映射
@@ -61,12 +36,13 @@ pub struct ProcessManager {
 
 impl ProcessManager {
   /// 创建新的进程管理器
-  pub fn new(config: ProcessManagerConfig) -> Self {
+  pub fn new(process_config: Arc<ProcessConfig>, shutdown_rx: Arc<broadcast::Receiver<()>>) -> Self {
     let (event_sender, event_receiver) = mpsc::unbounded_channel();
     let resource_monitor = ResourceMonitor::new();
 
     Self {
-      config,
+      process_config,
+      shutdown_rx,
       active_processes: Arc::new(RwLock::new(HashMap::default())),
       process_handles: Arc::new(RwLock::new(HashMap::default())),
       event_sender,
@@ -76,7 +52,7 @@ impl ProcessManager {
   }
 
   /// 启动进程管理器
-  pub async fn start(&self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+  pub async fn start(&self) -> Result<(), DataError> {
     info!("Starting ProcessManager");
 
     // 启动事件处理循环
@@ -97,7 +73,7 @@ impl ProcessManager {
     // 启动清理循环
     let cleanup_active_processes = Arc::clone(&self.active_processes);
     let cleanup_process_handles = Arc::clone(&self.process_handles);
-    let cleanup_config = self.config.clone();
+    let cleanup_config = self.process_config.clone();
     let cleanup_event_sender = self.event_sender.clone();
 
     tokio::spawn(async move {
@@ -117,14 +93,14 @@ impl ProcessManager {
     working_dir: Option<&str>,
     environment: Option<&HashMap<String, String>>,
     resource_limits: Option<ResourceLimits>,
-  ) -> Result<Uuid, Box<dyn std::error::Error + Send + Sync>> {
+  ) -> Result<Uuid, DataError> {
     let process_id = Uuid::new_v4();
 
     // 检查并发进程数限制
     {
       let active_processes = self.active_processes.read().await;
-      if active_processes.len() >= self.config.max_concurrent_processes {
-        return Err("Maximum concurrent processes limit reached".into());
+      if active_processes.len() >= self.process_config.max_concurrent_processes {
+        return Err(DataError::server_error("Maximum concurrent processes limit reached"));
       }
     }
 
@@ -194,7 +170,7 @@ impl ProcessManager {
   }
 
   /// 强制终止进程
-  pub async fn kill_process(&self, process_id: Uuid) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+  pub async fn kill_process(&self, process_id: Uuid) -> Result<(), DataError> {
     debug!("Killing process: {}", process_id);
 
     let mut child_opt = {
@@ -310,7 +286,7 @@ impl ProcessManager {
   async fn cleanup_loop(
     active_processes: Arc<RwLock<HashMap<Uuid, ProcessInfo>>>,
     process_handles: Arc<RwLock<HashMap<Uuid, Child>>>,
-    config: ProcessManagerConfig,
+    config: Arc<ProcessConfig>,
     event_sender: mpsc::UnboundedSender<ProcessEvent>,
   ) {
     info!("ProcessManager cleanup loop started");
@@ -376,7 +352,7 @@ impl ProcessManager {
   async fn cleanup_timeout_processes(
     active_processes: &Arc<RwLock<HashMap<Uuid, ProcessInfo>>>,
     process_handles: &Arc<RwLock<HashMap<Uuid, Child>>>,
-    config: &ProcessManagerConfig,
+    config: &Arc<ProcessConfig>,
     event_sender: &mpsc::UnboundedSender<ProcessEvent>,
   ) {
     let timeout_duration = Duration::from_secs(config.process_timeout_seconds);
@@ -530,7 +506,7 @@ impl ResourceMonitor {
     &self,
     pid: u32,
     limits: &ResourceLimits,
-  ) -> Result<Option<ResourceViolation>, Box<dyn std::error::Error + Send + Sync>> {
+  ) -> Result<Option<ResourceViolation>, DataError> {
     let usage = self.get_resource_usage(pid).await?;
 
     // 检查内存限制
@@ -561,7 +537,7 @@ impl ResourceMonitor {
   }
 
   /// 获取进程资源使用情况
-  async fn get_resource_usage(&self, pid: u32) -> Result<ResourceUsage, Box<dyn std::error::Error + Send + Sync>> {
+  async fn get_resource_usage(&self, pid: u32) -> Result<ResourceUsage, DataError> {
     #[cfg(unix)]
     {
       use std::fs;

@@ -36,6 +36,9 @@ pub struct ScheduleEntity {
   /// 最大执行次数，为 1 时表示只执行一次，为 None 时表示无限执行。
   pub max_count: Option<i32>,
 
+  /// 计算出的下一次执行时间
+  pub next_run_at: Option<OffsetDateTime>,
+
   pub created_by: i64,
   pub created_at: OffsetDateTime,
   pub updated_by: Option<i64>,

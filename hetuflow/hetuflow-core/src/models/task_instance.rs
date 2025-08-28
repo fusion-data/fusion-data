@@ -21,7 +21,7 @@ pub struct TaskInstanceEntity {
   pub server_id: Uuid,
   pub agent_id: Uuid,
   pub status: TaskInstanceStatus,
-  pub started_at: Option<OffsetDateTime>,
+  pub started_at: OffsetDateTime,
   pub completed_at: Option<OffsetDateTime>,
   pub output: Option<String>,
   pub error_message: Option<String>,

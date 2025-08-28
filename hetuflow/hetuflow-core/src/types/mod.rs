@@ -135,7 +135,7 @@ pub enum AgentStatus {
   Online = 100,       // 在线
 }
 
-/// Agent 指令类型
+/// 从 Server 发向 Agent 的命令类型
 #[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "with-db", derive(sqlx::Type))]
 #[repr(i32)]
@@ -177,8 +177,6 @@ pub enum EventKind {
 
   /// Agent 请求 AgentRequest <-> GatewayResponse
   PollTaskRequest = 21,
-  /// 网关响应 GatewayResponse <-> AgentRequest
-  PollTaskResponse = 22,
 
   /// Agent 事件 AgentEvent
   TaskChangedEvent = 33,
