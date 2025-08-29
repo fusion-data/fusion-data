@@ -75,13 +75,12 @@ where distributed_lock.expires_at < now()
    or distributed_lock.value = excluded.value
 returning *"#;
     let db = mm.dbx().db_postgres()?;
-    let item = sqlx::query_as::<_, DistributedLockEntity>(sql)
+    let query = sqlx::query_as::<_, DistributedLockEntity>(sql)
       .bind(id)
       .bind(value)
       .bind(ttl)
-      .bind(token_increment_interval)
-      .fetch_optional(&db)
-      .await?;
+      .bind(token_increment_interval);
+    let item = db.fetch_optional(query).await?;
     Ok(item)
   }
 
@@ -100,8 +99,9 @@ returning *"#;
   pub async fn release_leadership(mm: &ModelManager, id: &str, value: &str) -> Result<bool, SqlError> {
     let sql = r#"delete from distributed_lock where id = $1 and value = $2"#;
     let db = mm.dbx().db_postgres()?;
-    let rows = sqlx::query(sql).bind(id).bind(value).execute(&db).await?;
-    Ok(rows.rows_affected() == 1)
+    let query = sqlx::query(sql).bind(id).bind(value);
+    let rows_affected = db.execute(query).await?;
+    Ok(rows_affected == 1)
   }
 
   /// 验证分布式锁参数配置的安全性

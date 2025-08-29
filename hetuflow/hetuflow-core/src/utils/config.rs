@@ -6,7 +6,7 @@ use ultimate_core::DataError;
 pub fn write_app_config(path: PathBuf, key: &str, id: &str) -> Result<(), DataError> {
   let config = Config::builder()
     .add_source(config::File::from(path.clone()))
-    .add_source(config::File::from_str(&format!("{}={}", key, id), config::FileFormat::Toml))
+    .add_source(config::File::from_str(&format!("{}: {}", key, id), config::FileFormat::Yaml))
     .build()?;
 
   // Convert config to serde_json::Value

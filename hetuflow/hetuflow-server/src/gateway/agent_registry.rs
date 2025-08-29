@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use hetuflow_core::protocol::{AgentRegisterRequest, TaskInstanceUpdated};
+use hetuflow_core::protocol::{AgentRegisterRequest, TaskInstanceUpdated, TaskPollRequest, WebSocketCommand};
 use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc;
 use uuid::Uuid;
@@ -14,13 +14,15 @@ pub enum AgentEvent {
   /// Agent 连接建立
   Connected { agent_id: Uuid, remote_addr: String },
   /// Agent 注册
-  Registered { agent_id: Uuid, payload: Arc<AgentRegisterRequest> },
+  Registered { agent_id: Uuid, payload: Box<AgentRegisterRequest> },
   /// Agent 取消注册
   Unregistered { agent_id: Uuid, reason: String },
   /// Agent 心跳更新
   Heartbeat { agent_id: Uuid, timestamp: i64 },
   /// Agent 任务实例状态变更
-  TaskInstanceChanged { agent_id: Uuid, payload: Arc<TaskInstanceUpdated> },
+  TaskInstanceChanged { agent_id: Uuid, payload: Box<TaskInstanceUpdated> },
+  /// Agent 任务轮询请求
+  TaskPollRequest { agent_id: Uuid, request: Box<TaskPollRequest> },
 }
 
 /// Agent 注册表接口 - Agent 运行态的唯一抽象
@@ -29,6 +31,10 @@ pub enum AgentEvent {
 /// 提供统一的在线/离线状态管理、心跳更新和事件订阅功能。
 #[async_trait::async_trait]
 pub trait AgentRegistry: Send + Sync {
+  async fn send_to_agent(&self, agent_id: &Uuid, command: WebSocketCommand) -> Result<(), GatewayError>;
+
+  async fn broadcast_to_all(&self, command: WebSocketCommand) -> Result<(), GatewayError>;
+
   /// 获取在线 Agent 列表
   ///
   /// 返回当前所有在线的 Agent ID 列表

@@ -255,7 +255,7 @@ impl ServerApplication {
 
   pub async fn health_status(&self) -> Result<HealthStatus, DataError> {
     let db = self.mm.dbx().db_postgres()?;
-    let db_size = db.size();
+    let db_size = db.db().size();
 
     let agent_size = self.connection_manager.get_online_count().await?;
 

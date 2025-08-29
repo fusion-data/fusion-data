@@ -1,41 +1,18 @@
-use std::{sync::Arc, time::Duration};
+use std::{path::PathBuf, sync::Arc, time::Duration};
 
 use duration_str::deserialize_duration;
 use hetuflow_core::utils::config::write_app_config;
+use log::{info, warn};
 use serde::{Deserialize, Serialize};
-use ultimate_common::ahash::HashMap;
+use ultimate_common::{ahash::HashMap, env::get_env};
 use ultimate_core::{DataError, configuration::UltimateConfigRegistry};
 use uuid::Uuid;
-
-/// Agent 基本配置
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct AgentConfig {
-  pub agent_id: Uuid,
-
-  /// Agent 名称
-  pub name: String,
-
-  /// Agent 版本
-  pub version: String,
-
-  /// Agent 能力列表
-  pub capabilities: Vec<String>,
-
-  /// Agent 标签
-  pub tags: Vec<String>,
-
-  /// 工作目录
-  pub work_dir: String,
-
-  /// 环境变量
-  pub env_vars: HashMap<String, String>,
-}
 
 /// 连接配置
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ConnectionConfig {
-  /// Gateway URL
-  pub gateway_base_url: String,
+  /// Server URL
+  pub server_base_address: String,
 
   /// 连接超时时间（秒）
   #[serde(deserialize_with = "deserialize_duration")]
@@ -51,21 +28,12 @@ pub struct ConnectionConfig {
 
   /// 最大重连次数
   pub max_reconnect_attempts: u32,
-
-  /// 消息缓冲区大小
-  pub message_buffer_size: usize,
-
-  /// 启用 TLS
-  pub enable_tls: bool,
-
-  /// TLS 证书路径
-  pub tls_cert_path: Option<String>,
 }
 
 impl ConnectionConfig {
-  pub fn gateway_url(&self) -> String {
-    let path = if self.gateway_base_url.ends_with('/') { "api/v1/gateway/ws" } else { "/api/v1/gateway/ws" };
-    format!("{}{}", self.gateway_base_url, path)
+  pub fn server_gateway_url(&self) -> String {
+    let path = if self.server_base_address.ends_with('/') { "api/v1/gateway/ws" } else { "/api/v1/gateway/ws" };
+    format!("ws://{}{}", self.server_base_address, path)
   }
 }
 
@@ -86,12 +54,6 @@ pub struct PollingConfig {
 
   /// 启用自适应轮询
   pub enable_adaptive_polling: bool,
-
-  /// 最小轮询间隔（秒）
-  pub min_interval_seconds: u64,
-
-  /// 最大轮询间隔（秒）
-  pub max_interval_seconds: u64,
 }
 
 /// 重试配置
@@ -150,25 +112,29 @@ pub enum RetryCondition {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ProcessConfig {
   /// 清理间隔（秒）
-  pub cleanup_interval_seconds: u64,
+  #[serde(deserialize_with = "deserialize_duration")]
+  pub cleanup_interval: Duration,
 
   /// 僵尸进程检测间隔（秒）
-  pub zombie_check_interval_seconds: u64,
+  #[serde(deserialize_with = "deserialize_duration")]
+  pub zombie_check_interval: Duration,
 
   /// 进程超时时间（秒）
-  pub process_timeout_seconds: u64,
+  #[serde(deserialize_with = "deserialize_duration")]
+  pub process_timeout: Duration,
 
   /// 最大并发进程数
   pub max_concurrent_processes: usize,
-
-  /// 默认资源限制
-  pub default_resource_limits: ResourceLimits,
 
   /// 启用资源监控
   pub enable_resource_monitoring: bool,
 
   /// 资源监控间隔（秒）
-  pub resource_monitor_interval_seconds: u64,
+  #[serde(deserialize_with = "deserialize_duration")]
+  pub resource_monitor_interval: Duration,
+
+  /// 默认资源限制
+  pub limits: ResourceLimits,
 }
 
 /// 资源限制
@@ -179,70 +145,35 @@ pub struct ResourceLimits {
 
   /// 最大 CPU 使用率（百分比）
   pub max_cpu_percent: Option<f64>,
-
-  /// 最大执行时间（秒）
-  pub max_execution_time_seconds: Option<u64>,
-
-  /// 最大文件描述符数
-  pub max_file_descriptors: Option<u32>,
 }
 
 /// 任务执行配置
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct TaskConfig {
   /// 默认任务超时时间（秒）
-  pub default_timeout_seconds: u64,
+  #[serde(deserialize_with = "deserialize_duration")]
+  pub default_timeout: Duration,
 
   /// 最大并发任务数
   pub max_concurrent_tasks: usize,
-
-  /// 输出缓冲区大小
-  pub output_buffer_size: usize,
-
-  /// 最大输出大小（字节）
-  pub max_output_size: u64,
-
-  /// 启用任务隔离
-  pub enable_task_isolation: bool,
-
-  /// 任务工作目录模板
-  pub work_dir_template: String,
-
-  /// 清理临时文件
-  pub cleanup_temp_files: bool,
-}
-
-/// 日志输出目标
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub enum LogTarget {
-  /// 标准输出
-  Stdout,
-  /// 标准错误
-  Stderr,
-  /// 文件
-  File,
-  /// 同时输出到控制台和文件
-  Both,
-}
-
-// 默认值函数
-fn default_heartbeat_interval() -> u32 {
-  30
-}
-
-fn default_task_timeout() -> u32 {
-  3600
-}
-
-fn default_max_output_size() -> u64 {
-  10 * 1024 * 1024 // 10MB
 }
 
 /// Agent 配置
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct HetuflowAgentSetting {
-  /// Agent 基本信息
-  pub agent: Arc<AgentConfig>,
+  pub agent_id: Uuid,
+
+  /// Agent 名称
+  pub name: Option<String>,
+
+  /// Agent 标签
+  pub tags: Vec<String>,
+
+  /// 工作目录
+  pub work_dir: Option<String>,
+
+  /// 元数据
+  pub metadata: HashMap<String, String>,
 
   /// 连接配置
   pub connection: Arc<ConnectionConfig>,
@@ -250,43 +181,65 @@ pub struct HetuflowAgentSetting {
   /// 轮询配置
   pub polling: Arc<PollingConfig>,
 
-  /// 重试配置
-  pub retry: Arc<RetryConfig>,
-
   /// 进程管理配置
   pub process: Arc<ProcessConfig>,
-
-  /// 任务执行配置
-  pub task: Arc<TaskConfig>,
-
-  /// 其他配置项（向后兼容）
-  pub settings: HashMap<String, String>,
-
-  // 向后兼容的字段
-  #[serde(default = "default_heartbeat_interval")]
-  pub heartbeat_interval: u32,
-
-  #[serde(default = "default_task_timeout")]
-  pub task_timeout: u32,
-
-  #[serde(default = "default_max_output_size")]
-  pub max_output_size: u64,
 }
+
 const KEY_PATH_AGENT_ID: &str = "hetuflow.agent.agent_id";
 
 impl HetuflowAgentSetting {
   pub fn load(config_registry: &UltimateConfigRegistry) -> Result<Self, DataError> {
     let config = config_registry.config();
     // Check if server_id not exists or invalid uuid in config
-    if let Err(_e) = config.get::<Uuid>(KEY_PATH_AGENT_ID) {
+    if let Err(e) = config.get::<Uuid>(KEY_PATH_AGENT_ID) {
+      warn!("Invalid agent_id in config file, error: {:?}", e);
+
       // Generate new UUID and write to config file
       let agent_id = Uuid::new_v4();
-      write_app_config("app.toml".into(), KEY_PATH_AGENT_ID, &agent_id.to_string())?;
+      let path = match get_env("CARGO_MANIFEST_DIR") {
+        Ok(dir) => PathBuf::from(dir).join("resources").join("app.toml"),
+        Err(_) => PathBuf::from(get_env("HOME")?).join(".hetuflow").join("agent.toml"),
+      };
+      std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+      write_app_config(path, KEY_PATH_AGENT_ID, &agent_id.to_string())?;
+      info!("Generated new agent_id: {}, and write to config file", agent_id);
+
       // Reload config registry
       config_registry.reload()?;
     }
 
-    let setting = config_registry.get_config_by_path("hetuflow")?;
+    let setting = config_registry.get_config_by_path("hetuflow.agent")?;
     Ok(setting)
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use ultimate_common::env::set_env;
+
+  use super::*;
+
+  #[test]
+  fn test_dir() {
+    for (key, value) in std::env::vars() {
+      println!("{}: {}", key, value);
+    }
+    let dir = std::env::temp_dir();
+    println!("dir: {}", dir.display());
+    // let file = dir.join("app.toml");
+    // assert!(file.exists());
+  }
+
+  #[test]
+  fn test_load() {
+    // 检查配置文件是否存在
+    set_env("ULTIMATE_CONFIG_FILE", "resources/app.toml").unwrap();
+
+    // 尝试加载配置
+    let config_registry = UltimateConfigRegistry::load().unwrap();
+    println!("{:?}", config_registry.ultimate_config().app());
+
+    let setting = HetuflowAgentSetting::load(&config_registry).unwrap();
+    assert!(Uuid::try_parse(&setting.agent_id.to_string()).is_ok());
   }
 }

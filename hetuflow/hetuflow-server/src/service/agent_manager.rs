@@ -1,6 +1,7 @@
 use hetuflow_core::{
   models::*,
-  types::{AgentStatus, TaskInstanceStatus, TaskStatus},
+  protocol::{ScheduledTask, TaskPollRequest, TaskPollResponse, WebSocketCommand},
+  types::{AgentStatus, CommandKind, TaskInstanceStatus, TaskStatus},
 };
 use log::{debug, error, info, warn};
 use modelsql::{
@@ -9,7 +10,10 @@ use modelsql::{
 };
 use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
-use ultimate_common::time::now_offset;
+use ultimate_common::{
+  ahash::{HashMap, HashSet},
+  time::now_offset,
+};
 use ultimate_core::DataError;
 use uuid::Uuid;
 
@@ -35,7 +39,9 @@ impl AgentManager {
     let (tx, event_receiver) = mpsc::unbounded_channel();
     self.agent_registry.subscribe_events(tx).await?;
 
-    let join_handle = tokio::spawn(handle_agent_events(self.mm.clone(), event_receiver));
+    let run_loop =
+      AgentEventRunLoop { mm: self.mm.clone(), agent_registry: self.agent_registry.clone(), event_receiver };
+    let join_handle = tokio::spawn(run_loop.run());
     Ok(join_handle)
   }
 
@@ -226,37 +232,89 @@ impl AgentManager {
   }
 }
 
-/// 处理 Agent 事件
-async fn handle_agent_events(mm: ModelManager, mut event_receiver: mpsc::UnboundedReceiver<AgentEvent>) {
-  let agent_svc = AgentSvc::new(mm.clone());
-  while let Some(event) = event_receiver.recv().await {
-    match event {
-      AgentEvent::Heartbeat { agent_id, .. } => {
-        debug!("Received heartbeat from agent {}", agent_id);
-        if let Err(e) = agent_svc.update_agent_heartbeat(&agent_id).await {
-          // TODO:
-          error!("Failed to update agent heartbeat: {:?}", e);
+struct AgentEventRunLoop {
+  mm: ModelManager,
+  agent_registry: AgentRegistryRef,
+  event_receiver: mpsc::UnboundedReceiver<AgentEvent>,
+}
+
+impl AgentEventRunLoop {
+  /// 处理 Agent 事件
+  async fn run(mut self) {
+    let agent_svc = AgentSvc::new(self.mm.clone());
+    while let Some(event) = self.event_receiver.recv().await {
+      match event {
+        AgentEvent::Heartbeat { agent_id, .. } => {
+          debug!("Received heartbeat from agent {}", agent_id);
+          if let Err(e) = agent_svc.update_agent_heartbeat(&agent_id).await {
+            // TODO:
+            error!("Failed to update agent heartbeat: {:?}", e);
+          }
         }
-      }
-      AgentEvent::TaskInstanceChanged { agent_id, payload } => {
-        info!("Agent {} task instance changed: {:?}", agent_id, payload);
-      }
-      AgentEvent::Registered { agent_id, .. } => {
-        info!("Agent {} connected, updating reliability stats", agent_id);
-        if let Err(e) = agent_svc.update_agent_status(&agent_id, AgentStatus::Online).await {
-          error!("Failed to update agent status: {:?}", e);
+        AgentEvent::TaskInstanceChanged { agent_id, payload } => {
+          info!("Agent {} task instance changed: {:?}", agent_id, payload);
         }
-      }
-      AgentEvent::Connected { .. } => {
-        // do nothing
-      }
-      AgentEvent::Unregistered { agent_id, reason } => {
-        warn!("Agent {} disconnected: {}", agent_id, reason);
-        // 处理 Agent 离线导致的任务失败
-        if let Err(e) = agent_svc.handle_agent_offline(&agent_id).await {
-          error!("Failed to handle offline agent {}: {:?}", agent_id, e);
+        AgentEvent::TaskPollRequest { agent_id, request } => {
+          if let Err(e) = self.process_task_poll(agent_id, *request).await {
+            error!("Failed to process task poll request: {:?}", e);
+          }
+        }
+        AgentEvent::Registered { agent_id, .. } => {
+          info!("Agent {} connected, updating reliability stats", agent_id);
+          if let Err(e) = agent_svc.update_agent_status(&agent_id, AgentStatus::Online).await {
+            error!("Failed to update agent status: {:?}", e);
+          }
+        }
+        AgentEvent::Connected { .. } => {
+          // do nothing
+        }
+        AgentEvent::Unregistered { agent_id, reason } => {
+          warn!("Agent {} disconnected: {}", agent_id, reason);
+          // 处理 Agent 离线导致的任务失败
+          if let Err(e) = agent_svc.handle_agent_offline(&agent_id).await {
+            error!("Failed to handle offline agent {}: {:?}", agent_id, e);
+          }
         }
       }
     }
+  }
+
+  /// Agent poll task 时不对 Server 绑定的 Namespace 进行过滤，直接拉取符合要求的最紧急的 TaskInstanceEntity。按 request 条件进行过滤
+  async fn process_task_poll(&self, agent_id: Uuid, request: TaskPollRequest) -> Result<(), DataError> {
+    info!("Agent {} task poll request: {:?}", agent_id, request);
+    let task_instances = TaskInstanceBmc::find_many_by_poll(&self.mm, &request).await?;
+    let task_map = TaskBmc::find_many(
+      &self.mm,
+      vec![TaskFilter {
+        id: Some(OpValsUuid::in_(task_instances.iter().map(|ti| ti.task_id).collect::<HashSet<_>>())),
+        ..Default::default()
+      }],
+      None,
+    )
+    .await?
+    .into_iter()
+    .map(|t| (t.id, t))
+    .collect::<HashMap<_, _>>();
+
+    let tasks = task_instances
+      .into_iter()
+      .filter_map(|task_instance| {
+        let task_id = task_instance.task_id;
+        match task_map.get(&task_id) {
+          Some(task) => Some(ScheduledTask { task_instance, task: task.clone() }),
+          None => {
+            warn!("TaskEntity not exists, task_id: {}", task_id);
+            None
+          }
+        }
+      })
+      .collect::<Vec<_>>();
+
+    // 向 request.agent_id 发送 TaskPollResponse
+    let parameters = serde_json::to_value(TaskPollResponse { tasks, has_more: false, next_poll_interval: 0 })?;
+    let command = WebSocketCommand::new(CommandKind::DispatchTask, parameters);
+    self.agent_registry.send_to_agent(&agent_id, command).await?;
+
+    Ok(())
   }
 }

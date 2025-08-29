@@ -11,10 +11,10 @@ use hetumind::{
   utils::NodeRegistryPlugin,
 };
 use hetumind_core::workflow::{ErrorHandlingStrategy, ExecutionMode, WorkflowId, WorkflowStatus};
-use modelsql::ModelManager;
+use modelsql::{ModelManager, store::DbxPostgres};
 use once_cell::sync::Lazy;
 use serde_json::json;
-use sqlx::{Connection, Executor, PgConnection, PgPool};
+use sqlx::{Connection, Executor, PgConnection};
 use tokio::sync::OnceCell;
 use ultimate_core::{DataError, application::Application};
 use ultimate_db::DbPlugin;
@@ -26,7 +26,7 @@ pub async fn get_server() -> TestServer {
   let context = TestContext::setup().await;
 
   // 清理测试数据
-  cleanup_test_data(&context.db_pool).await;
+  cleanup_test_data(&context.dbx).await;
 
   let mut server = TestServer::new(context.router).unwrap();
   server.add_header("Authorization", format!("Bearer {}", ADMIN_TOKEN));
@@ -34,8 +34,8 @@ pub async fn get_server() -> TestServer {
 }
 
 // 清理测试数据的函数
-async fn cleanup_test_data(pool: &PgPool) {
-  let mut conn = pool.acquire().await.unwrap();
+async fn cleanup_test_data(dbx: &DbxPostgres) {
+  let mut conn = dbx.db().acquire().await.unwrap();
 
   // 按照外键依赖顺序删除数据
   conn.execute("DELETE FROM execution_data").await.ok();
@@ -46,7 +46,7 @@ async fn cleanup_test_data(pool: &PgPool) {
 // The test context that will be shared between tests.
 pub struct TestContext {
   pub router: Router,
-  pub db_pool: PgPool,
+  pub dbx: DbxPostgres,
 }
 
 impl TestContext {
@@ -72,9 +72,9 @@ impl TestContext {
       .unwrap();
 
     let router = endpoint::api::routes().with_state(application);
-    let db_pool = mm.dbx().db_postgres().unwrap();
+    let dbx = mm.dbx().db_postgres().unwrap().clone();
 
-    TestContext { router, db_pool }
+    TestContext { router, dbx }
   }
 }
 

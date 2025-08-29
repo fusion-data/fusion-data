@@ -18,7 +18,7 @@ use crate::types::TaskInstanceStatus;
 pub struct TaskInstanceEntity {
   pub id: Uuid,
   pub task_id: Uuid,
-  pub server_id: Uuid,
+  pub job_id: Uuid,
   pub agent_id: Uuid,
   pub status: TaskInstanceStatus,
   pub started_at: OffsetDateTime,

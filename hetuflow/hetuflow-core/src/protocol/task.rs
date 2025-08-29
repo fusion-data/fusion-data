@@ -3,28 +3,21 @@ use ultimate_common::time::now_epoch_millis;
 use uuid::Uuid;
 
 use crate::{
-  models::{ScheduleEntity, TaskEntity, TaskInstanceEntity, TaskMetrics},
+  models::{TaskEntity, TaskInstanceEntity, TaskMetrics},
   types::{TaskControlKind, TaskInstanceStatus},
 };
 
-/// 任务分发请求 (Represents a 'Task')
-/// 调度任务组合结构体
-/// 包含任务信息和对应的调度信息
+/// 任务分发请求
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ScheduledTask {
   pub task_instance: TaskInstanceEntity,
-
-  /// 任务实体
   pub task: TaskEntity,
-
-  /// 调度实体（可选，手动/事件触发的任务没有调度信息或者Flow类型的任务也没有调度信息）
-  pub schedule: Option<ScheduleEntity>,
 }
 
 impl ScheduledTask {
   /// 创建新的调度任务
-  pub fn new(task_instance: TaskInstanceEntity, task: TaskEntity, schedule: Option<ScheduleEntity>) -> Self {
-    Self { task_instance, task, schedule }
+  pub fn new(task_instance: TaskInstanceEntity, task: TaskEntity) -> Self {
+    Self { task_instance, task }
   }
 
   pub fn task_instance_id(&self) -> Uuid {
@@ -52,8 +45,8 @@ impl ScheduledTask {
   }
 
   /// 获取任务标签
-  pub fn tags(&self) -> &Vec<String> {
-    &self.task.tags
+  pub fn tags(&self) -> &[String] {
+    self.task.tags.as_ref()
   }
 
   /// 检查任务是否匹配指定的标签
@@ -67,20 +60,17 @@ impl ScheduledTask {
 
   /// 检查任务是否为定时任务
   pub fn is_scheduled(&self) -> bool {
-    self.schedule.is_some()
+    self.task.schedule_id.is_some()
   }
 
   /// 检查任务是否为手动触发任务
   pub fn is_manual(&self) -> bool {
-    self.schedule.is_none()
+    self.task.schedule_id.is_none()
   }
 
   /// 获取调度类型描述
-  pub fn schedule_type_description(&self) -> String {
-    match &self.schedule {
-      Some(schedule) => format!("{:?}", schedule.schedule_kind),
-      None => "Manual".to_string(),
-    }
+  pub fn schedule_type_description(&self) -> &str {
+    self.task.schedule_kind.as_ref()
   }
 }
 

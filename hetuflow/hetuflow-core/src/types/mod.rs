@@ -2,9 +2,10 @@
 mod cli;
 
 use serde_repr::{Deserialize_repr, Serialize_repr};
+use strum::AsRefStr;
 
 /// 作业类型 (ScheduleKind) - 定义了 Job 的核心调度和行为模式
-#[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy, PartialEq, Eq, AsRefStr)]
 #[cfg_attr(feature = "with-db", derive(sqlx::Type))]
 #[repr(i32)]
 pub enum ScheduleKind {
@@ -67,12 +68,11 @@ pub enum ScheduleStatus {
 ///   Cancelled --> [*] : 任务取消结束
 ///   Succeeded --> [*] : 任务成功结束
 /// ```
-#[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "with-db", derive(sqlx::Type))]
 #[repr(i32)]
 pub enum TaskStatus {
   /// 等待分发
-  #[default]
   Pending = 1,
   /// 已锁定，等待分发到 agent 执行
   Locked = 10,
@@ -95,6 +95,8 @@ pub enum TaskStatus {
 pub enum TaskInstanceStatus {
   /// 等待执行
   Pending = 1,
+  /// 已分发
+  Dispatched = 5,
   /// 执行中
   Running = 10,
   /// 执行超时

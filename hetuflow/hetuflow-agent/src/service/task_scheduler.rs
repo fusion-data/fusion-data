@@ -142,10 +142,10 @@ impl TaskScheduler {
 
         // 发送轮询请求
         let poll_request = TaskPollRequest {
-          agent_id: setting.agent.agent_id,
+          agent_id: setting.agent_id,
           max_tasks: current_capacity as u32,
           available_capacity: current_capacity as u32,
-          tags: setting.agent.tags.clone(),
+          tags: setting.tags.clone(),
         };
 
         if let Err(e) = connection_manager.send_event(WebSocketEvent::new(EventKind::PollTaskRequest, poll_request)) {

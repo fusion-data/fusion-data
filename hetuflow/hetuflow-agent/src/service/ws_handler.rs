@@ -1,4 +1,7 @@
-use std::sync::Arc;
+use std::sync::{
+  Arc,
+  atomic::{AtomicBool, Ordering},
+};
 
 use futures_util::{FutureExt, SinkExt, StreamExt, pin_mut};
 use hetuflow_core::{
@@ -16,7 +19,8 @@ pub struct WsHandler {
   setting: Arc<HetuflowAgentSetting>,
   task_poll_resp_tx: mpsc::UnboundedSender<TaskPollResponse>,
   event_rx: mpsc::UnboundedReceiver<WebSocketEvent>,
-  shutdown_rx: broadcast::Receiver<()>,
+  shutdown_tx: broadcast::Sender<()>,
+  closed: Arc<AtomicBool>,
 }
 
 impl WsHandler {
@@ -24,34 +28,50 @@ impl WsHandler {
     setting: Arc<HetuflowAgentSetting>,
     task_poll_resp_tx: mpsc::UnboundedSender<TaskPollResponse>,
     event_rx: mpsc::UnboundedReceiver<WebSocketEvent>,
-    shutdown_rx: broadcast::Receiver<()>,
+    shutdown_tx: broadcast::Sender<()>,
   ) -> Self {
-    Self { setting, task_poll_resp_tx, event_rx, shutdown_rx }
+    Self { setting, task_poll_resp_tx, event_rx, shutdown_tx, closed: Arc::new(AtomicBool::new(false)) }
   }
 
   pub async fn start_loop(&mut self) {
-    while let Err(e) = self.start_websocket_loop().await {
+    let closed = self.closed.clone();
+    let mut shutdown_rx = self.shutdown_tx.subscribe();
+    tokio::spawn(async move {
+      let _ = shutdown_rx.recv().await;
+      closed.store(true, Ordering::Relaxed);
+    });
+
+    while let Err(e) = self.start_websocket_loop().await
+      && !self.closed.load(Ordering::Relaxed)
+    {
       error!("Failed to run websocket loop: {}", e);
+
       // 等待 10 秒后重试
       tokio::time::sleep(std::time::Duration::from_secs(10)).await;
     }
 
     // 正常退出
-    // TODO: 退出整个 Agent 程序还是也重试连接 Server？
+    info!("Websocket loop closed");
   }
 
   async fn start_websocket_loop(&mut self) -> Result<(), DataError> {
-    let (ws_stream, _resp) = tokio_tungstenite::connect_async(self.setting.connection.gateway_url())
+    let (ws_stream, _resp) = tokio_tungstenite::connect_async(self.setting.connection.server_gateway_url())
       .await
       .map_err(|e| DataError::server_error(format!("Failed to connect to gateway: {}", e)))?;
     let (mut ws_tx, mut ws_rx) = ws_stream.split();
+    let mut shutdown_rx = self.shutdown_tx.subscribe();
 
     loop {
       let event_fut = self.event_rx.recv().fuse();
       let ws_fut = ws_rx.next().fuse();
-      let shutdown_fut = self.shutdown_rx.recv().fuse();
+      let shutdown_fut = shutdown_rx.recv().fuse();
       pin_mut!(event_fut, ws_fut, shutdown_fut);
       futures_util::select! {
+        _ = shutdown_fut => { // Shutdown signal received
+          info!("Shutdown signal received, stopping ConnectionManager loop");
+          self.closed.store(true, Ordering::Relaxed);
+          return Ok(());
+        }
         event = event_fut => { // Send event to Server
           if let Some(event) = event {
             let msg = serde_json::to_string(&event).unwrap();
@@ -97,10 +117,6 @@ impl WsHandler {
               // do nothing
             }
           }
-        }
-        _ = shutdown_fut => { // Shutdown signal received
-          info!("Shutdown signal received, stopping ConnectionManager loop");
-          return Ok(());
         }
       }
     }

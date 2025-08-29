@@ -15,7 +15,7 @@ uninlined_format_args = "allow"
 [features]
 default = ["opentelemetry"]
 tonic = ["dep:tonic", "dep:protobuf"]
-opentelemetry = []
+opentelemetry = ["logforth/append-opentelemetry"]
 with-uuid = ["dep:uuid"]
 with-ulid = ["dep:ulid"]
 
@@ -40,6 +40,8 @@ log.workspace = true
 rand.workspace = true
 argon2.workspace = true
 josekit.workspace = true
+logforth = { workspace = true }
+fastrace = { workspace = true }
 serde.workspace = true
 serde_json.workspace = true
 serde_with.workspace = true
@@ -48,6 +50,8 @@ serde_repr.workspace = true
 tonic = { workspace = true, optional = true }
 protobuf = { workspace = true, optional = true }
 modelsql = { workspace = true, optional = true }
+jiff = "0.2"
+
 
 [dev-dependencies]
 dotenvy.workspace = true

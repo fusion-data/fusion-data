@@ -67,7 +67,6 @@ pub struct TaskExecution {
 }
 
 /// 任务执行器。负责执行具体的任务，包括进程管理、重试机制和状态上报
-#[derive(Clone)]
 pub struct TaskExecutor {
   /// Agent ID
   agent_id: Uuid,

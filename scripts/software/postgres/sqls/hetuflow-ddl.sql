@@ -86,13 +86,12 @@ create table sched_schedule (
 create table sched_task (
   id uuid primary key,
   job_id uuid not null references sched_job (id),
-  schedule_id uuid references sched_schedule (id), -- 可以为空，表示手动触发
-  agent_id uuid, -- 进行任务执行的最终实际 Agent ID
-  server_id uuid, -- 进行分发的最终服务器 ID
   namespace_id uuid not null default '00000000-0000-0000-0000-000000000000', -- namespace_id 由 fusion-iam 管理
   priority int not null default 0, -- 任务优先级，数值越大优先级越高
   status int not null default 1, -- 见 TaskStatus 枚举
+  schedule_id uuid references sched_schedule (id), -- 为空时表示手动触发：Event, Flow
   scheduled_at timestamptz not null, -- 计划执行时间
+  schedule_kind int not null, -- 见 ScheduleKind 枚举
   completed_at timestamptz, -- 任务完成时间，具体的任务明细见对应的 sched_task_instance 表
   tags varchar(255) [] not null default '{}', -- 任务标签
   parameters jsonb not null default '{}'::jsonb, -- 任务参数
@@ -100,8 +99,8 @@ create table sched_task (
   job_config jsonb, -- 任务配置
   retry_count int not null default 0, -- 重试次数
   max_retries int not null default 3, -- 最大重试次数
-  locked_at timestamptz,
-  lock_version int not null default 0,
+  -- locked_at timestamptz,
+  -- lock_version int not null default 0,
   dependencies jsonb, -- 任务依赖关系
   created_by bigint not null,
   created_at timestamptz not null default now(),
@@ -112,10 +111,6 @@ create table sched_task (
 -- 创建索引优化查询性能
 create index if not exists idx_sched_task_status_scheduled on sched_task (status, scheduled_at);
 
-create index if not exists idx_sched_task_server_locked on sched_task (server_id, locked_at)
-where
-  server_id is not null;
-
 create index if not exists idx_sched_task_lock_timeout on sched_task (locked_at)
 where
   status in (10, 20);
@@ -124,7 +119,7 @@ where
 create table sched_task_instance (
   id uuid primary key,
   task_id uuid not null references sched_task (id),
-  server_id uuid not null references sched_server (id), -- 绑定的服务器 ID，用于任务分发
+  job_id uuid not null references sched_job (id), -- 绑定的 Job ID，用于任务分发
   agent_id uuid not null references sched_agent (id), -- 绑定的 Agent ID，用于任务执行
   status int not null default 1, -- 见 TaskInstanceStatus 枚举
   started_at timestamptz not null, -- 任务实例开始（计划）时间，实际运行时可能会有微小的偏差

@@ -65,7 +65,7 @@ impl KeyConf for PwdConf {
   }
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize, ZeroizeOnDrop)]
+#[derive(Clone, Deserialize, Serialize, ZeroizeOnDrop)]
 pub struct TokenConf {
   #[serde(deserialize_with = "deser_str_to_vec_u8", serialize_with = "ser_vec_u8_to_str")]
   pub(crate) secret_key: Vec<u8>,

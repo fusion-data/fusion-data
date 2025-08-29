@@ -82,7 +82,7 @@ impl ConnectionManager {
 
   /// 连接到 Hetuflow Server
   pub async fn start(&self) -> Result<(), DataError> {
-    info!("Connecting to Hetuflow Server: {}", self.setting.connection.gateway_url());
+    info!("Connecting to Hetuflow Server: {}", self.setting.connection.server_gateway_url());
 
     self.start_websocket();
 
@@ -93,7 +93,7 @@ impl ConnectionManager {
     let (event_tx, event_rx) = mpsc::unbounded_channel();
     self.set_event_tx(event_tx);
     let mut ws_handler =
-      WsHandler::new(self.setting.clone(), self.task_poll_resp_tx.clone(), event_rx, self.shutdown_tx.subscribe());
+      WsHandler::new(self.setting.clone(), self.task_poll_resp_tx.clone(), event_rx, self.shutdown_tx.clone());
     let handle = tokio::spawn(async move { ws_handler.start_loop().await });
     let mut websocket_handle = self.websocket_handle.lock().unwrap();
     *websocket_handle = Some(handle);

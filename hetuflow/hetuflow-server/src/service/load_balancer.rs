@@ -277,13 +277,13 @@ impl LoadBalancer {
 
     // 清空没有分配到 namespace_id 的服务器
     for server_info in servers {
-      if !namespace_assignments.contains_key(&server_info.server.id) {
-        ServerBmc::update_server_namespace_bind(&self.mm, server_info.server.id, vec![])
-          .await
-          .map_err(|e| DataError::server_error(format!("Failed to clear server namespace_id bind: {}", e)))?;
-
-        debug!("Cleared namespaces for server {}", server_info.server.id);
+      if namespace_assignments.contains_key(&server_info.server.id) {
+        continue;
       }
+      ServerBmc::update_server_namespace_bind(&self.mm, server_info.server.id, vec![])
+        .await
+        .map_err(|e| DataError::server_error(format!("Failed to clear server namespace_id bind: {}", e)))?;
+      debug!("Cleared namespaces for server {}", server_info.server.id);
     }
 
     Ok(())
@@ -295,11 +295,8 @@ impl LoadBalancer {
     let sql =
       "select distinct namespace_id from sched_task where status < 90 or (status = 90 and retry_count < max_retries)";
     let db = self.mm.dbx().db_postgres().map_err(|e| DataError::server_error(format!("Database error: {}", e)))?;
-
-    let rows: Vec<(Uuid,)> = sqlx::query_as(sql)
-      .fetch_all(&db)
-      .await
-      .map_err(|e| DataError::server_error(format!("Failed to fetch namespaces: {}", e)))?;
+    let query = sqlx::query_as(sql);
+    let rows: Vec<(Uuid,)> = db.fetch_all(query).await?;
 
     Ok(rows.into_iter().map(|(id,)| id).collect())
   }

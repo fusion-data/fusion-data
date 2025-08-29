@@ -17,7 +17,7 @@ use crate::{
   Result,
   component::{ComponentArc, ComponentError, ComponentResult, DynComponentArc, auto_inject_component},
   configuration::{ConfigRegistry, Configurable, ConfigureResult, UltimateConfig, UltimateConfigRegistry},
-  log::TracingPlugin,
+  log::LogPlugin,
   plugin::{Plugin, PluginRef},
 };
 
@@ -316,7 +316,7 @@ impl ApplicationBuilder {
 
   /// Initialize tracing for Application
   async fn build_plugins(&mut self) -> Result<()> {
-    self.add_plugin(TracingPlugin);
+    self.add_plugin(LogPlugin);
 
     let registry = std::mem::take(&mut self.plugin_registry);
     let mut to_register = registry.iter().map(|e| e.value().to_owned()).collect::<Vec<_>>();

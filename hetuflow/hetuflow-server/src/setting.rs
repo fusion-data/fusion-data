@@ -1,8 +1,9 @@
-use std::time::Duration;
+use std::{path::PathBuf, time::Duration};
 
 use duration_str::deserialize_duration;
 use hetuflow_core::utils::config::write_app_config;
 use serde::{Deserialize, Serialize};
+use ultimate_common::env::get_env;
 use ultimate_core::{DataError, configuration::UltimateConfigRegistry};
 use uuid::Uuid;
 
@@ -49,7 +50,12 @@ impl HetuflowServerSetting {
     if let Err(_e) = config.get::<Uuid>(KEY_PATH_SERVER_ID) {
       // Generate new UUID and write to config file
       let server_id = Uuid::new_v4();
-      write_app_config("app.toml".into(), KEY_PATH_SERVER_ID, &server_id.to_string())?;
+      let path = match get_env("CARGO_MANIFEST_DIR") {
+        Ok(dir) => PathBuf::from(dir).join("resources").join("app.toml"),
+        Err(_) => PathBuf::from(get_env("HOME")?).join(".hetuflow").join("server.toml"),
+      };
+      std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+      write_app_config(path, KEY_PATH_SERVER_ID, &server_id.to_string())?;
       // Reload config registry
       config_registry.reload()?;
     }

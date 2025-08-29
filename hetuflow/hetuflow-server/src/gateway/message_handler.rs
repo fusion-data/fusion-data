@@ -10,7 +10,8 @@ use tokio::sync::mpsc;
 use ultimate_common::time::now_epoch_millis;
 use uuid::Uuid;
 
-use crate::gateway::AgentEvent;
+use crate::gateway::{AgentEvent, AgentRegistry};
+use crate::infra::bmc::TaskInstanceBmc;
 use crate::model::AgentConnection;
 
 use super::{ConnectionManager, GatewayError};
@@ -36,7 +37,10 @@ impl MessageHandler {
       }
       EventKind::PollTaskRequest => {
         let request: TaskPollRequest = serde_json::from_value(event.payload)?;
-        self.handle_poll_task_request(agent_id, request).await
+        self
+          .event_sender
+          .send(AgentEvent::TaskPollRequest { agent_id, request: Box::new(request) })
+          .map_err(|e| GatewayError::async_queue_error(e.to_string()))
       }
       EventKind::TaskChangedEvent => {
         let update: TaskInstanceUpdated = serde_json::from_value(event.payload)?;
@@ -62,7 +66,7 @@ impl MessageHandler {
     // 发布注册成功事件
     self
       .connection_manager
-      .publish_event(AgentEvent::Registered { agent_id, payload: Arc::new(register_req) })
+      .publish_event(AgentEvent::Registered { agent_id, payload: Box::new(register_req) })
       .await?;
 
     // 发送注册响应
@@ -92,12 +96,6 @@ impl MessageHandler {
     Ok(())
   }
 
-  /// 处理 Agent poll task 请求
-  async fn handle_poll_task_request(&self, agent_id: Uuid, request: TaskPollRequest) -> Result<(), GatewayError> {
-    // TODO: Agent poll task 时不对 Server 绑定的 Namespace 进行过滤，直接拉取符合要求的最紧急的 Task
-    todo!()
-  }
-
   /// 处理任务状态更新
   async fn handle_task_status_update(&self, agent_id: Uuid, payload: TaskInstanceUpdated) -> Result<(), GatewayError> {
     // TODO: 实现任务状态更新逻辑
@@ -106,7 +104,7 @@ impl MessageHandler {
     // 3. 更新任务状态
     // 4. 通知相关服务
     // 发送状态更新事件
-    let event = AgentEvent::TaskInstanceChanged { agent_id, payload: Arc::new(payload) };
+    let event = AgentEvent::TaskInstanceChanged { agent_id, payload: Box::new(payload) };
     self.event_sender.send(event).map_err(|e| GatewayError::async_queue_error(e.to_string()))?;
 
     Ok(())

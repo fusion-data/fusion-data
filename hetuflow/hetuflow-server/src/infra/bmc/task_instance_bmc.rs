@@ -9,7 +9,10 @@ use sqlx::Row;
 use ultimate_common::time::now_offset;
 use uuid::Uuid;
 
-use hetuflow_core::types::TaskInstanceStatus;
+use hetuflow_core::{
+  protocol::TaskPollRequest,
+  types::{TaskInstanceStatus, TaskStatus},
+};
 
 use hetuflow_core::models::{TaskInstanceEntity, TaskInstanceFilter, TaskInstanceForCreate, TaskInstanceForUpdate};
 
@@ -34,39 +37,6 @@ generate_pg_bmc_filter!(
 );
 
 impl TaskInstanceBmc {
-  /// 统计 Agent 运行中的任务实例数量
-  pub async fn count_running_tasks_by_agent(mm: &ModelManager, agent_id: &Uuid) -> Result<u64, SqlError> {
-    let filter = TaskInstanceFilter {
-      agent_id: Some(OpValsUuid::eq(*agent_id)),
-      status: Some(OpValsInt32::eq(TaskInstanceStatus::Running as i32)),
-      ..Default::default()
-    };
-
-    Self::count(mm, vec![filter]).await
-  }
-
-  /// 查找运行中的任务实例
-  pub async fn find_running_instances(mm: &ModelManager) -> Result<Vec<TaskInstanceEntity>, SqlError> {
-    let filter =
-      TaskInstanceFilter { status: Some(OpValsInt32::eq(TaskInstanceStatus::Running as i32)), ..Default::default() };
-
-    Self::find_many(mm, vec![filter], None).await
-  }
-
-  /// 根据任务 ID 查找实例
-  pub async fn find_many_by_task_id(mm: &ModelManager, task_id: Uuid) -> Result<Vec<TaskInstanceEntity>, SqlError> {
-    let filter = TaskInstanceFilter { task_id: Some(OpValsUuid::eq(task_id)), ..Default::default() };
-
-    Self::find_many(mm, vec![filter], None).await
-  }
-
-  /// 根据 Agent ID 查找实例
-  pub async fn find_many_by_agent_id(mm: &ModelManager, agent_id: &Uuid) -> Result<Vec<TaskInstanceEntity>, SqlError> {
-    let filter = TaskInstanceFilter { agent_id: Some(OpValsUuid::eq(*agent_id)), ..Default::default() };
-
-    Self::find_many(mm, vec![filter], None).await
-  }
-
   /// 开始执行任务实例
   pub async fn start_instance(
     mm: &ModelManager,
@@ -239,5 +209,46 @@ impl TaskInstanceBmc {
   /// 找到所有僵尸任务实例
   pub async fn find_zombie_instances(_mm: &ModelManager) -> Result<Vec<TaskInstanceEntity>, SqlError> {
     todo!()
+  }
+
+  /// 拉取到 TaskInstanceEntity 后，将 request.agent_id 绑定到 TaskInstanceEntity.agent_id 上
+  pub async fn find_many_by_poll(
+    mm: &ModelManager,
+    request: &TaskPollRequest,
+  ) -> Result<Vec<TaskInstanceEntity>, SqlError> {
+    // SQL 语句：
+    // 1. 查询符合条件的 task_instance
+    // 2. 更新对应 task 状态
+    // 3. 更新对应 task_instance 状态 和 agent_id
+    // 4. 返回更新后的 task_instance
+    let mm = mm.get_txn_clone();
+    mm.dbx().begin_txn().await?;
+    let where_tags = if request.tags.is_empty() { "t.tags = $2" } else { "t.tags && $2" };
+    let sql = format!(
+      r#"with sti as (select ti.*
+                  from sched_task_instance ti
+                          inner join sched_task t on t.id = ti.task_id
+                  where ti.status = $1
+                    and {})
+              update_task as (update sched_task set status = $3 where id in (select task_id from sti) and status = $4)
+      update sched_task_instance
+      set status   = $5,
+          agent_id = $6
+      where id in (select id from sti)
+      returning sched_task_instance.*"#,
+      where_tags
+    );
+
+    let query = sqlx::query_as::<_, TaskInstanceEntity>(&sql)
+      .bind(TaskInstanceStatus::Pending)
+      .bind(request.tags.clone())
+      .bind(TaskStatus::Dispatched)
+      .bind(TaskStatus::Pending)
+      .bind(TaskInstanceStatus::Dispatched)
+      .bind(request.agent_id);
+    let task_instances = mm.dbx().db_postgres()?.fetch_all(query).await?;
+
+    mm.dbx().commit_txn().await?;
+    Ok(task_instances)
   }
 }

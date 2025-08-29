@@ -88,36 +88,6 @@ impl ConnectionManager {
     }
   }
 
-  /// 发送消息给指定 Agent
-  pub async fn send_to_agent(&self, agent_id: &Uuid, command: WebSocketCommand) -> Result<(), GatewayError> {
-    let connections = self.connections.read().await;
-    if let Some(connection) = connections.get(agent_id) {
-      connection.send_command(command).await
-    } else {
-      Err(GatewayError::connection_not_found(*agent_id))
-    }
-  }
-
-  /// 广播消息给所有在线 Agent
-  pub async fn broadcast_to_all(&self, command: WebSocketCommand) -> Result<(), GatewayError> {
-    let connections = self.get_online_agents().await?;
-    let mut failed_agents = Vec::new();
-
-    for connection in connections {
-      if let Err(e) = connection.send_command(command.clone()).await {
-        error!("Failed to send message to agent {}: {:?}", connection.agent_id, e);
-        failed_agents.push(connection.agent_id);
-      }
-    }
-
-    // 记录失败的 Agent 连接
-    for agent_id in failed_agents {
-      self.lost_connection(agent_id).await?;
-    }
-
-    Ok(())
-  }
-
   /// 获取连接统计信息
   pub async fn get_connection_stats(&self) -> Result<ConnectionStats, GatewayError> {
     let connections = self.connections.read().await;
@@ -173,6 +143,36 @@ impl ConnectionManager {
 
 #[async_trait::async_trait]
 impl AgentRegistry for ConnectionManager {
+  /// 发送消息给指定 Agent
+  async fn send_to_agent(&self, agent_id: &Uuid, command: WebSocketCommand) -> Result<(), GatewayError> {
+    let connections = self.connections.read().await;
+    if let Some(connection) = connections.get(agent_id) {
+      connection.send_command(command).await
+    } else {
+      Err(GatewayError::connection_not_found(*agent_id))
+    }
+  }
+
+  /// 广播消息给所有在线 Agent
+  async fn broadcast_to_all(&self, command: WebSocketCommand) -> Result<(), GatewayError> {
+    let connections = self.get_online_agents().await?;
+    let mut failed_agents = Vec::new();
+
+    for connection in connections {
+      if let Err(e) = connection.send_command(command.clone()).await {
+        error!("Failed to send message to agent {}: {:?}", connection.agent_id, e);
+        failed_agents.push(connection.agent_id);
+      }
+    }
+
+    // 记录失败的 Agent 连接
+    for agent_id in failed_agents {
+      self.lost_connection(agent_id).await?;
+    }
+
+    Ok(())
+  }
+
   async fn get_online_agents(&self) -> Result<Vec<Arc<AgentConnection>>, GatewayError> {
     // 基于内存连接
     let connections = self.connections.read().await;

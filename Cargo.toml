@@ -153,7 +153,7 @@ arc-swap = { version = "1.7", features = ["serde"] }
 dashmap = { version = "6.1" }
 # -- Logging
 log = "0.4"
-logforth = "0.27"
+logforth = { version = "0.27", features = ["colored", "append-rolling-file"] }
 # -- Tracing
 fastrace = { version = "0.7" }
 metrics = "0.24"
@@ -178,7 +178,8 @@ pgvector = { version = "0.4", features = ["sqlx"] }
 serde = { version = "1.0", features = ["derive", "rc"] }
 serde_with = { version = "3.14", features = ["chrono_0_4"] }
 serde_json = { version = "1.0" }
-serde_json5 = { version = "0.2" }
+sonic-rs = { version = "0.5" }
+
 json-five = { version = "0.3" }
 serde_repr = "0.1"
 jsonpath-rust = { version = "1.0" }

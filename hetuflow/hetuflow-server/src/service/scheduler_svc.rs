@@ -86,11 +86,8 @@ impl SchedulerSvc {
       id: self.server_config.server_id,
       name: self.server_config.server_name.clone(),
       address: web_config.server_addr().to_string(),
-      bind_namespaces: vec![],
       status: ServerStatus::Active,
-      description: Some("Hetuflow Server".to_string()),
     };
-
     ServerBmc::register(&self.mm, server).await?;
     info!("Server {} registered", &self.server_config.server_id);
     Ok(())

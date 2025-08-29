@@ -36,9 +36,7 @@ pub struct ServerForRegister {
   pub id: Uuid,
   pub name: String,
   pub address: String,
-  pub bind_namespaces: Vec<Uuid>,
   pub status: ServerStatus,
-  pub description: Option<String>,
 }
 
 /// Server 更新模型

@@ -291,8 +291,8 @@ impl ProcessManager {
   ) {
     info!("ProcessManager cleanup loop started");
 
-    let mut cleanup_interval = tokio::time::interval(Duration::from_secs(config.cleanup_interval_seconds));
-    let mut zombie_check_interval = tokio::time::interval(Duration::from_secs(config.zombie_check_interval_seconds));
+    let mut cleanup_interval = tokio::time::interval(config.cleanup_interval);
+    let mut zombie_check_interval = tokio::time::interval(config.zombie_check_interval);
 
     loop {
       tokio::select! {
@@ -355,7 +355,7 @@ impl ProcessManager {
     config: &Arc<ProcessConfig>,
     event_sender: &mpsc::UnboundedSender<ProcessEvent>,
   ) {
-    let timeout_duration = Duration::from_secs(config.process_timeout_seconds);
+    let timeout_duration = config.process_timeout;
     let now = now_offset();
     let mut to_kill = Vec::new();
 

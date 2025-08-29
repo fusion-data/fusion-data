@@ -1,38 +1,56 @@
-[ultimate.app]
-run_mode = "dev"
-name = "hetuflow-agent"
-time_offset = "+08:00"
-
 [ultimate.log]
 enable = true
-log_level = "info"
-# ... 其他日志配置
+log_targets = [
+    "tower_http=debug",
+    "ultimate_common=debug",
+    "ultimate_grpc=debug",
+    "ultimate_db=debug",
+    "ultimate=debug",
+    "fusion_iam=debug",
+    "hetuflow_core=debug",
+    "hetuflow_agent=debug",
+    "hetuflow_server=debug",
+]
 
-# Agent 专属配置
+[ultimate.app]
+name = "hetuflow-agent"
+time_offset = "+08:00"
+run_mode = "dev"
+
 [hetuflow.agent]
-# Agent 的唯一标识符，若为空则自动生成
-agent_id = "agent-node-01"
-# Agent 标签，用于 Server 进行任务匹配
-tags = ["linux", "x86_64", "gpu-enabled"]
-# Agent 上报给 Server 的元数据
-metadata = { region = "cn-hangzhou", owner = "data-team" }
+tags = [
+    "linux",
+    "x86_64",
+    "gpu-enabled",
+]
+agent_id = "1dcb5bdf-8396-4218-9241-2e4928318624"
 
-# WebSocket 连接配置
-[hetuflow.agent.websocket]
-server_url = "ws://127.0.0.1:9500/ws/v1/connect"
-reconnect_interval = "5s"
-heartbeat_interval = "30s"
-# 连接和握手超时时间
-connect_timeout = "10s"
+[hetuflow.agent.metadata]
+region = "cn-hangzhou"
+owner = "data-team"
 
-# 本地调度器配置
-[hetuflow.agent.scheduler]
-# Agent 实例上允许同时运行的最大任务数
+[hetuflow.agent.polling]
 max_concurrent_tasks = 20
-# 时钟精度，时间轮的 tick duration
-timer_precision = "50ms"
+enable_adaptive_polling = true
+interval_seconds = 60
+capacity_weight = 50
+load_factor_threshold = 1
 
-# 任务执行器配置
-[hetuflow.agent.executor]
-# 任务默认超时时间
-default_task_timeout = "1h"
+[hetuflow.agent.process]
+enable_resource_monitoring = true
+resource_monitor_interval = "30s"
+cleanup_interval = "1h"
+max_concurrent_processes = 100
+process_timeout = "2h"
+zombie_check_interval = "1h"
+
+[hetuflow.agent.process.limits]
+max_cpu_percent = 0.7
+max_memory_bytes = 4194304
+
+[hetuflow.agent.connection]
+connect_timeout = "30s"
+heartbeat_interval = "30s"
+max_reconnect_attempts = 10
+reconnect_interval = "10s"
+server_base_address = "127.0.0.1:9500"

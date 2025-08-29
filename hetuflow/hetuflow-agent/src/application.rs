@@ -25,9 +25,9 @@ impl AgentApplication {
   pub async fn new() -> Result<Self, DataError> {
     let application = Application::builder().add_plugin(TimerPlugin).run().await?;
     let setting: Arc<HetuflowAgentSetting> = Arc::new(HetuflowAgentSetting::load(application.config_registry())?);
-    info!("Creating AgentApplication with agent_id: {}", setting.agent.name);
+    info!("Creating AgentApplication with agent_id: {}", setting.agent_id);
 
-    let agent_id = setting.agent.agent_id;
+    let agent_id = setting.agent_id;
 
     let (poll_task_resp_tx, task_poll_resp_rx) = mpsc::unbounded_channel();
     let (shutdown_tx, _) = broadcast::channel(1);
@@ -55,17 +55,12 @@ impl AgentApplication {
 
   /// 获取 Agent ID
   pub fn get_agent_id(&self) -> Uuid {
-    self.setting.agent.agent_id
-  }
-
-  /// 获取 Agent 名称
-  pub fn get_agent_name(&self) -> &str {
-    &self.setting.agent.name
+    self.setting.agent_id
   }
 
   /// 启动应用程序
   pub async fn start(&self) -> Result<(), DataError> {
-    info!("Starting AgentApplication: {}", self.setting.agent.name);
+    info!("Starting AgentApplication: {}", self.setting.agent_id);
 
     // 启动 ConnectionManager
     info!("Starting ConnectionManager");
@@ -89,7 +84,7 @@ impl AgentApplication {
 
   /// 停止应用程序
   pub async fn shutdown(&self) -> Result<(), DataError> {
-    info!("AgentApplication shutdown begging: {}", self.setting.agent.name);
+    info!("AgentApplication shutdown begging: {}", self.setting.agent_id);
 
     // 发送关闭信号
     if let Err(e) = self.shutdown_tx.send(()) {

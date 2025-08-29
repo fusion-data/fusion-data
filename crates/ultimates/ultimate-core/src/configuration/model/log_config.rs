@@ -82,6 +82,12 @@ impl LogWriterType {
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug, Hash)]
 pub struct LogLevel(pub(crate) Level);
 
+impl From<Level> for LogLevel {
+  fn from(level: Level) -> Self {
+    LogLevel(level)
+  }
+}
+
 impl Display for LogLevel {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     f.pad(self.0.as_str())
