@@ -6,7 +6,6 @@ use std::{
   time::Duration,
 };
 
-use hetuflow_core::protocol::GatewayCommand;
 use log::{debug, error, info};
 use modelsql::{ModelManager, store::DbxError};
 use tokio::sync::{broadcast, mpsc};
@@ -16,11 +15,14 @@ use uuid::Uuid;
 
 use crate::service::{AgentManager, LoadBalancer, SchedulerSvc};
 use crate::{
-  gateway::{AgentRegistry, ConnectionManager, GatewaySvc, MessageHandler},
+  gateway::{ConnectionManager, GatewaySvc, MessageHandler},
   infra::bmc::DistributedLockBmc,
   model::DistributedLockIds,
 };
-use crate::{model::HealthStatus, setting::HetuflowServerSetting};
+use crate::{
+  model::{GatewayCommandRequest, HealthStatus},
+  setting::HetuflowServerSetting,
+};
 
 /// Hetuflow 应用容器
 #[derive(Clone)]
@@ -35,7 +37,7 @@ pub struct ServerApplication {
   pub(crate) connection_manager: Arc<ConnectionManager>,
   pub(crate) message_handler: Arc<MessageHandler>,
   load_balancer: Arc<LoadBalancer>,
-  gateway_command_tx: mpsc::UnboundedSender<GatewayCommand>,
+  gateway_command_tx: mpsc::UnboundedSender<GatewayCommandRequest>,
 }
 
 impl ServerApplication {
@@ -53,11 +55,10 @@ impl ServerApplication {
 
     // 创建通信通道
     let (gateway_command_tx, gateway_command_rx) = mpsc::unbounded_channel();
-    let (gateway_event_tx, gateway_event_rx) = mpsc::unbounded_channel();
 
     // 创建网关组件
     let connection_manager = Arc::new(ConnectionManager::new());
-    let message_handler = Arc::new(MessageHandler::new(connection_manager.clone(), gateway_event_tx.clone()));
+    let message_handler = Arc::new(MessageHandler::new(connection_manager.clone()));
 
     // 初始化核心组件
     let scheduler_svc = Arc::new(SchedulerSvc::new(mm.clone(), Arc::new(config.server.clone()), shutdown_tx.clone()));
@@ -65,12 +66,8 @@ impl ServerApplication {
     // 将 ConnectionManager 作为 AgentRegistry 传递给 AgentManager
     let agent_manager = Arc::new(AgentManager::new(mm.clone(), connection_manager.clone()));
 
-    let gateway_svc = Arc::new(GatewaySvc::new(
-      connection_manager.clone(),
-      message_handler.clone(),
-      gateway_command_rx,
-      gateway_event_rx,
-    ));
+    let gateway_svc =
+      Arc::new(GatewaySvc::new(connection_manager.clone(), message_handler.clone(), gateway_command_rx));
 
     let is_leader = Arc::new(AtomicBool::new(false));
     let load_balancer = Arc::new(LoadBalancer::new(mm.clone(), config.server.server_id));
@@ -257,7 +254,7 @@ impl ServerApplication {
     let db = self.mm.dbx().db_postgres()?;
     let db_size = db.db().size();
 
-    let agent_size = self.connection_manager.get_online_count().await?;
+    let agent_size = self.connection_manager.get_online_count()?;
 
     let body = HealthStatus::new(db_size, agent_size);
     Ok(body)
@@ -267,10 +264,10 @@ impl ServerApplication {
     self.agent_manager.get_stats().await
   }
 
-  pub async fn send_gateway_command(&self, command: GatewayCommand) -> Result<Uuid, DataError> {
+  pub async fn send_gateway_command(&self, command: GatewayCommandRequest) -> Result<Uuid, DataError> {
     let message_id = match &command {
-      GatewayCommand::Send { command, .. } => command.id(),
-      GatewayCommand::Broadcast { command } => command.id(),
+      GatewayCommandRequest::Single { command, .. } => command.id(),
+      GatewayCommandRequest::Broadcast { command } => command.id(),
     };
     self.gateway_command_tx.send(command)?;
     Ok(message_id)

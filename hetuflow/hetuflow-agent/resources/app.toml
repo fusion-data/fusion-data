@@ -18,11 +18,7 @@ time_offset = "+08:00"
 run_mode = "dev"
 
 [hetuflow.agent]
-tags = [
-    "linux",
-    "x86_64",
-    "gpu-enabled",
-]
+tags = ["linux", "x86_64", "gpu-enabled"]
 agent_id = "1dcb5bdf-8396-4218-9241-2e4928318624"
 
 [hetuflow.agent.metadata]
@@ -53,4 +49,5 @@ connect_timeout = "30s"
 heartbeat_interval = "30s"
 max_reconnect_attempts = 10
 reconnect_interval = "10s"
-server_base_address = "127.0.0.1:9500"
+# ip:port or domain:port
+server_address = "127.0.0.1:9500"

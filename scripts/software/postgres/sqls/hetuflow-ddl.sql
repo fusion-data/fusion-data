@@ -26,17 +26,11 @@ create table sched_server (
 -- Agent 管理表 (sched_agent)
 create table sched_agent (
   id uuid primary key, -- Agent ID，由客户端生成
-  server_id uuid not null references sched_server (id) on delete cascade,
   description text,
-  host varchar(255) not null,
-  port int not null,
+  address varchar(255) not null,
   status int not null default 100, -- 见 AgentStatus
   capabilities jsonb not null, -- Agent 能力描述
-  last_heartbeat timestamptz default now(),
-  created_by bigint not null,
-  created_at timestamptz not null default now(),
-  updated_by bigint,
-  updated_at timestamptz
+  last_heartbeat timestamptz default now()
 );
 
 -- indexes for sched_agent

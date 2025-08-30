@@ -55,9 +55,11 @@ impl WsHandler {
   }
 
   async fn start_websocket_loop(&mut self) -> Result<(), DataError> {
-    let (ws_stream, _resp) = tokio_tungstenite::connect_async(self.setting.connection.server_gateway_url())
+    let (ws_stream, _resp) = tokio_tungstenite::connect_async(self.setting.server_gateway_ws())
       .await
       .map_err(|e| DataError::server_error(format!("Failed to connect to gateway: {}", e)))?;
+    info!("Connected to Hetuflow Server: {}", self.setting.server_gateway_ws());
+
     let (mut ws_tx, mut ws_rx) = ws_stream.split();
     let mut shutdown_rx = self.shutdown_tx.subscribe();
 

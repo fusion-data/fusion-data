@@ -1,12 +1,9 @@
 use std::sync::Arc;
 
 use log::{error, info};
-use modelsql::ModelManager;
 use tokio::sync::{Mutex, mpsc};
 
-use hetuflow_core::protocol::GatewayCommand;
-
-use crate::gateway::AgentEvent;
+use crate::model::{AgentEvent, GatewayCommandRequest};
 
 use super::{ConnectionManager, GatewayError, MessageHandler};
 
@@ -14,7 +11,7 @@ use super::{ConnectionManager, GatewayError, MessageHandler};
 pub struct GatewaySvc {
   connection_manager: Arc<ConnectionManager>,
   message_handler: Arc<MessageHandler>,
-  command_receiver: Arc<Mutex<mpsc::UnboundedReceiver<GatewayCommand>>>,
+  command_receiver: Arc<Mutex<mpsc::UnboundedReceiver<GatewayCommandRequest>>>,
   event_receiver: Arc<Mutex<mpsc::UnboundedReceiver<AgentEvent>>>,
 }
 
@@ -22,9 +19,10 @@ impl GatewaySvc {
   pub fn new(
     connection_manager: Arc<ConnectionManager>,
     message_handler: Arc<MessageHandler>,
-    command_receiver: mpsc::UnboundedReceiver<GatewayCommand>,
-    event_receiver: mpsc::UnboundedReceiver<AgentEvent>,
+    command_receiver: mpsc::UnboundedReceiver<GatewayCommandRequest>,
   ) -> Self {
+    let (event_sender, event_receiver) = mpsc::unbounded_channel();
+    connection_manager.subscribe_event(event_sender);
     Self {
       connection_manager,
       message_handler,

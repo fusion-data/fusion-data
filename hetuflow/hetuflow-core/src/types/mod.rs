@@ -170,18 +170,21 @@ pub enum TaskControlKind {
 #[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(i32)]
 pub enum EventKind {
-  Nack = 9, // 未确认消息
-  Ack = 10, // 确认消息
+  /// 确认消息
+  Ack = 1,
+  /// 未确认消息
+  Nack = 2,
 
-  // Agent 生命周期管理
-  AgentRegister = 11,  // Agent 注册
-  AgentHeartbeat = 12, // Agent 心跳
+  /// Agent 注册
+  AgentRegister = 3,
+  /// Agent 心跳
+  AgentHeartbeat = 4,
 
   /// Agent 请求 AgentRequest <-> GatewayResponse
-  PollTaskRequest = 21,
+  PollTaskRequest = 5,
 
   /// Agent 事件 AgentEvent
-  TaskChangedEvent = 33,
+  TaskChangedEvent = 6,
 }
 
 #[cfg(feature = "with-db")]

@@ -1,5 +1,7 @@
+mod agent;
 mod distributed_lock;
 
+pub use agent::*;
 pub use distributed_lock::*;
 
 use std::sync::{
@@ -7,7 +9,7 @@ use std::sync::{
   atomic::{AtomicI64, Ordering},
 };
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc;
 use ultimate_common::time::now_epoch_millis;
 use uuid::Uuid;
@@ -15,6 +17,14 @@ use uuid::Uuid;
 use hetuflow_core::protocol::WebSocketCommand;
 
 use crate::gateway::GatewayError;
+
+/// 数据流动方向: Server -> Agent
+#[derive(Deserialize)]
+#[serde(tag = "type", rename_all = "lowercase")]
+pub enum GatewayCommandRequest {
+  Single { agent_id: Uuid, command: WebSocketCommand },
+  Broadcast { command: WebSocketCommand },
+}
 
 #[derive(Serialize)]
 pub struct HealthStatus {
@@ -82,7 +92,7 @@ impl AgentConnection {
   }
 
   /// 发送消息给 Agent
-  pub async fn send_command(&self, message: WebSocketCommand) -> Result<(), GatewayError> {
+  pub fn send_command(&self, message: WebSocketCommand) -> Result<(), GatewayError> {
     if let Some(sender) = &self.sender {
       sender
         .send(message)

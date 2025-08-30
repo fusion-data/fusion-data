@@ -7,7 +7,7 @@ use modelsql::{
 use ultimate_common::time::now_offset;
 use uuid::Uuid;
 
-use hetuflow_core::types::AgentStatus;
+use hetuflow_core::{protocol::AgentRegisterRequest, types::AgentStatus};
 
 use hetuflow_core::models::{AgentEntity, AgentFilter, AgentForCreate, AgentForUpdate};
 
@@ -40,14 +40,6 @@ impl AgentBmc {
     Self::find_many(mm, vec![filter], None).await
   }
 
-  /// 更新 Agent 心跳时间
-  pub async fn update_heartbeat(mm: &ModelManager, agent_id: &Uuid) -> Result<(), SqlError> {
-    let update =
-      AgentForUpdate { status: Some(AgentStatus::Online), last_heartbeat: Some(now_offset()), ..Default::default() };
-
-    Self::update_by_id(mm, agent_id, update).await.map(|_| ())
-  }
-
   /// 更新 Agent 状态
   pub async fn update_status(mm: &ModelManager, agent_id: &Uuid, status: AgentStatus) -> Result<(), SqlError> {
     let mut update = AgentForUpdate { status: Some(status), ..Default::default() };
@@ -69,5 +61,30 @@ impl AgentBmc {
     };
 
     Self::find_many(mm, vec![filter], None).await
+  }
+
+  pub async fn register(
+    mm: &ModelManager,
+    agent_id: &Uuid,
+    payload: &AgentRegisterRequest,
+  ) -> Result<AgentEntity, SqlError> {
+    let sql = r#"
+      insert into sched_agent (id, address, status, capabilities, last_heartbeat)
+      values ($1, $2, $3, $4, $5)
+      on conflict (id) do update set
+        address = excluded.address,
+        status = excluded.status,
+        capabilities = excluded.capabilities,
+        last_heartbeat = excluded.last_heartbeat
+      returning *"#;
+    let query = sqlx::query_as(sql)
+      .bind(agent_id)
+      .bind(&payload.address)
+      .bind(AgentStatus::Online)
+      .bind(&payload.capabilities)
+      .bind(now_offset());
+
+    let agent = mm.dbx().db_postgres()?.fetch_one::<AgentEntity, _>(query).await?;
+    Ok(agent)
   }
 }

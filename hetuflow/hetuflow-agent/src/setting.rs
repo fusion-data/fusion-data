@@ -12,7 +12,7 @@ use uuid::Uuid;
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ConnectionConfig {
   /// Server URL
-  pub server_base_address: String,
+  pub server_address: String,
 
   /// 连接超时时间（秒）
   #[serde(deserialize_with = "deserialize_duration")]
@@ -28,13 +28,6 @@ pub struct ConnectionConfig {
 
   /// 最大重连次数
   pub max_reconnect_attempts: u32,
-}
-
-impl ConnectionConfig {
-  pub fn server_gateway_url(&self) -> String {
-    let path = if self.server_base_address.ends_with('/') { "api/v1/gateway/ws" } else { "/api/v1/gateway/ws" };
-    format!("ws://{}{}", self.server_base_address, path)
-  }
 }
 
 /// 轮询配置
@@ -210,6 +203,11 @@ impl HetuflowAgentSetting {
 
     let setting = config_registry.get_config_by_path("hetuflow.agent")?;
     Ok(setting)
+  }
+
+  /// 获取 Server Gateway WebSocket 地址
+  pub fn server_gateway_ws(&self) -> String {
+    format!("ws://{}/api/v1/gateway/ws?agent_id={}", self.connection.server_address, self.agent_id)
   }
 }
 

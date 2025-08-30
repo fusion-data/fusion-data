@@ -43,8 +43,8 @@ impl AgentApplication {
     ));
     let process_manager = Arc::new(ProcessManager::new(setting.process.clone(), Arc::new(shutdown_tx.subscribe())));
     let task_executor = Arc::new(TaskExecutor::new(
-      agent_id,
-      Arc::new(shutdown_tx.subscribe()),
+      setting.clone(),
+      shutdown_tx.clone(),
       process_manager.clone(),
       connection_manager.clone(),
       None,

@@ -8,14 +8,6 @@ use std::{
   time::Duration,
 };
 
-use hetuflow_core::{
-  models::TaskMetrics,
-  protocol::{
-    BackoffStrategy, ProcessInfo, ScheduledTask, TaskExecutionError, TaskExecutionErrorType, TaskExecutionResult,
-    TaskInstanceUpdated, WebSocketEvent,
-  },
-  types::{EventKind, TaskInstanceStatus},
-};
 use log::{debug, info, warn};
 use tokio::{
   process::Command,
@@ -26,7 +18,19 @@ use ultimate_common::time::now_epoch_millis;
 use ultimate_core::DataError;
 use uuid::Uuid;
 
-use crate::service::{ConnectionManager, ProcessManager};
+use hetuflow_core::{
+  models::TaskMetrics,
+  protocol::{
+    BackoffStrategy, ProcessInfo, ScheduledTask, TaskExecutionError, TaskExecutionErrorType, TaskExecutionResult,
+    TaskInstanceUpdated, WebSocketEvent,
+  },
+  types::{EventKind, TaskInstanceStatus},
+};
+
+use crate::{
+  service::{ConnectionManager, ProcessManager},
+  setting::HetuflowAgentSetting,
+};
 
 /// 重试配置
 #[derive(Debug, Clone)]
@@ -69,8 +73,8 @@ pub struct TaskExecution {
 /// 任务执行器。负责执行具体的任务，包括进程管理、重试机制和状态上报
 pub struct TaskExecutor {
   /// Agent ID
-  agent_id: Uuid,
-  shutdown_rx: Arc<broadcast::Receiver<()>>,
+  setting: Arc<HetuflowAgentSetting>,
+  shutdown_tx: broadcast::Sender<()>,
   /// 进程管理器
   process_manager: Arc<ProcessManager>,
   /// 活跃任务执行
@@ -86,15 +90,15 @@ pub struct TaskExecutor {
 impl TaskExecutor {
   /// 创建新的任务执行器
   pub fn new(
-    agent_id: Uuid,
-    shutdown_rx: Arc<broadcast::Receiver<()>>,
+    setting: Arc<HetuflowAgentSetting>,
+    shutdown_tx: broadcast::Sender<()>,
     process_manager: Arc<ProcessManager>,
     connection_manager: Arc<ConnectionManager>,
     retry_config: Option<RetryConfig>,
   ) -> Self {
     Self {
-      agent_id,
-      shutdown_rx,
+      setting,
+      shutdown_tx,
       process_manager,
       active_executions: Arc::new(RwLock::new(HashMap::new())),
       connection_manager,
@@ -105,23 +109,25 @@ impl TaskExecutor {
 
   /// 启动任务执行器
   pub async fn start(&self) -> Result<(), DataError> {
-    info!("Starting TaskExecutor for agent {}", self.agent_id);
+    info!("Starting TaskExecutor for agent {}", self.setting.agent_id);
+
+    // TODO
     Ok(())
   }
 
   /// 停止任务执行器
   pub async fn stop(&self) -> Result<(), DataError> {
-    info!("Stopping TaskExecutor for agent {}", self.agent_id);
+    info!("Stopping TaskExecutor for agent {}", self.setting.agent_id);
     self.stop_flag.store(true, Ordering::SeqCst);
 
     // 取消所有活跃任务
     let executions = self.active_executions.read().await;
     for execution in executions.values() {
       execution.cancelled.store(true, Ordering::SeqCst);
-      if let Some(process_id) = execution.process_id {
-        if let Err(e) = self.process_manager.kill_process(process_id).await {
-          warn!("Failed to kill process {}: {}", process_id, e);
-        }
+      if let Some(process_id) = execution.process_id
+        && let Err(e) = self.process_manager.kill_process(process_id).await
+      {
+        warn!("Failed to kill process {}: {}", process_id, e);
       }
     }
     drop(executions);
@@ -144,7 +150,7 @@ impl TaskExecutor {
       task: task.clone(),
       process_id: None,
       process_info: None,
-      started_at: now_epoch_millis() as i64,
+      started_at: now_epoch_millis(),
       retry_count: 0,
       status: TaskInstanceStatus::Running,
       cancelled: Arc::new(AtomicBool::new(false)),
@@ -193,7 +199,7 @@ impl TaskExecutor {
           message: "Task was cancelled".to_string(),
           retry_count: execution.retry_count,
           max_retries,
-          timestamp: now_epoch_millis() as i64,
+          timestamp: now_epoch_millis(),
         });
       }
 
@@ -207,8 +213,8 @@ impl TaskExecutor {
             TaskInstanceUpdated {
               task_instance_id: execution.instance_id,
               task_id: execution.task.task.id,
-              agent_id: self.agent_id,
-              timestamp: now_epoch_millis() as i64,
+              agent_id: self.setting.agent_id,
+              timestamp: now_epoch_millis(),
               output: result.output,
               error_message: result.error_message,
               exit_code: result.exit_code,
@@ -230,8 +236,8 @@ impl TaskExecutor {
               TaskInstanceUpdated {
                 task_instance_id: execution.instance_id,
                 task_id: execution.task.task.id,
-                agent_id: self.agent_id,
-                timestamp: now_epoch_millis() as i64,
+                agent_id: self.setting.agent_id,
+                timestamp: now_epoch_millis(),
                 output: None,
                 error_message: Some(error.message.clone()),
                 exit_code: None,
@@ -272,7 +278,7 @@ impl TaskExecutor {
       message: "Missing job configuration".to_string(),
       retry_count: execution.retry_count,
       max_retries: execution.task.task.max_retries,
-      timestamp: now_epoch_millis() as i64,
+      timestamp: now_epoch_millis(),
     })?;
 
     // 构建命令
@@ -304,7 +310,7 @@ impl TaskExecutor {
       message: format!("Failed to spawn process: {}", e),
       retry_count: execution.retry_count,
       max_retries: execution.task.task.max_retries,
-      timestamp: now_epoch_millis() as i64,
+      timestamp: now_epoch_millis(),
     })?;
 
     let pid = child.id().unwrap_or(0);
@@ -318,7 +324,7 @@ impl TaskExecutor {
       message: format!("Process execution failed: {}", e),
       retry_count: execution.retry_count,
       max_retries: execution.task.task.max_retries,
-      timestamp: now_epoch_millis() as i64,
+      timestamp: now_epoch_millis(),
     })?;
 
     let duration = start_time.elapsed();
@@ -335,7 +341,7 @@ impl TaskExecutor {
     // 创建任务指标
     let metrics = TaskMetrics {
       start_time: execution.started_at,
-      end_time: Some(now_epoch_millis() as i64),
+      end_time: Some(now_epoch_millis()),
       cpu_time: 0.0,
       memory_peak: 0,
       disk_read: 0,
@@ -348,9 +354,9 @@ impl TaskExecutor {
     let task_update = TaskInstanceUpdated {
       task_instance_id: execution.instance_id,
       task_id: execution.task.task.id,
-      agent_id: self.agent_id,
+      agent_id: self.setting.agent_id,
       status: execution.status.clone(),
-      timestamp: now_epoch_millis() as i64,
+      timestamp: now_epoch_millis(),
       output: Some(stdout.clone()),
       error_message: if success { None } else { Some(stderr.clone()) },
       exit_code: Some(exit_code),
@@ -380,7 +386,7 @@ impl TaskExecutor {
         message: format!("Process failed with exit code {}: {}", exit_code, stderr),
         retry_count: execution.retry_count,
         max_retries: execution.task.task.max_retries,
-        timestamp: now_epoch_millis() as i64,
+        timestamp: now_epoch_millis(),
       })
     }
   }
