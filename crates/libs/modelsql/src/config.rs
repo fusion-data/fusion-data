@@ -3,8 +3,8 @@ use std::borrow::Cow;
 use duration_str::deserialize_option_duration;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
-use ultimate_common::model::sensitive::UriString;
 
+use crate::common::UriString;
 use crate::store::dbx::DbxProvider;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]

@@ -20,6 +20,7 @@ with-uuid = ["dep:uuid"]
 with-ulid = ["dep:ulid"]
 
 [dependencies]
+fusion-corelib.workspace = true
 ultimate-common.workspace = true
 ultimate-core-macros = { workspace = true }
 thiserror = { workspace = true }

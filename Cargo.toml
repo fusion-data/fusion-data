@@ -1,8 +1,8 @@
 [workspace]
 members = [
+  "crates/fusions/*",
   "crates/ultimates/*",
   "crates/libs/*",
-  # "fusion/fusion-iam",
   "hetuflow/hetuflow-server",
   "hetuflow/hetuflow-agent",
   "hetuflow/hetuflow-core",
@@ -35,6 +35,7 @@ uninlined_format_args = "allow"
 
 [workspace.dependencies]
 # -- projects begin
+fusion-corelib = { version = "0.1.1", path = "crates/fusions/fusion-corelib" }
 modelsql = { version = "0.1.1", path = "crates/libs/modelsql" }
 modelsql-core = { version = "0.1.1", path = "crates/libs/modelsql-core" }
 modelsql-macros = { version = "0.1.1", path = "crates/libs/modelsql-macros" }

@@ -1539,6 +1539,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e6d5a32815ae3f33302d95fdcb2ce17862f8c65363dcfd29360480ba1001fc9c"
 
 [[package]]
+name = "fusion-corelib"
+version = "0.1.1"
+dependencies = [
+ "chrono",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.16",
+]
+
+[[package]]
 name = "futf"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2026,6 +2036,7 @@ dependencies = [
  "async-trait",
  "axum",
  "dashmap",
+ "fusion-corelib",
  "hetumind-core",
  "http",
  "log",
@@ -2052,6 +2063,7 @@ dependencies = [
  "derive_more",
  "dotenvy",
  "duration-str",
+ "fusion-corelib",
  "jsonpath-rust",
  "log",
  "modelsql",
@@ -3036,11 +3048,13 @@ dependencies = [
  "config",
  "derive_more",
  "duration-str",
+ "fusion-corelib",
  "log",
  "logforth",
  "modelsql-core",
  "modelsql-macros",
  "pgvector",
+ "regex",
  "rust_decimal",
  "sea-query",
  "sea-query-binder",
@@ -3051,7 +3065,6 @@ dependencies = [
  "thiserror 2.0.16",
  "tokio",
  "tonic 0.14.1",
- "ultimate-common",
  "uuid",
 ]
 
@@ -3066,7 +3079,6 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror 2.0.16",
- "ultimate-common",
  "uuid",
 ]
 
@@ -6094,6 +6106,7 @@ dependencies = [
  "chrono",
  "dotenvy",
  "duration-str",
+ "fusion-corelib",
  "hmac",
  "log",
  "rand 0.9.2",
@@ -6116,6 +6129,7 @@ dependencies = [
  "dashmap",
  "dotenvy",
  "fastrace",
+ "fusion-corelib",
  "futures",
  "hierarchical_hash_wheel_timer",
  "inventory",
@@ -6159,6 +6173,7 @@ version = "0.1.1"
 dependencies = [
  "anyhow",
  "config",
+ "fusion-corelib",
  "log",
  "logforth",
  "modelsql",
@@ -6180,6 +6195,7 @@ name = "ultimate-grpc"
 version = "0.1.1"
 dependencies = [
  "config",
+ "fusion-corelib",
  "futures",
  "http",
  "log",
@@ -6204,6 +6220,7 @@ dependencies = [
  "axum",
  "bytes",
  "config",
+ "fusion-corelib",
  "futures",
  "headers",
  "http",

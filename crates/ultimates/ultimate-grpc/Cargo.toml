@@ -18,6 +18,7 @@ default = ["opentelemetry"]
 opentelemetry = ["ultimate-core/opentelemetry"]
 
 [dependencies]
+fusion-corelib.workspace = true
 ultimate-common = { workspace = true }
 ultimate-core = { workspace = true, features = ["tonic"] }
 uuid = { workspace = true }

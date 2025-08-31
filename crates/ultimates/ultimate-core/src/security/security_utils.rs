@@ -1,7 +1,7 @@
 use std::time::SystemTime;
 
+use fusion_corelib::ctx::CtxPayload;
 use josekit::{jwe::JweHeader, jwt::JwtPayload};
-use ultimate_common::ctx::CtxPayload;
 
 use crate::configuration::KeyConf;
 
@@ -47,7 +47,7 @@ impl SecurityUtils {
 mod tests {
   use std::time::{Duration, SystemTime};
 
-  use ultimate_common::ctx::CtxPayload;
+  use fusion_corelib::ctx::CtxPayload;
 
   use crate::configuration::TokenConf;
 

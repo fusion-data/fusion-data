@@ -1,9 +1,9 @@
 use std::{net::AddrParseError, num::ParseIntError};
 
 use config::ConfigError;
+use fusion_corelib::ctx::CtxError;
 use serde::{Serialize, ser::SerializeMap};
 use thiserror::Error;
-use ultimate_common::ctx::CtxError;
 
 use crate::{configuration::ConfigureError, security::Error as SecurityError};
 

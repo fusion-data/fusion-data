@@ -17,6 +17,7 @@ with-sqlite = ["modelsql/with-sqlite"]
 with-uuid = ["dep:uuid", "modelsql/with-uuid"]
 
 [dependencies]
+fusion-corelib.workspace = true
 ultimate-common.workspace = true
 ultimate-core = { workspace = true, features = ["modelsql"] }
 modelsql = { workspace = true }

@@ -3,9 +3,8 @@ pub mod ser;
 
 use std::sync::OnceLock;
 
+use chrono::ParseError;
 pub use chrono::{DateTime, Duration, FixedOffset, Local, NaiveDate, NaiveTime, Offset, TimeDelta, TimeZone, Utc};
-
-use super::Result;
 
 pub type OffsetDateTime = DateTime<FixedOffset>;
 pub type UtcDateTime = DateTime<Utc>;
@@ -51,11 +50,11 @@ pub fn to_local<Tz: TimeZone>(t: DateTime<Tz>) -> DateTime<FixedOffset> {
 }
 
 /// Returns an RFC 3339 and ISO 8601 date and time string such as 1996-12-19T16:39:57-08:00.
-pub fn format_time<Tz: TimeZone>(time: DateTime<Tz>) -> Result<String> {
+pub fn format_time<Tz: TimeZone>(time: DateTime<Tz>) -> Result<String, ParseError> {
   Ok(time.to_rfc3339())
 }
 
-pub fn now_utc_plus_sec_str(sec: u64) -> Result<String> {
+pub fn now_utc_plus_sec_str(sec: u64) -> Result<String, ParseError> {
   let new_time = now_utc() + Duration::seconds(sec as i64);
   format_time(new_time)
 }
@@ -68,7 +67,7 @@ pub fn datetime_from_millis(milliseconds: i64) -> DateTime<FixedOffset> {
   utc_from_millis(milliseconds).with_timezone(local_offset())
 }
 
-pub fn parse_utc(moment: &str) -> Result<UtcDateTime> {
+pub fn parse_utc(moment: &str) -> Result<UtcDateTime, ParseError> {
   let time = moment.parse::<UtcDateTime>()?;
   Ok(time)
 }
