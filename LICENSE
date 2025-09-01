@@ -1,0 +1,5 @@
+This repository contains multiple components under different licenses:
+
+1. hetuflow and hetumind are licensed under the Elastic License 2.0 (see ./hetuflow/LICENSE, ./hetumind/LICENSE).
+2. SDKs and Plugins are licensed under the Apache License 2.0 (see ./crates/LICENSE).
+3. Documentation is licensed under the Creative Commons Attribution 4.0 International License (see ./documents/LICENSE).

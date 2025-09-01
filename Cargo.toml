@@ -1,18 +1,5 @@
 [workspace]
-members = [
-  "crates/fusions/*",
-  "crates/libs/*",
-  "hetuflow/hetuflow-server",
-  "hetuflow/hetuflow-agent",
-  "hetuflow/hetuflow-core",
-  "hetuflow/hetuflow-docs",
-  "hetumind/hetumind-core",
-  "hetumind/hetumind-cli",
-  "hetumind/hetumind-context",
-  "hetumind/hetumind-nodes",
-  "hetumind/hetumind-studio",
-  "hetumind/hetumind-docs",
-]
+members = ["crates/fusions/*", "crates/libs/*", "hetuflow/*", "hetumind/*"]
 resolver = "2"
 
 [workspace.package]
