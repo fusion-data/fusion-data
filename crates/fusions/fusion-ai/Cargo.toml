@@ -12,6 +12,8 @@ publish = true
 workspace = true
 
 [dependencies]
+fusion-common = { workspace = true }
 tokio = { workspace = true }
 rig-core = { workspace = true }
+graph-flow = { workspace = true }
 rmcp = { workspace = true }

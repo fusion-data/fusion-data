@@ -1,7 +1,6 @@
-use modelsql::store::DbxError;
+use fusion_common::time::UtcDateTime;
 use modelsql::{
-  ModelManager, SqlError, base::DbBmc, field::FieldMask, filter::OpValsInt32, generate_pg_bmc_common,
-  generate_pg_bmc_filter,
+  ModelManager, SqlError, base::DbBmc, filter::OpValsInt32, generate_pg_bmc_common, generate_pg_bmc_filter,
 };
 use uuid::Uuid;
 
@@ -60,8 +59,8 @@ impl ServerBmc {
       .bind(server.address)
       .bind(server.status as i32)
       .bind(ctx.uid())
-      .bind(ctx.req_time());
-    let rows_affected = db.execute(query).await.map_err(DbxError::from)?;
+      .bind(UtcDateTime::from(*ctx.req_time()));
+    let rows_affected = db.execute(query).await?;
     if rows_affected == 1 {
       Ok(())
     } else {

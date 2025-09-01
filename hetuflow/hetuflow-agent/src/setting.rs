@@ -231,7 +231,7 @@ mod tests {
   #[test]
   fn test_load() {
     // 检查配置文件是否存在
-    set_env("ULTIMATE_CONFIG_FILE", "resources/app.toml").unwrap();
+    set_env("FUSION_CONFIG_FILE", "resources/app.toml").unwrap();
 
     // 尝试加载配置
     let config_registry = FusionConfigRegistry::load().unwrap();

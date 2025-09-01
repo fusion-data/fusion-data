@@ -244,8 +244,8 @@ tonic-reflection = "0.14"
 tonic-web = "0.14"
 tonic-build = { version = "0.14" }
 # -- Protocol Buffers
-protobuf = "3"
-protobuf-codegen = "3"
+protobuf = "4.32.0-release"
+protobuf-codegen = "4.32.0-release"
 protobuf-json-mapping = "3"
 protobuf-parse = "3"
 # protoc-bin-vendored = "3"
@@ -268,6 +268,7 @@ minio = { version = "0.3" }
 # -- LLM
 rig-core = { version = "0.18", features = ["derive"] }
 rig-postgres = { version = "0.1" }
+graph-flow = { version = "0.2" }
 rmcp = { version = "0.6" }
 # -- Plugins
 extism = { version = "1.11" }

@@ -1,17 +1,16 @@
 use std::{future::Future, time::Duration};
 
+use fusion_common::env::set_env;
+use fusion_core::{DataError, configuration::SecurityConfig, security::SecurityUtils};
 use fusion_corelib::ctx::CtxPayload;
 use futures::TryFutureExt;
 use log::info;
-use protobuf::well_known_types::field_mask::FieldMask;
 use tokio::{net::TcpListener, sync::oneshot};
 use tonic::{
   Status,
   metadata::MetadataMap,
   transport::{Server, server::TcpIncoming},
 };
-use fusion_common::env::set_env;
-use fusion_core::{DataError, configuration::SecurityConfig, security::SecurityUtils};
 
 use crate::{GrpcSettings, GrpcStartInfo};
 
@@ -29,8 +28,8 @@ pub async fn init_grpc_server(
   let (tx, rx) = oneshot::channel();
   let tcp_listener = TcpListener::bind(&conf.server_addr).await?;
   let local_addr = tcp_listener.local_addr()?;
-  set_env("ULTIMATE__GRPC__SERVER_ADDR", &local_addr.to_string())
-    .unwrap_or_else(|_| panic!("Failed to set ULTIMATE__GRPC__SERVER_ADDR, value: {}", local_addr));
+  set_env("FUSION__GRPC__SERVER_ADDR", &local_addr.to_string())
+    .unwrap_or_else(|_| panic!("Failed to set FUSION__GRPC__SERVER_ADDR, value: {}", local_addr));
   let start_info = GrpcStartInfo { local_addr };
   match tx.send(start_info) {
     Ok(_) => info!("gRPC server listening to {}", local_addr),
@@ -82,10 +81,10 @@ pub fn extract_token_from_metadata(metadata: &MetadataMap) -> Result<&str, tonic
   Ok(&auth_str[offset..])
 }
 
-// 当 paths 为空或者 paths 包含以 path 开头的路径时返回 true，否则返回 false
-pub fn field_mask_match_with(field_mask: &FieldMask, path: &str) -> bool {
-  field_mask.paths.is_empty() || field_mask.paths.iter().any(|p| p.starts_with(path))
-}
+// // 当 paths 为空或者 paths 包含以 path 开头的路径时返回 true，否则返回 false
+// pub fn field_mask_match_with(field_mask: &FieldMask, path: &str) -> bool {
+//   field_mask.paths.is_empty() || field_mask.paths.iter().any(|p| p.starts_with(path))
+// }
 
 #[allow(clippy::result_large_err)]
 pub fn parse_uuid(s: &str) -> core::result::Result<uuid::Uuid, Status> {
