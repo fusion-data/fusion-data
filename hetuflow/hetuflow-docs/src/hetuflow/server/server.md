@@ -47,7 +47,7 @@ src/
   - **ultimate-core::Application**: 依赖注入容器和应用生命周期管理
   - **modelsql::ModelManager**: 数据库连接池和操作管理
   - **modelsql::base::DbBmc**: 统一的数据库操作抽象层
-  - **modelsql::SqlError → ultimate_core::DataError**: 分层错误处理机制
+  - **modelsql::SqlError →fusion_core::DataError**: 分层错误处理机制
   - **sea-query**: 类型安全的 SQL 查询构建器
 - 基于 tokio-tungstenite 的高性能 WebSocket 服务
 - 支持任务的动态配置和热更新
@@ -71,8 +71,8 @@ src/
 - [GatewaySvc](./server-gateway.md#gatewaysvc): 网关服务，负责处理 Agent 与网关的 WebSocket 通信
 
 ```rust
-use ultimate_core::{DataError, application::Application};
-use ultimate_db::DbPlugin;
+use fusion_core::{DataError, application::Application};
+use fusion_db::DbPlugin;
 use modelsql::ModelManager;
 use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
 use tokio::sync::{mpsc, RwLock, Mutex};

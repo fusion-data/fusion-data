@@ -106,8 +106,8 @@ use modelsql::{
 };
 
 // Web 响应类型
-use ultimate_web::WebResult;
-use ultimate_core::DataError;
+use fusion_web::WebResult;
+use fusion_core::DataError;
 
 // 应用核心
 use crate::ServerApplication;
@@ -363,7 +363,7 @@ pub async fn send_agent_command(
   let message = WebSocketMessage {
     kind: MessageKind::Command,
     payload: request.parameters.unwrap_or_default(),
-    timestamp: ultimate_common::time::now_utc(),
+    timestamp:fusion_common::time::now_utc(),
   };
 
   gateway.connection_manager().send_to_agent(&agent_id.to_string(), message).await?;
@@ -410,7 +410,7 @@ use modelsql::{
   filter::page::Page,
   page::PageResult,
 };
-use ultimate_web::WebResult;
+use fusion_web::WebResult;
 
 /// 查询 Job 列表
 ///
@@ -649,7 +649,7 @@ use modelsql::{
   filter::page::Page,
   page::PageResult,
 };
-use ultimate_web::WebResult;
+use fusion_web::WebResult;
 
 /// 查询 Task 列表
 ///
@@ -958,7 +958,7 @@ use modelsql::{
   filter::page::Page,
   page::PageResult,
 };
-use ultimate_web::WebResult;
+use fusion_web::WebResult;
 
 /// 查询 TaskInstance 列表
 ///
@@ -1288,7 +1288,7 @@ use crate::{
   ServerApplication,
   endpoint::types::*,
 };
-use ultimate_web::WebResult;
+use fusion_web::WebResult;
 use modelsql::page::PageResult;
 
 /// 查询连接列表
@@ -1388,7 +1388,7 @@ pub async fn broadcast_message(
 // src/model/connection.rs
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use ultimate_common::time::OffsetDateTime;
+use fusion_common::time::OffsetDateTime;
 use hetuflow_core::{
   types::AgentStatus,
   protocol::MessageKind,
@@ -1503,7 +1503,7 @@ use crate::{
   ServerApplication,
   endpoint::types::*,
 };
-use ultimate_web::WebResult;
+use fusion_web::WebResult;
 use serde::Serialize;
 
 /// 健康检查
@@ -1534,7 +1534,7 @@ pub async fn health_check(
     status: if db_status { "healthy" } else { "unhealthy" }.to_string(),
     database: db_status,
     connections: connection_count,
-    timestamp: ultimate_common::time::now_utc(),
+    timestamp:fusion_common::time::now_utc(),
   };
 
   Ok(health_status)
@@ -1571,7 +1571,7 @@ pub async fn get_metrics(
   let metrics = SystemMetrics {
     connections: connection_stats,
     tasks: task_stats,
-    timestamp: ultimate_common::time::now_utc(),
+    timestamp:fusion_common::time::now_utc(),
   };
 
   Ok(metrics)
@@ -1601,7 +1601,7 @@ pub async fn get_system_info(
     git_commit: env!("GIT_COMMIT").to_string(),
     is_leader: app.is_leader(),
     uptime: app.get_uptime().as_secs(),
-    timestamp: ultimate_common::time::now_utc(),
+    timestamp:fusion_common::time::now_utc(),
   };
 
   Ok(system_info)
@@ -1613,7 +1613,7 @@ pub async fn get_system_info(
 ```rust
 // src/model/metrics.rs
 use serde::{Deserialize, Serialize};
-use ultimate_common::time::OffsetDateTime;
+use fusion_common::time::OffsetDateTime;
 
 use hetuflow_core::models::ConnectionStats;
 

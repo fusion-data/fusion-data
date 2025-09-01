@@ -285,20 +285,18 @@ mod tests {
             "id": "12345678-1234-1234-1234-123456789012",
             "name": "Valid Workflow",
             "status": 1,
-            "version_id": "12345678-1234-1234-1234-123456789012",
+            "version": null,
             "settings": {
                 "execution_timeout": null,
-                "max_concurrent_executions": null,
-                "error_handling": 1,
+                "error_handling": "StopOnFirstError",
                 "execution_mode": 1,
-                "save_execution_data_days": null,
                 "remark": null
             },
             "meta": {
                 "credentials_setup_completed": false
             },
             "nodes": [],
-            "connections": [],
+            "connections": {},
             "pin_data": {
                 "data": {}
             },
@@ -363,20 +361,18 @@ mod tests {
             "id": "12345678-1234-1234-1234-123456789012",
             "name": "Test Run Workflow",
             "status": 1,
-            "version_id": "12345678-1234-1234-1234-123456789012",
+            "version": null,
             "settings": {
                 "execution_timeout": null,
-                "max_concurrent_executions": null,
-                "error_handling": 1,
+                "error_handling": "StopOnFirstError",
                 "execution_mode": 1,
-                "save_execution_data_days": null,
                 "remark": null
             },
             "meta": {
                 "credentials_setup_completed": false
             },
             "nodes": [],
-            "connections": [],
+            "connections": {},
             "pin_data": {
                 "data": {}
             },
@@ -443,20 +439,18 @@ mod tests {
             "id": "12345678-1234-1234-1234-123456789012",
             "name": "Import Test Workflow",
             "status": 1,
-            "version_id": "12345678-1234-1234-1234-123456789012",
+            "version": null,
             "settings": {
                 "execution_timeout": null,
-                "max_concurrent_executions": null,
-                "error_handling": 1,
+                "error_handling": "StopOnFirstError",
                 "execution_mode": 1,
-                "save_execution_data_days": null,
                 "remark": null
             },
             "meta": {
                 "credentials_setup_completed": false
             },
             "nodes": [],
-            "connections": [],
+            "connections": {},
             "pin_data": {
                 "data": {}
             },

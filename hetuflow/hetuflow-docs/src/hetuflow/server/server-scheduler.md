@@ -468,7 +468,7 @@ graph TD
 ### 6.1 TaskPoller (任务轮询器)
 
 ```rust
-use ultimate_core::DataError;
+use fusion_core::DataError;
 use tokio::time::{interval, Duration, Instant};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Arc;
@@ -820,7 +820,7 @@ impl TaskPoller {
 ### 6.2 SchedulerSvc 集成轮询机制
 
 ```rust
-use ultimate_core::DataError;
+use fusion_core::DataError;
 use tokio::sync::mpsc;
 use std::sync::Arc;
 
@@ -1168,8 +1168,8 @@ use std::sync::Arc;
 
 use tokio::sync::RwLock;
 
-use ultimate_core::DataError;
-use ultimate_common::time::OffsetDateTime;
+use fusion_core::DataError;
+use fusion_common::time::OffsetDateTime;
 
 #[derive(Debug, Clone)]
 pub struct AgentInfo {
@@ -1283,7 +1283,7 @@ impl AgentManager {
 ### 7.2 任务预生成机制
 
 ```rust
-use ultimate_core::DataError;
+use fusion_core::DataError;
 use chrono::{DateTime, Utc, Duration as ChronoDuration};
 use croner::Cron;
 use std::str::FromStr;
@@ -1641,7 +1641,7 @@ impl SchedulerSvc {
 ### 领导者选举
 
 ```rust
-use ultimate_core::DataError;
+use fusion_core::DataError;
 
 impl SchedulerSvc {
   // 使用 PostgreSQL Advisory Lock 实现领导者选举

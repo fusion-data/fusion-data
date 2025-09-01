@@ -99,7 +99,7 @@ impl Default for IfNode {
   fn default() -> Self {
     let base = NodeDefinition::builder()
       .kind(NodeKind::from(IF_NODE_KIND))
-      .groups(vec![NodeGroupKind::Transform])
+      .groups(vec![NodeGroupKind::Transform, NodeGroupKind::Input, NodeGroupKind::Output])
       .display_name("If")
       .description("根据条件判断分割工作流执行路径。支持多种数据类型的比较操作。")
       .icon("code-branch")

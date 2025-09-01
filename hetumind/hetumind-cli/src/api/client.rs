@@ -239,20 +239,18 @@ mod tests {
             "id": "12345678-1234-1234-1234-123456789012",
             "name": "Test Workflow",
             "status": 1,
-            "version_id": "12345678-1234-1234-1234-123456789012",
+            "version": "12345678-1234-1234-1234-123456789012",
             "settings": {
-                "execution_timeout": null,
-                "max_concurrent_executions": null,
-                "error_handling": 1,
+                "execution_timeout": 3600,
+                "error_handling": "StopOnFirstError",
                 "execution_mode": 1,
-                "save_execution_data_days": null,
-                "remark": null
+                "remark": "Test workflow"
             },
             "meta": {
                 "credentials_setup_completed": false
             },
             "nodes": [],
-            "connections": [],
+            "connections": {},
             "pin_data": {
                 "data": {}
             },
@@ -264,6 +262,9 @@ mod tests {
     let temp_path = temp_file.path().to_path_buf();
 
     let result = client.load_workflow_from_file(&temp_path).await;
+    if let Err(e) = &result {
+      println!("Error loading workflow: {:?}", e);
+    }
     assert!(result.is_ok());
 
     let workflow = result.unwrap();

@@ -183,7 +183,7 @@ impl NodeExecutor for HttpRequestNode {
 }
 
 impl HttpRequestNode {
-  pub const NODE_KIND: &str = "hetumind_nodes::integration::http_request_node::HttpRequest";
+  pub const NODE_KIND: &str = "HttpRequest";
 }
 
 /// 获取节点元数据

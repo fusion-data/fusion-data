@@ -22,7 +22,7 @@
 ### 组件依赖关系
 
 ```rust
-use ultimate_core::DataError;
+use fusion_core::DataError;
 use modelsql::ModelManager;
 use std::sync::Arc;
 use tokio::sync::{mpsc, RwLock, Mutex};
@@ -40,7 +40,7 @@ use std::collections::HashMap;
 // src/gateway/gateway_svc.rs
 use tokio::sync::{mpsc, Mutex};
 use tracing::{info, error};
-use ultimate_core::DataError;
+use fusion_core::DataError;
 use modelsql::ModelManager;
 use std::sync::Arc;
 use super::{ConnectionManager, MessageHandler};
@@ -172,7 +172,7 @@ Agent 的连接、断开和心跳等事件将直接通过日志系统记录，�
 ```rust
 // 引用在 server-types-entities.md 中定义的 AgentEntity 和 AgentBmc
 use crate::bmc::{AgentBmc, AgentEntity, AgentForUpdate, AgentFilter};
-use ultimate_core::DataError;
+use fusion_core::DataError;
 use modelsql::{ModelManager, SqlError};
 impl AgentBmc {
   /// 查找在线的 Agent
@@ -267,7 +267,7 @@ graph TD
 - [ ] TODO: 身份验证和授权 ：验证 Agent 的身份和权限
 
 ```rust
-use ultimate_core::DataError;
+use fusion_core::DataError;
 use modelsql::page::{PageResult, Page};
 
 pub struct ConnectionManager {
@@ -423,7 +423,7 @@ use hetuflow_core::protocol::{
   WebSocketMessage, MessageKind, AgentRegisterRequest, HeartbeatRequest,
   TaskInstanceUpdate, AgentCapabilities, AgentMetrics
 };
-use ultimate_core::DataError;
+use fusion_core::DataError;
 
 pub struct MessageHandler {
   connection_manager: Arc<ConnectionManager>,
@@ -734,7 +734,7 @@ pub enum GatewayError {
   Serialization(#[from] serde_json::Error),
 
   #[error("Database error: {0}")]
-  Database(#[from] ultimate_core::DataError),
+  Database(#[from]fusion_core::DataError),
 
   #[error("Connection not found: {agent_id}")]
   ConnectionNotFound { agent_id: Uuid },

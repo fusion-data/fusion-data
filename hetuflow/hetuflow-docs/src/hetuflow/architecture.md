@@ -354,7 +354,7 @@ sequenceDiagram
 - **Application 容器模式**：使用 `ultimate-core::Application` 统一管理服务依赖和生命周期
 - **ModelManager 数据管理**：使用 `modelsql::ModelManager` 统一管理数据库连接和操作
 - **DbBmc 抽象层**：使用 `modelsql::base::DbBmc` 提供类型安全的数据库 CRUD 操作
-- **分层错误处理**：`modelsql::SqlError → ultimate_core::DataError` 的分层错误转换机制
+- **分层错误处理**：`modelsql::SqlError →fusion_core::DataError` 的分层错误转换机制
 - **组件整合**：将多个组件合并为核心的 Server 和 Agent，减少部署复杂度
 - **通信统一**：使用 WebSocket 协议，提供全双工通信和网络穿透能力
 - **存储统一**：使用 PostgreSQL 作为唯一存储，简化技术栈

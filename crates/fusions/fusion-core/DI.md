@@ -7,7 +7,7 @@
 ```rust
 use std::sync::Arc;
 
-use ultimate_core::{application::Application, component::Component};
+use fusion_core::{application::Application, component::Component};
 
 #[derive(Component, Clone)]
 pub struct AuthSvc {
@@ -40,7 +40,7 @@ pub struct PwdGenerator {}
 pub struct Db {}
 
 #[tokio::main]
-async fn main() -> ultimate_core::Result<()> {
+async fn main() ->fusion_core::Result<()> {
   Application::builder().build().await?;
 
   let _auth_svc: AuthSvc = Application::global().component();

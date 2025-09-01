@@ -96,7 +96,7 @@ Agent 的行为通过 `app.toml`（详细配置见: [/resources/app.toml](../../
 
 ```rust
 use std::sync::Arc;
-use ultimate_core::{application::Application, configuration::ConfigRegistry, DataError};
+use fusion_core::{application::Application, configuration::ConfigRegistry, DataError};
 
 // 从 app.toml 解析的配置结构体
 #[derive(Debug, Clone, serde::Deserialize)]
