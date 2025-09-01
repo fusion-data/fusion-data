@@ -18,10 +18,10 @@ path = "bin/hetuflow-server.rs"
 
 [dependencies]
 hetuflow-core = { workspace = true, features = ["with-db", "with-cli"] }
-ultimate-common = { workspace = true, features = ["with-uuid"] }
-ultimate-core = { workspace = true, features = ["with-uuid"] }
-ultimate-web = { workspace = true }
-ultimate-db = { workspace = true, features = ["with-postgres", "with-uuid"] }
+fusion-common = { workspace = true, features = ["with-uuid"] }
+fusion-core = { workspace = true, features = ["with-uuid"] }
+fusion-web = { workspace = true }
+fusion-db = { workspace = true, features = ["with-postgres", "with-uuid"] }
 modelsql = { workspace = true, features = ["with-uuid"] }
 sqlx = { workspace = true, features = [
   "runtime-tokio",

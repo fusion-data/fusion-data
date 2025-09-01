@@ -4,6 +4,8 @@
 use axum::Router;
 use axum_test::TestServer;
 use config::File;
+use fusion_core::{DataError, application::Application};
+use fusion_db::DbPlugin;
 use hetumind::{
   endpoint,
   infra::{db::execution::ExecutionStorePlugin, queue::QueueProviderPlugin},
@@ -16,8 +18,6 @@ use once_cell::sync::Lazy;
 use serde_json::json;
 use sqlx::{Connection, Executor, PgConnection};
 use tokio::sync::OnceCell;
-use ultimate_core::{DataError, application::Application};
-use ultimate_db::DbPlugin;
 
 // 使用 std::sync::Once 确保只初始化一次
 static ONCE: Lazy<OnceCell<Application>> = Lazy::new(OnceCell::new);

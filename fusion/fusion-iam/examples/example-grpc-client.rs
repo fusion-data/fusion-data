@@ -6,7 +6,7 @@ use fusion_iam::pb::fusion_iam::v1::{
   FilterUserRequest, PageUserRequest, SigninRequest, TokenKind, auth_client::AuthClient, user_client::UserClient,
 };
 use tonic::{Request, transport::Channel};
-use ultimate_api::v1::{OpNumber, OpString, Pagination, ValInt32, ValString};
+use fusion_api::v1::{OpNumber, OpString, Pagination, ValInt32, ValString};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

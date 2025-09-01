@@ -7,7 +7,7 @@ use super::{
 };
 use ahash::HashMap;
 use chrono::NaiveTime;
-use ultimate_common::time::{OffsetDateTime, now};
+use fusion_common::time::{OffsetDateTime, now};
 
 #[derive(Debug, thiserror::Error)]
 pub enum EvaluationError {

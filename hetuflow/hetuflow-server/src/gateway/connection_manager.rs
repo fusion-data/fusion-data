@@ -6,7 +6,7 @@ use std::{
 use hetuflow_core::protocol::{HeartbeatRequest, WebSocketCommand};
 use log::{debug, error, info};
 use tokio::sync::mpsc;
-use ultimate_common::{ahash::HashMap, time::now_epoch_millis};
+use fusion_common::{ahash::HashMap, time::now_epoch_millis};
 use uuid::Uuid;
 
 use crate::model::{AgentConnection, AgentEvent, ConnectionStats, GatewayCommandRequest};

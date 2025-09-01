@@ -1,7 +1,7 @@
 use modelsql::ModelManager;
 use modelsql::field::FieldMask;
 use modelsql::filter::OpValsUuid;
-use ultimate_core::DataError;
+use fusion_core::DataError;
 use uuid::Uuid;
 
 use hetuflow_core::models::{

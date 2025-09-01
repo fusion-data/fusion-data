@@ -1,8 +1,8 @@
 use axum::{Router, routing::post};
-use ultimate_core::application::Application;
+use fusion_core::application::Application;
 
 use crate::domain::auth::{SignSvc, SigninRequest, SigninResponse, SignupRequest};
-use ultimate_web::{WebResult, extract::JsonOrForm, ok_json};
+use fusion_web::{WebResult, extract::JsonOrForm, ok_json};
 
 pub fn auth_routes() -> Router<Application> {
   Router::new().route("/signin", post(signin)).route("/signup", post(signup))

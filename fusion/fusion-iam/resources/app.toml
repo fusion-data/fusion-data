@@ -1,21 +1,21 @@
-[ultimate.app]
+[fusion.app]
 run_mode = "DEV"
 name = "fusion-iam"
 
-[ultimate.security.pwd]
+[fusion.security.pwd]
 expires_in = 604800
 default_pwd = "2024.Fusiondata"
 
-[ultimate.web]
+[fusion.web]
 enable = true
 server_addr = "0.0.0.0:58000"
 
-[ultimate.grpc]
+[fusion.grpc]
 enable = true
 server_addr = "0.0.0.0:58010"
 plaintext = true
 
-[ultimate.log]
+[fusion.log]
 enable = true
 log_writer = "both"
 with_span_events = []
@@ -23,18 +23,18 @@ log_targets = [
   "fusion_iam=debug",
   "fusiondata=debug",
   "fusiondata_context=debug",
-  "ultimate_grpc=debug",
-  "ultimate_db=debug",
-  "ultimate=debug",
-  "ultimate_common=debug",
+  "fusion_grpc=debug",
+  "fusion_db=debug",
+  "fusion=debug",
+  "fusion_common=debug",
 ]
 
-[ultimate.log.otel]
+[fusion.log.otel]
 # enable = true
 exporter_otlp_endpoint = "http://localhost:4317"
 traces_sample = "always_on"
 
-[ultimate.db]
+[fusion.db]
 enable = true
 host = "localhost"
 port = 45432

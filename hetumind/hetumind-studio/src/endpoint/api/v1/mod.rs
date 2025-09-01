@@ -1,5 +1,5 @@
 use axum::Router;
-use ultimate_core::application::Application;
+use fusion_core::application::Application;
 
 mod executions;
 mod users;

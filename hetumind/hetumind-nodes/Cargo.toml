@@ -13,8 +13,8 @@ publish = true
 workspace = true
 
 [dependencies]
-ultimate-common = { workspace = true }
-ultimate-core = { workspace = true }
+fusion-common = { workspace = true }
+fusion-core = { workspace = true }
 hetumind-core = { workspace = true }
 hetumind-context = { workspace = true }
 

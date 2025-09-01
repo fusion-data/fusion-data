@@ -20,8 +20,8 @@ hetumind-core = { workspace = true, features = ["with-db"] }
 hetumind-context = { workspace = true }
 hetumind-nodes = { workspace = true }
 
-ultimate-common = { workspace = true, features = ["with-uuid"] }
-ultimate-core = { workspace = true, features = ["with-uuid"] }
+fusion-common = { workspace = true, features = ["with-uuid"] }
+fusion-core = { workspace = true, features = ["with-uuid"] }
 
 async-trait = { workspace = true }
 thiserror = { workspace = true }
@@ -35,7 +35,7 @@ log = { workspace = true }
 logforth = { workspace = true }
 
 # -- db
-ultimate-db = { workspace = true, features = ["with-postgres", "with-uuid"] }
+fusion-db = { workspace = true, features = ["with-postgres", "with-uuid"] }
 modelsql = { workspace = true, features = [
   "with-postgres",
   "with-uuid",
@@ -62,7 +62,7 @@ sea-query-binder = { workspace = true, features = [
 ] }
 
 # -- Web
-ultimate-web = { workspace = true, features = ["with-uuid"] }
+fusion-web = { workspace = true, features = ["with-uuid"] }
 http = { workspace = true }
 tower = { workspace = true }
 tower-http = { workspace = true }

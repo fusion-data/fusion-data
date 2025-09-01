@@ -46,7 +46,7 @@ fn main() {
     .emit_rerun_if_changed(true)
     .file_descriptor_set_path(out_dir.join("fusion_iam_descriptor.bin"))
     // .compile_well_known_types(true)
-    .extern_path(".ultimate_api", "::ultimate_api");
+    .extern_path(".fusion_api", "::fusion_api");
 
   iam_b = enums.iter().fold(iam_b, |b, e| b.enum_attribute(format!("{}.{}", BASE_PACKAGE, e), ENUM_ATTR));
   // builder = messages.iter().fold(builder, |b, m| b.message_attribute(format!("{}.{}", BASE_PACKAGE, m), MESSAGE_ATTR));

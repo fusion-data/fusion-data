@@ -7,8 +7,8 @@ use modelsql::{
   ModelManager,
   filter::{OpValsInt32, OpValsUuid},
 };
-use ultimate_common::time::{OffsetDateTime, now_offset};
-use ultimate_core::DataError;
+use fusion_common::time::{OffsetDateTime, now_offset};
+use fusion_core::DataError;
 use uuid::Uuid;
 
 use crate::infra::bmc::*;

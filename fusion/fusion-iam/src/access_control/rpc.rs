@@ -1,7 +1,7 @@
 use tonic::{Request, Response, Status};
 use log::debug;
-use ultimate_core::component::Component;
-use ultimate_grpc::GrpcServiceIntercepted;
+use fusion_core::component::Component;
+use fusion_grpc::GrpcServiceIntercepted;
 use uuid::Uuid;
 
 use crate::{

@@ -1,5 +1,5 @@
 use fusiondata_context::ctx::CtxW;
-use ultimate_core::{Result, component::Component, security::pwd::verify_pwd};
+use fusion_core::{Result, component::Component, security::pwd::verify_pwd};
 
 use crate::{
   pb::fusion_iam::v1::{SigninRequest, SigninResponse, TokenKind},
@@ -19,7 +19,7 @@ impl AuthSvc {
     let (u, uc) = self.user_svc.get_fetch_credential(&ctx, UserFilter::from(&req)).await?;
     verify_pwd(&req.password, &uc.encrypted_pwd).await?;
 
-    let token = make_token(ctx.app().ultimate_config().security(), u.id)?;
+    let token = make_token(ctx.app().fusion_config().security(), u.id)?;
     Ok(SigninResponse { token, token_kind: TokenKind::Bearer as i32 })
   }
 }

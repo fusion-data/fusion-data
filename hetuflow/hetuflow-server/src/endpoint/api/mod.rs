@@ -1,6 +1,6 @@
 pub mod v1;
 
-use ultimate_web::Router;
+use fusion_web::Router;
 
 use crate::application::ServerApplication;
 

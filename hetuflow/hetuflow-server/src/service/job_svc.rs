@@ -1,5 +1,5 @@
 use modelsql::{ModelManager, page::PageResult};
-use ultimate_core::DataError;
+use fusion_core::DataError;
 use uuid::Uuid;
 
 use hetuflow_core::models::{JobEntity, JobForCreate, JobForQuery, JobForUpdate};

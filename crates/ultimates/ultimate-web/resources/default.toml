@@ -1,3 +1,0 @@
-[ultimate.web]
-enable = false
-server_addr = "0.0.0.0:9500"

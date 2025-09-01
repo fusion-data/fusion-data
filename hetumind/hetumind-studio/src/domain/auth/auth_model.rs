@@ -3,7 +3,7 @@ use sea_query::enum_def;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use sqlx::FromRow;
-use ultimate_common::time::OffsetDateTime;
+use fusion_common::time::OffsetDateTime;
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize_repr, Deserialize_repr, sqlx::Type)]

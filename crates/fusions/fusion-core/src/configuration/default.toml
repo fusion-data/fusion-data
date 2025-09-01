@@ -1,0 +1,59 @@
+[fusion.app]
+run_mode = "dev"
+name = "fusion"
+# Example: `+08:00`
+time_offset = ""
+
+[fusion.security.pwd]
+pwd_key = "0123456789ABCDEF0123456789ABCDEF"
+secret_key = "0123456789ABCDEF0123456789ABCDEF"
+expires_in = 604800
+default_pwd = "2024.Fusion"
+
+[fusion.security.token]
+expires_in = 7200
+secret_key = "0123456789ABCDEF0123456789ABCDEF"
+public_key = """-----BEGIN PUBLIC KEY-----
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEOTv4YquENmDfXoSN0TQiOqmgR1Px
+UDTicuyW06VcX/XOkXp/6vmIIBFUXVWREJmQy7EIhNXM1qCy7Hs6SK9y7A==
+-----END PUBLIC KEY-----"""
+private_key = """-----BEGIN PRIVATE KEY-----
+MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgbMlaUVhOz9IHvlxT
+4i7Wm6cmubzzGZr/PNNME25ZVNuhRANCAAQ5O/hiq4Q2YN9ehI3RNCI6qaBHU/FQ
+NOJy7JbTpVxf9c6Ren/q+YggEVRdVZEQmZDLsQiE1czWoLLsezpIr3Ls
+-----END PRIVATE KEY-----"""
+
+[fusion.log]
+with_target = true
+with_file = true
+with_thread_ids = false
+with_thread_names = true
+with_line_number = true
+# "new", "close"
+with_span_events = []
+time_format = ""
+log_level = "info"
+log_targets = [
+  "tower_http=debug",
+  "fusion_iam=debug",
+  "hetuflow_core=debug",
+  "hetuflow_agent=debug",
+  "hetuflow_server=debug",
+  "hetumind=debug",
+  "hetumind_context=debug",
+  "fusion_grpc=debug",
+  "fusion_db=debug",
+  "fusion=debug",
+  "fusion_common=debug",
+]
+log_writer = "stdout"
+# 默认为 "./var/logs/"，可以通过环境变量设置 ULTIMATE__LOG_DIR 覆盖。当同时设置时，环境变量优先级更高。
+# log_dir =
+
+# 默认 log_name 同 fusion.app.name
+#log_name = ""
+
+[fusion.log.otel]
+enable = false
+traces_sample = "always_on"
+exporter_otlp_endpoint = "http://localhost:4317"

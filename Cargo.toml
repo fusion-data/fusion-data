@@ -1,7 +1,6 @@
 [workspace]
 members = [
   "crates/fusions/*",
-  "crates/ultimates/*",
   "crates/libs/*",
   "hetuflow/hetuflow-server",
   "hetuflow/hetuflow-agent",
@@ -39,13 +38,13 @@ fusion-corelib = { version = "0.1.1", path = "crates/fusions/fusion-corelib" }
 modelsql = { version = "0.1.1", path = "crates/libs/modelsql" }
 modelsql-core = { version = "0.1.1", path = "crates/libs/modelsql-core" }
 modelsql-macros = { version = "0.1.1", path = "crates/libs/modelsql-macros" }
-ultimate-common = { version = "0.1.1", path = "crates/ultimates/ultimate-common" }
-ultimate-core-macros = { version = "0.1.1", path = "crates/ultimates/ultimate-core-macros" }
-ultimate-core = { version = "0.1.1", path = "crates/ultimates/ultimate-core" }
-ultimate-db = { version = "0.1.1", path = "crates/ultimates/ultimate-db" }
-ultimate-web = { version = "0.1.1", path = "crates/ultimates/ultimate-web" }
-ultimate-grpc = { version = "0.1.1", path = "crates/ultimates/ultimate-grpc" }
-ultimate = { version = "0.1.1", path = "crates/ultimates/ultimate" }
+fusion-common = { version = "0.1.1", path = "crates/fusions/fusion-common" }
+fusion-core-macros = { version = "0.1.1", path = "crates/fusions/fusion-core-macros" }
+fusion-core = { version = "0.1.1", path = "crates/fusions/fusion-core" }
+fusion-db = { version = "0.1.1", path = "crates/fusions/fusion-db" }
+fusion-web = { version = "0.1.1", path = "crates/fusions/fusion-web" }
+fusion-grpc = { version = "0.1.1", path = "crates/fusions/fusion-grpc" }
+fusions = { version = "0.1.1", path = "crates/fusions/fusions" }
 hetuflow-core = { version = "0.1.1", path = "hetuflow/hetuflow-core" }
 hetumind-core = { version = "0.1.1", path = "hetumind/hetumind-core" }
 hetumind-context = { version = "0.1.1", path = "hetumind/hetumind-context" }

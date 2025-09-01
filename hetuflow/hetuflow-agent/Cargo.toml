@@ -17,9 +17,9 @@ path = "bin/hetuflow-agent.rs"
 
 [dependencies]
 hetuflow-core = { workspace = true }
-ultimate-common = { workspace = true, features = ["with-uuid"] }
-ultimate-core = { workspace = true, features = ["with-uuid"] }
-ultimate-web = { workspace = true }
+fusion-common = { workspace = true, features = ["with-uuid"] }
+fusion-core = { workspace = true, features = ["with-uuid"] }
+fusion-web = { workspace = true }
 tokio = { workspace = true }
 tokio-tungstenite = { workspace = true }
 futures-util = { workspace = true }

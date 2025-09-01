@@ -11,7 +11,7 @@ use hetuflow_core::{
 use log::{error, info};
 use tokio::sync::{broadcast, mpsc};
 use tokio_tungstenite::tungstenite::Message;
-use ultimate_core::DataError;
+use fusion_core::DataError;
 
 use crate::setting::HetuflowAgentSetting;
 

@@ -1,11 +1,11 @@
 use std::{path::PathBuf, sync::Arc, time::Duration};
 
 use duration_str::deserialize_duration;
+use fusion_common::{ahash::HashMap, env::get_env};
+use fusion_core::{DataError, configuration::FusionConfigRegistry};
 use hetuflow_core::utils::config::write_app_config;
 use log::{info, warn};
 use serde::{Deserialize, Serialize};
-use ultimate_common::{ahash::HashMap, env::get_env};
-use ultimate_core::{DataError, configuration::UltimateConfigRegistry};
 use uuid::Uuid;
 
 /// 连接配置
@@ -181,7 +181,7 @@ pub struct HetuflowAgentSetting {
 const KEY_PATH_AGENT_ID: &str = "hetuflow.agent.agent_id";
 
 impl HetuflowAgentSetting {
-  pub fn load(config_registry: &UltimateConfigRegistry) -> Result<Self, DataError> {
+  pub fn load(config_registry: &FusionConfigRegistry) -> Result<Self, DataError> {
     let config = config_registry.config();
     // Check if server_id not exists or invalid uuid in config
     if let Err(e) = config.get::<Uuid>(KEY_PATH_AGENT_ID) {
@@ -213,7 +213,7 @@ impl HetuflowAgentSetting {
 
 #[cfg(test)]
 mod tests {
-  use ultimate_common::env::set_env;
+  use fusion_common::env::set_env;
 
   use super::*;
 
@@ -234,8 +234,8 @@ mod tests {
     set_env("ULTIMATE_CONFIG_FILE", "resources/app.toml").unwrap();
 
     // 尝试加载配置
-    let config_registry = UltimateConfigRegistry::load().unwrap();
-    println!("{:?}", config_registry.ultimate_config().app());
+    let config_registry = FusionConfigRegistry::load().unwrap();
+    println!("{:?}", config_registry.fusion_config().app());
 
     let setting = HetuflowAgentSetting::load(&config_registry).unwrap();
     assert!(Uuid::try_parse(&setting.agent_id.to_string()).is_ok());

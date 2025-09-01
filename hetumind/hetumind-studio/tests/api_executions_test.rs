@@ -6,7 +6,7 @@ use modelsql::{
   page::PageResult,
 };
 use serde_json::json;
-use ultimate_core::IdResult;
+use fusion_core::IdResult;
 
 use crate::common::get_server;
 

@@ -2,8 +2,8 @@ use fusiondata_context::ctx::CtxW;
 use modelsql::filter::OpValInt64;
 use protobuf::FieldMask;
 use tonic::{Request, Response, Status};
-use ultimate_core::component::Component;
-use ultimate_grpc::{GrpcServiceIntercepted, utils::field_mask_match_with};
+use fusion_core::component::Component;
+use fusion_grpc::{GrpcServiceIntercepted, utils::field_mask_match_with};
 
 use crate::{
   pb::fusion_iam::v1::{

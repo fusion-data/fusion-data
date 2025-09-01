@@ -6,8 +6,8 @@ use modelsql::{
 use o2o::o2o;
 use sea_query::enum_def;
 use sqlx::prelude::FromRow;
-use ultimate_api::v1::PagePayload;
-use ultimate_common::time::UtcDateTime;
+use fusion_api::v1::PagePayload;
+use fusion_common::time::UtcDateTime;
 
 use crate::{
   pb::fusion_iam::v1::{CreatePermissionDto, FilterPermissionDto, PagePermissionResponse, UpdatePermissionDto},

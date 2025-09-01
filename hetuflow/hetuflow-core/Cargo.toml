@@ -17,8 +17,8 @@ with-db = ["modelsql", "sqlx", "sea-query", "modelsql-core/with-sea-query"]
 with-cli = ["clap"]
 
 [dependencies]
-ultimate-common = { workspace = true, features = ["with-uuid"] }
-ultimate-core = { workspace = true, features = ["with-uuid"] }
+fusion-common = { workspace = true, features = ["with-uuid"] }
+fusion-core = { workspace = true, features = ["with-uuid"] }
 hierarchical_hash_wheel_timer = { workspace = true }
 croner = { workspace = true }
 thiserror = { workspace = true }

@@ -9,8 +9,8 @@ use std::{
 use log::{debug, error, info};
 use modelsql::{ModelManager, store::DbxError};
 use tokio::sync::{broadcast, mpsc};
-use ultimate_core::{DataError, application::Application};
-use ultimate_db::DbPlugin;
+use fusion_core::{DataError, application::Application};
+use fusion_db::DbPlugin;
 use uuid::Uuid;
 
 use crate::service::{AgentManager, LoadBalancer, SchedulerSvc};
@@ -158,8 +158,8 @@ impl ServerApplication {
     // 启动 HTTP API 服务 (/api/v1)
     let app_state = self.clone();
     tokio::spawn(async move {
-      let router = ultimate_web::Router::new().nest("/api", crate::endpoint::api::routes()).with_state(app_state);
-      if let Err(e) = ultimate_web::server::init_server(router).await {
+      let router = fusion_web::Router::new().nest("/api", crate::endpoint::api::routes()).with_state(app_state);
+      if let Err(e) = fusion_web::server::init_server(router).await {
         error!("HTTP server error: {:?}", e);
       }
     });

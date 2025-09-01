@@ -1,0 +1,30 @@
+[package]
+name = "fusions"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = true
+
+[lints]
+workspace = true
+
+[features]
+with-db = ["dep:fusion-db", "dep:modelsql"]
+with-grpc = ["dep:fusion-grpc", "dep:tonic"]
+with-web = ["dep:fusion-web", "dep:axum"]
+
+[dependencies]
+tokio = { workspace = true }
+fusion-core = { workspace = true }
+# -- db & modelsql
+fusion-db = { workspace = true, optional = true }
+modelsql = { workspace = true, optional = true }
+# -- web & axum
+fusion-web = { workspace = true, optional = true }
+axum = { workspace = true, optional = true }
+# -- grpc & tonic
+fusion-grpc = { workspace = true, optional = true }
+tonic = { workspace = true, optional = true }

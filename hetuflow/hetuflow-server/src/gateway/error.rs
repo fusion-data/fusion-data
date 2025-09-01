@@ -1,8 +1,8 @@
 use log::{error, warn};
 use modelsql::SqlError;
 use thiserror::Error;
-use ultimate_core::DataError;
-use ultimate_web::WebError;
+use fusion_core::DataError;
+use fusion_web::WebError;
 use uuid::Uuid;
 
 /// Gateway 模块专用错误类型
@@ -79,7 +79,7 @@ impl GatewayError {
   }
 }
 
-/// 与 ultimate_core::DataError 的兼容性转换
+/// 与 fusion_core::DataError 的兼容性转换
 impl From<GatewayError> for DataError {
   fn from(err: GatewayError) -> Self {
     match err {
@@ -93,7 +93,7 @@ impl From<GatewayError> for DataError {
   }
 }
 
-/// 与 ultimate_web::WebError 的兼容性置换
+/// 与 fusion_web::WebError 的兼容性置换
 impl From<GatewayError> for WebError {
   fn from(err: GatewayError) -> Self {
     match err {

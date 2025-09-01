@@ -4,7 +4,7 @@ use std::sync::Arc;
 use ahash::HashMap;
 use serde::{Deserialize, Serialize};
 use typed_builder::TypedBuilder;
-use ultimate_common::time::OffsetDateTime;
+use fusion_common::time::OffsetDateTime;
 use uuid::Uuid;
 
 use crate::{

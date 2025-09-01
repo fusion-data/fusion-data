@@ -6,7 +6,7 @@ use modelsql::{
   generate_pg_bmc_common, generate_pg_bmc_filter,
 };
 use sqlx::Row;
-use ultimate_common::time::now_offset;
+use fusion_common::time::now_offset;
 use uuid::Uuid;
 
 use hetuflow_core::{

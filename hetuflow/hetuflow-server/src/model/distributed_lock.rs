@@ -6,7 +6,7 @@ use modelsql::{
 use sea_query::enum_def;
 use serde::Deserialize;
 use sqlx::FromRow;
-use ultimate_common::time::OffsetDateTime;
+use fusion_common::time::OffsetDateTime;
 
 pub struct DistributedLockIds;
 impl DistributedLockIds {

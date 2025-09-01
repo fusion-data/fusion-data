@@ -1,7 +1,7 @@
 use modelsql::field::Fields;
 use modelsql::postgres::PgRowType;
 use sqlx::prelude::FromRow;
-use ultimate_common::time::UtcDateTime;
+use fusion_common::time::UtcDateTime;
 use uuid::Uuid;
 
 #[derive(Debug, Default, FromRow, Fields)]

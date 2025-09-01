@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::runtime::execution::ExecutionStore;
 use hetumind_core::workflow::ExecutionId;
 use log::info;
-use ultimate_common::time::now;
+use fusion_common::time::now;
 
 use super::{CheckpointConfig, CheckpointError, ExecutionCheckpoint, ExecutionState};
 

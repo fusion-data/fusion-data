@@ -11,7 +11,7 @@ use std::sync::{
 
 use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc;
-use ultimate_common::time::now_epoch_millis;
+use fusion_common::time::now_epoch_millis;
 use uuid::Uuid;
 
 use hetuflow_core::protocol::WebSocketCommand;

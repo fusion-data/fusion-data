@@ -2,7 +2,7 @@
 use ahash::HashMap;
 use chrono::Duration;
 use serde::{Deserialize, Serialize};
-use ultimate_common::time::OffsetDateTime;
+use fusion_common::time::OffsetDateTime;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]

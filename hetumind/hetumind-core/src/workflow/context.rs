@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use fusion_corelib::ctx::Ctx;
-use ultimate_common::time::{OffsetDateTime, now};
+use fusion_common::time::{OffsetDateTime, now};
 
 use crate::workflow::ExecutionId;
 

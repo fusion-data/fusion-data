@@ -1,0 +1,20 @@
+[package]
+name = "fusion-core-macros"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = true
+
+[lints]
+workspace = true
+
+[lib]
+proc-macro = true
+
+[dependencies]
+quote = { workspace = true }
+syn = { workspace = true, features = ["extra-traits"] }
+proc-macro2 = { workspace = true }

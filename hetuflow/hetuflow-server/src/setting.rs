@@ -1,10 +1,10 @@
 use std::{path::PathBuf, time::Duration};
 
 use duration_str::deserialize_duration;
+use fusion_common::env::get_env;
+use fusion_core::{DataError, configuration::FusionConfigRegistry};
 use hetuflow_core::utils::config::write_app_config;
 use serde::{Deserialize, Serialize};
-use ultimate_common::env::get_env;
-use ultimate_core::{DataError, configuration::UltimateConfigRegistry};
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -44,7 +44,7 @@ pub struct HetuflowServerSetting {
 const KEY_PATH_SERVER_ID: &str = "hetuflow.server.server_id";
 
 impl HetuflowServerSetting {
-  pub fn load(config_registry: &UltimateConfigRegistry) -> Result<Self, DataError> {
+  pub fn load(config_registry: &FusionConfigRegistry) -> Result<Self, DataError> {
     let config = config_registry.config();
     // Check if server_id not exists or invalid uuid in config
     if let Err(_e) = config.get::<Uuid>(KEY_PATH_SERVER_ID) {

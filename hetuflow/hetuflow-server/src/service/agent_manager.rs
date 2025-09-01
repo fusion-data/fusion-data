@@ -14,11 +14,11 @@ use modelsql::{
 };
 use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
-use ultimate_common::{
+use fusion_common::{
   ahash::{HashMap, HashSet},
   time::{now_epoch_millis, now_offset},
 };
-use ultimate_core::DataError;
+use fusion_core::DataError;
 use uuid::Uuid;
 
 use crate::{gateway::ConnectionManager, model::AgentEvent};

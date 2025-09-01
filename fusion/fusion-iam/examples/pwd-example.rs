@@ -1,4 +1,4 @@
-use ultimate_core::security::pwd::generate_pwd;
+use fusion_core::security::pwd::generate_pwd;
 
 #[tokio::main]
 async fn main() {

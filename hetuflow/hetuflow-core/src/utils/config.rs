@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use config::Config;
-use ultimate_core::DataError;
+use fusion_core::DataError;
 
 pub fn write_app_config(path: PathBuf, key: &str, id: &str) -> Result<(), DataError> {
   let config = Config::builder()

@@ -1,18 +1,18 @@
-[ultimate.log]
+[fusion.log]
 enable = true
 log_targets = [
     "tower_http=debug",
-    "ultimate_common=debug",
-    "ultimate_grpc=debug",
-    "ultimate_db=debug",
-    "ultimate=debug",
+    "fusion_common=debug",
+    "fusion_grpc=debug",
+    "fusion_db=debug",
+    "fusion=debug",
     "fusion_iam=debug",
     "hetuflow_core=debug",
     "hetuflow_agent=debug",
     "hetuflow_server=debug",
 ]
 
-[ultimate.app]
+[fusion.app]
 name = "hetuflow-agent"
 time_offset = "+08:00"
 run_mode = "dev"

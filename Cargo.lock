@@ -1539,13 +1539,179 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e6d5a32815ae3f33302d95fdcb2ce17862f8c65363dcfd29360480ba1001fc9c"
 
 [[package]]
+name = "fusion-ai"
+version = "0.1.1"
+dependencies = [
+ "rig-core",
+ "rmcp",
+ "tokio",
+]
+
+[[package]]
+name = "fusion-common"
+version = "0.1.1"
+dependencies = [
+ "ahash 0.8.12",
+ "base16ct",
+ "base64ct",
+ "chrono",
+ "dotenvy",
+ "duration-str",
+ "fusion-corelib",
+ "hmac",
+ "log",
+ "rand 0.9.2",
+ "regex",
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror 2.0.16",
+ "uuid",
+]
+
+[[package]]
+name = "fusion-core"
+version = "0.1.1"
+dependencies = [
+ "anyhow",
+ "argon2",
+ "async-trait",
+ "config",
+ "dashmap",
+ "dotenvy",
+ "fastrace",
+ "fusion-common",
+ "fusion-core-macros",
+ "fusion-corelib",
+ "futures",
+ "hierarchical_hash_wheel_timer",
+ "inventory",
+ "jiff",
+ "josekit",
+ "log",
+ "logforth",
+ "modelsql",
+ "protobuf",
+ "protobuf-codegen",
+ "rand 0.9.2",
+ "regex",
+ "serde",
+ "serde_json",
+ "serde_repr",
+ "serde_with",
+ "strum",
+ "thiserror 2.0.16",
+ "tokio",
+ "toml 0.9.5",
+ "tonic 0.14.1",
+ "ulid",
+ "uuid",
+ "zeroize",
+]
+
+[[package]]
+name = "fusion-core-macros"
+version = "0.1.1"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.106",
+]
+
+[[package]]
 name = "fusion-corelib"
 version = "0.1.1"
 dependencies = [
- "chrono",
  "serde",
  "serde_json",
  "thiserror 2.0.16",
+]
+
+[[package]]
+name = "fusion-db"
+version = "0.1.1"
+dependencies = [
+ "anyhow",
+ "config",
+ "fusion-common",
+ "fusion-core",
+ "fusion-corelib",
+ "log",
+ "logforth",
+ "modelsql",
+ "sea-query",
+ "sea-query-binder",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "thiserror 2.0.16",
+ "tokio",
+ "tonic 0.14.1",
+ "uuid",
+]
+
+[[package]]
+name = "fusion-grpc"
+version = "0.1.1"
+dependencies = [
+ "config",
+ "fusion-common",
+ "fusion-core",
+ "fusion-corelib",
+ "futures",
+ "http",
+ "log",
+ "protobuf",
+ "serde",
+ "tokio",
+ "tonic 0.14.1",
+ "tonic-reflection",
+ "tonic-types",
+ "tonic-web",
+ "tower-http",
+ "tower-service",
+ "uuid",
+]
+
+[[package]]
+name = "fusion-web"
+version = "0.1.1"
+dependencies = [
+ "axum",
+ "bytes",
+ "config",
+ "fusion-common",
+ "fusion-core",
+ "fusion-corelib",
+ "futures",
+ "headers",
+ "http",
+ "hyper",
+ "log",
+ "mime",
+ "serde",
+ "serde_json",
+ "serde_with",
+ "tokio",
+ "tonic 0.14.1",
+ "tower",
+ "tower-http",
+ "ulid",
+ "uuid",
+]
+
+[[package]]
+name = "fusions"
+version = "0.1.1"
+dependencies = [
+ "axum",
+ "fusion-core",
+ "fusion-db",
+ "fusion-grpc",
+ "fusion-web",
+ "modelsql",
+ "tokio",
+ "tonic 0.14.1",
 ]
 
 [[package]]
@@ -1868,6 +2034,9 @@ dependencies = [
  "clap",
  "croner 3.0.0",
  "duration-str",
+ "fusion-common",
+ "fusion-core",
+ "fusion-web",
  "futures-util",
  "hetuflow-core",
  "hierarchical_hash_wheel_timer",
@@ -1879,9 +2048,6 @@ dependencies = [
  "serde_json",
  "tokio",
  "tokio-tungstenite 0.27.0",
- "ultimate-common",
- "ultimate-core",
- "ultimate-web",
  "uuid",
 ]
 
@@ -1894,6 +2060,8 @@ dependencies = [
  "config",
  "croner 3.0.0",
  "duration-str",
+ "fusion-common",
+ "fusion-core",
  "garde",
  "hierarchical_hash_wheel_timer",
  "log",
@@ -1910,8 +2078,6 @@ dependencies = [
  "tokio-test",
  "toml 0.9.5",
  "typed-builder",
- "ultimate-common",
- "ultimate-core",
  "uuid",
 ]
 
@@ -1936,6 +2102,10 @@ dependencies = [
  "croner 3.0.0",
  "duration-str",
  "fastrace",
+ "fusion-common",
+ "fusion-core",
+ "fusion-db",
+ "fusion-web",
  "futures-util",
  "garde",
  "hetuflow-core",
@@ -1951,10 +2121,6 @@ dependencies = [
  "thiserror 2.0.16",
  "tokio",
  "toml 0.9.5",
- "ultimate-common",
- "ultimate-core",
- "ultimate-db",
- "ultimate-web",
  "uuid",
 ]
 
@@ -1973,6 +2139,10 @@ dependencies = [
  "config",
  "croner 3.0.0",
  "fastrace",
+ "fusion-common",
+ "fusion-core",
+ "fusion-db",
+ "fusion-web",
  "futures",
  "hetumind-context",
  "hetumind-core",
@@ -2000,10 +2170,6 @@ dependencies = [
  "tower",
  "tower-cookies",
  "tower-http",
- "ultimate-common",
- "ultimate-core",
- "ultimate-db",
- "ultimate-web",
  "uuid",
 ]
 
@@ -2014,6 +2180,8 @@ dependencies = [
  "clap",
  "config",
  "dirs",
+ "fusion-common",
+ "fusion-core",
  "hetumind-core",
  "modelsql",
  "reqwest",
@@ -2023,8 +2191,6 @@ dependencies = [
  "thiserror 2.0.16",
  "tokio",
  "toml 0.9.5",
- "ultimate-common",
- "ultimate-core",
  "uuid",
 ]
 
@@ -2036,7 +2202,10 @@ dependencies = [
  "async-trait",
  "axum",
  "dashmap",
+ "fusion-common",
+ "fusion-core",
  "fusion-corelib",
+ "fusion-web",
  "hetumind-core",
  "http",
  "log",
@@ -2045,9 +2214,6 @@ dependencies = [
  "serde_json",
  "sqlx",
  "thiserror 2.0.16",
- "ultimate-common",
- "ultimate-core",
- "ultimate-web",
 ]
 
 [[package]]
@@ -2063,6 +2229,7 @@ dependencies = [
  "derive_more",
  "dotenvy",
  "duration-str",
+ "fusion-common",
  "fusion-corelib",
  "jsonpath-rust",
  "log",
@@ -2080,7 +2247,6 @@ dependencies = [
  "thiserror 2.0.16",
  "tokio",
  "typed-builder",
- "ultimate-common",
  "uuid",
 ]
 
@@ -2098,6 +2264,8 @@ version = "0.1.1"
 dependencies = [
  "ahash 0.8.12",
  "async-trait",
+ "fusion-common",
+ "fusion-core",
  "hetumind-context",
  "hetumind-core",
  "log",
@@ -2107,8 +2275,6 @@ dependencies = [
  "serde_json",
  "thiserror 2.0.16",
  "tokio",
- "ultimate-common",
- "ultimate-core",
  "uuid",
 ]
 
@@ -6071,173 +6237,6 @@ dependencies = [
  "serde",
  "uuid",
  "web-time",
-]
-
-[[package]]
-name = "ultimate"
-version = "0.1.1"
-dependencies = [
- "axum",
- "modelsql",
- "tokio",
- "tonic 0.14.1",
- "ultimate-core",
- "ultimate-db",
- "ultimate-grpc",
- "ultimate-web",
-]
-
-[[package]]
-name = "ultimate-ai"
-version = "0.1.1"
-dependencies = [
- "rig-core",
- "rmcp",
- "tokio",
-]
-
-[[package]]
-name = "ultimate-common"
-version = "0.1.1"
-dependencies = [
- "ahash 0.8.12",
- "base16ct",
- "base64ct",
- "chrono",
- "dotenvy",
- "duration-str",
- "fusion-corelib",
- "hmac",
- "log",
- "rand 0.9.2",
- "regex",
- "serde",
- "serde_json",
- "sha2",
- "thiserror 2.0.16",
- "uuid",
-]
-
-[[package]]
-name = "ultimate-core"
-version = "0.1.1"
-dependencies = [
- "anyhow",
- "argon2",
- "async-trait",
- "config",
- "dashmap",
- "dotenvy",
- "fastrace",
- "fusion-corelib",
- "futures",
- "hierarchical_hash_wheel_timer",
- "inventory",
- "jiff",
- "josekit",
- "log",
- "logforth",
- "modelsql",
- "protobuf",
- "protobuf-codegen",
- "rand 0.9.2",
- "regex",
- "serde",
- "serde_json",
- "serde_repr",
- "serde_with",
- "strum",
- "thiserror 2.0.16",
- "tokio",
- "toml 0.9.5",
- "tonic 0.14.1",
- "ulid",
- "ultimate-common",
- "ultimate-core-macros",
- "uuid",
- "zeroize",
-]
-
-[[package]]
-name = "ultimate-core-macros"
-version = "0.1.1"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.106",
-]
-
-[[package]]
-name = "ultimate-db"
-version = "0.1.1"
-dependencies = [
- "anyhow",
- "config",
- "fusion-corelib",
- "log",
- "logforth",
- "modelsql",
- "sea-query",
- "sea-query-binder",
- "serde",
- "serde_json",
- "sqlx",
- "thiserror 2.0.16",
- "tokio",
- "tonic 0.14.1",
- "ultimate-common",
- "ultimate-core",
- "uuid",
-]
-
-[[package]]
-name = "ultimate-grpc"
-version = "0.1.1"
-dependencies = [
- "config",
- "fusion-corelib",
- "futures",
- "http",
- "log",
- "protobuf",
- "serde",
- "tokio",
- "tonic 0.14.1",
- "tonic-reflection",
- "tonic-types",
- "tonic-web",
- "tower-http",
- "tower-service",
- "ultimate-common",
- "ultimate-core",
- "uuid",
-]
-
-[[package]]
-name = "ultimate-web"
-version = "0.1.1"
-dependencies = [
- "axum",
- "bytes",
- "config",
- "fusion-corelib",
- "futures",
- "headers",
- "http",
- "hyper",
- "log",
- "mime",
- "serde",
- "serde_json",
- "serde_with",
- "tokio",
- "tonic 0.14.1",
- "tower",
- "tower-http",
- "ulid",
- "ultimate-common",
- "ultimate-core",
- "uuid",
 ]
 
 [[package]]

@@ -5,7 +5,7 @@ use modelsql::{
   utils::datetime_to_sea_value,
 };
 use sqlx::FromRow;
-use ultimate_common::time::UtcDateTime;
+use fusion_common::time::UtcDateTime;
 
 #[derive(FromRow, Fields)]
 pub struct UserCredential {

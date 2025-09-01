@@ -4,7 +4,7 @@ use modelsql::{
   filter::{OpValsDateTime, OpValsInt32},
   generate_pg_bmc_common, generate_pg_bmc_filter,
 };
-use ultimate_common::time::now_offset;
+use fusion_common::time::now_offset;
 use uuid::Uuid;
 
 use hetuflow_core::{protocol::AgentRegisterRequest, types::AgentStatus};

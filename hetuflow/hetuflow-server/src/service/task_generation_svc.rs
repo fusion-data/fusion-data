@@ -2,13 +2,13 @@ use std::time::Duration;
 
 use log::{info, warn};
 use modelsql::ModelManager;
-use ultimate_core::DataError;
+use fusion_core::DataError;
 use uuid::Uuid;
 
 use croner::Cron;
 use serde_json::json;
 use std::str::FromStr;
-use ultimate_common::time::{OffsetDateTime, now_offset};
+use fusion_common::time::{OffsetDateTime, now_offset};
 
 use hetuflow_core::models::{JobEntity, ScheduleEntity, TaskForCreate, TaskInstanceForCreate};
 use hetuflow_core::types::{ScheduleKind, ScheduleStatus, TaskInstanceStatus, TaskStatus};

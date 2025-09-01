@@ -1,6 +1,6 @@
 use tonic::{Request, Response, Status};
-use ultimate_core::component::Component;
-use ultimate_grpc::GrpcServiceIntercepted;
+use fusion_core::component::Component;
+use fusion_grpc::GrpcServiceIntercepted;
 
 use crate::{
   pb::fusion_iam::v1::{

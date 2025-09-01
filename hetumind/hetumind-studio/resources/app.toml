@@ -1,4 +1,4 @@
-[ultimate.app]
+[fusion.app]
 run_mode = "DEV"
 name = "hetumind"
 
@@ -27,15 +27,15 @@ execution_timeout_ms = 7200000               # 2小时
 max_retries = 3
 retry_interval_seconds = 10
 
-[ultimate.security.pwd]
+[fusion.security.pwd]
 expires_in = 604800
 default_pwd = "2025.Hetumind"
 
-[ultimate.web]
+[fusion.web]
 enable = true
 server_addr = "0.0.0.0:50000"
 
-[ultimate.log]
+[fusion.log]
 enable = true
 log_writer = "both"
 with_span_events = []
@@ -47,17 +47,17 @@ log_targets = [
   "hetumind_core=debug",
   "modelsql=debug",
   "modelsql_core=debug",
-  "ultimate_db=debug",
-  "ultimate_common=debug",
-  "ultimate_core=debug",
-  "ultimate_web=debug",
+  "fusion_db=debug",
+  "fusion_common=debug",
+  "fusion_core=debug",
+  "fusion_web=debug",
 ]
 
-[ultimate.db]
+[fusion.db]
 enable = true
 url = "postgresql://fusiondata:2025.Fusiondata@localhost:5432/fusiondata"
 
-[ultimate.log.otel]
+[fusion.log.otel]
 enable = false
 exporter_otlp_endpoint = "http://localhost:4317"
 traces_sample = "always_on"

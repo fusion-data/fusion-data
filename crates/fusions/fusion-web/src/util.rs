@@ -1,0 +1,80 @@
+use std::time::SystemTime;
+
+use axum::Json;
+use axum::extract::Query;
+use axum::http::StatusCode;
+use axum::http::request::Parts;
+use fusion_common::time;
+#[cfg(feature = "with-ulid")]
+use fusion_core::IdUlidResult;
+use fusion_core::configuration::SecurityConfig;
+use fusion_core::log::get_trace_id;
+use fusion_core::security::{AccessToken, SecurityUtils};
+use fusion_core::{DataError, IdI64Result};
+use fusion_corelib::ctx::Ctx;
+use headers::authorization::Bearer;
+use headers::{Authorization, HeaderMapExt};
+use serde::de::DeserializeOwned;
+#[cfg(feature = "with-ulid")]
+use ulid::Ulid;
+
+use crate::WebResult;
+use crate::error::WebError;
+
+/// ok_json! 宏：支持无参数（返回 Ok(Json(()))）或一个参数（返回 Ok(Json(v))）
+#[macro_export]
+macro_rules! ok_json {
+  () => {
+    Ok(axum::Json(().into()))
+  };
+  ($v:expr) => {
+    Ok(axum::Json($v))
+  };
+}
+
+#[inline]
+pub fn ok_id(id: i64) -> WebResult<IdI64Result> {
+  Ok(IdI64Result::new(id).into())
+}
+
+#[cfg(feature = "with-ulid")]
+#[inline]
+pub fn ok_ulid(id: Ulid) -> WebResult<IdUlidResult> {
+  Ok(IdUlidResult::new(id).into())
+}
+
+#[cfg(feature = "with-uuid")]
+#[inline]
+pub fn ok_uuid(id: uuid::Uuid) -> WebResult<fusion_core::IdUuidResult> {
+  Ok(fusion_core::IdUuidResult::new(id).into())
+}
+
+pub fn unauthorized_app_error(msg: impl Into<String>) -> (StatusCode, Json<WebError>) {
+  (StatusCode::UNAUTHORIZED, Json(WebError::new_with_msg(msg).with_err_code(401)))
+}
+
+/// 从 Http Request Parts 中获取 [Ctx]
+pub fn extract_ctx(parts: &Parts, sc: &SecurityConfig) -> Result<Ctx, DataError> {
+  let req_time = SystemTime::now();
+
+  let token = if let Some(Authorization(bearer)) = parts.headers.typed_get::<Authorization<Bearer>>() {
+    bearer.token().to_string()
+  } else if let Ok(at) = Query::<AccessToken>::try_from_uri(&parts.uri) {
+    at.0.access_token
+  } else {
+    return Err(DataError::unauthorized("Missing token"));
+  };
+
+  let (payload, _) =
+    SecurityUtils::decrypt_jwt(sc.pwd(), &token).map_err(|_e| DataError::unauthorized("Failed decode jwt"))?;
+
+  let ctx = Ctx::try_new(payload, Some(req_time), get_trace_id())?;
+  Ok(ctx)
+}
+
+pub fn opt_to_app_result<T>(opt: Option<T>) -> WebResult<T>
+where
+  T: DeserializeOwned,
+{
+  if let Some(v) = opt { Ok(Json(v)) } else { Err(WebError::new_with_code(404, "Not found.")) }
+}

@@ -1,15 +1,15 @@
 use axum::extract::FromRequestParts;
+use fusion_core::{
+  DataError,
+  application::Application,
+  security::pwd::{generate_pwd, verify_pwd},
+};
+use fusion_web::WebError;
 use hetumind_context::utils::make_token;
 use hetumind_core::credential::TokenType;
 use http::request::Parts;
 use log::info;
 use modelsql::{ModelManager, filter::OpValString};
-use ultimate_core::{
-  DataError,
-  application::Application,
-  security::pwd::{generate_pwd, verify_pwd},
-};
-use ultimate_web::WebError;
 
 use crate::domain::user::{UserBmc, UserFilter, UserForCreate, UserStatus};
 
@@ -41,7 +41,7 @@ impl SignSvc {
     let password = user.password.ok_or_else(|| DataError::unauthorized("User password not set"))?;
     verify_pwd(&signin_req.password, &password).await?;
 
-    let token = make_token(user.id.to_string(), self.application.ultimate_config().security().pwd())?;
+    let token = make_token(user.id.to_string(), self.application.fusion_config().security().pwd())?;
     Ok(SigninResponse { token, token_type: TokenType::Bearer })
   }
 

@@ -14,9 +14,9 @@ workspace = true
 [dependencies]
 fusion-corelib = { workspace = true }
 hetumind-core = { workspace = true, features = ["with-db"] }
-ultimate-common = { workspace = true, features = ["with-uuid"] }
-ultimate-core = { workspace = true, features = ["with-uuid", "modelsql"] }
-ultimate-web = { workspace = true }
+fusion-common = { workspace = true, features = ["with-uuid"] }
+fusion-core = { workspace = true, features = ["with-uuid", "modelsql"] }
+fusion-web = { workspace = true }
 
 log = { workspace = true }
 thiserror = { workspace = true }
