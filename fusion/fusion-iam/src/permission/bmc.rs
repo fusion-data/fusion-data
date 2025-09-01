@@ -5,7 +5,7 @@ use modelsql::{
   generate_pg_bmc_common,
 };
 use sea_query::{Condition, Expr, Query, SelectStatement};
-use ultimate_api::v1::{Page, PagePayload, Pagination};
+use fusion_api::v1::{Page, PagePayload, Pagination};
 
 use crate::role::role_permission::{RolePermissionBmc, RolePermissionIden};
 

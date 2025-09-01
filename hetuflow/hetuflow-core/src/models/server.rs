@@ -3,7 +3,7 @@ use modelsql_core::{
   filter::{OpValsDateTime, OpValsInt32, OpValsString, OpValsUuid, Page},
 };
 use serde::{Deserialize, Serialize};
-use ultimate_common::time::OffsetDateTime;
+use fusion_common::time::OffsetDateTime;
 use uuid::Uuid;
 
 use crate::types::ServerStatus;
@@ -36,9 +36,7 @@ pub struct ServerForRegister {
   pub id: Uuid,
   pub name: String,
   pub address: String,
-  pub bind_namespaces: Vec<Uuid>,
   pub status: ServerStatus,
-  pub description: Option<String>,
 }
 
 /// Server 更新模型

@@ -3,7 +3,7 @@ use modelsql_core::{
   filter::{OpValsDateTime, OpValsInt32, OpValsUuid, Page},
 };
 use serde::{Deserialize, Serialize};
-use ultimate_common::time::OffsetDateTime;
+use fusion_common::time::OffsetDateTime;
 use uuid::Uuid;
 
 use crate::types::TaskInstanceStatus;
@@ -18,10 +18,10 @@ use crate::types::TaskInstanceStatus;
 pub struct TaskInstanceEntity {
   pub id: Uuid,
   pub task_id: Uuid,
-  pub server_id: Uuid,
+  pub job_id: Uuid,
   pub agent_id: Uuid,
   pub status: TaskInstanceStatus,
-  pub started_at: Option<OffsetDateTime>,
+  pub started_at: OffsetDateTime,
   pub completed_at: Option<OffsetDateTime>,
   pub output: Option<String>,
   pub error_message: Option<String>,

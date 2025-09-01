@@ -4,7 +4,7 @@
 use hetumind_core::workflow::{Workflow, WorkflowForUpdate, WorkflowStatus};
 use http::StatusCode;
 use serde_json::json;
-use ultimate_core::IdUuidResult;
+use fusion_core::IdUuidResult;
 
 mod common;
 

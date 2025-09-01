@@ -17,7 +17,7 @@ use serde_json::json;
 use sqlx::FromRow;
 use std::env;
 use std::time::Duration;
-use ultimate_common::ctx::Ctx;
+use fusion_common::ctx::Ctx;
 
 #[derive(Debug, Serialize, Deserialize, FromRow, Fields)]
 #[enum_def]

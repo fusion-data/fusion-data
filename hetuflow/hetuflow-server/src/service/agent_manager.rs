@@ -1,6 +1,11 @@
+use std::sync::Arc;
+
 use hetuflow_core::{
   models::*,
-  types::{AgentStatus, TaskInstanceStatus, TaskStatus},
+  protocol::{
+    AgentRegisterResponse, ScheduledTask, TaskInstanceUpdated, TaskPollRequest, TaskPollResponse, WebSocketCommand,
+  },
+  types::{AgentStatus, CommandKind, TaskInstanceStatus, TaskStatus},
 };
 use log::{debug, error, info, warn};
 use modelsql::{
@@ -9,23 +14,26 @@ use modelsql::{
 };
 use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
-use ultimate_common::time::now_offset;
-use ultimate_core::DataError;
+use fusion_common::{
+  ahash::{HashMap, HashSet},
+  time::{now_epoch_millis, now_offset},
+};
+use fusion_core::DataError;
 use uuid::Uuid;
 
-use crate::gateway::{AgentEvent, AgentRegistryRef};
+use crate::{gateway::ConnectionManager, model::AgentEvent};
 use crate::{infra::bmc::*, service::AgentSvc};
 
 /// Agent 管理器 - 负责调度策略、可靠性统计和任务分发
 pub struct AgentManager {
   mm: ModelManager,
-  agent_registry: AgentRegistryRef,
+  connection_manager: Arc<ConnectionManager>,
 }
 
 impl AgentManager {
   /// 创建新的 Agent 管理器
-  pub fn new(mm: ModelManager, agent_registry: AgentRegistryRef) -> Self {
-    Self { mm, agent_registry }
+  pub fn new(mm: ModelManager, connection_manager: Arc<ConnectionManager>) -> Self {
+    Self { mm, connection_manager }
   }
 
   /// 运行 Agent 管理器（订阅事件流）
@@ -33,9 +41,14 @@ impl AgentManager {
     info!("Starting AgentManager with event subscription");
     // 订阅 Agent 事件
     let (tx, event_receiver) = mpsc::unbounded_channel();
-    self.agent_registry.subscribe_events(tx).await?;
+    self.connection_manager.subscribe_event(tx)?;
 
-    let join_handle = tokio::spawn(handle_agent_events(self.mm.clone(), event_receiver));
+    let run_loop = AgentEventRunLoop {
+      mm: self.mm.clone(),
+      connection_manager: self.connection_manager.clone(),
+      event_rx: event_receiver,
+    };
+    let join_handle = tokio::spawn(run_loop.run_loop());
     Ok(join_handle)
   }
 
@@ -58,7 +71,7 @@ impl AgentManager {
       warn!("Found zombie task instance: {}", instance_ref.id);
 
       // 通过 AgentRegistry 检查对应的 Agent 是否还在线
-      let is_online = self.agent_registry.is_agent_online(&instance_ref.agent_id).await?;
+      let is_online = self.connection_manager.is_agent_online(&instance_ref.agent_id)?;
 
       if !is_online {
         // Agent 离线，取消任务
@@ -115,7 +128,7 @@ impl AgentManager {
 
   /// 获取在线 Agent 列表（通过 AgentRegistry）
   pub async fn get_agents(&self, server_ids: &[Uuid]) -> Result<Vec<AgentEntity>, DataError> {
-    let online_agents = self.agent_registry.get_online_agents().await?;
+    let online_agents = self.connection_manager.get_online_agents()?;
     if online_agents.is_empty() {
       return Ok(vec![]);
     }
@@ -137,7 +150,7 @@ impl AgentManager {
   /// 获取 Agent 详细信息（包含可靠性统计）
   pub async fn get_agent_details(&self, agent_id: &Uuid) -> Result<Option<serde_json::Value>, DataError> {
     // 通过 AgentRegistry 获取基础信息
-    if let Some(agent) = self.agent_registry.get_agent(agent_id).await? {
+    if let Some(agent) = self.connection_manager.get_agent(agent_id)? {
       // 获取可靠性统计
       let details = serde_json::to_value(&agent)?;
       Ok(Some(details))
@@ -151,7 +164,7 @@ impl AgentManager {
     &self,
     _task_requirements: Option<serde_json::Value>,
   ) -> Result<Option<Uuid>, DataError> {
-    let online_agents = self.agent_registry.get_online_agents().await?;
+    let online_agents = self.connection_manager.get_online_agents()?;
 
     if online_agents.is_empty() {
       return Ok(None);
@@ -176,7 +189,7 @@ impl AgentManager {
     success: bool,
     response_time_ms: f64,
   ) -> Result<(), DataError> {
-    if let Some(agent) = self.agent_registry.get_agent(agent_id).await? {
+    if let Some(agent) = self.connection_manager.get_agent(agent_id)? {
       agent.update_stats(success, response_time_ms);
     }
 
@@ -188,8 +201,8 @@ impl AgentManager {
     debug!("Refreshing agent status from AgentRegistry");
 
     // 获取当前在线 Agent 数量和列表，用于统计信息更新
-    let online_count = self.agent_registry.get_online_count().await?;
-    let online_agents = self.agent_registry.get_online_agents().await?;
+    let online_count = self.connection_manager.get_online_count()?;
+    let online_agents = self.connection_manager.get_online_agents()?;
     info!("Current online agents: {}, agent list: {:?}", online_count, online_agents);
 
     // TODO: 待实现
@@ -199,7 +212,7 @@ impl AgentManager {
 
   /// 获取统计信息（包含可靠性数据）
   pub async fn get_stats(&self) -> Result<serde_json::Value, DataError> {
-    let online_agents = self.agent_registry.get_online_agents().await?;
+    let online_agents = self.connection_manager.get_online_agents()?;
     let online_count = online_agents.len();
 
     let mut total_tasks: u64 = 0;
@@ -226,37 +239,102 @@ impl AgentManager {
   }
 }
 
-/// 处理 Agent 事件
-async fn handle_agent_events(mm: ModelManager, mut event_receiver: mpsc::UnboundedReceiver<AgentEvent>) {
-  let agent_svc = AgentSvc::new(mm.clone());
-  while let Some(event) = event_receiver.recv().await {
-    match event {
-      AgentEvent::Heartbeat { agent_id, .. } => {
-        debug!("Received heartbeat from agent {}", agent_id);
-        if let Err(e) = agent_svc.update_agent_heartbeat(&agent_id).await {
-          // TODO:
-          error!("Failed to update agent heartbeat: {:?}", e);
+struct AgentEventRunLoop {
+  mm: ModelManager,
+  connection_manager: Arc<ConnectionManager>,
+  event_rx: mpsc::UnboundedReceiver<AgentEvent>,
+}
+
+impl AgentEventRunLoop {
+  /// 处理 Agent 事件
+  async fn run_loop(mut self) {
+    let agent_svc = AgentSvc::new(self.mm.clone());
+    while let Some(event) = self.event_rx.recv().await {
+      match event {
+        AgentEvent::Heartbeat { agent_id, .. } => {
+          if let Err(e) = agent_svc.update_agent_heartbeat(&agent_id).await {
+            error!("Failed to update agent heartbeat agent {}: {:?}", agent_id, e);
+          }
         }
-      }
-      AgentEvent::TaskInstanceChanged { agent_id, payload } => {
-        info!("Agent {} task instance changed: {:?}", agent_id, payload);
-      }
-      AgentEvent::Registered { agent_id, .. } => {
-        info!("Agent {} connected, updating reliability stats", agent_id);
-        if let Err(e) = agent_svc.update_agent_status(&agent_id, AgentStatus::Online).await {
-          error!("Failed to update agent status: {:?}", e);
+        AgentEvent::TaskInstanceChanged { agent_id, payload } => {
+          if let Err(e) = self.process_task_instance_changed(agent_id, payload).await {
+            error!("Failed to process task instance changed agent {}: {:?}", agent_id, e);
+          }
         }
-      }
-      AgentEvent::Connected { .. } => {
-        // do nothing
-      }
-      AgentEvent::Unregistered { agent_id, reason } => {
-        warn!("Agent {} disconnected: {}", agent_id, reason);
-        // 处理 Agent 离线导致的任务失败
-        if let Err(e) = agent_svc.handle_agent_offline(&agent_id).await {
-          error!("Failed to handle offline agent {}: {:?}", agent_id, e);
+        AgentEvent::TaskPollRequest { agent_id, request } => {
+          if let Err(e) = self.process_task_poll(agent_id, request).await {
+            error!("Failed to process task poll request agent {}: {:?}", agent_id, e);
+          }
+        }
+        AgentEvent::Registered { agent_id, payload } => match agent_svc.handle_register(&agent_id, &payload).await {
+          Ok(response) => {
+            let message = WebSocketCommand::new(CommandKind::AgentRegistered, response);
+            if let Err(e) = self.connection_manager.send_to_agent(&agent_id, message) {
+              error!("Failed to send registered message to agent {}: {:?}", agent_id, e);
+            }
+          }
+          Err(e) => {
+            error!("Failed to handle register agent {}: {:?}", agent_id, e);
+          }
+        },
+        AgentEvent::Connected { .. } => {
+          // do nothing
+        }
+        AgentEvent::Unconnected { agent_id, reason } => {
+          warn!("Agent {} disconnected: {}", agent_id, reason);
+          // 处理 Agent 离线导致的任务失败
+          if let Err(e) = agent_svc.handle_agent_offline(&agent_id).await {
+            error!("Failed to handle offline agent {}: {:?}", agent_id, e);
+          }
         }
       }
     }
+  }
+
+  /// Agent poll task 时不对 Server 绑定的 Namespace 进行过滤，直接拉取符合要求的最紧急的 TaskInstanceEntity。按 request 条件进行过滤
+  async fn process_task_poll(&self, agent_id: Uuid, request: Arc<TaskPollRequest>) -> Result<(), DataError> {
+    info!("Agent {} task poll request: {:?}", agent_id, request);
+    let task_instances = TaskInstanceBmc::find_many_by_poll(&self.mm, &request).await?;
+    let task_map = TaskBmc::find_many(
+      &self.mm,
+      vec![TaskFilter {
+        id: Some(OpValsUuid::in_(task_instances.iter().map(|ti| ti.task_id).collect::<HashSet<_>>())),
+        ..Default::default()
+      }],
+      None,
+    )
+    .await?
+    .into_iter()
+    .map(|t| (t.id, t))
+    .collect::<HashMap<_, _>>();
+
+    let tasks = task_instances
+      .into_iter()
+      .filter_map(|task_instance| {
+        let task_id = task_instance.task_id;
+        match task_map.get(&task_id) {
+          Some(task) => Some(ScheduledTask { task_instance, task: task.clone() }),
+          None => {
+            warn!("TaskEntity({}) of TaskInstanceEntity({}) not exists", task_id, task_instance.id);
+            None
+          }
+        }
+      })
+      .collect::<Vec<_>>();
+
+    // 向 Agent 发送 TaskPollResponse
+    let parameters = serde_json::to_value(TaskPollResponse { tasks, has_more: false, next_poll_interval: 0 })?;
+    let command = WebSocketCommand::new(CommandKind::DispatchTask, parameters);
+    self.connection_manager.send_to_agent(&agent_id, command)?;
+
+    Ok(())
+  }
+
+  async fn process_task_instance_changed(
+    &self,
+    agent_id: Uuid,
+    payload: Arc<TaskInstanceUpdated>,
+  ) -> Result<(), DataError> {
+    todo!()
   }
 }

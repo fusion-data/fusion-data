@@ -15,7 +15,8 @@ workspace = true
 with-db = ["sqlx", "sea-query", "modelsql", "modelsql-core/with-sea-query"]
 
 [dependencies]
-ultimate-common = { workspace = true, features = ["with-uuid"] }
+fusion-corelib = { workspace = true }
+fusion-common = { workspace = true, features = ["with-uuid"] }
 config = { workspace = true }
 thiserror = { workspace = true }
 derive_more = { workspace = true }

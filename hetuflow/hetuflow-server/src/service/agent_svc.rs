@@ -4,8 +4,8 @@ use modelsql::{
   filter::{OpValsDateTime, OpValsInt32, OpValsUuid, Page},
   page::PageResult,
 };
-use ultimate_common::time::now_offset;
-use ultimate_core::DataError;
+use fusion_common::time::{now_epoch_millis, now_offset};
+use fusion_core::DataError;
 use uuid::Uuid;
 
 use hetuflow_core::{
@@ -13,6 +13,7 @@ use hetuflow_core::{
     AgentEntity, AgentFilter, AgentForCreate, AgentForQuery, AgentForUpdate, TaskForUpdate, TaskInstanceFilter,
     TaskInstanceForUpdate,
   },
+  protocol::{AgentRegisterRequest, AgentRegisterResponse},
   types::{AgentStatus, TaskInstanceStatus, TaskStatus},
 };
 
@@ -63,7 +64,9 @@ impl AgentSvc {
 
   /// 更新 Agent 心跳
   pub async fn update_agent_heartbeat(&self, agent_id: &Uuid) -> Result<(), DataError> {
-    AgentBmc::update_heartbeat(&self.mm, agent_id).await.map_err(DataError::from)
+    let update =
+      AgentForUpdate { status: Some(AgentStatus::Online), last_heartbeat: Some(now_offset()), ..Default::default() };
+    AgentBmc::update_by_id(&self.mm, agent_id, update).await.map_err(DataError::from)
   }
 
   /// 查找在线的 Agent
@@ -149,5 +152,21 @@ impl AgentSvc {
 
   pub async fn query(&self, input: AgentForQuery) -> Result<PageResult<AgentEntity>, DataError> {
     AgentBmc::page(&self.mm, vec![input.filter], input.page).await.map_err(DataError::from)
+  }
+
+  pub async fn handle_register(
+    &self,
+    agent_id: &Uuid,
+    payload: &AgentRegisterRequest,
+  ) -> Result<AgentRegisterResponse, DataError> {
+    let agent = AgentBmc::register(&self.mm, agent_id, payload).await?;
+    let response = AgentRegisterResponse {
+      success: true,
+      message: "".to_string(),
+      agent: Some(agent),
+      server_time: now_epoch_millis(),
+      // session_id: todo!(),
+    };
+    Ok(response)
   }
 }

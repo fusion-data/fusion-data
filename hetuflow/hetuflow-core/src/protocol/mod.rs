@@ -1,10 +1,12 @@
 mod agent;
 mod heartbeat;
+mod process;
 mod task;
 mod websocket;
 
 pub use agent::*;
 pub use heartbeat::*;
+pub use process::*;
 pub use task::*;
 pub use websocket::*;
 
@@ -55,19 +57,6 @@ pub struct AckMessage {
   pub status: String,
   /// 详细信息
   pub details: Option<String>,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-#[serde(tag = "type", rename_all = "snake_case")]
-pub enum GatewayCommand {
-  Send { command: WebSocketCommand, agent_id: Uuid },
-  Broadcast { command: WebSocketCommand },
-}
-
-#[derive(Debug)]
-pub enum SchedulerEvent {
-  TaskDispatched { task_id: Uuid, agent_id: Uuid },
-  TaskCompleted { task_id: Uuid, agent_id: Uuid, success: bool },
 }
 
 #[cfg(test)]

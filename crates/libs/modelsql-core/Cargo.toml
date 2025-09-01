@@ -14,15 +14,10 @@ workspace = true
 [features]
 # default = ["with-sea-query"]
 with-sea-query = ["dep:sea-query", "dep:sea-query-binder"]
-with-uuid = [
-  "dep:uuid",
-  "ultimate-common/with-uuid",
-  "sea-query-binder/with-uuid",
-]
+with-uuid = ["dep:uuid", "sea-query-binder/with-uuid"]
 with-ilike = []
 
 [dependencies]
-ultimate-common.workspace = true
 modelsql-macros = { workspace = true }
 sea-query = { workspace = true, optional = true }
 sea-query-binder = { workspace = true, optional = true }

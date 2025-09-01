@@ -687,6 +687,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b05b61dc5112cbb17e4b6cd61790d9845d13888356391624cbe7e41efeac1e75"
 
 [[package]]
+name = "colored"
+version = "3.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fde0e0ec90c9dfb3b4b1a0891a7dcd0e2bffde2f7efed5fe7c9bb00e5bfb915e"
+dependencies = [
+ "windows-sys 0.48.0",
+]
+
+[[package]]
 name = "combine"
 version = "4.6.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1530,6 +1539,182 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e6d5a32815ae3f33302d95fdcb2ce17862f8c65363dcfd29360480ba1001fc9c"
 
 [[package]]
+name = "fusion-ai"
+version = "0.1.1"
+dependencies = [
+ "rig-core",
+ "rmcp",
+ "tokio",
+]
+
+[[package]]
+name = "fusion-common"
+version = "0.1.1"
+dependencies = [
+ "ahash 0.8.12",
+ "base16ct",
+ "base64ct",
+ "chrono",
+ "dotenvy",
+ "duration-str",
+ "fusion-corelib",
+ "hmac",
+ "log",
+ "rand 0.9.2",
+ "regex",
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror 2.0.16",
+ "uuid",
+]
+
+[[package]]
+name = "fusion-core"
+version = "0.1.1"
+dependencies = [
+ "anyhow",
+ "argon2",
+ "async-trait",
+ "config",
+ "dashmap",
+ "dotenvy",
+ "fastrace",
+ "fusion-common",
+ "fusion-core-macros",
+ "fusion-corelib",
+ "futures",
+ "hierarchical_hash_wheel_timer",
+ "inventory",
+ "jiff",
+ "josekit",
+ "log",
+ "logforth",
+ "modelsql",
+ "protobuf",
+ "protobuf-codegen",
+ "rand 0.9.2",
+ "regex",
+ "serde",
+ "serde_json",
+ "serde_repr",
+ "serde_with",
+ "strum",
+ "thiserror 2.0.16",
+ "tokio",
+ "toml 0.9.5",
+ "tonic 0.14.1",
+ "ulid",
+ "uuid",
+ "zeroize",
+]
+
+[[package]]
+name = "fusion-core-macros"
+version = "0.1.1"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.106",
+]
+
+[[package]]
+name = "fusion-corelib"
+version = "0.1.1"
+dependencies = [
+ "serde",
+ "serde_json",
+ "thiserror 2.0.16",
+]
+
+[[package]]
+name = "fusion-db"
+version = "0.1.1"
+dependencies = [
+ "anyhow",
+ "config",
+ "fusion-common",
+ "fusion-core",
+ "fusion-corelib",
+ "log",
+ "logforth",
+ "modelsql",
+ "sea-query",
+ "sea-query-binder",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "thiserror 2.0.16",
+ "tokio",
+ "tonic 0.14.1",
+ "uuid",
+]
+
+[[package]]
+name = "fusion-grpc"
+version = "0.1.1"
+dependencies = [
+ "config",
+ "fusion-common",
+ "fusion-core",
+ "fusion-corelib",
+ "futures",
+ "http",
+ "log",
+ "protobuf",
+ "serde",
+ "tokio",
+ "tonic 0.14.1",
+ "tonic-reflection",
+ "tonic-types",
+ "tonic-web",
+ "tower-http",
+ "tower-service",
+ "uuid",
+]
+
+[[package]]
+name = "fusion-web"
+version = "0.1.1"
+dependencies = [
+ "axum",
+ "bytes",
+ "config",
+ "fusion-common",
+ "fusion-core",
+ "fusion-corelib",
+ "futures",
+ "headers",
+ "http",
+ "hyper",
+ "log",
+ "mime",
+ "serde",
+ "serde_json",
+ "serde_with",
+ "tokio",
+ "tonic 0.14.1",
+ "tower",
+ "tower-http",
+ "ulid",
+ "uuid",
+]
+
+[[package]]
+name = "fusions"
+version = "0.1.1"
+dependencies = [
+ "axum",
+ "fusion-core",
+ "fusion-db",
+ "fusion-grpc",
+ "fusion-web",
+ "modelsql",
+ "tokio",
+ "tonic 0.14.1",
+]
+
+[[package]]
 name = "futf"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1848,16 +2033,22 @@ dependencies = [
  "axum",
  "clap",
  "croner 3.0.0",
+ "duration-str",
+ "fusion-common",
+ "fusion-core",
+ "fusion-web",
  "futures-util",
  "hetuflow-core",
  "hierarchical_hash_wheel_timer",
+ "log",
+ "logforth",
+ "nix",
+ "rand 0.9.2",
  "serde",
  "serde_json",
  "tokio",
  "tokio-tungstenite 0.27.0",
- "ultimate-common",
- "ultimate-core",
- "ultimate-web",
+ "uuid",
 ]
 
 [[package]]
@@ -1866,9 +2057,11 @@ version = "0.1.1"
 dependencies = [
  "chrono",
  "clap",
+ "config",
  "croner 3.0.0",
- "derive_builder",
  "duration-str",
+ "fusion-common",
+ "fusion-core",
  "garde",
  "hierarchical_hash_wheel_timer",
  "log",
@@ -1883,8 +2076,8 @@ dependencies = [
  "thiserror 2.0.16",
  "tokio",
  "tokio-test",
- "ultimate-common",
- "ultimate-core",
+ "toml 0.9.5",
+ "typed-builder",
  "uuid",
 ]
 
@@ -1909,6 +2102,10 @@ dependencies = [
  "croner 3.0.0",
  "duration-str",
  "fastrace",
+ "fusion-common",
+ "fusion-core",
+ "fusion-db",
+ "fusion-web",
  "futures-util",
  "garde",
  "hetuflow-core",
@@ -1924,10 +2121,6 @@ dependencies = [
  "thiserror 2.0.16",
  "tokio",
  "toml 0.9.5",
- "ultimate-common",
- "ultimate-core",
- "ultimate-db",
- "ultimate-web",
  "uuid",
 ]
 
@@ -1946,6 +2139,10 @@ dependencies = [
  "config",
  "croner 3.0.0",
  "fastrace",
+ "fusion-common",
+ "fusion-core",
+ "fusion-db",
+ "fusion-web",
  "futures",
  "hetumind-context",
  "hetumind-core",
@@ -1973,10 +2170,6 @@ dependencies = [
  "tower",
  "tower-cookies",
  "tower-http",
- "ultimate-common",
- "ultimate-core",
- "ultimate-db",
- "ultimate-web",
  "uuid",
 ]
 
@@ -1987,6 +2180,8 @@ dependencies = [
  "clap",
  "config",
  "dirs",
+ "fusion-common",
+ "fusion-core",
  "hetumind-core",
  "modelsql",
  "reqwest",
@@ -1996,8 +2191,6 @@ dependencies = [
  "thiserror 2.0.16",
  "tokio",
  "toml 0.9.5",
- "ultimate-common",
- "ultimate-core",
  "uuid",
 ]
 
@@ -2009,6 +2202,10 @@ dependencies = [
  "async-trait",
  "axum",
  "dashmap",
+ "fusion-common",
+ "fusion-core",
+ "fusion-corelib",
+ "fusion-web",
  "hetumind-core",
  "http",
  "log",
@@ -2017,9 +2214,6 @@ dependencies = [
  "serde_json",
  "sqlx",
  "thiserror 2.0.16",
- "ultimate-common",
- "ultimate-core",
- "ultimate-web",
 ]
 
 [[package]]
@@ -2035,6 +2229,8 @@ dependencies = [
  "derive_more",
  "dotenvy",
  "duration-str",
+ "fusion-common",
+ "fusion-corelib",
  "jsonpath-rust",
  "log",
  "modelsql",
@@ -2051,7 +2247,6 @@ dependencies = [
  "thiserror 2.0.16",
  "tokio",
  "typed-builder",
- "ultimate-common",
  "uuid",
 ]
 
@@ -2069,6 +2264,8 @@ version = "0.1.1"
 dependencies = [
  "ahash 0.8.12",
  "async-trait",
+ "fusion-common",
+ "fusion-core",
  "hetumind-context",
  "hetumind-core",
  "log",
@@ -2078,8 +2275,6 @@ dependencies = [
  "serde_json",
  "thiserror 2.0.16",
  "tokio",
- "ultimate-common",
- "ultimate-core",
  "uuid",
 ]
 
@@ -2831,9 +3026,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8bb3bacbca013b1a4d9f342501b6aa28eb32a6aa33bc804792fad83d661a59d5"
 dependencies = [
  "anyhow",
+ "colored",
+ "crossbeam-channel",
  "env_filter",
  "jiff",
  "log",
+ "opentelemetry",
+ "opentelemetry-otlp",
+ "opentelemetry_sdk",
 ]
 
 [[package]]
@@ -3014,11 +3214,13 @@ dependencies = [
  "config",
  "derive_more",
  "duration-str",
+ "fusion-corelib",
  "log",
  "logforth",
  "modelsql-core",
  "modelsql-macros",
  "pgvector",
+ "regex",
  "rust_decimal",
  "sea-query",
  "sea-query-binder",
@@ -3028,8 +3230,7 @@ dependencies = [
  "sqlx",
  "thiserror 2.0.16",
  "tokio",
- "tonic",
- "ultimate-common",
+ "tonic 0.14.1",
  "uuid",
 ]
 
@@ -3044,7 +3245,6 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror 2.0.16",
- "ultimate-common",
  "uuid",
 ]
 
@@ -3087,6 +3287,18 @@ name = "new_debug_unreachable"
 version = "1.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "650eef8c711430f1a879fdd01d4745a7deea475becfb90269c06775983bbf086"
+
+[[package]]
+name = "nix"
+version = "0.30.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "74523f3a35e05aba87a1d978330aef40f67b0304ac79c1c00b294c9830543db6"
+dependencies = [
+ "bitflags 2.9.2",
+ "cfg-if",
+ "cfg_aliases",
+ "libc",
+]
 
 [[package]]
 name = "nom"
@@ -3349,6 +3561,86 @@ dependencies = [
  "libc",
  "pkg-config",
  "vcpkg",
+]
+
+[[package]]
+name = "opentelemetry"
+version = "0.30.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "aaf416e4cb72756655126f7dd7bb0af49c674f4c1b9903e80c009e0c37e552e6"
+dependencies = [
+ "futures-core",
+ "futures-sink",
+ "js-sys",
+ "pin-project-lite",
+ "thiserror 2.0.16",
+ "tracing",
+]
+
+[[package]]
+name = "opentelemetry-http"
+version = "0.30.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "50f6639e842a97dbea8886e3439710ae463120091e2e064518ba8e716e6ac36d"
+dependencies = [
+ "async-trait",
+ "bytes",
+ "http",
+ "opentelemetry",
+ "reqwest",
+]
+
+[[package]]
+name = "opentelemetry-otlp"
+version = "0.30.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dbee664a43e07615731afc539ca60c6d9f1a9425e25ca09c57bc36c87c55852b"
+dependencies = [
+ "http",
+ "opentelemetry",
+ "opentelemetry-http",
+ "opentelemetry-proto",
+ "opentelemetry_sdk",
+ "prost 0.13.5",
+ "reqwest",
+ "serde_json",
+ "thiserror 2.0.16",
+ "tokio",
+ "tonic 0.13.1",
+ "tracing",
+]
+
+[[package]]
+name = "opentelemetry-proto"
+version = "0.30.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2e046fd7660710fe5a05e8748e70d9058dc15c94ba914e7c4faa7c728f0e8ddc"
+dependencies = [
+ "base64",
+ "hex",
+ "opentelemetry",
+ "opentelemetry_sdk",
+ "prost 0.13.5",
+ "serde",
+ "tonic 0.13.1",
+]
+
+[[package]]
+name = "opentelemetry_sdk"
+version = "0.30.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "11f644aa9e5e31d11896e024305d7e3c98a88884d9f8919dbf37a9991bc47a4b"
+dependencies = [
+ "futures-channel",
+ "futures-executor",
+ "futures-util",
+ "opentelemetry",
+ "percent-encoding",
+ "rand 0.9.2",
+ "serde_json",
+ "thiserror 2.0.16",
+ "tokio",
+ "tokio-stream",
 ]
 
 [[package]]
@@ -4147,6 +4439,7 @@ dependencies = [
  "cookie",
  "cookie_store",
  "encoding_rs",
+ "futures-channel",
  "futures-core",
  "futures-util",
  "h2",
@@ -5610,6 +5903,32 @@ checksum = "fcc842091f2def52017664b53082ecbbeb5c7731092bad69d2c63050401dfd64"
 
 [[package]]
 name = "tonic"
+version = "0.13.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7e581ba15a835f4d9ea06c55ab1bd4dce26fc53752c69a04aac00703bfb49ba9"
+dependencies = [
+ "async-trait",
+ "base64",
+ "bytes",
+ "http",
+ "http-body",
+ "http-body-util",
+ "hyper",
+ "hyper-timeout",
+ "hyper-util",
+ "percent-encoding",
+ "pin-project",
+ "prost 0.13.5",
+ "tokio",
+ "tokio-stream",
+ "tower",
+ "tower-layer",
+ "tower-service",
+ "tracing",
+]
+
+[[package]]
+name = "tonic"
 version = "0.14.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "67ac5a8627ada0968acec063a4746bf79588aa03ccb66db2f75d7dce26722a40"
@@ -5645,7 +5964,7 @@ checksum = "b9c511b9a96d40cb12b7d5d00464446acf3b9105fd3ce25437cfe41c92b1c87d"
 dependencies = [
  "bytes",
  "prost 0.14.1",
- "tonic",
+ "tonic 0.14.1",
 ]
 
 [[package]]
@@ -5658,7 +5977,7 @@ dependencies = [
  "prost-types 0.14.1",
  "tokio",
  "tokio-stream",
- "tonic",
+ "tonic 0.14.1",
  "tonic-prost",
 ]
 
@@ -5670,7 +5989,7 @@ checksum = "2830bdf6d112fe42b060125a5eaf9242e1f63cc48085951879d7c4ae21247daa"
 dependencies = [
  "prost 0.14.1",
  "prost-types 0.14.1",
- "tonic",
+ "tonic 0.14.1",
 ]
 
 [[package]]
@@ -5685,7 +6004,7 @@ dependencies = [
  "http-body",
  "pin-project",
  "tokio-stream",
- "tonic",
+ "tonic 0.14.1",
  "tower-layer",
  "tower-service",
  "tracing",
@@ -5918,165 +6237,6 @@ dependencies = [
  "serde",
  "uuid",
  "web-time",
-]
-
-[[package]]
-name = "ultimate"
-version = "0.1.1"
-dependencies = [
- "axum",
- "modelsql",
- "tokio",
- "tonic",
- "ultimate-core",
- "ultimate-db",
- "ultimate-grpc",
- "ultimate-web",
-]
-
-[[package]]
-name = "ultimate-ai"
-version = "0.1.1"
-dependencies = [
- "rig-core",
- "rmcp",
- "tokio",
-]
-
-[[package]]
-name = "ultimate-common"
-version = "0.1.1"
-dependencies = [
- "ahash 0.8.12",
- "base16ct",
- "base64ct",
- "chrono",
- "dotenvy",
- "duration-str",
- "hmac",
- "log",
- "rand 0.9.2",
- "regex",
- "serde",
- "serde_json",
- "sha2",
- "thiserror 2.0.16",
- "uuid",
-]
-
-[[package]]
-name = "ultimate-core"
-version = "0.1.1"
-dependencies = [
- "anyhow",
- "argon2",
- "async-trait",
- "config",
- "dashmap",
- "dotenvy",
- "futures",
- "hierarchical_hash_wheel_timer",
- "inventory",
- "josekit",
- "log",
- "modelsql",
- "protobuf",
- "protobuf-codegen",
- "rand 0.9.2",
- "regex",
- "serde",
- "serde_json",
- "serde_repr",
- "serde_with",
- "strum",
- "thiserror 2.0.16",
- "tokio",
- "toml 0.9.5",
- "tonic",
- "ulid",
- "ultimate-common",
- "ultimate-core-macros",
- "uuid",
- "zeroize",
-]
-
-[[package]]
-name = "ultimate-core-macros"
-version = "0.1.1"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.106",
-]
-
-[[package]]
-name = "ultimate-db"
-version = "0.1.1"
-dependencies = [
- "anyhow",
- "config",
- "log",
- "logforth",
- "modelsql",
- "sea-query",
- "sea-query-binder",
- "serde",
- "serde_json",
- "sqlx",
- "thiserror 2.0.16",
- "tokio",
- "tonic",
- "ultimate-common",
- "ultimate-core",
- "uuid",
-]
-
-[[package]]
-name = "ultimate-grpc"
-version = "0.1.1"
-dependencies = [
- "config",
- "futures",
- "http",
- "log",
- "protobuf",
- "serde",
- "tokio",
- "tonic",
- "tonic-reflection",
- "tonic-types",
- "tonic-web",
- "tower-http",
- "tower-service",
- "ultimate-common",
- "ultimate-core",
- "uuid",
-]
-
-[[package]]
-name = "ultimate-web"
-version = "0.1.1"
-dependencies = [
- "axum",
- "bytes",
- "config",
- "futures",
- "headers",
- "http",
- "hyper",
- "log",
- "mime",
- "serde",
- "serde_json",
- "serde_with",
- "tokio",
- "tonic",
- "tower",
- "tower-http",
- "ulid",
- "ultimate-common",
- "ultimate-core",
- "uuid",
 ]
 
 [[package]]

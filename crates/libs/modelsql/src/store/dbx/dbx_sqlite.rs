@@ -21,7 +21,7 @@ type Db = Pool<Sqlite>;
 
 pub fn new_sqlite_pool_from_config(c: &DbConfig, _application_name: Option<&str>) -> Result<Db> {
   if !c.enable() {
-    return Err(DbxError::ConfigInvalid("Need set ultimate.db.enable = true"));
+    return Err(DbxError::ConfigInvalid("Need set fusion.db.enable = true"));
   }
 
   let mut pool_opts = SqlitePoolOptions::new();

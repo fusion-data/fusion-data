@@ -1,8 +1,9 @@
+use chrono::{DateTime, Utc};
+use fusion_corelib::ctx::Ctx;
 use modelsql_core::filter::Page;
 use sea_query::{DeleteStatement, InsertStatement, IntoIden, SelectStatement, UpdateStatement, WithQuery};
 #[cfg(any(feature = "with-postgres", feature = "with-sqlite"))]
 use sea_query_binder::{SqlxBinder, SqlxValues};
-use ultimate_common::ctx::Ctx;
 
 use crate::{
   Result, SqlError,
@@ -131,7 +132,7 @@ where
     fields.push(SeaField::new(TimestampIden::Cid, ctx.uid()));
   }
   if MC::_has_creation_timestamps() && !fields.exists(TimestampIden::Ctime.into_iden()) {
-    fields.push(SeaField::new(TimestampIden::Ctime, *ctx.req_time()));
+    fields.push(SeaField::new(TimestampIden::Ctime, DateTime::<Utc>::from(*ctx.req_time())));
   }
 }
 
@@ -145,7 +146,7 @@ where
     fields.push(SeaField::new(TimestampIden::Mid, ctx.uid()));
   }
   if MC::_has_modification_timestamps() && !fields.exists(TimestampIden::Mtime.into_iden()) {
-    fields.push(SeaField::new(TimestampIden::Mtime, *ctx.req_time()));
+    fields.push(SeaField::new(TimestampIden::Mtime, DateTime::<Utc>::from(*ctx.req_time())));
   }
 }
 

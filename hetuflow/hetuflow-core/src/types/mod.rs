@@ -2,9 +2,10 @@
 mod cli;
 
 use serde_repr::{Deserialize_repr, Serialize_repr};
+use strum::AsRefStr;
 
 /// 作业类型 (ScheduleKind) - 定义了 Job 的核心调度和行为模式
-#[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy, PartialEq, Eq, AsRefStr)]
 #[cfg_attr(feature = "with-db", derive(sqlx::Type))]
 #[repr(i32)]
 pub enum ScheduleKind {
@@ -67,12 +68,11 @@ pub enum ScheduleStatus {
 ///   Cancelled --> [*] : 任务取消结束
 ///   Succeeded --> [*] : 任务成功结束
 /// ```
-#[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy, Default, PartialEq, Eq)]
+#[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "with-db", derive(sqlx::Type))]
 #[repr(i32)]
 pub enum TaskStatus {
   /// 等待分发
-  #[default]
   Pending = 1,
   /// 已锁定，等待分发到 agent 执行
   Locked = 10,
@@ -95,6 +95,8 @@ pub enum TaskStatus {
 pub enum TaskInstanceStatus {
   /// 等待执行
   Pending = 1,
+  /// 已分发
+  Dispatched = 5,
   /// 执行中
   Running = 10,
   /// 执行超时
@@ -135,7 +137,7 @@ pub enum AgentStatus {
   Online = 100,       // 在线
 }
 
-/// Agent 指令类型
+/// 从 Server 发向 Agent 的命令类型
 #[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "with-db", derive(sqlx::Type))]
 #[repr(i32)]
@@ -168,20 +170,21 @@ pub enum TaskControlKind {
 #[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(i32)]
 pub enum EventKind {
-  Nack = 9, // 未确认消息
-  Ack = 10, // 确认消息
+  /// 确认消息
+  Ack = 1,
+  /// 未确认消息
+  Nack = 2,
 
-  // Agent 生命周期管理
-  AgentRegister = 11,  // Agent 注册
-  AgentHeartbeat = 12, // Agent 心跳
+  /// Agent 注册
+  AgentRegister = 3,
+  /// Agent 心跳
+  AgentHeartbeat = 4,
 
   /// Agent 请求 AgentRequest <-> GatewayResponse
-  PollTaskRequest = 21,
-  /// 网关响应 GatewayResponse <-> AgentRequest
-  PollTaskResponse = 22,
+  PollTaskRequest = 5,
 
   /// Agent 事件 AgentEvent
-  TaskChangedEvent = 33,
+  TaskChangedEvent = 6,
 }
 
 #[cfg(feature = "with-db")]

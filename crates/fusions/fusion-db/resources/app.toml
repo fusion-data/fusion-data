@@ -1,0 +1,32 @@
+[fusion.app]
+run_mode = "DEV"
+name = "fusion"
+
+[fusion.security.pwd]
+expires_in = 604800
+default_pwd = "2024.Fusion"
+
+[fusion.web]
+enable = true
+server_addr = "0.0.0.0:8888"
+
+[fusion.log]
+enable = true
+log_writer = "both"
+
+# [fusion.log.otel]
+# exporter_otlp_endpoint = "http://localhost:4317"
+# traces_sample = "always_on"
+
+[fusion.grpc]
+enable = true
+server_addr = "0.0.0.0:8889"
+plaintext = true
+
+[fusion.db]
+enable = true
+host = "localhost"
+port = 45432
+database = "fusion"
+username = "fusion"
+password = "2024.Fusion"

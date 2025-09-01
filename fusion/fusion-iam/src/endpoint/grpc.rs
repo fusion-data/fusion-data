@@ -2,14 +2,14 @@ use std::future::Future;
 
 use tokio::sync::oneshot;
 use tonic::service::RoutesBuilder;
-use ultimate_core::{application::Application, configuration::ConfigRegistry};
-use ultimate_grpc::{GrpcSettings, GrpcStartInfo, config::GrpcConfig, utils::init_grpc_server};
+use fusion_core::{application::Application, configuration::ConfigRegistry};
+use fusion_grpc::{GrpcSettings, GrpcStartInfo, config::GrpcConfig, utils::init_grpc_server};
 
 use crate::{access_control::AccessControlRpc, auth::AuthRpc, permission::PermissionRpc, role::RoleRpc, user::UserRpc};
 
 pub async fn grpc_serve(
   app: &Application,
-) -> ultimate_core::Result<(oneshot::Receiver<GrpcStartInfo>, impl Future<Output = ultimate_core::Result<()>>)> {
+) -> fusion_core::Result<(oneshot::Receiver<GrpcStartInfo>, impl Future<Output = fusion_core::Result<()>>)> {
   let conf: GrpcConfig = app.get_config()?;
 
   #[cfg(not(feature = "tonic-reflection"))]

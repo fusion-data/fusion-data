@@ -1,0 +1,38 @@
+[package]
+name = "fusion-common"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = true
+readme = "README.md"
+
+[lints.rust]
+unsafe_code = "allow"
+
+[features]
+default = ["std"]
+with-uuid = ["uuid"]
+std = ["ahash/std"]
+
+[dependencies]
+fusion-corelib = { workspace = true }
+thiserror.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+hmac.workspace = true
+base64ct.workspace = true
+base16ct.workspace = true
+ahash.workspace = true
+chrono.workspace = true
+duration-str.workspace = true
+rand.workspace = true
+regex.workspace = true
+log = { workspace = true }
+uuid = { workspace = true, optional = true }
+
+[dev-dependencies]
+dotenvy.workspace = true

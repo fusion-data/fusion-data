@@ -1,0 +1,4 @@
+[fusion.db]
+# enable = false
+# url = "postgres://<username>:<password>@localhost:5432/<database>"
+after_connect = "set timezone to 'Asia/Chongqing';"

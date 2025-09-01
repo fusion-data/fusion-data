@@ -40,6 +40,8 @@ pub enum Dbx {
   Sqlite(DbxSqlite),
 }
 
+// region:    --- DbxProviderTrait
+
 impl DbxProviderTrait for Dbx {
   fn provider(&self) -> &DbxProvider {
     match self {
@@ -87,6 +89,42 @@ impl Dbx {
   {
     match self {
       Dbx::Sqlite(dbx) => f(dbx.clone()).await,
+      #[allow(unreachable_patterns)]
+      _ => Err(DbxError::UnsupportedDatabase("Need sqlite database")),
+    }
+  }
+
+  pub async fn begin_txn(&self) -> Result<()> {
+    match self {
+      #[cfg(feature = "with-postgres")]
+      Dbx::Postgres(dbx_postgres) => dbx_postgres.begin_txn().await,
+      #[cfg(feature = "with-sqlite")]
+      Dbx::Sqlite(dbx_sqlite) => dbx_sqlite.begin_txn().await,
+    }
+  }
+
+  pub async fn commit_txn(&self) -> Result<()> {
+    match self {
+      #[cfg(feature = "with-postgres")]
+      Dbx::Postgres(dbx_postgres) => dbx_postgres.commit_txn().await,
+      #[cfg(feature = "with-sqlite")]
+      Dbx::Sqlite(dbx_sqlite) => dbx_sqlite.commit_txn().await,
+    }
+  }
+
+  #[cfg(feature = "with-postgres")]
+  pub fn db_postgres(&self) -> Result<&DbxPostgres> {
+    match self {
+      Dbx::Postgres(dbx_postgres) => Ok(dbx_postgres),
+      #[allow(unreachable_patterns)]
+      _ => Err(DbxError::UnsupportedDatabase("Need postgres database")),
+    }
+  }
+
+  #[cfg(feature = "with-sqlite")]
+  pub fn db_sqlite(&self) -> Result<&DbxSqlite> {
+    match self {
+      Dbx::Sqlite(dbx_sqlite) => Ok(dbx_sqlite),
       #[allow(unreachable_patterns)]
       _ => Err(DbxError::UnsupportedDatabase("Need sqlite database")),
     }
@@ -152,25 +190,6 @@ impl Dbx {
     }
   }
 
-  // pub async fn insert(&self, query: InsertStatement) -> Result<u64> {
-  //   // let count = match self {
-  //   //   #[cfg(feature = "with-postgres")]
-  //   //   Dbx::Postgres(dbx_postgres) => {
-  //   //     let (sql, values) = query.build_sqlx(sea_query::PostgresQueryBuilder);
-  //   //     let sqlx_query = sqlx::query_with(&sql, values);
-  //   //     dbx_postgres.execute(sqlx_query).await?
-  //   //   }
-  //   //   #[cfg(feature = "with-sqlite")]
-  //   //   Dbx::Sqlite(dbx_sqlite) => {
-  //   //     let (sql, values) = query.build_sqlx(sea_query::SqliteQueryBuilder);
-  //   //     let sqlx_query = sqlx::query_with(&sql, values);
-  //   //     dbx_sqlite.execute(sqlx_query).await?
-  //   //   }
-  //   // };
-  //   // Ok(count)
-  //   self.execute(query).await
-  // }
-
   pub async fn execute<Q>(&self, query: Q) -> Result<u64>
   where
     Q: SqlxBinder,
@@ -190,41 +209,5 @@ impl Dbx {
       }
     };
     Ok(count)
-  }
-
-  pub async fn begin_txn(&self) -> Result<()> {
-    match self {
-      #[cfg(feature = "with-postgres")]
-      Dbx::Postgres(dbx_postgres) => dbx_postgres.begin_txn().await,
-      #[cfg(feature = "with-sqlite")]
-      Dbx::Sqlite(dbx_sqlite) => dbx_sqlite.begin_txn().await,
-    }
-  }
-
-  pub async fn commit_txn(&self) -> Result<()> {
-    match self {
-      #[cfg(feature = "with-postgres")]
-      Dbx::Postgres(dbx_postgres) => dbx_postgres.commit_txn().await,
-      #[cfg(feature = "with-sqlite")]
-      Dbx::Sqlite(dbx_sqlite) => dbx_sqlite.commit_txn().await,
-    }
-  }
-
-  #[cfg(feature = "with-postgres")]
-  pub fn db_postgres(&self) -> Result<sqlx::PgPool> {
-    match self {
-      Dbx::Postgres(dbx_postgres) => Ok(dbx_postgres.db().clone()),
-      #[allow(unreachable_patterns)]
-      _ => Err(DbxError::UnsupportedDatabase("Need postgres database")),
-    }
-  }
-
-  #[cfg(feature = "with-sqlite")]
-  pub fn db_sqlite(&self) -> Result<sqlx::SqlitePool> {
-    match self {
-      Dbx::Sqlite(dbx_sqlite) => Ok(dbx_sqlite.db().clone()),
-      #[allow(unreachable_patterns)]
-      _ => Err(DbxError::UnsupportedDatabase("Need sqlite database")),
-    }
   }
 }

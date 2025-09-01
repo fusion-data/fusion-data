@@ -6,8 +6,8 @@ use hetumind_core::{
 use modelsql::ModelManager;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
-use ultimate_common::time::now;
-use ultimate_core::component::Component;
+use fusion_common::time::now;
+use fusion_core::component::Component;
 
 use crate::{infra::db::execution::ExecutionStoreService, runtime::workflow::WorkflowEngineService};
 

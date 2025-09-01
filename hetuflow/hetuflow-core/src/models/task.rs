@@ -3,10 +3,10 @@ use modelsql_core::{
   filter::{OpValsDateTime, OpValsInt32, OpValsString, OpValsUuid, Page},
 };
 use serde::{Deserialize, Serialize};
-use ultimate_common::time::OffsetDateTime;
+use fusion_common::time::OffsetDateTime;
 use uuid::Uuid;
 
-use crate::types::TaskStatus;
+use crate::types::{ScheduleKind, TaskStatus};
 
 use super::JobConfig;
 
@@ -33,14 +33,19 @@ pub struct TaskMetrics {
 pub struct TaskEntity {
   pub id: Uuid,
   pub job_id: Uuid,
-  pub schedule_id: Option<Uuid>,
-  pub agent_id: Option<Uuid>,
-  pub server_id: Option<Uuid>,
+  // pub agent_id: Option<Uuid>,
+  // pub server_id: Option<Uuid>,
   pub namespace_id: Uuid,
   /// 任务优先级，数值越大优先级越高
   pub priority: i32,
   pub status: TaskStatus,
+
+  pub schedule_id: Option<Uuid>,
+  /// 下一次调度时间。在生成任务时将根据此 调度时间 + schedule_id 判断任务是否已生成，若任务已生成则不会再次生成。
   pub scheduled_at: OffsetDateTime,
+  pub schedule_kind: ScheduleKind,
+
+  /// 任务完成时间。当次任务完成或者所有 Schedule 的配置均已到期
   pub completed_at: Option<OffsetDateTime>,
 
   /// 任务参数，需要为 JSON Object
@@ -67,37 +72,26 @@ pub struct TaskEntity {
 }
 
 /// TaskEntity 创建模型
-#[derive(Debug, Default, Deserialize)]
+#[derive(Debug, Deserialize)]
 #[cfg_attr(feature = "with-db", derive(modelsql::Fields))]
 pub struct TaskForCreate {
-  #[serde(default = "Uuid::now_v7")]
   pub id: Uuid,
   pub job_id: Uuid,
   pub namespace_id: Uuid,
+  pub status: TaskStatus,
+  pub priority: i32,
   /// 关联的 Schedule ID，若为 None 则表示为通过事件或手动触发创建的任务
   pub schedule_id: Option<Uuid>,
-  pub server_id: Option<Uuid>,
-  pub priority: i32,
   pub scheduled_at: OffsetDateTime,
-  pub status: TaskStatus,
   pub parameters: serde_json::Value,
   pub tags: Vec<String>,
   pub environment: Option<serde_json::Value>,
   pub job_config: Option<JobConfig>,
-  #[serde(default = "default_retry_count")]
   pub retry_count: i32,
-  #[serde(default = "default_max_retries")]
   pub max_retries: i32,
   pub dependencies: Option<serde_json::Value>,
-  pub locked_at: Option<OffsetDateTime>,
-  pub lock_version: i32,
-}
-
-fn default_max_retries() -> i32 {
-  3
-}
-fn default_retry_count() -> i32 {
-  0
+  // pub locked_at: Option<OffsetDateTime>,
+  // pub lock_version: i32,
 }
 
 /// TaskEntity 更新模型

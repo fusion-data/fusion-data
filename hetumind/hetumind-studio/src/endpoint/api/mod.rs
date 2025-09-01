@@ -1,7 +1,7 @@
 use axum::Router;
 use tower_http::auth::AsyncRequireAuthorizationLayer;
-use ultimate_core::application::Application;
-use ultimate_web::middleware::web_auth::WebAuth;
+use fusion_core::application::Application;
+use fusion_web::middleware::web_auth::WebAuth;
 
 pub mod auth;
 pub mod v1;

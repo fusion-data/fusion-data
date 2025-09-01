@@ -5,7 +5,7 @@ use modelsql::{
 };
 use sea_query::enum_def;
 use sqlx::prelude::FromRow;
-use ultimate_common::time::UtcDateTime;
+use fusion_common::time::UtcDateTime;
 
 use crate::pb::fusion_iam::v1::RoleStatus;
 

@@ -1,5 +1,5 @@
 use axum::{extract::State, routing::get};
-use ultimate_web::{Router, WebResult, ok_json};
+use fusion_web::{Router, WebResult, ok_json};
 
 use crate::{application::ServerApplication, model::HealthStatus};
 

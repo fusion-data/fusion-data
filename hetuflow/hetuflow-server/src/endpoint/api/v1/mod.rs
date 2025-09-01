@@ -5,7 +5,7 @@ mod system;
 mod task_instances;
 mod tasks;
 
-use ultimate_web::Router;
+use fusion_web::Router;
 
 use crate::application::ServerApplication;
 

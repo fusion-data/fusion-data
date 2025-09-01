@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use hetumind_core::workflow::{NodeRegistry, RegistrationError};
 use hetumind_nodes::{core, integration, trigger};
-use ultimate_core::{application::ApplicationBuilder, plugin::Plugin};
+use fusion_core::{application::ApplicationBuilder, plugin::Plugin};
 
 /// 初始化节点注册表
 fn init_node_registry() -> Result<NodeRegistry, RegistrationError> {

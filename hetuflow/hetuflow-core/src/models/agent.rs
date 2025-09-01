@@ -6,7 +6,7 @@ use modelsql_core::{
   filter::{OpValsDateTime, OpValsInt32, OpValsString, OpValsUuid, Page},
 };
 use serde::{Deserialize, Serialize};
-use ultimate_common::time::OffsetDateTime;
+use fusion_common::time::OffsetDateTime;
 use uuid::Uuid;
 
 use crate::types::AgentStatus;
@@ -35,6 +35,8 @@ pub struct AgentCapabilities {
   pub features: Vec<String>,
   /// Agent 标签，用于筛选任务。比如某些需要特定资源的任务只能在匹配标签的 Agent 上运行
   pub tags: HashMap<String, Option<Box<serde_json::Value>>>,
+  /// 扩展元数据
+  pub metadata: HashMap<String, String>,
 }
 
 /// AgentEntity 数据模型
@@ -47,25 +49,10 @@ pub struct AgentCapabilities {
 pub struct AgentEntity {
   pub id: Uuid,
   pub description: Option<String>,
-  pub server_id: Uuid,
-  pub host: String,
-  pub port: i32,
+  pub address: String,
   pub status: AgentStatus,
-  pub capabilities: Option<AgentCapabilities>,
+  pub capabilities: AgentCapabilities,
   pub last_heartbeat: OffsetDateTime,
-  pub created_by: i64,
-  pub created_at: OffsetDateTime,
-  pub updated_by: Option<i64>,
-  pub updated_at: Option<OffsetDateTime>,
-}
-
-impl AgentEntity {
-  pub fn capabilities(&self) -> AgentCapabilities {
-    match self.capabilities.as_ref() {
-      Some(capabilities) => capabilities.clone(),
-      None => AgentCapabilities::default(),
-    }
-  }
 }
 
 /// Agent 创建模型
@@ -85,7 +72,7 @@ pub struct AgentForCreate {
   #[garde(skip)]
   pub status: AgentStatus,
   #[garde(skip)]
-  pub capabilities: Option<serde_json::Value>,
+  pub capabilities: AgentCapabilities,
 }
 
 /// Agent 更新模型
@@ -97,7 +84,7 @@ pub struct AgentForUpdate {
   pub host: Option<String>,
   pub port: Option<i32>,
   pub status: Option<AgentStatus>,
-  pub capabilities: Option<serde_json::Value>,
+  pub capabilities: Option<AgentCapabilities>,
   pub last_heartbeat: Option<OffsetDateTime>,
   pub update_mask: Option<FieldMask>,
 }

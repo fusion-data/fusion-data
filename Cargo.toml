@@ -1,8 +1,7 @@
 [workspace]
 members = [
-  "crates/ultimates/*",
+  "crates/fusions/*",
   "crates/libs/*",
-  # "fusion/fusion-iam",
   "hetuflow/hetuflow-server",
   "hetuflow/hetuflow-agent",
   "hetuflow/hetuflow-core",
@@ -35,16 +34,17 @@ uninlined_format_args = "allow"
 
 [workspace.dependencies]
 # -- projects begin
+fusion-corelib = { version = "0.1.1", path = "crates/fusions/fusion-corelib" }
 modelsql = { version = "0.1.1", path = "crates/libs/modelsql" }
 modelsql-core = { version = "0.1.1", path = "crates/libs/modelsql-core" }
 modelsql-macros = { version = "0.1.1", path = "crates/libs/modelsql-macros" }
-ultimate-common = { version = "0.1.1", path = "crates/ultimates/ultimate-common" }
-ultimate-core-macros = { version = "0.1.1", path = "crates/ultimates/ultimate-core-macros" }
-ultimate-core = { version = "0.1.1", path = "crates/ultimates/ultimate-core" }
-ultimate-db = { version = "0.1.1", path = "crates/ultimates/ultimate-db" }
-ultimate-web = { version = "0.1.1", path = "crates/ultimates/ultimate-web" }
-ultimate-grpc = { version = "0.1.1", path = "crates/ultimates/ultimate-grpc" }
-ultimate = { version = "0.1.1", path = "crates/ultimates/ultimate" }
+fusion-common = { version = "0.1.1", path = "crates/fusions/fusion-common" }
+fusion-core-macros = { version = "0.1.1", path = "crates/fusions/fusion-core-macros" }
+fusion-core = { version = "0.1.1", path = "crates/fusions/fusion-core" }
+fusion-db = { version = "0.1.1", path = "crates/fusions/fusion-db" }
+fusion-web = { version = "0.1.1", path = "crates/fusions/fusion-web" }
+fusion-grpc = { version = "0.1.1", path = "crates/fusions/fusion-grpc" }
+fusions = { version = "0.1.1", path = "crates/fusions/fusions" }
 hetuflow-core = { version = "0.1.1", path = "hetuflow/hetuflow-core" }
 hetumind-core = { version = "0.1.1", path = "hetumind/hetumind-core" }
 hetumind-context = { version = "0.1.1", path = "hetumind/hetumind-context" }
@@ -142,6 +142,7 @@ tokio = { version = "1.47", features = [
   "fs",              # File system operations
   "time",            # Time utilities
   "sync",            # Synchronization primitives
+  "process",         # Process primitives
 ] }
 tokio-tungstenite = { version = "0.27" }
 tokio-stream = { version = "0.1", features = ["full"] }
@@ -152,7 +153,7 @@ arc-swap = { version = "1.7", features = ["serde"] }
 dashmap = { version = "6.1" }
 # -- Logging
 log = "0.4"
-logforth = "0.27"
+logforth = { version = "0.27", features = ["colored", "append-rolling-file"] }
 # -- Tracing
 fastrace = { version = "0.7" }
 metrics = "0.24"
@@ -177,7 +178,8 @@ pgvector = { version = "0.4", features = ["sqlx"] }
 serde = { version = "1.0", features = ["derive", "rc"] }
 serde_with = { version = "3.14", features = ["chrono_0_4"] }
 serde_json = { version = "1.0" }
-serde_json5 = { version = "0.2" }
+sonic-rs = { version = "0.5" }
+
 json-five = { version = "0.3" }
 serde_repr = "0.1"
 jsonpath-rust = { version = "1.0" }

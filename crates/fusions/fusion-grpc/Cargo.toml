@@ -1,0 +1,37 @@
+[package]
+name = "fusion-grpc"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = true
+
+[lints]
+# workspace = true
+[lints.rust]
+unsafe_code = "allow"
+
+[features]
+default = ["opentelemetry"]
+opentelemetry = ["fusion-core/opentelemetry"]
+
+[dependencies]
+fusion-corelib.workspace = true
+fusion-common = { workspace = true }
+fusion-core = { workspace = true, features = ["tonic"] }
+uuid = { workspace = true }
+http = { workspace = true }
+futures = { workspace = true }
+config = { workspace = true }
+log = { workspace = true }
+serde = { workspace = true }
+tokio = { workspace = true }
+tower-service = { workspace = true }
+tower-http = { workspace = true }
+tonic = { workspace = true }
+tonic-types = { workspace = true }
+tonic-web = { workspace = true, optional = true }
+tonic-reflection = { workspace = true, optional = true }
+protobuf = { workspace = true }

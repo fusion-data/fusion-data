@@ -1,6 +1,6 @@
 use fusiondata_context::ctx::CtxW;
 use modelsql::filter::OpValInt64;
-use ultimate_core::{DataError, Result, component::Component};
+use fusion_core::{DataError, Result, component::Component};
 
 use super::{
   User, UserBmc, UserCredential, UserCredentialBmc, UserFilter, UserForCreate, UserForPage, UserForUpdate, UserPage,

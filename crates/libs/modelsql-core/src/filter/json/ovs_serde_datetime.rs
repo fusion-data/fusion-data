@@ -1,12 +1,12 @@
 use std::fmt;
 
+use chrono::{DateTime, FixedOffset};
 use serde::{
   Deserialize, Serialize, Serializer,
   de::{MapAccess, Visitor},
   ser::SerializeMap,
 };
 use serde_json::Value;
-use ultimate_common::time::OffsetDateTime;
 
 use crate::filter::{Error, OpValDateTime, OpValsDateTime};
 
@@ -111,7 +111,7 @@ impl OpValueToOpValType for OpValDateTime {
   }
 }
 
-fn into_datetimes(value: Value) -> Result<Vec<OffsetDateTime>, Error> {
+fn into_datetimes(value: Value) -> Result<Vec<DateTime<FixedOffset>>, Error> {
   let mut values = Vec::new();
 
   let Value::Array(array) = value else {
@@ -129,6 +129,6 @@ fn into_datetimes(value: Value) -> Result<Vec<OffsetDateTime>, Error> {
   Ok(values)
 }
 
-fn parse_to_datetime(value: &str) -> Result<OffsetDateTime, Error> {
+fn parse_to_datetime(value: &str) -> Result<DateTime<FixedOffset>, Error> {
   value.parse().map_err(|_| Error::JsonValNotOfType("DateTime"))
 }

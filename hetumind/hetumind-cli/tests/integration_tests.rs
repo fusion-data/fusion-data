@@ -75,7 +75,7 @@ fn test_cli_help_command() {
   assert!(output.status.success());
 
   let stdout = String::from_utf8_lossy(&output.stdout);
-  assert!(stdout.contains("Rust libraries of The ultimates"));
+  assert!(stdout.contains("Rust libraries of The fusions"));
   assert!(stdout.contains("管理工作流"));
 }
 

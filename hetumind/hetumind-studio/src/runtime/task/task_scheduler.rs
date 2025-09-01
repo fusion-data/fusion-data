@@ -5,7 +5,7 @@ use hetumind_core::workflow::{
   ExecutionConfig, ExecutionData, ExecutionId, NodeExecutionError, NodeName, WorkflowExecutionError,
 };
 use tokio::sync::{RwLock, mpsc};
-use ultimate_common::time::now;
+use fusion_common::time::now;
 
 use super::{ExecutionTask, RunningTask, SchedulerCommand, WaitingTask};
 

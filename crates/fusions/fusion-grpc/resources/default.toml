@@ -1,0 +1,7 @@
+[fusion.grpc]
+enable = false
+server_addr = "0.0.0.0:9501"
+plaintext = true
+
+[fusion.grpc.clients]
+# fusion-iam = { addr = "http://127.0.0.1:9501", plaintext = true }

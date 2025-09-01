@@ -43,10 +43,11 @@ path = "examples/example-db-config.rs"
 required-features = ["with-sqlite"]
 
 [dependencies]
-ultimate-common.workspace = true
+fusion-corelib = { workspace = true }
 modelsql-macros = { workspace = true }
 modelsql-core = { workspace = true, features = ["with-sea-query"] }
 async-trait.workspace = true
+regex = { workspace = true }
 derive_more.workspace = true
 serde.workspace = true
 serde_with.workspace = true

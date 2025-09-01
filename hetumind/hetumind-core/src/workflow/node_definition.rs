@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use typed_builder::TypedBuilder;
-use ultimate_common::helper::default_bool_false;
+use fusion_common::helper::default_bool_false;
 
 use crate::types::IconColor;
 

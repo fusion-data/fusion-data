@@ -1,0 +1,62 @@
+[package]
+name = "fusion-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = true
+
+
+[lints.clippy]
+uninlined_format_args = "allow"
+
+[features]
+default = ["opentelemetry"]
+tonic = ["dep:tonic", "dep:protobuf"]
+opentelemetry = ["logforth/append-opentelemetry"]
+with-uuid = ["dep:uuid"]
+with-ulid = ["dep:ulid"]
+
+[dependencies]
+fusion-corelib.workspace = true
+fusion-common.workspace = true
+fusion-core-macros = { workspace = true }
+thiserror = { workspace = true }
+dashmap = { workspace = true }
+inventory = { workspace = true }
+async-trait = { workspace = true }
+regex.workspace = true
+futures.workspace = true
+tokio.workspace = true
+toml.workspace = true
+config.workspace = true
+zeroize.workspace = true
+strum.workspace = true
+uuid = { workspace = true, optional = true }
+ulid = { workspace = true, optional = true }
+hierarchical_hash_wheel_timer = { workspace = true }
+log.workspace = true
+rand.workspace = true
+argon2.workspace = true
+josekit.workspace = true
+logforth = { workspace = true }
+fastrace = { workspace = true }
+serde.workspace = true
+serde_json.workspace = true
+serde_with.workspace = true
+serde_repr.workspace = true
+# utoipa = { workspace = true, optional = true }
+tonic = { workspace = true, optional = true }
+protobuf = { workspace = true, optional = true }
+modelsql = { workspace = true, optional = true }
+jiff = "0.2"
+
+
+[dev-dependencies]
+dotenvy.workspace = true
+anyhow.workspace = true
+
+[build-dependencies]
+protobuf-codegen = { workspace = true }

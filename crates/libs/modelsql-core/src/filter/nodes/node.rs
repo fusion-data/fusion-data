@@ -1,4 +1,4 @@
-use ultimate_common::time::OffsetDateTime;
+use chrono::{DateTime, FixedOffset};
 
 use crate::filter::ops::OpVal;
 use crate::filter::{OpValBool, OpValDateTime, OpValFloat64, OpValInt32, OpValInt64, OpValString};
@@ -144,15 +144,15 @@ impl From<(&str, String)> for FilterNode {
 
 // region:    --- Froms Tuples (Datetime val)
 
-impl From<(&str, &OffsetDateTime)> for FilterNode {
-  fn from((name, ov): (&str, &OffsetDateTime)) -> Self {
+impl From<(&str, &DateTime<FixedOffset>)> for FilterNode {
+  fn from((name, ov): (&str, &DateTime<FixedOffset>)) -> Self {
     let opvals = vec![OpValDateTime::Eq(*ov).into()];
     FilterNode::new(name.to_string(), opvals)
   }
 }
 
-impl From<(&str, OffsetDateTime)> for FilterNode {
-  fn from((name, ov): (&str, OffsetDateTime)) -> Self {
+impl From<(&str, DateTime<FixedOffset>)> for FilterNode {
+  fn from((name, ov): (&str, DateTime<FixedOffset>)) -> Self {
     let opvals = vec![OpValDateTime::Eq(ov).into()];
     FilterNode::new(name.to_string(), opvals)
   }

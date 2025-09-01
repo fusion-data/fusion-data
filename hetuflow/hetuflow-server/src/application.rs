@@ -6,26 +6,28 @@ use std::{
   time::Duration,
 };
 
-use hetuflow_core::protocol::GatewayCommand;
 use log::{debug, error, info};
 use modelsql::{ModelManager, store::DbxError};
 use tokio::sync::{broadcast, mpsc};
-use ultimate_core::{DataError, application::Application};
-use ultimate_db::DbPlugin;
+use fusion_core::{DataError, application::Application};
+use fusion_db::DbPlugin;
 use uuid::Uuid;
 
 use crate::service::{AgentManager, LoadBalancer, SchedulerSvc};
 use crate::{
-  gateway::{AgentRegistry, ConnectionManager, GatewaySvc, MessageHandler},
+  gateway::{ConnectionManager, GatewaySvc, MessageHandler},
   infra::bmc::DistributedLockBmc,
   model::DistributedLockIds,
 };
-use crate::{model::HealthStatus, setting::FusionSchedulerConfig};
+use crate::{
+  model::{GatewayCommandRequest, HealthStatus},
+  setting::HetuflowServerSetting,
+};
 
 /// Hetuflow 应用容器
 #[derive(Clone)]
 pub struct ServerApplication {
-  pub(crate) config: Arc<FusionSchedulerConfig>,
+  pub(crate) config: Arc<HetuflowServerSetting>,
   pub(crate) is_leader: Arc<AtomicBool>,
   shutdown_tx: broadcast::Sender<()>,
   pub(crate) mm: ModelManager,
@@ -35,7 +37,7 @@ pub struct ServerApplication {
   pub(crate) connection_manager: Arc<ConnectionManager>,
   pub(crate) message_handler: Arc<MessageHandler>,
   load_balancer: Arc<LoadBalancer>,
-  gateway_command_tx: mpsc::UnboundedSender<GatewayCommand>,
+  gateway_command_tx: mpsc::UnboundedSender<GatewayCommandRequest>,
 }
 
 impl ServerApplication {
@@ -43,7 +45,7 @@ impl ServerApplication {
     // 构建底层 Application 与插件
     let application = Application::builder().add_plugin(DbPlugin).build().await?;
 
-    let config = Arc::new(FusionSchedulerConfig::load(application.config_registry())?);
+    let config = Arc::new(HetuflowServerSetting::load(application.config_registry())?);
 
     // 获取 ModelManager
     let mm = application.get_component::<ModelManager>()?;
@@ -53,11 +55,10 @@ impl ServerApplication {
 
     // 创建通信通道
     let (gateway_command_tx, gateway_command_rx) = mpsc::unbounded_channel();
-    let (gateway_event_tx, gateway_event_rx) = mpsc::unbounded_channel();
 
     // 创建网关组件
     let connection_manager = Arc::new(ConnectionManager::new());
-    let message_handler = Arc::new(MessageHandler::new(connection_manager.clone(), gateway_event_tx.clone()));
+    let message_handler = Arc::new(MessageHandler::new(connection_manager.clone()));
 
     // 初始化核心组件
     let scheduler_svc = Arc::new(SchedulerSvc::new(mm.clone(), Arc::new(config.server.clone()), shutdown_tx.clone()));
@@ -65,12 +66,8 @@ impl ServerApplication {
     // 将 ConnectionManager 作为 AgentRegistry 传递给 AgentManager
     let agent_manager = Arc::new(AgentManager::new(mm.clone(), connection_manager.clone()));
 
-    let gateway_svc = Arc::new(GatewaySvc::new(
-      connection_manager.clone(),
-      message_handler.clone(),
-      gateway_command_rx,
-      gateway_event_rx,
-    ));
+    let gateway_svc =
+      Arc::new(GatewaySvc::new(connection_manager.clone(), message_handler.clone(), gateway_command_rx));
 
     let is_leader = Arc::new(AtomicBool::new(false));
     let load_balancer = Arc::new(LoadBalancer::new(mm.clone(), config.server.server_id));
@@ -161,8 +158,8 @@ impl ServerApplication {
     // 启动 HTTP API 服务 (/api/v1)
     let app_state = self.clone();
     tokio::spawn(async move {
-      let router = ultimate_web::Router::new().nest("/api", crate::endpoint::api::routes()).with_state(app_state);
-      if let Err(e) = ultimate_web::server::init_server(router).await {
+      let router = fusion_web::Router::new().nest("/api", crate::endpoint::api::routes()).with_state(app_state);
+      if let Err(e) = fusion_web::server::init_server(router).await {
         error!("HTTP server error: {:?}", e);
       }
     });
@@ -255,9 +252,9 @@ impl ServerApplication {
 
   pub async fn health_status(&self) -> Result<HealthStatus, DataError> {
     let db = self.mm.dbx().db_postgres()?;
-    let db_size = db.size();
+    let db_size = db.db().size();
 
-    let agent_size = self.connection_manager.get_online_count().await?;
+    let agent_size = self.connection_manager.get_online_count()?;
 
     let body = HealthStatus::new(db_size, agent_size);
     Ok(body)
@@ -267,10 +264,10 @@ impl ServerApplication {
     self.agent_manager.get_stats().await
   }
 
-  pub async fn send_gateway_command(&self, command: GatewayCommand) -> Result<Uuid, DataError> {
+  pub async fn send_gateway_command(&self, command: GatewayCommandRequest) -> Result<Uuid, DataError> {
     let message_id = match &command {
-      GatewayCommand::Send { command, .. } => command.id(),
-      GatewayCommand::Broadcast { command } => command.id(),
+      GatewayCommandRequest::Single { command, .. } => command.id(),
+      GatewayCommandRequest::Broadcast { command } => command.id(),
     };
     self.gateway_command_tx.send(command)?;
     Ok(message_id)

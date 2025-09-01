@@ -1,9 +1,9 @@
-[ultimate.app]
+[fusion.app]
 run_mode = "dev"
 name = "hetuflow-server"
 time_offset = "+08:00"
 
-[ultimate.log]
+[fusion.log]
 enable = true
 with_target = true
 with_file = false
@@ -15,17 +15,17 @@ log_targets = [
   "fusion_metadata=debug",
   "hetumind=debug",
   "hetumind_context=debug",
-  "ultimate_grpc=debug",
-  "ultimate_db=debug",
-  "ultimate=debug",
-  "ultimate_common=debug",
+  "fusion_grpc=debug",
+  "fusion_db=debug",
+  "fusion=debug",
+  "fusion_common=debug",
 ]
 
-[ultimate.db]
+[fusion.db]
 enable = true
 url = "postgres://fusiondata:2025.Fusiondata@localhost:5432/fusiondata"
 
-[ultimate.web]
+[fusion.web]
 enable = true
 server_addr = "0.0.0.0:9500"
 

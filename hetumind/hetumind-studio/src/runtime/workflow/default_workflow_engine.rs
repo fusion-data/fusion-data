@@ -10,7 +10,7 @@ use hetumind_core::{
     WorkflowEngine, WorkflowExecutionError,
   },
 };
-use ultimate_common::time::now;
+use fusion_common::time::now;
 
 use crate::runtime::{
   execution::ExecutionStore,

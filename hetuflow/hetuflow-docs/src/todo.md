@@ -77,14 +77,28 @@
 - [*] **LoadBalancer 实现** - Namespace 负载均衡器。负载均衡机制基于 **namespace_id** 进行 namespace_id 分发，通过 **leader server** 自动管理各个 server 实例与 namespace_id 的绑定关系，实现 namespace_id 的智能分发和负载均衡
 - [*] **TaskGenerationSvc 实现** - 任务生成服务，根据 Job 配置生成 Task 实例
 - [*] **领导者选举** - 实现分布式领导者选举机制: `start_leader_and_follower_loop`，基于 PG 数据表的分布式锁。相关算法说明： [基于 PostgreSQL 的分布式锁设计](server/distributed_lock.md)
-- ~~[*] **任务分发策略** - 实现基于 Agent 能力和负载的任务分发算法~~: **采用 poll 模式，由 Agent 主动拉取任务，Server 不向 Agent 分派任务**
+- [*] Server 绑定 namespace_ids 的目的：避免多个 Server 对同一个 Namespace 的 Job 进行计算来生成任务
+- [*] Server 按间隔时间预生成 TaskEntity + TaskInstanceEntity, Agent Poll Task 时直接返回 TaskInstanceEntity，并将 agent_id 绑定到拉取的 TaskInstanceEntity 上
+  - [*] Server 可监控 TaskInstanceEntity 运行状态：未分配、超时、错误重试等
+  - [*] 可以避免 Task 重复分配给多个 Agent 的情况。因：
+    1. TaskInstanceEntity 的创建由 Server（分 Namespace）控制，不会创建重复
+    2. Agent Poll TaskInstanceEntity 时通过 PG 事务绑定 agent_id，不会出现多个 Agent Poll 同一个 TaskInstanceEntity 的情况
+- [*] Agent 向 Server 拉取任务时，不用限制只能 poll 当前 Server 绑定的 Namespace
+  - 可能因为网络原因，Agent 并不能访问所有 Server，所有 Agent 需要从 Server 拉取任何 Namespace 的任务。比如某个 Server 部署在跳板机或暴露为一个代理 Server
 - [*] **任务状态管理** - 实现任务状态流转和生命周期管理
 - [ ] **重试机制** - 实现任务失败重试和超时处理
 
+---
+
+- [ ] 定时检查任务（TaskEntity, TaskInstanceEntity）是否过期？若已过期则修改其 status 为 Expired 或 Timeout
+- [ ] 还是由 Leader Server 对 Follower Server 进行健康检查？还是由 Server 直接更新各自 sched_server.heartbeat 字段值？
+
+---
+
 ### 2.6 辅助服务
 
-- [ ] **AgentManager 实现** - Agent 管理器，维护 Agent 状态和能力信息
-- [ ] **负载均衡器** - 实现基于 namespace_id 的负载均衡算法
+- [*] **AgentManager 实现** - Agent 管理器，维护 Agent 状态和能力信息
+- [*] **负载均衡器** - 实现基于 namespace_id 的负载均衡算法
 - [ ] **健康检查服务** - 实现系统健康状态监控
 
 ### 2.7 安全与认证
@@ -95,7 +109,7 @@
 
 ### 2.8 监控与日志
 
-- [ ] **结构化日志** - 使用 tracing 实现结构化日志记录
+- [*] **结构化日志** - 使用 tracing 实现结构化日志记录
 - [ ] **指标收集** - 实现系统性能指标收集
 - [ ] **链路追踪** - 实现分布式链路追踪
 
@@ -103,16 +117,16 @@
 
 ### 3.1 应用容器架构
 
-- [ ] **AgentApplication 实现** - 基于 ultimate-core::Application 的 Agent 应用容器
-- [ ] **配置管理** - 实现 Agent 配置加载和验证
-- [ ] **服务启动** - 实现 Agent 各组件的启动和生命周期管理
+- [*] **AgentApplication 实现** - 基于 ultimate-core::Application 的 Agent 应用容器
+- [*] **配置管理** - 实现 Agent 配置加载和验证
+- [*] **服务启动** - 实现 Agent 各组件的启动和生命周期管理
 
 ### 3.2 连接管理
 
-- [ ] **ConnectionManager 实现** - WebSocket 连接管理器，处理与 Server 的通信
-- [ ] **自动重连机制** - 实现连接断开后的自动重连
-- [ ] **心跳维持** - 实现定期心跳保持连接活跃
-- [ ] **消息队列** - 实现本地消息队列缓存待发送消息
+- [*] **ConnectionManager 实现** - WebSocket 连接管理器，处理与 Server 的通信
+- [*] **自动重连机制** - 实现连接断开后的自动重连
+- [*] **心跳维持** - 实现定期心跳保持连接活跃
+- [ ] ~~**消息队列** - 实现本地消息队列缓存待发送消息~~
 
 ### 3.3 任务调度
 

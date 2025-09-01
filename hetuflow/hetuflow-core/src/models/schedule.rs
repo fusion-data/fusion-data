@@ -3,7 +3,7 @@ use modelsql_core::{
   filter::{OpValsDateTime, OpValsInt32, OpValsUuid},
 };
 use serde::{Deserialize, Serialize};
-use ultimate_common::time::OffsetDateTime;
+use fusion_common::time::OffsetDateTime;
 use uuid::Uuid;
 
 use crate::types::{ScheduleKind, ScheduleStatus};
@@ -33,8 +33,11 @@ pub struct ScheduleEntity {
   pub interval_secs: Option<i32>,
 
   /// ScheduleKind::Interval 时有效
-  /// 最大执行次数，为 1 时表示只执行一次，为 None 时表示无限执行
+  /// 最大执行次数，为 1 时表示只执行一次，为 None 时表示无限执行。
   pub max_count: Option<i32>,
+
+  /// 计算出的下一次执行时间
+  pub next_run_at: Option<OffsetDateTime>,
 
   pub created_by: i64,
   pub created_at: OffsetDateTime,

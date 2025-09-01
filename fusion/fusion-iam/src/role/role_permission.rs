@@ -7,7 +7,7 @@ use modelsql::{
 };
 use sea_query::enum_def;
 use sqlx::FromRow;
-use ultimate_common::time::UtcDateTime;
+use fusion_common::time::UtcDateTime;
 
 #[derive(Debug, FromRow, Fields)]
 #[enum_def]

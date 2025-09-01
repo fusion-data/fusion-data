@@ -9,8 +9,8 @@ use hetumind_core::workflow::{
   WorkflowForCreate, WorkflowForQuery, WorkflowForUpdate, WorkflowId, WorkflowStatus,
 };
 use modelsql::page::PageResult;
-use ultimate_core::{IdUuidResult, application::Application};
-use ultimate_web::{WebResult, ok_json};
+use fusion_core::{IdUuidResult, application::Application};
+use fusion_web::{WebResult, ok_json};
 
 use crate::domain::workflow::WorkflowSvc;
 

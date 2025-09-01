@@ -2,24 +2,24 @@ use std::time::Duration;
 
 use log::{info, warn};
 use modelsql::ModelManager;
-use ultimate_core::DataError;
+use fusion_core::DataError;
 use uuid::Uuid;
 
 use croner::Cron;
 use serde_json::json;
 use std::str::FromStr;
-use ultimate_common::time::{OffsetDateTime, now_offset};
+use fusion_common::time::{OffsetDateTime, now_offset};
 
-use hetuflow_core::models::{JobEntity, ScheduleEntity, TaskForCreate};
-use hetuflow_core::types::{ScheduleKind, ScheduleStatus, TaskStatus};
+use hetuflow_core::models::{JobEntity, ScheduleEntity, TaskForCreate, TaskInstanceForCreate};
+use hetuflow_core::types::{ScheduleKind, ScheduleStatus, TaskInstanceStatus, TaskStatus};
 
-use crate::infra::bmc::{JobBmc, ScheduleBmc, TaskBmc};
+use crate::infra::bmc::{JobBmc, ScheduleBmc, TaskBmc, TaskInstanceBmc};
 
 /// 任务生成服务
 ///
 /// 负责：
-/// - 根据 Schedule 预生成未来一段时间的任务
-/// - 基于外部事件或 API 调用按需生成任务
+/// - 根据 Schedule 预生成未来一段时间的 TaskInstanceEntity
+/// - 基于外部事件或 API 调用按需生成 TaskInstanceEntity
 pub struct TaskGenerationSvc {
   mm: ModelManager,
 }
@@ -45,34 +45,12 @@ impl TaskGenerationSvc {
     // 读取 Job 以获取 namespace_id
     let job = JobBmc::find_by_id(&self.mm, &job_id).await?;
 
-    // 生成任务 ID
-    let task_id = Uuid::now_v7();
-
     let parameters = params.unwrap_or_else(|| json!({}));
 
-    // 构建创建模型
-    let task = TaskForCreate {
-      id: task_id,
-      job_id,
-      namespace_id: job.namespace_id,
-      schedule_id: None, // 事件驱动任务无关联 Schedule
-      server_id: None,
-      priority: priority.unwrap_or(100),
-      scheduled_at: now_offset(), // 即时触发
-      status: TaskStatus::Pending,
-      tags: job.tags(),
-      parameters: parameters.clone(),
-      environment: job.environment,
-      job_config: job.config,
-      retry_count: 0,
-      max_retries: 3,
-      dependencies: None,
-      locked_at: None,
-      lock_version: 0,
-    };
-
-    // 入库。等待 Agent 主动 poll 任务执行
-    TaskBmc::insert(&self.mm, task).await.map_err(DataError::from)?;
+    let mm = self.mm.get_txn_clone();
+    mm.dbx().begin_txn().await?;
+    let task_id = self.create_task_and_instance(&mm, &job, None, now_offset(), parameters, priority).await?;
+    mm.dbx().commit_txn().await?;
 
     info!("Generated event-driven task {} for job {}", task_id, job_id);
     Ok(task_id)
@@ -97,6 +75,13 @@ impl TaskGenerationSvc {
 
     // 2. 遍历 schedule_entities，找到对应的有效 JobEntity
     for schedule in schedule_entities {
+      // 3. 检查是否过期
+      if schedule.end_time.is_some_and(|end_time| end_time < from_time) {
+        info!("Schedule {} is expired, end time is {:?}", schedule.id, schedule.end_time);
+        ScheduleBmc::update_status_by_id(&self.mm, schedule.id, ScheduleStatus::Expired).await?;
+        continue;
+      }
+
       // 获取关联的 Job
       let job = match JobBmc::find_enabled_by_id(&self.mm, schedule.job_id).await? {
         Some(job) => job,
@@ -106,21 +91,11 @@ impl TaskGenerationSvc {
         }
       };
 
-      // 3. 检查是否过期
-      if schedule.end_time.is_some_and(|end_time| end_time < from_time) {
-        info!("Schedule {} is expired, end time is {:?}", schedule.id, schedule.end_time);
-        ScheduleBmc::update_status_by_id(&self.mm, schedule.id, ScheduleStatus::Expired).await?;
-        continue;
-      }
-
       // 4. 根据 schedule_entity.schedule_kind 调用不同的生成方法
       let task_ids = match schedule.schedule_kind {
         ScheduleKind::Cron => self.generate_cron_tasks(&schedule, &job, from_time, to_time).await?,
         ScheduleKind::Interval => self.generate_interval_tasks(&schedule, &job, from_time, to_time).await?,
-        _ => {
-          // 其他类型暂不处理
-          continue;
-        }
+        _ => continue, // 其他类型暂不处理
       };
 
       generated_task_ids.extend(task_ids);
@@ -138,7 +113,7 @@ impl TaskGenerationSvc {
     from_time: OffsetDateTime,
     to_time: OffsetDateTime,
   ) -> Result<Vec<Uuid>, DataError> {
-    let mut generated_task_ids = Vec::new();
+    let mut task_ids = Vec::new();
 
     // 1. 解析 schedule.cron_expression
     let cron_expression = schedule
@@ -158,11 +133,14 @@ impl TaskGenerationSvc {
     let max_iterations = 1000; // 防止无限循环
     let mut iteration_count = 0;
 
+    let mm = self.mm.get_txn_clone();
+    mm.dbx().begin_txn().await?;
+
     while current_time < to_time && iteration_count < max_iterations {
       iteration_count += 1;
 
       // 计算下一次执行时间
-      let next_time = match cron.find_next_occurrence(&current_time, true) {
+      let scheduled_at = match cron.find_next_occurrence(&current_time, true) {
         Ok(next) => {
           if next >= to_time {
             break;
@@ -179,50 +157,28 @@ impl TaskGenerationSvc {
       };
 
       // 3. 检查任务是否已存在（去重）
-      let existing_task = TaskBmc::find_task_by_schedule_and_time(&self.mm, &schedule.id, next_time).await?;
+      let existing_task = TaskBmc::find_task_by_schedule_and_time(&self.mm, &schedule.id, scheduled_at).await?;
       if existing_task.is_some() {
-        current_time = next_time + Duration::from_secs(1);
+        current_time = scheduled_at + Duration::from_secs(1);
         continue;
       }
 
-      let task_id = Uuid::now_v7();
+      let task_id = self.create_task_and_instance(&mm, job, Some(schedule.id), scheduled_at, json!({}), None).await?;
+      task_ids.push(task_id);
 
-      // 4. 创建任务
-      let task_for_create = TaskForCreate {
-        id: task_id,
-        job_id: job.id,
-        namespace_id: job.namespace_id,
-        schedule_id: Some(schedule.id),
-        server_id: None, // 分发到 Agent 时再设置
-        priority: 0,     // 初始优先级为 0
-        scheduled_at: next_time,
-        status: TaskStatus::Pending,
-        tags: job.tags(),
-        parameters: json!({}),
-        environment: job.environment.clone(),
-        job_config: job.config.clone(),
-        retry_count: 0,
-        max_retries: 3, // 默认重试次数
-        dependencies: None,
-        locked_at: None,
-        lock_version: 0,
-      };
-
-      // 5. 插入任务到数据库
-      TaskBmc::insert(&self.mm, task_for_create).await?;
-      generated_task_ids.push(task_id);
-
-      info!("Generated cron task {} for schedule {} at {}", task_id, schedule.id, next_time);
+      info!("Generated cron task {} for schedule {} at {}", task_id, schedule.id, scheduled_at);
 
       // 移动到下一个时间点
-      current_time = next_time + Duration::from_secs(1);
+      current_time = scheduled_at + Duration::from_secs(1);
     }
+
+    mm.dbx().commit_txn().await?;
 
     if iteration_count >= max_iterations {
       warn!("Reached maximum iterations ({}) when generating cron tasks for schedule {}", max_iterations, schedule.id);
     }
 
-    Ok(generated_task_ids)
+    Ok(task_ids)
   }
 
   /// 为 Interval 类型的 Schedule 生成任务
@@ -244,47 +200,67 @@ impl TaskGenerationSvc {
 
     let mut task_ids = Vec::new();
 
+    let mm = self.mm.get_txn_clone();
+    mm.dbx().begin_txn().await?;
+
     // Calculate execution times within the range
-    let mut current_time = schedule.start_time.unwrap_or(from_time);
-    while current_time < to_time {
+    let mut schedule_at = schedule.start_time.unwrap_or(from_time);
+    while schedule_at < to_time {
       // Check for existing tasks at this time
-      let existing_task = TaskBmc::find_task_by_schedule_and_time(&self.mm, &schedule.id, current_time).await?;
+      let existing_task = TaskBmc::find_task_by_schedule_and_time(&self.mm, &schedule.id, schedule_at).await?;
       if existing_task.is_some() {
         continue;
       }
 
-      // Generate task ID
-      let task_id = Uuid::now_v7();
-
-      // Create task
-      let task = TaskForCreate {
-        id: task_id,
-        job_id: job.id,
-        namespace_id: job.namespace_id,
-        schedule_id: Some(schedule.id),
-        server_id: None,
-        priority: 0,
-        scheduled_at: current_time,
-        status: TaskStatus::Pending,
-        tags: job.tags(),
-        parameters: json!({}),
-        environment: job.environment.clone(),
-        job_config: job.config.clone(),
-        retry_count: 0,
-        max_retries: 3,
-        dependencies: None,
-        locked_at: None,
-        lock_version: 0,
-      };
-
-      // Insert task
-      TaskBmc::insert(&self.mm, task).await?;
+      let task_id = self.create_task_and_instance(&mm, job, Some(schedule.id), schedule_at, json!({}), None).await?;
       task_ids.push(task_id);
 
       // Move to next interval
-      current_time += Duration::from_secs(interval_secs as u64);
+      schedule_at += Duration::from_secs(interval_secs as u64);
     }
 
+    mm.dbx().commit_txn().await?;
+
     Ok(task_ids)
+  }
+
+  async fn create_task_and_instance(
+    &self,
+    mm: &ModelManager,
+    job: &JobEntity,
+    schedule_id: Option<Uuid>,
+    scheduled_at: OffsetDateTime,
+    parameters: serde_json::Value,
+    priority: Option<i32>,
+  ) -> Result<Uuid, DataError> {
+    let task_id = Uuid::now_v7();
+    let task = TaskForCreate {
+      id: task_id,
+      job_id: job.id,
+      namespace_id: job.namespace_id,
+      schedule_id,
+      priority: priority.unwrap_or_default(),
+      scheduled_at,
+      status: TaskStatus::Pending,
+      tags: job.tags(),
+      parameters,
+      environment: job.environment.clone(),
+      job_config: job.config.clone(),
+      retry_count: 0,
+      max_retries: 3,
+      dependencies: None,
+    };
+    let task_instance = TaskInstanceForCreate {
+      id: Some(Uuid::now_v7()),
+      task_id,
+      server_id: None,
+      agent_id: None,
+      status: TaskInstanceStatus::Pending,
+    };
+
+    TaskBmc::insert(mm, task).await.map_err(DataError::from)?; // 入库。等待 Agent 主动 poll 任务执行
+    TaskInstanceBmc::insert(mm, task_instance).await.map_err(DataError::from)?;
+
+    Ok(task_id)
   }
 }

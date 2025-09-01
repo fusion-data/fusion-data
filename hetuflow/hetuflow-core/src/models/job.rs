@@ -3,7 +3,7 @@ use modelsql_core::{
   filter::{OpValsDateTime, OpValsInt32, OpValsString, OpValsUuid, Page},
 };
 use serde::{Deserialize, Serialize};
-use ultimate_common::{ahash::HashMap, time::OffsetDateTime};
+use fusion_common::{ahash::HashMap, time::OffsetDateTime};
 use uuid::Uuid;
 
 use crate::types::{JobStatus, ResourceLimits};

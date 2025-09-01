@@ -45,28 +45,24 @@ impl ServerBmc {
   }
 
   pub async fn register(mm: &ModelManager, server: ServerForRegister) -> Result<(), SqlError> {
-    let sql = r#"insert into sched_server(id, name, address, status, description, created_by, created_at)
-      values ($1, $2, $3, $4, $5, $6, $7)
-      on conflict (id) do update set name            = excluded.name,
+    let sql = r#"insert into sched_server(id, name, address, status, created_by, created_at)
+      values ($1, $2, $3, $4, $5, $6)
+      on conflict (id) do update set name           = excluded.name,
                                     address         = excluded.address,
                                     status          = excluded.status,
-                                    description     = excluded.description,
                                     updated_by      = excluded.created_by,
                                     updated_at      = excluded.created_at"#;
     let db = mm.dbx().db_postgres()?;
     let ctx = mm.ctx_ref()?;
-    let ret = sqlx::query(sql)
+    let query = sqlx::query(sql)
       .bind(server.id)
       .bind(server.name.clone())
       .bind(server.address)
       .bind(server.status as i32)
-      .bind(server.description)
       .bind(ctx.uid())
-      .bind(ctx.req_time())
-      .execute(&db)
-      .await
-      .map_err(DbxError::from)?;
-    if ret.rows_affected() == 1 {
+      .bind(ctx.req_time());
+    let rows_affected = db.execute(query).await.map_err(DbxError::from)?;
+    if rows_affected == 1 {
       Ok(())
     } else {
       Err(SqlError::ExecuteError {
@@ -82,38 +78,7 @@ impl ServerBmc {
     server_id: Uuid,
     bind_namespaces: Vec<Uuid>,
   ) -> Result<(), SqlError> {
-    let sql = r#"update sched_server
-                 set bind_namespaces = $1, updated_by = $2, updated_at = $3
-                 where id = $4"#;
-    let db = mm.dbx().db_postgres()?;
-    let ctx = mm.ctx_ref()?;
-
-    let ret = sqlx::query(sql)
-      .bind(&bind_namespaces)
-      .bind(ctx.uid())
-      .bind(ctx.req_time())
-      .bind(server_id)
-      .execute(&db)
-      .await
-      .map_err(DbxError::from)?;
-
-    if ret.rows_affected() == 1 {
-      Ok(())
-    } else {
-      Err(SqlError::ExecuteError {
-        table: Self::qualified_table_name(),
-        message: format!("Update server namespace_id bind error, server_id: {}", server_id),
-      })
-    }
-  }
-
-  /// 根据服务器 ID 获取绑定的 namespaces
-  pub async fn get_server_bind_namespaces(mm: &ModelManager, server_id: Uuid) -> Result<Vec<Uuid>, SqlError> {
-    let sql = "select bind_namespaces from sched_server where id = $1";
-    let db = mm.dbx().db_postgres()?;
-
-    let row: (Vec<Uuid>,) = sqlx::query_as(sql).bind(server_id).fetch_one(&db).await.map_err(DbxError::from)?;
-
-    Ok(row.0)
+    let entity_u = ServerForUpdate { bind_namespaces: Some(bind_namespaces), ..Default::default() };
+    Self::update_by_id(mm, server_id, entity_u).await
   }
 }

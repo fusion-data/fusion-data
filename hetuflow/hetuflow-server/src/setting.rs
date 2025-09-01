@@ -1,17 +1,14 @@
 use std::{path::PathBuf, time::Duration};
 
-use config::Config;
 use duration_str::deserialize_duration;
+use fusion_common::env::get_env;
+use fusion_core::{DataError, configuration::FusionConfigRegistry};
+use hetuflow_core::utils::config::write_app_config;
 use serde::{Deserialize, Serialize};
-use ultimate_core::{
-  DataError,
-  configuration::{Configuration, UltimateConfigRegistry},
-};
 use uuid::Uuid;
 
-#[derive(Debug, Clone, Serialize, Deserialize, Configuration)]
-#[config_prefix = "hetuflow.server"]
-pub struct ServerSetting {
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ServerConfig {
   pub server_id: Uuid,
   pub server_name: String,
   pub allow_leader_election: bool,
@@ -37,47 +34,33 @@ pub struct ServerSetting {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct FusionSchedulerConfig {
+pub struct HetuflowServerSetting {
   pub max_concurrent_tasks: u32,
   #[serde(deserialize_with = "deserialize_duration")]
   pub history_ttl: Duration,
-  pub server: ServerSetting,
+  pub server: ServerConfig,
 }
 
 const KEY_PATH_SERVER_ID: &str = "hetuflow.server.server_id";
 
-impl FusionSchedulerConfig {
-  pub fn load(config_registry: &UltimateConfigRegistry) -> Result<Self, DataError> {
+impl HetuflowServerSetting {
+  pub fn load(config_registry: &FusionConfigRegistry) -> Result<Self, DataError> {
     let config = config_registry.config();
     // Check if server_id not exists or invalid uuid in config
     if let Err(_e) = config.get::<Uuid>(KEY_PATH_SERVER_ID) {
       // Generate new UUID and write to config file
       let server_id = Uuid::new_v4();
-      write_app_config("app.toml".into(), server_id)?;
+      let path = match get_env("CARGO_MANIFEST_DIR") {
+        Ok(dir) => PathBuf::from(dir).join("resources").join("app.toml"),
+        Err(_) => PathBuf::from(get_env("HOME")?).join(".hetuflow").join("server.toml"),
+      };
+      std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+      write_app_config(path, KEY_PATH_SERVER_ID, &server_id.to_string())?;
       // Reload config registry
       config_registry.reload()?;
     }
 
-    let hetuflow_config = config_registry.get_config_by_path("hetuflow")?;
-    Ok(hetuflow_config)
+    let setting = config_registry.get_config_by_path("hetuflow")?;
+    Ok(setting)
   }
-}
-
-fn write_app_config(path: PathBuf, server_id: Uuid) -> Result<(), DataError> {
-  let config = Config::builder()
-    .add_source(config::File::from(path.clone()))
-    .add_source(config::File::from_str(&format!("{}={}", KEY_PATH_SERVER_ID, server_id), config::FileFormat::Toml))
-    .build()?;
-
-  // Convert config to serde_json::Value
-  let config_data: serde_json::Value = config.try_deserialize()?;
-
-  // Serialize to TOML string
-  let config_str = toml::to_string_pretty(&config_data)
-    .map_err(|e| DataError::server_error(format!("TOML serialization error: {}", e)))?;
-
-  // Write the TOML string to file
-  std::fs::write(&path, config_str)?;
-
-  Ok(())
 }

@@ -8,10 +8,10 @@ use modelsql::{
 use sea_query::enum_def;
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
-use ultimate_api::v1::{Page, Pagination};
-use ultimate_common::{regex, time::UtcDateTime};
-use ultimate_core::{DataError, Result};
-use ultimate_db::{
+use fusion_api::v1::{Page, Pagination};
+use fusion_common::{regex, time::UtcDateTime};
+use fusion_core::{DataError, Result};
+use fusion_db::{
   try_into_op_vals_int32_opt, try_into_op_vals_int64_opt, try_into_op_vals_string_opt,
   try_into_op_values_with_string_opt,
 };

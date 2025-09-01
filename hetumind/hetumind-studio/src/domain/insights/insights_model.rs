@@ -2,7 +2,7 @@ use modelsql::field::Fields;
 use sea_query::enum_def;
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
-use ultimate_common::time::OffsetDateTime;
+use fusion_common::time::OffsetDateTime;
 
 /// 洞察元数据表
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow, Fields)]

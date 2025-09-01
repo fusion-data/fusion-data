@@ -1,6 +1,6 @@
 use fusiondata_context::ctx::CtxW;
-use ultimate_api::v1::{PagePayload, Pagination};
-use ultimate_core::{Result, component::Component};
+use fusion_api::v1::{PagePayload, Pagination};
+use fusion_core::{Result, component::Component};
 
 use crate::{pb::fusion_iam::v1::CreateRoleDto, role::bmc::RoleBmc};
 

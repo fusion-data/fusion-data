@@ -1,4 +1,4 @@
-use ultimate_common::time::OffsetDateTime;
+use chrono::{DateTime, FixedOffset};
 
 use super::OpVal;
 
@@ -6,41 +6,41 @@ use super::OpVal;
 pub struct OpValsDateTime(pub Vec<OpValDateTime>);
 
 impl OpValsDateTime {
-  pub fn eq(v: OffsetDateTime) -> Self {
+  pub fn eq(v: DateTime<FixedOffset>) -> Self {
     Self(vec![OpValDateTime::Eq(v)])
   }
 
-  pub fn not(v: OffsetDateTime) -> Self {
+  pub fn not(v: DateTime<FixedOffset>) -> Self {
     Self(vec![OpValDateTime::Not(v)])
   }
 
   pub fn in_<I>(v: I) -> Self
   where
-    I: IntoIterator<Item = OffsetDateTime>,
+    I: IntoIterator<Item = DateTime<FixedOffset>>,
   {
     Self(vec![OpValDateTime::In(v.into_iter().collect())])
   }
 
   pub fn not_in<I>(v: I) -> Self
   where
-    I: IntoIterator<Item = OffsetDateTime>,
+    I: IntoIterator<Item = DateTime<FixedOffset>>,
   {
     Self(vec![OpValDateTime::NotIn(v.into_iter().collect())])
   }
 
-  pub fn lt(v: OffsetDateTime) -> Self {
+  pub fn lt(v: DateTime<FixedOffset>) -> Self {
     Self(vec![OpValDateTime::Lt(v)])
   }
 
-  pub fn lte(v: OffsetDateTime) -> Self {
+  pub fn lte(v: DateTime<FixedOffset>) -> Self {
     Self(vec![OpValDateTime::Lte(v)])
   }
 
-  pub fn gt(v: OffsetDateTime) -> Self {
+  pub fn gt(v: DateTime<FixedOffset>) -> Self {
     Self(vec![OpValDateTime::Gt(v)])
   }
 
-  pub fn gte(v: OffsetDateTime) -> Self {
+  pub fn gte(v: DateTime<FixedOffset>) -> Self {
     Self(vec![OpValDateTime::Gte(v)])
   }
 
@@ -51,23 +51,23 @@ impl OpValsDateTime {
 
 #[derive(Debug, Clone)]
 pub enum OpValDateTime {
-  Eq(OffsetDateTime),
-  Not(OffsetDateTime),
+  Eq(DateTime<FixedOffset>),
+  Not(DateTime<FixedOffset>),
 
-  In(Vec<OffsetDateTime>),
-  NotIn(Vec<OffsetDateTime>),
+  In(Vec<DateTime<FixedOffset>>),
+  NotIn(Vec<DateTime<FixedOffset>>),
 
-  Lt(OffsetDateTime),
-  Lte(OffsetDateTime),
+  Lt(DateTime<FixedOffset>),
+  Lte(DateTime<FixedOffset>),
 
-  Gt(OffsetDateTime),
-  Gte(OffsetDateTime),
+  Gt(DateTime<FixedOffset>),
+  Gte(DateTime<FixedOffset>),
 
   Null(bool),
 }
 
-impl From<OffsetDateTime> for OpValDateTime {
-  fn from(value: OffsetDateTime) -> Self {
+impl From<DateTime<FixedOffset>> for OpValDateTime {
+  fn from(value: DateTime<FixedOffset>) -> Self {
     OpValDateTime::Eq(value)
   }
 }
@@ -78,8 +78,8 @@ impl From<OpValDateTime> for OpVal {
   }
 }
 
-impl From<OffsetDateTime> for OpVal {
-  fn from(value: OffsetDateTime) -> Self {
+impl From<DateTime<FixedOffset>> for OpVal {
+  fn from(value: DateTime<FixedOffset>) -> Self {
     OpValDateTime::Eq(value).into()
   }
 }
@@ -97,12 +97,12 @@ mod with_sea_query {
       col: &ColumnRef,
       node_options: &FilterNodeOptions,
     ) -> SeaResult<ConditionExpression> {
-      let binary_fn = |op: BinOper, v: OffsetDateTime| {
+      let binary_fn = |op: BinOper, v: DateTime<FixedOffset>| {
         let expr = into_node_value_expr(v, node_options);
         ConditionExpression::SimpleExpr(SimpleExpr::binary(col.clone().into(), op, expr))
       };
 
-      let binaries_fn = |op: BinOper, v: Vec<OffsetDateTime>| {
+      let binaries_fn = |op: BinOper, v: Vec<DateTime<FixedOffset>>| {
         let vec_expr: Vec<SimpleExpr> = v.into_iter().map(|v| into_node_value_expr(v, node_options)).collect();
         let expr = SimpleExpr::Tuple(vec_expr);
         ConditionExpression::SimpleExpr(SimpleExpr::binary(col.clone().into(), op, expr))

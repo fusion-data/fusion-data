@@ -1,19 +1,17 @@
 use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
-use ultimate_common::time::now_epoch_millis;
+use fusion_common::time::now_epoch_millis;
 use uuid::Uuid;
 
 use crate::types::{CommandKind, EventKind};
 
-/// 服务器下发的指令
+/// 服务器下发的指令。 Server -> Agent
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct WebSocketCommand {
   /// 指令ID，全局唯一。可选参数，默认使用 UUID v7
-  #[serde(default = "Uuid::now_v7")]
   id: Uuid,
   /// 发送时间
-  #[serde(default = "now_epoch_millis")]
   timestamp: i64,
   /// 指令类型
   pub kind: CommandKind,
@@ -26,12 +24,19 @@ pub struct WebSocketCommand {
 }
 
 impl WebSocketCommand {
-  pub fn new(kind: CommandKind, parameters: serde_json::Value) -> Self {
-    Self { id: Uuid::now_v7(), timestamp: now_epoch_millis(), kind, parameters, timeout: None, priority: None }
+  pub fn new<T: Serialize>(kind: CommandKind, parameters: T) -> Self {
+    Self::new_with_id(Uuid::now_v7(), kind, parameters)
   }
 
-  pub fn new_with_id(id: Uuid, kind: CommandKind, parameters: serde_json::Value) -> Self {
-    Self { id, timestamp: now_epoch_millis(), kind, parameters, timeout: None, priority: None }
+  pub fn new_with_id<T: Serialize>(id: Uuid, kind: CommandKind, parameters: T) -> Self {
+    Self {
+      id,
+      timestamp: now_epoch_millis(),
+      kind,
+      parameters: serde_json::to_value(parameters).unwrap(),
+      timeout: None,
+      priority: None,
+    }
   }
 
   pub fn with_timeout(mut self, timeout: u32) -> Self {
@@ -57,27 +62,30 @@ impl WebSocketCommand {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WebSocketEvent {
   /// 消息唯一标识
-  #[serde(default = "Uuid::now_v7")]
-  event_id: Uuid,
+  pub event_id: Uuid,
   /// 发送时间
-  #[serde(default = "now_epoch_millis")]
-  timestamp: i64,
+  pub timestamp: i64,
   /// 消息类型
   pub kind: EventKind,
   /// 消息载荷
   pub payload: serde_json::Value,
   /// 扩展元数据
-  #[serde(default)]
   pub metadata: HashMap<String, String>,
 }
 
 impl WebSocketEvent {
-  pub fn new(kind: EventKind, payload: serde_json::Value) -> Self {
-    Self { event_id: Uuid::now_v7(), timestamp: now_epoch_millis(), kind, payload, metadata: HashMap::default() }
+  pub fn new<T: Serialize>(kind: EventKind, payload: T) -> Self {
+    Self::new_with_id(Uuid::now_v7(), kind, payload)
   }
 
-  pub fn new_with_id(event_id: Uuid, message_kind: EventKind, payload: serde_json::Value) -> Self {
-    Self { event_id, timestamp: now_epoch_millis(), kind: message_kind, payload, metadata: HashMap::default() }
+  pub fn new_with_id<T: Serialize>(event_id: Uuid, kind: EventKind, payload: T) -> Self {
+    Self {
+      event_id,
+      timestamp: now_epoch_millis(),
+      kind,
+      payload: serde_json::to_value(payload).unwrap(),
+      metadata: HashMap::default(),
+    }
   }
 
   pub fn with_metadata(mut self, metadata: HashMap<String, String>) -> Self {
@@ -85,7 +93,7 @@ impl WebSocketEvent {
     self
   }
 
-  pub fn add_metadata(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
+  pub fn add_metadata(&mut self, key: impl Into<String>, value: impl Into<String>) -> &mut Self {
     self.metadata.insert(key.into(), value.into());
     self
   }

@@ -3,8 +3,8 @@ use modelsql::{field::Fields, postgres::PgRowType};
 use sea_query::enum_def;
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
-use ultimate_common::time::OffsetDateTime;
-use ultimate_core::DataError;
+use fusion_common::time::OffsetDateTime;
+use fusion_core::DataError;
 
 /// 工作流实体表
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow, Fields)]

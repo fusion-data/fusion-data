@@ -3,7 +3,7 @@ use ahash::HashMap;
 use modelsql::generate_enum_i32_to_sea_query_value;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
-use ultimate_common::time::OffsetDateTime;
+use fusion_common::time::OffsetDateTime;
 
 mod error;
 mod task_queue;

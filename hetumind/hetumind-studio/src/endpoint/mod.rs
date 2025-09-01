@@ -6,8 +6,8 @@ use tower_http::{
   sensitive_headers::SetSensitiveRequestHeadersLayer,
   trace::{DefaultMakeSpan, TraceLayer},
 };
-use ultimate_core::{DataError, application::Application};
-use ultimate_web::server::init_server;
+use fusion_core::{DataError, application::Application};
+use fusion_web::server::init_server;
 
 pub mod api;
 

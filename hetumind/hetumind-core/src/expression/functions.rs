@@ -4,7 +4,7 @@ use chrono::{Duration, NaiveTime};
 use jsonpath_rust::JsonPath;
 use log::error;
 use regex::Regex;
-use ultimate_common::time::now;
+use fusion_common::time::now;
 
 use super::{
   context::ExpressionExecutionContext,

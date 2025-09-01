@@ -1,12 +1,12 @@
 use axum::{extract::FromRequestParts, http::request::Parts};
 use hetumind_context::{ctx::CtxW, utils::new_ctx_w_from_parts};
 use modelsql::page::PageResult;
-use ultimate_core::{
+use fusion_core::{
   DataError,
   application::Application,
   security::pwd::{generate_pwd, verify_pwd},
 };
-use ultimate_web::WebError;
+use fusion_web::WebError;
 
 use crate::domain::user::UserForPage;
 

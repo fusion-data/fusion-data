@@ -6,7 +6,7 @@ use modelsql_core::{
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use typed_builder::TypedBuilder;
-use ultimate_common::time::OffsetDateTime;
+use fusion_common::time::OffsetDateTime;
 
 use crate::user::UserId;
 

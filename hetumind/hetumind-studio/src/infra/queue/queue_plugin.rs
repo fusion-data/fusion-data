@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use ultimate_core::{application::ApplicationBuilder, configuration::ConfigRegistry, plugin::Plugin};
+use fusion_core::{application::ApplicationBuilder, configuration::ConfigRegistry, plugin::Plugin};
 
 use crate::infra::queue::{QueueConfig, QueueProvider};
 
@@ -16,6 +16,6 @@ impl Plugin for QueueProviderPlugin {
   }
 
   fn dependencies(&self) -> Vec<&str> {
-    vec![std::any::type_name::<ultimate_db::DbPlugin>()]
+    vec![std::any::type_name::<fusion_db::DbPlugin>()]
   }
 }

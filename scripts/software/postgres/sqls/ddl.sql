@@ -1,18 +1,18 @@
 set
   timezone to 'Asia/Chongqing';
 
--- ultimate --
-create user ultimate
+-- fusion --
+create user fusion
 with
-  superuser encrypted password '2024.Ultimate';
+  superuser encrypted password '2024.Fusion';
 
-alter user ultimate
+alter user fusion
 set
   timezone = 'Asia/Chongqing';
 
-create database ultimate owner = ultimate template = template1;
+create database fusion owner = fusion template = template1;
 
-alter database ultimate
+alter database fusion
 set
   timezone = 'Asia/Chongqing';
 

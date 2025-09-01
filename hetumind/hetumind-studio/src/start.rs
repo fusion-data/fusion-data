@@ -1,5 +1,5 @@
-use ultimate_core::{DataError, application::Application};
-use ultimate_db::DbPlugin;
+use fusion_core::{DataError, application::Application};
+use fusion_db::DbPlugin;
 
 use crate::{
   endpoint::init_web,
