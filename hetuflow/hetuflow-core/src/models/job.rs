@@ -1,9 +1,9 @@
+use fusion_common::{ahash::HashMap, time::OffsetDateTime};
 use modelsql_core::{
   field::FieldMask,
   filter::{OpValsDateTime, OpValsInt32, OpValsString, OpValsUuid, Page},
 };
 use serde::{Deserialize, Serialize};
-use fusion_common::{ahash::HashMap, time::OffsetDateTime};
 use uuid::Uuid;
 
 use crate::types::{JobStatus, ResourceLimits};
@@ -29,10 +29,10 @@ pub struct JobConfig {
   pub resource_limits: Option<ResourceLimits>,
 }
 
-/// JobEntity 数据模型
+/// SchedJob 数据模型
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-db", derive(modelsql::Fields, sqlx::FromRow), sea_query::enum_def(table_name = "sched_job"))]
-pub struct JobEntity {
+pub struct SchedJob {
   pub id: Uuid,
   pub namespace_id: Uuid,
   pub name: String,
@@ -46,7 +46,7 @@ pub struct JobEntity {
   pub updated_at: Option<OffsetDateTime>,
 }
 
-impl JobEntity {
+impl SchedJob {
   pub fn tags(&self) -> Vec<String> {
     self.config.as_ref().map(|c| c.tags.keys().cloned().collect()).unwrap_or_default()
   }

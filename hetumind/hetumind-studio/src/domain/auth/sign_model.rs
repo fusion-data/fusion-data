@@ -1,6 +1,6 @@
+use fusion_common::regex::{is_email, is_phone};
 use hetumind_core::credential::TokenType;
 use serde::{Deserialize, Serialize};
-use fusion_common::regex::{is_email, is_phone};
 
 #[derive(Deserialize)]
 pub struct SigninRequest {

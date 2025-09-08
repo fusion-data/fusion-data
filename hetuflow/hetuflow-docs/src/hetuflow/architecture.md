@@ -250,7 +250,7 @@ hetuflow 采用基于 **modelsql** ORM 的分层数据模型设计，确保数�
 
 ### 核心数据模型
 
-- **`JobEntity`**: 存储作业的静态定义（"做什么"），对应数据库表 `sched_job`
+- **`SchedJob`**: 存储作业的静态定义（"做什么"），对应数据库表 `sched_job`
 - **`Schedule`**: 存储作业的调度策略（"何时做"），对应数据库表 `sched_schedule`
 - **`Task`**: 存储根据 `Schedule` 生成的、待执行的计划，对应数据库表 `sched_task`
 - **`TaskInstance`**: 存储 `Task` 在 Agent 上的实际执行记录，对应数据库表 `sched_task_instance`

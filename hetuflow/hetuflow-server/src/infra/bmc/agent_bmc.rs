@@ -1,15 +1,15 @@
+use fusion_common::time::now_offset;
 use modelsql::{
   ModelManager, SqlError,
   base::DbBmc,
   filter::{OpValsDateTime, OpValsInt32},
   generate_pg_bmc_common, generate_pg_bmc_filter,
 };
-use fusion_common::time::now_offset;
 use uuid::Uuid;
 
 use hetuflow_core::{protocol::AgentRegisterRequest, types::AgentStatus};
 
-use hetuflow_core::models::{AgentEntity, AgentFilter, AgentForCreate, AgentForUpdate};
+use hetuflow_core::models::{AgentFilter, AgentForCreate, AgentForUpdate, SchedAgent};
 
 /// AgentBmc 实现
 pub struct AgentBmc;
@@ -21,20 +21,20 @@ impl DbBmc for AgentBmc {
 
 generate_pg_bmc_common!(
   Bmc: AgentBmc,
-  Entity: AgentEntity,
+  Entity: SchedAgent,
   ForUpdate: AgentForUpdate,
   ForInsert: AgentForCreate,
 );
 
 generate_pg_bmc_filter!(
   Bmc: AgentBmc,
-  Entity: AgentEntity,
+  Entity: SchedAgent,
   Filter: AgentFilter,
 );
 
 impl AgentBmc {
   /// 查找在线的 Agent
-  pub async fn find_online_agents(mm: &ModelManager) -> Result<Vec<AgentEntity>, SqlError> {
+  pub async fn find_online_agents(mm: &ModelManager) -> Result<Vec<SchedAgent>, SqlError> {
     let filter = AgentFilter { status: Some(OpValsInt32::eq(AgentStatus::Online as i32)), ..Default::default() };
 
     Self::find_many(mm, vec![filter], None).await
@@ -51,7 +51,7 @@ impl AgentBmc {
   }
 
   /// 检查离线的 Agent
-  pub async fn find_offline_agents(mm: &ModelManager, timeout_seconds: i64) -> Result<Vec<AgentEntity>, SqlError> {
+  pub async fn find_offline_agents(mm: &ModelManager, timeout_seconds: i64) -> Result<Vec<SchedAgent>, SqlError> {
     let cutoff_time = now_offset() - chrono::Duration::seconds(timeout_seconds);
 
     let filter = AgentFilter {
@@ -67,7 +67,7 @@ impl AgentBmc {
     mm: &ModelManager,
     agent_id: &Uuid,
     payload: &AgentRegisterRequest,
-  ) -> Result<AgentEntity, SqlError> {
+  ) -> Result<SchedAgent, SqlError> {
     let sql = r#"
       insert into sched_agent (id, address, status, capabilities, last_heartbeat)
       values ($1, $2, $3, $4, $5)
@@ -84,7 +84,7 @@ impl AgentBmc {
       .bind(&payload.capabilities)
       .bind(now_offset());
 
-    let agent = mm.dbx().db_postgres()?.fetch_one::<AgentEntity, _>(query).await?;
+    let agent = mm.dbx().db_postgres()?.fetch_one::<SchedAgent, _>(query).await?;
     Ok(agent)
   }
 }

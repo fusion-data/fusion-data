@@ -1,16 +1,16 @@
+use fusion_common::time::{now_epoch_millis, now_offset};
+use fusion_core::DataError;
 use log::{info, warn};
 use modelsql::{
   ModelManager,
   filter::{OpValsDateTime, OpValsInt32, OpValsUuid, Page},
   page::PageResult,
 };
-use fusion_common::time::{now_epoch_millis, now_offset};
-use fusion_core::DataError;
 use uuid::Uuid;
 
 use hetuflow_core::{
   models::{
-    AgentEntity, AgentFilter, AgentForCreate, AgentForQuery, AgentForUpdate, TaskForUpdate, TaskInstanceFilter,
+    AgentFilter, AgentForCreate, AgentForQuery, AgentForUpdate, SchedAgent, TaskForUpdate, TaskInstanceFilter,
     TaskInstanceForUpdate,
   },
   protocol::{AgentRegisterRequest, AgentRegisterResponse},
@@ -36,7 +36,7 @@ impl AgentSvc {
   }
 
   /// 根据 ID 获取 Agent
-  pub async fn get_by_id(&self, id: &Uuid) -> Result<Option<AgentEntity>, DataError> {
+  pub async fn get_by_id(&self, id: &Uuid) -> Result<Option<SchedAgent>, DataError> {
     AgentBmc::get_by_id(&self.mm, id).await.map_err(DataError::from)
   }
 
@@ -70,17 +70,17 @@ impl AgentSvc {
   }
 
   /// 查找在线的 Agent
-  pub async fn find_online_agents(&self) -> Result<Vec<AgentEntity>, DataError> {
+  pub async fn find_online_agents(&self) -> Result<Vec<SchedAgent>, DataError> {
     AgentBmc::find_online_agents(&self.mm).await.map_err(DataError::from)
   }
 
   /// 根据 ID 查找 Agent
-  pub async fn find_agent_by_id(&self, agent_id: &Uuid) -> Result<AgentEntity, DataError> {
+  pub async fn find_agent_by_id(&self, agent_id: &Uuid) -> Result<SchedAgent, DataError> {
     AgentBmc::find_by_id(&self.mm, agent_id).await.map_err(DataError::from)
   }
 
   /// 检查离线的 Agent（心跳超时）
-  pub async fn check_offline_agents(&self, timeout_seconds: i64) -> Result<Vec<AgentEntity>, DataError> {
+  pub async fn check_offline_agents(&self, timeout_seconds: i64) -> Result<Vec<SchedAgent>, DataError> {
     let timeout_time = now_offset() - chrono::Duration::seconds(timeout_seconds);
 
     let filter = AgentFilter {
@@ -146,11 +146,11 @@ impl AgentSvc {
     Ok(())
   }
 
-  pub async fn find_many(&self, filter: AgentFilter, page: Option<Page>) -> Result<Vec<AgentEntity>, DataError> {
+  pub async fn find_many(&self, filter: AgentFilter, page: Option<Page>) -> Result<Vec<SchedAgent>, DataError> {
     AgentBmc::find_many(&self.mm, vec![filter], page).await.map_err(DataError::from)
   }
 
-  pub async fn query(&self, input: AgentForQuery) -> Result<PageResult<AgentEntity>, DataError> {
+  pub async fn query(&self, input: AgentForQuery) -> Result<PageResult<SchedAgent>, DataError> {
     AgentBmc::page(&self.mm, vec![input.filter], input.page).await.map_err(DataError::from)
   }
 

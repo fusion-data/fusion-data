@@ -64,7 +64,10 @@ mod tests {
     // 使用自定义环境变量源，确保测试隔离
     let mut test_env = HashMap::new();
     test_env.insert("FUSION__WEB__SERVER_ADDR".to_string(), "0.0.0.0:8000".to_string());
-    test_env.insert("FUSION__SECURITY__TOKEN__SECRET_KEY".to_string(), "8462b1ec9af827ebed13926f8f1e5409774fa1a21a1c8f726a4a34cf7dcabaf2".to_string());
+    test_env.insert(
+      "FUSION__SECURITY__TOKEN__SECRET_KEY".to_string(),
+      "8462b1ec9af827ebed13926f8f1e5409774fa1a21a1c8f726a4a34cf7dcabaf2".to_string(),
+    );
     test_env.insert("FUSION__SECURITY__PWD__PWD_KEY".to_string(), "80c9a35c0f231219ca14c44fe10c728d".to_string());
     test_env.insert("FUSION__APP__NAME".to_string(), "fusion-test".to_string());
 

@@ -1,30 +1,3 @@
-[fusion.log]
-enable = true
-log_targets = [
-    "tower_http=debug",
-    "fusion_common=debug",
-    "fusion_grpc=debug",
-    "fusion_db=debug",
-    "fusion=debug",
-    "fusion_iam=debug",
-    "hetuflow_core=debug",
-    "hetuflow_agent=debug",
-    "hetuflow_server=debug",
-]
-
-[fusion.app]
-name = "hetuflow-agent"
-time_offset = "+08:00"
-run_mode = "dev"
-
-[hetuflow.agent]
-tags = ["linux", "x86_64", "gpu-enabled"]
-agent_id = "1dcb5bdf-8396-4218-9241-2e4928318624"
-
-[hetuflow.agent.metadata]
-region = "cn-hangzhou"
-owner = "data-team"
-
 [hetuflow.agent.polling]
 max_concurrent_tasks = 20
 enable_adaptive_polling = true
@@ -36,6 +9,7 @@ load_factor_threshold = 1
 enable_resource_monitoring = true
 resource_monitor_interval = "30s"
 cleanup_interval = "1h"
+# 最大并发进程数，同时运行任务数
 max_concurrent_processes = 8
 process_timeout = "2h"
 zombie_check_interval = "1h"

@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use fusion_core::configuration::Configuration;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Configuration)]
 #[config_prefix = "fusion.web"]

@@ -19,6 +19,30 @@ unsafe_code = "forbid"
 [workspace.lints.clippy]
 uninlined_format_args = "allow"
 
+[profile.release]
+codegen-units = 1
+panic = "abort"
+strip = true
+lto = true
+opt-level = "z"
+# default-features = false
+# features = ["tikv-jemallocator"]
+
+# Optimize build times for development
+[profile.dev]
+opt-level = 1
+debug = true
+
+# Faster builds for dependencies
+[profile.dev.package."*"]
+opt-level = 2
+debug = false
+
+[profile.bench]
+lto = "fat"
+codegen-units = 1
+opt-level = 3
+
 [workspace.dependencies]
 # -- projects begin
 fusion-corelib = { version = "0.1.1", path = "crates/fusions/fusion-corelib" }
@@ -138,6 +162,8 @@ tokio-test = { version = "0.4" }
 tokio-mpmc = { version = "0.2" }
 arc-swap = { version = "1.7", features = ["serde"] }
 dashmap = { version = "6.1" }
+mea = { version = "0.4" }
+kanal = { version = "0.1" }
 # -- Logging
 log = "0.4"
 logforth = { version = "0.27", features = ["colored", "append-rolling-file"] }
@@ -253,9 +279,9 @@ opendal = { version = "0.54", features = [
 ] }
 minio = { version = "0.3" }
 # -- LLM
-rig-core = { version = "0.18", features = ["derive"] }
+rig-core = { version = "0.19", features = ["derive"] }
 rig-postgres = { version = "0.1" }
-graph-flow = { version = "0.2" }
+graph-flow = { version = "0.3" }
 rmcp = { version = "0.6" }
 # -- Plugins
 extism = { version = "1.11" }

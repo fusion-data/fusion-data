@@ -1,4 +1,6 @@
 use axum::Router;
+use fusion_core::{DataError, application::Application};
+use fusion_web::server::init_server;
 use http::header::AUTHORIZATION;
 use tower_http::{
   compression::CompressionLayer,
@@ -6,8 +8,6 @@ use tower_http::{
   sensitive_headers::SetSensitiveRequestHeadersLayer,
   trace::{DefaultMakeSpan, TraceLayer},
 };
-use fusion_core::{DataError, application::Application};
-use fusion_web::server::init_server;
 
 pub mod api;
 

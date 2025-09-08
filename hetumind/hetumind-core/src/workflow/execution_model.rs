@@ -1,4 +1,5 @@
 use ahash::HashMap;
+use fusion_common::time::OffsetDateTime;
 use modelsql_core::{
   field::FieldMask,
   filter::{OpValsDateTime, OpValsInt32, OpValsUuid, Page},
@@ -6,7 +7,6 @@ use modelsql_core::{
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use typed_builder::TypedBuilder;
-use fusion_common::time::OffsetDateTime;
 
 use crate::user::UserId;
 

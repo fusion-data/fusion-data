@@ -9,9 +9,9 @@ use std::sync::{
   atomic::{AtomicI64, Ordering},
 };
 
+use fusion_common::time::now_epoch_millis;
 use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc;
-use fusion_common::time::now_epoch_millis;
 use uuid::Uuid;
 
 use hetuflow_core::protocol::WebSocketCommand;

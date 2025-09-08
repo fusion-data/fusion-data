@@ -1,3 +1,4 @@
+use fusion_common::time::OffsetDateTime;
 use modelsql::{
   Fields, FilterNodes,
   field::FieldMask,
@@ -6,7 +7,6 @@ use modelsql::{
 use sea_query::enum_def;
 use serde::Deserialize;
 use sqlx::FromRow;
-use fusion_common::time::OffsetDateTime;
 
 pub struct DistributedLockIds;
 impl DistributedLockIds {

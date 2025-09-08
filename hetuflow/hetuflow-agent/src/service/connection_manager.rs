@@ -1,18 +1,21 @@
 use std::sync::{Arc, Mutex};
 
+use fusion_common::{
+  ahash::HashMap,
+  time::{OffsetDateTime, now_epoch_millis},
+};
+use fusion_core::DataError;
 use futures_util::{FutureExt, pin_mut};
 use log::{error, info, warn};
 use tokio::{
   sync::{broadcast, mpsc},
   task::JoinHandle,
 };
-use fusion_common::time::{OffsetDateTime, now_epoch_millis};
-use fusion_core::DataError;
 
 use hetuflow_core::{
   models::AgentMetrics,
-  protocol::{HeartbeatRequest, TaskPollResponse, WebSocketEvent},
-  types::{AgentStatus, EventKind},
+  protocol::{HeartbeatRequest, TaskResponse, WebSocketCommand, WebSocketEvent},
+  types::{AgentStatus, CommandKind, EventKind, HetuflowCommand},
 };
 
 use crate::{service::WsHandler, setting::HetuflowAgentSetting};
@@ -57,28 +60,25 @@ pub struct ConnectionStats {
 /// 负责与 HetuFlow Gateway 的连接管理、心跳机制和消息传输
 pub struct ConnectionManager {
   setting: Arc<HetuflowAgentSetting>,
+  command_publisher: broadcast::Sender<HetuflowCommand>,
   shutdown_tx: broadcast::Sender<()>,
   // 在 self.start_websocket 中会将 event_rx 取出来，所以这里需要用 Mutex 保护
   event_rx: Mutex<Option<mpsc::UnboundedReceiver<WebSocketEvent>>>,
   event_tx: mpsc::UnboundedSender<WebSocketEvent>,
-  task_poll_resp_tx: mpsc::UnboundedSender<TaskPollResponse>,
   websocket_handle: Mutex<Option<JoinHandle<()>>>,
 }
 
 impl ConnectionManager {
   /// 创建新的连接管理器
-  pub fn new(
-    setting: Arc<HetuflowAgentSetting>,
-    shutdown_tx: broadcast::Sender<()>,
-    task_poll_resp_tx: mpsc::UnboundedSender<TaskPollResponse>,
-  ) -> Self {
+  pub fn new(setting: Arc<HetuflowAgentSetting>, shutdown_tx: broadcast::Sender<()>) -> Self {
     let (event_tx, event_rx) = mpsc::unbounded_channel();
+    let (command_publisher, _) = broadcast::channel(100);
     Self {
       setting,
+      command_publisher,
       shutdown_tx,
       event_rx: Mutex::new(Some(event_rx)),
       event_tx,
-      task_poll_resp_tx,
       websocket_handle: Mutex::new(None),
     }
   }
@@ -95,10 +95,14 @@ impl ConnectionManager {
     Ok(())
   }
 
+  pub fn subscribe_command(&self) -> broadcast::Receiver<HetuflowCommand> {
+    self.command_publisher.subscribe()
+  }
+
   fn start_websocket(&self) {
     let event_rx = { self.event_rx.lock().unwrap().take().unwrap() };
     let mut ws_handler =
-      WsHandler::new(self.setting.clone(), self.task_poll_resp_tx.clone(), event_rx, self.shutdown_tx.clone());
+      WsHandler::new(self.setting.clone(), self.command_publisher.clone(), event_rx, self.shutdown_tx.clone());
     let handle = tokio::spawn(async move { ws_handler.start_loop().await });
     let mut websocket_handle = self.websocket_handle.lock().unwrap();
     *websocket_handle = Some(handle);

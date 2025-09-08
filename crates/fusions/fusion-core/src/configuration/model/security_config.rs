@@ -1,8 +1,8 @@
-use serde::{Deserialize, Serialize};
 use fusion_common::{
   string::{deser_str_to_vec_u8, ser_vec_u8_to_str},
   time::{self, Duration, UtcDateTime},
 };
+use serde::{Deserialize, Serialize};
 use zeroize::ZeroizeOnDrop;
 
 #[derive(Clone, Deserialize, Serialize)]

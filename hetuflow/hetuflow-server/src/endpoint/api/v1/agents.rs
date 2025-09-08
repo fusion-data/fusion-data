@@ -3,11 +3,11 @@ use axum::{
   extract::Path,
   routing::{get, post},
 };
-use modelsql::page::PageResult;
 use fusion_core::IdUuidResult;
 use fusion_web::{Router, WebResult, ok_json};
+use modelsql::page::PageResult;
 
-use hetuflow_core::models::{AgentEntity, AgentForCreate, AgentForQuery, AgentForUpdate};
+use hetuflow_core::models::{AgentForCreate, AgentForQuery, AgentForUpdate, SchedAgent};
 use uuid::Uuid;
 
 use crate::{application::ServerApplication, service::AgentSvc};
@@ -20,7 +20,7 @@ pub fn routes() -> Router<ServerApplication> {
     .route("/{id}/update", post(update_agent))
 }
 
-async fn query_agents(agent_svc: AgentSvc, Json(input): Json<AgentForQuery>) -> WebResult<PageResult<AgentEntity>> {
+async fn query_agents(agent_svc: AgentSvc, Json(input): Json<AgentForQuery>) -> WebResult<PageResult<SchedAgent>> {
   let result = agent_svc.query(input).await?;
   ok_json!(result)
 }
@@ -30,7 +30,7 @@ async fn create_agent(agent_svc: AgentSvc, Json(input): Json<AgentForCreate>) ->
   ok_json!(id.into())
 }
 
-async fn get_agent(agent_svc: AgentSvc, Path(id): Path<Uuid>) -> WebResult<Option<AgentEntity>> {
+async fn get_agent(agent_svc: AgentSvc, Path(id): Path<Uuid>) -> WebResult<Option<SchedAgent>> {
   let result = agent_svc.get_by_id(&id).await?;
   ok_json!(result)
 }

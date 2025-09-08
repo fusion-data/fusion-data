@@ -8,7 +8,7 @@ use uuid::Uuid;
 
 use hetuflow_core::types::{ScheduleKind, ScheduleStatus};
 
-use hetuflow_core::models::{ScheduleEntity, ScheduleFilter, ScheduleForCreate, ScheduleForUpdate};
+use hetuflow_core::models::{SchedSchedule, ScheduleFilter, ScheduleForCreate, ScheduleForUpdate};
 
 /// ScheduleBmc 实现
 pub struct ScheduleBmc;
@@ -20,20 +20,20 @@ impl DbBmc for ScheduleBmc {
 
 generate_pg_bmc_common!(
   Bmc: ScheduleBmc,
-  Entity: ScheduleEntity,
+  Entity: SchedSchedule,
   ForUpdate: ScheduleForUpdate,
   ForInsert: ScheduleForCreate,
 );
 
 generate_pg_bmc_filter!(
   Bmc: ScheduleBmc,
-  Entity: ScheduleEntity,
+  Entity: SchedSchedule,
   Filter: ScheduleFilter,
 );
 
 impl ScheduleBmc {
   /// 查找可调度的 Schedule 实体（Cron 和 Time 类型且状态为 Enabled）
-  pub async fn find_schedulable_entities(mm: &ModelManager) -> Result<Vec<ScheduleEntity>, SqlError> {
+  pub async fn find_schedulable_entities(mm: &ModelManager) -> Result<Vec<SchedSchedule>, SqlError> {
     let filter = ScheduleFilter {
       schedule_kind: Some(OpValsInt32::in_([ScheduleKind::Cron as i32, ScheduleKind::Interval as i32])),
       status: Some(OpValsInt32::eq(ScheduleStatus::Enabled as i32)),
@@ -50,7 +50,7 @@ impl ScheduleBmc {
   }
 
   /// 根据作业ID查找调度
-  pub async fn find_by_job_id(mm: &ModelManager, job_id: Uuid) -> Result<Vec<ScheduleEntity>, SqlError> {
+  pub async fn find_by_job_id(mm: &ModelManager, job_id: Uuid) -> Result<Vec<SchedSchedule>, SqlError> {
     let filter = ScheduleFilter { job_id: Some(OpValsUuid::eq(job_id)), ..Default::default() };
 
     Self::find_many(mm, vec![filter], None).await

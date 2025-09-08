@@ -13,10 +13,10 @@
 
 调度器围绕 **Job** -> **Task** -> **TaskInstance** 的三层模型，专注于以下核心职责：
 
-- **生成 `TaskEntity`**: 根据 `JobEntity` 的调度策略（Cron, Event 等），生成待执行的 `TaskEntity`。
-- **提前分发 `TaskEntity`**: 根据业务策略提前将任务分发给 Agent（例如提前 5 秒），确保 Agent 有足够时间进行精调度。
+- **生成 `SchedTask`**: 根据 `SchedJob` 的调度策略（Cron, Event 等），生成待执行的 `SchedTask`。
+- **提前分发 `SchedTask`**: 根据业务策略提前将任务分发给 Agent（例如提前 5 秒），确保 Agent 有足够时间进行精调度。
 - **Agent 选择与负载均衡**: 根据 Agent 的状态、负载和能力选择最佳的执行节点。
-- **监控 `TaskInstanceEntity`**: 接收和处理来自 Agent 的 `TaskInstanceEntity` 状态更新。
+- **监控 `SchedTaskInstance`**: 接收和处理来自 Agent 的 `SchedTaskInstance` 状态更新。
 - **状态驱动与可靠通信**: 通过 WebSocket 建立全双工持久连接，确保所有关键操作都有明确的状态流转和 ACK 确认机制。
 - **确保可靠性**: 处理任务失败、超时和重试逻辑，并保证 `Daemon` 类型 `Job` 的高可用。
 
@@ -48,7 +48,7 @@ impl SchedulerSvc {
     /// 计算任务的最佳分发时间
     async fn calculate_dispatch_time(
         &self,
-        task: &TaskEntity,
+        task: &SchedTask,
         agent_id: &Uuid,
     ) -> Result<DateTime<Utc>, DataError> {
         let agent_info = self.agent_manager.get_agent_info(agent_id).await?;
@@ -187,7 +187,7 @@ impl SchedulerSvc {
         &self,
         agent_id: &Uuid,
         session_id: &str,
-    ) -> Result<Vec<TaskEntity>, DataError> {
+    ) -> Result<Vec<SchedTask>, DataError> {
         info!("Agent {} reconnected with session {}", agent_id, session_id);
 
         // 1. 验证会话有效性
@@ -287,7 +287,7 @@ pub struct TaskIdempotencyKey {
 
 impl SchedulerSvc {
     /// 生成任务幂等性键
-    fn generate_idempotency_key(&self, task: &TaskEntity) -> String {
+    fn generate_idempotency_key(&self, task: &SchedTask) -> String {
         let key = TaskIdempotencyKey {
             job_id: task.job_id,
             scheduled_time: task.scheduled_at,
@@ -312,9 +312,9 @@ impl SchedulerSvc {
     /// 创建幂等执行的任务实例
     async fn create_idempotent_task_instance(
         &self,
-        task: &TaskEntity,
+        task: &SchedTask,
         agent_id: &Uuid,
-    ) -> Result<TaskInstanceEntity, DataError> {
+    ) -> Result<SchedTaskInstance, DataError> {
         let idempotency_key = self.generate_idempotency_key(task);
 
         // 检查是否已存在
@@ -636,7 +636,7 @@ impl TaskPoller {
     mm: &ModelManager,
     batch_size: usize,
     server_id: Uuid,
-  ) -> Result<Vec<TaskEntity>, DataError> {
+  ) -> Result<Vec<SchedTask>, DataError> {
     mm
       .dbx()
       .use_postgres(|dbx| async move {
@@ -661,7 +661,7 @@ impl TaskPoller {
           RETURNING *
         "#;
 
-        let tasks = sqlx::query_as::<_, TaskEntity>(query)
+        let tasks = sqlx::query_as::<_, SchedTask>(query)
           .bind(batch_size as i32)
           .bind(server_id)
           .bind(TaskStatus::Pending as i32)
@@ -678,7 +678,7 @@ impl TaskPoller {
   /// 处理获取到的任务
   async fn process_acquired_task(
     mm: &ModelManager,
-    task: TaskEntity,
+    task: SchedTask,
     server_id: &str,
   ) -> Result<(), DataError> {
     // 查找合适的 Agent
@@ -892,7 +892,7 @@ impl SchedulerSvc {
   async fn process_acquired_task(
     mm: &ModelManager,
     gateway_sender: &mpsc::UnboundedSender<GatewayCommand>,
-    task: TaskEntity,
+    task: SchedTask,
     server_id: &str,
   ) -> Result<(), DataError> {
     // 查找合适的 Agent
@@ -1322,7 +1322,7 @@ impl TaskGenerationSvc {
   /// 为指定 Schedule 预生成任务
   pub async fn generate_tasks_for_schedule(
     &self,
-    schedule: &ScheduleEntity,
+    schedule: &SchedSchedule,
     from_time: DateTime<Utc>,
     to_time: DateTime<Utc>,
   ) -> Result<Vec<TaskId>, DataError> {
@@ -1599,7 +1599,7 @@ use std::collections::HashMap;
 
 impl SchedulerSvc {
   // 构建任务分发请求
-  pub fn create_dispatch_request(&self, task: &TaskEntity, job: &JobEntity) -> DispatchTaskRequest {
+  pub fn create_dispatch_request(&self, task: &SchedTask, job: &SchedJob) -> DispatchTaskRequest {
     DispatchTaskRequest {
       job_id: job.id,
       task_id: task.id,

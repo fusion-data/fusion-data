@@ -1,10 +1,10 @@
 #![doc = include_str!("../../DI.md")]
 mod error;
 
+pub use fusion_core_macros::Component;
 pub use inventory::submit;
 use log::debug;
 use std::{any::Any, collections::HashSet, ops::Deref, sync::Arc};
-pub use fusion_core_macros::Component;
 
 use crate::application::ApplicationBuilder;
 

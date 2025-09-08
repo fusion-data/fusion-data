@@ -1,10 +1,13 @@
 use std::sync::Arc;
 
+use fusion_common::{
+  ahash::{HashMap, HashSet},
+  time::{now_epoch_millis, now_offset},
+};
+use fusion_core::DataError;
 use hetuflow_core::{
   models::*,
-  protocol::{
-    AgentRegisterResponse, ScheduledTask, TaskInstanceUpdated, TaskPollRequest, TaskPollResponse, WebSocketCommand,
-  },
+  protocol::{AgentRegisterResponse, ScheduledTask, TaskInstanceUpdated, TaskRequest, TaskResponse, WebSocketCommand},
   types::{AgentStatus, CommandKind, TaskInstanceStatus, TaskStatus},
 };
 use log::{debug, error, info, warn};
@@ -14,11 +17,6 @@ use modelsql::{
 };
 use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
-use fusion_common::{
-  ahash::{HashMap, HashSet},
-  time::{now_epoch_millis, now_offset},
-};
-use fusion_core::DataError;
 use uuid::Uuid;
 
 use crate::{gateway::ConnectionManager, model::AgentEvent};
@@ -90,7 +88,7 @@ impl AgentManager {
   }
 
   /// 取消僵尸任务
-  async fn cancel_zombie_task(&self, instance: &TaskInstanceEntity) -> Result<(), DataError> {
+  async fn cancel_zombie_task(&self, instance: &SchedTaskInstance) -> Result<(), DataError> {
     info!("Cancelling zombie task instance: {}", instance.id);
 
     // 更新任务实例状态
@@ -112,7 +110,7 @@ impl AgentManager {
   }
 
   /// 请求任务取消
-  async fn request_task_cancellation(&self, instance: &TaskInstanceEntity) -> Result<(), DataError> {
+  async fn request_task_cancellation(&self, instance: &SchedTaskInstance) -> Result<(), DataError> {
     info!("Requesting cancellation for task instance: {}", instance.id);
 
     // TODO: 发送取消命令给 Agent
@@ -127,7 +125,7 @@ impl AgentManager {
   }
 
   /// 获取在线 Agent 列表（通过 AgentRegistry）
-  pub async fn get_agents(&self, server_ids: &[Uuid]) -> Result<Vec<AgentEntity>, DataError> {
+  pub async fn get_agents(&self, server_ids: &[Uuid]) -> Result<Vec<SchedAgent>, DataError> {
     let online_agents = self.connection_manager.get_online_agents()?;
     if online_agents.is_empty() {
       return Ok(vec![]);
@@ -291,8 +289,8 @@ impl AgentEventRunLoop {
     }
   }
 
-  /// Agent poll task 时不对 Server 绑定的 Namespace 进行过滤，直接拉取符合要求的最紧急的 TaskInstanceEntity。按 request 条件进行过滤
-  async fn process_task_poll(&self, agent_id: Uuid, request: Arc<TaskPollRequest>) -> Result<(), DataError> {
+  /// Agent poll task 时不对 Server 绑定的 Namespace 进行过滤，直接拉取符合要求的最紧急的 SchedTaskInstance。按 request 条件进行过滤
+  async fn process_task_poll(&self, agent_id: Uuid, request: Arc<TaskRequest>) -> Result<(), DataError> {
     info!("Agent {} task poll request: {:?}", agent_id, request);
     let task_instances = TaskInstanceBmc::find_many_by_poll(&self.mm, &request).await?;
     let task_map = TaskBmc::find_many(
@@ -315,7 +313,7 @@ impl AgentEventRunLoop {
         match task_map.get(&task_id) {
           Some(task) => Some(ScheduledTask { task_instance, task: task.clone() }),
           None => {
-            warn!("TaskEntity({}) of TaskInstanceEntity({}) not exists", task_id, task_instance.id);
+            warn!("SchedTask({}) of SchedTaskInstance({}) not exists", task_id, task_instance.id);
             None
           }
         }
@@ -323,7 +321,7 @@ impl AgentEventRunLoop {
       .collect::<Vec<_>>();
 
     // 向 Agent 发送 TaskPollResponse
-    let parameters = serde_json::to_value(TaskPollResponse { tasks, has_more: false, next_poll_interval: 0 })?;
+    let parameters = serde_json::to_value(TaskResponse { tasks, has_more: false, next_poll_interval: 0 })?;
     let command = WebSocketCommand::new(CommandKind::DispatchTask, parameters);
     self.connection_manager.send_to_agent(&agent_id, command)?;
 

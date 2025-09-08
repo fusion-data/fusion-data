@@ -1,5 +1,6 @@
 use std::fmt::{self, Debug};
 
+use fusion_common::time::OffsetDateTime;
 use modelsql::generate_enum_i32_to_sea_query_value;
 use modelsql::{
   field::{FieldMask, Fields},
@@ -10,7 +11,6 @@ use sea_query::enum_def;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use sqlx::FromRow;
-use fusion_common::time::OffsetDateTime;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize_repr, Deserialize_repr, sqlx::Type)]
 #[repr(i32)]
@@ -120,9 +120,9 @@ pub struct UserForPage {
 
 #[cfg(test)]
 mod tests {
+  use fusion_common::time::now;
   use modelsql::field::HasSeaFields;
   use sea_query::ColumnRef;
-  use fusion_common::time::now;
 
   use super::*;
 

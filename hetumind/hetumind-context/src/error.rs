@@ -1,6 +1,6 @@
+use fusion_core::DataError;
 use hetumind_core::workflow::{NodeExecutionError, TriggerError, ValidationError, WorkflowExecutionError};
 use thiserror::Error;
-use fusion_core::DataError;
 
 #[derive(Error, Debug)]
 pub enum GuixuError {

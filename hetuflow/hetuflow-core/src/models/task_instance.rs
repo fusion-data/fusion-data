@@ -1,21 +1,21 @@
+use fusion_common::time::OffsetDateTime;
 use modelsql_core::{
   field::FieldMask,
   filter::{OpValsDateTime, OpValsInt32, OpValsUuid, Page},
 };
 use serde::{Deserialize, Serialize};
-use fusion_common::time::OffsetDateTime;
 use uuid::Uuid;
 
 use crate::types::TaskInstanceStatus;
 
-/// TaskInstanceEntity 数据模型
+/// SchedTaskInstance 数据模型
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(
   feature = "with-db",
   derive(modelsql::Fields, sqlx::FromRow),
   sea_query::enum_def(table_name = "sched_task_instance")
 )]
-pub struct TaskInstanceEntity {
+pub struct SchedTaskInstance {
   pub id: Uuid,
   pub task_id: Uuid,
   pub job_id: Uuid,

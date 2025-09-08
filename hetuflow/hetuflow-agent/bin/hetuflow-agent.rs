@@ -1,7 +1,7 @@
+use fusion_core::DataError;
 use log::info;
 use tokio::select;
 use tokio::signal::unix::{SignalKind, signal};
-use fusion_core::DataError;
 
 use hetuflow_agent::application::AgentApplication;
 
@@ -12,7 +12,7 @@ use hetuflow_agent::application::AgentApplication;
 /// ```
 #[tokio::main]
 async fn main() -> Result<(), DataError> {
-  let app = AgentApplication::new().await?;
+  let mut app = AgentApplication::new().await?;
   app.start().await?;
 
   // 同时监听 ctrl_c 和 kill 信号（SIGTERM）

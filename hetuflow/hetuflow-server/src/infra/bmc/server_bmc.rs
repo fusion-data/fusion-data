@@ -4,7 +4,7 @@ use modelsql::{
 };
 use uuid::Uuid;
 
-use hetuflow_core::models::{ServerEntity, ServerFilter, ServerForRegister, ServerForUpdate};
+use hetuflow_core::models::{SchedServer, ServerFilter, ServerForRegister, ServerForUpdate};
 use hetuflow_core::types::ServerStatus;
 
 /// ServerBmc 实现
@@ -16,27 +16,27 @@ impl DbBmc for ServerBmc {
 
 generate_pg_bmc_common!(
   Bmc: ServerBmc,
-  Entity: ServerEntity,
+  Entity: SchedServer,
   ForUpdate: ServerForUpdate,
   ForInsert: ServerForRegister,
 );
 
 generate_pg_bmc_filter!(
   Bmc: ServerBmc,
-  Entity: ServerEntity,
+  Entity: SchedServer,
   Filter: ServerFilter,
 );
 
 impl ServerBmc {
   /// 查找活跃的服务器
-  pub async fn find_active_servers(mm: &ModelManager) -> Result<Vec<ServerEntity>, SqlError> {
+  pub async fn find_active_servers(mm: &ModelManager) -> Result<Vec<SchedServer>, SqlError> {
     let filter = ServerFilter { status: Some(OpValsInt32::eq(ServerStatus::Active as i32)), ..Default::default() };
 
     Self::find_many(mm, vec![filter], None).await
   }
 
   /// 查找领导者服务器
-  pub async fn find_leader_server(mm: &ModelManager) -> Result<Option<ServerEntity>, SqlError> {
+  pub async fn find_leader_server(mm: &ModelManager) -> Result<Option<SchedServer>, SqlError> {
     let filter = ServerFilter { status: Some(OpValsInt32::eq(ServerStatus::Active as i32)), ..Default::default() };
 
     let servers = Self::find_many(mm, vec![filter], None).await?;

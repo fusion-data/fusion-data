@@ -10,23 +10,6 @@ check-all = "check --all-features"
 # [build]
 # rustflags = ["-C", "force-unwind-tables"]
 
-[profile.release]
-opt-level = 3
-codegen-units = 1
-lto = "fat"
-panic = "abort"
-strip = true
-# default-features = false
-# features = ["tikv-jemallocator"]
-
-[profile.dev]
-opt-level = 1
-debug = true
-
-[profile.bench]
-lto = "fat"
-codegen-units = 1
-opt-level = 3
 
 
 # On Windows

@@ -1,8 +1,13 @@
 #[cfg(feature = "with-cli")]
 mod cli;
 
+use std::sync::Arc;
+
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use strum::AsRefStr;
+use uuid::Uuid;
+
+use crate::protocol::{AgentRegisterResponse, TaskResponse};
 
 /// 作业类型 (ScheduleKind) - 定义了 Job 的核心调度和行为模式
 #[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy, PartialEq, Eq, AsRefStr)]
@@ -143,14 +148,24 @@ pub enum AgentStatus {
 #[repr(i32)]
 pub enum CommandKind {
   Shutdown = 1,        // 关闭指令
-  Restart = 2,         // 重启指令
-  UpdateConfig = 3,    // 更新配置
-  ClearCache = 4,      // 清理缓存
-  ReloadTasks = 5,     // 重新加载任务
-  HealthCheck = 6,     // 健康检查
-  AgentRegistered = 7, // Agent 注册成功
-  DispatchTask = 11,   // 分发任务
-  CancelTask = 12,     // 取消任务
+  UpdateConfig = 2,    // 更新配置
+  ClearCache = 3,      // 清理缓存
+  FetchMetrics = 4,    // 更新指标
+  AgentRegistered = 5, // Agent 注册成功
+  DispatchTask = 6,    // 分发任务
+  CancelTask = 7,      // 取消任务
+}
+
+#[derive(Clone)]
+pub enum HetuflowCommand {
+  Shutdown,
+  UpdateConfig,
+  ClearCache,
+  FetchMetrics,
+  AgentRegistered(Arc<AgentRegisterResponse>),
+  DispatchTask(Arc<TaskResponse>),
+  /// TaskInstanceId
+  CancelTask(Arc<Uuid>),
 }
 
 /// 任务控制类型

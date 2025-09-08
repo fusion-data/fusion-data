@@ -1,9 +1,9 @@
+use fusion_common::time::OffsetDateTime;
 use modelsql_core::{
   field::FieldMask,
   filter::{OpValsDateTime, OpValsInt32, OpValsString, OpValsUuid, Page},
 };
 use serde::{Deserialize, Serialize};
-use fusion_common::time::OffsetDateTime;
 use uuid::Uuid;
 
 use crate::types::{ScheduleKind, TaskStatus};
@@ -23,14 +23,14 @@ pub struct TaskMetrics {
   pub network_out: u64,      // 网络发送量
 }
 
-/// TaskEntity 数据模型
+/// SchedTask 数据模型
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(
   feature = "with-db",
   derive(modelsql::Fields, sqlx::FromRow),
   sea_query::enum_def(table_name = "sched_task")
 )]
-pub struct TaskEntity {
+pub struct SchedTask {
   pub id: Uuid,
   pub job_id: Uuid,
   // pub agent_id: Option<Uuid>,
@@ -54,7 +54,7 @@ pub struct TaskEntity {
   /// 任务标签。可用于限制哪些 Agent 允许执行该任务
   pub tags: Vec<String>,
 
-  /// 任务环境变量，可能来自 JobEntity 或由事件/手动触发执行传入
+  /// 任务环境变量，可能来自 SchedJob 或由事件/手动触发执行传入
   pub environment: Option<serde_json::Value>,
 
   /// 保存 Job.config
@@ -71,7 +71,7 @@ pub struct TaskEntity {
   pub updated_at: Option<OffsetDateTime>,
 }
 
-/// TaskEntity 创建模型
+/// SchedTask 创建模型
 #[derive(Debug, Deserialize)]
 #[cfg_attr(feature = "with-db", derive(modelsql::Fields))]
 pub struct TaskForCreate {
@@ -94,7 +94,7 @@ pub struct TaskForCreate {
   // pub lock_version: i32,
 }
 
-/// TaskEntity 更新模型
+/// SchedTask 更新模型
 #[derive(Debug, Clone, Default, Deserialize)]
 #[cfg_attr(feature = "with-db", derive(modelsql::Fields))]
 pub struct TaskForUpdate {
@@ -117,14 +117,14 @@ pub struct TaskForUpdate {
   pub update_mask: Option<FieldMask>,
 }
 
-/// TaskEntity 查询请求
+/// SchedTask 查询请求
 #[derive(Default, Deserialize)]
 pub struct TaskForQuery {
   pub filter: TaskFilter,
   pub page: Page,
 }
 
-/// TaskEntity 过滤器
+/// SchedTask 过滤器
 #[derive(Default, Deserialize)]
 #[cfg_attr(feature = "with-db", derive(modelsql::FilterNodes))]
 pub struct TaskFilter {

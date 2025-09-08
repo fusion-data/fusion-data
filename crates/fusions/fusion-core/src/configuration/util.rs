@@ -13,9 +13,7 @@ pub(crate) fn load_config() -> ConfigureResult<Config> {
   load_config_with_env(None)
 }
 
-pub(crate) fn load_config_with_env(
-  custom_env: Option<HashMap<String, String>>,
-) -> ConfigureResult<Config> {
+pub(crate) fn load_config_with_env(custom_env: Option<HashMap<String, String>>) -> ConfigureResult<Config> {
   let mut b = Config::builder().add_source(load_default_source());
 
   // load from default files, if exists

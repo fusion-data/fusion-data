@@ -26,12 +26,12 @@
 
 ### 1.4 数据实体和访问模型设计
 
-- [*] **JobEntity 定义** - 实现作业实体数据结构，对应 sched_job 表
-- [*] **TaskEntity 定义** - 实现任务实体数据结构，对应 sched_task 表
-- [*] **TaskInstanceEntity 定义** - 实现任务实例实体数据结构，对应 sched_task_instance 表
-- [*] **AgentEntity 定义** - 实现 Agent 实体数据结构，对应 sched_agent 表
-- [*] **ServerEntity 定义** - 实现服务器实体数据结构，对应 sched_server 表
-- [*] **ScheduleEntity 定义** - 实现调度实体数据结构，对应 sched_schedule 表
+- [*] **SchedJob 定义** - 实现作业实体数据结构，对应 sched_job 表
+- [*] **SchedTask 定义** - 实现任务实体数据结构，对应 sched_task 表
+- [*] **SchedTaskInstance 定义** - 实现任务实例实体数据结构，对应 sched_task_instance 表
+- [*] **SchedAgent 定义** - 实现 Agent 实体数据结构，对应 sched_agent 表
+- [*] **SchedServer 定义** - 实现服务器实体数据结构，对应 sched_server 表
+- [*] **SchedSchedule 定义** - 实现调度实体数据结构，对应 sched_schedule 表
 - [*] **ForCreate/ForUpdate/Filter 结构** - 为每个实体实现创建、更新、过滤数据结构
 
 ## 二、服务端 (hetuflow-server)
@@ -78,11 +78,11 @@
 - [*] **TaskGenerationSvc 实现** - 任务生成服务，根据 Job 配置生成 Task 实例
 - [*] **领导者选举** - 实现分布式领导者选举机制: `start_leader_and_follower_loop`，基于 PG 数据表的分布式锁。相关算法说明： [基于 PostgreSQL 的分布式锁设计](server/distributed_lock.md)
 - [*] Server 绑定 namespace_ids 的目的：避免多个 Server 对同一个 Namespace 的 Job 进行计算来生成任务
-- [*] Server 按间隔时间预生成 TaskEntity + TaskInstanceEntity, Agent Poll Task 时直接返回 TaskInstanceEntity，并将 agent_id 绑定到拉取的 TaskInstanceEntity 上
-  - [*] Server 可监控 TaskInstanceEntity 运行状态：未分配、超时、错误重试等
+- [*] Server 按间隔时间预生成 SchedTask + SchedTaskInstance, Agent Poll Task 时直接返回 SchedTaskInstance，并将 agent_id 绑定到拉取的 SchedTaskInstance 上
+  - [*] Server 可监控 SchedTaskInstance 运行状态：未分配、超时、错误重试等
   - [*] 可以避免 Task 重复分配给多个 Agent 的情况。因：
-    1. TaskInstanceEntity 的创建由 Server（分 Namespace）控制，不会创建重复
-    2. Agent Poll TaskInstanceEntity 时通过 PG 事务绑定 agent_id，不会出现多个 Agent Poll 同一个 TaskInstanceEntity 的情况
+    1. SchedTaskInstance 的创建由 Server（分 Namespace）控制，不会创建重复
+    2. Agent Poll SchedTaskInstance 时通过 PG 事务绑定 agent_id，不会出现多个 Agent Poll 同一个 SchedTaskInstance 的情况
 - [*] Agent 向 Server 拉取任务时，不用限制只能 poll 当前 Server 绑定的 Namespace
   - 可能因为网络原因，Agent 并不能访问所有 Server，所有 Agent 需要从 Server 拉取任何 Namespace 的任务。比如某个 Server 部署在跳板机或暴露为一个代理 Server
 - [*] **任务状态管理** - 实现任务状态流转和生命周期管理
@@ -90,7 +90,7 @@
 
 ---
 
-- [ ] 定时检查任务（TaskEntity, TaskInstanceEntity）是否过期？若已过期则修改其 status 为 Expired 或 Timeout
+- [ ] 定时检查任务（SchedTask, SchedTaskInstance）是否过期？若已过期则修改其 status 为 Expired 或 Timeout
 - [ ] 还是由 Leader Server 对 Follower Server 进行健康检查？还是由 Server 直接更新各自 sched_server.heartbeat 字段值？
 
 ---

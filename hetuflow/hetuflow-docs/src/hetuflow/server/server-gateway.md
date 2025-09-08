@@ -165,18 +165,18 @@ impl GatewaySvc {
 
 ### 数据模型与 BMC 层
 
-Gateway 服务依赖 `server-types-entities.md` 中定义的 `AgentEntity` 及其相关的 `AgentBmc`。这里不再重复定义，仅展示其在 Gateway 中的典型用法。
+Gateway 服务依赖 `server-types-entities.md` 中定义的 `SchedAgent` 及其相关的 `AgentBmc`。这里不再重复定义，仅展示其在 Gateway 中的典型用法。
 
 Agent 的连接、断开和心跳等事件将直接通过日志系统记录，不再使用独立的 `AgentLog` 数据实体。
 
 ```rust
-// 引用在 server-types-entities.md 中定义的 AgentEntity 和 AgentBmc
-use crate::bmc::{AgentBmc, AgentEntity, AgentForUpdate, AgentFilter};
+// 引用在 server-types-entities.md 中定义的 SchedAgent 和 AgentBmc
+use crate::bmc::{AgentBmc, SchedAgent, AgentForUpdate, AgentFilter};
 use fusion_core::DataError;
 use modelsql::{ModelManager, SqlError};
 impl AgentBmc {
   /// 查找在线的 Agent
-  pub async fn find_online_agents(mm: &ModelManager) -> Result<Vec<AgentEntity>, SqlError> {
+  pub async fn find_online_agents(mm: &ModelManager) -> Result<Vec<SchedAgent>, SqlError> {
     let filter = AgentFilter {
       status: Some("online".to_string().into()),
       ..Default::default()
@@ -387,7 +387,7 @@ impl ConnectionManager {
       ..Default::default()
     };
 
-    let stale_agents: Vec<AgentEntity> = AgentBmc::list(&self.mm, vec![filter])
+    let stale_agents: Vec<SchedAgent> = AgentBmc::list(&self.mm, vec![filter])
       .await
       .map_err(DataError::from)?;
 

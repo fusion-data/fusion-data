@@ -2,8 +2,8 @@ use std::net::SocketAddr;
 
 use ::config::{File, FileFormat};
 use config::{DEFAULT_CONFIG_STR, GrpcConfig};
-use tonic::service::{Routes, interceptor::InterceptedService};
 use fusion_core::{application::ApplicationBuilder, async_trait, plugin::Plugin};
+use tonic::service::{Routes, interceptor::InterceptedService};
 
 pub mod config;
 pub mod utils;

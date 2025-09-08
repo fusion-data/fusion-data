@@ -57,6 +57,7 @@
     "itertools",
     "jemallocator",
     "josekit",
+    "kanal",
     "logforth",
     "logiscal",
     "loglevel",

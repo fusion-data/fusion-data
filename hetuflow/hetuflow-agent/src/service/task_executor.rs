@@ -10,12 +10,8 @@ use std::{
 
 use fusion_common::time::now_epoch_millis;
 use fusion_core::DataError;
-use log::{debug, info, warn};
-use tokio::{
-  process::Command,
-  sync::{RwLock, broadcast},
-  time::sleep,
-};
+use log::{debug, error, info, warn};
+use tokio::{process::Command, sync::RwLock};
 use uuid::Uuid;
 
 use hetuflow_core::{
@@ -74,7 +70,6 @@ pub struct TaskExecution {
 pub struct TaskExecutor {
   /// Agent ID
   setting: Arc<HetuflowAgentSetting>,
-  shutdown_tx: broadcast::Sender<()>,
   /// 进程管理器
   process_manager: Arc<ProcessManager>,
   /// 活跃任务执行
@@ -83,42 +78,52 @@ pub struct TaskExecutor {
   connection_manager: Arc<ConnectionManager>,
   /// 重试配置
   retry_config: RetryConfig,
-  /// 停止标志
-  stop_flag: Arc<AtomicBool>,
+  scheduled_task_rx: Arc<kanal::AsyncReceiver<ScheduledTask>>,
 }
 
 impl TaskExecutor {
   /// 创建新的任务执行器
   pub fn new(
     setting: Arc<HetuflowAgentSetting>,
-    shutdown_tx: broadcast::Sender<()>,
     process_manager: Arc<ProcessManager>,
     connection_manager: Arc<ConnectionManager>,
     retry_config: Option<RetryConfig>,
+    scheduled_task_rx: kanal::AsyncReceiver<ScheduledTask>,
   ) -> Self {
     Self {
       setting,
-      shutdown_tx,
       process_manager,
       active_executions: Arc::new(RwLock::new(HashMap::new())),
       connection_manager,
       retry_config: retry_config.unwrap_or_default(),
-      stop_flag: Arc::new(AtomicBool::new(false)),
+      scheduled_task_rx: Arc::new(scheduled_task_rx),
     }
   }
 
   /// 启动任务执行器
-  pub async fn start(&self) -> Result<(), DataError> {
+  pub async fn run_loop(&self) -> Result<(), DataError> {
     info!("Starting TaskExecutor for agent {}", self.setting.agent_id);
 
-    // TODO
-    Ok(())
+    loop {
+      match self.scheduled_task_rx.recv().await {
+        Ok(task) => {
+          if let Err(e) = self.execute_task(task).await {
+            error!("Failed to execute task: {:?}", e);
+          }
+        }
+        Err(e) => {
+          info!("Task schedule channel closed: {}", e);
+          break;
+        }
+      }
+    }
+
+    self.stop().await
   }
 
   /// 停止任务执行器
-  pub async fn stop(&self) -> Result<(), DataError> {
+  async fn stop(&self) -> Result<(), DataError> {
     info!("Stopping TaskExecutor for agent {}", self.setting.agent_id);
-    self.stop_flag.store(true, Ordering::SeqCst);
 
     // 取消所有活跃任务
     let executions = self.active_executions.read().await;
@@ -135,7 +140,7 @@ impl TaskExecutor {
     // 等待所有任务完成
     let mut attempts = 0;
     while !self.active_executions.read().await.is_empty() && attempts < 30 {
-      sleep(Duration::from_millis(100)).await;
+      tokio::time::sleep(Duration::from_millis(100)).await;
       attempts += 1;
     }
 
@@ -257,7 +262,7 @@ impl TaskExecutor {
           );
 
           // 等待重试延迟
-          sleep(Duration::from_millis(delay)).await;
+          tokio::time::sleep(Duration::from_millis(delay)).await;
         }
       }
     }

@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use hetumind_core::workflow::{ExecutionConfig, NodeRegistry};
 use fusion_core::{application::ApplicationBuilder, configuration::ConfigRegistry, plugin::Plugin};
+use hetumind_core::workflow::{ExecutionConfig, NodeRegistry};
 
 use crate::{
   infra::db::execution::{ExecutionStorePlugin, ExecutionStoreService},

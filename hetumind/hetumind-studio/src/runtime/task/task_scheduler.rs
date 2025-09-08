@@ -1,11 +1,11 @@
 use std::{collections::VecDeque, sync::Arc, time::Duration};
 
 use ahash::HashMap;
+use fusion_common::time::now;
 use hetumind_core::workflow::{
   ExecutionConfig, ExecutionData, ExecutionId, NodeExecutionError, NodeName, WorkflowExecutionError,
 };
 use tokio::sync::{RwLock, mpsc};
-use fusion_common::time::now;
 
 use super::{ExecutionTask, RunningTask, SchedulerCommand, WaitingTask};
 

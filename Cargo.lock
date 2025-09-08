@@ -1935,9 +1935,9 @@ dependencies = [
 
 [[package]]
 name = "graph-flow"
-version = "0.2.3"
+version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "28137641d9817e20a7eef1c2c7677aab6c70a5e61dbd0c92cb41abefd8de9c10"
+checksum = "5744a6922b5f93ab3c6af82f90c8e294ed584b0f108f07791dacac2c60bc69e3"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2070,6 +2070,7 @@ version = "0.1.1"
 dependencies = [
  "axum",
  "clap",
+ "config",
  "croner 3.0.0",
  "duration-str",
  "fusion-common",
@@ -2078,8 +2079,10 @@ dependencies = [
  "futures-util",
  "hetuflow-core",
  "hierarchical_hash_wheel_timer",
+ "kanal",
  "log",
  "logforth",
+ "mea",
  "nix",
  "rand 0.9.2",
  "serde",
@@ -2149,6 +2152,7 @@ dependencies = [
  "hetuflow-core",
  "log",
  "logforth",
+ "mea",
  "modelsql",
  "rand 0.9.2",
  "sea-query",
@@ -2955,6 +2959,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "kanal"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9e3953adf0cd667798b396c2fa13552d6d9b3269d7dd1154c4c416442d1ff574"
+dependencies = [
+ "futures-core",
+ "lock_api",
+]
+
+[[package]]
 name = "kqueue"
 version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3175,6 +3189,15 @@ dependencies = [
  "pulldown-cmark 0.9.6",
  "serde_json",
  "toml_edit 0.15.0",
+]
+
+[[package]]
+name = "mea"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6f3876c525f3c3f650b97b69b61eeb27c976e7725e9b59120f774e6fcf02b518"
+dependencies = [
+ "slab",
 ]
 
 [[package]]
@@ -4503,9 +4526,9 @@ dependencies = [
 
 [[package]]
 name = "rig-core"
-version = "0.18.2"
+version = "0.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e588b3da859ea33f7132e9b3312a9aeda499d166cda63329fb68f7d022aa75bb"
+checksum = "e9cb9f39172ac833f95a88456fa7408cddd1ce99293175beaf1ad14304ff3aed"
 dependencies = [
  "as-any",
  "async-stream",
@@ -4529,9 +4552,9 @@ dependencies = [
 
 [[package]]
 name = "rig-derive"
-version = "0.1.5"
+version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aca44d588203eaa39942b436b038e233d35fef748156072a091d86302d050172"
+checksum = "e9fec90d416f5276d692f8596f85fc4c7e0f4ba271e25164045e8e8f3b02ab6a"
 dependencies = [
  "convert_case",
  "deluxe",

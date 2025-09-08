@@ -15,8 +15,8 @@ pub mod utils;
 
 pub use async_trait::async_trait;
 pub use data_error::*;
+pub use fusion_core_macros::Builder;
 pub use model::*;
 pub use run_mode::*;
-pub use fusion_core_macros::Builder;
 
 pub type Result<T> = core::result::Result<T, DataError>;

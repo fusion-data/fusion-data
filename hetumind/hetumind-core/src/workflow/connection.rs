@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 
+use fusion_common::helper::{default_bool_true, default_usize_0, is_true};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use typed_builder::TypedBuilder;
-use fusion_common::helper::{default_bool_true, default_usize_0, is_true};
 
 use super::NodeName;
 

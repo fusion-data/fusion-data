@@ -1,21 +1,21 @@
+use fusion_common::time::OffsetDateTime;
 use modelsql_core::{
   field::FieldMask,
   filter::{OpValsDateTime, OpValsInt32, OpValsString, OpValsUuid, Page},
 };
 use serde::{Deserialize, Serialize};
-use fusion_common::time::OffsetDateTime;
 use uuid::Uuid;
 
 use crate::types::ServerStatus;
 
-/// ServerEntity 数据模型
+/// SchedServer 数据模型
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(
   feature = "with-db",
   derive(modelsql::Fields, sqlx::FromRow),
   sea_query::enum_def(table_name = "sched_server")
 )]
-pub struct ServerEntity {
+pub struct SchedServer {
   pub id: Uuid,
   pub name: String,
   pub address: String,

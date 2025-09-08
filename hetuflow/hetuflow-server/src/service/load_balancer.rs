@@ -1,14 +1,14 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use fusion_common::time::{OffsetDateTime, now_offset};
+use fusion_core::DataError;
 use hetuflow_core::types::AgentStatus;
 use log::{debug, info, warn};
 use modelsql::{
   ModelManager,
   filter::{OpValsInt32, OpValsUuid},
 };
-use fusion_common::time::{OffsetDateTime, now_offset};
-use fusion_core::DataError;
 use uuid::Uuid;
 
 use crate::infra::bmc::*;
@@ -24,7 +24,7 @@ struct LoadBalanceCache {
 /// 服务器负载信息
 #[derive(Debug, Clone)]
 struct ServerLoadInfo {
-  server: ServerEntity,
+  server: SchedServer,
   active_tasks: u32,
   agent_count: u32,
   load_score: f64,
@@ -104,7 +104,7 @@ impl LoadBalancer {
   }
 
   /// 计算服务器负载
-  async fn calculate_server_load(&self, server: &ServerEntity) -> Result<ServerLoadInfo, DataError> {
+  async fn calculate_server_load(&self, server: &SchedServer) -> Result<ServerLoadInfo, DataError> {
     let active_tasks = TaskBmc::count_active_tasks_by_server(&self.mm, server.id).await? as u32;
     let agent_count = self.count_agents_by_server(server.id).await? as u32;
     let load_score = self.calculate_load_score(active_tasks, agent_count);
