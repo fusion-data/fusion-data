@@ -1,8 +1,8 @@
+use fusion_core::DataError;
+use fusion_web::WebError;
 use log::{error, warn};
 use modelsql::SqlError;
 use thiserror::Error;
-use fusion_core::DataError;
-use fusion_web::WebError;
 use uuid::Uuid;
 
 /// Gateway 模块专用错误类型

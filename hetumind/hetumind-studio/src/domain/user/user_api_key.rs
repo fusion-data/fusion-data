@@ -1,8 +1,8 @@
+use fusion_common::time::OffsetDateTime;
 use modelsql::{field::Fields, postgres::PgRowType};
 use sea_query::enum_def;
 use serde::Serialize;
 use sqlx::FromRow;
-use fusion_common::time::OffsetDateTime;
 
 /// 用户API密钥表
 #[derive(Debug, Clone, Serialize, FromRow, Fields)]

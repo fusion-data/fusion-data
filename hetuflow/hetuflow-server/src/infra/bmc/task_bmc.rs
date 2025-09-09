@@ -1,3 +1,4 @@
+use fusion_common::time::{OffsetDateTime, now_offset};
 use modelsql::{
   ModelManager, SqlError,
   base::DbBmc,
@@ -5,12 +6,11 @@ use modelsql::{
   filter::{OpValsDateTime, OpValsInt32, OpValsString, OpValsUuid},
   generate_pg_bmc_common, generate_pg_bmc_filter,
 };
-use fusion_common::time::{OffsetDateTime, now_offset};
 use uuid::Uuid;
 
 use hetuflow_core::types::TaskStatus;
 
-use hetuflow_core::models::{TaskEntity, TaskFilter, TaskForCreate, TaskForUpdate};
+use hetuflow_core::models::{SchedTask, TaskFilter, TaskForCreate, TaskForUpdate};
 
 /// TaskBmc 实现
 pub struct TaskBmc;
@@ -21,20 +21,20 @@ impl DbBmc for TaskBmc {
 
 generate_pg_bmc_common!(
   Bmc: TaskBmc,
-  Entity: TaskEntity,
+  Entity: SchedTask,
   ForUpdate: TaskForUpdate,
   ForInsert: TaskForCreate,
 );
 
 generate_pg_bmc_filter!(
   Bmc: TaskBmc,
-  Entity: TaskEntity,
+  Entity: SchedTask,
   Filter: TaskFilter,
 );
 
 impl TaskBmc {
   /// 查找待处理的任务
-  pub async fn find_pending_tasks(mm: &ModelManager, namespace_id: &Uuid) -> Result<Vec<TaskEntity>, SqlError> {
+  pub async fn find_pending_tasks(mm: &ModelManager, namespace_id: &Uuid) -> Result<Vec<SchedTask>, SqlError> {
     let filter = TaskFilter {
       status: Some(OpValsInt32::eq(TaskStatus::Pending as i32)),
       scheduled_at: Some(OpValsDateTime::lte(now_offset())),
@@ -62,7 +62,7 @@ impl TaskBmc {
   }
 
   /// 重置失败任务为待处理状态
-  pub async fn reset_failed_tasks_by_agent(mm: &ModelManager, agent_id: &Uuid) -> Result<Vec<TaskEntity>, SqlError> {
+  pub async fn reset_failed_tasks_by_agent(mm: &ModelManager, agent_id: &Uuid) -> Result<Vec<SchedTask>, SqlError> {
     let filter = TaskFilter {
       agent_id: Some(OpValsString::eq(agent_id.to_string())),
       status: Some(OpValsInt32::eq(TaskStatus::Dispatched as i32)),
@@ -99,7 +99,7 @@ impl TaskBmc {
     mm: &ModelManager,
     server_id: Uuid,
     limit: i32,
-  ) -> Result<Vec<TaskEntity>, SqlError> {
+  ) -> Result<Vec<SchedTask>, SqlError> {
     mm.dbx()
       .use_postgres(|dbx| async move {
         let query = r#"
@@ -115,7 +115,7 @@ impl TaskBmc {
           RETURNING *
         "#;
 
-        let rows = sqlx::query_as::<_, TaskEntity>(query)
+        let rows = sqlx::query_as::<_, SchedTask>(query)
           .bind(TaskStatus::Dispatched as i32)
           .bind(server_id)
           .bind(TaskStatus::Pending as i32)
@@ -130,7 +130,7 @@ impl TaskBmc {
   }
 
   /// 根据命名空间过滤获取任务
-  pub async fn acquire_task_for_execution(mm: &ModelManager, task_id: Uuid) -> Result<Option<TaskEntity>, SqlError> {
+  pub async fn acquire_task_for_execution(mm: &ModelManager, task_id: Uuid) -> Result<Option<SchedTask>, SqlError> {
     mm.dbx()
       .use_postgres(|dbx| async move {
         // TODO 是否添加 FOR UPDATE SKIP LOCKED
@@ -142,7 +142,7 @@ impl TaskBmc {
           RETURNING *
         "#;
 
-        let task = sqlx::query_as::<_, TaskEntity>(query)
+        let task = sqlx::query_as::<_, SchedTask>(query)
           .bind(TaskStatus::Locked as i32)
           .bind(task_id)
           .bind(TaskStatus::Pending as i32)
@@ -159,7 +159,7 @@ impl TaskBmc {
     mm: &ModelManager,
     schedule_id: &Uuid,
     scheduled_at: OffsetDateTime,
-  ) -> Result<Option<TaskEntity>, SqlError> {
+  ) -> Result<Option<SchedTask>, SqlError> {
     let filter = TaskFilter {
       schedule_id: Some(OpValsUuid::eq(*schedule_id)),
       scheduled_at: Some(OpValsDateTime::eq(scheduled_at)),
@@ -179,13 +179,13 @@ impl TaskBmc {
     Self::count(mm, vec![filter]).await
   }
 
-  pub async fn find_retryable_tasks(mm: &ModelManager) -> Result<Vec<TaskEntity>, SqlError> {
+  pub async fn find_retryable_tasks(mm: &ModelManager) -> Result<Vec<SchedTask>, SqlError> {
     mm.dbx()
       .use_postgres(|dbx| async move {
         let query = r#"
           SELECT * FROM sched_task WHERE status = $1 AND retry_count < max_retries AND updated_at <= NOW() - INTERVAL '5 minutes'
         "#;
-        let rows = sqlx::query_as::<_, TaskEntity>(query)
+        let rows = sqlx::query_as::<_, SchedTask>(query)
           .bind(TaskStatus::Failed as i32)
           .fetch_all(dbx.db())
           .await?;

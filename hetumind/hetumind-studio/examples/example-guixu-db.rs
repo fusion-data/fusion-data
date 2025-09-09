@@ -1,8 +1,8 @@
+use fusion_core::{DataError, application::Application};
+use fusion_db::DbPlugin;
 use hetumind::domain::user::{UserBmc, UserFilter};
 use hetumind_context::ctx::CtxW;
 use modelsql::filter::OpValString;
-use fusion_core::{DataError, application::Application};
-use fusion_db::DbPlugin;
 
 #[tokio::main]
 async fn main() -> Result<(), DataError> {

@@ -3,12 +3,10 @@ use axum::{
   extract::Path,
   routing::{get, post},
 };
-use hetuflow_core::models::{
-  TaskInstanceEntity, TaskInstanceForCreate, TaskInstanceForQuery, TaskInstanceForUpdate,
-};
+use fusion_web::{Router, WebResult, ok_json};
+use hetuflow_core::models::{SchedTaskInstance, TaskInstanceForCreate, TaskInstanceForQuery, TaskInstanceForUpdate};
 use modelsql::page::PageResult;
 use serde_json::Value;
-use fusion_web::{Router, WebResult, ok_json};
 use uuid::Uuid;
 
 use crate::{application::ServerApplication, service::TaskSvc};
@@ -24,7 +22,7 @@ pub fn routes() -> Router<ServerApplication> {
 async fn query_task_instances(
   task_svc: TaskSvc,
   Json(input): Json<TaskInstanceForQuery>,
-) -> WebResult<PageResult<TaskInstanceEntity>> {
+) -> WebResult<PageResult<SchedTaskInstance>> {
   let page_result = task_svc.find_task_instances_page(input).await?;
   ok_json!(page_result)
 }
@@ -34,7 +32,7 @@ async fn create_task_instance(task_svc: TaskSvc, Json(input): Json<TaskInstanceF
   ok_json!(id)
 }
 
-async fn get_task_instance(task_svc: TaskSvc, Path(id): Path<Uuid>) -> WebResult<Option<TaskInstanceEntity>> {
+async fn get_task_instance(task_svc: TaskSvc, Path(id): Path<Uuid>) -> WebResult<Option<SchedTaskInstance>> {
   let task_instance = task_svc.find_task_instance(id).await?;
   ok_json!(task_instance)
 }

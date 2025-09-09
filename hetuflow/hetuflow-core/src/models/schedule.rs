@@ -1,21 +1,21 @@
+use fusion_common::time::OffsetDateTime;
 use modelsql_core::{
   field::FieldMask,
   filter::{OpValsDateTime, OpValsInt32, OpValsUuid},
 };
 use serde::{Deserialize, Serialize};
-use fusion_common::time::OffsetDateTime;
 use uuid::Uuid;
 
 use crate::types::{ScheduleKind, ScheduleStatus};
 
-/// ScheduleEntity 数据模型
+/// SchedSchedule 数据模型
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(
   feature = "with-db",
   derive(modelsql::Fields, sqlx::FromRow),
   sea_query::enum_def(table_name = "sched_schedule")
 )]
-pub struct ScheduleEntity {
+pub struct SchedSchedule {
   pub id: Uuid,
   pub job_id: Uuid,
   pub name: Option<String>,

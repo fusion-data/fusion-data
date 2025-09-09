@@ -250,7 +250,7 @@ hetuflow 采用基于 **modelsql** ORM 的分层数据模型设计，确保数�
 
 ### 核心数据模型
 
-- **`JobEntity`**: 存储作业的静态定义（"做什么"），对应数据库表 `sched_job`
+- **`SchedJob`**: 存储作业的静态定义（"做什么"），对应数据库表 `sched_job`
 - **`Schedule`**: 存储作业的调度策略（"何时做"），对应数据库表 `sched_schedule`
 - **`Task`**: 存储根据 `Schedule` 生成的、待执行的计划，对应数据库表 `sched_task`
 - **`TaskInstance`**: 存储 `Task` 在 Agent 上的实际执行记录，对应数据库表 `sched_task_instance`
@@ -354,7 +354,7 @@ sequenceDiagram
 - **Application 容器模式**：使用 `ultimate-core::Application` 统一管理服务依赖和生命周期
 - **ModelManager 数据管理**：使用 `modelsql::ModelManager` 统一管理数据库连接和操作
 - **DbBmc 抽象层**：使用 `modelsql::base::DbBmc` 提供类型安全的数据库 CRUD 操作
-- **分层错误处理**：`modelsql::SqlError → ultimate_core::DataError` 的分层错误转换机制
+- **分层错误处理**：`modelsql::SqlError →fusion_core::DataError` 的分层错误转换机制
 - **组件整合**：将多个组件合并为核心的 Server 和 Agent，减少部署复杂度
 - **通信统一**：使用 WebSocket 协议，提供全双工通信和网络穿透能力
 - **存储统一**：使用 PostgreSQL 作为唯一存储，简化技术栈

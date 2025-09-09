@@ -1,22 +1,22 @@
-use serde::{Deserialize, Serialize};
 use fusion_common::time::now_epoch_millis;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::{
-  models::{TaskEntity, TaskInstanceEntity, TaskMetrics},
+  models::{SchedTask, SchedTaskInstance, TaskMetrics},
   types::{TaskControlKind, TaskInstanceStatus},
 };
 
 /// 任务分发请求
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ScheduledTask {
-  pub task_instance: TaskInstanceEntity,
-  pub task: TaskEntity,
+  pub task_instance: SchedTaskInstance,
+  pub task: SchedTask,
 }
 
 impl ScheduledTask {
   /// 创建新的调度任务
-  pub fn new(task_instance: TaskInstanceEntity, task: TaskEntity) -> Self {
+  pub fn new(task_instance: SchedTaskInstance, task: SchedTask) -> Self {
     Self { task_instance, task }
   }
 
@@ -142,27 +142,18 @@ impl TaskInstanceUpdated {
   }
 }
 
-/// 任务控制指令
+/// Task pull request
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct TaskControl {
-  pub task_id: Uuid,                 // 任务ID
-  pub control_type: TaskControlKind, // 控制类型
-  pub reason: Option<String>,        // 控制原因
-  pub force: bool,                   // 是否强制执行
-}
-
-/// 任务拉取请求
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct TaskPollRequest {
+pub struct TaskRequest {
   pub agent_id: Uuid,          // Agent ID
   pub max_tasks: u32,          // 最大拉取任务数
   pub tags: Vec<String>,       // 当前 Agent 拥有的标签，用于过滤任务
   pub available_capacity: u32, // 可用容量
 }
 
-/// 任务拉取响应
+/// Task response, for task pull requests or direct task assignments from Server to Agent
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct TaskPollResponse {
+pub struct TaskResponse {
   pub tasks: Vec<ScheduledTask>, // 可执行任务列表
   pub has_more: bool,            // 是否还有更多任务
   pub next_poll_interval: u32,   // 下次拉取间隔(秒)

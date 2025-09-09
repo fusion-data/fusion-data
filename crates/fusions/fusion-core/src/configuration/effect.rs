@@ -55,30 +55,32 @@ impl Visitor<'_> for StrToApiValidEffect {
 
 #[cfg(test)]
 mod tests {
-  use fusion_common::env::set_env;
+  use std::collections::HashMap;
 
-  use crate::configuration::{FusionConfig, model::KeyConf, util::load_config};
+  use crate::configuration::{FusionConfig, model::KeyConf, util::load_config_with_env};
 
   #[test]
   fn test_config_load() {
-    // 两个下划线作为层级分隔符
-    set_env("ULTIMATE__WEB__SERVER_ADDR", "0.0.0.0:8000").unwrap();
+    // 使用自定义环境变量源，确保测试隔离
+    let mut test_env = HashMap::new();
+    test_env.insert("FUSION__WEB__SERVER_ADDR".to_string(), "0.0.0.0:8000".to_string());
+    test_env.insert(
+      "FUSION__SECURITY__TOKEN__SECRET_KEY".to_string(),
+      "8462b1ec9af827ebed13926f8f1e5409774fa1a21a1c8f726a4a34cf7dcabaf2".to_string(),
+    );
+    test_env.insert("FUSION__SECURITY__PWD__PWD_KEY".to_string(), "80c9a35c0f231219ca14c44fe10c728d".to_string());
+    test_env.insert("FUSION__APP__NAME".to_string(), "fusion-test".to_string());
 
-    set_env(
-      "ULTIMATE__SECURITY__TOKEN__SECRET_KEY",
-      "8462b1ec9af827ebed13926f8f1e5409774fa1a21a1c8f726a4a34cf7dcabaf2",
-    )
-    .unwrap();
-    set_env("ULTIMATE__SECURITY__PWD__PWD_KEY", "80c9a35c0f231219ca14c44fe10c728d").unwrap();
-    set_env("ULTIMATE__APP__NAME", "fusion").unwrap();
-
-    let c = load_config().unwrap();
+    let c = load_config_with_env(Some(test_env)).unwrap();
+    println!("Config cache: {}", c.cache);
     let qc: FusionConfig = c.get("fusion").unwrap();
 
     assert_eq!(qc.security().pwd().pwd_key(), b"80c9a35c0f231219ca14c44fe10c728d");
     assert_eq!(qc.security().token().secret_key(), b"8462b1ec9af827ebed13926f8f1e5409774fa1a21a1c8f726a4a34cf7dcabaf2");
 
-    // 由默认配置文件提供
-    assert_eq!(qc.app().name(), "fusion");
+    // 由环境变量 FUSION__APP__NAME 提供
+    assert_eq!(qc.app().name(), "fusion-test");
+
+    // 不需要清理环境变量，因为使用了独立的环境变量源
   }
 }

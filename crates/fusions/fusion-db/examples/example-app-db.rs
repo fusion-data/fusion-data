@@ -1,7 +1,7 @@
-use modelsql::ModelManager;
 use fusion_core::component::Component;
 use fusion_core::{application::Application, component::ComponentArc};
 use fusion_db::DbPlugin;
+use modelsql::ModelManager;
 
 #[derive(Clone, Component)]
 struct TestSvc {

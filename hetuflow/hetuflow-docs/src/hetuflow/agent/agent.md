@@ -78,8 +78,8 @@ graph TD
 - **`AgentApplication`**: 应用容器，负责初始化所有组件、管理其生命周期，并处理应用的启动和优雅关闭。
 - **`AgentConfig`**: 从 `app.toml` 加载的配置信息，为所有组件提供配置参数。
 - **`ConnectionManager`**: 负责与 Server 的 WebSocket 连接，处理消息的收发、心跳维持、自动重连和消息路由。
-- **`TaskScheduler`**: **精调度核心**。接收 Server 分发的任务，通过 `croner` 解析表达式，使用 `hierarchical_hash_wheel_timer` 设置精确的本地定时器，并将到期的任务交给 `TaskExecutor`。它不维护任务的持久化状态，所有调度信息均实时来自 Server。
-- **`TaskExecutor`**: **任务执行核心**。负责管理任务的实际执行，包括创建子进程、监控运行状态、控制并发、处理标准输出/错误，并将结果上报。
+- **`TaskScheduler`**: **精调度核心**。从 Server 拉取任务或接收分派的任务，通过 `croner` 解析表达式，使用 `hierarchical_hash_wheel_timer` 设置精确的本地定时器，并将到期的任务通过队列发送给 `TaskExecutor`。它不维护任务的持久化状态，所有调度信息均实时来自 Server。
+- **`TaskExecutor`**: **任务执行核心**。负责管理任务的实际执行，包括创建子进程、监控运行状态、控制并发、处理标准输出/错误，并将结果上报。TaskExecutor 从队列中获取到期执行的任务，并控制任务的并发执行数。
 - **`LogManager`**: 负责收集任务执行过程中产生的日志，并根据配置进行管理（如输出到控制台、写入文件）。
 
 ## 3. 配置文件 (`app.toml`)
@@ -96,7 +96,7 @@ Agent 的行为通过 `app.toml`（详细配置见: [/resources/app.toml](../../
 
 ```rust
 use std::sync::Arc;
-use ultimate_core::{application::Application, configuration::ConfigRegistry, DataError};
+use fusion_core::{application::Application, configuration::ConfigRegistry, DataError};
 
 // 从 app.toml 解析的配置结构体
 #[derive(Debug, Clone, serde::Deserialize)]
@@ -169,11 +169,11 @@ pub enum ToServerMessage {
 /// 从 Server 接收的消息
 pub enum FromServerMessage {
   /// 分发新任务
-  DispatchTask(TaskEntity),
+  DispatchTask(SchedTask),
   /// 强制停止任务
   KillTask { task_id: i64 },
   /// 响应状态同步，一次性发送所有应由该 Agent 执行的任务
-  SyncTasksResponse { tasks: Vec<TaskEntity> },
+  SyncTasksResponse { tasks: Vec<SchedTask> },
 }
 
 pub struct ConnectionManager {
@@ -236,8 +236,8 @@ impl TaskScheduler {
   }
 
   /// 处理从 Server 分发来的任务
-  pub async fn handle_server_dispatch(&self, task: TaskEntity) -> Result<(), Error> {
-    // 1. 将 TaskEntity 转换为 ScheduledTask
+  pub async fn handle_server_dispatch(&self, task: SchedTask) -> Result<(), Error> {
+    // 1. 将 SchedTask 转换为 ScheduledTask
     // 2. 发送 ACK 给 Server
     // 3. 如果是 Cron 任务，使用 `croner::Cron` 解析表达式并计算下一次执行时间
     // 4. 使用 `self.timer.schedule_at` 将任务放入时间轮

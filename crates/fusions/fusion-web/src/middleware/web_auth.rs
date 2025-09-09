@@ -1,7 +1,7 @@
 use axum::body::Body;
+use fusion_core::{DataError, application::Application};
 use http::{Request, Response, StatusCode, header::CONTENT_TYPE};
 use tower_http::auth::AsyncAuthorizeRequest;
-use fusion_core::{DataError, application::Application};
 
 use crate::{WebError, extract_ctx};
 

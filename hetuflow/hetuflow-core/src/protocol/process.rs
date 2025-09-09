@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use fusion_common::time::OffsetDateTime;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 /// 资源限制配置

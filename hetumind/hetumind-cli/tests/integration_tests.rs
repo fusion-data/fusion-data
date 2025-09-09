@@ -75,7 +75,7 @@ fn test_cli_help_command() {
   assert!(output.status.success());
 
   let stdout = String::from_utf8_lossy(&output.stdout);
-  assert!(stdout.contains("Rust libraries of The fusions"));
+  assert!(stdout.contains("A data fusion platform with scheduler, ai agent studio and core libraries"));
   assert!(stdout.contains("管理工作流"));
 }
 
@@ -158,7 +158,7 @@ fn test_cli_workflow_new_with_empty_template() {
   let content = fs::read_to_string(&workflow_file).unwrap();
   assert!(content.contains("empty-test"));
   assert!(content.contains("\"nodes\": []"));
-  assert!(content.contains("\"connections\": []"));
+  assert!(content.contains("\"connections\": {}"));
 }
 
 #[test]

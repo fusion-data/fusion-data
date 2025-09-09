@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
-use serde::{Deserialize, Serialize};
 use fusion_common::time::now_epoch_millis;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::types::{CommandKind, EventKind};

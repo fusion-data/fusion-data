@@ -1,7 +1,7 @@
+use fusion_core::DataError;
 use log::info;
 use tokio::select;
 use tokio::signal::unix::{SignalKind, signal};
-use fusion_core::DataError;
 
 use hetuflow_server::application::ServerApplication;
 

@@ -3,21 +3,21 @@ use std::sync::{
   atomic::{AtomicBool, Ordering},
 };
 
+use fusion_core::{DataError, IdUuidResult};
 use futures_util::{FutureExt, SinkExt, StreamExt, pin_mut};
 use hetuflow_core::{
-  protocol::{TaskPollResponse, WebSocketCommand, WebSocketEvent},
-  types::CommandKind,
+  protocol::{TaskResponse, WebSocketCommand, WebSocketEvent},
+  types::{CommandKind, HetuflowCommand},
 };
 use log::{error, info};
 use tokio::sync::{broadcast, mpsc};
 use tokio_tungstenite::tungstenite::Message;
-use fusion_core::DataError;
 
 use crate::setting::HetuflowAgentSetting;
 
 pub struct WsHandler {
   setting: Arc<HetuflowAgentSetting>,
-  task_poll_resp_tx: mpsc::UnboundedSender<TaskPollResponse>,
+  command_publisher: broadcast::Sender<HetuflowCommand>,
   event_rx: mpsc::UnboundedReceiver<WebSocketEvent>,
   shutdown_tx: broadcast::Sender<()>,
   closed: Arc<AtomicBool>,
@@ -26,11 +26,11 @@ pub struct WsHandler {
 impl WsHandler {
   pub fn new(
     setting: Arc<HetuflowAgentSetting>,
-    task_poll_resp_tx: mpsc::UnboundedSender<TaskPollResponse>,
+    command_publisher: broadcast::Sender<HetuflowCommand>,
     event_rx: mpsc::UnboundedReceiver<WebSocketEvent>,
     shutdown_tx: broadcast::Sender<()>,
   ) -> Self {
-    Self { setting, task_poll_resp_tx, event_rx, shutdown_tx, closed: Arc::new(AtomicBool::new(false)) }
+    Self { setting, command_publisher, event_rx, shutdown_tx, closed: Arc::new(AtomicBool::new(false)) }
   }
 
   pub async fn start_loop(&mut self) {
@@ -99,14 +99,14 @@ impl WsHandler {
           match msg {
             Message::Text(text) => {
               if let Ok(cmd) = serde_json::from_str::<WebSocketCommand>(&text)
-                && let Err(e) = process_command(&self.task_poll_resp_tx, cmd)
+                && let Err(e) = process_command(&self.command_publisher, cmd)
               {
                 return Err(DataError::server_error(format!("Failed to send WebSocket command: {}", e)));
               }
             }
             Message::Binary(bin) => {
               if let Ok(cmd) = serde_json::from_slice::<WebSocketCommand>(&bin)
-                && let Err(e) = process_command(&self.task_poll_resp_tx, cmd)
+                && let Err(e) = process_command(&self.command_publisher, cmd)
               {
                 return Err(DataError::server_error(format!("Failed to send WebSocket command: {}", e)));
               }
@@ -127,22 +127,34 @@ impl WsHandler {
 
 /// 处理从 Server 接收到的命令消息
 fn process_command(
-  task_poll_resp_tx: &mpsc::UnboundedSender<TaskPollResponse>,
+  command_publisher: &broadcast::Sender<HetuflowCommand>,
   cmd: WebSocketCommand,
 ) -> Result<(), DataError> {
   match cmd.kind {
     CommandKind::DispatchTask => {
-      let resp: TaskPollResponse = serde_json::from_value(cmd.parameters).unwrap();
-      task_poll_resp_tx.send(resp)?;
+      let resp: TaskResponse = serde_json::from_value(cmd.parameters).unwrap();
+      let _ = command_publisher.send(HetuflowCommand::DispatchTask(Arc::new(resp)));
     }
-    CommandKind::Shutdown => todo!(),
-    CommandKind::Restart => todo!(),
-    CommandKind::UpdateConfig => todo!(),
-    CommandKind::ClearCache => todo!(),
-    CommandKind::ReloadTasks => todo!(),
-    CommandKind::HealthCheck => todo!(),
-    CommandKind::AgentRegistered => todo!(),
-    CommandKind::CancelTask => todo!(),
+    CommandKind::Shutdown => {
+      let _ = command_publisher.send(HetuflowCommand::Shutdown);
+    }
+    CommandKind::UpdateConfig => {
+      let _ = command_publisher.send(HetuflowCommand::UpdateConfig);
+    }
+    CommandKind::ClearCache => {
+      let _ = command_publisher.send(HetuflowCommand::ClearCache);
+    }
+    CommandKind::FetchMetrics => {
+      let _ = command_publisher.send(HetuflowCommand::FetchMetrics);
+    }
+    CommandKind::AgentRegistered => {
+      let resp = serde_json::from_value(cmd.parameters).unwrap();
+      let _ = command_publisher.send(HetuflowCommand::AgentRegistered(Arc::new(resp)));
+    }
+    CommandKind::CancelTask => {
+      let resp: IdUuidResult = serde_json::from_value(cmd.parameters).unwrap();
+      let _ = command_publisher.send(HetuflowCommand::CancelTask(Arc::new(resp.id)));
+    }
   }
   Ok(())
 }

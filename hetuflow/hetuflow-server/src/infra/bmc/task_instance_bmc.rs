@@ -1,3 +1,4 @@
+use fusion_common::time::now_offset;
 use modelsql::{
   ModelManager, SqlError,
   base::DbBmc,
@@ -6,15 +7,14 @@ use modelsql::{
   generate_pg_bmc_common, generate_pg_bmc_filter,
 };
 use sqlx::Row;
-use fusion_common::time::now_offset;
 use uuid::Uuid;
 
 use hetuflow_core::{
-  protocol::TaskPollRequest,
+  protocol::TaskRequest,
   types::{TaskInstanceStatus, TaskStatus},
 };
 
-use hetuflow_core::models::{TaskInstanceEntity, TaskInstanceFilter, TaskInstanceForCreate, TaskInstanceForUpdate};
+use hetuflow_core::models::{SchedTaskInstance, TaskInstanceFilter, TaskInstanceForCreate, TaskInstanceForUpdate};
 
 /// TaskInstanceBmc 实现
 pub struct TaskInstanceBmc;
@@ -25,14 +25,14 @@ impl DbBmc for TaskInstanceBmc {
 
 generate_pg_bmc_common!(
   Bmc: TaskInstanceBmc,
-  Entity: TaskInstanceEntity,
+  Entity: SchedTaskInstance,
   ForUpdate: TaskInstanceForUpdate,
   ForInsert: TaskInstanceForCreate,
 );
 
 generate_pg_bmc_filter!(
   Bmc: TaskInstanceBmc,
-  Entity: TaskInstanceEntity,
+  Entity: SchedTaskInstance,
   Filter: TaskInstanceFilter,
 );
 
@@ -114,7 +114,7 @@ impl TaskInstanceBmc {
   pub async fn find_timeout_instances(
     mm: &ModelManager,
     timeout_seconds: i64,
-  ) -> Result<Vec<TaskInstanceEntity>, SqlError> {
+  ) -> Result<Vec<SchedTaskInstance>, SqlError> {
     let cutoff_time = now_offset() - chrono::Duration::seconds(timeout_seconds);
 
     let filter = TaskInstanceFilter {
@@ -207,15 +207,15 @@ impl TaskInstanceBmc {
   }
 
   /// 找到所有僵尸任务实例
-  pub async fn find_zombie_instances(_mm: &ModelManager) -> Result<Vec<TaskInstanceEntity>, SqlError> {
+  pub async fn find_zombie_instances(_mm: &ModelManager) -> Result<Vec<SchedTaskInstance>, SqlError> {
     todo!()
   }
 
-  /// 拉取到 TaskInstanceEntity 后，将 request.agent_id 绑定到 TaskInstanceEntity.agent_id 上
+  /// 拉取到 SchedTaskInstance 后，将 request.agent_id 绑定到 SchedTaskInstance.agent_id 上
   pub async fn find_many_by_poll(
     mm: &ModelManager,
-    request: &TaskPollRequest,
-  ) -> Result<Vec<TaskInstanceEntity>, SqlError> {
+    request: &TaskRequest,
+  ) -> Result<Vec<SchedTaskInstance>, SqlError> {
     // SQL 语句：
     // 1. 查询符合条件的 task_instance
     // 2. 更新对应 task 状态
@@ -239,7 +239,7 @@ impl TaskInstanceBmc {
       where_tags
     );
 
-    let query = sqlx::query_as::<_, TaskInstanceEntity>(&sql)
+    let query = sqlx::query_as::<_, SchedTaskInstance>(&sql)
       .bind(TaskInstanceStatus::Pending)
       .bind(request.tags.clone())
       .bind(TaskStatus::Dispatched)

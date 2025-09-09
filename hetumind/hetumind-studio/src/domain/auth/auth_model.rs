@@ -1,9 +1,9 @@
+use fusion_common::time::OffsetDateTime;
 use modelsql::{field::Fields, generate_enum_i32_to_sea_query_value};
 use sea_query::enum_def;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use sqlx::FromRow;
-use fusion_common::time::OffsetDateTime;
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize_repr, Deserialize_repr, sqlx::Type)]

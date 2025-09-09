@@ -1,10 +1,10 @@
 // src/functions.rs
 use ahash::HashMap;
 use chrono::{Duration, NaiveTime};
+use fusion_common::time::now;
 use jsonpath_rust::JsonPath;
 use log::error;
 use regex::Regex;
-use fusion_common::time::now;
 
 use super::{
   context::ExpressionExecutionContext,

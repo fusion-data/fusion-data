@@ -2,9 +2,9 @@
 
 use std::time::Duration;
 
-use log::Level;
 use fusion_core::configuration::{LogConfig, LogWriterType};
 use fusion_core::log::init_log;
+use log::Level;
 
 fn main() {
   println!("=== 日志配置演示 ===");

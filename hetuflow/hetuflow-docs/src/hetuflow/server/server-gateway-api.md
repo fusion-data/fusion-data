@@ -106,8 +106,8 @@ use modelsql::{
 };
 
 // Web 响应类型
-use ultimate_web::WebResult;
-use ultimate_core::DataError;
+use fusion_web::WebResult;
+use fusion_core::DataError;
 
 // 应用核心
 use crate::ServerApplication;
@@ -120,11 +120,11 @@ use crate::ServerApplication;
 ```rust
 // 数据模型 - 已在 src/model/ 中实现
 use hetuflow_core::models::{
-  AgentEntity, AgentForCreate, AgentForUpdate, AgentForQuery,
-  JobEntity, JobForCreate, JobForUpdate, JobFilter, JobForQuery,
-  TaskEntity, TaskForCreate, TaskForUpdate, TaskFilter, TaskForQuery,
-  TaskInstanceEntity, TaskInstanceForCreate, TaskInstanceForUpdate, TaskInstanceFilter, TaskInstanceForQuery,
-  ServerEntity, ScheduleEntity, ServerForQuery,
+  SchedAgent, AgentForCreate, AgentForUpdate, AgentForQuery,
+  SchedJob, JobForCreate, JobForUpdate, JobFilter, JobForQuery,
+  SchedTask, TaskForCreate, TaskForUpdate, TaskFilter, TaskForQuery,
+  SchedTaskInstance, TaskInstanceForCreate, TaskInstanceForUpdate, TaskInstanceFilter, TaskInstanceForQuery,
+  SchedServer, SchedSchedule, ServerForQuery,
 };
 
 // BMC 数据访问层 - 已在 src/infra/bmc/ 中实现
@@ -187,14 +187,14 @@ use hetuflow_core::{
 /// - `request`: 包含过滤条件和分页参数的查询请求
 ///
 /// # 返回
-/// - `PageResult<AgentEntity>`: 分页的 Agent 列表
+/// - `PageResult<SchedAgent>`: 分页的 Agent 列表
 ///
 /// # 错误
 /// - 数据库查询失败时返回相应错误
 pub async fn query_agents(
   State(app): State<ServerApplication>,
   Json(request): Json<AgentForQuery>,
-) -> WebResult<PageResult<AgentEntity>> {
+) -> WebResult<PageResult<SchedAgent>> {
   todo!()
 }
 
@@ -207,7 +207,7 @@ pub async fn query_agents(
 /// - `request`: AgentForCreate 创建请求参数
 ///
 /// # 返回
-/// - `AgentEntity`: 创建的 Agent 实体
+/// - `SchedAgent`: 创建的 Agent 实体
 ///
 /// # 错误
 /// - Agent ID 已存在时返回冲突错误
@@ -215,7 +215,7 @@ pub async fn query_agents(
 pub async fn create_agent(
   State(app): State<ServerApplication>,
   Json(request): Json<AgentForCreate>,
-) -> WebResult<AgentEntity> {
+) -> WebResult<SchedAgent> {
   todo!()
 }
 
@@ -228,7 +228,7 @@ pub async fn create_agent(
 /// - `agent_id`: Agent 的唯一标识符
 ///
 /// # 返回
-/// - `AgentEntity`: Agent 实体详情
+/// - `SchedAgent`: Agent 实体详情
 ///
 /// # 错误
 /// - Agent 不存在时返回 404 错误
@@ -236,7 +236,7 @@ pub async fn create_agent(
 pub async fn get_agent(
   State(app): State<ServerApplication>,
   Path(agent_id): Path<Uuid>,
-) -> WebResult<AgentEntity> {
+) -> WebResult<SchedAgent> {
   todo!()
 }
 
@@ -250,7 +250,7 @@ pub async fn get_agent(
 /// - `request`: AgentForUpdate 更新请求参数
 ///
 /// # 返回
-/// - `AgentEntity`: 更新后的 Agent 实体
+/// - `SchedAgent`: 更新后的 Agent 实体
 ///
 /// # 错误
 /// - Agent 不存在时返回 404 错误
@@ -259,7 +259,7 @@ pub async fn update_agent(
   State(app): State<ServerApplication>,
   Path(agent_id): Path<Uuid>,
   Json(request): Json<AgentForUpdate>,
-) -> WebResult<AgentEntity> {
+) -> WebResult<SchedAgent> {
   todo!()
 }
 
@@ -363,7 +363,7 @@ pub async fn send_agent_command(
   let message = WebSocketMessage {
     kind: MessageKind::Command,
     payload: request.parameters.unwrap_or_default(),
-    timestamp: ultimate_common::time::now_utc(),
+    timestamp:fusion_common::time::now_utc(),
   };
 
   gateway.connection_manager().send_to_agent(&agent_id.to_string(), message).await?;
@@ -410,7 +410,7 @@ use modelsql::{
   filter::page::Page,
   page::PageResult,
 };
-use ultimate_web::WebResult;
+use fusion_web::WebResult;
 
 /// 查询 Job 列表
 ///
@@ -421,14 +421,14 @@ use ultimate_web::WebResult;
 /// - `request`: 包含过滤条件和分页参数的查询请求
 ///
 /// # 返回
-/// - `PageResult<JobEntity>`: 分页的 Job 列表
+/// - `PageResult<SchedJob>`: 分页的 Job 列表
 ///
 /// # 错误
 /// - 数据库查询失败时返回相应错误
 pub async fn query_jobs(
   State(app): State<ServerApplication>,
   Json(request): Json<JobForQuery>,
-) -> WebResult<PageResult<JobEntity>> {
+) -> WebResult<PageResult<SchedJob>> {
   let mm = &app.mm;
   let result = JobBmc::list(mm, Some(request.filter), Some(request.page)).await?;
   Ok(result)
@@ -443,7 +443,7 @@ pub async fn query_jobs(
 /// - `request`: JobForCreate 创建请求参数
 ///
 /// # 返回
-/// - `JobEntity`: 创建的 Job 实体
+/// - `SchedJob`: 创建的 Job 实体
 ///
 /// # 错误
 /// - 参数验证失败时返回相应错误
@@ -451,7 +451,7 @@ pub async fn query_jobs(
 pub async fn create_job(
   State(app): State<ServerApplication>,
   Json(request): Json<JobForCreate>,
-) -> WebResult<JobEntity> {
+) -> WebResult<SchedJob> {
   let mm = &app.mm;
   let job = JobBmc::insert(mm, request).await?;
   Ok(job)
@@ -466,7 +466,7 @@ pub async fn create_job(
 /// - `job_id`: Job 的唯一标识符
 ///
 /// # 返回
-/// - `JobEntity`: Job 实体详情
+/// - `SchedJob`: Job 实体详情
 ///
 /// # 错误
 /// - Job 不存在时返回 404 错误
@@ -474,7 +474,7 @@ pub async fn create_job(
 pub async fn get_job(
   State(app): State<ServerApplication>,
   Path(job_id): Path<i64>,
-) -> WebResult<JobEntity> {
+) -> WebResult<SchedJob> {
   let mm = &app.mm;
   let job = JobBmc::get(mm, job_id).await?;
   Ok(job)
@@ -490,7 +490,7 @@ pub async fn get_job(
 /// - `request`: JobForUpdate 更新请求参数
 ///
 /// # 返回
-/// - `JobEntity`: 更新后的 Job 实体
+/// - `SchedJob`: 更新后的 Job 实体
 ///
 /// # 错误
 /// - Job 不存在时返回 404 错误
@@ -499,7 +499,7 @@ pub async fn update_job(
   State(app): State<ServerApplication>,
   Path(job_id): Path<i64>,
   Json(request): Json<JobForUpdate>,
-) -> WebResult<JobEntity> {
+) -> WebResult<SchedJob> {
   let mm = &app.mm;
   let job = JobBmc::update(mm, job_id, request).await?;
   Ok(job)
@@ -537,7 +537,7 @@ pub async fn delete_job(
 /// - `job_id`: Job 的唯一标识符
 ///
 /// # 返回
-/// - `JobEntity`: 更新后的 Job 实体
+/// - `SchedJob`: 更新后的 Job 实体
 ///
 /// # 错误
 /// - Job 不存在时返回 404 错误
@@ -545,7 +545,7 @@ pub async fn delete_job(
 pub async fn enable_job(
   State(app): State<ServerApplication>,
   Path(job_id): Path<i64>,
-) -> WebResult<JobEntity> {
+) -> WebResult<SchedJob> {
   let mm = &app.mm;
   let update_data = JobForUpdate {
     enabled: Some(true),
@@ -564,7 +564,7 @@ pub async fn enable_job(
 /// - `job_id`: Job 的唯一标识符
 ///
 /// # 返回
-/// - `JobEntity`: 更新后的 Job 实体
+/// - `SchedJob`: 更新后的 Job 实体
 ///
 /// # 错误
 /// - Job 不存在时返回 404 错误
@@ -572,7 +572,7 @@ pub async fn enable_job(
 pub async fn disable_job(
   State(app): State<ServerApplication>,
   Path(job_id): Path<i64>,
-) -> WebResult<JobEntity> {
+) -> WebResult<SchedJob> {
   let mm = &app.mm;
   let update_data = JobForUpdate {
     enabled: Some(false),
@@ -591,14 +591,14 @@ pub async fn disable_job(
 /// - `namespace_id`: 命名空间名称
 ///
 /// # 返回
-/// - `Vec<JobEntity>`: Job 列表
+/// - `Vec<SchedJob>`: Job 列表
 ///
 /// # 错误
 /// - 数据库查询失败时返回相应错误
 pub async fn list_jobs_by_namespace(
   State(app): State<ServerApplication>,
   Path(namespace_id): Path<String>,
-) -> WebResult<Vec<JobEntity>> {
+) -> WebResult<Vec<SchedJob>> {
   let mm = &app.model_manager;
   let filter = JobFilter {
     namespace_id: Some(namespace_id),
@@ -649,7 +649,7 @@ use modelsql::{
   filter::page::Page,
   page::PageResult,
 };
-use ultimate_web::WebResult;
+use fusion_web::WebResult;
 
 /// 查询 Task 列表
 ///
@@ -660,14 +660,14 @@ use ultimate_web::WebResult;
 /// - `request`: 包含过滤条件和分页参数的查询请求
 ///
 /// # 返回
-/// - `PageResult<TaskEntity>`: 分页的 Task 列表
+/// - `PageResult<SchedTask>`: 分页的 Task 列表
 ///
 /// # 错误
 /// - 数据库查询失败时返回相应错误
 pub async fn query_tasks(
   State(app): State<ServerApplication>,
   Json(request): Json<TaskForQuery>,
-) -> WebResult<PageResult<TaskEntity>> {
+) -> WebResult<PageResult<SchedTask>> {
   let mm = &app.mm;
   let result = TaskBmc::list(mm, Some(request.filter), Some(request.page)).await?;
   Ok(result)
@@ -682,7 +682,7 @@ pub async fn query_tasks(
 /// - `request`: TaskForCreate 创建请求参数
 ///
 /// # 返回
-/// - `TaskEntity`: 创建的 Task 实体
+/// - `SchedTask`: 创建的 Task 实体
 ///
 /// # 错误
 /// - 参数验证失败时返回相应错误
@@ -690,7 +690,7 @@ pub async fn query_tasks(
 pub async fn create_task(
   State(app): State<ServerApplication>,
   Json(request): Json<TaskForCreate>,
-) -> WebResult<TaskEntity> {
+) -> WebResult<SchedTask> {
   let mm = &app.mm;
   let task = TaskBmc::insert(mm, request).await?;
   Ok(task)
@@ -705,7 +705,7 @@ pub async fn create_task(
 /// - `task_id`: Task 的唯一标识符
 ///
 /// # 返回
-/// - `TaskEntity`: Task 实体详情
+/// - `SchedTask`: Task 实体详情
 ///
 /// # 错误
 /// - Task 不存在时返回 404 错误
@@ -713,7 +713,7 @@ pub async fn create_task(
 pub async fn get_task(
   State(app): State<ServerApplication>,
   Path(task_id): Path<i64>,
-) -> WebResult<TaskEntity> {
+) -> WebResult<SchedTask> {
   let mm = &app.mm;
   let task = TaskBmc::get(mm, task_id).await?;
   Ok(task)
@@ -729,7 +729,7 @@ pub async fn get_task(
 /// - `request`: TaskForUpdate 更新请求参数
 ///
 /// # 返回
-/// - `TaskEntity`: 更新后的 Task 实体
+/// - `SchedTask`: 更新后的 Task 实体
 ///
 /// # 错误
 /// - Task 不存在时返回 404 错误
@@ -738,7 +738,7 @@ pub async fn update_task(
   State(app): State<ServerApplication>,
   Path(task_id): Path<i64>,
   Json(request): Json<TaskForUpdate>,
-) -> WebResult<TaskEntity> {
+) -> WebResult<SchedTask> {
   let mm = &app.mm;
   let task = TaskBmc::update(mm, task_id, request).await?;
   Ok(task)
@@ -776,14 +776,14 @@ pub async fn delete_task(
 /// - `job_id`: Job 的唯一标识符
 ///
 /// # 返回
-/// - `Vec<TaskEntity>`: Task 列表
+/// - `Vec<SchedTask>`: Task 列表
 ///
 /// # 错误
 /// - 数据库查询失败时返回相应错误
 pub async fn list_tasks_by_job(
   State(app): State<ServerApplication>,
   Path(job_id): Path<i64>,
-) -> WebResult<Vec<TaskEntity>> {
+) -> WebResult<Vec<SchedTask>> {
   let mm = &app.model_manager;
   let filter = TaskFilter {
     job_id: Some(job_id),
@@ -802,14 +802,14 @@ pub async fn list_tasks_by_job(
 /// - `agent_id`: Agent 的唯一标识符
 ///
 /// # 返回
-/// - `Vec<TaskEntity>`: Task 列表
+/// - `Vec<SchedTask>`: Task 列表
 ///
 /// # 错误
 /// - 数据库查询失败时返回相应错误
 pub async fn list_tasks_by_agent(
   State(app): State<ServerApplication>,
   Path(agent_id): Path<i64>,
-) -> WebResult<Vec<TaskEntity>> {
+) -> WebResult<Vec<SchedTask>> {
   let mm = &app.model_manager;
   let filter = TaskFilter {
     agent_id: Some(agent_id),
@@ -828,14 +828,14 @@ pub async fn list_tasks_by_agent(
 /// - `status`: Task 状态
 ///
 /// # 返回
-/// - `Vec<TaskEntity>`: Task 列表
+/// - `Vec<SchedTask>`: Task 列表
 ///
 /// # 错误
 /// - 数据库查询失败时返回相应错误
 pub async fn list_tasks_by_status(
   State(app): State<ServerApplication>,
   Path(status): Path<String>,
-) -> WebResult<Vec<TaskEntity>> {
+) -> WebResult<Vec<SchedTask>> {
   let mm = &app.model_manager;
   let filter = TaskFilter {
     status: Some(status),
@@ -854,7 +854,7 @@ pub async fn list_tasks_by_status(
 /// - `task_id`: Task 的唯一标识符
 ///
 /// # 返回
-/// - `TaskEntity`: 更新后的 Task 实体
+/// - `SchedTask`: 更新后的 Task 实体
 ///
 /// # 错误
 /// - Task 不存在时返回 404 错误
@@ -862,7 +862,7 @@ pub async fn list_tasks_by_status(
 pub async fn retry_task(
   State(app): State<ServerApplication>,
   Path(task_id): Path<i64>,
-) -> WebResult<TaskEntity> {
+) -> WebResult<SchedTask> {
   let mm = &app.model_manager;
 
   // 重置任务状态
@@ -889,7 +889,7 @@ pub async fn retry_task(
 /// - `task_id`: Task 的唯一标识符
 ///
 /// # 返回
-/// - `TaskEntity`: 更新后的 Task 实体
+/// - `SchedTask`: 更新后的 Task 实体
 ///
 /// # 错误
 /// - Task 不存在时返回 404 错误
@@ -897,7 +897,7 @@ pub async fn retry_task(
 pub async fn cancel_task(
   State(app): State<ServerApplication>,
   Path(task_id): Path<i64>,
-) -> WebResult<TaskEntity> {
+) -> WebResult<SchedTask> {
   let mm = &app.model_manager;
 
   let update_data = TaskForUpdate {
@@ -951,14 +951,14 @@ use uuid::Uuid;
 use crate::{
   ServerApplication,
   endpoint::types::*,
-  model::task_instance::{TaskInstanceEntity, TaskInstanceForCreate, TaskInstanceForUpdate, TaskInstanceFilter},
+  model::task_instance::{SchedTaskInstance, TaskInstanceForCreate, TaskInstanceForUpdate, TaskInstanceFilter},
   infra::bmc::TaskInstanceBmc,
 };
 use modelsql::{
   filter::page::Page,
   page::PageResult,
 };
-use ultimate_web::WebResult;
+use fusion_web::WebResult;
 
 /// 查询 TaskInstance 列表
 ///
@@ -969,14 +969,14 @@ use ultimate_web::WebResult;
 /// - `request`: 包含过滤条件和分页参数的查询请求
 ///
 /// # 返回
-/// - `PageResult<TaskInstanceEntity>`: 分页的 TaskInstance 列表
+/// - `PageResult<SchedTaskInstance>`: 分页的 TaskInstance 列表
 ///
 /// # 错误
 /// - 数据库查询失败时返回相应错误
 pub async fn query_task_instances(
   State(app): State<ServerApplication>,
   Json(request): Json<TaskInstanceForQuery>,
-) -> WebResult<PageResult<TaskInstanceEntity>> {
+) -> WebResult<PageResult<SchedTaskInstance>> {
   let mm = &app.mm;
   let result = TaskInstanceBmc::list(mm, Some(request.filter), Some(request.page)).await?;
   Ok(result)
@@ -991,7 +991,7 @@ pub async fn query_task_instances(
 /// - `request`: TaskInstanceForCreate 创建请求参数
 ///
 /// # 返回
-/// - `TaskInstanceEntity`: 创建的 TaskInstance 实体
+/// - `SchedTaskInstance`: 创建的 TaskInstance 实体
 ///
 /// # 错误
 /// - 参数验证失败时返回相应错误
@@ -999,7 +999,7 @@ pub async fn query_task_instances(
 pub async fn create_task_instance(
   State(app): State<ServerApplication>,
   Json(request): Json<TaskInstanceForCreate>,
-) -> WebResult<TaskInstanceEntity> {
+) -> WebResult<SchedTaskInstance> {
   let mm = &app.mm;
   let task_instance = TaskInstanceBmc::insert(mm, request).await?;
   Ok(task_instance)
@@ -1014,7 +1014,7 @@ pub async fn create_task_instance(
 /// - `instance_id`: TaskInstance 的唯一标识符
 ///
 /// # 返回
-/// - `TaskInstanceEntity`: TaskInstance 实体详情
+/// - `SchedTaskInstance`: TaskInstance 实体详情
 ///
 /// # 错误
 /// - TaskInstance 不存在时返回 404 错误
@@ -1022,7 +1022,7 @@ pub async fn create_task_instance(
 pub async fn get_task_instance(
   State(app): State<ServerApplication>,
   Path(instance_id): Path<Uuid>,
-) -> WebResult<TaskInstanceEntity> {
+) -> WebResult<SchedTaskInstance> {
   let mm = &app.mm;
   let task_instance = TaskInstanceBmc::get(mm, instance_id).await?;
   Ok(task_instance)
@@ -1038,7 +1038,7 @@ pub async fn get_task_instance(
 /// - `request`: TaskInstanceForUpdate 更新请求参数
 ///
 /// # 返回
-/// - `TaskInstanceEntity`: 更新后的 TaskInstance 实体
+/// - `SchedTaskInstance`: 更新后的 TaskInstance 实体
 ///
 /// # 错误
 /// - TaskInstance 不存在时返回 404 错误
@@ -1047,7 +1047,7 @@ pub async fn update_task_instance(
   State(app): State<ServerApplication>,
   Path(instance_id): Path<Uuid>,
   Json(request): Json<TaskInstanceForUpdate>,
-) -> WebResult<TaskInstanceEntity> {
+) -> WebResult<SchedTaskInstance> {
   let mm = &app.mm;
   let task_instance = TaskInstanceBmc::update(mm, instance_id, request).await?;
   Ok(task_instance)
@@ -1086,7 +1086,7 @@ pub async fn delete_task_instance(
 /// - `request`: StartTaskInstanceRequest 启动请求参数
 ///
 /// # 返回
-/// - `TaskInstanceEntity`: 更新后的 TaskInstance 实体
+/// - `SchedTaskInstance`: 更新后的 TaskInstance 实体
 ///
 /// # 错误
 /// - TaskInstance 不存在时返回 404 错误
@@ -1095,7 +1095,7 @@ pub async fn start_task_instance(
   State(app): State<ServerApplication>,
   Path(instance_id): Path<Uuid>,
   Json(request): Json<StartTaskInstanceRequest>,
-) -> WebResult<TaskInstanceEntity> {
+) -> WebResult<SchedTaskInstance> {
   let mm = &app.mm;
 
   // 更新任务实例状态为运行中
@@ -1124,7 +1124,7 @@ pub async fn start_task_instance(
 /// - `request`: CompleteTaskInstanceRequest 完成请求参数
 ///
 /// # 返回
-/// - `TaskInstanceEntity`: 更新后的 TaskInstance 实体
+/// - `SchedTaskInstance`: 更新后的 TaskInstance 实体
 ///
 /// # 错误
 /// - TaskInstance 不存在时返回 404 错误
@@ -1133,7 +1133,7 @@ pub async fn complete_task_instance(
   State(app): State<ServerApplication>,
   Path(instance_id): Path<Uuid>,
   Json(request): Json<CompleteTaskInstanceRequest>,
-) -> WebResult<TaskInstanceEntity> {
+) -> WebResult<SchedTaskInstance> {
   let mm = &app.mm;
 
   let update_data = TaskInstanceForUpdate {
@@ -1156,7 +1156,7 @@ pub async fn complete_task_instance(
 /// - `instance_id`: TaskInstance 的唯一标识符
 ///
 /// # 返回
-/// - `TaskInstanceEntity`: 更新后的 TaskInstance 实体
+/// - `SchedTaskInstance`: 更新后的 TaskInstance 实体
 ///
 /// # 错误
 /// - TaskInstance 不存在时返回 404 错误
@@ -1164,7 +1164,7 @@ pub async fn complete_task_instance(
 pub async fn cancel_task_instance(
   State(app): State<ServerApplication>,
   Path(instance_id): Path<Uuid>,
-) -> WebResult<TaskInstanceEntity> {
+) -> WebResult<SchedTaskInstance> {
   let mm = &app.mm;
 
   let update_data = TaskInstanceForUpdate {
@@ -1191,14 +1191,14 @@ pub async fn cancel_task_instance(
 /// - `task_id`: Task 的唯一标识符
 ///
 /// # 返回
-/// - `Vec<TaskInstanceEntity>`: TaskInstance 列表
+/// - `Vec<SchedTaskInstance>`: TaskInstance 列表
 ///
 /// # 错误
 /// - 数据库查询失败时返回相应错误
 pub async fn list_task_instances_by_task(
   State(app): State<ServerApplication>,
   Path(task_id): Path<i64>,
-) -> WebResult<Vec<TaskInstanceEntity>> {
+) -> WebResult<Vec<SchedTaskInstance>> {
   let mm = &app.mm;
   let filter = TaskInstanceFilter {
     task_id: Some(task_id),
@@ -1217,14 +1217,14 @@ pub async fn list_task_instances_by_task(
 /// - `agent_id`: Agent 的唯一标识符
 ///
 /// # 返回
-/// - `Vec<TaskInstanceEntity>`: TaskInstance 列表
+/// - `Vec<SchedTaskInstance>`: TaskInstance 列表
 ///
 /// # 错误
 /// - 数据库查询失败时返回相应错误
 pub async fn list_task_instances_by_agent(
   State(app): State<ServerApplication>,
   Path(agent_id): Path<Uuid>,
-) -> WebResult<Vec<TaskInstanceEntity>> {
+) -> WebResult<Vec<SchedTaskInstance>> {
   let mm = &app.mm;
   let filter = TaskInstanceFilter {
     agent_id: Some(agent_id),
@@ -1243,14 +1243,14 @@ pub async fn list_task_instances_by_agent(
 /// - `status`: TaskInstance 状态
 ///
 /// # 返回
-/// - `Vec<TaskInstanceEntity>`: TaskInstance 列表
+/// - `Vec<SchedTaskInstance>`: TaskInstance 列表
 ///
 /// # 错误
 /// - 数据库查询失败时返回相应错误
 pub async fn list_task_instances_by_status(
   State(app): State<ServerApplication>,
   Path(status): Path<String>,
-) -> WebResult<Vec<TaskInstanceEntity>> {
+) -> WebResult<Vec<SchedTaskInstance>> {
   let mm = &app.mm;
   let filter = TaskInstanceFilter {
     status: Some(status),
@@ -1288,7 +1288,7 @@ use crate::{
   ServerApplication,
   endpoint::types::*,
 };
-use ultimate_web::WebResult;
+use fusion_web::WebResult;
 use modelsql::page::PageResult;
 
 /// 查询连接列表
@@ -1388,7 +1388,7 @@ pub async fn broadcast_message(
 // src/model/connection.rs
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use ultimate_common::time::OffsetDateTime;
+use fusion_common::time::OffsetDateTime;
 use hetuflow_core::{
   types::AgentStatus,
   protocol::MessageKind,
@@ -1503,7 +1503,7 @@ use crate::{
   ServerApplication,
   endpoint::types::*,
 };
-use ultimate_web::WebResult;
+use fusion_web::WebResult;
 use serde::Serialize;
 
 /// 健康检查
@@ -1534,7 +1534,7 @@ pub async fn health_check(
     status: if db_status { "healthy" } else { "unhealthy" }.to_string(),
     database: db_status,
     connections: connection_count,
-    timestamp: ultimate_common::time::now_utc(),
+    timestamp:fusion_common::time::now_utc(),
   };
 
   Ok(health_status)
@@ -1571,7 +1571,7 @@ pub async fn get_metrics(
   let metrics = SystemMetrics {
     connections: connection_stats,
     tasks: task_stats,
-    timestamp: ultimate_common::time::now_utc(),
+    timestamp:fusion_common::time::now_utc(),
   };
 
   Ok(metrics)
@@ -1601,7 +1601,7 @@ pub async fn get_system_info(
     git_commit: env!("GIT_COMMIT").to_string(),
     is_leader: app.is_leader(),
     uptime: app.get_uptime().as_secs(),
-    timestamp: ultimate_common::time::now_utc(),
+    timestamp:fusion_common::time::now_utc(),
   };
 
   Ok(system_info)
@@ -1613,7 +1613,7 @@ pub async fn get_system_info(
 ```rust
 // src/model/metrics.rs
 use serde::{Deserialize, Serialize};
-use ultimate_common::time::OffsetDateTime;
+use fusion_common::time::OffsetDateTime;
 
 use hetuflow_core::models::ConnectionStats;
 

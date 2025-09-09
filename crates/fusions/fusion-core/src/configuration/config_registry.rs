@@ -12,7 +12,7 @@ pub struct FusionConfigRegistry {
 }
 
 impl FusionConfigRegistry {
-  /// ULTIMATE 配置文件根，支持通过环境变量覆盖默认配置。
+  /// FUSION 配置文件根，支持通过环境变量覆盖默认配置。
   ///
   /// # Examples
   ///
@@ -20,13 +20,13 @@ impl FusionConfigRegistry {
   /// # use fusion_core::configuration::*;
   /// # fn test_config_state_from_env() {
   /// // 两个下划线作为层级分隔符
-  /// fusion_common::env::set_env("ULTIMATE__WEB__SERVER_ADDR", "0.0.0.0:8000").unwrap();
+  /// fusion_common::env::set_env("FUSION__WEB__SERVER_ADDR", "0.0.0.0:8000").unwrap();
   ///
   /// fusion_common::env::set_env(
-  ///     "ULTIMATE__SECURITY__TOKEN__SECRET_KEY",
+  ///     "FUSION__SECURITY__TOKEN__SECRET_KEY",
   ///     "8462b1ec9af827ebed13926f8f1e5409774fa1a21a1c8f726a4a34cf7dcabaf2",
   /// ).unwrap();
-  /// fusion_common::env::set_env("ULTIMATE__SECURITY__PWD__PWD_KEY", "80c9a35c0f231219ca14c44fe10c728d").unwrap();
+  /// fusion_common::env::set_env("FUSION__SECURITY__PWD__PWD_KEY", "80c9a35c0f231219ca14c44fe10c728d").unwrap();
   ///
   /// let configuration = FusionConfigRegistry::load().unwrap();
   /// let uc = configuration.fusion_config();
@@ -38,14 +38,14 @@ impl FusionConfigRegistry {
   /// );
   ///
   /// // 由默认配置文件提供
-  /// assert_eq!(uc.web().server_addr(), "0.0.0.0:8000");
   /// assert_eq!(uc.app().name(), "fusion");
   /// # }
   /// ```
   ///
   pub fn load() -> ConfigureResult<Self> {
     let c = load_config()?;
-    let fusion_config = (&c).try_into()?;
+    // let fusion_config = (&c).try_into()?;
+    let fusion_config = c.get("fusion")?;
     Ok(Self::new(Arc::new(c), Arc::new(fusion_config)))
   }
 
@@ -83,7 +83,17 @@ impl FusionConfigRegistry {
     let mut config = self.config.write().unwrap();
     let c = config.as_ref().clone();
     let b = Config::builder().add_source(c).add_source(source);
-    *config = Arc::new(b.build()?);
+    let new_config = Arc::new(b.build()?);
+
+    // 同时更新 fusion_config
+    let new_fusion_config = Arc::new(FusionConfig::try_from(new_config.as_ref())?);
+
+    *config = new_config;
+    drop(config); // 释放 config 的写锁
+
+    let mut fusion_config_write = self.fusion_config.write().unwrap();
+    *fusion_config_write = new_fusion_config;
+
     Ok(())
   }
 

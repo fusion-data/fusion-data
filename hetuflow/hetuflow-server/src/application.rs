@@ -6,11 +6,11 @@ use std::{
   time::Duration,
 };
 
+use fusion_core::{DataError, application::Application};
+use fusion_db::DbPlugin;
 use log::{debug, error, info};
 use modelsql::{ModelManager, store::DbxError};
 use tokio::sync::{broadcast, mpsc};
-use fusion_core::{DataError, application::Application};
-use fusion_db::DbPlugin;
 use uuid::Uuid;
 
 use crate::service::{AgentManager, LoadBalancer, SchedulerSvc};

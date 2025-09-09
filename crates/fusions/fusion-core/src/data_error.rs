@@ -132,9 +132,20 @@ impl From<ConfigureError> for DataError {
 }
 
 #[cfg(feature = "tonic")]
-impl From<protobuf::Error> for DataError {
-  fn from(value: protobuf::Error) -> Self {
-    DataError::BizError { code: 400, msg: format!("Protobuf error: {}", value), detail: None }
+impl From<protobuf::ParseError> for DataError {
+  fn from(value: protobuf::ParseError) -> Self {
+    DataError::BizError { code: 400, msg: format!("Protobuf parse error: {}", value), detail: None }
+  }
+}
+
+#[cfg(feature = "tonic")]
+impl From<protobuf::SerializeError> for DataError {
+  fn from(value: protobuf::SerializeError) -> Self {
+    DataError::InternalError {
+      code: 500,
+      msg: format!("Protobuf serialize error: {}", value),
+      cause: Some(Box::new(value)),
+    }
   }
 }
 

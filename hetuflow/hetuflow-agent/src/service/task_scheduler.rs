@@ -1,15 +1,15 @@
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use log::{debug, error, info};
-use tokio::sync::{RwLock, broadcast, mpsc};
-use tokio::time::{Instant, interval};
 use fusion_common::time::now_offset;
 use fusion_core::DataError;
 use fusion_core::timer::TimerRef;
+use log::{debug, error, info, warn};
+use tokio::sync::{RwLock, broadcast, mpsc};
+use tokio::time::{Instant, interval};
 
-use hetuflow_core::protocol::{TaskPollRequest, TaskPollResponse, WebSocketEvent};
-use hetuflow_core::types::EventKind;
+use hetuflow_core::protocol::{ScheduledTask, TaskRequest, TaskResponse, WebSocketEvent};
+use hetuflow_core::types::{EventKind, HetuflowCommand};
 
 use crate::service::ConnectionManager;
 use crate::setting::HetuflowAgentSetting;
@@ -46,8 +46,8 @@ pub struct TaskScheduler {
   state: Arc<RwLock<TaskSchedulingState>>,
 
   connection_manager: Arc<ConnectionManager>,
-
-  task_run_loop: Mutex<Option<TaskRunLoop>>,
+  timer_ref: TimerRef,
+  scheduled_task_tx: kanal::AsyncSender<ScheduledTask>,
 }
 
 impl TaskScheduler {
@@ -56,16 +56,16 @@ impl TaskScheduler {
     setting: Arc<HetuflowAgentSetting>,
     shutdown_tx: broadcast::Sender<()>,
     connection_manager: Arc<ConnectionManager>,
-    task_poll_resp_rx: mpsc::UnboundedReceiver<TaskPollResponse>,
     timer_ref: TimerRef,
+    scheduled_task_tx: kanal::AsyncSender<ScheduledTask>,
   ) -> Self {
-    let task_run_loop = Mutex::new(Some(TaskRunLoop::new(shutdown_tx.clone(), timer_ref, task_poll_resp_rx)));
     Self {
       setting,
       shutdown_tx,
       state: Arc::new(RwLock::new(TaskSchedulingState::default())),
       connection_manager,
-      task_run_loop,
+      timer_ref,
+      scheduled_task_tx,
     }
   }
 
@@ -99,10 +99,13 @@ impl TaskScheduler {
   }
 
   fn start_task_run_loop(&self) {
-    let mut guard = self.task_run_loop.lock().unwrap();
-    if let Some(task_run_loop) = guard.take() {
-      tokio::spawn(task_run_loop.run_loop());
-    }
+    let command_rx = self.connection_manager.subscribe_command();
+    tokio::spawn(Self::process_task_response_loop(
+      self.scheduled_task_tx.clone_sync(),
+      self.shutdown_tx.clone(),
+      self.timer_ref.clone(),
+      command_rx,
+    ));
   }
 
   /// 轮询请求待执行任务循环
@@ -141,7 +144,7 @@ impl TaskScheduler {
         );
 
         // 发送轮询请求
-        let poll_request = TaskPollRequest {
+        let poll_request = TaskRequest {
           agent_id: setting.agent_id,
           max_tasks: current_capacity as u32,
           available_capacity: current_capacity as u32,
@@ -156,45 +159,43 @@ impl TaskScheduler {
       }
     }
   }
-}
 
-struct TaskRunLoop {
-  shutdown_tx: broadcast::Sender<()>,
-  timer_ref: TimerRef,
-  task_poll_resp_rx: mpsc::UnboundedReceiver<TaskPollResponse>,
-}
-
-impl TaskRunLoop {
-  pub fn new(
+  async fn process_task_response_loop(
+    scheduled_task_tx: kanal::Sender<ScheduledTask>,
     shutdown_tx: broadcast::Sender<()>,
-    timer_ref: TimerRef,
-    task_poll_resp_rx: mpsc::UnboundedReceiver<TaskPollResponse>,
-  ) -> Self {
-    Self { shutdown_tx, timer_ref, task_poll_resp_rx }
-  }
-
-  pub async fn run_loop(mut self) {
-    let mut shutdown_rx = self.shutdown_tx.subscribe();
+    mut timer_ref: TimerRef,
+    mut command_rx: broadcast::Receiver<HetuflowCommand>,
+  ) {
+    let mut shutdown_rx = shutdown_tx.subscribe();
     loop {
       tokio::select! {
-        task_maybe = self.task_poll_resp_rx.recv() => {
-          if let Some(task_poll_resp) = task_maybe {
-            for task in task_poll_resp.tasks {
-              let start_at = &task.task_instance.started_at;
-              let timeout = start_at.signed_duration_since(now_offset()).to_std().unwrap_or(Duration::ZERO);
+        command = command_rx.recv() => {
+          match command {
+            Ok(HetuflowCommand::DispatchTask(task_poll_resp)) => {
+              for task in task_poll_resp.tasks.iter().cloned() {
+                let start_at = &task.task_instance.started_at;
+                let timeout = start_at.signed_duration_since(now_offset()).to_std().unwrap_or(Duration::ZERO);
 
-              self.timer_ref.schedule_action_once(task.task_instance_id(), timeout, move |_id| {
-                debug!("Task {} expired", task.task_instance_id());
-                // TODO: 使用 TaskExecutor 执行任务？
-              });
+                let tx = scheduled_task_tx.clone();
+                timer_ref.schedule_action_once(task.task_instance_id(), timeout, move |task_instance_id| {
+                  // 发送到 TaskExecutor ，由 TaskExecutor 执行任务
+                  if let Err(e) = tx.send(task  ) {
+                    warn!("Failed to send task to TaskExecutor. TaskInstanceId: {}, Error: {}", task_instance_id, e);
+                  }
+                });
+              }
             }
-          } else {
-            info!("Task polling channel closed - stopping task run loop");
-            return;
+            Ok(_) => {
+              debug!("Command that doesn't care");
+            }
+            Err(e) => {
+              error!("Failed to receive command: {}", e);
+              return;
+            }
           }
         }
         _ = shutdown_rx.recv() => {
-          info!("TaskRunLoop stopped");
+          info!("process_task_response_loop stopped");
           return;
         }
       }

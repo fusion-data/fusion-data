@@ -116,7 +116,7 @@ pub struct ProcessConfig {
   #[serde(deserialize_with = "deserialize_duration")]
   pub process_timeout: Duration,
 
-  /// 最大并发进程数
+  /// 最大并发进程数，同时可以调度执行的任务数
   pub max_concurrent_processes: usize,
 
   /// 启用资源监控
@@ -182,6 +182,8 @@ const KEY_PATH_AGENT_ID: &str = "hetuflow.agent.agent_id";
 
 impl HetuflowAgentSetting {
   pub fn load(config_registry: &FusionConfigRegistry) -> Result<Self, DataError> {
+    let default_setting = include_str!("default.toml");
+    config_registry.add_config_source(config::File::from_str(default_setting, config::FileFormat::Toml))?;
     let config = config_registry.config();
     // Check if server_id not exists or invalid uuid in config
     if let Err(e) = config.get::<Uuid>(KEY_PATH_AGENT_ID) {
@@ -231,7 +233,7 @@ mod tests {
   #[test]
   fn test_load() {
     // 检查配置文件是否存在
-    set_env("ULTIMATE_CONFIG_FILE", "resources/app.toml").unwrap();
+    set_env("FUSION_CONFIG_FILE", "resources/app.toml").unwrap();
 
     // 尝试加载配置
     let config_registry = FusionConfigRegistry::load().unwrap();

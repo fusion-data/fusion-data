@@ -35,6 +35,7 @@ sea-query = { workspace = true }
 sea-query-binder = { workspace = true }
 async-trait = { workspace = true }
 tokio = { workspace = true }
+mea = { workspace = true }
 futures-util = { workspace = true }
 # tokio-tungstenite = { workspace = true }
 log = { workspace = true }

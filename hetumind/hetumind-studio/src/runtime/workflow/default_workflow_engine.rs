@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use ahash::HashMap;
 use async_trait::async_trait;
+use fusion_common::time::now;
 use hetumind_core::{
   expression::ExpressionEvaluator,
   workflow::{
@@ -10,7 +11,6 @@ use hetumind_core::{
     WorkflowEngine, WorkflowExecutionError,
   },
 };
-use fusion_common::time::now;
 
 use crate::runtime::{
   execution::ExecutionStore,

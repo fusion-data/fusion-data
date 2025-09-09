@@ -24,12 +24,12 @@
 
 ### 核心数据模型
 
-- **`JobEntity`**: 存储作业的静态定义（"做什么"），对应数据库表 `sched_job`
-- **`ScheduleEntity`**: 存储作业的调度策略（"何时做"），对应数据库表 `sched_schedule`
-- **`TaskEntity`**: 存储根据 `ScheduleEntity` 生成的、待执行的计划，对应数据库表 `sched_task`
-- **`TaskInstanceEntity`**: 存储 `TaskEntity` 在 Agent 上的实际执行记录，对应数据库表 `sched_task_instance`
-- **`AgentEntity`**: 存储 Agent 节点的信息，对应数据库表 `sched_agent`
-- **`ServerEntity`**: 存储 Server 节点的信息，对应数据库表 `sched_server`
+- **`SchedJob`**: 存储作业的静态定义（"做什么"），对应数据库表 `sched_job`
+- **`SchedSchedule`**: 存储作业的调度策略（"何时做"），对应数据库表 `sched_schedule`
+- **`SchedTask`**: 存储根据 `SchedSchedule` 生成的、待执行的计划，对应数据库表 `sched_task`
+- **`SchedTaskInstance`**: 存储 `SchedTask` 在 Agent 上的实际执行记录，对应数据库表 `sched_task_instance`
+- **`SchedAgent`**: 存储 Agent 节点的信息，对应数据库表 `sched_agent`
+- **`SchedServer`**: 存储 Server 节点的信息，对应数据库表 `sched_server`
 
 基于 `modelsql` 框架，为每个核心实体实现完整的数据模型（`XxxEntity`）和 `DbBmc` trait：
 

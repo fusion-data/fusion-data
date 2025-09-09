@@ -1,9 +1,9 @@
 use axum::Json;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
+use fusion_core::DataError;
 use serde::Serialize;
 use serde_json::Value;
-use fusion_core::DataError;
 
 pub type WebResult<T> = core::result::Result<Json<T>, WebError>;
 

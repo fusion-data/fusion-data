@@ -1,9 +1,7 @@
-use std::collections::HashMap;
-
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::models::{AgentCapabilities, AgentEntity};
+use crate::models::{AgentCapabilities, SchedAgent};
 
 #[derive(Debug, Deserialize)]
 pub struct WebSocketParams {
@@ -29,7 +27,7 @@ pub struct AgentRegisterResponse {
   /// 响应消息
   pub message: String,
   /// Agent 配置
-  pub agent: Option<AgentEntity>,
+  pub agent: Option<SchedAgent>,
   /// 服务器时间
   pub server_time: i64,
   // /// 会话标识

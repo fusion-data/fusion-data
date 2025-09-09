@@ -3,10 +3,10 @@ use std::{
   time::Duration,
 };
 
+use fusion_common::{ahash::HashMap, time::now_epoch_millis};
 use hetuflow_core::protocol::{HeartbeatRequest, WebSocketCommand};
 use log::{debug, error, info};
 use tokio::sync::mpsc;
-use fusion_common::{ahash::HashMap, time::now_epoch_millis};
 use uuid::Uuid;
 
 use crate::model::{AgentConnection, AgentEvent, ConnectionStats, GatewayCommandRequest};

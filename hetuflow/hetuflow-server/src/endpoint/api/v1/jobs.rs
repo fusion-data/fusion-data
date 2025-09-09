@@ -3,13 +3,13 @@ use axum::{
   extract::Path,
   routing::{get, post},
 };
-use modelsql::page::PageResult;
 use fusion_core::IdUuidResult;
 use fusion_web::{Router, WebResult, ok_json};
+use modelsql::page::PageResult;
 use uuid::Uuid;
 
 use hetuflow_core::{
-  models::{JobEntity, JobForCreate, JobForQuery, JobForUpdate},
+  models::{JobForCreate, JobForQuery, JobForUpdate, SchedJob},
   types::JobStatus,
 };
 
@@ -25,7 +25,7 @@ pub fn routes() -> Router<ServerApplication> {
     .route("/{id}/disable", post(disable_job))
 }
 
-async fn query_jobs(job_svc: JobSvc, Json(input): Json<JobForQuery>) -> WebResult<PageResult<JobEntity>> {
+async fn query_jobs(job_svc: JobSvc, Json(input): Json<JobForQuery>) -> WebResult<PageResult<SchedJob>> {
   let result = job_svc.query(input).await?;
   ok_json!(result)
 }
@@ -35,7 +35,7 @@ async fn create_job(job_svc: JobSvc, Json(input): Json<JobForCreate>) -> WebResu
   ok_json!(IdUuidResult::from(id))
 }
 
-async fn get_job(job_svc: JobSvc, Path(id): Path<Uuid>) -> WebResult<Option<JobEntity>> {
+async fn get_job(job_svc: JobSvc, Path(id): Path<Uuid>) -> WebResult<Option<SchedJob>> {
   let result = job_svc.get_by_id(&id).await?;
   ok_json!(result)
 }

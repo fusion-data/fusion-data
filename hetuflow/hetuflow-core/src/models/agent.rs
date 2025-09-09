@@ -1,12 +1,12 @@
 use std::collections::HashMap;
 
+use fusion_common::time::OffsetDateTime;
 use garde::Validate;
 use modelsql_core::{
   field::FieldMask,
   filter::{OpValsDateTime, OpValsInt32, OpValsString, OpValsUuid, Page},
 };
 use serde::{Deserialize, Serialize};
-use fusion_common::time::OffsetDateTime;
 use uuid::Uuid;
 
 use crate::types::AgentStatus;
@@ -39,14 +39,14 @@ pub struct AgentCapabilities {
   pub metadata: HashMap<String, String>,
 }
 
-/// AgentEntity 数据模型
+/// SchedAgent 数据模型
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(
   feature = "with-db",
   derive(sqlx::FromRow, modelsql::field::Fields),
   sea_query::enum_def(table_name = "sched_agent")
 )]
-pub struct AgentEntity {
+pub struct SchedAgent {
   pub id: Uuid,
   pub description: Option<String>,
   pub address: String,

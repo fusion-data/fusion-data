@@ -1,11 +1,11 @@
+use fusion_core::DataError;
 use modelsql::ModelManager;
 use modelsql::field::FieldMask;
 use modelsql::filter::OpValsUuid;
-use fusion_core::DataError;
 use uuid::Uuid;
 
 use hetuflow_core::models::{
-  TaskEntity, TaskFilter, TaskForCreate, TaskForQuery, TaskForUpdate, TaskInstanceEntity, TaskInstanceFilter,
+  SchedTask, SchedTaskInstance, TaskFilter, TaskForCreate, TaskForQuery, TaskForUpdate, TaskInstanceFilter,
   TaskInstanceForCreate, TaskInstanceForQuery, TaskInstanceForUpdate,
 };
 use hetuflow_core::types::{TaskInstanceStatus, TaskStatus};
@@ -22,7 +22,7 @@ impl TaskSvc {
   }
 
   /// 查找待处理任务
-  pub async fn find_pending_tasks(&self, namespace_id: &Uuid) -> Result<Vec<TaskEntity>, DataError> {
+  pub async fn find_pending_tasks(&self, namespace_id: &Uuid) -> Result<Vec<SchedTask>, DataError> {
     TaskBmc::find_pending_tasks(&self.mm, namespace_id).await.map_err(DataError::from)
   }
 
@@ -61,7 +61,7 @@ impl TaskSvc {
   }
 
   /// 根据作业 ID 查找任务
-  pub async fn find_tasks_by_job(&self, job_id: Uuid) -> Result<Vec<TaskEntity>, DataError> {
+  pub async fn find_tasks_by_job(&self, job_id: Uuid) -> Result<Vec<SchedTask>, DataError> {
     let filter = TaskFilter { job_id: Some(OpValsUuid::eq(job_id)), ..Default::default() };
 
     TaskBmc::find_many(&self.mm, vec![filter], None).await.map_err(DataError::from)
@@ -94,19 +94,19 @@ impl TaskSvc {
   }
 
   /// 查找任务的所有实例
-  pub async fn find_task_instances(&self, task_id: Uuid) -> Result<Vec<TaskInstanceEntity>, DataError> {
+  pub async fn find_task_instances(&self, task_id: Uuid) -> Result<Vec<SchedTaskInstance>, DataError> {
     let filter = TaskInstanceFilter { task_id: Some(OpValsUuid::eq(task_id)), ..Default::default() };
 
     TaskInstanceBmc::find_many(&self.mm, vec![filter], None).await.map_err(DataError::from)
   }
 
   /// 分页查询任务
-  pub async fn page(&self, input: TaskForQuery) -> Result<PageResult<TaskEntity>, DataError> {
+  pub async fn page(&self, input: TaskForQuery) -> Result<PageResult<SchedTask>, DataError> {
     TaskBmc::page(&self.mm, vec![input.filter], input.page).await.map_err(DataError::from)
   }
 
   /// 根据 ID 获取任务
-  pub async fn get_by_id(&self, id: Uuid) -> Result<Option<TaskEntity>, DataError> {
+  pub async fn get_by_id(&self, id: Uuid) -> Result<Option<SchedTask>, DataError> {
     TaskBmc::get_by_id(&self.mm, &id).await.map_err(DataError::from)
   }
 
@@ -172,13 +172,13 @@ impl TaskSvc {
   pub(crate) async fn find_task_instances_page(
     &self,
     input: TaskInstanceForQuery,
-  ) -> Result<PageResult<TaskInstanceEntity>, DataError> {
+  ) -> Result<PageResult<SchedTaskInstance>, DataError> {
     let result = TaskInstanceBmc::page(&self.mm, vec![input.filter], input.page).await?;
     Ok(result)
   }
 
   /// 根据 ID 获取任务实例
-  pub async fn find_task_instance(&self, id: Uuid) -> Result<Option<TaskInstanceEntity>, DataError> {
+  pub async fn find_task_instance(&self, id: Uuid) -> Result<Option<SchedTaskInstance>, DataError> {
     TaskInstanceBmc::get_by_id(&self.mm, &id).await.map_err(DataError::from)
   }
 

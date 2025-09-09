@@ -8,8 +8,8 @@ mod error;
 mod model;
 mod util;
 
-use serde::de::DeserializeOwned;
 pub use fusion_core_macros::Configuration;
+use serde::de::DeserializeOwned;
 
 pub use config_registry::*;
 pub use effect::*;

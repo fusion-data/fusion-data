@@ -1,8 +1,8 @@
-use modelsql::{ModelManager, page::PageResult};
 use fusion_core::DataError;
+use modelsql::{ModelManager, page::PageResult};
 use uuid::Uuid;
 
-use hetuflow_core::models::{JobEntity, JobForCreate, JobForQuery, JobForUpdate};
+use hetuflow_core::models::{JobForCreate, JobForQuery, JobForUpdate, SchedJob};
 use hetuflow_core::types::JobStatus;
 
 use crate::infra::bmc::JobBmc;
@@ -12,7 +12,7 @@ pub struct JobSvc {
 }
 
 impl JobSvc {
-  pub async fn query(&self, input: JobForQuery) -> Result<PageResult<JobEntity>, DataError> {
+  pub async fn query(&self, input: JobForQuery) -> Result<PageResult<SchedJob>, DataError> {
     JobBmc::page(&self.mm, vec![input.filter], input.page).await.map_err(DataError::from)
   }
 
@@ -29,7 +29,7 @@ impl JobSvc {
   }
 
   /// 根据 ID 获取任务
-  pub async fn get_by_id(&self, id: &Uuid) -> Result<Option<JobEntity>, DataError> {
+  pub async fn get_by_id(&self, id: &Uuid) -> Result<Option<SchedJob>, DataError> {
     JobBmc::get_by_id(&self.mm, id).await.map_err(DataError::from)
   }
 

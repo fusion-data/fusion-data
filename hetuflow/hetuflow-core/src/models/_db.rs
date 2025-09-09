@@ -2,9 +2,9 @@ use modelsql::postgres::PgRowType;
 
 use super::*;
 
-impl PgRowType for AgentEntity {}
-impl PgRowType for JobEntity {}
-impl PgRowType for ScheduleEntity {}
-impl PgRowType for ServerEntity {}
-impl PgRowType for TaskInstanceEntity {}
-impl PgRowType for TaskEntity {}
+impl PgRowType for SchedServer {}
+impl PgRowType for SchedAgent {}
+impl PgRowType for SchedJob {}
+impl PgRowType for SchedSchedule {}
+impl PgRowType for SchedTask {}
+impl PgRowType for SchedTaskInstance {}

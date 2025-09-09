@@ -196,7 +196,6 @@ impl ApplicationBuilder {
     T: config::Source + Send + Sync + 'static,
   {
     self.config_registry.add_config_source(source).expect("Add config source failed");
-    self.config_registry.reload().expect("Reload config failed");
     self
   }
 
@@ -375,6 +374,7 @@ impl ConfigRegistry for ApplicationBuilder {
 #[cfg(test)]
 mod tests {
   use super::*;
+  use std::env;
 
   #[tokio::test]
   async fn test_application_run() {

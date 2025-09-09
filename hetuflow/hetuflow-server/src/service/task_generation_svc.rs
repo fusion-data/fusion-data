@@ -1,16 +1,16 @@
 use std::time::Duration;
 
+use fusion_core::DataError;
 use log::{info, warn};
 use modelsql::ModelManager;
-use fusion_core::DataError;
 use uuid::Uuid;
 
 use croner::Cron;
+use fusion_common::time::{OffsetDateTime, now_offset};
 use serde_json::json;
 use std::str::FromStr;
-use fusion_common::time::{OffsetDateTime, now_offset};
 
-use hetuflow_core::models::{JobEntity, ScheduleEntity, TaskForCreate, TaskInstanceForCreate};
+use hetuflow_core::models::{SchedJob, SchedSchedule, TaskForCreate, TaskInstanceForCreate};
 use hetuflow_core::types::{ScheduleKind, ScheduleStatus, TaskInstanceStatus, TaskStatus};
 
 use crate::infra::bmc::{JobBmc, ScheduleBmc, TaskBmc, TaskInstanceBmc};
@@ -18,8 +18,8 @@ use crate::infra::bmc::{JobBmc, ScheduleBmc, TaskBmc, TaskInstanceBmc};
 /// 任务生成服务
 ///
 /// 负责：
-/// - 根据 Schedule 预生成未来一段时间的 TaskInstanceEntity
-/// - 基于外部事件或 API 调用按需生成 TaskInstanceEntity
+/// - 根据 Schedule 预生成未来一段时间的 SchedTaskInstance
+/// - 基于外部事件或 API 调用按需生成 SchedTaskInstance
 pub struct TaskGenerationSvc {
   mm: ModelManager,
 }
@@ -70,10 +70,10 @@ impl TaskGenerationSvc {
   ) -> Result<Vec<Uuid>, DataError> {
     let mut generated_task_ids = Vec::new();
 
-    // 1. 读取 schedule_kind 为 (Cron, Time) 且有效的 ScheduleEntity
+    // 1. 读取 schedule_kind 为 (Cron, Time) 且有效的 SchedSchedule
     let schedule_entities = ScheduleBmc::find_schedulable_entities(&self.mm).await?;
 
-    // 2. 遍历 schedule_entities，找到对应的有效 JobEntity
+    // 2. 遍历 schedule_entities，找到对应的有效 SchedJob
     for schedule in schedule_entities {
       // 3. 检查是否过期
       if schedule.end_time.is_some_and(|end_time| end_time < from_time) {
@@ -108,8 +108,8 @@ impl TaskGenerationSvc {
   /// 为 Cron 类型的 Schedule 生成任务
   async fn generate_cron_tasks(
     &self,
-    schedule: &ScheduleEntity,
-    job: &JobEntity,
+    schedule: &SchedSchedule,
+    job: &SchedJob,
     from_time: OffsetDateTime,
     to_time: OffsetDateTime,
   ) -> Result<Vec<Uuid>, DataError> {
@@ -184,8 +184,8 @@ impl TaskGenerationSvc {
   /// 为 Interval 类型的 Schedule 生成任务
   async fn generate_interval_tasks(
     &self,
-    schedule: &ScheduleEntity,
-    job: &JobEntity,
+    schedule: &SchedSchedule,
+    job: &SchedJob,
     from_time: OffsetDateTime,
     to_time: OffsetDateTime,
   ) -> Result<Vec<Uuid>, DataError> {
@@ -227,7 +227,7 @@ impl TaskGenerationSvc {
   async fn create_task_and_instance(
     &self,
     mm: &ModelManager,
-    job: &JobEntity,
+    job: &SchedJob,
     schedule_id: Option<Uuid>,
     scheduled_at: OffsetDateTime,
     parameters: serde_json::Value,

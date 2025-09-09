@@ -36,7 +36,7 @@ load_factor_threshold = 1
 enable_resource_monitoring = true
 resource_monitor_interval = "30s"
 cleanup_interval = "1h"
-max_concurrent_processes = 100
+max_concurrent_processes = 8
 process_timeout = "2h"
 zombie_check_interval = "1h"
 

@@ -8,7 +8,7 @@ use uuid::Uuid;
 
 use hetuflow_core::types::JobStatus;
 
-use hetuflow_core::models::{JobEntity, JobFilter, JobForCreate, JobForUpdate};
+use hetuflow_core::models::{JobFilter, JobForCreate, JobForUpdate, SchedJob};
 
 /// JobBmc 实现
 pub struct JobBmc;
@@ -19,26 +19,26 @@ impl DbBmc for JobBmc {
 
 generate_pg_bmc_common!(
   Bmc: JobBmc,
-  Entity: JobEntity,
+  Entity: SchedJob,
   ForUpdate: JobForUpdate,
   ForInsert: JobForCreate,
 );
 
 generate_pg_bmc_filter!(
   Bmc: JobBmc,
-  Entity: JobEntity,
+  Entity: SchedJob,
   Filter: JobFilter,
 );
 
 impl JobBmc {
   /// 查找启用的作业
-  pub async fn find_enabled_jobs(mm: &ModelManager) -> Result<Vec<JobEntity>, SqlError> {
+  pub async fn find_enabled_jobs(mm: &ModelManager) -> Result<Vec<SchedJob>, SqlError> {
     let filter = vec![JobFilter { status: Some(OpValsInt32::eq(JobStatus::Enabled as i32)), ..Default::default() }];
 
     Self::find_many(mm, filter, None).await
   }
 
-  pub async fn find_enabled_by_id(mm: &ModelManager, id: Uuid) -> Result<Option<JobEntity>, SqlError> {
+  pub async fn find_enabled_by_id(mm: &ModelManager, id: Uuid) -> Result<Option<SchedJob>, SqlError> {
     let filter = vec![JobFilter {
       id: Some(OpValsUuid::eq(id)),
       status: Some(OpValsInt32::eq(JobStatus::Enabled as i32)),
@@ -49,7 +49,7 @@ impl JobBmc {
   }
 
   /// 根据命名空间查找作业
-  pub async fn find_jobs_by_namespace(mm: &ModelManager, namespace_id: Uuid) -> Result<Vec<JobEntity>, SqlError> {
+  pub async fn find_jobs_by_namespace(mm: &ModelManager, namespace_id: Uuid) -> Result<Vec<SchedJob>, SqlError> {
     let filter = vec![JobFilter { namespace_id: Some(OpValsUuid::eq(namespace_id)), ..Default::default() }];
 
     Self::find_many(mm, filter, None).await
