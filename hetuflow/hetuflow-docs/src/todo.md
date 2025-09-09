@@ -130,9 +130,9 @@
 
 ### 3.3 任务调度
 
-- [ ] **TaskScheduler 实现** - 精调度器，基于 hierarchical_hash_wheel_timer 实现高精度定时
-- [ ] **Cron 解析** - 使用 croner 解析 Cron 表达式
-- [ ] **本地定时器** - 实现基于时间轮的本地定时任务触发
+- [*] **TaskScheduler 实现** - 精调度器，基于 hierarchical_hash_wheel_timer 实现高精度定时
+- [*] **Cron 解析** - 使用 croner 解析 Cron 表达式
+- [*] **本地定时器** - 实现基于时间轮的本地定时任务触发
 - [ ] **任务同步** - 实现与 Server 的任务状态同步
 
 ### 3.4 任务执行
