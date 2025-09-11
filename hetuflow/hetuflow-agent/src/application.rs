@@ -1,9 +1,10 @@
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use fusion_core::DataError;
 use fusion_core::application::Application;
 use fusion_core::timer::{Timer, TimerPlugin};
 use log::{error, info};
+use mea::shutdown::{ShutdownRecv, ShutdownSend};
 use tokio::sync::{broadcast, mpsc};
 use uuid::Uuid;
 
@@ -18,7 +19,7 @@ pub struct AgentApplication {
   task_scheduler: Arc<TaskScheduler>,
   task_executors: Vec<Arc<TaskExecutor>>,
   process_manager: Arc<ProcessManager>,
-  shutdown_tx: broadcast::Sender<()>,
+  shutdown_tx: Arc<Mutex<Option<ShutdownSend>>>,
 }
 
 impl AgentApplication {
@@ -27,19 +28,20 @@ impl AgentApplication {
     let setting: Arc<HetuflowAgentSetting> = Arc::new(HetuflowAgentSetting::load(application.config_registry())?);
     info!("Creating AgentApplication with agent_id: {}", setting.agent_id);
 
-    let (shutdown_tx, _) = broadcast::channel(1);
+    let (shutdown_tx, shutdown_rx) = mea::shutdown::new_pair();
+
     let (scheduled_task_tx, scheduled_task_rx) = kanal::unbounded_async();
 
     // 创建组件
-    let connection_manager = Arc::new(ConnectionManager::new(setting.clone(), shutdown_tx.clone()));
+    let connection_manager = Arc::new(ConnectionManager::new(setting.clone(), shutdown_rx.clone()));
     let task_scheduler = Arc::new(TaskScheduler::new(
       setting.clone(),
-      shutdown_tx.clone(),
+      shutdown_rx.clone(),
       connection_manager.clone(),
       application.component::<Timer>().timer_ref(),
       scheduled_task_tx,
     ));
-    let process_manager = Arc::new(ProcessManager::new(setting.process.clone(), Arc::new(shutdown_tx.subscribe())));
+    let process_manager = Arc::new(ProcessManager::new(setting.process.clone(), shutdown_rx.clone()));
     let task_executors = (0..setting.process.max_concurrent_processes)
       .map(|_i| {
         Arc::new(TaskExecutor::new(
@@ -52,7 +54,14 @@ impl AgentApplication {
       })
       .collect();
 
-    Ok(Self { setting, connection_manager, task_scheduler, task_executors, process_manager, shutdown_tx })
+    Ok(Self {
+      setting,
+      connection_manager,
+      task_scheduler,
+      task_executors,
+      process_manager,
+      shutdown_tx: Arc::new(Mutex::new(Some(shutdown_tx))),
+    })
   }
 
   /// 获取 Agent ID
@@ -89,28 +98,19 @@ impl AgentApplication {
   /// 停止应用程序
   pub async fn shutdown(&self) -> Result<(), DataError> {
     info!("AgentApplication shutdown begging: {}", self.setting.agent_id);
+    let mut shutdown_tx = self.shutdown_tx.lock().unwrap();
+    if shutdown_tx.is_none() {
+      return Err(DataError::server_error("AgentApplication is not running"));
+    }
+
+    // 取出 ShutdownSend
+    let shutdown_tx = shutdown_tx.take().unwrap();
 
     // 发送关闭信号
-    if let Err(e) = self.shutdown_tx.send(()) {
-      error!("Shutdown error: {}", e);
-    }
+    shutdown_tx.shutdown();
 
-    info!("Stopping TaskScheduler");
-    // TODO: 实现 TaskScheduler 的停止方法
-
-    info!("Stopping TaskExecutor");
-    // TODO: 实现 TaskExecutor 的停止方法
-
-    info!("Stopping ProcessManager");
-    // TODO: 实现 ProcessManager 的停止方法
-
-    // 停止各个组件
-    if let Err(e) = self.connection_manager.wait_closed().await {
-      error!("Wait closed ConnectionManager error: {}", e);
-    } else {
-      info!("Wait closed ConnectionManager successfully");
-    }
-
+    // 等待各组件停止完成
+    shutdown_tx.await_shutdown().await;
     info!("AgentApplication shutdown successfully");
     Ok(())
   }

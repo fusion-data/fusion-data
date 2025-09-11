@@ -6,10 +6,11 @@ use std::sync::{
 use fusion_core::{DataError, IdUuidResult};
 use futures_util::{FutureExt, SinkExt, StreamExt, pin_mut};
 use hetuflow_core::{
-  protocol::{TaskResponse, WebSocketCommand, WebSocketEvent},
+  protocol::{AcquireTaskResponse, WebSocketCommand, WebSocketEvent},
   types::{CommandKind, HetuflowCommand},
 };
 use log::{error, info};
+use mea::shutdown::ShutdownRecv;
 use tokio::sync::{broadcast, mpsc};
 use tokio_tungstenite::tungstenite::Message;
 
@@ -19,8 +20,8 @@ pub struct WsHandler {
   setting: Arc<HetuflowAgentSetting>,
   command_publisher: broadcast::Sender<HetuflowCommand>,
   event_rx: mpsc::UnboundedReceiver<WebSocketEvent>,
-  shutdown_tx: broadcast::Sender<()>,
-  closed: Arc<AtomicBool>,
+  shutdown_rx: ShutdownRecv,
+  is_shutdown: Arc<AtomicBool>,
 }
 
 impl WsHandler {
@@ -28,23 +29,16 @@ impl WsHandler {
     setting: Arc<HetuflowAgentSetting>,
     command_publisher: broadcast::Sender<HetuflowCommand>,
     event_rx: mpsc::UnboundedReceiver<WebSocketEvent>,
-    shutdown_tx: broadcast::Sender<()>,
+    shutdown_rx: ShutdownRecv,
   ) -> Self {
-    Self { setting, command_publisher, event_rx, shutdown_tx, closed: Arc::new(AtomicBool::new(false)) }
+    Self { setting, command_publisher, event_rx, shutdown_rx, is_shutdown: Arc::new(AtomicBool::new(false)) }
   }
 
-  pub async fn start_loop(&mut self) {
-    let closed = self.closed.clone();
-    let mut shutdown_rx = self.shutdown_tx.subscribe();
-    tokio::spawn(async move {
-      let _ = shutdown_rx.recv().await;
-      closed.store(true, Ordering::Relaxed);
-    });
-
-    while let Err(e) = self.start_websocket_loop().await
-      && !self.closed.load(Ordering::Relaxed)
+  pub async fn run_loop(&mut self) {
+    while let Err(e) = self.run_websocket_loop().await
+      && !self.is_shutdown.load(Ordering::Relaxed)
     {
-      error!("Failed to run websocket loop: {}", e);
+      error!("Failed to run websocket loop: {}. Retrying in 10 seconds...", e);
 
       // 等待 10 秒后重试
       tokio::time::sleep(std::time::Duration::from_secs(10)).await;
@@ -54,24 +48,23 @@ impl WsHandler {
     info!("Websocket loop closed");
   }
 
-  async fn start_websocket_loop(&mut self) -> Result<(), DataError> {
+  async fn run_websocket_loop(&mut self) -> Result<(), DataError> {
     let (ws_stream, _resp) = tokio_tungstenite::connect_async(self.setting.server_gateway_ws())
       .await
       .map_err(|e| DataError::server_error(format!("Failed to connect to gateway: {}", e)))?;
     info!("Connected to Hetuflow Server: {}", self.setting.server_gateway_ws());
 
     let (mut ws_tx, mut ws_rx) = ws_stream.split();
-    let mut shutdown_rx = self.shutdown_tx.subscribe();
 
     loop {
       let event_fut = self.event_rx.recv().fuse();
-      let ws_fut = ws_rx.next().fuse();
-      let shutdown_fut = shutdown_rx.recv().fuse();
-      pin_mut!(event_fut, ws_fut, shutdown_fut);
+      let ws_rx_fut = ws_rx.next().fuse();
+      let shutdown_fut = self.shutdown_rx.is_shutdown().fuse();
+      pin_mut!(event_fut, ws_rx_fut, shutdown_fut);
       futures_util::select! {
         _ = shutdown_fut => { // Shutdown signal received
           info!("Shutdown signal received, stopping ConnectionManager loop");
-          self.closed.store(true, Ordering::Relaxed);
+          self.is_shutdown.store(true, Ordering::Relaxed);
           return Ok(());
         }
         event = event_fut => { // Send event to Server
@@ -84,7 +77,7 @@ impl WsHandler {
             return Err(DataError::server_error("WebSocketEvent channel closed"));
           }
         }
-        msg_maybe = ws_fut => { // Receive message from Server
+        msg_maybe = ws_rx_fut => { // Receive message from Server
           let msg = if let Some(msg_result) = msg_maybe  {
             match msg_result {
               Ok(msg) => msg,
@@ -132,8 +125,8 @@ fn process_command(
 ) -> Result<(), DataError> {
   match cmd.kind {
     CommandKind::DispatchTask => {
-      let resp: TaskResponse = serde_json::from_value(cmd.parameters).unwrap();
-      let _ = command_publisher.send(HetuflowCommand::DispatchTask(Arc::new(resp)));
+      let resp: AcquireTaskResponse = serde_json::from_value(cmd.parameters).unwrap();
+      let _ = command_publisher.send(HetuflowCommand::AcquiredTask(Arc::new(resp)));
     }
     CommandKind::Shutdown => {
       let _ = command_publisher.send(HetuflowCommand::Shutdown);

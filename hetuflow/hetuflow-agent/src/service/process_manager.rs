@@ -10,6 +10,7 @@ use hetuflow_core::protocol::{
   ResourceViolationType,
 };
 use log::{debug, error, info, warn};
+use mea::shutdown::ShutdownRecv;
 use serde_json::json;
 use tokio::sync::{RwLock, broadcast, mpsc};
 use uuid::Uuid;
@@ -21,7 +22,7 @@ use crate::setting::ProcessConfig;
 pub struct ProcessManager {
   /// 配置
   process_config: Arc<ProcessConfig>,
-  shutdown_rx: Arc<broadcast::Receiver<()>>,
+  shutdown_rx: ShutdownRecv,
   /// 活跃进程映射
   active_processes: Arc<RwLock<HashMap<Uuid, ProcessInfo>>>,
   /// 进程句柄映射
@@ -36,7 +37,7 @@ pub struct ProcessManager {
 
 impl ProcessManager {
   /// 创建新的进程管理器
-  pub fn new(process_config: Arc<ProcessConfig>, shutdown_rx: Arc<broadcast::Receiver<()>>) -> Self {
+  pub fn new(process_config: Arc<ProcessConfig>, shutdown_rx: ShutdownRecv) -> Self {
     let (event_sender, event_receiver) = mpsc::unbounded_channel();
     let resource_monitor = ResourceMonitor::new();
 

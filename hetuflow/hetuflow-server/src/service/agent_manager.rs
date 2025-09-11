@@ -7,7 +7,9 @@ use fusion_common::{
 use fusion_core::DataError;
 use hetuflow_core::{
   models::*,
-  protocol::{AgentRegisterResponse, ScheduledTask, TaskInstanceUpdated, TaskRequest, TaskResponse, WebSocketCommand},
+  protocol::{
+    AcquireTaskRequest, AgentRegisterResponse, ScheduledTask, TaskInstanceUpdated, AcquireTaskResponse, WebSocketCommand,
+  },
   types::{AgentStatus, CommandKind, TaskInstanceStatus, TaskStatus},
 };
 use log::{debug, error, info, warn};
@@ -290,7 +292,7 @@ impl AgentEventRunLoop {
   }
 
   /// Agent poll task 时不对 Server 绑定的 Namespace 进行过滤，直接拉取符合要求的最紧急的 SchedTaskInstance。按 request 条件进行过滤
-  async fn process_task_poll(&self, agent_id: Uuid, request: Arc<TaskRequest>) -> Result<(), DataError> {
+  async fn process_task_poll(&self, agent_id: Uuid, request: Arc<AcquireTaskRequest>) -> Result<(), DataError> {
     info!("Agent {} task poll request: {:?}", agent_id, request);
     let task_instances = TaskInstanceBmc::find_many_by_poll(&self.mm, &request).await?;
     let task_map = TaskBmc::find_many(
@@ -321,7 +323,7 @@ impl AgentEventRunLoop {
       .collect::<Vec<_>>();
 
     // 向 Agent 发送 TaskPollResponse
-    let parameters = serde_json::to_value(TaskResponse { tasks, has_more: false, next_poll_interval: 0 })?;
+    let parameters = serde_json::to_value(AcquireTaskResponse { tasks, has_more: false, next_poll_interval: 0 })?;
     let command = WebSocketCommand::new(CommandKind::DispatchTask, parameters);
     self.connection_manager.send_to_agent(&agent_id, command)?;
 

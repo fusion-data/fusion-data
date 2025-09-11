@@ -7,7 +7,7 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 use strum::AsRefStr;
 use uuid::Uuid;
 
-use crate::protocol::{AgentRegisterResponse, TaskResponse};
+use crate::protocol::{AcquireTaskResponse, AgentRegisterResponse};
 
 /// 作业类型 (ScheduleKind) - 定义了 Job 的核心调度和行为模式
 #[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy, PartialEq, Eq, AsRefStr)]
@@ -163,7 +163,7 @@ pub enum HetuflowCommand {
   ClearCache,
   FetchMetrics,
   AgentRegistered(Arc<AgentRegisterResponse>),
-  DispatchTask(Arc<TaskResponse>),
+  AcquiredTask(Arc<AcquireTaskResponse>),
   /// TaskInstanceId
   CancelTask(Arc<Uuid>),
 }

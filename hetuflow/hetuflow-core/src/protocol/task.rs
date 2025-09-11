@@ -144,7 +144,7 @@ impl TaskInstanceUpdated {
 
 /// Task pull request
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct TaskRequest {
+pub struct AcquireTaskRequest {
   pub agent_id: Uuid,          // Agent ID
   pub max_tasks: u32,          // 最大拉取任务数
   pub tags: Vec<String>,       // 当前 Agent 拥有的标签，用于过滤任务
@@ -153,7 +153,7 @@ pub struct TaskRequest {
 
 /// Task response, for task pull requests or direct task assignments from Server to Agent
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct TaskResponse {
+pub struct AcquireTaskResponse {
   pub tasks: Vec<ScheduledTask>, // 可执行任务列表
   pub has_more: bool,            // 是否还有更多任务
   pub next_poll_interval: u32,   // 下次拉取间隔(秒)
