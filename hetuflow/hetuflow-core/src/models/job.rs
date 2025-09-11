@@ -10,13 +10,17 @@ use crate::types::{JobStatus, ResourceLimits};
 
 /// 任务配置
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
-pub struct JobConfig {
+pub struct TaskConfig {
   /// 超时时间(秒)
   pub timeout: u32,
   /// 最大重试次数
   pub max_retries: u32,
   /// 重试间隔(秒)
   pub retry_interval: u32,
+  /// 命令。如： python, uv/uvx, npx, node, bash, sh, cargo, rustc 等
+  pub cmd: String,
+  /// 命令参数
+  pub args: Vec<String>,
   /// 工作目录，不设置则使用默认值
   pub working_directory: Option<String>,
   /// 是否捕获输出
@@ -38,7 +42,7 @@ pub struct SchedJob {
   pub name: String,
   pub description: Option<String>,
   pub environment: Option<serde_json::Value>,
-  pub config: Option<JobConfig>,
+  pub config: Option<TaskConfig>,
   pub status: JobStatus,
   pub created_by: i64,
   pub created_at: OffsetDateTime,
@@ -108,32 +112,32 @@ mod with_db {
 
   use super::*;
 
-  impl From<JobConfig> for sea_query::Value {
-    fn from(value: JobConfig) -> Self {
+  impl From<TaskConfig> for sea_query::Value {
+    fn from(value: TaskConfig) -> Self {
       Self::Json(Some(Box::new(serde_json::to_value(value).unwrap())))
     }
   }
-  impl sea_query::Nullable for JobConfig {
+  impl sea_query::Nullable for TaskConfig {
     fn null() -> sea_query::Value {
       sea_query::Value::Json(None)
     }
   }
-  impl Type<Postgres> for JobConfig {
+  impl Type<Postgres> for TaskConfig {
     fn type_info() -> PgTypeInfo {
       <Json<Self> as Type<Postgres>>::type_info()
     }
   }
-  impl PgHasArrayType for JobConfig {
+  impl PgHasArrayType for TaskConfig {
     fn array_type_info() -> PgTypeInfo {
       <Json<Self> as PgHasArrayType>::array_type_info()
     }
   }
-  impl Encode<'_, Postgres> for JobConfig {
+  impl Encode<'_, Postgres> for TaskConfig {
     fn encode_by_ref(&self, buf: &mut PgArgumentBuffer) -> Result<IsNull, BoxDynError> {
       Json(self).encode_by_ref(buf)
     }
   }
-  impl<'r> Decode<'r, Postgres> for JobConfig {
+  impl<'r> Decode<'r, Postgres> for TaskConfig {
     fn decode(value: PgValueRef<'r>) -> Result<Self, BoxDynError> {
       Ok(Json::<Self>::decode(value)?.0)
     }

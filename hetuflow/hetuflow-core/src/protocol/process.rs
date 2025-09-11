@@ -2,39 +2,13 @@ use fusion_common::time::OffsetDateTime;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-/// 资源限制配置
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ResourceLimits {
-  /// 最大内存使用量 (MB)
-  pub max_memory_mb: Option<u64>,
-  /// 最大CPU使用率 (0.0-1.0)
-  pub max_cpu_percent: Option<f64>,
-  /// 最大执行时间 (秒)
-  pub max_execution_time_secs: Option<u64>,
-  /// 最大输出大小 (字节)
-  pub max_output_size_bytes: Option<u64>,
-}
-
-impl Default for ResourceLimits {
-  fn default() -> Self {
-    Self {
-      max_memory_mb: Some(1024),                     // 默认1GB内存限制
-      max_cpu_percent: Some(0.8),                    // 默认80%CPU限制
-      max_execution_time_secs: Some(3600),           // 默认1小时执行时间限制
-      max_output_size_bytes: Some(10 * 1024 * 1024), // 默认10MB输出限制
-    }
-  }
-}
-
 /// 进程信息
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ProcessInfo {
   /// 进程ID
   pub pid: u32,
-  /// 任务ID
-  pub task_id: Uuid,
   /// 任务实例ID
-  pub instance_id: Option<Uuid>,
+  pub instance_id: Uuid,
   /// 进程状态
   pub status: ProcessStatus,
   /// 启动时间
@@ -112,8 +86,8 @@ pub enum ResourceViolationType {
 pub struct ProcessEvent {
   /// 进程ID
   pub pid: u32,
-  /// 任务ID
-  pub task_id: Uuid,
+  /// 任务实例ID
+  pub instance_id: Uuid,
   /// 事件类型
   pub event_type: ProcessEventType,
   /// 事件时间

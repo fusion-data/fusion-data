@@ -78,10 +78,7 @@ impl ScheduledTask {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TaskInstanceUpdated {
   /// 任务实例 ID
-  // TODO: 是否应该添加 task_instance_id？（由客户端生成 task instance id，避免重复或遗漏）
-  pub task_instance_id: Uuid,
-  /// 正在上报状态的 Task ID
-  pub task_id: Uuid,
+  pub instance_id: Uuid,
   /// Agent ID
   pub agent_id: Uuid,
   /// 执行状态
@@ -96,48 +93,31 @@ pub struct TaskInstanceUpdated {
   pub exit_code: Option<i32>,
   /// 执行指标
   pub metrics: Option<TaskMetrics>,
-  /// 执行进度 (0.0-1.0)
-  pub progress: Option<f64>,
 }
 
 impl TaskInstanceUpdated {
-  pub fn new(agent_id: Uuid, task_id: Uuid, task_instance_id: Uuid, status: TaskInstanceStatus) -> Self {
-    Self {
-      task_instance_id,
-      agent_id,
-      task_id,
-      status,
-      timestamp: now_epoch_millis(),
-      output: None,
-      error_message: None,
-      exit_code: None,
-      metrics: None,
-      progress: None,
-    }
+  pub fn with_status(&mut self, status: TaskInstanceStatus) -> &Self {
+    self.status = status;
+    self
   }
 
-  pub fn with_output(mut self, output: impl Into<String>) -> Self {
+  pub fn with_output(&mut self, output: impl Into<String>) -> &Self {
     self.output = Some(output.into());
     self
   }
 
-  pub fn with_error_message(mut self, error_message: impl Into<String>) -> Self {
+  pub fn with_error_message(&mut self, error_message: impl Into<String>) -> &Self {
     self.error_message = Some(error_message.into());
     self
   }
 
-  pub fn with_exit_code(mut self, exit_code: i32) -> Self {
+  pub fn with_exit_code(&mut self, exit_code: i32) -> &Self {
     self.exit_code = Some(exit_code);
     self
   }
 
-  pub fn with_metrics(mut self, metrics: TaskMetrics) -> Self {
+  pub fn with_metrics(&mut self, metrics: TaskMetrics) -> &Self {
     self.metrics = Some(metrics);
-    self
-  }
-
-  pub fn with_progress(mut self, progress: f64) -> Self {
-    self.progress = Some(progress);
     self
   }
 }
@@ -208,21 +188,9 @@ pub struct TaskExecutionResult {
   pub duration_ms: u64,              // 执行时长(毫秒)
 }
 
-/// 任务执行错误
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct TaskExecutionError {
-  pub task_id: Uuid,                      // 任务ID
-  pub instance_id: Option<Uuid>,          // 任务实例ID
-  pub error_type: TaskExecutionErrorType, // 错误类型
-  pub message: String,                    // 错误消息
-  pub retry_count: i32,                   // 当前重试次数
-  pub max_retries: i32,                   // 最大重试次数
-  pub timestamp: i64,                     // 错误时间戳
-}
-
 /// 任务执行错误类型
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub enum TaskExecutionErrorType {
+pub enum TaskExecutionError {
   /// 任务被取消
   Cancelled,
   /// 进程启动失败
@@ -239,4 +207,6 @@ pub enum TaskExecutionErrorType {
   ConfigurationError,
   /// 网络错误
   NetworkError,
+  /// 其他错误
+  Failed,
 }

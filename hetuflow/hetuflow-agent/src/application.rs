@@ -48,7 +48,6 @@ impl AgentApplication {
           setting.clone(),
           process_manager.clone(),
           connection_manager.clone(),
-          None,
           scheduled_task_rx.clone(),
         ))
       })

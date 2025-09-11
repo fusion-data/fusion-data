@@ -94,6 +94,7 @@
     "reranker",
     "retryable",
     "rmcp",
+    "rustc",
     "sched",
     "serde",
     "serv",

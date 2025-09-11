@@ -6,13 +6,13 @@ use std::time::Duration;
 use fusion_common::time::now_offset;
 use fusion_core::DataError;
 use hetuflow_core::protocol::{
-  ProcessEvent, ProcessEventType, ProcessInfo, ProcessStatus, ResourceLimits, ResourceUsage, ResourceViolation,
-  ResourceViolationType,
+  ProcessEvent, ProcessEventType, ProcessInfo, ProcessStatus, ResourceUsage, ResourceViolation, ResourceViolationType,
 };
+use hetuflow_core::types::ResourceLimits;
 use log::{debug, error, info, warn};
 use mea::shutdown::ShutdownRecv;
 use serde_json::json;
-use tokio::sync::{RwLock, broadcast, mpsc};
+use tokio::sync::{RwLock, mpsc};
 use uuid::Uuid;
 
 use crate::setting::ProcessConfig;
@@ -24,9 +24,9 @@ pub struct ProcessManager {
   process_config: Arc<ProcessConfig>,
   shutdown_rx: ShutdownRecv,
   /// 活跃进程映射
-  active_processes: Arc<RwLock<HashMap<Uuid, ProcessInfo>>>,
+  active_processes: Arc<RwLock<HashMap<u32, ProcessInfo>>>,
   /// 进程句柄映射
-  process_handles: Arc<RwLock<HashMap<Uuid, Child>>>,
+  process_handles: Arc<RwLock<HashMap<u32, Child>>>,
   /// 事件发送器
   event_sender: mpsc::UnboundedSender<ProcessEvent>,
   /// 事件接收器
@@ -88,14 +88,13 @@ impl ProcessManager {
   /// 启动新进程
   pub async fn spawn_process(
     &self,
-    task_id: Uuid,
-    command: &str,
+    instance_id: Uuid,
+    cmd: &str,
     args: &[String],
     working_dir: Option<&str>,
     environment: Option<&HashMap<String, String>>,
-    resource_limits: Option<ResourceLimits>,
-  ) -> Result<Uuid, DataError> {
-    let process_id = Uuid::new_v4();
+    resource_limits: Option<&ResourceLimits>,
+  ) -> Result<u32, DataError> {
 
     // 检查并发进程数限制
     {
@@ -105,10 +104,10 @@ impl ProcessManager {
       }
     }
 
-    debug!("Spawning process: {} with args: {:?}, working_dir: {:?}", command, args, working_dir);
+    debug!("Spawning process: {} with args: {:?}, working_dir: {:?}", cmd, args, working_dir);
 
     // 构建命令
-    let mut cmd = Command::new(command);
+    let mut cmd = Command::new(cmd);
     cmd.args(args).stdout(Stdio::piped()).stderr(Stdio::piped()).stdin(Stdio::null());
 
     // 设置工作目录
@@ -131,47 +130,46 @@ impl ProcessManager {
     }
 
     // 启动进程
-    let mut child = cmd.spawn()?;
-    let pid = child.id();
+    let child = cmd.spawn()?;
+    let pid: u32 = child.id();
 
     // 创建进程信息
     let process_info = ProcessInfo {
       pid,
-      task_id,
-      instance_id: todo!(),
-      status: todo!(),
-      started_at: todo!(),
-      completed_at: todo!(),
-      exit_code: todo!(),
-      resource_usage: todo!(),
-      is_daemon: todo!(),
+      instance_id,
+      status: ProcessStatus::Running,
+      started_at: now_offset(),
+      completed_at: None,
+      exit_code: None,
+      resource_usage: None,
+      is_daemon: false,
     };
 
     // 存储进程信息和句柄
     {
       let mut active_processes = self.active_processes.write().await;
-      active_processes.insert(process_id, process_info);
+      active_processes.insert(pid, process_info);
     }
     {
       let mut process_handles = self.process_handles.write().await;
-      process_handles.insert(process_id, child);
+      process_handles.insert(pid, child);
     }
 
     // 发送进程启动事件
     let _ = self.event_sender.send(ProcessEvent {
-      pid: 0, // TODO: process_id,
-      task_id,
+      pid,
+      instance_id,
       event_type: ProcessEventType::Started,
       timestamp: now_offset(),
       data: None,
     });
 
-    info!("Process spawned successfully: {} (PID: {})", process_id, pid);
-    Ok(process_id)
+    info!("Process spawned successfully: PID {}", pid);
+    Ok(pid)
   }
 
   /// 强制终止进程
-  pub async fn kill_process(&self, process_id: Uuid) -> Result<(), DataError> {
+  pub async fn kill_process(&self, process_id: u32) -> Result<(), DataError> {
     debug!("Killing process: {}", process_id);
 
     let mut child_opt = {
@@ -229,15 +227,15 @@ impl ProcessManager {
       }
 
       // 发送进程终止事件
-      let task_id = {
+      let process_instance_id = {
         let active_processes = self.active_processes.read().await;
-        active_processes.get(&process_id).map(|p| p.task_id)
+        active_processes.get(&process_id).map(|p| p.instance_id)
       };
 
-      if let Some(task_id) = task_id {
+      if let Some(instance_id) = process_instance_id {
         let _ = self.event_sender.send(ProcessEvent {
-          pid: 0, // TODO: process_id,
-          task_id,
+          pid: process_id,
+          instance_id,
           event_type: ProcessEventType::Killed,
           timestamp: now_offset(),
           data: None,
@@ -253,7 +251,7 @@ impl ProcessManager {
   }
 
   /// 获取进程信息
-  pub async fn get_process_info(&self, process_id: Uuid) -> Option<ProcessInfo> {
+  pub async fn get_process_info(&self, process_id: u32) -> Option<ProcessInfo> {
     let active_processes = self.active_processes.read().await;
     active_processes.get(&process_id).cloned()
   }
@@ -265,16 +263,16 @@ impl ProcessManager {
   }
 
   /// 获取任务的进程列表
-  pub async fn get_task_processes(&self, task_id: Uuid) -> Vec<ProcessInfo> {
+  pub async fn get_task_processes(&self, instance_id: Uuid) -> Vec<ProcessInfo> {
     let active_processes = self.active_processes.read().await;
-    active_processes.values().filter(|p| p.task_id == task_id).cloned().collect()
+    active_processes.values().filter(|p| p.instance_id == instance_id).cloned().collect()
   }
 
   /// 事件处理循环
   async fn event_loop(
     mut receiver: mpsc::UnboundedReceiver<ProcessEvent>,
-    active_processes: Arc<RwLock<HashMap<Uuid, ProcessInfo>>>,
-    process_handles: Arc<RwLock<HashMap<Uuid, Child>>>,
+    active_processes: Arc<RwLock<HashMap<u32, ProcessInfo>>>,
+    process_handles: Arc<RwLock<HashMap<u32, Child>>>,
   ) {
     info!("ProcessManager event loop started");
 
@@ -285,8 +283,8 @@ impl ProcessManager {
 
   /// 清理循环
   async fn cleanup_loop(
-    active_processes: Arc<RwLock<HashMap<Uuid, ProcessInfo>>>,
-    process_handles: Arc<RwLock<HashMap<Uuid, Child>>>,
+    active_processes: Arc<RwLock<HashMap<u32, ProcessInfo>>>,
+    process_handles: Arc<RwLock<HashMap<u32, Child>>>,
     config: Arc<ProcessConfig>,
     event_sender: mpsc::UnboundedSender<ProcessEvent>,
   ) {
@@ -310,8 +308,8 @@ impl ProcessManager {
 
   /// 清理已完成的进程
   async fn cleanup_completed_processes(
-    active_processes: &Arc<RwLock<HashMap<Uuid, ProcessInfo>>>,
-    process_handles: &Arc<RwLock<HashMap<Uuid, Child>>>,
+    active_processes: &Arc<RwLock<HashMap<u32, ProcessInfo>>>,
+    process_handles: &Arc<RwLock<HashMap<u32, Child>>>,
   ) {
     let mut to_remove = Vec::new();
 
@@ -351,8 +349,8 @@ impl ProcessManager {
 
   /// 清理超时进程
   async fn cleanup_timeout_processes(
-    active_processes: &Arc<RwLock<HashMap<Uuid, ProcessInfo>>>,
-    process_handles: &Arc<RwLock<HashMap<Uuid, Child>>>,
+    active_processes: &Arc<RwLock<HashMap<u32, ProcessInfo>>>,
+    process_handles: &Arc<RwLock<HashMap<u32, Child>>>,
     config: &Arc<ProcessConfig>,
     event_sender: &mpsc::UnboundedSender<ProcessEvent>,
   ) {
@@ -366,13 +364,13 @@ impl ProcessManager {
         if process_info.status == ProcessStatus::Running {
           let elapsed = now - process_info.started_at;
           if elapsed.num_milliseconds() as u128 > timeout_duration.as_millis() {
-            to_kill.push((*process_id, process_info.task_id));
+            to_kill.push((*process_id, process_info.instance_id));
           }
         }
       }
     }
 
-    for (process_id, task_id) in to_kill {
+    for (process_id, instance_id) in to_kill {
       warn!("Process {} timed out, killing it", process_id);
 
       // 强制终止进程
@@ -395,8 +393,8 @@ impl ProcessManager {
 
       // 发送超时事件
       let _ = event_sender.send(ProcessEvent {
-        pid: 0, // TODO: process_id,
-        task_id,
+        pid: process_id,
+        instance_id,
         event_type: ProcessEventType::BecameZombie,
         timestamp: now,
         data: Some(json!({"message": "Process killed due to timeout"})),
@@ -406,8 +404,8 @@ impl ProcessManager {
 
   /// 检查僵尸进程
   async fn check_zombie_processes(
-    active_processes: &Arc<RwLock<HashMap<Uuid, ProcessInfo>>>,
-    process_handles: &Arc<RwLock<HashMap<Uuid, Child>>>,
+    active_processes: &Arc<RwLock<HashMap<u32, ProcessInfo>>>,
+    process_handles: &Arc<RwLock<HashMap<u32, Child>>>,
     event_sender: &mpsc::UnboundedSender<ProcessEvent>,
   ) {
     let mut to_cleanup = Vec::new();
@@ -419,15 +417,15 @@ impl ProcessManager {
       for (process_id, process_info) in processes.iter() {
         if process_info.status == ProcessStatus::Running {
           if Self::is_zombie_process(process_info.pid) {
-            to_cleanup.push((*process_id, process_info.task_id));
+            to_cleanup.push((*process_id, process_info.instance_id));
           }
         }
       }
     }
 
-    for (process_id, task_id) in to_cleanup {
+    for (process_id, instance_id) in to_cleanup {
       warn!("Zombie process detected: {}", process_id);
-      Self::cleanup_zombie_process(process_id, task_id, active_processes, process_handles, event_sender).await;
+      Self::cleanup_zombie_process(process_id, instance_id, active_processes, process_handles, event_sender).await;
     }
   }
 
@@ -457,10 +455,10 @@ impl ProcessManager {
 
   /// 清理僵尸进程
   async fn cleanup_zombie_process(
-    process_id: Uuid,
-    task_id: Uuid,
-    active_processes: &Arc<RwLock<HashMap<Uuid, ProcessInfo>>>,
-    process_handles: &Arc<RwLock<HashMap<Uuid, Child>>>,
+    process_id: u32,
+    instance_id: Uuid,
+    active_processes: &Arc<RwLock<HashMap<u32, ProcessInfo>>>,
+    process_handles: &Arc<RwLock<HashMap<u32, Child>>>,
     event_sender: &mpsc::UnboundedSender<ProcessEvent>,
   ) {
     // 移除进程句柄
@@ -480,8 +478,8 @@ impl ProcessManager {
 
     // 发送僵尸进程事件
     let _ = event_sender.send(ProcessEvent {
-      pid: 0, // TODO: process_id,
-      task_id,
+      pid: process_id,
+      instance_id,
       event_type: ProcessEventType::BecameZombie,
       timestamp: now_offset(),
       data: Some(json!({"message": "Zombie process detected and cleaned up"})),
@@ -511,27 +509,27 @@ impl ResourceMonitor {
     let usage = self.get_resource_usage(pid).await?;
 
     // 检查内存限制
-    if let Some(memory_limit) = limits.max_memory_mb {
-      if usage.memory_mb > memory_limit as f64 {
-        return Ok(Some(ResourceViolation {
-          violation_type: ResourceViolationType::MemoryExceeded,
-          current_value: usage.memory_mb,
-          limit_value: memory_limit as f64,
-          timestamp: now_offset(),
-        }));
-      }
+    if let Some(memory_limit) = limits.max_memory_mb
+      && usage.memory_mb > memory_limit as f64
+    {
+      return Ok(Some(ResourceViolation {
+        violation_type: ResourceViolationType::MemoryExceeded,
+        current_value: usage.memory_mb,
+        limit_value: memory_limit as f64,
+        timestamp: now_offset(),
+      }));
     }
 
     // 检查CPU限制
-    if let Some(cpu_limit) = limits.max_cpu_percent {
-      if usage.cpu_percent > cpu_limit as f64 {
-        return Ok(Some(ResourceViolation {
-          violation_type: ResourceViolationType::CpuExceeded,
-          current_value: usage.cpu_percent,
-          limit_value: cpu_limit as f64,
-          timestamp: now_offset(),
-        }));
-      }
+    if let Some(cpu_limit) = limits.max_cpu_percent
+      && usage.cpu_percent > cpu_limit as f64
+    {
+      return Ok(Some(ResourceViolation {
+        violation_type: ResourceViolationType::CpuExceeded,
+        current_value: usage.cpu_percent,
+        limit_value: cpu_limit as f64,
+        timestamp: now_offset(),
+      }));
     }
 
     Ok(None)
@@ -551,10 +549,10 @@ impl ResourceMonitor {
         for line in status_content.lines() {
           if line.starts_with("VmRSS:") {
             let parts: Vec<&str> = line.split_whitespace().collect();
-            if parts.len() >= 2 {
-              if let Ok(kb) = parts[1].parse::<f64>() {
-                memory_mb = kb / 1024.0;
-              }
+            if parts.len() >= 2
+              && let Ok(kb) = parts[1].parse::<f64>()
+            {
+              memory_mb = kb / 1024.0;
             }
             break;
           }
