@@ -1,10 +1,9 @@
-use fusion_common::time::now_epoch_millis;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::{
   models::{SchedTask, SchedTaskInstance, TaskMetrics},
-  types::{TaskControlKind, TaskInstanceStatus},
+  types::TaskInstanceStatus,
 };
 
 /// 任务分发请求
@@ -85,12 +84,10 @@ pub struct TaskInstanceUpdated {
   pub status: TaskInstanceStatus,
   /// 状态更新时间
   pub timestamp: i64,
-  /// 任务输出
-  pub output: Option<String>,
+  /// 任务数据
+  pub data: Option<String>,
   /// 错误信息
   pub error_message: Option<String>,
-  /// 退出码
-  pub exit_code: Option<i32>,
   /// 执行指标
   pub metrics: Option<TaskMetrics>,
 }
@@ -102,17 +99,12 @@ impl TaskInstanceUpdated {
   }
 
   pub fn with_output(&mut self, output: impl Into<String>) -> &Self {
-    self.output = Some(output.into());
+    self.data = Some(output.into());
     self
   }
 
   pub fn with_error_message(&mut self, error_message: impl Into<String>) -> &Self {
     self.error_message = Some(error_message.into());
-    self
-  }
-
-  pub fn with_exit_code(&mut self, exit_code: i32) -> &Self {
-    self.exit_code = Some(exit_code);
     self
   }
 

@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use hetuflow_core::protocol::{AgentRegisterRequest, HeartbeatRequest, TaskInstanceUpdated, AcquireTaskRequest};
+use hetuflow_core::protocol::{AcquireTaskRequest, AgentRegisterRequest, HeartbeatRequest, TaskInstanceUpdated};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 

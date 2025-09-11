@@ -33,8 +33,6 @@ pub struct TaskMetrics {
 pub struct SchedTask {
   pub id: Uuid,
   pub job_id: Uuid,
-  // pub agent_id: Option<Uuid>,
-  // pub server_id: Option<Uuid>,
   pub namespace_id: Uuid,
   /// 任务优先级，数值越大优先级越高
   pub priority: i32,

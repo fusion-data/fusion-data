@@ -8,7 +8,8 @@ use fusion_core::DataError;
 use hetuflow_core::{
   models::*,
   protocol::{
-    AcquireTaskRequest, AgentRegisterResponse, ScheduledTask, TaskInstanceUpdated, AcquireTaskResponse, WebSocketCommand,
+    AcquireTaskRequest, AcquireTaskResponse, AgentRegisterResponse, ScheduledTask, TaskInstanceUpdated,
+    WebSocketCommand,
   },
   types::{AgentStatus, CommandKind, TaskInstanceStatus, TaskStatus},
 };

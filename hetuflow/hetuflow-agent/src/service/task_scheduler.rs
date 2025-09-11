@@ -4,10 +4,12 @@ use std::time::Duration;
 use fusion_common::time::now_offset;
 use fusion_core::DataError;
 use fusion_core::timer::TimerRef;
+use futures_util::future::Join;
 use futures_util::{FutureExt, pin_mut};
 use log::{debug, error, info, warn};
 use mea::shutdown::ShutdownRecv;
 use tokio::sync::{RwLock, broadcast};
+use tokio::task::JoinHandle;
 use tokio::time::{Instant, interval};
 
 use hetuflow_core::protocol::{AcquireTaskRequest, ScheduledTask, WebSocketEvent};
@@ -45,6 +47,7 @@ pub struct TaskScheduler {
   schedule_task_runner: Arc<Mutex<Option<ScheduleTaskRunner>>>,
   /// 调度状态
   state: Arc<RwLock<TaskSchedulingState>>,
+  scheduled_task_rx: kanal::AsyncReceiver<ScheduledTask>,
 }
 
 impl TaskScheduler {
@@ -54,10 +57,10 @@ impl TaskScheduler {
     shutdown_rx: ShutdownRecv,
     connection_manager: Arc<ConnectionManager>,
     timer_ref: TimerRef,
-    scheduled_task_tx: kanal::AsyncSender<ScheduledTask>,
   ) -> Self {
     let state = Arc::new(RwLock::new(TaskSchedulingState::default()));
 
+    let (scheduled_task_tx, scheduled_task_rx) = kanal::unbounded_async();
     let command_rx = connection_manager.subscribe_command();
     let schedule_task_runner =
       ScheduleTaskRunner { scheduled_task_tx, shutdown_rx: shutdown_rx.clone(), timer_ref, command_rx };
@@ -66,13 +69,18 @@ impl TaskScheduler {
     let poll_task_runner = PollTaskRunner { setting, shutdown_rx, state: state.clone(), connection_manager };
     let poll_task_runner = Arc::new(Mutex::new(Some(poll_task_runner)));
 
-    Self { poll_task_runner, schedule_task_runner, state }
+    Self { poll_task_runner, schedule_task_runner, state, scheduled_task_rx }
   }
 
   /// 获取调度状态
   pub async fn get_state(&self) -> TaskSchedulingState {
     let state = self.state.read().await;
     state.clone()
+  }
+
+  /// 获取 ScheduledTask Receiver
+  pub fn scheduled_task_rx(&self) -> kanal::AsyncReceiver<ScheduledTask> {
+    self.scheduled_task_rx.clone()
   }
 
   /// 获取负载因子
@@ -82,30 +90,29 @@ impl TaskScheduler {
   }
 
   /// 启动任务调度器
-  pub async fn start(&self) -> Result<(), DataError> {
+  pub fn start(&self) -> Result<Vec<JoinHandle<()>>, DataError> {
     info!("Starting TaskScheduler");
 
-    self.start_poll_task_runner();
-
-    self.start_task_run_loop();
+    let h1 = self.start_poll_task_runner();
+    let h2 = self.start_task_run_loop();
 
     info!("TaskScheduler started successfully");
-    Ok(())
+    Ok(vec![h1, h2])
   }
 
-  fn start_poll_task_runner(&self) {
+  fn start_poll_task_runner(&self) -> JoinHandle<()> {
     let mut guard = self.poll_task_runner.lock().unwrap();
     if let Some(mut poll_task_runner) = guard.take() {
-      tokio::spawn(async move { poll_task_runner.run_loop().await });
+      tokio::spawn(async move { poll_task_runner.run_loop().await })
     } else {
-      panic!("poll_task_runner is None");
+      panic!("poll_task_runner is None")
     }
   }
 
-  fn start_task_run_loop(&self) {
+  fn start_task_run_loop(&self) -> JoinHandle<()> {
     let mut guard = self.schedule_task_runner.lock().unwrap();
     if let Some(mut schedule_task_runner) = guard.take() {
-      tokio::spawn(async move { schedule_task_runner.run_loop().await });
+      tokio::spawn(async move { schedule_task_runner.run_loop().await })
     } else {
       panic!("schedule_task_runner is None");
     }
@@ -146,16 +153,17 @@ impl ScheduleTaskRunner {
             }
             Err(e) => {
               error!("Failed to receive command: {}", e);
-              return;
+              break;
             }
           }
         }
         _ = shutdown_rx_fut => {
-          info!("process_task_response_loop stopped");
-          return;
+          info!("ScheduleTaskRunner stopped");
+          break;
         }
       }
     }
+    let _ = self.scheduled_task_tx.close();
   }
 }
 
@@ -177,7 +185,7 @@ impl PollTaskRunner {
       tokio::select! {
         _ = poll_interval_fut => {},
         _ = shutdown_rx_fut => {
-          info!("TaskScheduler polling loop stopped");
+          info!("PollTaskRunner polling loop stopped");
           return;
         }
       };

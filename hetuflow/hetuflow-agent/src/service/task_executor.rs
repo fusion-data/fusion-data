@@ -1,19 +1,15 @@
-use std::{
-  sync::{
-    Arc,
-    atomic::{AtomicBool, Ordering},
-  },
-  time::Duration,
-};
+use std::sync::Arc;
 
-use fusion_common::{ahash::HashMap, time::now_epoch_millis};
+use fusion_common::time::now_epoch_millis;
 use fusion_core::DataError;
-use log::{debug, error, info, warn};
-use tokio::sync::RwLock;
+use futures_util::{FutureExt, pin_mut};
+use log::{error, info};
+use mea::shutdown::ShutdownRecv;
+use tokio::task::JoinHandle;
 use uuid::Uuid;
 
 use hetuflow_core::{
-  protocol::{ProcessInfo, ScheduledTask, TaskExecutionError, TaskInstanceUpdated, WebSocketEvent},
+  protocol::{ProcessEvent, ProcessEventKind, ScheduledTask, TaskExecutionError, TaskInstanceUpdated, WebSocketEvent},
   types::{EventKind, TaskInstanceStatus},
 };
 
@@ -22,36 +18,13 @@ use crate::{
   setting::HetuflowAgentSetting,
 };
 
-/// 任务执行状态
-#[derive(Debug, Clone)]
-pub struct TaskExecution {
-  /// 任务实例ID
-  pub instance_id: Uuid,
-  /// 调度任务
-  pub task: Arc<ScheduledTask>,
-  /// 进程执行 ID
-  pub process_id: Option<Uuid>,
-  /// 进程信息
-  pub process_info: Option<ProcessInfo>,
-  /// 开始时间
-  pub started_at: i64,
-  /// 状态
-  pub status: TaskInstanceStatus,
-  /// 取消标志
-  pub cancelled: Arc<AtomicBool>,
-}
-
 /// 任务执行器。负责执行具体的任务，包括进程管理和状态上报
 pub struct TaskExecutor {
-  /// Agent ID
   setting: Arc<HetuflowAgentSetting>,
-  /// 进程管理器
   process_manager: Arc<ProcessManager>,
-  /// 活跃任务执行
-  active_executions: Arc<RwLock<HashMap<Uuid, TaskExecution>>>,
-  /// 连接管理器
   connection_manager: Arc<ConnectionManager>,
-  scheduled_task_rx: Arc<kanal::AsyncReceiver<ScheduledTask>>,
+  scheduled_task_rx: kanal::AsyncReceiver<ScheduledTask>,
+  shutdown_rx: std::sync::Mutex<Option<ShutdownRecv>>,
 }
 
 impl TaskExecutor {
@@ -61,143 +34,144 @@ impl TaskExecutor {
     process_manager: Arc<ProcessManager>,
     connection_manager: Arc<ConnectionManager>,
     scheduled_task_rx: kanal::AsyncReceiver<ScheduledTask>,
+    shutdown_rx: ShutdownRecv,
   ) -> Self {
-    Self {
-      setting,
-      process_manager,
-      active_executions: Arc::new(RwLock::new(HashMap::default())),
-      connection_manager,
-      scheduled_task_rx: Arc::new(scheduled_task_rx),
-    }
+    let shutdown_rx = std::sync::Mutex::new(Some(shutdown_rx));
+    Self { setting, process_manager, connection_manager, scheduled_task_rx, shutdown_rx }
+  }
+
+  pub fn start(&self) -> Result<Vec<JoinHandle<()>>, DataError> {
+    info!("Starting TaskExecutor");
+    let h1 = self.run_scheduled_task_loop();
+    let h2 = self.run_process_event_loop();
+
+    // discard ShutdownRecv
+    let _ = self.shutdown_rx.lock().unwrap().take();
+
+    info!("TaskExecutor started successfully");
+    Ok(vec![h1, h2])
   }
 
   /// 启动任务执行器
-  pub async fn run_loop(&self) -> Result<(), DataError> {
+  fn run_scheduled_task_loop(&self) -> JoinHandle<()> {
     info!("Starting TaskExecutor for agent {}", self.setting.agent_id);
 
-    loop {
-      match self.scheduled_task_rx.recv().await {
-        Ok(task) => self.execute_task(task).await,
-        Err(e) => {
-          info!("The scheduled_task_rx channel closed: {}", e);
-          break;
+    let connection_manager = self.connection_manager.clone();
+    let process_manager = self.process_manager.clone();
+    let setting = self.setting.clone();
+    let scheduled_task_rx = self.scheduled_task_rx.clone();
+
+    tokio::spawn(async move {
+      loop {
+        match scheduled_task_rx.recv().await {
+          Ok(task) => {
+            Self::execute_task(setting.clone(), process_manager.clone(), connection_manager.clone(), task).await
+          }
+          Err(e) => {
+            info!("The scheduled_task_rx channel closed: {}", e);
+            break;
+          }
         }
       }
-    }
+    })
+  }
 
-    self.stop().await
+  fn run_process_event_loop(&self) -> JoinHandle<()> {
+    let mut process_event_rx = self.process_manager.subscribe_events();
+    let agent_id = self.setting.agent_id;
+    let connection_manager = self.connection_manager.clone();
+    let shutdown_rx = self.shutdown_rx.lock().unwrap().clone().unwrap();
+
+    tokio::spawn(async move {
+      loop {
+        let process_event_rx_fut = process_event_rx.recv().fuse();
+        let shutdown_rx_fut = shutdown_rx.is_shutdown().fuse();
+        pin_mut!(process_event_rx_fut, shutdown_rx_fut);
+        futures_util::select! {
+          event_result = process_event_rx_fut => {
+            match event_result {
+              Ok(event) => Self::handle_process_event(agent_id, connection_manager.clone(), event).await,
+              Err(e) => {
+                info!("The process_event_rx channel closed: {}", e);
+                break;
+              }
+            }
+          },
+          _ = shutdown_rx_fut => {
+            info!("TaskExecutor process_event_rx loop stopped");
+            break;
+          }
+        }
+      }
+    })
   }
 
   /// 停止任务执行器
-  async fn stop(&self) -> Result<(), DataError> {
-    info!("Stopping TaskExecutor for agent {}", self.setting.agent_id);
-
-    // 取消所有活跃任务
-    let executions = self.active_executions.read().await;
-    for execution in executions.values() {
-      execution.cancelled.store(true, Ordering::SeqCst);
-      if let Some(process_id) = execution.process_id.as_ref()
-        && let Err(e) = self.process_manager.kill_process(process_id).await
-      {
-        warn!("Failed to kill process {}: {}", process_id, e);
-      }
-    }
-    drop(executions);
-
-    // 等待所有任务完成
-    let mut attempts = 0;
-    while !self.active_executions.read().await.is_empty() && attempts < 30 {
-      tokio::time::sleep(Duration::from_millis(100)).await;
-      attempts += 1;
-    }
-
+  pub async fn stop(&self) -> Result<(), DataError> {
+    info!("Stopping TaskExecutor");
+    self.process_manager.kill_all_processes().await?;
+    info!("TaskExecutor stopped");
     Ok(())
   }
 
-  /// 取消任务
-  pub async fn cancel_task(&self, instance_id: Uuid) -> Result<(), DataError> {
-    let mut executions = self.active_executions.write().await;
-    if let Some(execution) = executions.remove(&instance_id) {
-      execution.cancelled.store(true, Ordering::SeqCst);
-      if let Some(process_id) = execution.process_id.as_ref() {
-        self.process_manager.kill_process(process_id).await?;
-      }
-      let event = WebSocketEvent::new(
-        EventKind::TaskChangedEvent,
-        TaskInstanceUpdated {
-          instance_id,
-          agent_id: self.setting.agent_id,
-          timestamp: now_epoch_millis(),
-          output: None,
-          error_message: None,
-          exit_code: None,
-          metrics: None,
-          status: TaskInstanceStatus::Cancelled,
-        },
-      );
-      self.connection_manager.send_event(event)?;
+  async fn handle_process_event(agent_id: Uuid, connection_manager: Arc<ConnectionManager>, event: ProcessEvent) {
+    let status = match event.kind {
+      ProcessEventKind::Started => TaskInstanceStatus::Running,
+      ProcessEventKind::Exited => TaskInstanceStatus::Succeeded,
+      ProcessEventKind::Sigterm => TaskInstanceStatus::Failed,
+      ProcessEventKind::Sigkill => TaskInstanceStatus::Failed,
+      ProcessEventKind::ResourceViolation => TaskInstanceStatus::Failed,
+      ProcessEventKind::BecameZombie => TaskInstanceStatus::Failed,
+    };
+    let event = WebSocketEvent::new(
+      EventKind::TaskChangedEvent,
+      TaskInstanceUpdated {
+        instance_id: event.instance_id,
+        agent_id,
+        timestamp: event.timestamp,
+        data: event.data,
+        error_message: None,
+        metrics: None,
+        status,
+      },
+    );
+    if let Err(e) = connection_manager.send_event(event) {
+      error!("Failed to send event with process event. error: {:?}", e);
     }
-    Ok(())
-  }
-
-  /// 获取活跃任务列表
-  pub async fn get_active_tasks(&self) -> Vec<TaskExecution> {
-    self.active_executions.read().await.values().cloned().collect()
   }
 
   /// 执行任务
-  pub async fn execute_task(&self, task: ScheduledTask) {
+  async fn execute_task(
+    setting: Arc<HetuflowAgentSetting>,
+    process_manager: Arc<ProcessManager>,
+    connection_manager: Arc<ConnectionManager>,
+    task: ScheduledTask,
+  ) {
     let instance_id = task.task_instance_id();
-    let execution = TaskExecution {
-      instance_id,
-      task: Arc::new(task),
-      process_id: None,
-      process_info: None,
-      started_at: now_epoch_millis(),
-      status: TaskInstanceStatus::Running,
-      cancelled: Arc::new(AtomicBool::new(false)),
-    };
+    let agent_id = setting.agent_id;
 
     // 执行任务（单次执行）
-    let result = self.execute_single_attempt(execution).await;
-    match result {
-      Ok(execution) => {
-        if execution.process_id.is_some() {
-          self.active_executions.write().await.insert(instance_id, execution);
-        } else {
-          error!("Task {} executed without process ID", instance_id);
-        }
-      }
-      Err(error) => {
-        let event = self.process_execution_error(instance_id, error);
-        if let Err(e) = self.connection_manager.send_event(event) {
-          error!("Failed to send event: {:?}", e);
-        }
+    if let Err(error) = Self::_execute_task(process_manager, task).await {
+      let event = Self::process_execution_error(agent_id, instance_id, error);
+      if let Err(e) = connection_manager.send_event(event) {
+        error!("Failed to send event: {:?}", e);
       }
     }
   }
 
   /// 执行单次任务尝试
-  async fn execute_single_attempt(&self, mut execution: TaskExecution) -> Result<TaskExecution, TaskExecutionError> {
-    // 检查是否被取消
-    if execution.cancelled.load(Ordering::SeqCst) {
-      return Err(TaskExecutionError::Cancelled);
-    }
-
+  async fn _execute_task(process_manager: Arc<ProcessManager>, task: ScheduledTask) -> Result<(), TaskExecutionError> {
     // 获取任务配置
-    let task_config = execution.task.task.config.as_ref().ok_or(TaskExecutionError::ConfigurationError)?;
+    let task_config = task.task.config.as_ref().ok_or(TaskExecutionError::ConfigurationError)?;
 
     // 准备环境变量
     let environment =
-      if let Some(value) = execution.task.task.environment.clone() { serde_json::from_value(value).ok() } else { None };
-
-    execution.started_at = now_epoch_millis();
+      if let Some(value) = task.task.environment.clone() { serde_json::from_value(value).ok() } else { None };
 
     // 使用ProcessManager启动进程
-    let process_id = self
-      .process_manager
+    let instance_id = process_manager
       .spawn_process(
-        execution.instance_id,
+        task.task_instance_id(),
         &task_config.cmd,
         &task_config.args,
         task_config.working_directory.as_deref(),
@@ -207,20 +181,17 @@ impl TaskExecutor {
       .await
       .map_err(|_e| TaskExecutionError::ProcessStartFailed)?;
 
-    execution.process_id = Some(process_id);
-    debug!("Started process {} for task instance {}", process_id, execution.task.task_instance.id);
-
-    Ok(execution)
+    info!("Started process for task instance {}", instance_id);
+    Ok(())
   }
 
-  fn process_execution_error(&self, instance_id: Uuid, error: TaskExecutionError) -> WebSocketEvent {
+  fn process_execution_error(agent_id: Uuid, instance_id: Uuid, error: TaskExecutionError) -> WebSocketEvent {
     let mut payload = TaskInstanceUpdated {
       instance_id,
-      agent_id: self.setting.agent_id,
+      agent_id,
       timestamp: now_epoch_millis(),
-      output: None,
+      data: None,
       error_message: None,
-      exit_code: None,
       metrics: None,
       status: TaskInstanceStatus::Failed,
     };

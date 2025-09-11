@@ -133,7 +133,9 @@
 - [*] **TaskScheduler 实现** - 精调度器，基于 hierarchical_hash_wheel_timer 实现高精度定时
 - [*] **Cron 解析** - 使用 croner 解析 Cron 表达式
 - [*] **本地定时器** - 实现基于时间轮的本地定时任务触发
-- [ ] **任务同步** - 实现与 Server 的任务状态同步
+- [*] **任务同步** - 实现与 Server 的任务状态同步
+  - [*] task_executor 需要监听 ProcessEvent
+  - [*] 一个 TaskInstance 只能生成一次 Process 执行
 
 ### 3.4 任务执行
 

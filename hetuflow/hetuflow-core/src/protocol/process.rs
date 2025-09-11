@@ -1,12 +1,11 @@
 use std::sync::Arc;
 
-use fusion_common::time::OffsetDateTime;
 use serde::{Deserialize, Serialize};
 use tokio::process::Child;
 use uuid::Uuid;
 
 /// 进程信息
-#[derive(Debug, Clone)]
+#[derive(Clone, Serialize)]
 pub struct ProcessInfo {
   /// 进程ID
   pub pid: u32,
@@ -15,17 +14,14 @@ pub struct ProcessInfo {
   /// 进程状态
   pub status: ProcessStatus,
   /// 启动时间
-  pub started_at: OffsetDateTime,
+  pub started_at: i64,
   /// 完成时间
-  pub completed_at: Option<OffsetDateTime>,
+  pub completed_at: Option<i64>,
   /// 退出码
   pub exit_code: Option<i32>,
-  /// 资源使用情况
-  pub resource_usage: Option<ResourceUsage>,
-  /// 是否为守护进程
-  pub is_daemon: bool,
-
-  pub child: Arc<tokio::sync::Mutex<Child>>,
+  /// 子进程
+  #[serde(skip)]
+  pub child: Arc<mea::mutex::Mutex<Child>>,
 }
 
 /// 进程状态
@@ -70,7 +66,7 @@ pub struct ResourceViolation {
   /// 限制值
   pub limit_value: f64,
   /// 违规时间
-  pub timestamp: OffsetDateTime,
+  pub timestamp: i64,
 }
 
 /// 资源违规类型
@@ -89,27 +85,27 @@ pub enum ResourceViolationType {
 /// 进程事件
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ProcessEvent {
-  /// 进程ID
-  pub process_id: Uuid,
   /// 任务实例ID
   pub instance_id: Uuid,
   /// 事件类型
-  pub event_type: ProcessEventType,
+  pub kind: ProcessEventKind,
   /// 事件时间
-  pub timestamp: OffsetDateTime,
+  pub timestamp: i64,
   /// 事件数据
-  pub data: Option<serde_json::Value>,
+  pub data: Option<String>,
 }
 
 /// 进程事件类型
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub enum ProcessEventType {
+pub enum ProcessEventKind {
   /// 进程启动
   Started,
-  /// 进程退出
+  /// 进程运行结束退出
   Exited,
-  /// 进程被杀死
-  Killed,
+  /// 进程收到 SIGTERM 信号退出
+  Sigterm,
+  /// 进程收到 SIGKILL 信号初杀死
+  Sigkill,
   /// 资源违规
   ResourceViolation,
   /// 进程变为僵尸

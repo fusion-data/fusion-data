@@ -1,7 +1,4 @@
-use std::sync::{
-  Arc,
-  atomic::{AtomicBool, Ordering},
-};
+use std::sync::Arc;
 
 use fusion_core::{DataError, IdUuidResult};
 use futures_util::{FutureExt, SinkExt, StreamExt, pin_mut};
@@ -16,27 +13,26 @@ use tokio_tungstenite::tungstenite::Message;
 
 use crate::setting::HetuflowAgentSetting;
 
-pub struct WsHandler {
+pub struct WsRunner {
   setting: Arc<HetuflowAgentSetting>,
   command_publisher: broadcast::Sender<HetuflowCommand>,
   event_rx: mpsc::UnboundedReceiver<WebSocketEvent>,
   shutdown_rx: ShutdownRecv,
-  is_shutdown: Arc<AtomicBool>,
 }
 
-impl WsHandler {
+impl WsRunner {
   pub fn new(
     setting: Arc<HetuflowAgentSetting>,
     command_publisher: broadcast::Sender<HetuflowCommand>,
     event_rx: mpsc::UnboundedReceiver<WebSocketEvent>,
     shutdown_rx: ShutdownRecv,
   ) -> Self {
-    Self { setting, command_publisher, event_rx, shutdown_rx, is_shutdown: Arc::new(AtomicBool::new(false)) }
+    Self { setting, command_publisher, event_rx, shutdown_rx }
   }
 
   pub async fn run_loop(&mut self) {
     while let Err(e) = self.run_websocket_loop().await
-      && !self.is_shutdown.load(Ordering::Relaxed)
+      && !self.shutdown_rx.is_shutdown_now()
     {
       error!("Failed to run websocket loop: {}. Retrying in 10 seconds...", e);
 
@@ -45,7 +41,7 @@ impl WsHandler {
     }
 
     // 正常退出
-    info!("Websocket loop closed");
+    info!("WsRunner websocket loop closed");
   }
 
   async fn run_websocket_loop(&mut self) -> Result<(), DataError> {
@@ -64,7 +60,6 @@ impl WsHandler {
       futures_util::select! {
         _ = shutdown_fut => { // Shutdown signal received
           info!("Shutdown signal received, stopping ConnectionManager loop");
-          self.is_shutdown.store(true, Ordering::Relaxed);
           return Ok(());
         }
         event = event_fut => { // Send event to Server

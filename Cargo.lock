@@ -2109,6 +2109,7 @@ dependencies = [
  "garde",
  "hierarchical_hash_wheel_timer",
  "log",
+ "mea",
  "modelsql",
  "modelsql-core",
  "sea-query",

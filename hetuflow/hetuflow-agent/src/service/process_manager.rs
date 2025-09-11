@@ -1,30 +1,29 @@
 use std::process::Stdio;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use fusion_common::ahash::HashMap;
-use fusion_common::time::now_offset;
+use fusion_common::time::now_epoch_millis;
 use fusion_core::DataError;
 use hetuflow_core::protocol::{
-  ProcessEvent, ProcessEventType, ProcessInfo, ProcessStatus, ResourceUsage, ResourceViolation, ResourceViolationType,
+  ProcessEvent, ProcessEventKind, ProcessInfo, ProcessStatus, ResourceUsage, ResourceViolation, ResourceViolationType,
 };
 use hetuflow_core::types::ResourceLimits;
 use log::{debug, error, info, warn};
 use mea::shutdown::ShutdownRecv;
-use serde_json::json;
 use tokio::process::Command;
 use tokio::sync::{RwLock, broadcast};
+use tokio::task::JoinHandle;
 use uuid::Uuid;
 
 use crate::setting::ProcessConfig;
 
 /// 进程管理器。负责管理活跃进程、处理进程事件和后台清理僵尸进程
-#[derive(Debug)]
 pub struct ProcessManager {
   /// 配置
   process_config: Arc<ProcessConfig>,
-  _shutdown_rx: ShutdownRecv,
-  /// 活跃进程映射
+  shutdown_rx: Mutex<Option<ShutdownRecv>>,
+  /// 活跃进程映射。键为任务实例ID，值为进程信息。
   active_processes: Arc<RwLock<HashMap<Uuid, ProcessInfo>>>,
   /// 事件广播发送器
   event_broadcaster: broadcast::Sender<ProcessEvent>,
@@ -40,7 +39,7 @@ impl ProcessManager {
 
     Self {
       process_config,
-      _shutdown_rx: shutdown_rx,
+      shutdown_rx: Mutex::new(Some(shutdown_rx)),
       active_processes: Arc::new(RwLock::new(HashMap::default())),
       event_broadcaster,
       _resource_monitor: resource_monitor,
@@ -48,20 +47,18 @@ impl ProcessManager {
   }
 
   /// 启动进程管理器
-  pub async fn start(&self) -> Result<(), DataError> {
+  pub fn start(&self) -> Result<Vec<JoinHandle<()>>, DataError> {
     info!("Starting ProcessManager");
 
-    // 启动清理循环
-    let cleanup_active_processes = Arc::clone(&self.active_processes);
-    let cleanup_config = self.process_config.clone();
-    let cleanup_event_broadcaster = self.event_broadcaster.clone();
+    let active_processes = self.active_processes.clone();
+    let process_config = self.process_config.clone();
+    let event_broadcaster = self.event_broadcaster.clone();
+    let shutdown_rx = self.shutdown_rx.lock().unwrap().take().unwrap();
 
-    tokio::spawn(async move {
-      Self::cleanup_loop(cleanup_active_processes, cleanup_config, cleanup_event_broadcaster).await;
-    });
+    let handle = tokio::spawn(Self::cleanup_loop(active_processes, process_config, event_broadcaster, shutdown_rx));
 
     info!("ProcessManager started successfully");
-    Ok(())
+    Ok(vec![handle])
   }
 
   /// 启动新进程
@@ -74,7 +71,6 @@ impl ProcessManager {
     environment: Option<&HashMap<String, String>>,
     _resource_limits: Option<&ResourceLimits>,
   ) -> Result<Uuid, DataError> {
-    let process_id = Uuid::now_v7();
     // 检查并发进程数限制
     {
       let active_processes = self.active_processes.read().await;
@@ -109,158 +105,69 @@ impl ProcessManager {
 
     // 启动进程
     let child = cmd.spawn()?;
-    let pid: u32 = child.id().ok_or_else(|| DataError::server_error("Failed to get process ID"))?;
+    let pid: u32 = child.id().ok_or_else(|| DataError::server_error("Start process failed"))?;
 
     // 创建进程信息
+    let started_at = now_epoch_millis();
     let process_info = ProcessInfo {
       pid,
       instance_id,
       status: ProcessStatus::Running,
-      started_at: now_offset(),
+      started_at,
       completed_at: None,
       exit_code: None,
-      resource_usage: None,
-      is_daemon: false,
-      child: Arc::new(tokio::sync::Mutex::new(child)),
+      child: Arc::new(mea::mutex::Mutex::new(child)),
     };
 
     // 存储进程信息
     {
       let mut active_processes = self.active_processes.write().await;
-      active_processes.insert(process_id, process_info);
+      active_processes.insert(instance_id, process_info.clone());
     }
 
     // 发送进程启动事件
     let _ = self.event_broadcaster.send(ProcessEvent {
-      process_id,
       instance_id,
-      event_type: ProcessEventType::Started,
-      timestamp: now_offset(),
-      data: None,
+      kind: ProcessEventKind::Started,
+      timestamp: started_at,
+      data: serde_json::to_string(&process_info).ok(),
     });
 
-    info!("Process spawned successfully: ProcessID: {}, PID {}", process_id, pid);
-    Ok(process_id)
+    info!("Process spawned successfully: ProcessID: {}, PID {}", instance_id, pid);
+    Ok(instance_id)
   }
 
   /// 强制终止进程
-  pub async fn kill_process(&self, process_id: &Uuid) -> Result<(), DataError> {
-    debug!("Killing process: {}", process_id);
+  /// 终止进程，返回 JoinHandle 用于异步处理
+  pub fn spawn_kill_process(&self, instance_id: Uuid) -> tokio::task::JoinHandle<Result<Option<Uuid>, DataError>> {
+    let active_processes = self.active_processes.clone();
+    let event_broadcaster = self.event_broadcaster.clone();
+    _spawn_kill_process(instance_id, active_processes, event_broadcaster)
+  }
 
-    let child_opt = {
-      let active_processes = self.active_processes.read().await;
-      active_processes.get(process_id).map(|info| info.child.clone())
-    };
+  pub async fn kill_all_processes(&self) -> Result<(), DataError> {
+    let handles = self
+      .active_processes
+      .read()
+      .await
+      .keys()
+      .map(|instance_id| (*instance_id, self.spawn_kill_process(*instance_id)))
+      .collect::<Vec<_>>();
 
-    if let Some(child_arc) = child_opt {
-      // 尝试优雅终止
-      #[cfg(unix)]
-      {
-        use nix::sys::signal::{self, Signal};
-        use nix::unistd::Pid;
-
-        let child_pid = {
-          let child = child_arc.lock().await;
-          child.id()
-        };
-
-        if let Some(child_pid) = child_pid
-          && child_pid > 0
-        {
-          let pid = Pid::from_raw(child_pid as i32);
-          // 发送 SIGTERM
-          let _ = signal::kill(pid, Signal::SIGTERM);
-
-          // 等待一段时间
-          tokio::time::sleep(Duration::from_secs(5)).await;
-
-          // 如果还在运行，发送 SIGKILL
-          let still_running = {
-            let mut child = child_arc.lock().await;
-            match child.try_wait() {
-              Ok(Some(_)) => {
-                debug!("Process {} terminated gracefully", process_id);
-                false
-              }
-              Ok(None) => true,
-              Err(_) => false,
-            }
-          };
-
-          if still_running {
-            warn!("Process {} did not terminate gracefully, sending SIGKILL", process_id);
-            let _ = signal::kill(pid, Signal::SIGKILL);
-          }
-        }
-
-        // 等待进程结束，但不持有锁
-        let _wait_result = {
-          let mut child = child_arc.lock().await;
-          child.try_wait()
-        };
+    // Wait for all kill process tasks to complete
+    for (instance_id, handle) in handles {
+      if let Err(e) = handle.await {
+        warn!("Error waiting for kill process task for {}, error: {}", instance_id, e);
       }
-
-      #[cfg(windows)]
-      {
-        {
-          let mut child = child_arc.lock().unwrap();
-          let _ = child.kill();
-        }
-
-        // 等待进程结束，但不持有锁
-        loop {
-          let wait_result = {
-            let mut child = child_arc.lock().unwrap();
-            child.try_wait()
-          };
-
-          match wait_result {
-            Ok(Some(_)) => break,
-            Ok(None) => {
-              tokio::time::sleep(Duration::from_millis(100)).await;
-            }
-            Err(_) => break,
-          }
-        }
-      }
-
-      // 更新进程状态
-      {
-        let mut active_processes = self.active_processes.write().await;
-        if let Some(process_info) = active_processes.get_mut(&process_id) {
-          process_info.status = ProcessStatus::Killed;
-          process_info.completed_at = Some(now_offset());
-        }
-      }
-
-      // 发送进程终止事件
-      let process_instance_id = {
-        let active_processes = self.active_processes.read().await;
-        active_processes.get(process_id).map(|p| p.instance_id)
-      };
-
-      if let Some(instance_id) = process_instance_id {
-        let _ = self.event_broadcaster.send(ProcessEvent {
-          process_id: *process_id,
-          instance_id,
-          event_type: ProcessEventType::Killed,
-          timestamp: now_offset(),
-          data: None,
-        });
-      }
-
-      info!("Process killed successfully: {}", process_id);
-    } else {
-      warn!("Process not found or already terminated: {}", process_id);
     }
 
     Ok(())
   }
 
   /// 获取进程信息
-  pub async fn get_process_info(&self, process_id: &Uuid) -> Option<ProcessInfo> {
+  pub async fn get_process_info(&self, instance_id: &Uuid) -> Option<ProcessInfo> {
     let active_processes = self.active_processes.read().await;
-    active_processes.get(process_id).cloned()
+    active_processes.get(instance_id).cloned()
   }
 
   /// 获取所有活跃进程
@@ -279,6 +186,7 @@ impl ProcessManager {
     active_processes: Arc<RwLock<HashMap<Uuid, ProcessInfo>>>,
     config: Arc<ProcessConfig>,
     event_broadcaster: broadcast::Sender<ProcessEvent>,
+    shutdown_rx: ShutdownRecv,
   ) {
     info!("ProcessManager cleanup loop started");
 
@@ -289,10 +197,14 @@ impl ProcessManager {
       tokio::select! {
           _ = cleanup_interval.tick() => {
               Self::cleanup_completed_processes(&active_processes).await;
-              Self::cleanup_timeout_processes(&active_processes, &config, &event_broadcaster).await;
+              Self::cleanup_timeout_processes(&config, active_processes.clone(), event_broadcaster.clone()).await;
           }
           _ = zombie_check_interval.tick() => {
-              Self::check_zombie_processes(&active_processes, &event_broadcaster).await;
+              Self::cleanup_zombie_processes(active_processes.clone(), event_broadcaster.clone()).await;
+          }
+          _ = shutdown_rx.is_shutdown() => {
+              info!("ProcessManager cleanup loop stopped");
+              break;
           }
       }
     }
@@ -305,24 +217,24 @@ impl ProcessManager {
     {
       let mut processes = active_processes.write().await;
 
-      for (process_id, process_info) in processes.iter_mut() {
+      for (instance_id, process_info) in processes.iter_mut() {
         let mut child = process_info.child.lock().await;
         match child.try_wait() {
           Ok(Some(exit_status)) => {
-            debug!("Process {} exited with status: {:?}", process_id, exit_status);
+            debug!("Process {} exited with status: {:?}", instance_id, exit_status);
 
             process_info.status = ProcessStatus::Completed;
-            process_info.completed_at = Some(now_offset());
+            process_info.completed_at = Some(now_epoch_millis());
             process_info.exit_code = exit_status.code();
 
-            to_remove.push(*process_id);
+            to_remove.push(*instance_id);
           }
           Ok(None) => {
             // 进程仍在运行
           }
           Err(e) => {
-            error!("Error checking process status for {}: {}", process_id, e);
-            to_remove.push(*process_id);
+            error!("Error checking process status for {}: {}", instance_id, e);
+            to_remove.push(*instance_id);
           }
         }
       }
@@ -331,144 +243,259 @@ impl ProcessManager {
     // 移除已完成的进程
     {
       let mut processes = active_processes.write().await;
-      for process_id in &to_remove {
-        processes.remove(process_id);
+      for instance_id in &to_remove {
+        processes.remove(instance_id);
       }
     }
   }
 
   /// 清理超时进程
   async fn cleanup_timeout_processes(
-    active_processes: &Arc<RwLock<HashMap<Uuid, ProcessInfo>>>,
     config: &Arc<ProcessConfig>,
-    event_broadcaster: &broadcast::Sender<ProcessEvent>,
+    active_processes: Arc<RwLock<HashMap<Uuid, ProcessInfo>>>,
+    event_broadcaster: broadcast::Sender<ProcessEvent>,
   ) {
     let timeout_duration = config.process_timeout;
-    let now = now_offset();
-    let mut to_kill = Vec::new();
+    let now = now_epoch_millis();
 
-    {
-      let processes = active_processes.read().await;
-      for (process_id, process_info) in processes.iter() {
-        if process_info.status == ProcessStatus::Running {
-          let elapsed = now - process_info.started_at;
-          if elapsed.num_milliseconds() as u128 > timeout_duration.as_millis() {
-            to_kill.push((*process_id, process_info.instance_id));
-          }
+    let processes = active_processes.read().await;
+    for process_info in processes.values() {
+      if process_info.status == ProcessStatus::Running {
+        let elapsed = (now - process_info.started_at) as u128;
+        if elapsed > timeout_duration.as_millis() {
+          warn!("Process {} timed out, killing it", process_info.instance_id);
+          let _handle =
+            _spawn_kill_process(process_info.instance_id, active_processes.clone(), event_broadcaster.clone());
         }
       }
     }
+  }
 
-    for (process_id, instance_id) in to_kill {
-      warn!("Process {} timed out, killing it", process_id);
+  /// 清理僵尸进程
+  async fn cleanup_zombie_processes(
+    active_processes: Arc<RwLock<HashMap<Uuid, ProcessInfo>>>,
+    event_broadcaster: broadcast::Sender<ProcessEvent>,
+  ) {
+    let zombies = {
+      let mut processes = active_processes.write().await;
+      let (zombies, actives) = std::mem::take(&mut *processes).into_iter().partition(|(_, process_info)| {
+        process_info.status == ProcessStatus::Running && is_zombie_process(process_info.pid)
+      });
+      *processes = actives;
+      zombies
+    };
 
-      // 强制终止进程并更新状态
-      let child_arc = {
-        let processes = active_processes.read().await;
-        processes.get(&process_id).map(|info| info.child.clone())
-      };
+    for mut process_info in zombies.into_values() {
+      info!("Zombie process detected: {}", process_info.instance_id);
+      process_info.status = ProcessStatus::Zombie;
+      process_info.completed_at = Some(now_epoch_millis());
 
-      if let Some(child_arc) = child_arc {
-        // 终止进程，避免跨 await 持有锁
-        {
-          let mut child = child_arc.lock().await;
-          let _ = child.kill().await;
-          let _ = child.wait().await;
-        }
-
-        // 更新进程状态
-        {
-          let mut processes = active_processes.write().await;
-          if let Some(process_info) = processes.get_mut(&process_id) {
-            process_info.status = ProcessStatus::Killed;
-            process_info.completed_at = Some(now);
-          }
-        }
-      }
-
-      // 发送超时事件
+      // 发送僵尸进程事件
       let _ = event_broadcaster.send(ProcessEvent {
-        process_id,
-        instance_id,
-        event_type: ProcessEventType::BecameZombie,
-        timestamp: now,
-        data: Some(json!({"message": "Process killed due to timeout"})),
+        instance_id: process_info.instance_id,
+        kind: ProcessEventKind::BecameZombie,
+        timestamp: now_epoch_millis(),
+        data: serde_json::to_string(&process_info).ok(),
       });
     }
   }
+}
 
-  /// 检查僵尸进程
-  async fn check_zombie_processes(
-    active_processes: &Arc<RwLock<HashMap<Uuid, ProcessInfo>>>,
-    event_broadcaster: &broadcast::Sender<ProcessEvent>,
-  ) {
-    let mut to_cleanup = Vec::new();
+/// 检查是否为僵尸进程
+fn is_zombie_process(pid: u32) -> bool {
+  #[cfg(unix)]
+  {
+    use std::fs;
 
-    {
-      let processes = active_processes.read().await;
-
-      for (process_id, process_info) in processes.iter() {
-        if process_info.status == ProcessStatus::Running && Self::is_zombie_process(process_info.pid) {
-          to_cleanup.push((*process_id, process_info.instance_id));
-        }
+    let stat_path = format!("/proc/{}/stat", pid);
+    if let Ok(stat_content) = fs::read_to_string(stat_path) {
+      let fields: Vec<&str> = stat_content.split_whitespace().collect();
+      if fields.len() > 2 {
+        return fields[2] == "Z";
       }
-    }
-
-    for (process_id, instance_id) in to_cleanup {
-      warn!("Zombie process detected: {}", process_id);
-      Self::cleanup_zombie_process(&process_id, instance_id, active_processes, event_broadcaster).await;
     }
   }
 
-  /// 检查是否为僵尸进程
-  fn is_zombie_process(pid: u32) -> bool {
+  // Windows 没有僵尸进程的概念
+
+  false
+}
+
+fn _spawn_kill_process(
+  instance_id: Uuid,
+  active_processes: Arc<RwLock<HashMap<Uuid, ProcessInfo>>>,
+  event_broadcaster: broadcast::Sender<ProcessEvent>,
+) -> tokio::task::JoinHandle<Result<Option<Uuid>, DataError>> {
+  tokio::spawn(async move {
+    debug!("Beginning kill process. instance_id: {}", instance_id);
+
+    let mut process_info = {
+      match active_processes.write().await.remove(&instance_id) {
+        Some(process_info) => process_info,
+        None => {
+          warn!("Process not found or already terminated: {}", instance_id);
+          return Ok(None);
+        }
+      }
+    };
+
+    let child_arc = process_info.child.clone();
+    let mut sigterm_sent = false;
+    let mut sigkill_sent = false;
+    // 尝试优雅终止
     #[cfg(unix)]
     {
-      use std::fs;
+      use nix::sys::signal::{self, Signal};
+      use nix::unistd::Pid;
 
-      let stat_path = format!("/proc/{}/stat", pid);
-      if let Ok(stat_content) = fs::read_to_string(stat_path) {
-        let fields: Vec<&str> = stat_content.split_whitespace().collect();
-        if fields.len() > 2 {
-          return fields[2] == "Z";
+      let child_pid = {
+        let child = child_arc.lock().await;
+        child.id()
+      };
+
+      if let Some(child_pid) = child_pid
+        && child_pid > 0
+      {
+        let pid = Pid::from_raw(child_pid as i32);
+
+        // 发送 SIGTERM 信号
+        if let Ok(()) = signal::kill(pid, Signal::SIGTERM) {
+          debug!("Sent SIGTERM to process {}", instance_id);
+          sigterm_sent = true;
+        } else {
+          warn!("Failed to send SIGTERM to process {}", instance_id);
         }
+
+        // 循环监听进程状态，最多等待30秒
+        let start_time = std::time::Instant::now();
+        let timeout_duration = Duration::from_secs(30);
+
+        loop {
+          // 检查进程是否已终止
+          let process_terminated = {
+            let mut child = child_arc.lock().await;
+            match child.try_wait() {
+              Ok(Some(exit_status)) => {
+                debug!("Process {} terminated with status: {:?}", instance_id, exit_status);
+                true
+              }
+              Ok(None) => false,
+              Err(e) => {
+                warn!("Error checking process {} status: {}", instance_id, e);
+                true // 假设进程已终止
+              }
+            }
+          };
+
+          if process_terminated {
+            if sigterm_sent && !sigkill_sent {
+              info!("Process {} terminated gracefully after SIGTERM", instance_id);
+            }
+            break;
+          }
+
+          // 检查是否超时
+          if start_time.elapsed() >= timeout_duration && !sigkill_sent {
+            warn!("Process {} did not terminate within 30 seconds, sending SIGKILL", instance_id);
+
+            // 发送 SIGKILL 信号
+            if let Ok(()) = signal::kill(pid, Signal::SIGKILL) {
+              debug!("Sent SIGKILL to process {}", instance_id);
+              sigkill_sent = true;
+            } else {
+              error!("Failed to send SIGKILL to process {}", instance_id);
+              break;
+            }
+          }
+
+          // 如果已发送 SIGKILL 且超过额外的等待时间，强制退出循环
+          if sigkill_sent && start_time.elapsed() >= timeout_duration + Duration::from_secs(5) {
+            error!("Process {} did not terminate even after SIGKILL", instance_id);
+            break;
+          }
+
+          // 短暂等待后再次检查
+          tokio::time::sleep(Duration::from_millis(100)).await;
+        }
+      } else {
+        warn!("Invalid or missing PID for process {}", instance_id);
       }
     }
 
     #[cfg(windows)]
     {
-      // Windows 没有僵尸进程的概念
-      return false;
-    }
+      // Windows 平台直接终止进程
+      {
+        let mut child = child_arc.lock().await;
+        if let Err(e) = child.kill().await {
+          error!("Failed to kill process {}: {}", instance_id, e);
+        } else {
+          debug!("Sent kill signal to process {}", instance_id);
+          sigkill_sent = true;
 
-    false
-  }
+          // 发布 SIGKILL 事件（Windows 没有 SIGTERM）
+          let _ = event_broadcaster.send(ProcessEvent {
+            instance_id: instance_id,
+            instance_id,
+            kind: ProcessEventKind::Sigkill,
+            timestamp: now_epoch_millis(),
+            data: None,
+          });
+        }
+      }
 
-  /// 清理僵尸进程
-  async fn cleanup_zombie_process(
-    process_id: &Uuid,
-    instance_id: Uuid,
-    active_processes: &Arc<RwLock<HashMap<Uuid, ProcessInfo>>>,
-    event_broadcaster: &broadcast::Sender<ProcessEvent>,
-  ) {
-    // 更新进程状态
-    {
-      let mut processes = active_processes.write().await;
-      if let Some(process_info) = processes.get_mut(&process_id) {
-        process_info.status = ProcessStatus::Zombie;
-        process_info.completed_at = Some(now_offset());
+      // 等待进程结束
+      let start_time = std::time::Instant::now();
+      let timeout_duration = Duration::from_secs(30);
+
+      loop {
+        let wait_result = {
+          let mut child = child_arc.lock().await;
+          child.try_wait()
+        };
+
+        match wait_result {
+          Ok(Some(exit_status)) => {
+            debug!("Process {} terminated with status: {:?}", instance_id, exit_status);
+            break;
+          }
+          Ok(None) => {
+            if start_time.elapsed() >= timeout_duration {
+              error!("Process {} did not terminate within timeout", instance_id);
+              break;
+            }
+            tokio::time::sleep(Duration::from_millis(100)).await;
+          }
+          Err(e) => {
+            warn!("Error waiting for process {}: {}", instance_id, e);
+            break;
+          }
+        }
       }
     }
 
-    // 发送僵尸进程事件
-    let _ = event_broadcaster.send(ProcessEvent {
-      process_id: *process_id,
-      instance_id,
-      event_type: ProcessEventType::BecameZombie,
-      timestamp: now_offset(),
-      data: Some(json!({"message": "Zombie process detected and cleaned up"})),
-    });
-  }
+    // 更新进程信息状态
+    let completed_at = now_epoch_millis();
+    process_info.status = ProcessStatus::Killed;
+    process_info.completed_at = Some(completed_at);
+    let instance_id = process_info.instance_id;
+
+    info!("Process killed successfully. instance_id: {}", instance_id);
+    let kind = if sigkill_sent {
+      ProcessEventKind::Sigkill
+    } else if sigterm_sent {
+      ProcessEventKind::Sigterm
+    } else {
+      ProcessEventKind::Exited
+    };
+    let data = serde_json::to_string(&process_info).ok();
+    let event = ProcessEvent { instance_id, kind, timestamp: completed_at, data };
+    if let Err(e) = event_broadcaster.send(event) {
+      warn!("Failed to publish process event. instance_id: {}; error: {}", instance_id, e);
+    }
+
+    Ok(Some(instance_id))
+  })
 }
 
 /// 资源监控器
@@ -500,7 +527,7 @@ impl ResourceMonitor {
         violation_type: ResourceViolationType::MemoryExceeded,
         current_value: usage.memory_mb,
         limit_value: memory_limit as f64,
-        timestamp: now_offset(),
+        timestamp: now_epoch_millis(),
       }));
     }
 
@@ -512,7 +539,7 @@ impl ResourceMonitor {
         violation_type: ResourceViolationType::CpuExceeded,
         current_value: usage.cpu_percent,
         limit_value: cpu_limit as f64,
-        timestamp: now_offset(),
+        timestamp: now_epoch_millis(),
       }));
     }
 
@@ -567,7 +594,54 @@ impl ResourceMonitor {
     {
       // Windows 平台的资源监控实现
       // TODO: 这里需要使用 Windows API 或第三方库，为了简化，返回默认值
-      Ok(ResourceUsage { memory_mb: 0.0, cpu_percent: 0.0, disk_io_mb: 0.0, network_io_mb: 0.0 })
+      Ok(ResourceUsage { memory_mb: 0.0, cpu_percent: 0.0, runtime_secs: 0, output_size_bytes: 0 })
     }
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+  use std::time::Duration;
+  use tokio::time::timeout;
+  use uuid::Uuid;
+
+  #[tokio::test]
+  async fn test_kill_process_returns_join_handle() {
+    // 这个测试验证 kill_process 方法返回 JoinHandle
+    // 注意：这是一个基本的接口测试，不会实际启动进程
+
+    let config = Arc::new(ProcessConfig {
+      cleanup_interval: Duration::from_secs(60),
+      zombie_check_interval: Duration::from_secs(30),
+      process_timeout: Duration::from_secs(300),
+      max_concurrent_processes: 10,
+      enable_resource_monitoring: false,
+      resource_monitor_interval: Duration::from_secs(30),
+      limits: crate::setting::ResourceLimits { max_memory_bytes: None, max_cpu_percent: None },
+    });
+
+    let (shutdown_tx, shutdown_rx) = mea::shutdown::new_pair();
+    let process_manager = ProcessManager::new(config, shutdown_rx);
+
+    // 测试对不存在进程的 kill_process 调用
+    let non_existent_instance_id = Uuid::new_v4();
+    let kill_handle = process_manager.spawn_kill_process(non_existent_instance_id);
+
+    // 验证返回的是 JoinHandle
+    assert!(std::any::type_name_of_val(&kill_handle).contains("JoinHandle"));
+
+    // 等待任务完成，应该返回 NotFound 错误
+    let result = timeout(Duration::from_secs(5), kill_handle).await;
+    assert!(result.is_ok(), "Kill process task should complete within timeout");
+
+    let task_result = result.unwrap();
+    assert!(task_result.is_ok(), "JoinHandle should not have join errors");
+
+    let kill_result = task_result.unwrap();
+    assert!(kill_result.is_err(), "Should return error for non-existent process");
+
+    // 清理
+    drop(shutdown_tx);
   }
 }
