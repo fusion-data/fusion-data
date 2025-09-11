@@ -1,8 +1,8 @@
-use std::collections::HashMap;
-use std::process::{Child, Command, Stdio};
+use std::process::Stdio;
 use std::sync::Arc;
 use std::time::Duration;
 
+use fusion_common::ahash::HashMap;
 use fusion_common::time::now_offset;
 use fusion_core::DataError;
 use hetuflow_core::protocol::{
@@ -12,7 +12,8 @@ use hetuflow_core::types::ResourceLimits;
 use log::{debug, error, info, warn};
 use mea::shutdown::ShutdownRecv;
 use serde_json::json;
-use tokio::sync::{RwLock, mpsc};
+use tokio::process::Command;
+use tokio::sync::{RwLock, broadcast};
 use uuid::Uuid;
 
 use crate::setting::ProcessConfig;
@@ -22,33 +23,27 @@ use crate::setting::ProcessConfig;
 pub struct ProcessManager {
   /// 配置
   process_config: Arc<ProcessConfig>,
-  shutdown_rx: ShutdownRecv,
+  _shutdown_rx: ShutdownRecv,
   /// 活跃进程映射
-  active_processes: Arc<RwLock<HashMap<u32, ProcessInfo>>>,
-  /// 进程句柄映射
-  process_handles: Arc<RwLock<HashMap<u32, Child>>>,
-  /// 事件发送器
-  event_sender: mpsc::UnboundedSender<ProcessEvent>,
-  /// 事件接收器
-  event_receiver: Arc<RwLock<Option<mpsc::UnboundedReceiver<ProcessEvent>>>>,
+  active_processes: Arc<RwLock<HashMap<Uuid, ProcessInfo>>>,
+  /// 事件广播发送器
+  event_broadcaster: broadcast::Sender<ProcessEvent>,
   /// 资源监控器
-  resource_monitor: ResourceMonitor,
+  _resource_monitor: ResourceMonitor,
 }
 
 impl ProcessManager {
   /// 创建新的进程管理器
   pub fn new(process_config: Arc<ProcessConfig>, shutdown_rx: ShutdownRecv) -> Self {
-    let (event_sender, event_receiver) = mpsc::unbounded_channel();
+    let (event_broadcaster, _) = broadcast::channel(1000);
     let resource_monitor = ResourceMonitor::new();
 
     Self {
       process_config,
-      shutdown_rx,
+      _shutdown_rx: shutdown_rx,
       active_processes: Arc::new(RwLock::new(HashMap::default())),
-      process_handles: Arc::new(RwLock::new(HashMap::default())),
-      event_sender,
-      event_receiver: Arc::new(RwLock::new(Some(event_receiver))),
-      resource_monitor,
+      event_broadcaster,
+      _resource_monitor: resource_monitor,
     }
   }
 
@@ -56,29 +51,13 @@ impl ProcessManager {
   pub async fn start(&self) -> Result<(), DataError> {
     info!("Starting ProcessManager");
 
-    // 启动事件处理循环
-    let event_receiver = {
-      let mut receiver_guard = self.event_receiver.write().await;
-      receiver_guard.take()
-    };
-
-    if let Some(receiver) = event_receiver {
-      let active_processes = Arc::clone(&self.active_processes);
-      let process_handles = Arc::clone(&self.process_handles);
-
-      tokio::spawn(async move {
-        Self::event_loop(receiver, active_processes, process_handles).await;
-      });
-    }
-
     // 启动清理循环
     let cleanup_active_processes = Arc::clone(&self.active_processes);
-    let cleanup_process_handles = Arc::clone(&self.process_handles);
     let cleanup_config = self.process_config.clone();
-    let cleanup_event_sender = self.event_sender.clone();
+    let cleanup_event_broadcaster = self.event_broadcaster.clone();
 
     tokio::spawn(async move {
-      Self::cleanup_loop(cleanup_active_processes, cleanup_process_handles, cleanup_config, cleanup_event_sender).await;
+      Self::cleanup_loop(cleanup_active_processes, cleanup_config, cleanup_event_broadcaster).await;
     });
 
     info!("ProcessManager started successfully");
@@ -93,9 +72,9 @@ impl ProcessManager {
     args: &[String],
     working_dir: Option<&str>,
     environment: Option<&HashMap<String, String>>,
-    resource_limits: Option<&ResourceLimits>,
-  ) -> Result<u32, DataError> {
-
+    _resource_limits: Option<&ResourceLimits>,
+  ) -> Result<Uuid, DataError> {
+    let process_id = Uuid::now_v7();
     // 检查并发进程数限制
     {
       let active_processes = self.active_processes.read().await;
@@ -125,13 +104,12 @@ impl ProcessManager {
     // 设置进程组（Unix系统）
     #[cfg(unix)]
     {
-      use std::os::unix::process::CommandExt;
       cmd.process_group(0);
     }
 
     // 启动进程
     let child = cmd.spawn()?;
-    let pid: u32 = child.id();
+    let pid: u32 = child.id().ok_or_else(|| DataError::server_error("Failed to get process ID"))?;
 
     // 创建进程信息
     let process_info = ProcessInfo {
@@ -143,50 +121,53 @@ impl ProcessManager {
       exit_code: None,
       resource_usage: None,
       is_daemon: false,
+      child: Arc::new(tokio::sync::Mutex::new(child)),
     };
 
-    // 存储进程信息和句柄
+    // 存储进程信息
     {
       let mut active_processes = self.active_processes.write().await;
-      active_processes.insert(pid, process_info);
-    }
-    {
-      let mut process_handles = self.process_handles.write().await;
-      process_handles.insert(pid, child);
+      active_processes.insert(process_id, process_info);
     }
 
     // 发送进程启动事件
-    let _ = self.event_sender.send(ProcessEvent {
-      pid,
+    let _ = self.event_broadcaster.send(ProcessEvent {
+      process_id,
       instance_id,
       event_type: ProcessEventType::Started,
       timestamp: now_offset(),
       data: None,
     });
 
-    info!("Process spawned successfully: PID {}", pid);
-    Ok(pid)
+    info!("Process spawned successfully: ProcessID: {}, PID {}", process_id, pid);
+    Ok(process_id)
   }
 
   /// 强制终止进程
-  pub async fn kill_process(&self, process_id: u32) -> Result<(), DataError> {
+  pub async fn kill_process(&self, process_id: &Uuid) -> Result<(), DataError> {
     debug!("Killing process: {}", process_id);
 
-    let mut child_opt = {
-      let mut process_handles = self.process_handles.write().await;
-      process_handles.remove(&process_id)
+    let child_opt = {
+      let active_processes = self.active_processes.read().await;
+      active_processes.get(process_id).map(|info| info.child.clone())
     };
 
-    if let Some(mut child) = child_opt {
+    if let Some(child_arc) = child_opt {
       // 尝试优雅终止
       #[cfg(unix)]
       {
         use nix::sys::signal::{self, Signal};
         use nix::unistd::Pid;
 
-        if child.id() > 0 {
-          let pid = child.id();
-          let pid = Pid::from_raw(pid as i32);
+        let child_pid = {
+          let child = child_arc.lock().await;
+          child.id()
+        };
+
+        if let Some(child_pid) = child_pid
+          && child_pid > 0
+        {
+          let pid = Pid::from_raw(child_pid as i32);
           // 发送 SIGTERM
           let _ = signal::kill(pid, Signal::SIGTERM);
 
@@ -194,27 +175,53 @@ impl ProcessManager {
           tokio::time::sleep(Duration::from_secs(5)).await;
 
           // 如果还在运行，发送 SIGKILL
-          match child.try_wait() {
-            Ok(Some(_)) => {
-              debug!("Process {} terminated gracefully", process_id);
+          let still_running = {
+            let mut child = child_arc.lock().await;
+            match child.try_wait() {
+              Ok(Some(_)) => {
+                debug!("Process {} terminated gracefully", process_id);
+                false
+              }
+              Ok(None) => true,
+              Err(_) => false,
             }
-            Ok(None) => {
-              warn!("Process {} did not terminate gracefully, sending SIGKILL", process_id);
-              let _ = signal::kill(pid, Signal::SIGKILL);
-              let _ = child.wait();
-            }
-            Err(e) => {
-              error!("Error checking process status: {}", e);
-              let _ = child.kill();
-            }
+          };
+
+          if still_running {
+            warn!("Process {} did not terminate gracefully, sending SIGKILL", process_id);
+            let _ = signal::kill(pid, Signal::SIGKILL);
           }
         }
+
+        // 等待进程结束，但不持有锁
+        let _wait_result = {
+          let mut child = child_arc.lock().await;
+          child.try_wait()
+        };
       }
 
       #[cfg(windows)]
       {
-        let _ = child.kill();
-        let _ = child.wait();
+        {
+          let mut child = child_arc.lock().unwrap();
+          let _ = child.kill();
+        }
+
+        // 等待进程结束，但不持有锁
+        loop {
+          let wait_result = {
+            let mut child = child_arc.lock().unwrap();
+            child.try_wait()
+          };
+
+          match wait_result {
+            Ok(Some(_)) => break,
+            Ok(None) => {
+              tokio::time::sleep(Duration::from_millis(100)).await;
+            }
+            Err(_) => break,
+          }
+        }
       }
 
       // 更新进程状态
@@ -229,12 +236,12 @@ impl ProcessManager {
       // 发送进程终止事件
       let process_instance_id = {
         let active_processes = self.active_processes.read().await;
-        active_processes.get(&process_id).map(|p| p.instance_id)
+        active_processes.get(process_id).map(|p| p.instance_id)
       };
 
       if let Some(instance_id) = process_instance_id {
-        let _ = self.event_sender.send(ProcessEvent {
-          pid: process_id,
+        let _ = self.event_broadcaster.send(ProcessEvent {
+          process_id: *process_id,
           instance_id,
           event_type: ProcessEventType::Killed,
           timestamp: now_offset(),
@@ -251,9 +258,9 @@ impl ProcessManager {
   }
 
   /// 获取进程信息
-  pub async fn get_process_info(&self, process_id: u32) -> Option<ProcessInfo> {
+  pub async fn get_process_info(&self, process_id: &Uuid) -> Option<ProcessInfo> {
     let active_processes = self.active_processes.read().await;
-    active_processes.get(&process_id).cloned()
+    active_processes.get(process_id).cloned()
   }
 
   /// 获取所有活跃进程
@@ -262,31 +269,16 @@ impl ProcessManager {
     active_processes.values().cloned().collect()
   }
 
-  /// 获取任务的进程列表
-  pub async fn get_task_processes(&self, instance_id: Uuid) -> Vec<ProcessInfo> {
-    let active_processes = self.active_processes.read().await;
-    active_processes.values().filter(|p| p.instance_id == instance_id).cloned().collect()
-  }
-
-  /// 事件处理循环
-  async fn event_loop(
-    mut receiver: mpsc::UnboundedReceiver<ProcessEvent>,
-    active_processes: Arc<RwLock<HashMap<u32, ProcessInfo>>>,
-    process_handles: Arc<RwLock<HashMap<u32, Child>>>,
-  ) {
-    info!("ProcessManager event loop started");
-
-    // TODO:
-
-    info!("ProcessManager event loop ended");
+  /// 获取事件接收器
+  pub fn subscribe_events(&self) -> broadcast::Receiver<ProcessEvent> {
+    self.event_broadcaster.subscribe()
   }
 
   /// 清理循环
   async fn cleanup_loop(
-    active_processes: Arc<RwLock<HashMap<u32, ProcessInfo>>>,
-    process_handles: Arc<RwLock<HashMap<u32, Child>>>,
+    active_processes: Arc<RwLock<HashMap<Uuid, ProcessInfo>>>,
     config: Arc<ProcessConfig>,
-    event_sender: mpsc::UnboundedSender<ProcessEvent>,
+    event_broadcaster: broadcast::Sender<ProcessEvent>,
   ) {
     info!("ProcessManager cleanup loop started");
 
@@ -296,37 +288,32 @@ impl ProcessManager {
     loop {
       tokio::select! {
           _ = cleanup_interval.tick() => {
-              Self::cleanup_completed_processes(&active_processes, &process_handles).await;
-              Self::cleanup_timeout_processes(&active_processes, &process_handles, &config, &event_sender).await;
+              Self::cleanup_completed_processes(&active_processes).await;
+              Self::cleanup_timeout_processes(&active_processes, &config, &event_broadcaster).await;
           }
           _ = zombie_check_interval.tick() => {
-              Self::check_zombie_processes(&active_processes, &process_handles, &event_sender).await;
+              Self::check_zombie_processes(&active_processes, &event_broadcaster).await;
           }
       }
     }
   }
 
   /// 清理已完成的进程
-  async fn cleanup_completed_processes(
-    active_processes: &Arc<RwLock<HashMap<u32, ProcessInfo>>>,
-    process_handles: &Arc<RwLock<HashMap<u32, Child>>>,
-  ) {
+  async fn cleanup_completed_processes(active_processes: &Arc<RwLock<HashMap<Uuid, ProcessInfo>>>) {
     let mut to_remove = Vec::new();
 
     {
-      let mut handles = process_handles.write().await;
       let mut processes = active_processes.write().await;
 
-      for (process_id, child) in handles.iter_mut() {
+      for (process_id, process_info) in processes.iter_mut() {
+        let mut child = process_info.child.lock().await;
         match child.try_wait() {
           Ok(Some(exit_status)) => {
             debug!("Process {} exited with status: {:?}", process_id, exit_status);
 
-            if let Some(process_info) = processes.get_mut(process_id) {
-              process_info.status = ProcessStatus::Completed;
-              process_info.completed_at = Some(now_offset());
-              process_info.exit_code = exit_status.code();
-            }
+            process_info.status = ProcessStatus::Completed;
+            process_info.completed_at = Some(now_offset());
+            process_info.exit_code = exit_status.code();
 
             to_remove.push(*process_id);
           }
@@ -339,20 +326,22 @@ impl ProcessManager {
           }
         }
       }
+    }
 
-      // 移除已完成的进程句柄
+    // 移除已完成的进程
+    {
+      let mut processes = active_processes.write().await;
       for process_id in &to_remove {
-        handles.remove(process_id);
+        processes.remove(process_id);
       }
     }
   }
 
   /// 清理超时进程
   async fn cleanup_timeout_processes(
-    active_processes: &Arc<RwLock<HashMap<u32, ProcessInfo>>>,
-    process_handles: &Arc<RwLock<HashMap<u32, Child>>>,
+    active_processes: &Arc<RwLock<HashMap<Uuid, ProcessInfo>>>,
     config: &Arc<ProcessConfig>,
-    event_sender: &mpsc::UnboundedSender<ProcessEvent>,
+    event_broadcaster: &broadcast::Sender<ProcessEvent>,
   ) {
     let timeout_duration = config.process_timeout;
     let now = now_offset();
@@ -373,27 +362,33 @@ impl ProcessManager {
     for (process_id, instance_id) in to_kill {
       warn!("Process {} timed out, killing it", process_id);
 
-      // 强制终止进程
-      {
-        let mut handles = process_handles.write().await;
-        if let Some(mut child) = handles.remove(&process_id) {
-          let _ = child.kill();
-          let _ = child.wait();
-        }
-      }
+      // 强制终止进程并更新状态
+      let child_arc = {
+        let processes = active_processes.read().await;
+        processes.get(&process_id).map(|info| info.child.clone())
+      };
 
-      // 更新进程状态
-      {
-        let mut processes = active_processes.write().await;
-        if let Some(process_info) = processes.get_mut(&process_id) {
-          process_info.status = ProcessStatus::Killed;
-          process_info.completed_at = Some(now);
+      if let Some(child_arc) = child_arc {
+        // 终止进程，避免跨 await 持有锁
+        {
+          let mut child = child_arc.lock().await;
+          let _ = child.kill().await;
+          let _ = child.wait().await;
+        }
+
+        // 更新进程状态
+        {
+          let mut processes = active_processes.write().await;
+          if let Some(process_info) = processes.get_mut(&process_id) {
+            process_info.status = ProcessStatus::Killed;
+            process_info.completed_at = Some(now);
+          }
         }
       }
 
       // 发送超时事件
-      let _ = event_sender.send(ProcessEvent {
-        pid: process_id,
+      let _ = event_broadcaster.send(ProcessEvent {
+        process_id,
         instance_id,
         event_type: ProcessEventType::BecameZombie,
         timestamp: now,
@@ -404,28 +399,24 @@ impl ProcessManager {
 
   /// 检查僵尸进程
   async fn check_zombie_processes(
-    active_processes: &Arc<RwLock<HashMap<u32, ProcessInfo>>>,
-    process_handles: &Arc<RwLock<HashMap<u32, Child>>>,
-    event_sender: &mpsc::UnboundedSender<ProcessEvent>,
+    active_processes: &Arc<RwLock<HashMap<Uuid, ProcessInfo>>>,
+    event_broadcaster: &broadcast::Sender<ProcessEvent>,
   ) {
     let mut to_cleanup = Vec::new();
 
     {
       let processes = active_processes.read().await;
-      let handles = process_handles.read().await;
 
       for (process_id, process_info) in processes.iter() {
-        if process_info.status == ProcessStatus::Running {
-          if Self::is_zombie_process(process_info.pid) {
-            to_cleanup.push((*process_id, process_info.instance_id));
-          }
+        if process_info.status == ProcessStatus::Running && Self::is_zombie_process(process_info.pid) {
+          to_cleanup.push((*process_id, process_info.instance_id));
         }
       }
     }
 
     for (process_id, instance_id) in to_cleanup {
       warn!("Zombie process detected: {}", process_id);
-      Self::cleanup_zombie_process(process_id, instance_id, active_processes, process_handles, event_sender).await;
+      Self::cleanup_zombie_process(&process_id, instance_id, active_processes, event_broadcaster).await;
     }
   }
 
@@ -455,18 +446,11 @@ impl ProcessManager {
 
   /// 清理僵尸进程
   async fn cleanup_zombie_process(
-    process_id: u32,
+    process_id: &Uuid,
     instance_id: Uuid,
-    active_processes: &Arc<RwLock<HashMap<u32, ProcessInfo>>>,
-    process_handles: &Arc<RwLock<HashMap<u32, Child>>>,
-    event_sender: &mpsc::UnboundedSender<ProcessEvent>,
+    active_processes: &Arc<RwLock<HashMap<Uuid, ProcessInfo>>>,
+    event_broadcaster: &broadcast::Sender<ProcessEvent>,
   ) {
-    // 移除进程句柄
-    {
-      let mut handles = process_handles.write().await;
-      handles.remove(&process_id);
-    }
-
     // 更新进程状态
     {
       let mut processes = active_processes.write().await;
@@ -477,8 +461,8 @@ impl ProcessManager {
     }
 
     // 发送僵尸进程事件
-    let _ = event_sender.send(ProcessEvent {
-      pid: process_id,
+    let _ = event_broadcaster.send(ProcessEvent {
+      process_id: *process_id,
       instance_id,
       event_type: ProcessEventType::BecameZombie,
       timestamp: now_offset(),

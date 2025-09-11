@@ -1,9 +1,12 @@
+use std::sync::Arc;
+
 use fusion_common::time::OffsetDateTime;
 use serde::{Deserialize, Serialize};
+use tokio::process::Child;
 use uuid::Uuid;
 
 /// 进程信息
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Debug, Clone)]
 pub struct ProcessInfo {
   /// 进程ID
   pub pid: u32,
@@ -21,6 +24,8 @@ pub struct ProcessInfo {
   pub resource_usage: Option<ResourceUsage>,
   /// 是否为守护进程
   pub is_daemon: bool,
+
+  pub child: Arc<tokio::sync::Mutex<Child>>,
 }
 
 /// 进程状态
@@ -85,7 +90,7 @@ pub enum ResourceViolationType {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ProcessEvent {
   /// 进程ID
-  pub pid: u32,
+  pub process_id: Uuid,
   /// 任务实例ID
   pub instance_id: Uuid,
   /// 事件类型

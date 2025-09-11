@@ -48,7 +48,6 @@ pub struct ConnectionStats {
 /// 连接管理器
 /// 负责与 HetuFlow Gateway 的连接管理、心跳机制和消息传输
 pub struct ConnectionManager {
-  setting: Arc<HetuflowAgentSetting>,
   command_publisher: broadcast::Sender<HetuflowCommand>,
   event_tx: mpsc::UnboundedSender<WebSocketEvent>,
   ws_handler: Mutex<Option<WsHandler>>,
@@ -62,7 +61,7 @@ impl ConnectionManager {
     let ws_handler = WsHandler::new(setting.clone(), command_publisher.clone(), event_rx, shutdown_rx);
     let ws_handler = Mutex::new(Some(ws_handler));
 
-    Self { setting, command_publisher, event_tx, ws_handler }
+    Self { command_publisher, event_tx, ws_handler }
   }
 
   /// 连接到 Hetuflow Server
