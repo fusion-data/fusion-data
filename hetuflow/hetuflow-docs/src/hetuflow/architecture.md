@@ -219,7 +219,7 @@ hetuflow 使用 WebSocket 协议进行 Agent 与 Server 之间的通信。WebSoc
 所有通信协议定义统一在 `hetuflow-core` 模块中管理：
 
 - **协议规范**：[core.md - 通信协议 (Protocol)](./core/core.md#通信协议-protocol)
-- **消息格式**：WebSocketMessage 统一消息包装器
+- **消息格式**：WebSocketEvent/WebSocketCommand 双向消息包装器
 - **数据模型**：Job/Task/TaskInstance 三层任务模型
 - **类型定义**：所有枚举类型和结构体定义
 
@@ -227,10 +227,10 @@ hetuflow 使用 WebSocket 协议进行 Agent 与 Server 之间的通信。WebSoc
 
 通过 `hetuflow-core` 定义的核心消息类型包括：
 
-- **Agent 生命周期**：AgentRegisterRequest/Response、HeartbeatRequest/Response
-- **任务调度**：DispatchTaskRequest、TaskInstanceUpdate、TaskControl
-- **文件传输**：FileUpload/Download、FileTransferStatus
-- **错误处理**：Error、Ack 确认机制
+- **Agent 生命周期**：AgentRegisterRequest/Response、HeartbeatRequest
+- **任务调度**：ScheduledTask、TaskInstanceUpdated、AcquireTaskRequest/Response
+- **WebSocket 通信**：WebSocketEvent、WebSocketCommand
+- **错误处理**：ErrorResponse、AckMessage 确认机制
 
 ### 使用方式
 
@@ -273,22 +273,24 @@ flowchart TD
     H --> I[TaskDispatcher 选择合适的 Agent]
     I --> J[Gateway 通过 WebSocket 发送 Task 到目标 Agent]
 
-    J --> K[Agent 接收 Task 并创建 TaskInstance]
-    K --> L[执行任务实例]
-    L --> M[收集执行结果和状态]
-    M --> N[通过 WebSocket 上报 TaskInstance 状态]
+    J --> K[Agent TaskScheduler 接收 Task]
+    K --> L[ScheduleTaskRunner 调度任务到 ProcessManager]
+    L --> M[ProcessManager 检查并发容量并启动进程]
+    M --> N[TaskExecutor 执行任务实例]
+    N --> O[收集执行结果和状态]
+    O --> P[通过 WebSocket 上报 TaskInstance 状态]
 
-    N --> O[Server 接收状态并更新 `sched_task_instance` 表]
-    O --> P[更新 `sched_task` 表状态]
-    P --> Q[用户在 Console 查看 Job/Schedule/Task/Instance 状态]
+    P --> Q[Server 接收状态并更新 `sched_task_instance` 表]
+    Q --> R[更新 `sched_task` 表状态]
+    R --> S[用户在 Console 查看 Job/Schedule/Task/Instance 状态]
 
     style A fill:#e3f2fd
-    style Q fill:#e3f2fd
+    style S fill:#e3f2fd
     style J fill:#f3e5f5
-    style N fill:#f3e5f5
-    style L fill:#e8f5e8
-    style O fill:#ffcda8
-    style P fill:#ffcda8
+    style P fill:#f3e5f5
+    style N fill:#e8f5e8
+    style Q fill:#ffcda8
+    style R fill:#ffcda8
 ```
 
 ### 任务状态图
@@ -336,7 +338,9 @@ sequenceDiagram
     S->>S: SchedulerEngine 查询到新 Task
     S->>G: 请求分发 Task
     G->>A: WebSocket 发送 Task
-    A->>A: 创建 TaskInstance 并执行
+    A->>A: TaskScheduler 接收并调度任务
+    A->>A: ProcessManager 检查并发容量
+    A->>A: TaskExecutor 创建 TaskInstance 并执行
     A->>G: 实时上报 TaskInstance 状态
     G->>PG: 更新 `sched_task_instance` 表
 

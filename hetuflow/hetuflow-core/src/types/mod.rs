@@ -7,7 +7,7 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 use strum::AsRefStr;
 use uuid::Uuid;
 
-use crate::protocol::{AgentRegisterResponse, TaskResponse};
+use crate::protocol::{AcquireTaskResponse, AgentRegisterResponse};
 
 /// 作业类型 (ScheduleKind) - 定义了 Job 的核心调度和行为模式
 #[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy, PartialEq, Eq, AsRefStr)]
@@ -163,7 +163,7 @@ pub enum HetuflowCommand {
   ClearCache,
   FetchMetrics,
   AgentRegistered(Arc<AgentRegisterResponse>),
-  DispatchTask(Arc<TaskResponse>),
+  AcquiredTask(Arc<AcquireTaskResponse>),
   /// TaskInstanceId
   CancelTask(Arc<Uuid>),
 }
@@ -216,10 +216,25 @@ modelsql::generate_enum_i32_to_sea_query_value!(
 );
 
 /// 资源限制配置
-#[derive(serde::Serialize, serde::Deserialize, Debug, Clone, Default)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 pub struct ResourceLimits {
-  pub max_cpu_cores: Option<f64>,
+  /// 最大内存使用量 (MB)
   pub max_memory_mb: Option<u64>,
-  pub max_disk_mb: Option<u64>,
-  pub max_network_mbps: Option<u64>,
+  /// 最大CPU使用率 (0.0-1.0)
+  pub max_cpu_percent: Option<f64>,
+  /// 最大执行时间 (秒)
+  pub max_execution_time_secs: Option<u64>,
+  /// 最大输出大小 (字节)
+  pub max_output_size_bytes: Option<u64>,
+}
+
+impl Default for ResourceLimits {
+  fn default() -> Self {
+    Self {
+      max_memory_mb: Some(1024),                     // 默认1GB内存限制
+      max_cpu_percent: Some(0.8),                    // 默认80%CPU限制
+      max_execution_time_secs: Some(3600),           // 默认1小时执行时间限制
+      max_output_size_bytes: Some(10 * 1024 * 1024), // 默认10MB输出限制
+    }
+  }
 }

@@ -12,6 +12,14 @@ pub struct ServerBmc;
 
 impl DbBmc for ServerBmc {
   const TABLE: &str = "sched_server";
+
+  fn _has_modification_timestamps() -> bool {
+    false
+  }
+
+  fn _has_modification_id() -> bool {
+    false
+  }
 }
 
 generate_pg_bmc_common!(

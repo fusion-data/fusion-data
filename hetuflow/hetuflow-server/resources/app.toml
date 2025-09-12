@@ -6,8 +6,16 @@ time_offset = "+08:00"
 [fusion.log]
 enable = true
 with_target = true
-with_file = false
+with_file = true
+with_thread_ids = false
+with_thread_names = true
+with_line_number = true
+with_span_events = []
+time_format = "%Y-%m-%d %H:%M:%S%.3f"
 log_level = "info"
+log_writer = "both"
+log_dir = "./var/logs/server/"
+log_name = "hetuflow-server"
 log_targets = [
   "tower_http=debug",
   "fusion_iam=debug",
@@ -19,7 +27,14 @@ log_targets = [
   "fusion_db=debug",
   "fusion=debug",
   "fusion_common=debug",
+  "hetuflow_core=debug",
+  "hetuflow_server=debug",
 ]
+
+[fusion.log.otel]
+enable = false
+traces_sample = "always_on"
+exporter_otlp_endpoint = "http://localhost:4317"
 
 [fusion.db]
 enable = true
@@ -52,3 +67,7 @@ agent_heartbeat_interval = "10s"
 agent_heartbeat_ttl = "60s"
 # 负载均衡间隔
 load_balance_interval = "30s"
+# 服务器过期时间
+server_overdue_ttl = "5m"
+# Agent 过期时间
+agent_overdue_ttl = "5m"

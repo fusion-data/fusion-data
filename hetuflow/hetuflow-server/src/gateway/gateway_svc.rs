@@ -22,7 +22,7 @@ impl GatewaySvc {
     command_receiver: mpsc::UnboundedReceiver<GatewayCommandRequest>,
   ) -> Self {
     let (event_sender, event_receiver) = mpsc::unbounded_channel();
-    connection_manager.subscribe_event(event_sender);
+
     Self {
       connection_manager,
       message_handler,

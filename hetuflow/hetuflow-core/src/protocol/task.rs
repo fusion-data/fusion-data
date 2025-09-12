@@ -1,10 +1,9 @@
-use fusion_common::time::now_epoch_millis;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::{
   models::{SchedTask, SchedTaskInstance, TaskMetrics},
-  types::{TaskControlKind, TaskInstanceStatus},
+  types::TaskInstanceStatus,
 };
 
 /// 任务分发请求
@@ -78,82 +77,55 @@ impl ScheduledTask {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TaskInstanceUpdated {
   /// 任务实例 ID
-  // TODO: 是否应该添加 task_instance_id？（由客户端生成 task instance id，避免重复或遗漏）
-  pub task_instance_id: Uuid,
-  /// 正在上报状态的 Task ID
-  pub task_id: Uuid,
+  pub instance_id: Uuid,
   /// Agent ID
   pub agent_id: Uuid,
   /// 执行状态
   pub status: TaskInstanceStatus,
   /// 状态更新时间
   pub timestamp: i64,
-  /// 任务输出
-  pub output: Option<String>,
+  /// 任务数据
+  pub data: Option<String>,
   /// 错误信息
   pub error_message: Option<String>,
-  /// 退出码
-  pub exit_code: Option<i32>,
   /// 执行指标
   pub metrics: Option<TaskMetrics>,
-  /// 执行进度 (0.0-1.0)
-  pub progress: Option<f64>,
 }
 
 impl TaskInstanceUpdated {
-  pub fn new(agent_id: Uuid, task_id: Uuid, task_instance_id: Uuid, status: TaskInstanceStatus) -> Self {
-    Self {
-      task_instance_id,
-      agent_id,
-      task_id,
-      status,
-      timestamp: now_epoch_millis(),
-      output: None,
-      error_message: None,
-      exit_code: None,
-      metrics: None,
-      progress: None,
-    }
-  }
-
-  pub fn with_output(mut self, output: impl Into<String>) -> Self {
-    self.output = Some(output.into());
+  pub fn with_status(&mut self, status: TaskInstanceStatus) -> &Self {
+    self.status = status;
     self
   }
 
-  pub fn with_error_message(mut self, error_message: impl Into<String>) -> Self {
+  pub fn with_output(&mut self, output: impl Into<String>) -> &Self {
+    self.data = Some(output.into());
+    self
+  }
+
+  pub fn with_error_message(&mut self, error_message: impl Into<String>) -> &Self {
     self.error_message = Some(error_message.into());
     self
   }
 
-  pub fn with_exit_code(mut self, exit_code: i32) -> Self {
-    self.exit_code = Some(exit_code);
-    self
-  }
-
-  pub fn with_metrics(mut self, metrics: TaskMetrics) -> Self {
+  pub fn with_metrics(&mut self, metrics: TaskMetrics) -> &Self {
     self.metrics = Some(metrics);
-    self
-  }
-
-  pub fn with_progress(mut self, progress: f64) -> Self {
-    self.progress = Some(progress);
     self
   }
 }
 
 /// Task pull request
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct TaskRequest {
-  pub agent_id: Uuid,          // Agent ID
-  pub max_tasks: u32,          // 最大拉取任务数
-  pub tags: Vec<String>,       // 当前 Agent 拥有的标签，用于过滤任务
-  pub available_capacity: u32, // 可用容量
+pub struct AcquireTaskRequest {
+  pub agent_id: Uuid,     // Agent ID
+  pub max_tasks: u32,     // 允许最大并发任务数
+  pub tags: Vec<String>,  // 当前 Agent 拥有的标签，用于过滤任务
+  pub acquire_count: u32, // 拉取任务数
 }
 
 /// Task response, for task pull requests or direct task assignments from Server to Agent
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct TaskResponse {
+pub struct AcquireTaskResponse {
   pub tasks: Vec<ScheduledTask>, // 可执行任务列表
   pub has_more: bool,            // 是否还有更多任务
   pub next_poll_interval: u32,   // 下次拉取间隔(秒)
@@ -208,21 +180,9 @@ pub struct TaskExecutionResult {
   pub duration_ms: u64,              // 执行时长(毫秒)
 }
 
-/// 任务执行错误
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct TaskExecutionError {
-  pub task_id: Uuid,                      // 任务ID
-  pub instance_id: Option<Uuid>,          // 任务实例ID
-  pub error_type: TaskExecutionErrorType, // 错误类型
-  pub message: String,                    // 错误消息
-  pub retry_count: i32,                   // 当前重试次数
-  pub max_retries: i32,                   // 最大重试次数
-  pub timestamp: i64,                     // 错误时间戳
-}
-
 /// 任务执行错误类型
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub enum TaskExecutionErrorType {
+pub enum TaskExecutionError {
   /// 任务被取消
   Cancelled,
   /// 进程启动失败
@@ -239,4 +199,6 @@ pub enum TaskExecutionErrorType {
   ConfigurationError,
   /// 网络错误
   NetworkError,
+  /// 其他错误
+  Failed,
 }

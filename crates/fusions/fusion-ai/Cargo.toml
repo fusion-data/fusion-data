@@ -17,3 +17,8 @@ tokio = { workspace = true }
 rig-core = { workspace = true }
 graph-flow = { workspace = true }
 rmcp = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+dotenvy = { workspace = true }

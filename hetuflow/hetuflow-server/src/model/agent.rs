@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use hetuflow_core::protocol::{AgentRegisterRequest, HeartbeatRequest, TaskInstanceUpdated, TaskRequest};
+use hetuflow_core::protocol::{AcquireTaskRequest, AgentRegisterRequest, HeartbeatRequest, TaskInstanceUpdated};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -17,7 +17,7 @@ pub enum AgentEvent {
   /// Agent 任务实例状态变更
   TaskInstanceChanged { agent_id: Uuid, payload: Arc<TaskInstanceUpdated> },
   /// Agent 任务轮询请求
-  TaskPollRequest { agent_id: Uuid, request: Arc<TaskRequest> },
+  TaskPollRequest { agent_id: Uuid, request: Arc<AcquireTaskRequest> },
   /// Agent 断开连接
   Unconnected { agent_id: Uuid, reason: String },
 }
@@ -31,7 +31,7 @@ impl AgentEvent {
     Self::Heartbeat { agent_id, payload: Arc::new(request) }
   }
 
-  pub fn new_task_poll_request(agent_id: Uuid, request: TaskRequest) -> Self {
+  pub fn new_task_poll_request(agent_id: Uuid, request: AcquireTaskRequest) -> Self {
     Self::TaskPollRequest { agent_id, request: Arc::new(request) }
   }
 

@@ -4,7 +4,7 @@ use std::{
 };
 
 use fusion_common::{ahash::HashMap, time::now_epoch_millis};
-use hetuflow_core::protocol::{HeartbeatRequest, WebSocketCommand};
+use hetuflow_core::protocol::WebSocketCommand;
 use log::{debug, error, info};
 use tokio::sync::mpsc;
 use uuid::Uuid;

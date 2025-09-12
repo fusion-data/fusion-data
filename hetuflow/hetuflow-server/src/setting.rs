@@ -28,9 +28,13 @@ pub struct ServerConfig {
   #[serde(deserialize_with = "deserialize_duration")]
   pub load_balance_interval: Duration,
 
+  /// Server 过期超时
+  #[serde(deserialize_with = "deserialize_duration")]
+  pub server_overdue_ttl: Duration,
+
   /// Agent 过期超时
   #[serde(deserialize_with = "deserialize_duration")]
-  pub agent_heartbeat_ttl: Duration,
+  pub agent_overdue_ttl: Duration,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

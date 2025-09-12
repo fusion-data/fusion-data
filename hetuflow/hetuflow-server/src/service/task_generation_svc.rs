@@ -10,7 +10,7 @@ use fusion_common::time::{OffsetDateTime, now_offset};
 use serde_json::json;
 use std::str::FromStr;
 
-use hetuflow_core::models::{SchedJob, SchedSchedule, TaskForCreate, TaskInstanceForCreate};
+use hetuflow_core::models::{SchedJob, SchedSchedule, SchedTask, TaskForCreate, TaskInstanceForCreate};
 use hetuflow_core::types::{ScheduleKind, ScheduleStatus, TaskInstanceStatus, TaskStatus};
 
 use crate::infra::bmc::{JobBmc, ScheduleBmc, TaskBmc, TaskInstanceBmc};
@@ -222,6 +222,86 @@ impl TaskGenerationSvc {
     mm.dbx().commit_txn().await?;
 
     Ok(task_ids)
+  }
+
+  /// 生成重试任务
+  ///
+  /// 为失败的任务创建重试任务实例
+  pub async fn generate_retry_tasks(&self) -> Result<Vec<Uuid>, DataError> {
+    let mut retry_task_ids = Vec::new();
+    
+    // 查找需要重试的任务
+     let retryable_tasks = TaskBmc::find_retryable_tasks(&self.mm).await?;
+     
+     for task in retryable_tasks {
+       // 获取最大重试次数配置
+       let max_retries = task.config.as_ref().map(|c| c.max_retries as i32).unwrap_or(3);
+       
+       // 检查是否已达到最大重试次数
+       if task.retry_count >= max_retries {
+         continue;
+       }
+      
+      // 获取关联的 Job
+       let job = JobBmc::find_by_id(&self.mm, &task.job_id).await?;
+      
+      let mm = self.mm.get_txn_clone();
+      mm.dbx().begin_txn().await?;
+      
+      // 创建重试任务
+      let retry_task_id = self.create_retry_task_and_instance(
+        &mm,
+        &job,
+        &task,
+        now_offset(),
+      ).await?;
+      
+      mm.dbx().commit_txn().await?;
+      
+      retry_task_ids.push(retry_task_id);
+      info!("Generated retry task {} for failed task {}", retry_task_id, task.id);
+    }
+    
+    Ok(retry_task_ids)
+  }
+
+  async fn create_retry_task_and_instance(
+     &self,
+     mm: &ModelManager,
+     job: &SchedJob,
+     original_task: &SchedTask,
+     scheduled_at: OffsetDateTime,
+   ) -> Result<Uuid, DataError> {
+     let task_id = Uuid::now_v7();
+     let max_retries = original_task.config.as_ref().map(|c| c.max_retries as i32).unwrap_or(3);
+    let task = TaskForCreate {
+      id: task_id,
+      job_id: job.id,
+      namespace_id: job.namespace_id,
+      schedule_id: original_task.schedule_id,
+      priority: original_task.priority,
+      scheduled_at,
+      status: TaskStatus::Pending,
+      tags: job.tags(),
+      parameters: original_task.parameters.clone(),
+      environment: job.environment.clone(),
+      job_config: job.config.clone(),
+       retry_count: original_task.retry_count + 1,
+       max_retries,
+       dependencies: original_task.dependencies.clone(),
+    };
+    let task_instance = TaskInstanceForCreate {
+      id: Some(Uuid::now_v7()),
+      task_id,
+      server_id: None,
+      agent_id: None,
+      status: TaskInstanceStatus::Pending,
+    };
+
+    TaskBmc::insert(mm, task).await.map_err(DataError::from)?;
+    TaskInstanceBmc::insert(mm, task_instance).await.map_err(DataError::from)?;
+
+    Ok(task_id)
   }
 
   async fn create_task_and_instance(

@@ -8,7 +8,7 @@ use uuid::Uuid;
 
 use crate::types::{ScheduleKind, TaskStatus};
 
-use super::JobConfig;
+use super::TaskConfig;
 
 /// 任务执行指标
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
@@ -33,8 +33,6 @@ pub struct TaskMetrics {
 pub struct SchedTask {
   pub id: Uuid,
   pub job_id: Uuid,
-  // pub agent_id: Option<Uuid>,
-  // pub server_id: Option<Uuid>,
   pub namespace_id: Uuid,
   /// 任务优先级，数值越大优先级越高
   pub priority: i32,
@@ -48,20 +46,21 @@ pub struct SchedTask {
   /// 任务完成时间。当次任务完成或者所有 Schedule 的配置均已到期
   pub completed_at: Option<OffsetDateTime>,
 
-  /// 任务参数，需要为 JSON Object
-  pub parameters: serde_json::Value,
-
   /// 任务标签。可用于限制哪些 Agent 允许执行该任务
   pub tags: Vec<String>,
 
   /// 任务环境变量，可能来自 SchedJob 或由事件/手动触发执行传入
   pub environment: Option<serde_json::Value>,
 
-  /// 保存 Job.config
-  pub job_config: Option<JobConfig>,
+  /// 任务参数，需要为 JSON Object。对于 Event 触发类型的任务，参数为 Event 触发时传入的参数
+  pub parameters: serde_json::Value,
 
+  /// 保存 SchedJob.config。当 SchedJob 被修改后，因 SchedTask 保存了 config，所有任务受 SchedJob.config 变更的影响
+  pub config: Option<TaskConfig>,
+
+  /// 任务重试次数
   pub retry_count: i32,
-  pub max_retries: i32,
+
   pub dependencies: Option<serde_json::Value>,
   pub locked_at: Option<OffsetDateTime>,
   pub lock_version: i32,
@@ -86,7 +85,7 @@ pub struct TaskForCreate {
   pub parameters: serde_json::Value,
   pub tags: Vec<String>,
   pub environment: Option<serde_json::Value>,
-  pub job_config: Option<JobConfig>,
+  pub job_config: Option<TaskConfig>,
   pub retry_count: i32,
   pub max_retries: i32,
   pub dependencies: Option<serde_json::Value>,
@@ -108,7 +107,7 @@ pub struct TaskForUpdate {
   pub parameters: Option<serde_json::Value>,
   pub tags: Option<Vec<String>>,
   pub environment: Option<serde_json::Value>,
-  pub job_config: Option<JobConfig>,
+  pub job_config: Option<TaskConfig>,
   pub retry_count: Option<i32>,
   pub max_retries: Option<i32>,
   pub dependencies: Option<serde_json::Value>,

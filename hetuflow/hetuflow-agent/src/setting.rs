@@ -117,7 +117,7 @@ pub struct ProcessConfig {
   pub process_timeout: Duration,
 
   /// 最大并发进程数，同时可以调度执行的任务数
-  pub max_concurrent_processes: usize,
+  pub max_concurrent_processes: u32,
 
   /// 启用资源监控
   pub enable_resource_monitoring: bool,

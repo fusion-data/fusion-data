@@ -78,8 +78,8 @@ graph TD
 - **`AgentApplication`**: 应用容器，负责初始化所有组件、管理其生命周期，并处理应用的启动和优雅关闭。
 - **`AgentConfig`**: 从 `app.toml` 加载的配置信息，为所有组件提供配置参数。
 - **`ConnectionManager`**: 负责与 Server 的 WebSocket 连接，处理消息的收发、心跳维持、自动重连和消息路由。
-- **`TaskScheduler`**: **精调度核心**。从 Server 拉取任务或接收分派的任务，通过 `croner` 解析表达式，使用 `hierarchical_hash_wheel_timer` 设置精确的本地定时器，并将到期的任务通过队列发送给 `TaskExecutor`。它不维护任务的持久化状态，所有调度信息均实时来自 Server。
-- **`TaskExecutor`**: **任务执行核心**。负责管理任务的实际执行，包括创建子进程、监控运行状态、控制并发、处理标准输出/错误，并将结果上报。TaskExecutor 从队列中获取到期执行的任务，并控制任务的并发执行数。
+- **`TaskScheduler`**: **任务调度核心**。包含两个主要组件：`ScheduleTaskRunner`（负责接收和调度任务）和 `PollTaskRunner`（负责轮询请求新任务）。通过 `ProcessManager` 的并发控制机制，确保任务执行不超过配置的最大并发数。所有调度信息均实时来自 Server，不维护任务的持久化状态。
+- **`TaskExecutor`**: **任务执行核心**。负责管理任务的实际执行，包括创建子进程、监控运行状态、处理标准输出/错误，并将结果上报。TaskExecutor 从队列中获取调度的任务，通过 `ProcessManager` 控制任务的并发执行数。
 - **`LogManager`**: 负责收集任务执行过程中产生的日志，并根据配置进行管理（如输出到控制台、写入文件）。
 
 ## 3. 配置文件 (`app.toml`)
@@ -198,7 +198,72 @@ impl ConnectionManager {
 }
 ```
 
-### 4.3. `TaskScheduler` (精调度器)
+### 4.3. `TaskScheduler` (任务调度器)
+
+负责任务调度的核心组件，包含两个主要的运行器：
+
+```rust
+use std::sync::Arc;
+use tokio::sync::mpsc;
+use kanal::{AsyncSender, AsyncReceiver};
+
+/// 调度的任务结构
+pub struct ScheduledTask {
+  pub task: SchedTask,
+  pub scheduled_at: i64,
+}
+
+/// 任务调度器主结构
+pub struct TaskScheduler {
+  setting: Arc<HetuflowAgentSetting>,
+  process_manager: Arc<ProcessManager>,
+  connection_manager: Arc<ConnectionManager>,
+  scheduled_task_tx: AsyncSender<ScheduledTask>,
+}
+
+/// 调度任务运行器 - 负责接收和调度任务
+struct ScheduleTaskRunner {
+  setting: Arc<HetuflowAgentSetting>,
+  shutdown_rx: ShutdownRecv,
+  connection_manager: Arc<ConnectionManager>,
+  scheduled_task_tx: AsyncSender<ScheduledTask>,
+}
+
+/// 轮询任务运行器 - 负责请求新任务
+struct PollTaskRunner {
+  setting: Arc<HetuflowAgentSetting>,
+  shutdown_rx: ShutdownRecv,
+  process_manager: Arc<ProcessManager>,
+  connection_manager: Arc<ConnectionManager>,
+}
+
+impl TaskScheduler {
+  /// 创建新的任务调度器
+  pub fn new(
+    setting: Arc<HetuflowAgentSetting>,
+    process_manager: Arc<ProcessManager>,
+    connection_manager: Arc<ConnectionManager>,
+    scheduled_task_tx: AsyncSender<ScheduledTask>,
+  ) -> Self {
+    Self { setting, process_manager, connection_manager, scheduled_task_tx }
+  }
+
+  /// 启动调度器的两个运行器
+  pub fn start(&self, shutdown_rx: ShutdownRecv) -> Result<Vec<JoinHandle<()>>, DataError> {
+    // 启动调度任务运行器和轮询任务运行器
+    // 返回两个 JoinHandle 用于生命周期管理
+  }
+}
+
+impl PollTaskRunner {
+  /// 轮询请求待执行任务循环
+  async fn run_loop(&mut self) {
+    // 定期检查可用容量并请求新任务
+    // 通过 process_manager.available_capacity() 获取当前可用容量
+    // 发送 AcquireTaskRequest 到 Server
+  }
+}
+```
 
 实现“精调度”的核心，确保任务在正确的时间被触发。
 
@@ -249,32 +314,46 @@ impl TaskScheduler {
 
 ### 4.4. `TaskExecutor` (任务执行器)
 
-负责任务的最终执行和监控。
+负责任务的最终执行和监控。通过 `ProcessManager` 进行并发控制。
 
 ```rust
-use tokio::sync::Semaphore;
+use std::sync::Arc;
+use kanal::AsyncReceiver;
 
 pub struct TaskExecutor {
-  // 使用信号量控制最大并发任务数
-  concurrency_limiter: Arc<Semaphore>,
+  setting: Arc<HetuflowAgentSetting>,
+  process_manager: Arc<ProcessManager>,
   connection_manager: Arc<ConnectionManager>,
+  scheduled_task_rx: AsyncReceiver<ScheduledTask>,
 }
 
 impl TaskExecutor {
-  /// 创建一个新的 TaskExecutor
-  pub fn new(max_concurrent_tasks: usize, ...) -> Self {
-    todo!()
+  /// 创建新的任务执行器
+  pub fn new(
+    setting: Arc<HetuflowAgentSetting>,
+    process_manager: Arc<ProcessManager>,
+    connection_manager: Arc<ConnectionManager>,
+    scheduled_task_rx: AsyncReceiver<ScheduledTask>,
+  ) -> Self {
+    Self { setting, process_manager, connection_manager, scheduled_task_rx }
   }
 
-  /// 执行一个任务（此方法由 TaskScheduler 的时间轮回调触发）
-  pub async fn execute_task(&self, task: ScheduledTask) {
-    // 1. 获取并发许可 `concurrency_limiter.acquire().await`
-    // 2. 上报任务状态为 `Running`
-    // 3. 使用 `tokio::process::Command` 创建子进程执行 `task.command`
-    // 4. 启动新 Task 来监控子进程的输出和退出码
-    // 5. 任务结束后，上报最终状态 (`Succeeded`/`Failed`)
-    // 6. 释放并发许可
-    todo!()
+  /// 启动任务执行器
+  pub fn start(&self, shutdown_rx: ShutdownRecv) -> Result<Vec<JoinHandle<()>>, DataError> {
+    // 启动任务执行循环
+    // 从 scheduled_task_rx 接收任务并执行
+  }
+
+  /// 执行单个任务
+  async fn execute_task(
+    setting: Arc<HetuflowAgentSetting>,
+    process_manager: Arc<ProcessManager>,
+    connection_manager: Arc<ConnectionManager>,
+    task: ScheduledTask,
+  ) {
+    // 1. 通过 ProcessManager 启动进程（自动进行并发控制）
+    // 2. 上报任务状态变更
+    // 3. 监控进程执行状态
   }
 }
 ```

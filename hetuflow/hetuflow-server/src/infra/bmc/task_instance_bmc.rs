@@ -10,7 +10,7 @@ use sqlx::Row;
 use uuid::Uuid;
 
 use hetuflow_core::{
-  protocol::TaskRequest,
+  protocol::AcquireTaskRequest,
   types::{TaskInstanceStatus, TaskStatus},
 };
 
@@ -214,7 +214,7 @@ impl TaskInstanceBmc {
   /// 拉取到 SchedTaskInstance 后，将 request.agent_id 绑定到 SchedTaskInstance.agent_id 上
   pub async fn find_many_by_poll(
     mm: &ModelManager,
-    request: &TaskRequest,
+    request: &AcquireTaskRequest,
   ) -> Result<Vec<SchedTaskInstance>, SqlError> {
     // SQL 语句：
     // 1. 查询符合条件的 task_instance

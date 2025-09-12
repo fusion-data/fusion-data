@@ -1,6 +1,4 @@
-use std::collections::HashMap;
-
-use fusion_common::time::OffsetDateTime;
+use fusion_common::{ahash::HashMap, time::OffsetDateTime};
 use garde::Validate;
 use modelsql_core::{
   field::FieldMask,
@@ -29,13 +27,9 @@ pub struct AgentMetrics {
 pub struct AgentCapabilities {
   /// 最大并发任务数
   pub max_concurrent_tasks: u32,
-  /// 资源描述 (cpu, memory, etc.)
-  pub resources: HashMap<String, String>,
-  /// 支持的特性列表
-  pub features: Vec<String>,
   /// Agent 标签，用于筛选任务。比如某些需要特定资源的任务只能在匹配标签的 Agent 上运行
   pub tags: HashMap<String, Option<Box<serde_json::Value>>>,
-  /// 扩展元数据
+  /// 扩展元数据 (cpu, memory, etc.)
   pub metadata: HashMap<String, String>,
 }
 

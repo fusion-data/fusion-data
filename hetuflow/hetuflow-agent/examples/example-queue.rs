@@ -1,6 +1,6 @@
 use std::{sync::Arc, time::Duration};
 
-use futures_util::FutureExt;
+use futures_util::StreamExt;
 use mea::mpsc;
 use tokio::sync::broadcast;
 
@@ -18,14 +18,12 @@ async fn demo_kanal_mpmc() {
   let rx0 = rx.clone();
   let mut shutdown_rx = shutdown_tx.subscribe();
   tokio::spawn(async move {
-    let rx0_fut = rx0.recv().fuse();
-    let shutdown_fut = shutdown_rx.recv().fuse();
-    futures_util::pin_mut!(rx0_fut, shutdown_fut);
-    futures_util::select! {
-      v = rx0_fut => {
+    let mut rx0_stream = rx0.stream();
+    tokio::select! {
+      v = rx0_stream.next() => {
         println!("rx0 recv: {:?}", v);
       }
-      _ = shutdown_fut => {
+      _ = shutdown_rx.recv() => {
         println!("rx0 recv shutdown signal");
       }
     }

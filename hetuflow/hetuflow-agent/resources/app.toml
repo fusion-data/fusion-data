@@ -1,5 +1,16 @@
 [fusion.log]
 enable = true
+with_target = true
+with_file = true
+with_thread_ids = false
+with_thread_names = true
+with_line_number = true
+with_span_events = []
+time_format = "%Y-%m-%d %H:%M:%S%.3f"
+log_level = "info"
+log_writer = "both"
+log_dir = "./var/logs/agent/"
+log_name = "hetuflow-agent"
 log_targets = [
     "tower_http=debug",
     "fusion_common=debug",
@@ -11,6 +22,11 @@ log_targets = [
     "hetuflow_agent=debug",
     "hetuflow_server=debug",
 ]
+
+[fusion.log.otel]
+enable = false
+traces_sample = "always_on"
+exporter_otlp_endpoint = "http://localhost:4317"
 
 [fusion.app]
 name = "hetuflow-agent"
