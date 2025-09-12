@@ -1,15 +1,19 @@
 use std::sync::Arc;
 
 use fusion_core::{DataError, IdUuidResult};
-use futures_util::{SinkExt, StreamExt};
+use futures_util::{SinkExt, StreamExt, stream::SplitSink};
 use hetuflow_core::{
-  protocol::{AcquireTaskResponse, WebSocketCommand, WebSocketEvent},
-  types::{CommandKind, HetuflowCommand},
+  models::AgentCapabilities,
+  protocol::{AcquireTaskResponse, AgentRegisterRequest, WebSocketCommand, WebSocketEvent},
+  types::{CommandKind, EventKind, HetuflowCommand},
 };
 use log::{error, info, warn};
 use mea::shutdown::ShutdownRecv;
-use tokio::sync::{broadcast, mpsc};
-use tokio_tungstenite::tungstenite::Message;
+use tokio::{
+  net::TcpStream,
+  sync::{broadcast, mpsc},
+};
+use tokio_tungstenite::{MaybeTlsStream, WebSocketStream, tungstenite::Message};
 
 use crate::setting::HetuflowAgentSetting;
 
@@ -45,8 +49,10 @@ impl WsRunner {
   }
 
   async fn run_websocket_loop(&mut self) -> Result<(), DataError> {
-    let ws_stream = self.connect_with_timeout_and_retry().await?;
+    let (ws_stream, local_address) = self.connect_with_timeout_and_retry().await?;
     let (mut ws_tx, mut ws_rx) = ws_stream.split();
+
+    self.register_agent(&mut ws_tx, local_address).await?;
 
     loop {
       tokio::select! {
@@ -106,8 +112,7 @@ impl WsRunner {
 
   async fn connect_with_timeout_and_retry(
     &self,
-  ) -> Result<tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>, DataError>
-  {
+  ) -> Result<(WebSocketStream<MaybeTlsStream<TcpStream>>, String), DataError> {
     let url = self.setting.server_gateway_ws();
     let timeout_duration = self.setting.connection.connect_timeout;
     info!("Connecting to Hetuflow Server: {}", url);
@@ -117,7 +122,17 @@ impl WsRunner {
       match connect_result {
         Ok(Ok((ws_stream, _response))) => {
           info!("Connected to Hetuflow Server: {}, attempts: {}", url, attempts);
-          return Ok(ws_stream);
+          let tcp_stream = ws_stream.get_ref();
+          let local_address = match tcp_stream {
+            MaybeTlsStream::Plain(t) => t.local_addr()?.to_string(),
+            #[cfg(feature = "native-tls")]
+            MaybeTlsStream::NativeTls(t) => t.local_addr()?.to_string(),
+            /// Encrypted socket stream using `rustls`.
+            #[cfg(feature = "__rustls-tls")]
+            MaybeTlsStream::Rustls(t) => t.local_addr()?.to_string(),
+            _ => "".to_string(),
+          };
+          return Ok((ws_stream, local_address));
         }
         Ok(Err(e)) => {
           error!("Failed to connect to gateway: {}", e);
@@ -134,6 +149,24 @@ impl WsRunner {
       "Failed to connect to gateway after {} attempts",
       self.setting.connection.max_reconnect_attempts
     )))
+  }
+
+  async fn register_agent(
+    &self,
+    ws_tx: &mut SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, Message>,
+    address: String,
+  ) -> Result<(), DataError> {
+    let capabilities = AgentCapabilities {
+      max_concurrent_tasks: self.setting.process.max_concurrent_processes,
+      tags: self.setting.tags.iter().map(|tag| (tag.clone(), Default::default())).collect(),
+      metadata: self.setting.metadata.clone(),
+    };
+    let register_req = AgentRegisterRequest { agent_id: self.setting.agent_id, capabilities, address };
+    let message = serde_json::to_string(&WebSocketEvent::new(EventKind::AgentRegister, register_req)).unwrap();
+    ws_tx
+      .send(Message::Text(message.into()))
+      .await
+      .map_err(|e| DataError::server_error(format!("Send message to Server error: {}", e)))
   }
 }
 

@@ -65,108 +65,142 @@ Agent 与 Server 之间使用 WebSocket 进行通信，可以支持如下特性�
 2. 网络穿透：agent 支持部署到不同的私有网络，只要能连接上任何一个 Server 即可（比如将 Server 部署在一个公共网络中，同时管理不同私网的 Agents）
 
 ```rust
-// WebSocket 消息统一包装器
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct WebSocketMessage {
-  pub message_id: Uuid,              // 消息唯一标识
-  pub timestamp: OffsetDateTime,                  // 时间戳: Epoch Millis
-  pub message_kind: MessageKind,       // 消息类型
-  pub payload: serde_json::Value,      // 消息载荷
-  pub metadata: HashMap<String, String>, // 扩展元数据
+/// WebSocket 事件统一包装器，Agent -> Server
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WebSocketEvent {
+  /// 消息唯一标识
+  pub event_id: Uuid,
+  /// 发送时间
+  pub timestamp: i64,
+  /// 消息类型
+  pub kind: EventKind,
+  /// 消息载荷
+  pub payload: serde_json::Value,
+  /// 扩展元数据
+  pub metadata: HashMap<String, String>,
 }
 
-// 消息类型枚举
-#[derive(Serialize_repr, Deserialize_repr, Debug, Clone)]
+/// 服务器下发的指令。 Server -> Agent
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct WebSocketCommand {
+  /// 指令ID，全局唯一
+  id: Uuid,
+  /// 发送时间
+  timestamp: i64,
+  /// 指令类型
+  pub kind: CommandKind,
+  /// 指令参数
+  pub parameters: serde_json::Value,
+  /// 指令超时时间
+  pub timeout: Option<u32>,
+  /// 指令优先级
+  pub priority: Option<u8>,
+}
+
+/// WebSocket 消息类型枚举
+#[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(i32)]
-pub enum MessageKind {
-  // 错误处理
-  Error = 99,                          // 错误消息
-  Ack = 100,                           // 确认消息
+pub enum EventKind {
+  /// 确认消息
+  Ack = 1,
+  /// 未确认消息
+  Nack = 2,
+  /// Agent 注册
+  AgentRegister = 3,
+  /// Agent 心跳
+  AgentHeartbeat = 4,
+  /// Agent 请求 AgentRequest <-> GatewayResponse
+  PollTaskRequest = 5,
+  /// Agent 事件 AgentEvent
+  TaskChangedEvent = 6,
+}
 
-  // Agent 生命周期管理
-  AgentRegister = 101,                 // Agent 注册
-  AgentRegisterResponse,               // Agent 注册响应
-  AgentHeartbeat,                      // Agent 心跳
-  AgentHeartbeatResponse,              // Agent 心跳响应
-
-  // 任务调度相关
-  TaskDispatch = 201,                  // 任务分发
-  TaskDispatchResponse,                // 任务分发响应
-  TaskInstanceUpdate,                  // 任务实例更新
-  TaskControl,                         // 任务控制指令
-  TaskPoll,                            // Agent 主动拉取任务
-
-  // 文件传输相关
-  FileUpload = 301,                    // 文件上传
-  FileDownload,                        // 文件下载
-  FileTransferStatus,                  // 文件传输状态
+/// 从 Server 发向 Agent 的命令类型
+#[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(i32)]
+pub enum CommandKind {
+  Shutdown = 1,        // 关闭指令
+  UpdateConfig = 2,    // 更新配置
+  ClearCache = 3,      // 清理缓存
+  FetchMetrics = 4,    // 更新指标
+  AgentRegistered = 5, // Agent 注册成功
+  DispatchTask = 6,    // 分发任务
+  CancelTask = 7,      // 取消任务
 }
 ```
 
 ### Agent 注册与管理
 
 ```rust
-// Agent 注册请求
+/// Agent 注册请求。Agent 连接上 Server 后发送的第一个请求，用于描述当前 Agent 的能力和元数据
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct AgentRegisterRequest {
-  pub agent_id: Uuid,                    // Agent 唯一标识
-  pub namespace_id: Uuid,                   // 命名空间
-  pub capabilities: AgentCapabilities,     // Agent 能力描述
-  pub metadata: HashMap<String, String>,   // 扩展元数据
-  pub version: String,                     // Agent 版本
-  pub hostname: String,                    // 主机名
-  pub os_info: String,                     // 操作系统信息
+  /// Agent 唯一标识
+  pub agent_id: Uuid,
+  /// Agent 能力描述
+  pub capabilities: AgentCapabilities,
+  /// Agent 地址
+  pub address: String,
 }
 
+/// Agent 注册响应
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct AgentRegisterResponse {
-  pub success: bool,                       // 注册是否成功
-  pub err_msg: String,                     // 响应消息
-  pub config: Option<AgentConfig>,         // Agent 配置
-  pub server_time: OffsetDateTime,                    // 服务器时间
-  pub session_id: String,                  // 会话标识
+  /// 注册是否成功
+  pub success: bool,
+  /// 响应消息
+  pub message: String,
+  /// Agent 配置
+  pub agent: Option<SchedAgent>,
+  /// 服务器时间
+  pub server_time: i64,
 }
 
-// Agent 能力描述
-#[derive(Serialize, Deserialize, Debug, Clone)]
+/// Agent 能力描述
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct AgentCapabilities {
-  pub max_concurrent_tasks: u32,           // 最大并发任务数
-  pub supported_task_types: Vec<String>,   // 支持的任务类型
-  pub resources: HashMap<String, String>,  // 资源描述 (cpu, memory, etc.)
-  pub features: Vec<String>,               // 支持的特性列表
-}
-
-// Agent 配置
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct AgentConfig {
-  pub heartbeat_interval: u32,             // 心跳间隔(秒)
-  pub task_timeout: u32,                   // 任务超时时间(秒)
-  pub max_output_size: u64,                // 最大输出大小
-  pub settings: HashMap<String, String>,   // 其他配置项
+  /// 最大并发任务数
+  pub max_concurrent_tasks: u32,
+  /// 支持的特性列表
+  pub features: Vec<String>,
+  /// Agent 标签，用于筛选任务。比如某些需要特定资源的任务只能在匹配标签的 Agent 上运行
+  pub tags: HashMap<String, Option<Box<serde_json::Value>>>,
+  /// 扩展元数据 (cpu, memory, etc.)
+  pub metadata: HashMap<String, String>,
 }
 ```
 
 ### 心跳与状态同步
 
 ```rust
-// 心跳请求
+/// 心跳请求
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct HeartbeatRequest {
-  pub agent_id: Uuid,                    // Agent ID
-  pub timestamp: OffsetDateTime,                      // 时间戳
-  pub status: AgentStatus,                 // Agent 状态
-  pub running_tasks: Vec<TaskStatus>,      // 运行中的任务状态
-  pub metrics: AgentMetrics,               // Agent 性能指标
-  pub last_task_id: Option<String>,        // 最后处理的任务ID
+  /// Agent ID
+  pub agent_id: Uuid,
+  /// 心跳时间戳
+  pub timestamp: i64,
+  /// Agent 状态
+  pub status: AgentStatus,
+  /// 运行中的任务状态信息
+  pub running_tasks: Vec<TaskStatusInfo>,
+  /// Agent 性能指标
+  pub metrics: AgentMetrics,
+  /// 最后处理的任务ID
+  pub last_task_id: Option<String>,
 }
 
+/// 心跳响应
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct HeartbeatResponse {
-  pub ack: bool,                           // 确认收到
-  pub commands: Vec<AgentCommand>,         // 服务器指令
-  pub server_time: OffsetDateTime,                    // 服务器时间
-  pub config_updates: Option<AgentConfig>, // 配置更新
-  pub pending_tasks: Vec<String>,          // 待处理任务ID列表
+  /// 响应状态
+  pub success: bool,
+  /// 服务器时间
+  pub server_time: i64,
+  /// 服务器指令
+  pub commands: Vec<ServerCommand>,
+  /// 配置更新
+  pub config_updates: Option<AgentConfig>,
 }
 
 // Agent 性能指标
@@ -196,47 +230,72 @@ pub struct AgentCommand {
 ### 任务调度消息
 
 ```rust
-// 任务分发请求 (Represents a 'Task')
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct DispatchTaskRequest {
-  pub job_id: Uuid,                        // 归属的 Job ID
-  pub task_id: Uuid,                       // 本次 Task 的唯一标识 (UUID)
-  pub task_name: Option<String>,           // 任务名称
-  pub schedule_kind: ScheduleKind,                   // 任务类型
-  pub command: String,                     // 执行命令
-  pub cron_expression: Option<String>,     // Cron 表达式 (仅 CRON 类型)
-  pub environment: HashMap<String, String>, // 环境变量
-  pub config: TaskConfig,                  // 任务配置
-  pub scheduled_at: OffsetDateTime,                   // 调度时间戳
-  pub priority: u8,                        // 任务优先级
-  pub dependencies: Vec<Uuid>,             // 依赖任务ID列表
+// 任务分发请求
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ScheduledTask {
+  pub task_instance: SchedTaskInstance,
+  pub task: SchedTask,
 }
 
 // 任务配置
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct TaskConfig {
-  pub timeout: u32,                        // 超时时间(秒)
-  pub max_retries: u32,                    // 最大重试次数
-  pub retry_interval: u32,                 // 重试间隔(秒)
-  pub working_directory: Option<String>,   // 工作目录
-  pub capture_output: bool,                // 是否捕获输出
-  pub max_output_size: u64,                // 最大输出大小
-  pub tags: HashMap<String, Option<JsonValue>>, // 任务标签
-  pub resource_limits: Option<ResourceLimits>, // 资源限制
+  /// 超时时间(秒)
+  pub timeout: u32,
+  /// 最大重试次数
+  pub max_retries: u32,
+  /// 重试间隔(秒)
+  pub retry_interval: u32,
+  /// 命令。如： python, uv/uvx, npx, node, bash, sh, cargo, rustc 等
+  pub cmd: String,
+  /// 命令参数
+  pub args: Vec<String>,
+  /// 工作目录，不设置则使用默认值
+  pub working_directory: Option<String>,
+  /// 是否捕获输出
+  pub capture_output: bool,
+  /// 最大输出大小(字节)
+  pub max_output_size: u64,
+  /// 任务标签。可用于限制哪些 Agent 允许执行该任务
+  pub tags: HashMap<String, Option<serde_json::Value>>,
+  /// 资源限制
+  pub resource_limits: Option<ResourceLimits>,
 }
 
-// 任务状态更新 (Reports status for a 'Task', which the server records as a 'TaskInstance')
+// 任务实例状态更新
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TaskInstanceUpdated {
+  /// 任务实例 ID
+  pub instance_id: Uuid,
+  /// Agent ID
+  pub agent_id: Uuid,
+  /// 执行状态
+  pub status: TaskInstanceStatus,
+  /// 状态更新时间
+  pub timestamp: i64,
+  /// 任务数据
+  pub data: Option<String>,
+  /// 错误信息
+  pub error_message: Option<String>,
+  /// 执行指标
+  pub metrics: Option<TaskMetrics>,
+}
+
+/// Task pull request
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct TaskInstanceUpdate {
-  pub task_id: Uuid,                       // 正在上报状态的 Task ID
-  pub agent_id: Uuid,                    // Agent ID
-  pub status: TaskInstanceStatus,         // 执行状态
-  pub timestamp: OffsetDateTime,                      // 时间戳
-  pub output: Option<String>,              // 任务输出
-  pub error_message: Option<String>,       // 错误信息
-  pub exit_code: Option<i32>,              // 退出码
-  pub metrics: Option<TaskMetrics>,        // 执行指标
-  pub progress: Option<f64>,               // 执行进度 (0.0-1.0)
+pub struct AcquireTaskRequest {
+  pub agent_id: Uuid,     // Agent ID
+  pub max_tasks: u32,     // 允许最大并发任务数
+  pub tags: Vec<String>,  // 当前 Agent 拥有的标签，用于过滤任务
+  pub acquire_count: u32, // 拉取任务数
+}
+
+/// Task response, for task pull requests or direct task assignments from Server to Agent
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct AcquireTaskResponse {
+  pub tasks: Vec<ScheduledTask>, // 可执行任务列表
+  pub has_more: bool,            // 是否还有更多任务
+  pub next_poll_interval: u32,   // 下次拉取间隔(秒)
 }
 
 // 任务执行指标
@@ -257,44 +316,57 @@ pub struct TaskMetrics {
 
 ```rust
 // 作业类型 (ScheduleKind) - 定义了 Job 的核心调度和行为模式
-#[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy, PartialEq)]
+#[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy, PartialEq, Eq, AsRefStr)]
 #[cfg_attr(feature = "with-db", derive(sqlx::Type))]
 #[repr(i32)]
 pub enum ScheduleKind {
-  Cron = 1,                                // Cron 定时作业
-  Time = 2,                                // 间隔定时作业，可以通过设置最大执行次数表达 Once 执行
-  Daemon = 3,                              // 守护进程作业
-  Event = 4,                               // 事件驱动作业
-  Flow = 5,                                // 流程任务
+  /// Cron 定时作业
+  Cron = 1,
+  /// 间隔定时作业。可以通过设置最大执行次数为 1 次来表达 Once 执行，可以通过设置 start_time 来设置定时执行时间
+  Interval = 2,
+  /// 守护进程作业
+  Daemon = 3,
+  /// 事件驱动作业
+  Event = 4,
+  /// 流程任务
+  Flow = 5,
 }
 
-// 任务执行状态
-#[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy, PartialEq)]
+// 任务状态
+#[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "with-db", derive(sqlx::Type))]
 #[repr(i32)]
 pub enum TaskInstanceStatus {
-  Pending = 1,                             // 等待执行
-  Running = 10,                             // 执行中
-  Timeout = 20,                             // 执行超时
-  Paused = 30,                              // 已暂停
-  Skipped = 40,                             // 已跳过
-  Failed = 90,                              // 执行失败
-  Cancelled = 99,                           // 已取消
-  Succeeded = 100,                             // 执行成功
+  /// 已创建
+  Created = 1,
+  /// 等待执行
+  Pending = 10,
+  /// 正在执行
+  Running = 20,
+  /// 已暂停
+  Paused = 30,
+  /// 已跳过
+  Skipped = 40,
+  /// 执行失败
+  Failed = 90,
+  /// 已取消
+  Cancelled = 99,
+  /// 执行成功
+  Succeeded = 100,
 }
 
 // Agent 状态
-#[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy, PartialEq)]
+#[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "with-db", derive(sqlx::Type))]
 #[repr(i32)]
 pub enum AgentStatus {
-  Idle = 10,                                // 空闲
-  Busy = 20,                                // 忙碌
-  Connecting = 30,                          // 连接中
-  Disconnecting = 31,                       // 断开连接中
-  Offline = 90,                             // 离线
-  Error = 99,                               // 错误状态
-  Online = 100,                              // 在线
+  Idle = 10,          // 空闲
+  Busy = 20,          // 忙碌
+  Connecting = 30,    // 连接中
+  Disconnecting = 31, // 断开连接中
+  Offline = 90,       // 离线
+  Error = 99,         // 错误状态
+  Online = 100,       // 在线
 }
 
 // Agent 指令类型
@@ -311,16 +383,16 @@ pub enum AgentCommandKind {
 }
 
 // 任务控制类型
-#[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy, PartialEq)]
+#[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "with-db", derive(sqlx::Type))]
 #[repr(i32)]
 pub enum TaskControlKind {
-  Stop = 1,                                // 停止任务
-  Pause = 2,                               // 暂停任务
-  Resume = 3,                              // 恢复任务
-  Restart = 4,                             // 重启任务
-  Skip = 5,                                // 跳过任务
-  Kill = 9,                                // 强制终止任务
+  Stop = 1,    // 停止任务
+  Pause = 2,   // 暂停任务
+  Resume = 3,  // 恢复任务
+  Restart = 4, // 重启任务
+  Skip = 5,    // 跳过任务
+  Kill = 9,    // 强制终止任务
 }
 
 #[cfg(feature = "with-db")]
@@ -345,10 +417,34 @@ pub enum WebSocketError {
   SerializationError(String),
   #[error("认证错误: {0}")]
   AuthenticationError(String),
-  #[error("超时错误: {0}")]
+  #[error("超时错误")]
   TimeoutError,
   #[error("未知错误: {0}")]
   UnknownError(String),
+}
+
+/// 错误响应
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ErrorResponse {
+  /// 错误码
+  pub err_code: i32,
+  /// 错误消息
+  pub err_msg: String,
+  /// 详细信息
+  pub details: Option<serde_json::Value>,
+  /// 时间戳
+  pub timestamp: Option<i64>,
+}
+
+/// 确认消息
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct AckMessage {
+  /// 原始消息ID
+  pub message_id: Uuid,
+  /// 处理状态
+  pub status: String,
+  /// 详细信息
+  pub details: Option<String>,
 }
 ```
 
