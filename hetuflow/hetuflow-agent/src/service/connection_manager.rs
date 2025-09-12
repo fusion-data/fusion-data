@@ -2,7 +2,6 @@ use std::sync::{Arc, Mutex};
 
 use fusion_common::time::OffsetDateTime;
 use fusion_core::DataError;
-use futures_util::{FutureExt, pin_mut};
 use log::{error, info};
 use mea::shutdown::ShutdownRecv;
 use tokio::{
@@ -131,12 +130,8 @@ struct CommandRunner {
 impl CommandRunner {
   async fn run_loop(&mut self) {
     loop {
-      let command_fut = self.command_rx.recv().fuse();
-      let shutdown_fut = self.shutdown_rx.is_shutdown().fuse();
-      pin_mut!(command_fut, shutdown_fut);
-
-      futures_util::select! {
-        command = command_fut => {
+      tokio::select! {
+        command = self.command_rx.recv() => {
           match command {
             Ok(command) => {
               match command {
@@ -156,7 +151,7 @@ impl CommandRunner {
             }
           }
         }
-        _ = shutdown_fut => {
+        _ = self.shutdown_rx.is_shutdown() => {
           info!("CommandRunner exited.");
           return;
         }

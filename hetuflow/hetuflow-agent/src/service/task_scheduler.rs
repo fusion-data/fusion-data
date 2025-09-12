@@ -4,8 +4,6 @@ use std::time::Duration;
 use fusion_common::time::now_offset;
 use fusion_core::DataError;
 use fusion_core::timer::TimerRef;
-use futures_util::future::Join;
-use futures_util::{FutureExt, pin_mut};
 use log::{debug, error, info, warn};
 use mea::shutdown::ShutdownRecv;
 use tokio::sync::{RwLock, broadcast};
@@ -128,11 +126,8 @@ struct ScheduleTaskRunner {
 impl ScheduleTaskRunner {
   async fn run_loop(&mut self) {
     loop {
-      let command_rx_fut = self.command_rx.recv().fuse();
-      let shutdown_rx_fut = self.shutdown_rx.is_shutdown().fuse();
-      pin_mut!(command_rx_fut, shutdown_rx_fut);
       tokio::select! {
-        command = command_rx_fut => {
+        command = self.command_rx.recv() => {
           match command {
             Ok(HetuflowCommand::AcquiredTask(task_poll_resp)) => {
               for task in task_poll_resp.tasks.iter().cloned() {
@@ -157,7 +152,7 @@ impl ScheduleTaskRunner {
             }
           }
         }
-        _ = shutdown_rx_fut => {
+        _ = self.shutdown_rx.is_shutdown() => {
           info!("ScheduleTaskRunner stopped");
           break;
         }
@@ -179,12 +174,9 @@ impl PollTaskRunner {
     let mut poll_interval = interval(Duration::from_secs(self.setting.polling.interval_seconds));
 
     loop {
-      let poll_interval_fut = poll_interval.tick().fuse();
-      let shutdown_rx_fut = self.shutdown_rx.is_shutdown().fuse();
-      pin_mut!(poll_interval_fut, shutdown_rx_fut);
       tokio::select! {
-        _ = poll_interval_fut => {},
-        _ = shutdown_rx_fut => {
+        _ = poll_interval.tick() => {},
+        _ = self.shutdown_rx.is_shutdown() => {
           info!("PollTaskRunner polling loop stopped");
           return;
         }

@@ -2,7 +2,6 @@ use std::sync::Arc;
 
 use fusion_common::time::now_epoch_millis;
 use fusion_core::DataError;
-use futures_util::{FutureExt, pin_mut};
 use log::{error, info};
 use mea::shutdown::ShutdownRecv;
 use tokio::task::JoinHandle;
@@ -84,11 +83,8 @@ impl TaskExecutor {
 
     tokio::spawn(async move {
       loop {
-        let process_event_rx_fut = process_event_rx.recv().fuse();
-        let shutdown_rx_fut = shutdown_rx.is_shutdown().fuse();
-        pin_mut!(process_event_rx_fut, shutdown_rx_fut);
-        futures_util::select! {
-          event_result = process_event_rx_fut => {
+        tokio::select! {
+          event_result = process_event_rx.recv() => {
             match event_result {
               Ok(event) => Self::handle_process_event(agent_id, connection_manager.clone(), event).await,
               Err(e) => {
@@ -97,7 +93,7 @@ impl TaskExecutor {
               }
             }
           },
-          _ = shutdown_rx_fut => {
+          _ = shutdown_rx.is_shutdown() => {
             info!("TaskExecutor process_event_rx loop stopped");
             break;
           }

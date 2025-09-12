@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use fusion_core::{DataError, IdUuidResult};
-use futures_util::{FutureExt, SinkExt, StreamExt, pin_mut};
+use futures_util::{SinkExt, StreamExt};
 use hetuflow_core::{
   protocol::{AcquireTaskResponse, WebSocketCommand, WebSocketEvent},
   types::{CommandKind, HetuflowCommand},
@@ -53,16 +53,12 @@ impl WsRunner {
     let (mut ws_tx, mut ws_rx) = ws_stream.split();
 
     loop {
-      let event_fut = self.event_rx.recv().fuse();
-      let ws_rx_fut = ws_rx.next().fuse();
-      let shutdown_fut = self.shutdown_rx.is_shutdown().fuse();
-      pin_mut!(event_fut, ws_rx_fut, shutdown_fut);
-      futures_util::select! {
-        _ = shutdown_fut => { // Shutdown signal received
+      tokio::select! {
+        _ = self.shutdown_rx.is_shutdown() => { // Shutdown signal received
           info!("Shutdown signal received, stopping ConnectionManager loop");
           return Ok(());
         }
-        event = event_fut => { // Send event to Server
+        event = self.event_rx.recv() => { // Send event to Server
           if let Some(event) = event {
             let msg = serde_json::to_string(&event).unwrap();
             if let Err(e) = ws_tx.send(Message::Text(msg.into())).await {
@@ -72,7 +68,7 @@ impl WsRunner {
             return Err(DataError::server_error("WebSocketEvent channel closed"));
           }
         }
-        msg_maybe = ws_rx_fut => { // Receive message from Server
+        msg_maybe = ws_rx.next() => { // Receive message from Server
           let msg = if let Some(msg_result) = msg_maybe  {
             match msg_result {
               Ok(msg) => msg,
