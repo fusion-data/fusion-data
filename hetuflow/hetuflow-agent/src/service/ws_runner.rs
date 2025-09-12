@@ -6,7 +6,7 @@ use hetuflow_core::{
   protocol::{AcquireTaskResponse, WebSocketCommand, WebSocketEvent},
   types::{CommandKind, HetuflowCommand},
 };
-use log::{error, info};
+use log::{error, info, warn};
 use mea::shutdown::ShutdownRecv;
 use tokio::sync::{broadcast, mpsc};
 use tokio_tungstenite::tungstenite::Message;
@@ -45,11 +45,7 @@ impl WsRunner {
   }
 
   async fn run_websocket_loop(&mut self) -> Result<(), DataError> {
-    let (ws_stream, _resp) = tokio_tungstenite::connect_async(self.setting.server_gateway_ws())
-      .await
-      .map_err(|e| DataError::server_error(format!("Failed to connect to gateway: {}", e)))?;
-    info!("Connected to Hetuflow Server: {}", self.setting.server_gateway_ws());
-
+    let ws_stream = self.connect_with_timeout_and_retry().await?;
     let (mut ws_tx, mut ws_rx) = ws_stream.split();
 
     loop {
@@ -106,6 +102,38 @@ impl WsRunner {
         }
       }
     }
+  }
+
+  async fn connect_with_timeout_and_retry(
+    &self,
+  ) -> Result<tokio_tungstenite::WebSocketStream<tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>>, DataError>
+  {
+    let url = self.setting.server_gateway_ws();
+    let timeout_duration = self.setting.connection.connect_timeout;
+    info!("Connecting to Hetuflow Server: {}", url);
+
+    for attempts in 0..self.setting.connection.max_reconnect_attempts {
+      let connect_result = tokio::time::timeout(timeout_duration, tokio_tungstenite::connect_async(&url)).await;
+      match connect_result {
+        Ok(Ok((ws_stream, _response))) => {
+          info!("Connected to Hetuflow Server: {}, attempts: {}", url, attempts);
+          return Ok(ws_stream);
+        }
+        Ok(Err(e)) => {
+          error!("Failed to connect to gateway: {}", e);
+          tokio::time::sleep(self.setting.connection.reconnect_interval).await;
+        }
+        Err(elapsed) => {
+          warn!("WebSocket connection timed out after {} seconds: {}", timeout_duration.as_secs(), elapsed);
+          tokio::time::sleep(self.setting.connection.reconnect_interval).await;
+        }
+      }
+    }
+
+    Err(DataError::server_error(format!(
+      "Failed to connect to gateway after {} attempts",
+      self.setting.connection.max_reconnect_attempts
+    )))
   }
 }
 

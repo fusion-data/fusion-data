@@ -74,7 +74,7 @@ impl ProcessManager {
     // 检查并发进程数限制
     {
       let active_processes = self.active_processes.read().await;
-      if active_processes.len() >= self.process_config.max_concurrent_processes {
+      if active_processes.len() >= self.process_config.max_concurrent_processes as usize {
         return Err(DataError::server_error("Maximum concurrent processes limit reached"));
       }
     }
@@ -174,6 +174,12 @@ impl ProcessManager {
   pub async fn get_active_processes(&self) -> Vec<ProcessInfo> {
     let active_processes = self.active_processes.read().await;
     active_processes.values().cloned().collect()
+  }
+
+  /// 获取可用容量
+  pub async fn available_capacity(&self) -> u32 {
+    let active_processes = self.active_processes.read().await;
+    self.process_config.max_concurrent_processes - active_processes.len() as u32
   }
 
   /// 获取事件接收器
