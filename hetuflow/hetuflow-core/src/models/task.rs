@@ -58,6 +58,9 @@ pub struct SchedTask {
   /// 保存 SchedJob.config。当 SchedJob 被修改后，因 SchedTask 保存了 config，所有任务受 SchedJob.config 变更的影响
   pub config: Option<TaskConfig>,
 
+  /// 任务重试次数
+  pub retry_count: i32,
+
   pub dependencies: Option<serde_json::Value>,
   pub locked_at: Option<OffsetDateTime>,
   pub lock_version: i32,

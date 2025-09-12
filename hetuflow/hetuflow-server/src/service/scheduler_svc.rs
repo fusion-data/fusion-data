@@ -105,8 +105,14 @@ impl SchedulerSvc {
                 let from_time = now_offset();
                 let to_time = from_time + duration;
 
+                // 生成定时任务
                 if let Err(e) = task_generation_svc.generate_tasks_for_schedule(from_time, to_time).await {
                     error!("Task generation failed: {}", e);
+                }
+                
+                // 生成重试任务
+                if let Err(e) = task_generation_svc.generate_retry_tasks().await {
+                    error!("Retry task generation failed: {}", e);
                 }
             }
             _ = shutdown_rx.recv() => {

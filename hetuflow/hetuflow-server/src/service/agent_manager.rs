@@ -336,6 +336,70 @@ impl AgentEventRunLoop {
     agent_id: Uuid,
     payload: Arc<TaskInstanceUpdated>,
   ) -> Result<(), DataError> {
-    todo!()
+    info!("Processing task instance changed for agent {}, instance {}", agent_id, payload.instance_id);
+
+    // 1. 更新任务实例状态
+    let instance_update = TaskInstanceForUpdate {
+      status: Some(payload.status),
+      completed_at: if matches!(payload.status, TaskInstanceStatus::Succeeded | TaskInstanceStatus::Failed | TaskInstanceStatus::Cancelled) {
+        Some(now_offset())
+      } else {
+        None
+      },
+      error_message: payload.error_message.clone(),
+      output: payload.data.clone(),
+      ..Default::default()
+    };
+
+    TaskInstanceBmc::update_by_id(&self.mm, payload.instance_id, instance_update).await?;
+
+    // 2. 获取任务实例信息以获取关联的任务ID
+    let task_instance = TaskInstanceBmc::find_by_id(&self.mm, &payload.instance_id).await?;
+
+    // 3. 如果任务失败，需要更新任务的重试计数和状态
+    if payload.status == TaskInstanceStatus::Failed {
+      // 获取当前任务信息
+      let current_task = TaskBmc::find_by_id(&self.mm, &task_instance.task_id).await?;
+
+      let new_retry_count = current_task.retry_count + 1;
+      let max_retries = current_task.config.as_ref().map(|c| c.max_retries as i32).unwrap_or(3);
+      let new_status = if new_retry_count >= max_retries {
+        TaskStatus::Failed // 达到最大重试次数，标记为最终失败
+      } else {
+        TaskStatus::Pending // 还可以重试，重置为待处理状态
+      };
+
+      // 更新任务状态和重试计数
+      let task_update = TaskForUpdate {
+        status: Some(new_status),
+        retry_count: Some(new_retry_count),
+        ..Default::default()
+      };
+
+      TaskBmc::update_by_id(&self.mm, task_instance.task_id, task_update).await?;
+
+      info!("Updated task {} retry count to {}, status: {:?}", task_instance.task_id, new_retry_count, new_status);
+    } else if payload.status == TaskInstanceStatus::Succeeded {
+      // 任务成功完成，更新任务状态
+      let task_update = TaskForUpdate {
+        status: Some(TaskStatus::Succeeded),
+        ..Default::default()
+      };
+
+      TaskBmc::update_by_id(&self.mm, task_instance.task_id, task_update).await?;
+      info!("Task {} completed successfully", task_instance.task_id);
+    }
+
+    // 4. 更新 Agent 统计信息
+    let success = payload.status == TaskInstanceStatus::Succeeded;
+    let response_time_ms = payload.metrics.as_ref()
+      .and_then(|m| m.end_time.map(|end| (end - m.start_time) as f64))
+      .unwrap_or(0.0);
+    
+    if let Some(agent) = self.connection_manager.get_agent(&agent_id)? {
+      agent.update_stats(success, response_time_ms);
+    }
+
+    Ok(())
   }
 }

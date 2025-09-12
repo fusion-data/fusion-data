@@ -87,11 +87,8 @@
   - 可能因为网络原因，Agent 并不能访问所有 Server，所有 Agent 需要从 Server 拉取任何 Namespace 的任务。比如某个 Server 部署在跳板机或暴露为一个代理 Server
 - [*] **任务状态管理** - 实现任务状态流转和生命周期管理
 - [ ] **重试机制** - 实现任务失败重试和超时处理
-
----
-
-- [ ] 定时检查任务（SchedTask, SchedTaskInstance）是否过期？若已过期则修改其 status 为 Expired 或 Timeout
-- [ ] 还是由 Leader Server 对 Follower Server 进行健康检查？还是由 Server 直接更新各自 sched_server.heartbeat 字段值？
+  - [ ] 定时检查任务（SchedTask, SchedTaskInstance）是否过期？若已过期则修改其 status 为 Expired 或 Timeout
+  - [ ] 还是由 Leader Server 对 Follower Server 进行健康检查？还是由 Server 直接更新各自 sched_server.heartbeat 字段值？
 
 ---
 
