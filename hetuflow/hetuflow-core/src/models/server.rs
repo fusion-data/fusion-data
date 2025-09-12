@@ -22,10 +22,9 @@ pub struct SchedServer {
   pub bind_namespaces: Vec<Uuid>,
   pub status: ServerStatus,
   pub description: Option<String>,
+  pub last_heartbeat: OffsetDateTime,
   pub created_by: i64,
   pub created_at: OffsetDateTime,
-  pub updated_by: Option<i64>,
-  pub updated_at: Option<OffsetDateTime>,
   pub deleted_at: Option<OffsetDateTime>,
 }
 

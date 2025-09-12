@@ -8,13 +8,15 @@ use fusion_core::configuration::ConfigRegistry;
 use fusion_web::config::WebConfig;
 use log::{error, info};
 use modelsql::ModelManager;
+use modelsql::filter::{OpValsDateTime, OpValsInt32};
 use tokio::sync::broadcast;
 use tokio::time::interval;
+use uuid::Uuid;
 
-use hetuflow_core::models::ServerForRegister;
-use hetuflow_core::types::ServerStatus;
+use hetuflow_core::models::{AgentFilter, AgentForUpdate, ServerFilter, ServerForRegister, ServerForUpdate};
+use hetuflow_core::types::{AgentStatus, ServerStatus};
 
-use crate::infra::bmc::ServerBmc;
+use crate::infra::bmc::{AgentBmc, ServerBmc};
 use crate::service::TaskGenerationSvc;
 use crate::setting::ServerConfig;
 
@@ -46,6 +48,9 @@ impl SchedulerSvc {
     // 启动心跳任务
     self.start_heartbeat_task().await;
 
+    // 启动心跳监控任务
+    self.start_heartbeat_monitor_task().await;
+
     info!("Scheduler Service started successfully");
     Ok(())
   }
@@ -62,9 +67,9 @@ impl SchedulerSvc {
       loop {
         tokio::select! {
           _ = interval.tick() => {
-            // TODO: 实现服务器心跳更新逻辑
-            if let Err(e) = Ok::<(), DataError>(()) {
-              error!("Server heartbeat update failed: {}", e);
+            // 更新服务器心跳时间
+            if let Err(e) = Self::update_server_heartbeat(&mm, server_id).await {
+              error!("Failed to update server heartbeat: {}", e);
             }
           }
           _ = shutdown_rx.recv() => {
@@ -74,6 +79,103 @@ impl SchedulerSvc {
         }
       }
     });
+  }
+
+  /// 更新服务器心跳时间
+  async fn update_server_heartbeat(mm: &ModelManager, server_id: Uuid) -> Result<(), DataError> {
+    let server_update = ServerForUpdate {
+      status: Some(ServerStatus::Active),
+      ..Default::default()
+    };
+    
+    ServerBmc::update_by_id(mm, server_id, server_update).await?;
+    Ok(())
+  }
+
+  /// 启动心跳监控任务
+  async fn start_heartbeat_monitor_task(&self) {
+    let mm = self.mm.clone();
+    let agent_overdue_ttl = self.server_config.agent_overdue_ttl;
+    let server_overdue_ttl = self.server_config.server_overdue_ttl;
+    let mut shutdown_rx = self.shutdown_tx.subscribe();
+
+    tokio::spawn(async move {
+      let mut interval = interval(Duration::from_secs(60)); // 每分钟检查一次
+
+      loop {
+        tokio::select! {
+          _ = interval.tick() => {
+            // 检查超时的Agent
+            if let Err(e) = Self::check_agent_timeouts(&mm, agent_overdue_ttl).await {
+              error!("Failed to check agent timeouts: {}", e);
+            }
+
+            // 检查超时的Server
+            if let Err(e) = Self::check_server_timeouts(&mm, server_overdue_ttl).await {
+              error!("Failed to check server timeouts: {}", e);
+            }
+          }
+          _ = shutdown_rx.recv() => {
+            info!("Heartbeat monitor shutting down");
+            break;
+          }
+        }
+      }
+    });
+  }
+
+  /// 检查Agent心跳超时
+  async fn check_agent_timeouts(mm: &ModelManager, timeout: Duration) -> Result<(), DataError> {
+    let timeout_threshold = now_offset() - timeout;
+    
+    // 查找心跳超时的在线Agent
+    let filter = AgentFilter {
+      status: Some(OpValsInt32::eq(AgentStatus::Online as i32)),
+      last_heartbeat: Some(OpValsDateTime::lt(timeout_threshold)),
+      ..Default::default()
+    };
+    
+    let timeout_agents = AgentBmc::find_many(mm, vec![filter], None).await?;
+    
+    for agent in timeout_agents {
+      info!("Agent {} heartbeat timeout, marking as offline", agent.id);
+      
+      let update = AgentForUpdate {
+        status: Some(AgentStatus::Offline),
+        ..Default::default()
+      };
+      
+      AgentBmc::update_by_id(mm, agent.id, update).await?;
+    }
+    
+    Ok(())
+  }
+
+  /// 检查Server心跳超时
+  async fn check_server_timeouts(mm: &ModelManager, timeout: Duration) -> Result<(), DataError> {
+    let timeout_threshold = now_offset() - timeout;
+    
+    // 查找心跳超时的活跃Server
+    let filter = ServerFilter {
+      status: Some(OpValsInt32::eq(ServerStatus::Active as i32)),
+      updated_at: Some(OpValsDateTime::lt(timeout_threshold)),
+      ..Default::default()
+    };
+    
+    let timeout_servers = ServerBmc::find_many(mm, vec![filter], None).await?;
+    
+    for server in timeout_servers {
+      info!("Server {} heartbeat timeout, marking as inactive", server.id);
+      
+      let update = ServerForUpdate {
+        status: Some(ServerStatus::Inactive),
+        ..Default::default()
+      };
+      
+      ServerBmc::update_by_id(mm, server.id, update).await?;
+    }
+    
+    Ok(())
   }
 
   /// 注册服务器

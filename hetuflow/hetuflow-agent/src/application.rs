@@ -3,6 +3,7 @@ use std::sync::Arc;
 use fusion_core::DataError;
 use fusion_core::application::Application;
 use fusion_core::timer::{Timer, TimerPlugin};
+use fusion_core::log::LogPlugin;
 use log::info;
 use mea::mutex::Mutex;
 use mea::shutdown::{ShutdownRecv, ShutdownSend};
@@ -26,7 +27,9 @@ pub struct AgentApplication {
 
 impl AgentApplication {
   pub async fn new() -> Result<Self, DataError> {
-    let application = Application::builder().add_plugin(TimerPlugin).run().await?;
+    let application = Application::builder()
+      .add_plugin(TimerPlugin)
+      .run().await?;
     let setting: Arc<HetuflowAgentSetting> = Arc::new(HetuflowAgentSetting::load(application.config_registry())?);
     info!("Creating AgentApplication with agent_id: {}", setting.agent_id);
 

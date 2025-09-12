@@ -86,9 +86,9 @@
 - [*] Agent 向 Server 拉取任务时，不用限制只能 poll 当前 Server 绑定的 Namespace
   - 可能因为网络原因，Agent 并不能访问所有 Server，所有 Agent 需要从 Server 拉取任何 Namespace 的任务。比如某个 Server 部署在跳板机或暴露为一个代理 Server
 - [*] **任务状态管理** - 实现任务状态流转和生命周期管理
-- [ ] **重试机制** - 实现任务失败重试和超时处理
-  - [ ] 定时检查任务（SchedTask, SchedTaskInstance）是否过期？若已过期则修改其 status 为 Expired 或 Timeout
-  - [ ] 还是由 Leader Server 对 Follower Server 进行健康检查？还是由 Server 直接更新各自 sched_server.heartbeat 字段值？
+- [*] **重试机制** - 实现任务失败重试和超时处理
+  - [*] 定时检查任务（SchedTask, SchedTaskInstance）是否过期？若已过期则修改其 status 为 Expired 或 Timeout
+  - [*] 还是由 Leader Server 对 Follower Server 进行健康检查？还是由 Server 直接更新各自 sched_server.heartbeat 字段值？
 
 ---
 
@@ -96,19 +96,13 @@
 
 - [*] **AgentManager 实现** - Agent 管理器，维护 Agent 状态和能力信息
 - [*] **负载均衡器** - 实现基于 namespace_id 的负载均衡算法
-- [ ] **健康检查服务** - 实现系统健康状态监控
+- [*] **健康检查服务** - 实现系统健康状态监控
 
 ### 2.7 安全与认证
 
 - [ ] **API 认证机制** - 实现 JWT 或 API Key 认证
 - [ ] **权限控制** - 实现基于角色的访问控制 (RBAC)
 - [ ] **Agent Token 验证** - 实现 Agent 连接的 Token 验证
-
-### 2.8 监控与日志
-
-- [*] **结构化日志** - 使用 tracing 实现结构化日志记录
-- [ ] **指标收集** - 实现系统性能指标收集
-- [ ] **链路追踪** - 实现分布式链路追踪
 
 ## 三、客户端 (hetuflow-agent)
 
@@ -123,7 +117,6 @@
 - [*] **ConnectionManager 实现** - WebSocket 连接管理器，处理与 Server 的通信
 - [*] **自动重连机制** - 实现连接断开后的自动重连
 - [*] **心跳维持** - 实现定期心跳保持连接活跃
-- [ ] ~~**消息队列** - 实现本地消息队列缓存待发送消息~~
 
 ### 3.3 任务调度
 
@@ -148,9 +141,7 @@
 
 ### 3.6 日志管理
 
-- [ ] **LogManager 实现** - 任务执行日志的收集和管理
-- [ ] **日志转发** - 实现任务日志向 Server 的实时转发
-- [ ] **本地日志** - 实现本地日志文件的管理和轮转
+- [*] **本地日志** - 实现本地日志文件的管理和轮转
 
 ## 四、数据库与存储
 

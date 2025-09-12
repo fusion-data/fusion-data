@@ -7,6 +7,7 @@ use std::{
 };
 
 use fusion_core::{DataError, application::Application};
+use fusion_core::log::LogPlugin;
 use fusion_db::DbPlugin;
 use log::{debug, error, info};
 use modelsql::{ModelManager, store::DbxError};
@@ -43,7 +44,9 @@ pub struct ServerApplication {
 impl ServerApplication {
   pub async fn new() -> Result<Self, DataError> {
     // 构建底层 Application 与插件
-    let application = Application::builder().add_plugin(DbPlugin).build().await?;
+    let application = Application::builder()
+      .add_plugin(DbPlugin)
+      .build().await?;
 
     let config = Arc::new(HetuflowServerSetting::load(application.config_registry())?);
 
@@ -184,7 +187,7 @@ impl ServerApplication {
 
     // Agent 心跳超时清理
     let connection_manager = self.connection_manager.clone();
-    let agent_heartbeat_ttl = self.config.server.agent_heartbeat_ttl;
+    let agent_heartbeat_ttl = self.config.server.agent_overdue_ttl;
     tokio::spawn(async move {
       let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(60));
       loop {

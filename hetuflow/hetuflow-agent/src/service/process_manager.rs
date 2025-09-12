@@ -340,7 +340,7 @@ fn _spawn_kill_process(
         Some(process_info) => process_info,
         None => {
           warn!("Process not found or already terminated: {}", instance_id);
-          return Ok(None);
+          return Err(DataError::not_found(format!("Process {} not found", instance_id)));
         }
       }
     };
