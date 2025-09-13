@@ -17,15 +17,30 @@ use hetuflow_core::{
   types::{AgentStatus, TaskInstanceStatus, TaskStatus},
 };
 
-use crate::infra::bmc::{AgentBmc, TaskBmc, TaskInstanceBmc};
+use crate::{
+  infra::bmc::{AgentBmc, TaskBmc, TaskInstanceBmc},
+  service::{JweService, JweServiceError},
+  setting::HetuflowServerSetting,
+};
 
 pub struct AgentSvc {
   mm: ModelManager,
+  jwe_service: Option<JweService>,
 }
 
 impl AgentSvc {
   pub fn new(mm: ModelManager) -> Self {
-    Self { mm }
+    Self { mm, jwe_service: None }
+  }
+
+  /// 创建带有JWE配置的AgentSvc
+  pub fn with_jwe_config(mm: ModelManager, setting: &HetuflowServerSetting) -> Result<Self, JweServiceError> {
+    let jwe_service = if let Some(jwe_config) = &setting.jwe {
+      Some(JweService::new(jwe_config.clone())?)
+    } else {
+      None
+    };
+    Ok(Self { mm, jwe_service })
   }
 
   /// 创建新的 Agent
@@ -159,13 +174,62 @@ impl AgentSvc {
     agent_id: &Uuid,
     payload: &AgentRegisterRequest,
   ) -> Result<AgentRegisterResponse, DataError> {
+    // JWE双重验证逻辑
+    if let Some(jwe_service) = &self.jwe_service {
+      // 如果配置了JWE服务，则必须提供有效的JWE Token
+      let jwe_token = payload.jwe_token.as_ref().ok_or_else(|| {
+        DataError::bad_request("JWE Token is required for agent registration")
+      })?;
+
+      // 验证JWE Token
+      match jwe_service.verify_token(jwe_token, *agent_id) {
+        Ok(token_payload) => {
+          info!("Agent {} JWE token verified successfully, server_id: {}", agent_id, token_payload.server_id);
+        }
+        Err(JweServiceError::TokenExpired) => {
+          warn!("Agent {} registration failed: JWE token expired", agent_id);
+          return Ok(AgentRegisterResponse {
+            success: false,
+            message: "JWE token has expired, please generate a new token".to_string(),
+            agent: None,
+            server_time: now_epoch_millis(),
+          });
+        }
+        Err(JweServiceError::AgentIdMismatch { expected, actual }) => {
+           warn!("Agent {} registration failed: Agent ID mismatch (expected: {}, actual: {})", 
+                 agent_id, expected, actual);
+           return Ok(AgentRegisterResponse {
+             success: false,
+             message: "Agent ID mismatch in JWE token".to_string(),
+             agent: None,
+             server_time: now_epoch_millis(),
+           });
+         }
+        Err(e) => {
+          warn!("Agent {} registration failed: JWE token verification error: {:?}", agent_id, e);
+          return Ok(AgentRegisterResponse {
+            success: false,
+            message: format!("JWE token verification failed: {}", e),
+            agent: None,
+            server_time: now_epoch_millis(),
+          });
+        }
+      }
+    } else {
+      // 如果未配置JWE服务，记录警告但允许注册（向后兼容）
+      if payload.jwe_token.is_some() {
+        warn!("Agent {} provided JWE token but JWE service is not configured", agent_id);
+      }
+      info!("Agent {} registration without JWE verification (JWE service not configured)", agent_id);
+    }
+
+    // 执行Agent注册
     let agent = AgentBmc::register(&self.mm, agent_id, payload).await?;
     let response = AgentRegisterResponse {
       success: true,
-      message: "".to_string(),
+      message: "Agent registered successfully".to_string(),
       agent: Some(agent),
       server_time: now_epoch_millis(),
-      // session_id: todo!(),
     };
     Ok(response)
   }

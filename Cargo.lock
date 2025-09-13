@@ -2128,6 +2128,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "hetuflow-scripts"
+version = "0.1.0"
+
+[[package]]
 name = "hetuflow-server"
 version = "0.1.1"
 dependencies = [

@@ -7,6 +7,8 @@ use hetuflow_core::utils::config::write_app_config;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+use crate::service::JweConfig;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServerConfig {
   pub server_id: Uuid,
@@ -43,6 +45,8 @@ pub struct HetuflowServerSetting {
   #[serde(deserialize_with = "deserialize_duration")]
   pub history_ttl: Duration,
   pub server: ServerConfig,
+  /// JWE Token 认证配置
+  pub jwe: Option<JweConfig>,
 }
 
 const KEY_PATH_SERVER_ID: &str = "hetuflow.server.server_id";

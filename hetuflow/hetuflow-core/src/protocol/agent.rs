@@ -17,6 +17,8 @@ pub struct AgentRegisterRequest {
   pub capabilities: AgentCapabilities,
   /// Agent 地址
   pub address: String,
+  /// JWE Token (用于身份认证)
+  pub jwe_token: Option<String>,
 }
 
 /// Agent 注册响应

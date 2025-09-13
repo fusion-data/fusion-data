@@ -1,4 +1,5 @@
 mod agents;
+mod auth;
 mod gateway;
 mod jobs;
 mod system;
@@ -12,6 +13,7 @@ use crate::application::ServerApplication;
 pub fn routes() -> Router<ServerApplication> {
   Router::new()
     .nest("/agents", agents::routes())
+    .nest("/auth", auth::routes())
     .nest("/jobs", jobs::routes())
     .nest("/tasks", tasks::routes())
     .nest("/task-instances", task_instances::routes())

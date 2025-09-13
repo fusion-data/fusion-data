@@ -71,3 +71,16 @@ load_balance_interval = "30s"
 server_overdue_ttl = "5m"
 # Agent 过期时间
 agent_overdue_ttl = "5m"
+
+# JWE Token 认证配置（可选）
+[hetuflow.jwe]
+# 私钥（用于解密 JWE Token）
+# private_key = "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQg...\n-----END PRIVATE KEY-----"
+# 公钥（用于加密 JWE Token）
+# public_key = "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE...\n-----END PUBLIC KEY-----"
+# 密钥协商算法
+# key_agreement_algorithm = "ECDH-ES"
+# 内容加密算法
+# content_encryption_algorithm = "A256GCM"
+# Token 有效期（秒）
+# token_ttl = 3600

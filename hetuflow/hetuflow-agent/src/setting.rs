@@ -168,6 +168,9 @@ pub struct HetuflowAgentSetting {
   /// 元数据
   pub metadata: HashMap<String, String>,
 
+  /// JWE Token 配置
+  pub jwe_token: Option<String>,
+
   /// 连接配置
   pub connection: Arc<ConnectionConfig>,
 

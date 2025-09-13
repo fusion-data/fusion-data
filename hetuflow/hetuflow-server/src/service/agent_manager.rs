@@ -22,19 +22,25 @@ use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
 use uuid::Uuid;
 
-use crate::{gateway::ConnectionManager, model::AgentEvent};
-use crate::{infra::bmc::*, service::AgentSvc};
+use crate::{
+  gateway::ConnectionManager, 
+  model::AgentEvent,
+  infra::bmc::*,
+  service::AgentSvc,
+  setting::HetuflowServerSetting,
+};
 
 /// Agent 管理器 - 负责调度策略、可靠性统计和任务分发
 pub struct AgentManager {
   mm: ModelManager,
   connection_manager: Arc<ConnectionManager>,
+  setting: Arc<HetuflowServerSetting>,
 }
 
 impl AgentManager {
   /// 创建新的 Agent 管理器
-  pub fn new(mm: ModelManager, connection_manager: Arc<ConnectionManager>) -> Self {
-    Self { mm, connection_manager }
+  pub fn new(mm: ModelManager, connection_manager: Arc<ConnectionManager>, setting: Arc<HetuflowServerSetting>) -> Self {
+    Self { mm, connection_manager, setting }
   }
 
   /// 运行 Agent 管理器（订阅事件流）
@@ -47,6 +53,7 @@ impl AgentManager {
     let run_loop = AgentEventRunLoop {
       mm: self.mm.clone(),
       connection_manager: self.connection_manager.clone(),
+      setting: self.setting.clone(),
       event_rx: event_receiver,
     };
     let join_handle = tokio::spawn(run_loop.run_loop());
@@ -243,13 +250,20 @@ impl AgentManager {
 struct AgentEventRunLoop {
   mm: ModelManager,
   connection_manager: Arc<ConnectionManager>,
+  setting: Arc<HetuflowServerSetting>,
   event_rx: mpsc::UnboundedReceiver<AgentEvent>,
 }
 
 impl AgentEventRunLoop {
   /// 处理 Agent 事件
   async fn run_loop(mut self) {
-    let agent_svc = AgentSvc::new(self.mm.clone());
+    let agent_svc = match AgentSvc::with_jwe_config(self.mm.clone(), &self.setting) {
+      Ok(svc) => svc,
+      Err(e) => {
+        error!("Failed to create AgentSvc with JWE config: {:?}", e);
+        return;
+      }
+    };
     while let Some(event) = self.event_rx.recv().await {
       match event {
         AgentEvent::Heartbeat { agent_id, .. } => {

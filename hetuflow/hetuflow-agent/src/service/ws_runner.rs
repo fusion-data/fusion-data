@@ -161,7 +161,12 @@ impl WsRunner {
       tags: self.setting.tags.iter().map(|tag| (tag.clone(), Default::default())).collect(),
       metadata: self.setting.metadata.clone(),
     };
-    let register_req = AgentRegisterRequest { agent_id: self.setting.agent_id, capabilities, address };
+    let register_req = AgentRegisterRequest { 
+      agent_id: self.setting.agent_id, 
+      capabilities, 
+      address,
+      jwe_token: self.setting.jwe_token.clone(),
+    };
     let message = serde_json::to_string(&WebSocketEvent::new(EventKind::AgentRegister, register_req)).unwrap();
     ws_tx
       .send(Message::Text(message.into()))

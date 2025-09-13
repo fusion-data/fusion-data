@@ -67,7 +67,7 @@ impl ServerApplication {
     let scheduler_svc = Arc::new(SchedulerSvc::new(mm.clone(), Arc::new(config.server.clone()), shutdown_tx.clone()));
 
     // 将 ConnectionManager 作为 AgentRegistry 传递给 AgentManager
-    let agent_manager = Arc::new(AgentManager::new(mm.clone(), connection_manager.clone()));
+    let agent_manager = Arc::new(AgentManager::new(mm.clone(), connection_manager.clone(), config.clone()));
 
     let gateway_svc =
       Arc::new(GatewaySvc::new(connection_manager.clone(), message_handler.clone(), gateway_command_rx));
@@ -274,6 +274,11 @@ impl ServerApplication {
     };
     self.gateway_command_tx.send(command)?;
     Ok(message_id)
+  }
+
+  /// 获取应用配置
+  pub fn setting(&self) -> &HetuflowServerSetting {
+    &self.config
   }
 }
 

@@ -1,3 +1,10 @@
+[hetuflow.agent]
+name = "default-agent"
+tags = ["default"]
+metadata = { os = "linux", arch = "x86_64" }
+# JWE Token for authentication (optional)
+# jwe_token = "your-jwe-token-here"
+
 [hetuflow.agent.polling]
 max_concurrent_tasks = 20
 enable_adaptive_polling = true
