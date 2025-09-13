@@ -155,20 +155,15 @@
 
 ### 5.1 配置文件
 
-- [ ] **Server 配置模板** - 完善 hetuflow-server 的 app.toml 配置模板
-- [ ] **Agent 配置模板** - 完善 hetuflow-agent 的 app.toml 配置模板
-- [ ] **环境变量支持** - 实现敏感配置通过环境变量覆盖
+- [*] **Server 配置模板** - 完善 hetuflow-server 的 app.toml 配置模板
+- [*] **Agent 配置模板** - 完善 hetuflow-agent 的 app.toml 配置模板
+- [*] **环境变量支持** - 实现敏感配置通过环境变量覆盖
 
 ### 5.2 部署配置
 
 - [ ] **Docker 镜像** - 创建 Server 和 Agent 的 Docker 镜像构建配置
 - [ ] **Kubernetes 配置** - 创建 K8s 部署配置文件
 - [ ] **系统服务配置** - 创建 systemd 服务配置文件
-
-### 5.3 数据迁移
-
-- [ ] **迁移脚本** - 实现数据库版本迁移脚本
-- [ ] **数据初始化** - 实现系统基础数据的初始化脚本
 
 ## 六、测试与质量保证
 
@@ -309,7 +304,7 @@
 
 #### 里程碑 1.4：基础 WebSocket 连接管理（Gateway MVP）
 
-- [ ] Issue 1.4.1 WebSocket 端点与连接接入
+- [*] Issue 1.4.1 WebSocket 端点与连接接入
   - 目录：fusion/hetuflow-server/src/gateway/
   - 验收标准：
     - 暴露 /ws 端点，可接受连接，完成 ping/pong

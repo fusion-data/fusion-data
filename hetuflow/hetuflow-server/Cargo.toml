@@ -37,7 +37,7 @@ async-trait = { workspace = true }
 tokio = { workspace = true }
 mea = { workspace = true }
 futures-util = { workspace = true }
-# tokio-tungstenite = { workspace = true }
+josekit = { workspace = true }
 log = { workspace = true }
 logforth = { workspace = true }
 fastrace = { workspace = true }
