@@ -113,13 +113,13 @@ pub struct JweService {
 impl JweService {
   /// 创建新的 JWE 服务实例
   pub fn new(config: JweConfig) -> Result<Self, JweServiceError> {
-    // 解析私钥
-    let private_key = Jwk::from_bytes(&config.private_key)
+    // 解析私钥 (PEM 格式)
+    let ec_key_pair = EcKeyPair::from_pem(&config.private_key, Some(EcCurve::P256))
       .map_err(|e| JweServiceError::InvalidKeyFormat(format!("私钥解析失败: {}", e)))?;
+    let private_key = ec_key_pair.to_jwk_private_key();
     
-    // 解析公钥
-    let public_key = Jwk::from_bytes(&config.public_key)
-      .map_err(|e| JweServiceError::InvalidKeyFormat(format!("公钥解析失败: {}", e)))?;
+    // 解析公钥 (PEM 格式) - 从私钥生成对应的公钥
+    let public_key = ec_key_pair.to_jwk_public_key();
     
     Ok(Self {
       config,
