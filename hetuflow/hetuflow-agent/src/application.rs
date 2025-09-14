@@ -3,7 +3,6 @@ use std::sync::Arc;
 use fusion_core::DataError;
 use fusion_core::application::Application;
 use fusion_core::timer::{Timer, TimerPlugin};
-use fusion_core::log::LogPlugin;
 use log::info;
 use mea::mutex::Mutex;
 use mea::shutdown::{ShutdownRecv, ShutdownSend};

@@ -161,9 +161,9 @@ impl WsRunner {
       tags: self.setting.tags.iter().map(|tag| (tag.clone(), Default::default())).collect(),
       metadata: self.setting.metadata.clone(),
     };
-    let register_req = AgentRegisterRequest { 
-      agent_id: self.setting.agent_id, 
-      capabilities, 
+    let register_req = AgentRegisterRequest {
+      agent_id: self.setting.agent_id,
+      capabilities,
       address,
       jwe_token: self.setting.jwe_token.clone(),
     };
@@ -204,6 +204,10 @@ fn process_command(
     CommandKind::CancelTask => {
       let resp: IdUuidResult = serde_json::from_value(cmd.parameters).unwrap();
       let _ = command_publisher.send(HetuflowCommand::CancelTask(Arc::new(resp.id)));
+    }
+    CommandKind::LogForward => {
+      // TODO: 实现日志转发命令处理
+      warn!("LogForward command received but not implemented yet");
     }
   }
   Ok(())

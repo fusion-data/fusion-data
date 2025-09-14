@@ -8,7 +8,7 @@ use log::{debug, error, info, warn};
 use mea::shutdown::ShutdownRecv;
 use tokio::sync::broadcast;
 use tokio::task::JoinHandle;
-use tokio::time::{Instant, interval};
+use tokio::time::interval;
 
 use hetuflow_core::protocol::{AcquireTaskRequest, ScheduledTask, WebSocketEvent};
 use hetuflow_core::types::{EventKind, HetuflowCommand};

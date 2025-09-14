@@ -128,6 +128,36 @@ pub struct ProcessConfig {
 
   /// 默认资源限制
   pub limits: ResourceLimits,
+
+  /// 日志转发配置
+  pub log_forwarding: LogForwardingConfig,
+}
+
+/// 日志转发配置
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct LogForwardingConfig {
+  /// 启用日志转发
+  pub enabled: bool,
+
+  /// 日志缓冲区大小（字节）
+  pub buffer_size: usize,
+
+  /// 批次大小（条数）
+  pub batch_size: usize,
+
+  /// 刷新间隔（毫秒）
+  #[serde(deserialize_with = "deserialize_duration")]
+  pub flush_interval: Duration,
+
+  /// 最大重试次数
+  pub max_retries: u32,
+
+  /// 重试间隔（毫秒）
+  #[serde(deserialize_with = "deserialize_duration")]
+  pub retry_interval: Duration,
+
+  /// 启用压缩
+  pub enable_compression: bool,
 }
 
 /// 资源限制

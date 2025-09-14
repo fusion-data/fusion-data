@@ -17,6 +17,7 @@
 - [hetuflow-agent](hetuflow/agent/agent.md)
 - [安全机制](hetuflow/security/jwt-auth-design.md)
   - [JWE 认证部署指南](hetuflow/security/jwe-authentication.md)
+- [日志收集](hetuflow/infra/log-collector.md)
 
 ---
 

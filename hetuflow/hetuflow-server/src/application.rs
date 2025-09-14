@@ -14,7 +14,7 @@ use modelsql::{ModelManager, store::DbxError};
 use tokio::sync::{broadcast, mpsc};
 use uuid::Uuid;
 
-use crate::service::{AgentManager, LoadBalancer, SchedulerSvc};
+use crate::service::{AgentManager, LoadBalancer, SchedulerSvc, LogReceiver};
 use crate::{
   gateway::{ConnectionManager, GatewaySvc, MessageHandler},
   infra::bmc::DistributedLockBmc,
@@ -39,6 +39,7 @@ pub struct ServerApplication {
   pub(crate) message_handler: Arc<MessageHandler>,
   load_balancer: Arc<LoadBalancer>,
   gateway_command_tx: mpsc::UnboundedSender<GatewayCommandRequest>,
+  log_receiver: Arc<tokio::sync::Mutex<LogReceiver>>,
 }
 
 impl ServerApplication {
@@ -75,6 +76,14 @@ impl ServerApplication {
     let is_leader = Arc::new(AtomicBool::new(false));
     let load_balancer = Arc::new(LoadBalancer::new(mm.clone(), config.server.server_id));
 
+    // 创建日志接收器
+    let mut log_receiver = LogReceiver::new(
+      Arc::new(config.task_log.clone()),
+      Arc::new(config.task_log.websocket.clone()),
+    );
+    log_receiver.set_gateway_sender(gateway_command_tx.clone());
+    let log_receiver = Arc::new(tokio::sync::Mutex::new(log_receiver));
+
     Ok(Self {
       config,
       is_leader,
@@ -87,6 +96,7 @@ impl ServerApplication {
       message_handler,
       load_balancer,
       gateway_command_tx,
+      log_receiver,
     })
   }
 
@@ -157,6 +167,15 @@ impl ServerApplication {
     if let Err(e) = gateway_svc.start().await {
       error!("Gateway service error: {:?}", e);
     }
+
+    // 启动日志接收器
+    let log_receiver = self.log_receiver.clone();
+    tokio::spawn(async move {
+      let mut receiver = log_receiver.lock().await;
+      if let Err(e) = receiver.start().await {
+        error!("LogReceiver start error: {:?}", e);
+      }
+    });
 
     // 启动 HTTP API 服务 (/api/v1)
     let app_state = self.clone();
@@ -279,6 +298,20 @@ impl ServerApplication {
   /// 获取应用配置
   pub fn setting(&self) -> &HetuflowServerSetting {
     &self.config
+  }
+
+  /// 处理Agent转发的日志消息
+  pub async fn handle_log_message(&self, log_batch: hetuflow_core::protocol::LogBatch) -> Result<(), DataError> {
+    let log_receiver = self.log_receiver.clone();
+    let mut receiver = log_receiver.lock().await;
+    // 处理日志批次 - 直接调用内部方法
+    match receiver.write_log_batch(&log_batch).await {
+      Ok(_) => Ok(()),
+      Err(e) => {
+        log::error!("处理日志批次失败: {}", e);
+        Err(e)
+      }
+    }
   }
 }
 

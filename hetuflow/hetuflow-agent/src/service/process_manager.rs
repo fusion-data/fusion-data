@@ -11,6 +11,7 @@ use hetuflow_core::protocol::{
 use hetuflow_core::types::ResourceLimits;
 use log::{debug, error, info, warn};
 use mea::shutdown::ShutdownRecv;
+
 use tokio::process::Command;
 use tokio::sync::{RwLock, broadcast};
 use tokio::task::JoinHandle;
@@ -106,6 +107,9 @@ impl ProcessManager {
     // 启动进程
     let child = cmd.spawn()?;
     let pid: u32 = child.id().ok_or_else(|| DataError::server_error("Start process failed"))?;
+
+    // TODO: 日志转发功能将通过LogForwarder组件处理
+    // 这里暂时不处理stdout/stderr的捕获
 
     // 创建进程信息
     let started_at = now_epoch_millis();
@@ -625,6 +629,15 @@ mod tests {
       enable_resource_monitoring: false,
       resource_monitor_interval: Duration::from_secs(30),
       limits: crate::setting::ResourceLimits { max_memory_bytes: None, max_cpu_percent: None },
+      log_forwarding: crate::setting::LogForwardingConfig {
+        enabled: false,
+        buffer_size: 1024,
+        batch_size: 10,
+        flush_interval: Duration::from_secs(1),
+        max_retries: 3,
+        retry_interval: Duration::from_secs(1),
+        enable_compression: false,
+      },
     });
 
     let (shutdown_tx, shutdown_rx) = mea::shutdown::new_pair();

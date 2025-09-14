@@ -1,0 +1,15 @@
+[package]
+name = "hetuflow-tests"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+hetuflow-core = { path = "../hetuflow-core" }
+hetuflow-server = { path = "../hetuflow-server" }
+hetuflow-agent = { path = "../hetuflow-agent" }
+tokio = { version = "1.0", features = ["full"] }
+serde_json = "1.0"
+
+[[bin]]
+name = "integration_jwe_auth_test"
+path = "integration_jwe_auth_test.rs"
