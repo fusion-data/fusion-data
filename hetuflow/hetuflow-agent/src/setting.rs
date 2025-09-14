@@ -3,7 +3,7 @@ use std::{path::PathBuf, sync::Arc, time::Duration};
 use duration_str::deserialize_duration;
 use fusion_common::{ahash::HashMap, env::get_env};
 use fusion_core::{DataError, configuration::FusionConfigRegistry};
-use hetuflow_core::utils::config::write_app_config;
+use hetuflow_core::{models::Labels, utils::config::write_app_config};
 use log::{info, warn};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -190,7 +190,7 @@ pub struct HetuflowAgentSetting {
   pub name: Option<String>,
 
   /// Agent 标签
-  pub tags: Vec<String>,
+  pub labels: Labels,
 
   /// 工作目录
   pub work_dir: Option<String>,

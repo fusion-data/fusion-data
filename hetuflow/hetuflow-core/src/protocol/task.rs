@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::{
-  models::{SchedTask, SchedTaskInstance, TaskMetrics},
+  models::{Labels, SchedTask, SchedTaskInstance, TaskMetrics},
   types::TaskInstanceStatus,
 };
 
@@ -44,17 +44,13 @@ impl ScheduledTask {
   }
 
   /// 获取任务标签
-  pub fn tags(&self) -> &[String] {
-    self.task.tags.as_ref()
+  pub fn labels(&self) -> &Labels {
+    &self.task.config.labels
   }
 
   /// 检查任务是否匹配指定的标签
-  pub fn matches_tags(&self, required_tags: &[String]) -> bool {
-    if required_tags.is_empty() {
-      return true;
-    }
-
-    required_tags.iter().all(|tag| self.task.tags.contains(tag))
+  pub fn match_label(&self, label: &str, value: &str) -> bool {
+    self.task.config.labels.get(label).is_some_and(|v| v == value)
   }
 
   /// 检查任务是否为定时任务
@@ -119,7 +115,7 @@ impl TaskInstanceUpdated {
 pub struct AcquireTaskRequest {
   pub agent_id: Uuid,     // Agent ID
   pub max_tasks: u32,     // 允许最大并发任务数
-  pub tags: Vec<String>,  // 当前 Agent 拥有的标签，用于过滤任务
+  pub labels: Labels,     // 当前 Agent 拥有的标签，用于过滤任务
   pub acquire_count: u32, // 拉取任务数
 }
 

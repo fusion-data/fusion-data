@@ -7,7 +7,7 @@ use modelsql_core::{
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::types::AgentStatus;
+use crate::{models::Labels, types::AgentStatus};
 
 /// Agent 性能指标
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
@@ -28,7 +28,7 @@ pub struct AgentCapabilities {
   /// 最大并发任务数
   pub max_concurrent_tasks: u32,
   /// Agent 标签，用于筛选任务。比如某些需要特定资源的任务只能在匹配标签的 Agent 上运行
-  pub tags: HashMap<String, Option<Box<serde_json::Value>>>,
+  pub labels: Labels,
   /// 扩展元数据 (cpu, memory, etc.)
   pub metadata: HashMap<String, String>,
 }

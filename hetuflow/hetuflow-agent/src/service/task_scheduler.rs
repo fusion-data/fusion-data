@@ -156,7 +156,7 @@ impl PollTaskRunner {
           agent_id: self.setting.agent_id,
           max_tasks: self.setting.process.max_concurrent_processes,
           acquire_count,
-          tags: self.setting.tags.clone(),
+          labels: self.setting.labels.clone(),
         };
 
         if let Err(e) =

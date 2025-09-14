@@ -564,7 +564,7 @@ impl WsRunner {
     ) -> Result<(), DataError> {
         let capabilities = AgentCapabilities {
             max_concurrent_tasks: self.setting.process.max_concurrent_processes,
-            tags: self.setting.tags.iter().map(|tag| (tag.clone(), Default::default())).collect(),
+            labels: self.setting.labels.iter().map(|tag| (tag.clone(), Default::default())).collect(),
             metadata: self.setting.metadata.clone(),
         };
 

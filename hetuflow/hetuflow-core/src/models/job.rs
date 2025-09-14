@@ -6,7 +6,10 @@ use modelsql_core::{
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::types::{JobStatus, ResourceLimits};
+use crate::{
+  models::Labels,
+  types::{JobStatus, ResourceLimits},
+};
 
 /// 任务配置
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
@@ -28,7 +31,7 @@ pub struct TaskConfig {
   /// 最大输出大小(字节)
   pub max_output_size: u64,
   /// 任务标签。可用于限制哪些 Agent 允许执行该任务
-  pub tags: HashMap<String, Option<serde_json::Value>>,
+  pub labels: Labels,
   /// 资源限制
   pub resource_limits: Option<ResourceLimits>,
 }
@@ -42,18 +45,12 @@ pub struct SchedJob {
   pub name: String,
   pub description: Option<String>,
   pub environment: Option<serde_json::Value>,
-  pub config: Option<TaskConfig>,
+  pub config: TaskConfig,
   pub status: JobStatus,
   pub created_by: i64,
   pub created_at: OffsetDateTime,
   pub updated_by: Option<i64>,
   pub updated_at: Option<OffsetDateTime>,
-}
-
-impl SchedJob {
-  pub fn tags(&self) -> Vec<String> {
-    self.config.as_ref().map(|c| c.tags.keys().cloned().collect()).unwrap_or_default()
-  }
 }
 
 /// Job 创建模型
@@ -100,46 +97,4 @@ pub struct JobFilter {
   pub status: Option<OpValsInt32>,
   pub created_at: Option<OpValsDateTime>,
   pub updated_at: Option<OpValsDateTime>,
-}
-
-#[cfg(feature = "with-db")]
-mod with_db {
-  use sqlx::encode::IsNull;
-  use sqlx::error::BoxDynError;
-  use sqlx::postgres::{PgArgumentBuffer, PgHasArrayType, PgTypeInfo, PgValueRef};
-  use sqlx::types::Json;
-  use sqlx::{Decode, Encode, Postgres, Type};
-
-  use super::*;
-
-  impl From<TaskConfig> for sea_query::Value {
-    fn from(value: TaskConfig) -> Self {
-      Self::Json(Some(Box::new(serde_json::to_value(value).unwrap())))
-    }
-  }
-  impl sea_query::Nullable for TaskConfig {
-    fn null() -> sea_query::Value {
-      sea_query::Value::Json(None)
-    }
-  }
-  impl Type<Postgres> for TaskConfig {
-    fn type_info() -> PgTypeInfo {
-      <Json<Self> as Type<Postgres>>::type_info()
-    }
-  }
-  impl PgHasArrayType for TaskConfig {
-    fn array_type_info() -> PgTypeInfo {
-      <Json<Self> as PgHasArrayType>::array_type_info()
-    }
-  }
-  impl Encode<'_, Postgres> for TaskConfig {
-    fn encode_by_ref(&self, buf: &mut PgArgumentBuffer) -> Result<IsNull, BoxDynError> {
-      Json(self).encode_by_ref(buf)
-    }
-  }
-  impl<'r> Decode<'r, Postgres> for TaskConfig {
-    fn decode(value: PgValueRef<'r>) -> Result<Self, BoxDynError> {
-      Ok(Json::<Self>::decode(value)?.0)
-    }
-  }
 }

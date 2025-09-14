@@ -223,7 +223,7 @@ impl TaskInstanceBmc {
     // 4. 返回更新后的 task_instance
     let mm = mm.get_txn_clone();
     mm.dbx().begin_txn().await?;
-    let where_tags = if request.tags.is_empty() { "t.tags = $2" } else { "t.tags && $2" };
+    let where_tags = if request.labels.is_empty() { "t.labels = $2" } else { "t.labels && $2" };
     let sql = format!(
       r#"with sti as (select ti.*
                   from sched_task_instance ti
@@ -241,7 +241,7 @@ impl TaskInstanceBmc {
 
     let query = sqlx::query_as::<_, SchedTaskInstance>(&sql)
       .bind(TaskInstanceStatus::Pending)
-      .bind(request.tags.clone())
+      .bind(request.labels.clone())
       .bind(TaskStatus::Dispatched)
       .bind(TaskStatus::Pending)
       .bind(TaskInstanceStatus::Dispatched)

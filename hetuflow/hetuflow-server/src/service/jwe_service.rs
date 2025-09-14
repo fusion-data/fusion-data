@@ -3,16 +3,17 @@
 //! 提供基于 JWE (JSON Web Encryption) 标准的 Token 生成和验证功能
 //! 采用 ECDH-ES 密钥协商 + A256GCM 内容加密算法
 
-use std::collections::BTreeMap;
+use chrono::Utc;
 use josekit::{
-  jwe::{JweHeader, JweHeaderSet, JweContext},
-  jwk::{Jwk, alg::ec::{EcCurve, EcKeyPair}},
-  jwt::{JwtPayload},
+  jwe::{JweContext, JweHeader},
+  jwk::{
+    Jwk,
+    alg::ec::{EcCurve, EcKeyPair},
+  },
 };
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use uuid::Uuid;
-use chrono::{Utc, DateTime};
 
 /// JWE 配置结构
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -60,17 +61,17 @@ impl Default for JweConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JweTokenPayload {
   /// 标准 Claims
-  pub iss: String,        // Issuer
-  pub sub: String,        // Subject (agent_id)
-  pub aud: String,        // Audience
-  pub exp: i64,           // Expiration Time
-  pub nbf: i64,           // Not Before
-  pub iat: i64,           // Issued At
-  pub jti: String,        // JWT ID
-  
+  pub iss: String, // Issuer
+  pub sub: String, // Subject (agent_id)
+  pub aud: String, // Audience
+  pub exp: i64,    // Expiration Time
+  pub nbf: i64,    // Not Before
+  pub iat: i64,    // Issued At
+  pub jti: String, // JWT ID
+
   /// 自定义 Claims
-  pub agent_id: Uuid,     // Agent ID (双重验证)
-  pub server_id: Uuid,    // Server ID
+  pub agent_id: Uuid, // Agent ID (双重验证)
+  pub server_id: Uuid,          // Server ID
   pub permissions: Vec<String>, // 权限列表
 }
 
@@ -79,25 +80,25 @@ pub struct JweTokenPayload {
 pub enum JweServiceError {
   #[error("密钥格式错误: {0}")]
   InvalidKeyFormat(String),
-  
+
   #[error("Token 生成失败: {0}")]
   TokenGenerationFailed(String),
-  
+
   #[error("Token 解密失败: {0}")]
   TokenDecryptionFailed(String),
-  
+
   #[error("Token 验证失败: {0}")]
   TokenValidationFailed(String),
-  
+
   #[error("Agent ID 不匹配: expected {expected}, got {actual}")]
   AgentIdMismatch { expected: Uuid, actual: Uuid },
-  
+
   #[error("Token 已过期")]
   TokenExpired,
-  
+
   #[error("Token 尚未生效")]
   TokenNotYetValid,
-  
+
   #[error("JSON 序列化/反序列化错误: {0}")]
   JsonError(#[from] serde_json::Error),
 }
@@ -117,17 +118,13 @@ impl JweService {
     let ec_key_pair = EcKeyPair::from_pem(&config.private_key, Some(EcCurve::P256))
       .map_err(|e| JweServiceError::InvalidKeyFormat(format!("私钥解析失败: {}", e)))?;
     let private_key = ec_key_pair.to_jwk_private_key();
-    
+
     // 解析公钥 (PEM 格式) - 从私钥生成对应的公钥
     let public_key = ec_key_pair.to_jwk_public_key();
-    
-    Ok(Self {
-      config,
-      private_key,
-      public_key,
-    })
+
+    Ok(Self { config, private_key, public_key })
   }
-  
+
   /// 生成 JWE Token
   pub fn generate_token(
     &self,
@@ -138,7 +135,7 @@ impl JweService {
     let now = Utc::now();
     let exp = now.timestamp() + self.config.token_ttl as i64;
     let jti = Uuid::new_v4().to_string();
-    
+
     // 创建 Payload
     let payload = JweTokenPayload {
       iss: "hetuflow-server".to_string(),
@@ -152,47 +149,42 @@ impl JweService {
       server_id,
       permissions,
     };
-    
+
     // 序列化 Payload
     let payload_json = serde_json::to_string(&payload)?;
-    
+
     // 创建 JWE Header
     let mut header = JweHeader::new();
     header.set_algorithm(&self.config.key_agreement_algorithm);
     header.set_content_encryption(&self.config.content_encryption_algorithm);
     header.set_token_type("JWE");
-    
+
     // 使用 josekit 的 JWE 加密
     let context = JweContext::new();
-    let encrypter = josekit::jwe::ECDH_ES.encrypter_from_jwk(&self.public_key)
+    let encrypter = josekit::jwe::ECDH_ES
+      .encrypter_from_jwk(&self.public_key)
       .map_err(|e| JweServiceError::TokenGenerationFailed(format!("创建加密器失败: {}", e)))?;
-    let token = context.serialize_compact(
-      payload_json.as_bytes(),
-      &header,
-      &encrypter,
-    ).map_err(|e| JweServiceError::TokenGenerationFailed(format!("JWE 加密失败: {}", e)))?;
-    
+    let token = context
+      .serialize_compact(payload_json.as_bytes(), &header, &encrypter)
+      .map_err(|e| JweServiceError::TokenGenerationFailed(format!("JWE 加密失败: {}", e)))?;
+
     Ok(token)
   }
-  
+
   /// 验证并解密 JWE Token
-  pub fn verify_token(
-    &self,
-    token: &str,
-    expected_agent_id: Uuid,
-  ) -> Result<JweTokenPayload, JweServiceError> {
+  pub fn verify_token(&self, token: &str, expected_agent_id: Uuid) -> Result<JweTokenPayload, JweServiceError> {
     // 解密 JWE Token
     let context = JweContext::new();
-    let decrypter = josekit::jwe::ECDH_ES.decrypter_from_jwk(&self.private_key)
+    let decrypter = josekit::jwe::ECDH_ES
+      .decrypter_from_jwk(&self.private_key)
       .map_err(|e| JweServiceError::TokenDecryptionFailed(format!("创建解密器失败: {}", e)))?;
-    let (payload_bytes, _header) = context.deserialize_compact(
-      token,
-      &decrypter,
-    ).map_err(|e| JweServiceError::TokenDecryptionFailed(format!("JWE 解密失败: {}", e)))?;
-    
+    let (payload_bytes, _header) = context
+      .deserialize_compact(token, &decrypter)
+      .map_err(|e| JweServiceError::TokenDecryptionFailed(format!("JWE 解密失败: {}", e)))?;
+
     // 反序列化 Payload
     let payload: JweTokenPayload = serde_json::from_slice(&payload_bytes)?;
-    
+
     // 验证时间
     let now = Utc::now().timestamp();
     if payload.exp < now {
@@ -201,38 +193,33 @@ impl JweService {
     if payload.nbf > now {
       return Err(JweServiceError::TokenNotYetValid);
     }
-    
+
     // 双重验证 Agent ID
     if payload.agent_id != expected_agent_id {
-      return Err(JweServiceError::AgentIdMismatch {
-        expected: expected_agent_id,
-        actual: payload.agent_id,
-      });
+      return Err(JweServiceError::AgentIdMismatch { expected: expected_agent_id, actual: payload.agent_id });
     }
-    
+
     // 验证 sub 字段与 agent_id 一致性
     let sub_uuid = Uuid::parse_str(&payload.sub)
       .map_err(|e| JweServiceError::TokenValidationFailed(format!("sub 字段格式错误: {}", e)))?;
     if sub_uuid != payload.agent_id {
-      return Err(JweServiceError::TokenValidationFailed(
-        "sub 字段与 agent_id 不一致".to_string()
-      ));
+      return Err(JweServiceError::TokenValidationFailed("sub 字段与 agent_id 不一致".to_string()));
     }
-    
+
     Ok(payload)
   }
-  
+
   /// 生成 ECDH-ES 密钥对
   pub fn generate_key_pair() -> Result<(String, String), JweServiceError> {
     let key_pair = EcKeyPair::generate(EcCurve::P256)
       .map_err(|e| JweServiceError::InvalidKeyFormat(format!("密钥生成失败: {}", e)))?;
-    
+
     let private_key_pem = String::from_utf8(key_pair.to_pem_private_key())
       .map_err(|e| JweServiceError::InvalidKeyFormat(format!("私钥转换失败: {}", e)))?;
-    
+
     let public_key_pem = String::from_utf8(key_pair.to_pem_public_key())
       .map_err(|e| JweServiceError::InvalidKeyFormat(format!("公钥转换失败: {}", e)))?;
-    
+
     Ok((private_key_pem, public_key_pem))
   }
 }
@@ -240,12 +227,12 @@ impl JweService {
 #[cfg(test)]
 mod tests {
   use super::*;
-  
+
   #[tokio::test]
   async fn test_jwe_token_generation_and_verification() {
     // 生成测试密钥对
     let (private_key, public_key) = JweService::generate_key_pair().unwrap();
-    
+
     let config = JweConfig {
       private_key,
       public_key,
@@ -253,16 +240,16 @@ mod tests {
       content_encryption_algorithm: "A256GCM".to_string(),
       token_ttl: 3600,
     };
-    
+
     let service = JweService::new(config).unwrap();
     let agent_id = Uuid::new_v4();
     let server_id = Uuid::new_v4();
     let permissions = vec!["read".to_string(), "write".to_string()];
-    
+
     // 生成 Token
     let token = service.generate_token(agent_id, server_id, permissions.clone()).unwrap();
     assert!(!token.is_empty());
-    
+
     // 验证 Token
     let payload = service.verify_token(&token, agent_id).unwrap();
     assert_eq!(payload.agent_id, agent_id);
@@ -270,11 +257,11 @@ mod tests {
     assert_eq!(payload.permissions, permissions);
     assert_eq!(payload.sub, agent_id.to_string());
   }
-  
+
   #[tokio::test]
   async fn test_agent_id_mismatch() {
     let (private_key, public_key) = JweService::generate_key_pair().unwrap();
-    
+
     let config = JweConfig {
       private_key,
       public_key,
@@ -282,16 +269,16 @@ mod tests {
       content_encryption_algorithm: "A256GCM".to_string(),
       token_ttl: 3600,
     };
-    
+
     let service = JweService::new(config).unwrap();
     let agent_id = Uuid::new_v4();
     let different_agent_id = Uuid::new_v4();
     let server_id = Uuid::new_v4();
     let permissions = vec!["read".to_string()];
-    
+
     // 生成 Token
     let token = service.generate_token(agent_id, server_id, permissions).unwrap();
-    
+
     // 使用不同的 agent_id 验证应该失败
     let result = service.verify_token(&token, different_agent_id);
     assert!(matches!(result, Err(JweServiceError::AgentIdMismatch { .. })));
@@ -300,7 +287,7 @@ mod tests {
   #[tokio::test]
   async fn test_token_expiration() {
     let (private_key, public_key) = JweService::generate_key_pair().unwrap();
-    
+
     let config = JweConfig {
       private_key,
       public_key,
@@ -308,18 +295,18 @@ mod tests {
       content_encryption_algorithm: "A256GCM".to_string(),
       token_ttl: 1, // 1秒过期
     };
-    
+
     let service = JweService::new(config).unwrap();
     let agent_id = Uuid::new_v4();
     let server_id = Uuid::new_v4();
     let permissions = vec!["read".to_string()];
-    
+
     // 生成 Token
     let token = service.generate_token(agent_id, server_id, permissions).unwrap();
-    
+
     // 等待 Token 过期
     tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
-    
+
     // 验证过期的 Token 应该失败
     let result = service.verify_token(&token, agent_id);
     assert!(matches!(result, Err(JweServiceError::TokenExpired)));
@@ -328,7 +315,7 @@ mod tests {
   #[tokio::test]
   async fn test_invalid_token_format() {
     let (private_key, public_key) = JweService::generate_key_pair().unwrap();
-    
+
     let config = JweConfig {
       private_key,
       public_key,
@@ -336,10 +323,10 @@ mod tests {
       content_encryption_algorithm: "A256GCM".to_string(),
       token_ttl: 3600,
     };
-    
+
     let service = JweService::new(config).unwrap();
     let agent_id = Uuid::new_v4();
-    
+
     // 测试无效的 Token 格式
     let invalid_token = "invalid.token.format";
     let result = service.verify_token(invalid_token, agent_id);
@@ -350,7 +337,7 @@ mod tests {
   async fn test_key_pair_generation() {
     let result = JweService::generate_key_pair();
     assert!(result.is_ok());
-    
+
     let (private_key, public_key) = result.unwrap();
     assert!(!private_key.is_empty());
     assert!(!public_key.is_empty());
@@ -369,7 +356,7 @@ mod tests {
   #[tokio::test]
   async fn test_multiple_permissions() {
     let (private_key, public_key) = JweService::generate_key_pair().unwrap();
-    
+
     let config = JweConfig {
       private_key,
       public_key,
@@ -377,20 +364,15 @@ mod tests {
       content_encryption_algorithm: "A256GCM".to_string(),
       token_ttl: 3600,
     };
-    
+
     let service = JweService::new(config).unwrap();
     let agent_id = Uuid::new_v4();
     let server_id = Uuid::new_v4();
-    let permissions = vec![
-      "read".to_string(),
-      "write".to_string(),
-      "execute".to_string(),
-      "admin".to_string(),
-    ];
-    
+    let permissions = vec!["read".to_string(), "write".to_string(), "execute".to_string(), "admin".to_string()];
+
     // 生成 Token
     let token = service.generate_token(agent_id, server_id, permissions.clone()).unwrap();
-    
+
     // 验证 Token
     let payload = service.verify_token(&token, agent_id).unwrap();
     assert_eq!(payload.permissions, permissions);

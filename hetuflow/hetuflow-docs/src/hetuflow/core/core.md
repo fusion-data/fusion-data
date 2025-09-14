@@ -164,7 +164,7 @@ pub struct AgentCapabilities {
   /// 支持的特性列表
   pub features: Vec<String>,
   /// Agent 标签，用于筛选任务。比如某些需要特定资源的任务只能在匹配标签的 Agent 上运行
-  pub tags: HashMap<String, Option<Box<serde_json::Value>>>,
+  pub labels: Labels,
   /// 扩展元数据 (cpu, memory, etc.)
   pub metadata: HashMap<String, String>,
 }
@@ -257,7 +257,7 @@ pub struct TaskConfig {
   /// 最大输出大小(字节)
   pub max_output_size: u64,
   /// 任务标签。可用于限制哪些 Agent 允许执行该任务
-  pub tags: HashMap<String, Option<serde_json::Value>>,
+  pub labels: Labels,
   /// 资源限制
   pub resource_limits: Option<ResourceLimits>,
 }
@@ -286,7 +286,7 @@ pub struct TaskInstanceUpdated {
 pub struct AcquireTaskRequest {
   pub agent_id: Uuid,     // Agent ID
   pub max_tasks: u32,     // 允许最大并发任务数
-  pub tags: Vec<String>,  // 当前 Agent 拥有的标签，用于过滤任务
+  pub labels: Labels,  // 当前 Agent 拥有的标签，用于过滤任务
   pub acquire_count: u32, // 拉取任务数
 }
 

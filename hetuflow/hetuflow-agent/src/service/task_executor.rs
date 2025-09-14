@@ -158,7 +158,7 @@ impl TaskExecutor {
   /// 执行单次任务尝试
   async fn _execute_task(process_manager: Arc<ProcessManager>, task: ScheduledTask) -> Result<(), TaskExecutionError> {
     // 获取任务配置
-    let task_config = task.task.config.as_ref().ok_or(TaskExecutionError::ConfigurationError)?;
+    let task_config = &task.task.config;
 
     // 准备环境变量
     let environment =

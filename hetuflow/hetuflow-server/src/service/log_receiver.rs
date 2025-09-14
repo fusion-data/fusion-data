@@ -307,10 +307,10 @@ impl LogReceiver {
       let mut to_rotate = Vec::new();
 
       for (path, _) in writers.iter() {
-        if let Ok(metadata) = tokio::fs::metadata(path).await {
-          if metadata.len() > config.max_file_size {
-            to_rotate.push(path.clone());
-          }
+        if let Ok(metadata) = tokio::fs::metadata(path).await
+          && metadata.len() > config.max_file_size
+        {
+          to_rotate.push(path.clone());
         }
       }
 

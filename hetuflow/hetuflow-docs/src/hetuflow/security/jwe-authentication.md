@@ -11,7 +11,7 @@ sequenceDiagram
     participant Admin as 管理员
     participant Server as Hetuflow Server
     participant Agent as Hetuflow Agent
-    
+
     Admin->>Server: 1. 配置 JWE 密钥对
     Admin->>Server: 2. 启动 Server
     Admin->>Admin: 3. 生成 Agent JWE Token
@@ -110,7 +110,7 @@ export HETUFLOW__JWE__TOKEN_TTL=3600
 [hetuflow.agent]
 # 其他配置...
 name = "my-agent"
-tags = ["linux", "x86_64"]
+labels = ["linux", "x86_64"]
 
 # JWE Token（由 Server 端生成）
 jwe_token = "eyJhbGciOiJFQ0RILUVTK0EyNTZLVyIsImVuYyI6IkEyNTZHQ00iLCJ0eXAiOiJKV0UifQ..."
@@ -181,6 +181,7 @@ export HETUFLOW__AGENT__JWE_TOKEN="<从步骤4获取的Token>"
 ### 密钥管理
 
 1. **私钥保护**：
+
    - 私钥文件权限设置为 600
    - 不要将私钥提交到版本控制系统
    - 使用密钥管理系统（如 HashiCorp Vault）存储私钥
@@ -193,10 +194,12 @@ export HETUFLOW__AGENT__JWE_TOKEN="<从步骤4获取的Token>"
 ### Token 管理
 
 1. **Token 有效期**：
+
    - 设置合理的 Token 有效期（建议 1-24 小时）
    - 实现 Token 自动刷新机制
 
 2. **权限控制**：
+
    - 为不同 Agent 分配不同权限
    - 实现最小权限原则
 
@@ -207,6 +210,7 @@ export HETUFLOW__AGENT__JWE_TOKEN="<从步骤4获取的Token>"
 ### 网络安全
 
 1. **传输加密**：
+
    - 使用 TLS/SSL 加密 WebSocket 连接
    - 配置证书验证
 
@@ -219,17 +223,21 @@ export HETUFLOW__AGENT__JWE_TOKEN="<从步骤4获取的Token>"
 ### 常见错误
 
 1. **Token 验证失败**：
+
    ```
    ERROR: JWE token validation failed: Invalid signature
    ```
+
    - 检查密钥配置是否正确
    - 确认 Token 未过期
    - 验证密钥格式
 
 2. **密钥格式错误**：
+
    ```
    ERROR: Failed to parse private key: Invalid PEM format
    ```
+
    - 检查 PEM 格式是否正确
    - 确认换行符转义正确
 
@@ -243,6 +251,7 @@ export HETUFLOW__AGENT__JWE_TOKEN="<从步骤4获取的Token>"
 ### 调试方法
 
 1. **启用调试日志**：
+
    ```toml
    [fusion.log]
    log_level = "debug"
@@ -253,6 +262,7 @@ export HETUFLOW__AGENT__JWE_TOKEN="<从步骤4获取的Token>"
    ```
 
 2. **验证 Token 内容**：
+
    ```bash
    # 使用 JWT 调试工具查看 Token 内容
    echo "<JWE_TOKEN>" | base64 -d | jq .

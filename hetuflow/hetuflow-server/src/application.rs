@@ -7,14 +7,13 @@ use std::{
 };
 
 use fusion_core::{DataError, application::Application};
-use fusion_core::log::LogPlugin;
 use fusion_db::DbPlugin;
 use log::{debug, error, info};
 use modelsql::{ModelManager, store::DbxError};
 use tokio::sync::{broadcast, mpsc};
 use uuid::Uuid;
 
-use crate::service::{AgentManager, LoadBalancer, SchedulerSvc, LogReceiver};
+use crate::service::{AgentManager, LoadBalancer, LogReceiver, SchedulerSvc};
 use crate::{
   gateway::{ConnectionManager, GatewaySvc, MessageHandler},
   infra::bmc::DistributedLockBmc,
@@ -45,9 +44,7 @@ pub struct ServerApplication {
 impl ServerApplication {
   pub async fn new() -> Result<Self, DataError> {
     // 构建底层 Application 与插件
-    let application = Application::builder()
-      .add_plugin(DbPlugin)
-      .build().await?;
+    let application = Application::builder().add_plugin(DbPlugin).build().await?;
 
     let config = Arc::new(HetuflowServerSetting::load(application.config_registry())?);
 
@@ -77,10 +74,8 @@ impl ServerApplication {
     let load_balancer = Arc::new(LoadBalancer::new(mm.clone(), config.server.server_id));
 
     // 创建日志接收器
-    let mut log_receiver = LogReceiver::new(
-      Arc::new(config.task_log.clone()),
-      Arc::new(config.task_log.websocket.clone()),
-    );
+    let mut log_receiver =
+      LogReceiver::new(Arc::new(config.task_log.clone()), Arc::new(config.task_log.websocket.clone()));
     log_receiver.set_gateway_sender(gateway_command_tx.clone());
     let log_receiver = Arc::new(tokio::sync::Mutex::new(log_receiver));
 
@@ -303,7 +298,7 @@ impl ServerApplication {
   /// 处理Agent转发的日志消息
   pub async fn handle_log_message(&self, log_batch: hetuflow_core::protocol::LogBatch) -> Result<(), DataError> {
     let log_receiver = self.log_receiver.clone();
-    let mut receiver = log_receiver.lock().await;
+    let receiver = log_receiver.lock().await;
     // 处理日志批次 - 直接调用内部方法
     match receiver.write_log_batch(&log_batch).await {
       Ok(_) => Ok(()),
