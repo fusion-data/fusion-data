@@ -11,7 +11,7 @@ use axum::{
   response::Json,
   routing::post,
 };
-use chrono::{DateTime, Utc};
+use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -54,8 +54,6 @@ pub struct ErrorResponse {
   /// 错误详情
   pub details: Option<String>,
 }
-
-
 
 /// 检查是否为本机访问
 fn is_localhost(addr: &SocketAddr) -> bool {
@@ -186,6 +184,4 @@ mod tests {
     let remote = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(192, 168, 1, 1)), 8080);
     assert!(!is_localhost(&remote));
   }
-
-
 }

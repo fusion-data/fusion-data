@@ -74,8 +74,7 @@ impl ServerApplication {
     let load_balancer = Arc::new(LoadBalancer::new(mm.clone(), config.server.server_id));
 
     // 创建日志接收器
-    let mut log_receiver =
-      LogReceiver::new(Arc::new(config.task_log.clone()), Arc::new(config.task_log.websocket.clone()));
+    let mut log_receiver = LogReceiver::new(Arc::new(config.task_log.clone()));
     log_receiver.set_gateway_sender(gateway_command_tx.clone());
     let log_receiver = Arc::new(tokio::sync::Mutex::new(log_receiver));
 

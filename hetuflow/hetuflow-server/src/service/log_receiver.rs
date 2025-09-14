@@ -18,15 +18,15 @@ use tokio::time::interval;
 use crate::model::GatewayCommandRequest;
 use crate::setting::{TaskLogConfig, WebSocketLogConfig};
 
+type FileWriters = HashMap<String, Arc<Mutex<BufWriter<File>>>>;
+
 /// 日志接收器，负责接收Agent转发的日志并存储到文件
 #[derive(Debug)]
 pub struct LogReceiver {
   /// 任务日志配置
   config: Arc<TaskLogConfig>,
-  /// WebSocket日志配置
-  websocket_config: Arc<WebSocketLogConfig>,
   /// 文件写入器缓存
-  file_writers: Arc<RwLock<HashMap<String, Arc<Mutex<BufWriter<File>>>>>>,
+  file_writers: Arc<RwLock<FileWriters>>,
   /// 日志统计信息
   stats: Arc<RwLock<LogStats>>,
   /// 停止信号
@@ -37,7 +37,7 @@ pub struct LogReceiver {
 
 /// 日志统计信息
 #[derive(Debug, Default)]
-struct LogStats {
+pub struct LogStats {
   /// 接收的日志总数
   total_received: u64,
   /// 写入的日志总数
@@ -60,10 +60,9 @@ struct LogStats {
 
 impl LogReceiver {
   /// 创建新的日志接收器
-  pub fn new(config: Arc<TaskLogConfig>, websocket_config: Arc<WebSocketLogConfig>) -> Self {
+  pub fn new(config: Arc<TaskLogConfig>) -> Self {
     Self {
       config,
-      websocket_config,
       file_writers: Arc::new(RwLock::new(HashMap::new())),
       stats: Arc::new(RwLock::new(LogStats::default())),
       shutdown_tx: None,
@@ -404,8 +403,7 @@ mod tests {
       },
     });
 
-    let websocket_config = Arc::new(task_config.websocket.clone());
-    let receiver = LogReceiver::new(task_config, websocket_config);
+    let receiver = LogReceiver::new(task_config);
 
     assert!(receiver.config.enabled);
     assert_eq!(receiver.config.retention_days, 7);
@@ -428,8 +426,7 @@ mod tests {
       },
     });
 
-    let websocket_config = Arc::new(task_config.websocket.clone());
-    let receiver = LogReceiver::new(task_config, websocket_config);
+    let receiver = LogReceiver::new(task_config);
 
     let path = receiver.get_log_file_path("task_123", "instance_456");
     let filename = path.file_name().unwrap().to_string_lossy();

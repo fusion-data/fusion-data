@@ -1,4 +1,4 @@
-use fusion_common::{ahash::HashMap, time::OffsetDateTime};
+use fusion_common::time::OffsetDateTime;
 use modelsql_core::{
   field::FieldMask,
   filter::{OpValsDateTime, OpValsInt32, OpValsString, OpValsUuid, Page},
@@ -6,10 +6,7 @@ use modelsql_core::{
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::{
-  models::Labels,
-  types::{ScheduleKind, TaskStatus},
-};
+use crate::types::{ScheduleKind, TaskStatus};
 
 use super::TaskConfig;
 
@@ -87,8 +84,6 @@ pub struct TaskForCreate {
   pub task_config: Option<TaskConfig>,
   pub retry_count: i32,
   pub dependencies: Option<serde_json::Value>,
-  // pub locked_at: Option<OffsetDateTime>,
-  // pub lock_version: i32,
 }
 
 /// SchedTask 更新模型

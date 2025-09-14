@@ -1,6 +1,6 @@
 [hetuflow.agent]
 name = "default-agent"
-labels = ["default"]
+labels = { type = "default" }
 metadata = { os = "linux", arch = "x86_64" }
 # JWE Token for authentication (optional)
 # jwe_token = "your-jwe-token-here"

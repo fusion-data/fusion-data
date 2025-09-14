@@ -2,17 +2,9 @@ use std::sync::Arc;
 
 use fusion_common::{
   ahash::{HashMap, HashSet},
-  time::{now_epoch_millis, now_offset},
+  time::now_offset,
 };
 use fusion_core::DataError;
-use hetuflow_core::{
-  models::*,
-  protocol::{
-    AcquireTaskRequest, AcquireTaskResponse, AgentRegisterResponse, ScheduledTask, TaskInstanceUpdated,
-    WebSocketCommand,
-  },
-  types::{AgentStatus, CommandKind, TaskInstanceStatus, TaskStatus},
-};
 use log::{debug, error, info, warn};
 use modelsql::{
   ModelManager,
@@ -21,6 +13,12 @@ use modelsql::{
 use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
 use uuid::Uuid;
+
+use hetuflow_core::{
+  models::*,
+  protocol::{AcquireTaskRequest, AcquireTaskResponse, ScheduledTask, TaskInstanceUpdated, WebSocketCommand},
+  types::{AgentStatus, CommandKind, TaskInstanceStatus, TaskStatus},
+};
 
 use crate::{
   gateway::ConnectionManager, infra::bmc::*, model::AgentEvent, service::AgentSvc, setting::HetuflowServerSetting,

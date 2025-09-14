@@ -1,8 +1,3 @@
-use serde::{Deserialize, Serialize};
-use uuid::Uuid;
-
-use crate::protocol::TaskExecutionError;
-
 /// WebSocket 错误类型
 #[derive(Debug, Clone, thiserror::Error)]
 pub enum WebSocketError {

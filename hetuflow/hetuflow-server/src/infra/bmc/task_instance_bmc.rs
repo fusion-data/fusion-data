@@ -3,7 +3,7 @@ use modelsql::{
   ModelManager, SqlError,
   base::DbBmc,
   field::FieldMask,
-  filter::{OpValsDateTime, OpValsInt32, OpValsUuid},
+  filter::{OpValsDateTime, OpValsInt32},
   generate_pg_bmc_common, generate_pg_bmc_filter,
 };
 use sqlx::Row;
@@ -223,7 +223,15 @@ impl TaskInstanceBmc {
     // 4. 返回更新后的 task_instance
     let mm = mm.get_txn_clone();
     mm.dbx().begin_txn().await?;
-    let where_tags = if request.labels.is_empty() { "t.labels = $2" } else { "t.labels && $2" };
+
+    // 构建标签匹配条件：使用 JSON 包含查询，类似 k8s label selector
+    // Agent 的 labels 必须是 Task config.labels 的子集
+    let where_labels = if request.labels.is_empty() {
+      "(t.config->'labels' = '{}' OR t.config->'labels' IS NULL)"
+    } else {
+      "t.config->'labels' @> $2"
+    };
+
     let sql = format!(
       r#"with sti as (select ti.*
                   from sched_task_instance ti
@@ -236,16 +244,29 @@ impl TaskInstanceBmc {
           agent_id = $6
       where id in (select id from sti)
       returning sched_task_instance.*"#,
-      where_tags
+      where_labels
     );
 
-    let query = sqlx::query_as::<_, SchedTaskInstance>(&sql)
-      .bind(TaskInstanceStatus::Pending)
-      .bind(request.labels.clone())
-      .bind(TaskStatus::Dispatched)
-      .bind(TaskStatus::Pending)
-      .bind(TaskInstanceStatus::Dispatched)
-      .bind(request.agent_id);
+    let query = if request.labels.is_empty() {
+      sqlx::query_as::<_, SchedTaskInstance>(&sql)
+        .bind(TaskInstanceStatus::Pending)
+        .bind(TaskStatus::Dispatched)
+        .bind(TaskStatus::Pending)
+        .bind(TaskInstanceStatus::Dispatched)
+        .bind(request.agent_id)
+    } else {
+      let agent_labels_json = serde_json::to_value(&*request.labels)
+        .map_err(|e| SqlError::InvalidArgument { message: format!("Failed to serialize agent labels: {}", e) })?;
+
+      sqlx::query_as::<_, SchedTaskInstance>(&sql)
+        .bind(TaskInstanceStatus::Pending)
+        .bind(agent_labels_json)
+        .bind(TaskStatus::Dispatched)
+        .bind(TaskStatus::Pending)
+        .bind(TaskInstanceStatus::Dispatched)
+        .bind(request.agent_id)
+    };
+
     let task_instances = mm.dbx().db_postgres()?.fetch_all(query).await?;
 
     mm.dbx().commit_txn().await?;

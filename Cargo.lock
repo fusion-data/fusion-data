@@ -1689,6 +1689,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "fusion-security"
+version = "0.1.1"
+dependencies = [
+ "fusion-common",
+ "fusion-corelib",
+ "josekit",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.16",
+]
+
+[[package]]
 name = "fusion-web"
 version = "0.1.1"
 dependencies = [

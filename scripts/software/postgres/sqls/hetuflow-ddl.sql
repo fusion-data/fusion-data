@@ -87,14 +87,13 @@ create table sched_task (
   scheduled_at timestamptz not null, -- 计划执行时间
   schedule_kind int not null, -- 见 ScheduleKind 枚举
   completed_at timestamptz, -- 任务完成时间，具体的任务明细见对应的 sched_task_instance 表
-  labels varchar(255) [] not null default '{}', -- 任务标签
   parameters jsonb not null default '{}'::jsonb, -- 任务参数
   environment jsonb, -- 任务环境变量
   task_config jsonb, -- 任务配置
   retry_count int not null default 0, -- 重试次数
   max_retries int not null default 3, -- 最大重试次数
-  -- locked_at timestamptz,
-  -- lock_version int not null default 0,
+  locked_at timestamptz,
+  lock_version int not null default 0,
   dependencies jsonb, -- 任务依赖关系
   created_by bigint not null,
   created_at timestamptz not null default now(),
