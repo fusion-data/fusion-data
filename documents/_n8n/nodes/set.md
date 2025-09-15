@@ -3,6 +3,7 @@
 ## 1. 节点架构与基础信息
 
 ### 1.1 节点基本信息
+
 - **显示名称**: Edit Fields (Set) - V3+ | Set - V1/V2
 - **节点名称**: `set`
 - **图标**: 🖊️ (fa:pen)
@@ -12,9 +13,11 @@
 - **源码路径**: `packages/nodes-base/nodes/Set/`
 
 ### 1.2 节点描述
+
 Set 节点是 n8n 中最常用的数据转换节点之一，用于修改、添加或删除数据项中的字段。它提供了灵活的数据操作功能，支持手动字段映射和 JSON 模式两种操作方式，是工作流数据处理的核心组件。
 
 ### 1.3 版本历史与演进
+
 ```mermaid
 timeline
     title Set 节点版本演进历史
@@ -45,6 +48,7 @@ timeline
 ```
 
 ### 1.4 节点架构与数据流
+
 ```mermaid
 flowchart TD
     A[输入数据项] --> B[Set 节点]
@@ -99,6 +103,7 @@ flowchart TD
 ### 2.1 核心配置属性
 
 #### 模式选择 (Mode)
+
 ```typescript
 {
   displayName: 'Mode',
@@ -121,6 +126,7 @@ flowchart TD
 ```
 
 #### 字段包含策略 (Include Options)
+
 ```typescript
 // V3.3+ 版本
 {
@@ -146,6 +152,7 @@ flowchart TD
 ```
 
 ### 2.2 手动映射模式配置
+
 ```mermaid
 flowchart TD
     A[Manual Mapping Mode] --> B[字段配置]
@@ -191,6 +198,7 @@ flowchart TD
 ```
 
 ### 2.3 JSON 模式配置
+
 ```mermaid
 sequenceDiagram
     participant User as 用户配置
@@ -224,6 +232,7 @@ sequenceDiagram
 ## 3. 数据处理机制详解
 
 ### 3.1 字段操作引擎
+
 ```mermaid
 flowchart TD
     A[输入数据项] --> B[字段操作引擎]
@@ -281,6 +290,7 @@ flowchart TD
 ```
 
 ### 3.2 类型转换与验证
+
 ```mermaid
 stateDiagram-v2
     [*] --> TypeDetection: 输入字段值
@@ -334,6 +344,7 @@ stateDiagram-v2
 ```
 
 ### 3.3 字段包含策略处理
+
 ```mermaid
 flowchart TD
     A[原始数据项] --> B[字段包含策略引擎]
@@ -397,6 +408,7 @@ flowchart TD
 ## 4. 执行模式详细分析
 
 ### 4.1 Manual Mapping 模式执行流程
+
 ```mermaid
 sequenceDiagram
     participant Input as 输入数据
@@ -432,6 +444,7 @@ sequenceDiagram
 ```
 
 ### 4.2 JSON 模式执行流程
+
 ```mermaid
 flowchart TD
     A[JSON 模式输入] --> B[JSON 字符串解析]
@@ -478,6 +491,7 @@ flowchart TD
 ```
 
 ### 4.3 版本差异对比
+
 ```mermaid
 flowchart TD
     A[版本功能对比] --> B{版本选择}
@@ -539,6 +553,7 @@ flowchart TD
 ## 5. 高级功能与配置选项
 
 ### 5.1 点记号 (Dot Notation) 处理
+
 ```mermaid
 flowchart TD
     A[字段路径输入] --> B{点记号启用?}
@@ -595,6 +610,7 @@ flowchart TD
 ```
 
 ### 5.2 数据复制与引用管理
+
 ```mermaid
 sequenceDiagram
     participant Original as 原始数据
@@ -634,6 +650,7 @@ sequenceDiagram
 ```
 
 ### 5.3 错误处理与恢复机制
+
 ```mermaid
 stateDiagram-v2
     [*] --> Processing: 开始处理
@@ -689,6 +706,7 @@ stateDiagram-v2
 ### 6.1 常见使用场景
 
 #### 场景 1: 数据清理与标准化
+
 ```javascript
 // 手动映射模式示例
 {
@@ -723,6 +741,7 @@ stateDiagram-v2
 ```
 
 #### 场景 2: API 响应格式转换
+
 ```javascript
 // 转换外部 API 响应为内部格式
 {
@@ -739,7 +758,7 @@ stateDiagram-v2
       "city": "={{ $json.location.city }}",
       "country": "={{ $json.location.country_code }}"
     },
-    "tags": "={{ $json.categories?.split(',').map(tag => tag.trim()) }}"
+    "labels": "={{ $json.categories?.split(',').map(tag => tag.trim()) }}"
   }
 }
 ```
@@ -747,6 +766,7 @@ stateDiagram-v2
 ### 6.2 工作流设计模式
 
 #### 数据转换管道模式
+
 ```mermaid
 flowchart LR
     A[原始数据源] --> B[Set: 数据清理]
@@ -792,6 +812,7 @@ flowchart LR
 ```
 
 #### 条件数据处理模式
+
 ```mermaid
 flowchart TD
     A[输入数据] --> B[If: 数据类型检查]
@@ -843,6 +864,7 @@ flowchart TD
 ### 6.3 性能优化与最佳实践
 
 #### 性能优化策略
+
 ```mermaid
 mindmap
   root((Set节点性能优化))
@@ -876,6 +898,7 @@ mindmap
 ```
 
 #### 调试与故障排除
+
 ```mermaid
 flowchart TD
     A[Set 节点问题诊断] --> B{问题类型}
@@ -916,12 +939,13 @@ flowchart TD
 ## 7. 技术规格总结
 
 ### 7.1 节点接口规格
+
 ```typescript
 interface SetNodeSpecification {
   // 基础信息
-  name: 'set';
-  displayName: 'Edit Fields (Set)' | 'Set';
-  group: ['input'];
+  name: "set";
+  displayName: "Edit Fields (Set)" | "Set";
+  group: ["input"];
   version: 1 | 2 | 3 | 3.1 | 3.2 | 3.3 | 3.4;
 
   // 连接配置
@@ -930,25 +954,19 @@ interface SetNodeSpecification {
 
   // 操作模式
   modes: {
-    manual: 'Manual Mapping';
-    raw: 'JSON';
+    manual: "Manual Mapping";
+    raw: "JSON";
   };
 
   // 字段类型支持
-  supportedTypes: [
-    'stringValue',
-    'numberValue',
-    'booleanValue',
-    'arrayValue',
-    'objectValue'
-  ];
+  supportedTypes: ["stringValue", "numberValue", "booleanValue", "arrayValue", "objectValue"];
 
   // 包含策略
   includeStrategies: {
-    all: '包含所有输入字段';
-    none: '仅包含设置字段';
-    selected: '包含选定字段';
-    except: '排除指定字段';
+    all: "包含所有输入字段";
+    none: "仅包含设置字段";
+    selected: "包含选定字段";
+    except: "排除指定字段";
   };
 
   // 高级选项
@@ -964,17 +982,19 @@ interface SetNodeSpecification {
 ```
 
 ### 7.2 版本功能对比矩阵
-| 功能特性 | V1 | V2 | V3.0-3.2 | V3.3+ | 说明 |
-|----------|----|----|----------|-------|------|
-| 操作模式 | 单一 | 单一 | 双模式 | 双模式 | V3+ 支持 Manual/JSON |
-| 字段配置 | 固定集合 | 固定集合 | 固定集合 | Assignment Collection | V3.3+ 更灵活 |
-| 包含策略 | keepOnlySet | keepOnlySet | include 选项 | includeOtherFields | 逐渐简化配置 |
-| 类型支持 | 基础类型 | 增强数字 | 完整类型 | 完整类型 | V3+ 支持所有类型 |
-| 表达式支持 | 基础 | 基础 | 增强 | 增强 | V3+ 完整表达式引擎 |
-| 错误处理 | 简单 | 改进 | 完善 | 完善 | V3+ 容错机制 |
-| 用户界面 | 基础 | 基础 | 改进 | 优化 | V3.3+ 最佳体验 |
+
+| 功能特性   | V1          | V2          | V3.0-3.2     | V3.3+                 | 说明                 |
+| ---------- | ----------- | ----------- | ------------ | --------------------- | -------------------- |
+| 操作模式   | 单一        | 单一        | 双模式       | 双模式                | V3+ 支持 Manual/JSON |
+| 字段配置   | 固定集合    | 固定集合    | 固定集合     | Assignment Collection | V3.3+ 更灵活         |
+| 包含策略   | keepOnlySet | keepOnlySet | include 选项 | includeOtherFields    | 逐渐简化配置         |
+| 类型支持   | 基础类型    | 增强数字    | 完整类型     | 完整类型              | V3+ 支持所有类型     |
+| 表达式支持 | 基础        | 基础        | 增强         | 增强                  | V3+ 完整表达式引擎   |
+| 错误处理   | 简单        | 改进        | 完善         | 完善                  | V3+ 容错机制         |
+| 用户界面   | 基础        | 基础        | 改进         | 优化                  | V3.3+ 最佳体验       |
 
 ### 7.3 性能指标与限制
+
 - **处理能力**: 单次可处理大型数据对象（建议 < 10MB）
 - **字段数量**: 理论无限制，建议 < 1000 个字段
 - **嵌套深度**: 支持任意深度，建议 < 10 层
@@ -983,6 +1003,7 @@ interface SetNodeSpecification {
 - **处理延迟**: 毫秒级（简单操作）到秒级（复杂转换）
 
 ### 7.4 与其他节点的集成模式
+
 ```mermaid
 graph LR
     A[HTTP Request] --> B[Set: API 响应处理]
@@ -1011,6 +1032,7 @@ graph LR
 ### 7.5 最佳实践指南
 
 #### 设计原则
+
 1. **明确数据流向**: 清楚定义输入输出数据结构
 2. **选择适当模式**: 简单映射用 Manual，复杂转换用 JSON
 3. **合理使用包含策略**: 避免不必要的数据复制
@@ -1018,6 +1040,7 @@ graph LR
 5. **错误处理**: 启用适当的容错机制
 
 #### 避免常见陷阱
+
 1. **过度嵌套**: 避免过深的对象嵌套
 2. **不必要的深拷贝**: 合理选择字段包含策略
 3. **表达式过度复杂**: 保持表达式可读性

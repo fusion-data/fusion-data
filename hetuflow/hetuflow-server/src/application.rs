@@ -7,14 +7,13 @@ use std::{
 };
 
 use fusion_core::{DataError, application::Application};
-use fusion_core::log::LogPlugin;
 use fusion_db::DbPlugin;
 use log::{debug, error, info};
 use modelsql::{ModelManager, store::DbxError};
 use tokio::sync::{broadcast, mpsc};
 use uuid::Uuid;
 
-use crate::service::{AgentManager, LoadBalancer, SchedulerSvc};
+use crate::service::{AgentManager, LoadBalancer, LogReceiver, SchedulerSvc};
 use crate::{
   gateway::{ConnectionManager, GatewaySvc, MessageHandler},
   infra::bmc::DistributedLockBmc,
@@ -28,25 +27,36 @@ use crate::{
 /// Hetuflow 应用容器
 #[derive(Clone)]
 pub struct ServerApplication {
-  pub(crate) config: Arc<HetuflowServerSetting>,
-  pub(crate) is_leader: Arc<AtomicBool>,
+  pub setting: Arc<HetuflowServerSetting>,
+  pub is_leader: Arc<AtomicBool>,
   shutdown_tx: broadcast::Sender<()>,
-  pub(crate) mm: ModelManager,
-  pub(crate) scheduler_svc: Arc<SchedulerSvc>,
-  pub(crate) gateway_svc: Arc<GatewaySvc>,
+  pub mm: ModelManager,
+  pub scheduler_svc: Arc<SchedulerSvc>,
+  pub gateway_svc: Arc<GatewaySvc>,
   agent_manager: Arc<AgentManager>,
-  pub(crate) connection_manager: Arc<ConnectionManager>,
-  pub(crate) message_handler: Arc<MessageHandler>,
+  pub connection_manager: Arc<ConnectionManager>,
+  pub message_handler: Arc<MessageHandler>,
   load_balancer: Arc<LoadBalancer>,
   gateway_command_tx: mpsc::UnboundedSender<GatewayCommandRequest>,
+  log_receiver: Arc<tokio::sync::Mutex<LogReceiver>>,
 }
 
 impl ServerApplication {
   pub async fn new() -> Result<Self, DataError> {
+    Self::new_with_source::<config::Environment>(None).await
+  }
+
+  pub async fn new_with_source<S>(config_source: Option<S>) -> Result<Self, DataError>
+  where
+    S: config::Source + Send + Sync + 'static,
+  {
     // 构建底层 Application 与插件
-    let application = Application::builder()
-      .add_plugin(DbPlugin)
-      .build().await?;
+    let application = Application::builder().add_plugin(DbPlugin).build().await?;
+    if let Some(config_source) = config_source {
+      let config_registry = application.config_registry();
+      config_registry.add_config_source(config_source)?;
+      config_registry.reload()?;
+    }
 
     let config = Arc::new(HetuflowServerSetting::load(application.config_registry())?);
 
@@ -67,16 +77,21 @@ impl ServerApplication {
     let scheduler_svc = Arc::new(SchedulerSvc::new(mm.clone(), Arc::new(config.server.clone()), shutdown_tx.clone()));
 
     // 将 ConnectionManager 作为 AgentRegistry 传递给 AgentManager
-    let agent_manager = Arc::new(AgentManager::new(mm.clone(), connection_manager.clone()));
+    let agent_manager = Arc::new(AgentManager::new(mm.clone(), connection_manager.clone(), config.clone()));
 
     let gateway_svc =
       Arc::new(GatewaySvc::new(connection_manager.clone(), message_handler.clone(), gateway_command_rx));
 
     let is_leader = Arc::new(AtomicBool::new(false));
-    let load_balancer = Arc::new(LoadBalancer::new(mm.clone(), config.server.server_id));
+    let load_balancer = Arc::new(LoadBalancer::new(mm.clone(), config.server.server_id.clone()));
+
+    // 创建日志接收器
+    let mut log_receiver = LogReceiver::new(Arc::new(config.task_log.clone()));
+    log_receiver.set_gateway_sender(gateway_command_tx.clone());
+    let log_receiver = Arc::new(tokio::sync::Mutex::new(log_receiver));
 
     Ok(Self {
-      config,
+      setting: config,
       is_leader,
       shutdown_tx,
       mm,
@@ -87,6 +102,7 @@ impl ServerApplication {
       message_handler,
       load_balancer,
       gateway_command_tx,
+      log_receiver,
     })
   }
 
@@ -117,7 +133,7 @@ impl ServerApplication {
     // 启动领导者选举监控
     let is_leader = self.is_leader.clone();
     let mm = self.mm.clone();
-    let server_id = self.config.server.server_id.to_string();
+    let server_id = self.setting.server.server_id.to_string();
     let mut shutdown_rx = self.shutdown_tx.subscribe();
     let load_balancer = self.load_balancer.clone();
     tokio::spawn(async move {
@@ -158,6 +174,15 @@ impl ServerApplication {
       error!("Gateway service error: {:?}", e);
     }
 
+    // 启动日志接收器
+    let log_receiver = self.log_receiver.clone();
+    tokio::spawn(async move {
+      let mut receiver = log_receiver.lock().await;
+      if let Err(e) = receiver.start().await {
+        error!("LogReceiver start error: {:?}", e);
+      }
+    });
+
     // 启动 HTTP API 服务 (/api/v1)
     let app_state = self.clone();
     tokio::spawn(async move {
@@ -187,7 +212,7 @@ impl ServerApplication {
 
     // Agent 心跳超时清理
     let connection_manager = self.connection_manager.clone();
-    let agent_heartbeat_ttl = self.config.server.agent_overdue_ttl;
+    let agent_heartbeat_ttl = self.setting.server.agent_overdue_ttl;
     tokio::spawn(async move {
       let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(60));
       loop {
@@ -274,6 +299,25 @@ impl ServerApplication {
     };
     self.gateway_command_tx.send(command)?;
     Ok(message_id)
+  }
+
+  /// 获取应用配置
+  pub fn setting(&self) -> &HetuflowServerSetting {
+    &self.setting
+  }
+
+  /// 处理Agent转发的日志消息
+  pub async fn handle_log_message(&self, log_batch: hetuflow_core::protocol::LogBatch) -> Result<(), DataError> {
+    let log_receiver = self.log_receiver.clone();
+    let receiver = log_receiver.lock().await;
+    // 处理日志批次 - 直接调用内部方法
+    match receiver.write_log_batch(&log_batch).await {
+      Ok(_) => Ok(()),
+      Err(e) => {
+        log::error!("处理日志批次失败: {}", e);
+        Err(e)
+      }
+    }
   }
 }
 

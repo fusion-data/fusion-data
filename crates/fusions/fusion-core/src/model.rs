@@ -55,6 +55,16 @@ impl IdI64Result {
   }
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct IdStringResult {
+  pub id: String,
+}
+impl IdStringResult {
+  pub fn new(id: String) -> Self {
+    Self { id }
+  }
+}
+
 #[cfg(feature = "with-uuid")]
 #[derive(Debug, Serialize, Deserialize)]
 // #[cfg_attr(feature = "utoipa", derive(utoipa::ToSchema))]

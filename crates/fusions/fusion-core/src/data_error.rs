@@ -13,7 +13,7 @@ pub enum DataError {
   BizError { code: i32, msg: String, detail: Option<Box<serde_json::Value>> },
 
   #[error("Internal error: {code} {msg}")]
-  InternalError { code: i32, msg: String, cause: Option<Box<dyn std::error::Error + Send>> },
+  InternalError { code: i32, msg: String, cause: Option<Box<dyn std::error::Error + Send + Sync>> },
 
   #[error(transparent)]
   SystemTimeError(#[from] std::time::SystemTimeError),
@@ -53,7 +53,7 @@ impl DataError {
     DataError::BizError { code: 403, msg: msg.into(), detail: None }
   }
 
-  pub fn internal(code: i32, msg: impl Into<String>, cause: Option<Box<dyn std::error::Error + Send>>) -> Self {
+  pub fn internal(code: i32, msg: impl Into<String>, cause: Option<Box<dyn std::error::Error + Send + Sync>>) -> Self {
     DataError::InternalError { code, msg: msg.into(), cause }
   }
 }

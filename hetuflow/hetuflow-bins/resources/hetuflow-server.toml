@@ -71,3 +71,42 @@ load_balance_interval = "30s"
 server_overdue_ttl = "5m"
 # Agent 过期时间
 agent_overdue_ttl = "5m"
+
+# 任务日志配置
+[hetuflow.task_log]
+# 启用任务日志收集
+enabled = true
+# 日志存储根目录
+log_dir = "./var/logs/tasks/"
+# 日志文件最大大小（字节，默认100MB）
+max_file_size = 104857600
+# 日志文件保留天数
+retention_days = 30
+# 启用日志压缩
+enable_compression = true
+# 日志轮转检查间隔
+rotation_check_interval = "1h"
+
+# WebSocket 日志推送配置
+[hetuflow.task_log.websocket]
+# 启用实时日志推送
+enabled = true
+# 推送缓冲区大小（条数）
+buffer_size = 1000
+# 推送间隔
+push_interval = "100ms"
+# 最大订阅者数量
+max_subscribers = 100
+
+# JWE Token 认证配置（可选）
+[hetuflow.jwe]
+# 私钥（用于解密 JWE Token）
+# private_key = "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQg...\n-----END PRIVATE KEY-----"
+# 公钥（用于加密 JWE Token）
+# public_key = "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE...\n-----END PUBLIC KEY-----"
+# 密钥协商算法
+# key_agreement_algorithm = "ECDH-ES"
+# 内容加密算法
+# content_encryption_algorithm = "A256GCM"
+# Token 有效期（秒）
+# token_ttl = 3600

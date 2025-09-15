@@ -103,7 +103,7 @@ pub enum NodeExecutionError {
   ParameterValidation(#[from] ValidationError),
 
   #[error("节点初始化失败: {message}")]
-  InitFailed { message: String, cause: Option<Box<dyn std::error::Error + Send>> },
+  InitFailed { message: String, cause: Option<Box<dyn std::error::Error + Send + Sync>> },
 
   #[error("输入数据无效, {connection_kind}|{port_index}")]
   InvalidInputData { connection_kind: ConnectionKind, port_index: ConnectionIndex },

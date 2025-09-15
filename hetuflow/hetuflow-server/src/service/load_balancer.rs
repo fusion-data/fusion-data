@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use fusion_common::time::{OffsetDateTime, now_offset};
 use fusion_core::DataError;
-use hetuflow_core::types::AgentStatus;
+use hetuflow_core::types::{AgentStatus, ServerId};
 use log::{debug, info, warn};
 use modelsql::{
   ModelManager,
@@ -17,7 +17,7 @@ use hetuflow_core::models::*;
 /// 负载均衡缓存
 #[derive(Debug, Clone)]
 struct LoadBalanceCache {
-  servers: HashMap<Uuid, ServerLoadInfo>,
+  servers: HashMap<ServerId, ServerLoadInfo>,
   last_updated: OffsetDateTime,
 }
 
@@ -26,7 +26,6 @@ struct LoadBalanceCache {
 struct ServerLoadInfo {
   server: SchedServer,
   active_tasks: u32,
-  agent_count: u32,
   load_score: f64,
 }
 
@@ -51,14 +50,14 @@ impl Default for RebalanceThreshold {
 /// 负载均衡器 - 负责服务器间的负载均衡和命名空间分配。只有 Leader 节点可以执行负载均衡操作。
 pub struct LoadBalancer {
   mm: ModelManager,
-  server_id: Uuid,
+  server_id: ServerId,
   // 负载均衡策略缓存
   balance_cache: Arc<tokio::sync::RwLock<LoadBalanceCache>>,
 }
 
 impl LoadBalancer {
   /// 创建新的负载均衡器
-  pub fn new(mm: ModelManager, server_id: Uuid) -> Self {
+  pub fn new(mm: ModelManager, server_id: ServerId) -> Self {
     Self {
       mm,
       server_id,
@@ -105,34 +104,17 @@ impl LoadBalancer {
 
   /// 计算服务器负载
   async fn calculate_server_load(&self, server: &SchedServer) -> Result<ServerLoadInfo, DataError> {
-    let active_tasks = TaskBmc::count_active_tasks_by_server(&self.mm, server.id).await? as u32;
-    let agent_count = self.count_agents_by_server(server.id).await? as u32;
-    let load_score = self.calculate_load_score(active_tasks, agent_count);
+    let active_tasks = TaskBmc::count_active_tasks_by_server(&self.mm, server.id.clone()).await? as u32;
+    let load_score = self.calculate_load_score(active_tasks);
 
-    Ok(ServerLoadInfo { server: server.clone(), active_tasks, agent_count, load_score })
-  }
-
-  /// 统计服务器的 Agent 数量
-  async fn count_agents_by_server(&self, server_id: Uuid) -> Result<u64, DataError> {
-    let filter = AgentFilter {
-      server_id: Some(OpValsUuid::eq(server_id)),
-      status: Some(OpValsInt32::eq(AgentStatus::Online as i32)),
-      ..Default::default()
-    };
-    let count = AgentBmc::count(&self.mm, vec![filter]).await?;
-
-    Ok(count)
+    Ok(ServerLoadInfo { server: server.clone(), active_tasks, load_score })
   }
 
   /// 计算负载评分
-  fn calculate_load_score(&self, active_tasks: u32, agent_count: u32) -> f64 {
+  fn calculate_load_score(&self, active_tasks: u32) -> f64 {
     let task_weight = 1.0;
-    let agent_weight = 0.5; // 更多 Agent 能力更强，分数应更低，这里用倒数控制
-
     let task_score = active_tasks as f64 * task_weight;
-    let agent_score = if agent_count > 0 { (1.0 / agent_count as f64) * agent_weight } else { agent_weight * 2.0 };
-
-    task_score + agent_score
+    task_score
   }
 
   /// 检查是否需要重平衡
@@ -194,7 +176,6 @@ impl LoadBalancer {
           "server_id": info.server.id,
           "server_name": info.server.name,
           "active_tasks": info.active_tasks,
-          "agent_count": info.agent_count,
           "load_score": info.load_score,
         })
       })
@@ -212,8 +193,6 @@ impl LoadBalancer {
     let cache = self.balance_cache.read().await;
 
     let total_tasks: u32 = cache.servers.values().map(|info| info.active_tasks).sum();
-    let total_agents: u32 = cache.servers.values().map(|info| info.agent_count).sum();
-
     let load_scores: Vec<f64> = cache.servers.values().map(|info| info.load_score).collect();
     let avg_load =
       if !load_scores.is_empty() { load_scores.iter().sum::<f64>() / load_scores.len() as f64 } else { 0.0 };
@@ -222,7 +201,7 @@ impl LoadBalancer {
       "server_id": self.server_id,
       "total_servers": cache.servers.len(),
       "total_tasks": total_tasks,
-      "total_agents": total_agents,
+
       "average_load": avg_load,
       "last_updated": cache.last_updated,
     })
@@ -256,19 +235,19 @@ impl LoadBalancer {
     let namespaces_per_server = all_namespaces.len().div_ceil(servers.len()); // 向上取整
 
     // 分配 namespaces 到服务器
-    let mut namespace_assignments: HashMap<Uuid, Vec<Uuid>> = HashMap::default();
+    let mut namespace_assignments: HashMap<String, Vec<Uuid>> = HashMap::default();
 
     for (i, namespace_id) in all_namespaces.iter().enumerate() {
       let server_index = i / namespaces_per_server;
       let server_index = server_index.min(servers.len() - 1); // 确保不越界
-      let server_id = servers[server_index].server.id;
+      let server_id = servers[server_index].server.id.clone();
 
       namespace_assignments.entry(server_id).or_default().push(*namespace_id);
     }
 
     // 更新数据库中的绑定关系
     for (server_id, namespaces) in &namespace_assignments {
-      ServerBmc::update_server_namespace_bind(&self.mm, *server_id, namespaces.clone())
+      ServerBmc::update_server_namespace_bind(&self.mm, server_id, namespaces.clone())
         .await
         .map_err(|e| DataError::server_error(format!("Failed to update server namespace_id bind: {}", e)))?;
 
@@ -280,7 +259,7 @@ impl LoadBalancer {
       if namespace_assignments.contains_key(&server_info.server.id) {
         continue;
       }
-      ServerBmc::update_server_namespace_bind(&self.mm, server_info.server.id, vec![])
+      ServerBmc::update_server_namespace_bind(&self.mm, server_info.server.id.as_str(), vec![])
         .await
         .map_err(|e| DataError::server_error(format!("Failed to clear server namespace_id bind: {}", e)))?;
       debug!("Cleared namespaces for server {}", server_info.server.id);

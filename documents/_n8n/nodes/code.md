@@ -3,9 +3,11 @@
 ## 1. 节点架构与基础信息
 
 ### 1.1 节点基本概念
+
 Code 节点是 n8n 中最强大和灵活的数据处理节点，允许用户在工作流中编写和执行自定义 JavaScript 或 Python 代码。它提供了完整的编程能力，可以处理复杂的数据转换、业务逻辑和外部 API 调用。
 
 ### 1.2 支持的语言与版本
+
 ```mermaid
 mindmap
   root((Code 节点))
@@ -39,6 +41,7 @@ mindmap
 ```
 
 ### 1.3 核心架构组件
+
 - **源码路径**: `packages/nodes-base/nodes/Code/`
 - **当前版本**: 2 (支持 JavaScript 和 Python)
 - **主要文件**:
@@ -52,30 +55,32 @@ mindmap
 ## 2. 节点配置与属性详解
 
 ### 2.1 节点描述结构
+
 ```typescript
 // packages/nodes-base/nodes/Code/Code.node.ts
 export class Code implements INodeType {
   description: INodeTypeDescription = {
-    displayName: 'Code',
-    name: 'code',
-    icon: 'fa:code',
-    group: ['transform'],
-    version: [1, 2],  // 支持版本 1 和 2
-    description: 'Run custom JavaScript or Python code',
+    displayName: "Code",
+    name: "code",
+    icon: "fa:code",
+    group: ["transform"],
+    version: [1, 2], // 支持版本 1 和 2
+    description: "Run custom JavaScript or Python code",
     defaults: {
-      name: 'Code',
-      color: '#FF6D5A',
+      name: "Code",
+      color: "#FF6D5A",
     },
     inputs: [NodeConnectionTypes.Main],
     outputs: [NodeConnectionTypes.Main],
     properties: [
       // 动态属性配置
-    ]
+    ],
   };
 }
 ```
 
 ### 2.2 动态属性配置系统
+
 ```mermaid
 flowchart TD
     A[节点版本检查] --> B{版本类型}
@@ -102,6 +107,7 @@ flowchart TD
 ### 2.3 详细属性配置
 
 #### 语言选择 (Version 2)
+
 ```typescript
 {
   displayName: 'Language',
@@ -123,6 +129,7 @@ flowchart TD
 ```
 
 #### 执行模式配置
+
 ```typescript
 {
   displayName: 'Mode',
@@ -145,6 +152,7 @@ flowchart TD
 ```
 
 #### 代码编辑器配置
+
 ```typescript
 // JavaScript 代码配置
 {
@@ -180,6 +188,7 @@ flowchart TD
 ## 3. 执行引擎与沙箱系统
 
 ### 3.1 执行流程架构
+
 ```mermaid
 sequenceDiagram
     participant User as 用户代码
@@ -200,24 +209,25 @@ sequenceDiagram
 ```
 
 ### 3.2 JavaScript 沙箱实现
+
 ```typescript
 // packages/nodes-base/nodes/Code/JavaScriptSandbox.ts
 export class JavaScriptSandbox extends Sandbox {
   private readonly vm: NodeVM;
 
-  constructor(context: SandboxContext, private jsCode: string, helpers: IExecuteFunctions['helpers']) {
-    super({ object: { singular: 'object', plural: 'objects' } }, helpers);
+  constructor(context: SandboxContext, private jsCode: string, helpers: IExecuteFunctions["helpers"]) {
+    super({ object: { singular: "object", plural: "objects" } }, helpers);
 
     // 配置 VM2 沙箱环境
     this.vm = new NodeVM({
-      console: 'redirect',                    // 重定向 console 输出
-      sandbox: context,                       // 注入上下文
-      require: vmResolver,                    // 控制模块导入
-      wasm: false,                           // 禁用 WebAssembly
+      console: "redirect", // 重定向 console 输出
+      sandbox: context, // 注入上下文
+      require: vmResolver, // 控制模块导入
+      wasm: false, // 禁用 WebAssembly
     });
 
     // 监听 console.log 输出
-    this.vm.on('console.log', (...args: unknown[]) => this.emit('output', ...args));
+    this.vm.on("console.log", (...args: unknown[]) => this.emit("output", ...args));
   }
 
   async runCodeAllItems(): Promise<INodeExecutionData[]> {
@@ -251,17 +261,18 @@ export class JavaScriptSandbox extends Sandbox {
 ```
 
 ### 3.3 Python 沙箱实现
+
 ```typescript
 // packages/nodes-base/nodes/Code/PythonSandbox.ts
 export class PythonSandbox extends Sandbox {
   private readonly context: PythonSandboxContext;
 
-  constructor(context: SandboxContext, private pythonCode: string, helpers: IExecuteFunctions['helpers']) {
-    super({ object: { singular: 'dictionary', plural: 'dictionaries' } }, helpers);
+  constructor(context: SandboxContext, private pythonCode: string, helpers: IExecuteFunctions["helpers"]) {
+    super({ object: { singular: "dictionary", plural: "dictionaries" } }, helpers);
 
     // 转换上下文变量名 ($var -> _var)
     this.context = Object.keys(context).reduce((acc, key) => {
-      acc[key.startsWith('$') ? key.replace(/^\$/, '_') : key] = context[key];
+      acc[key.startsWith("$") ? key.replace(/^\$/, "_") : key] = context[key];
       return acc;
     }, {} as PythonSandboxContext);
   }
@@ -272,35 +283,38 @@ export class PythonSandbox extends Sandbox {
 
     try {
       // 设置类型字典
-      await pyodide.runPythonAsync('jsproxy_typedict[0] = type(Object.new().as_object_map())');
+      await pyodide.runPythonAsync("jsproxy_typedict[0] = type(Object.new().as_object_map())");
 
       // 加载依赖包
       await pyodide.loadPackagesFromImports(this.pythonCode);
 
       // 创建全局变量字典
-      const dict = pyodide.globals.get('dict');
+      const dict = pyodide.globals.get("dict");
       const globalsDict: PyDict = dict();
       for (const key of Object.keys(this.context)) {
-        if ((key === '_env' && envAccessBlocked) || key === '_node') continue;
+        if ((key === "_env" && envAccessBlocked) || key === "_node") continue;
         globalsDict.set(key, this.context[key]);
       }
 
       // 设置输出重定向
-      pyodide.setStdout({ batched: (str) => this.emit('output', str) });
+      pyodide.setStdout({ batched: (str) => this.emit("output", str) });
 
       // 包装代码为异步函数
       const runCode = `
 async def __main():
-${this.pythonCode.split('\n').map((line) => '  ' + line).join('\n')}
+${this.pythonCode
+  .split("\n")
+  .map((line) => "  " + line)
+  .join("\n")}
 await __main()`;
 
       const executionResult = await pyodide.runPythonAsync(runCode, { globals: globalsDict });
       globalsDict.destroy();
 
       // 转换 Python 对象为 JavaScript 对象
-      return executionResult?.toJs ?
-        executionResult.toJs({ dict_converter: Object.fromEntries, create_proxies: false }) :
-        executionResult;
+      return executionResult?.toJs
+        ? executionResult.toJs({ dict_converter: Object.fromEntries, create_proxies: false })
+        : executionResult;
     } catch (error) {
       throw this.getPrettyError(error as PyodideError);
     }
@@ -309,6 +323,7 @@ await __main()`;
 ```
 
 ### 3.4 Task Runner 沙箱
+
 ```typescript
 // packages/nodes-base/nodes/Code/JsTaskRunnerSandbox.ts
 export class JsTaskRunnerSandbox {
@@ -317,12 +332,12 @@ export class JsTaskRunnerSandbox {
     private readonly nodeMode: CodeExecutionMode,
     private readonly workflowMode: WorkflowExecuteMode,
     private readonly executeFunctions: IExecuteFunctions,
-    private readonly chunkSize = 1000,
+    private readonly chunkSize = 1000
   ) {}
 
   async runCodeAllItems(): Promise<INodeExecutionData[]> {
     const executionResult = await this.executeFunctions.startJob<INodeExecutionData[]>(
-      'javascript',
+      "javascript",
       {
         code: this.jsCode,
         nodeMode: this.nodeMode,
@@ -344,7 +359,7 @@ export class JsTaskRunnerSandbox {
     // 分块处理大量输入项
     for (const chunk of chunks) {
       const executionResult = await this.executeFunctions.startJob<INodeExecutionData[]>(
-        'javascript',
+        "javascript",
         {
           code: this.jsCode,
           nodeMode: this.nodeMode,
@@ -370,7 +385,7 @@ export class JsTaskRunnerSandbox {
     for (let i = 0; i < numInputItems; i += this.chunkSize) {
       chunks.push({
         startIdx: i,
-        count: Math.min(this.chunkSize, numInputItems - i)
+        count: Math.min(this.chunkSize, numInputItems - i),
       });
     }
     return chunks;
@@ -383,6 +398,7 @@ export class JsTaskRunnerSandbox {
 ## 4. 上下文系统与数据访问
 
 ### 4.1 上下文变量架构
+
 ```mermaid
 classDiagram
     class SandboxContext {
@@ -424,6 +440,7 @@ classDiagram
 ```
 
 ### 4.2 上下文创建机制
+
 ```typescript
 // packages/nodes-base/nodes/Code/Sandbox.ts
 export function getSandboxContext(this: IExecuteFunctions, index: number): SandboxContext {
@@ -448,36 +465,38 @@ export function getSandboxContext(this: IExecuteFunctions, index: number): Sandb
 ### 4.3 输入数据访问模式
 
 #### runOnceForAllItems 模式
+
 ```javascript
 // 可访问的上下文变量
-console.log($input.all());        // 所有输入项
-console.log($input.first());      // 第一个项目
-console.log($input.last());       // 最后一个项目
-console.log(items);               // 所有输入项 (向后兼容)
+console.log($input.all()); // 所有输入项
+console.log($input.first()); // 第一个项目
+console.log($input.last()); // 最后一个项目
+console.log(items); // 所有输入项 (向后兼容)
 
 // 数据处理示例
-return $input.all().map(item => ({
+return $input.all().map((item) => ({
   json: {
     ...item.json,
     processed: true,
-    timestamp: $now
-  }
+    timestamp: $now,
+  },
 }));
 ```
 
 #### runOnceForEachItem 模式
+
 ```javascript
 // 可访问的上下文变量
-console.log($input.item);         // 当前处理的项目
-console.log(item);                // 当前项目 (向后兼容)
+console.log($input.item); // 当前处理的项目
+console.log(item); // 当前项目 (向后兼容)
 
 // 数据处理示例
 return {
   json: {
     ...$input.item.json,
     doubled: $input.item.json.value * 2,
-    nodeInfo: $node.name
-  }
+    nodeInfo: $node.name,
+  },
 };
 ```
 
@@ -486,6 +505,7 @@ return {
 ## 5. 代码验证与错误处理系统
 
 ### 5.1 代码验证机制
+
 ```typescript
 // packages/nodes-base/nodes/Code/JsCodeValidator.ts
 export function validateNoDisallowedMethodsInRunForEach(code: string, itemIndex: number) {
@@ -493,15 +513,16 @@ export function validateNoDisallowedMethodsInRunForEach(code: string, itemIndex:
 
   if (match?.groups?.disallowedMethod) {
     const { disallowedMethod } = match.groups;
-    const lineNumber = code.split('\n').findIndex((line) => {
-      line = line.trimStart();
-      return (
-        line.includes(disallowedMethod) &&
-        !line.startsWith('//') &&      // 忽略单行注释
-        !line.startsWith('/*') &&      // 忽略多行注释开始
-        !line.startsWith('*')          // 忽略多行注释内容
-      );
-    }) + 1;
+    const lineNumber =
+      code.split("\n").findIndex((line) => {
+        line = line.trimStart();
+        return (
+          line.includes(disallowedMethod) &&
+          !line.startsWith("//") && // 忽略单行注释
+          !line.startsWith("/*") && // 忽略多行注释开始
+          !line.startsWith("*") // 忽略多行注释内容
+        );
+      }) + 1;
 
     if (lineNumber !== 0) {
       throw new ValidationError({
@@ -516,19 +537,20 @@ export function validateNoDisallowedMethodsInRunForEach(code: string, itemIndex:
 
 // 智能错误提示映射
 export function mapItemsNotDefinedErrorIfNeededForRunForAll(code: string, error: Error) {
-  if (error.message === 'items is not defined' && !/(let|const|var) +items +=/.test(code)) {
-    error.message = '`items` is not defined. Did you mean `$input.all()`?';
+  if (error.message === "items is not defined" && !/(let|const|var) +items +=/.test(code)) {
+    error.message = "`items` is not defined. Did you mean `$input.all()`?";
   }
 }
 
 export function mapItemNotDefinedErrorIfNeededForRunForEach(code: string, error: Error) {
-  if (error.message === 'item is not defined' && !/(let|const|var) +item +=/.test(code)) {
-    error.message = '`item` is not defined. Did you mean `$input.item.json`?';
+  if (error.message === "item is not defined" && !/(let|const|var) +item +=/.test(code)) {
+    error.message = "`item` is not defined. Did you mean `$input.item.json`?";
   }
 }
 ```
 
 ### 5.2 错误处理架构
+
 ```mermaid
 flowchart TD
     A[代码执行] --> B{执行成功?}
@@ -561,6 +583,7 @@ flowchart TD
 ```
 
 ### 5.3 错误类实现
+
 ```typescript
 // packages/nodes-base/nodes/Code/ExecutionError.ts
 export class ExecutionError extends ApplicationError {
@@ -572,26 +595,26 @@ export class ExecutionError extends ApplicationError {
   constructor(error: Error & { stack?: string }, itemIndex?: number) {
     super(error.message);
     this.itemIndex = itemIndex;
-    this.stack = error.stack ?? '';
+    this.stack = error.stack ?? "";
     this.populateFromStack();
   }
 
   private populateFromStack() {
-    const stackRows = this.stack.split('\n');
-    const messageRow = stackRows.find((line) => line.includes('Error:'));
-    const lineNumberRow = stackRows.find((line) => line.includes('Code:'));
+    const stackRows = this.stack.split("\n");
+    const messageRow = stackRows.find((line) => line.includes("Error:"));
+    const lineNumberRow = stackRows.find((line) => line.includes("Code:"));
 
     const lineNumberDisplay = this.toLineNumberDisplay(lineNumberRow);
     const [errorDetails, errorType] = this.toErrorDetailsAndType(messageRow);
 
     if (errorType) this.description = errorType;
-    this.message = `${errorDetails || 'Unknown error'} ${lineNumberDisplay}`;
+    this.message = `${errorDetails || "Unknown error"} ${lineNumberDisplay}`;
   }
 }
 
 // packages/nodes-base/nodes/Code/ValidationError.ts
 export class ValidationError extends ApplicationError {
-  description = '';
+  description = "";
   itemIndex: number | undefined = undefined;
   lineNumber: number | undefined = undefined;
 
@@ -618,6 +641,7 @@ export class ValidationError extends ApplicationError {
 ## 6. 数据验证与标准化系统
 
 ### 6.1 输出数据验证流程
+
 ```mermaid
 flowchart TD
     A[用户代码返回结果] --> B{执行模式}
@@ -651,11 +675,12 @@ flowchart TD
 ```
 
 ### 6.2 数据标准化实现
+
 ```typescript
 // packages/nodes-base/nodes/Code/Sandbox.ts
 abstract class Sandbox extends EventEmitter {
   validateRunCodeEachItem(executionResult: INodeExecutionData | undefined, itemIndex: number): INodeExecutionData {
-    if (typeof executionResult !== 'object') {
+    if (typeof executionResult !== "object") {
       throw new ValidationError({
         message: `Code doesn't return an object`,
         description: `Please return an object representing the output item. ('${executionResult}' was returned instead.)`,
@@ -664,9 +689,10 @@ abstract class Sandbox extends EventEmitter {
     }
 
     if (Array.isArray(executionResult)) {
-      const firstSentence = executionResult.length > 0
-        ? `An array of ${typeof executionResult[0]}s was returned.`
-        : 'An empty array was returned.';
+      const firstSentence =
+        executionResult.length > 0
+          ? `An array of ${typeof executionResult[0]}s was returned.`
+          : "An empty array was returned.";
       throw new ValidationError({
         message: `Code doesn't return a single object`,
         description: `${firstSentence} If you need to output multiple items, please use the 'Run Once for All Items' mode instead.`,
@@ -680,8 +706,10 @@ abstract class Sandbox extends EventEmitter {
     return returnData;
   }
 
-  validateRunCodeAllItems(executionResult: INodeExecutionData | INodeExecutionData[] | undefined): INodeExecutionData[] {
-    if (typeof executionResult !== 'object') {
+  validateRunCodeAllItems(
+    executionResult: INodeExecutionData | INodeExecutionData[] | undefined
+  ): INodeExecutionData[] {
+    if (typeof executionResult !== "object") {
       throw new ValidationError({
         message: "Code doesn't return items properly",
         description: `Please return an array of objects, one for each item you would like to output.`,
@@ -712,13 +740,13 @@ abstract class Sandbox extends EventEmitter {
   }
 
   private validateTopLevelKeys(item: INodeExecutionData, itemIndex: number) {
-    const REQUIRED_N8N_ITEM_KEYS = new Set(['json', 'binary', 'pairedItem', 'error']);
+    const REQUIRED_N8N_ITEM_KEYS = new Set(["json", "binary", "pairedItem", "error"]);
 
     Object.keys(item).forEach((key) => {
       if (REQUIRED_N8N_ITEM_KEYS.has(key)) return;
       throw new ValidationError({
         message: `Unknown top-level item key: ${key}`,
-        description: 'Access the properties of an item under `.json`, e.g. `item.json`',
+        description: "Access the properties of an item under `.json`, e.g. `item.json`",
         itemIndex,
       });
     });
@@ -731,35 +759,37 @@ abstract class Sandbox extends EventEmitter {
 ## 7. 性能优化与安全机制
 
 ### 7.1 性能优化策略
+
 ```typescript
 // 分块处理大量数据
 interface ChunkProcessingConfig {
-  chunkSize: number;              // 默认 1000 项
-  maxConcurrency: number;         // 最大并发数
-  memoryThreshold: string;        // 内存阈值
-  timeoutMs: number;             // 超时设置
+  chunkSize: number; // 默认 1000 项
+  maxConcurrency: number; // 最大并发数
+  memoryThreshold: string; // 内存阈值
+  timeoutMs: number; // 超时设置
 }
 
 // VM2 沙箱优化配置
 interface SandboxOptimization {
   sandbox: {
-    console: 'redirect';          // 重定向输出
-    wasm: false;                 // 禁用 WebAssembly
-    eval: false;                 // 禁用 eval
-    require: vmResolver;         // 限制模块导入
+    console: "redirect"; // 重定向输出
+    wasm: false; // 禁用 WebAssembly
+    eval: false; // 禁用 eval
+    require: vmResolver; // 限制模块导入
   };
   memory: {
     maxOldGenerationSizeMb: 512; // 老生代内存限制
     maxYoungGenerationSizeMb: 64; // 新生代内存限制
   };
   timeout: {
-    script: 60000;               // 脚本执行超时
-    async: 120000;               // 异步操作超时
+    script: 60000; // 脚本执行超时
+    async: 120000; // 异步操作超时
   };
 }
 ```
 
 ### 7.2 安全沙箱机制
+
 ```mermaid
 graph TD
     A[用户代码] --> B[VM2 沙箱]
@@ -790,6 +820,7 @@ graph TD
 ```
 
 ### 7.3 模块访问控制
+
 ```typescript
 // packages/nodes-base/nodes/Code/JavaScriptSandbox.ts
 const { NODE_FUNCTION_ALLOW_BUILTIN: builtIn, NODE_FUNCTION_ALLOW_EXTERNAL: external } = process.env;
@@ -797,22 +828,18 @@ const { NODE_FUNCTION_ALLOW_BUILTIN: builtIn, NODE_FUNCTION_ALLOW_EXTERNAL: exte
 export const vmResolver = makeResolverFromLegacyOptions({
   external: external
     ? {
-        modules: external.split(','),  // 允许的外部模块列表
-        transitive: false,             // 不允许传递依赖
+        modules: external.split(","), // 允许的外部模块列表
+        transitive: false, // 不允许传递依赖
       }
     : false,
-  builtin: builtIn?.split(',') ?? [], // 允许的内置模块列表
+  builtin: builtIn?.split(",") ?? [], // 允许的内置模块列表
 });
 
 // 默认允许的内置模块
-const defaultBuiltinModules = [
-  'crypto', 'path', 'url', 'util', 'querystring', 'stream'
-];
+const defaultBuiltinModules = ["crypto", "path", "url", "util", "querystring", "stream"];
 
 // 默认允许的外部模块
-const defaultExternalModules = [
-  'lodash', 'moment', 'axios', 'uuid', 'crypto-js'
-];
+const defaultExternalModules = ["lodash", "moment", "axios", "uuid", "crypto-js"];
 ```
 
 ---
@@ -822,6 +849,7 @@ const defaultExternalModules = [
 ### 8.1 JavaScript 代码示例
 
 #### 批量数据处理 (runOnceForAllItems)
+
 ```javascript
 // 数据聚合和统计
 const totalValue = $input.all().reduce((sum, item) => sum + (item.json.value || 0), 0);
@@ -834,29 +862,30 @@ return $input.all().map((item, index) => ({
     totalValue,
     avgValue,
     isAboveAverage: item.json.value > avgValue,
-    processedAt: $now
-  }
+    processedAt: $now,
+  },
 }));
 ```
 
 #### 异步 API 调用
+
 ```javascript
 // 并发调用外部 API
 const promises = $input.all().map(async (item) => {
   const response = await $helpers.httpRequest({
-    method: 'GET',
+    method: "GET",
     url: `https://api.example.com/user/${item.json.userId}`,
     headers: {
-      'Authorization': `Bearer ${$env.API_TOKEN}`
-    }
+      Authorization: `Bearer ${$env.API_TOKEN}`,
+    },
   });
 
   return {
     json: {
       ...item.json,
       userInfo: response.data,
-      enrichedAt: $now
-    }
+      enrichedAt: $now,
+    },
   };
 });
 
@@ -864,13 +893,14 @@ return await Promise.all(promises);
 ```
 
 #### 复杂数据转换
+
 ```javascript
 // 扁平化嵌套数据结构
-const flattenObject = (obj, prefix = '') => {
+const flattenObject = (obj, prefix = "") => {
   const flattened = {};
   for (const [key, value] of Object.entries(obj)) {
     const newKey = prefix ? `${prefix}_${key}` : key;
-    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+    if (typeof value === "object" && value !== null && !Array.isArray(value)) {
       Object.assign(flattened, flattenObject(value, newKey));
     } else {
       flattened[newKey] = value;
@@ -879,50 +909,52 @@ const flattenObject = (obj, prefix = '') => {
   return flattened;
 };
 
-return $input.all().map(item => ({
+return $input.all().map((item) => ({
   json: flattenObject(item.json),
-  binary: item.binary
+  binary: item.binary,
 }));
 ```
 
 #### 逐项处理 (runOnceForEachItem)
+
 ```javascript
 // 条件处理和验证
 const item = $input.item;
 
 // 数据验证
-if (!item.json.email || !item.json.email.includes('@')) {
+if (!item.json.email || !item.json.email.includes("@")) {
   throw new Error(`Invalid email address: ${item.json.email}`);
 }
 
 // 数据清理和格式化
 const cleanedData = {
   email: item.json.email.toLowerCase().trim(),
-  name: item.json.name?.trim() || 'Unknown',
+  name: item.json.name?.trim() || "Unknown",
   age: parseInt(item.json.age) || 0,
-  tags: Array.isArray(item.json.tags) ? item.json.tags : [],
+  labels: Array.isArray(item.json.labels) ? item.json.labels : [],
   createdAt: $now,
-  nodeId: $node.id
+  nodeId: $node.id,
 };
 
 // 条件逻辑
 if (cleanedData.age >= 18) {
-  cleanedData.category = 'adult';
-  cleanedData.permissions = ['read', 'write'];
+  cleanedData.category = "adult";
+  cleanedData.permissions = ["read", "write"];
 } else {
-  cleanedData.category = 'minor';
-  cleanedData.permissions = ['read'];
+  cleanedData.category = "minor";
+  cleanedData.permissions = ["read"];
 }
 
 return {
   json: cleanedData,
-  pairedItem: { item: 0 }
+  pairedItem: { item: 0 },
 };
 ```
 
 ### 8.2 Python 代码示例
 
 #### 数据科学处理
+
 ```python
 import pandas as pd
 import numpy as np
@@ -962,6 +994,7 @@ return result
 ```
 
 #### 机器学习预处理
+
 ```python
 import re
 import json
@@ -1028,6 +1061,7 @@ return results
 ### 8.3 错误处理最佳实践
 
 #### 优雅的错误处理
+
 ```javascript
 // runOnceForAllItems 模式的错误处理
 try {
@@ -1038,24 +1072,23 @@ try {
     try {
       // 数据验证
       if (!item.json.id) {
-        throw new Error('Missing required field: id');
+        throw new Error("Missing required field: id");
       }
 
       // 数据处理
       const processed = await processItem(item);
       results.push({
         json: processed,
-        pairedItem: { item: index }
+        pairedItem: { item: index },
       });
-
     } catch (error) {
       errors.push({
         json: {
           error: error.message,
           originalData: item.json,
-          itemIndex: index
+          itemIndex: index,
         },
-        pairedItem: { item: index }
+        pairedItem: { item: index },
       });
     }
   }
@@ -1067,31 +1100,31 @@ try {
 
   // 返回成功和失败的项目
   return [...results, ...errors];
-
 } catch (error) {
-  console.error('Workflow processing failed:', error);
+  console.error("Workflow processing failed:", error);
   throw error;
 }
 
 async function processItem(item) {
   // 模拟异步处理
   const response = await $helpers.httpRequest({
-    method: 'POST',
-    url: 'https://api.example.com/process',
+    method: "POST",
+    url: "https://api.example.com/process",
     body: item.json,
-    timeout: 10000
+    timeout: 10000,
   });
 
   return {
     ...item.json,
-    processedBy: 'external-api',
+    processedBy: "external-api",
     result: response.data,
-    processedAt: $now
+    processedAt: $now,
   };
 }
 ```
 
 #### 输入验证模式
+
 ```javascript
 // runOnceForEachItem 模式的输入验证
 const item = $input.item;
@@ -1100,20 +1133,20 @@ const item = $input.item;
 const validationRules = {
   email: {
     required: true,
-    type: 'string',
-    pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    type: "string",
+    pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
   },
   age: {
     required: false,
-    type: 'number',
+    type: "number",
     min: 0,
-    max: 150
+    max: 150,
   },
   status: {
     required: true,
-    type: 'string',
-    enum: ['active', 'inactive', 'pending']
-  }
+    type: "string",
+    enum: ["active", "inactive", "pending"],
+  },
 };
 
 // 验证函数
@@ -1122,16 +1155,16 @@ function validateField(value, fieldName, rules) {
   if (!rule) return { valid: true };
 
   // 必填验证
-  if (rule.required && (value === undefined || value === null || value === '')) {
+  if (rule.required && (value === undefined || value === null || value === "")) {
     return { valid: false, error: `${fieldName} is required` };
   }
 
   // 类型验证
   if (value !== undefined && rule.type) {
-    if (rule.type === 'number' && isNaN(Number(value))) {
+    if (rule.type === "number" && isNaN(Number(value))) {
       return { valid: false, error: `${fieldName} must be a number` };
     }
-    if (rule.type === 'string' && typeof value !== 'string') {
+    if (rule.type === "string" && typeof value !== "string") {
       return { valid: false, error: `${fieldName} must be a string` };
     }
   }
@@ -1146,7 +1179,7 @@ function validateField(value, fieldName, rules) {
 
   // 枚举验证
   if (rule.enum && !rule.enum.includes(value)) {
-    return { valid: false, error: `${fieldName} must be one of: ${rule.enum.join(', ')}` };
+    return { valid: false, error: `${fieldName} must be one of: ${rule.enum.join(", ")}` };
   }
 
   // 正则验证
@@ -1168,7 +1201,7 @@ for (const [fieldName, rules] of Object.entries(validationRules)) {
 
 // 如果有验证错误，抛出异常或返回错误信息
 if (validationErrors.length > 0) {
-  throw new Error(`Validation failed: ${validationErrors.join(', ')}`);
+  throw new Error(`Validation failed: ${validationErrors.join(", ")}`);
 }
 
 // 验证通过，处理数据
@@ -1177,8 +1210,8 @@ return {
     ...item.json,
     validated: true,
     validatedAt: $now,
-    validationPassed: true
-  }
+    validationPassed: true,
+  },
 };
 ```
 
@@ -1187,6 +1220,7 @@ return {
 ## 9. 高级功能与扩展
 
 ### 9.1 二进制数据处理
+
 ```javascript
 // 处理图片文件
 const item = $input.item;
@@ -1199,40 +1233,40 @@ if (item.binary && item.binary.data) {
     mimeType: binaryData.mimeType,
     fileExtension: binaryData.fileExtension,
     fileName: binaryData.fileName,
-    fileSize: Buffer.from(binaryData.data, 'base64').length
+    fileSize: Buffer.from(binaryData.data, "base64").length,
   };
 
   // 处理图片文件
-  if (binaryData.mimeType.startsWith('image/')) {
+  if (binaryData.mimeType.startsWith("image/")) {
     // 这里可以调用图片处理 API
     const processedImage = await $helpers.httpRequest({
-      method: 'POST',
-      url: 'https://api.imageprocessing.com/resize',
+      method: "POST",
+      url: "https://api.imageprocessing.com/resize",
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${$env.IMAGE_API_TOKEN}`
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${$env.IMAGE_API_TOKEN}`,
       },
       body: {
         image: binaryData.data,
         width: 800,
         height: 600,
-        format: 'jpeg'
-      }
+        format: "jpeg",
+      },
     });
 
     return {
       json: {
         ...item.json,
         fileInfo,
-        processed: true
+        processed: true,
       },
       binary: {
         data: {
           ...binaryData,
           data: processedImage.data,
-          fileName: `processed_${binaryData.fileName}`
-        }
-      }
+          fileName: `processed_${binaryData.fileName}`,
+        },
+      },
     };
   }
 }
@@ -1240,15 +1274,16 @@ if (item.binary && item.binary.data) {
 return {
   json: {
     ...item.json,
-    error: 'No binary data or unsupported file type'
-  }
+    error: "No binary data or unsupported file type",
+  },
 };
 ```
 
 ### 9.2 工作流状态管理
+
 ```javascript
 // 使用静态数据存储工作流状态
-const staticData = $getWorkflowStaticData('global');
+const staticData = $getWorkflowStaticData("global");
 
 // 初始化计数器
 if (!staticData.processedCount) {
@@ -1287,42 +1322,43 @@ return $input.all().map((item, index) => ({
       totalProcessed: staticData.processedCount,
       todayProcessed: staticData.dailyStats[today],
       batchSize: $input.all().length,
-      itemIndex: index
-    }
-  }
+      itemIndex: index,
+    },
+  },
 }));
 ```
 
 ### 9.3 动态参数使用
+
 ```javascript
 // 获取节点参数
-const customParam = $getNodeParameter('customParameter', 0, 'defaultValue');
-const processingMode = $getNodeParameter('mode', 0, 'standard');
+const customParam = $getNodeParameter("customParameter", 0, "defaultValue");
+const processingMode = $getNodeParameter("mode", 0, "standard");
 
 // 根据参数调整处理逻辑
 let processFunction;
 
 switch (processingMode) {
-  case 'aggressive':
+  case "aggressive":
     processFunction = (data) => {
       // 激进处理模式
       return {
         ...data,
         processed: true,
-        mode: 'aggressive',
-        transformations: ['normalize', 'clean', 'enrich', 'validate']
+        mode: "aggressive",
+        transformations: ["normalize", "clean", "enrich", "validate"],
       };
     };
     break;
 
-  case 'conservative':
+  case "conservative":
     processFunction = (data) => {
       // 保守处理模式
       return {
         ...data,
         processed: true,
-        mode: 'conservative',
-        transformations: ['validate']
+        mode: "conservative",
+        transformations: ["validate"],
       };
     };
     break;
@@ -1333,16 +1369,16 @@ switch (processingMode) {
       return {
         ...data,
         processed: true,
-        mode: 'standard',
-        transformations: ['normalize', 'validate']
+        mode: "standard",
+        transformations: ["normalize", "validate"],
       };
     };
 }
 
 // 应用处理函数
-return $input.all().map(item => ({
+return $input.all().map((item) => ({
   json: processFunction(item.json),
-  pairedItem: { item: 0 }
+  pairedItem: { item: 0 },
 }));
 ```
 
@@ -1351,6 +1387,7 @@ return $input.all().map(item => ({
 ## 10. 源码结构与技术架构
 
 ### 10.1 核心目录结构
+
 ```
 packages/nodes-base/nodes/Code/
 ├── Code.node.ts                    # 主节点定义
@@ -1375,6 +1412,7 @@ packages/nodes-base/nodes/Code/
 ```
 
 ### 10.2 架构交互图
+
 ```mermaid
 graph TB
     subgraph "用户界面层"
@@ -1440,17 +1478,19 @@ graph TB
 ## 11. 性能对比与选择指南
 
 ### 11.1 执行环境对比
-| 特性 | JavaScript Sandbox | Python Sandbox | Task Runner |
-|------|-------------------|-----------------|-------------|
-| **隔离级别** | VM2 沙箱 | Pyodide 沙箱 | 独立进程 |
-| **启动速度** | 快 (< 10ms) | 慢 (2-5s) | 中等 (100-500ms) |
-| **内存使用** | 低 (10-50MB) | 高 (100-200MB) | 中等 (50-100MB) |
-| **CPU 性能** | 原生 V8 | 编译到 WASM | 原生 V8 |
-| **第三方库** | 有限制 | 丰富 (NumPy, Pandas) | 有限制 |
-| **并发处理** | 单线程 | 单线程 | 多进程 |
-| **适用场景** | 通用数据处理 | 数据科学计算 | 大量数据处理 |
+
+| 特性         | JavaScript Sandbox | Python Sandbox       | Task Runner      |
+| ------------ | ------------------ | -------------------- | ---------------- |
+| **隔离级别** | VM2 沙箱           | Pyodide 沙箱         | 独立进程         |
+| **启动速度** | 快 (< 10ms)        | 慢 (2-5s)            | 中等 (100-500ms) |
+| **内存使用** | 低 (10-50MB)       | 高 (100-200MB)       | 中等 (50-100MB)  |
+| **CPU 性能** | 原生 V8            | 编译到 WASM          | 原生 V8          |
+| **第三方库** | 有限制             | 丰富 (NumPy, Pandas) | 有限制           |
+| **并发处理** | 单线程             | 单线程               | 多进程           |
+| **适用场景** | 通用数据处理       | 数据科学计算         | 大量数据处理     |
 
 ### 11.2 最佳实践选择
+
 ```mermaid
 flowchart TD
     A[选择代码节点配置] --> B{数据量大小}
@@ -1486,39 +1526,41 @@ flowchart TD
 ## 12. 故障排除与调试指南
 
 ### 12.1 常见错误类型
+
 ```typescript
 interface CommonErrors {
   syntaxErrors: {
-    'Unexpected token': '语法错误，检查括号匹配和分号',
-    'Unexpected end of input': '代码不完整，缺少闭合括号',
-    'Invalid regular expression': '正则表达式语法错误'
+    "Unexpected token": "语法错误，检查括号匹配和分号";
+    "Unexpected end of input": "代码不完整，缺少闭合括号";
+    "Invalid regular expression": "正则表达式语法错误";
   };
 
   runtimeErrors: {
-    'ReferenceError: ... is not defined': '变量未定义，检查变量名拼写',
-    'TypeError: Cannot read property': '尝试访问 null/undefined 的属性',
-    'TypeError: ... is not a function': '尝试调用非函数类型'
+    "ReferenceError: ... is not defined": "变量未定义，检查变量名拼写";
+    "TypeError: Cannot read property": "尝试访问 null/undefined 的属性";
+    "TypeError: ... is not a function": "尝试调用非函数类型";
   };
 
   validationErrors: {
-    "Code doesn't return an object": '需要返回对象类型的数据',
-    "Can't use .all() here": '在 runOnceForEachItem 模式下不能使用批量方法',
-    "Unknown top-level item key": '返回数据包含不支持的顶级键'
+    "Code doesn't return an object": "需要返回对象类型的数据";
+    "Can't use .all() here": "在 runOnceForEachItem 模式下不能使用批量方法";
+    "Unknown top-level item key": "返回数据包含不支持的顶级键";
   };
 
   executionErrors: {
-    'Request timeout': 'HTTP 请求超时，检查网络或增加超时时间',
-    'Memory limit exceeded': '内存使用超限，考虑分批处理',
-    'Script execution timeout': '脚本执行超时，优化代码逻辑'
+    "Request timeout": "HTTP 请求超时，检查网络或增加超时时间";
+    "Memory limit exceeded": "内存使用超限，考虑分批处理";
+    "Script execution timeout": "脚本执行超时，优化代码逻辑";
   };
 }
 ```
 
 ### 12.2 调试技术
+
 ```javascript
 // 1. 使用 console.log 调试
-console.log('Input data:', $input.all().length, 'items');
-console.log('First item:', JSON.stringify($input.first(), null, 2));
+console.log("Input data:", $input.all().length, "items");
+console.log("First item:", JSON.stringify($input.first(), null, 2));
 
 // 2. 数据类型检查
 const debugInfo = $input.all().map((item, index) => {
@@ -1527,57 +1569,60 @@ const debugInfo = $input.all().map((item, index) => {
     hasJson: !!item.json,
     jsonKeys: Object.keys(item.json || {}),
     hasBinary: !!item.binary,
-    binaryKeys: Object.keys(item.binary || {})
+    binaryKeys: Object.keys(item.binary || {}),
   };
 });
-console.log('Debug info:', debugInfo);
+console.log("Debug info:", debugInfo);
 
 // 3. 错误边界
 try {
   // 你的代码逻辑
   const result = processData($input.all());
-  console.log('Processing successful, result count:', result.length);
+  console.log("Processing successful, result count:", result.length);
   return result;
 } catch (error) {
-  console.error('Processing failed:', error.message);
-  console.error('Stack trace:', error.stack);
+  console.error("Processing failed:", error.message);
+  console.error("Stack trace:", error.stack);
 
   // 返回调试信息
-  return [{
-    json: {
-      error: error.message,
-      debugInfo: {
-        inputCount: $input.all().length,
-        nodeInfo: $node,
-        timestamp: $now
-      }
-    }
-  }];
+  return [
+    {
+      json: {
+        error: error.message,
+        debugInfo: {
+          inputCount: $input.all().length,
+          nodeInfo: $node,
+          timestamp: $now,
+        },
+      },
+    },
+  ];
 }
 
 function processData(items) {
   // 数据处理逻辑
-  return items.map(item => {
+  return items.map((item) => {
     // 验证输入
     if (!item.json) {
-      throw new Error('Item missing json property');
+      throw new Error("Item missing json property");
     }
 
     return {
       json: {
         ...item.json,
-        processed: true
-      }
+        processed: true,
+      },
     };
   });
 }
 ```
 
 ### 12.3 性能监控
+
 ```javascript
 // 性能监控包装器
-function withPerformanceMonitoring(fn, label = 'operation') {
-  return async function(...args) {
+function withPerformanceMonitoring(fn, label = "operation") {
+  return async function (...args) {
     const startTime = Date.now();
     const startMemory = process.memoryUsage?.() || { heapUsed: 0 };
 
@@ -1589,7 +1634,9 @@ function withPerformanceMonitoring(fn, label = 'operation') {
       const endMemory = process.memoryUsage?.() || { heapUsed: 0 };
 
       console.log(`[${label}] Completed in ${endTime - startTime}ms`);
-      console.log(`[${label}] Memory delta: ${((endMemory.heapUsed - startMemory.heapUsed) / 1024 / 1024).toFixed(2)}MB`);
+      console.log(
+        `[${label}] Memory delta: ${((endMemory.heapUsed - startMemory.heapUsed) / 1024 / 1024).toFixed(2)}MB`
+      );
 
       return result;
     } catch (error) {
@@ -1603,14 +1650,14 @@ function withPerformanceMonitoring(fn, label = 'operation') {
 // 使用示例
 const processWithMonitoring = withPerformanceMonitoring(async (items) => {
   // 你的处理逻辑
-  return items.map(item => ({
+  return items.map((item) => ({
     json: {
       ...item.json,
       processed: true,
-      timestamp: $now
-    }
+      timestamp: $now,
+    },
   }));
-}, 'DataProcessing');
+}, "DataProcessing");
 
 return await processWithMonitoring($input.all());
 ```
@@ -1620,6 +1667,7 @@ return await processWithMonitoring($input.all());
 ## 13. 总结与最佳实践
 
 ### 13.1 Code 节点特点总结
+
 1. **灵活性强**: 支持 JavaScript 和 Python 两种语言
 2. **安全可靠**: 基于沙箱技术，确保代码执行安全
 3. **性能优化**: 支持多种执行模式，适应不同场景需求
@@ -1627,6 +1675,7 @@ return await processWithMonitoring($input.all());
 5. **扩展性好**: 丰富的上下文变量和辅助函数
 
 ### 13.2 开发建议
+
 ```mermaid
 mindmap
   root((Code 节点最佳实践))
@@ -1658,6 +1707,7 @@ mindmap
 ```
 
 ### 13.3 使用场景指南
+
 - **数据转换**: 格式转换、字段映射、数据清洗
 - **业务逻辑**: 条件判断、计算逻辑、状态管理
 - **API 集成**: 外部服务调用、数据聚合、认证处理

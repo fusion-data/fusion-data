@@ -8,7 +8,7 @@ use modelsql::{
 };
 use uuid::Uuid;
 
-use hetuflow_core::types::TaskStatus;
+use hetuflow_core::types::{AgentId, ServerId, TaskStatus};
 
 use hetuflow_core::models::{SchedTask, TaskFilter, TaskForCreate, TaskForUpdate};
 
@@ -62,7 +62,7 @@ impl TaskBmc {
   }
 
   /// 重置失败任务为待处理状态
-  pub async fn reset_failed_tasks_by_agent(mm: &ModelManager, agent_id: &Uuid) -> Result<Vec<SchedTask>, SqlError> {
+  pub async fn reset_failed_tasks_by_agent(mm: &ModelManager, agent_id: &AgentId) -> Result<Vec<SchedTask>, SqlError> {
     let filter = TaskFilter {
       agent_id: Some(OpValsString::eq(agent_id.to_string())),
       status: Some(OpValsInt32::eq(TaskStatus::Dispatched as i32)),
@@ -74,7 +74,7 @@ impl TaskBmc {
     for task in &tasks {
       let update = TaskForUpdate {
         status: Some(TaskStatus::Pending),
-        agent_id: Some(*agent_id),
+        agent_id: Some(agent_id.to_string()),
         server_id: None,
         locked_at: None,
         lock_version: Some(task.lock_version + 1),
@@ -97,7 +97,7 @@ impl TaskBmc {
   /// 使用 SELECT FOR UPDATE SKIP LOCKED 获取任务
   pub async fn acquire_pending_tasks(
     mm: &ModelManager,
-    server_id: Uuid,
+    server_id: &ServerId,
     limit: i32,
   ) -> Result<Vec<SchedTask>, SqlError> {
     mm.dbx()
@@ -169,9 +169,9 @@ impl TaskBmc {
     Self::find_unique(mm, vec![filter]).await
   }
 
-  pub async fn count_active_tasks_by_server(mm: &ModelManager, server_id: Uuid) -> Result<u64, SqlError> {
+  pub async fn count_active_tasks_by_server(mm: &ModelManager, server_id: ServerId) -> Result<u64, SqlError> {
     let filter = TaskFilter {
-      server_id: Some(OpValsUuid::eq(server_id)),
+      server_id: Some(OpValsString::eq(server_id)),
       status: Some(OpValsInt32::in_([TaskStatus::Locked as i32, TaskStatus::Dispatched as i32])),
       ..Default::default()
     };

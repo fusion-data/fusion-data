@@ -1,11 +1,13 @@
 mod agent;
 mod heartbeat;
+mod log;
 mod process;
 mod task;
 mod websocket;
 
 pub use agent::*;
 pub use heartbeat::*;
+pub use log::*;
 pub use process::*;
 pub use task::*;
 pub use websocket::*;

@@ -1,0 +1,11 @@
+[package]
+name = "hetuflow-scripts"
+version = "0.1.0"
+edition = "2021"
+
+# 这是一个脚本包，包含部署和工具脚本
+# 仅用于满足工作区配置要求
+
+[lib]
+name = "hetuflow_scripts"
+path = "src/lib.rs"

@@ -12,10 +12,6 @@ publish = false
 [lints]
 workspace = true
 
-[[bin]]
-name = "hetuflow-server"
-path = "bin/hetuflow-server.rs"
-
 [dependencies]
 hetuflow-core = { workspace = true, features = ["with-db", "with-cli"] }
 fusion-common = { workspace = true, features = ["with-uuid"] }
@@ -37,7 +33,7 @@ async-trait = { workspace = true }
 tokio = { workspace = true }
 mea = { workspace = true }
 futures-util = { workspace = true }
-# tokio-tungstenite = { workspace = true }
+josekit = { workspace = true }
 log = { workspace = true }
 logforth = { workspace = true }
 fastrace = { workspace = true }

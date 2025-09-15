@@ -34,8 +34,8 @@ time_offset = "+08:00"
 run_mode = "dev"
 
 [hetuflow.agent]
-tags = ["linux", "x86_64", "gpu-enabled"]
 agent_id = "1dcb5bdf-8396-4218-9241-2e4928318624"
+labels = { os = "linux", arch = "x86_64", gpu = "enabled" }
 
 [hetuflow.agent.metadata]
 region = "cn-hangzhou"

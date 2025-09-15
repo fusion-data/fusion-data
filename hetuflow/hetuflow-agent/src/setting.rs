@@ -3,7 +3,10 @@ use std::{path::PathBuf, sync::Arc, time::Duration};
 use duration_str::deserialize_duration;
 use fusion_common::{ahash::HashMap, env::get_env};
 use fusion_core::{DataError, configuration::FusionConfigRegistry};
-use hetuflow_core::utils::config::write_app_config;
+use hetuflow_core::{
+  types::{AgentId, Labels},
+  utils::config::write_app_config,
+};
 use log::{info, warn};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -128,6 +131,36 @@ pub struct ProcessConfig {
 
   /// 默认资源限制
   pub limits: ResourceLimits,
+
+  /// 日志转发配置
+  pub log_forwarding: LogForwardingConfig,
+}
+
+/// 日志转发配置
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct LogForwardingConfig {
+  /// 启用日志转发
+  pub enabled: bool,
+
+  /// 日志缓冲区大小（字节）
+  pub buffer_size: usize,
+
+  /// 批次大小（条数）
+  pub batch_size: usize,
+
+  /// 刷新间隔（毫秒）
+  #[serde(deserialize_with = "deserialize_duration")]
+  pub flush_interval: Duration,
+
+  /// 最大重试次数
+  pub max_retries: u32,
+
+  /// 重试间隔（毫秒）
+  #[serde(deserialize_with = "deserialize_duration")]
+  pub retry_interval: Duration,
+
+  /// 启用压缩
+  pub enable_compression: bool,
 }
 
 /// 资源限制
@@ -154,19 +187,22 @@ pub struct TaskConfig {
 /// Agent 配置
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct HetuflowAgentSetting {
-  pub agent_id: Uuid,
+  pub agent_id: AgentId,
 
   /// Agent 名称
   pub name: Option<String>,
 
   /// Agent 标签
-  pub tags: Vec<String>,
+  pub labels: Labels,
 
   /// 工作目录
   pub work_dir: Option<String>,
 
   /// 元数据
   pub metadata: HashMap<String, String>,
+
+  /// JWE Token 配置
+  pub jwe_token: Option<String>,
 
   /// 连接配置
   pub connection: Arc<ConnectionConfig>,
@@ -236,7 +272,7 @@ mod tests {
     set_env("FUSION_CONFIG_FILE", "resources/app.toml").unwrap();
 
     // 尝试加载配置
-    let config_registry = FusionConfigRegistry::load().unwrap();
+    let config_registry = FusionConfigRegistry::builder().build().unwrap();
     println!("{:?}", config_registry.fusion_config().app());
 
     let setting = HetuflowAgentSetting::load(&config_registry).unwrap();

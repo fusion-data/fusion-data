@@ -1,4 +1,5 @@
 use fusion_common::time::OffsetDateTime;
+use modelsql::filter::OpValsValue;
 use modelsql_core::{
   field::FieldMask,
   filter::{OpValsDateTime, OpValsInt32, OpValsString, OpValsUuid, Page},
@@ -6,7 +7,7 @@ use modelsql_core::{
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::types::{ScheduleKind, TaskStatus};
+use crate::types::{AgentId, ScheduleKind, ServerId, TaskStatus};
 
 use super::TaskConfig;
 
@@ -46,9 +47,6 @@ pub struct SchedTask {
   /// 任务完成时间。当次任务完成或者所有 Schedule 的配置均已到期
   pub completed_at: Option<OffsetDateTime>,
 
-  /// 任务标签。可用于限制哪些 Agent 允许执行该任务
-  pub tags: Vec<String>,
-
   /// 任务环境变量，可能来自 SchedJob 或由事件/手动触发执行传入
   pub environment: Option<serde_json::Value>,
 
@@ -56,7 +54,7 @@ pub struct SchedTask {
   pub parameters: serde_json::Value,
 
   /// 保存 SchedJob.config。当 SchedJob 被修改后，因 SchedTask 保存了 config，所有任务受 SchedJob.config 变更的影响
-  pub config: Option<TaskConfig>,
+  pub config: TaskConfig,
 
   /// 任务重试次数
   pub retry_count: i32,
@@ -83,31 +81,26 @@ pub struct TaskForCreate {
   pub schedule_id: Option<Uuid>,
   pub scheduled_at: OffsetDateTime,
   pub parameters: serde_json::Value,
-  pub tags: Vec<String>,
   pub environment: Option<serde_json::Value>,
-  pub job_config: Option<TaskConfig>,
+  pub config: Option<TaskConfig>,
   pub retry_count: i32,
-  pub max_retries: i32,
   pub dependencies: Option<serde_json::Value>,
-  // pub locked_at: Option<OffsetDateTime>,
-  // pub lock_version: i32,
 }
 
 /// SchedTask 更新模型
 #[derive(Debug, Clone, Default, Deserialize)]
 #[cfg_attr(feature = "with-db", derive(modelsql::Fields))]
 pub struct TaskForUpdate {
-  pub agent_id: Option<Uuid>,
-  pub server_id: Option<Uuid>,
+  pub agent_id: Option<AgentId>,
+  pub server_id: Option<ServerId>,
   pub priority: Option<i32>,
   pub namespace_id: Option<Uuid>,
   pub status: Option<TaskStatus>,
   pub scheduled_at: Option<OffsetDateTime>,
   pub completed_at: Option<OffsetDateTime>,
   pub parameters: Option<serde_json::Value>,
-  pub tags: Option<Vec<String>>,
   pub environment: Option<serde_json::Value>,
-  pub job_config: Option<TaskConfig>,
+  pub config: Option<TaskConfig>,
   pub retry_count: Option<i32>,
   pub max_retries: Option<i32>,
   pub dependencies: Option<serde_json::Value>,
@@ -132,8 +125,8 @@ pub struct TaskFilter {
   pub schedule_id: Option<OpValsUuid>,
   pub namespace_id: Option<OpValsUuid>,
   pub agent_id: Option<OpValsString>,
-  pub server_id: Option<OpValsUuid>,
-  pub tags: Option<OpValsString>,
+  pub server_id: Option<OpValsString>,
+  pub task_config: Option<OpValsValue>,
   pub status: Option<OpValsInt32>,
   pub scheduled_at: Option<OpValsDateTime>,
   pub locked_at: Option<OpValsDateTime>,

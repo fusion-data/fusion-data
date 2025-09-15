@@ -3,6 +3,8 @@ use std::sync::{Arc, RwLock};
 use config::Config;
 use serde::de::DeserializeOwned;
 
+use crate::configuration::load_config_with;
+
 use super::{Configurable, ConfigureError, ConfigureResult, FusionConfig, util::load_config};
 
 #[derive(Clone)]
@@ -12,41 +14,12 @@ pub struct FusionConfigRegistry {
 }
 
 impl FusionConfigRegistry {
-  /// FUSION 配置文件根，支持通过环境变量覆盖默认配置。
-  ///
-  /// # Examples
-  ///
-  /// ```rust
-  /// # use fusion_core::configuration::*;
-  /// # fn test_config_state_from_env() {
-  /// // 两个下划线作为层级分隔符
-  /// fusion_common::env::set_env("FUSION__WEB__SERVER_ADDR", "0.0.0.0:8000").unwrap();
-  ///
-  /// fusion_common::env::set_env(
-  ///     "FUSION__SECURITY__TOKEN__SECRET_KEY",
-  ///     "8462b1ec9af827ebed13926f8f1e5409774fa1a21a1c8f726a4a34cf7dcabaf2",
-  /// ).unwrap();
-  /// fusion_common::env::set_env("FUSION__SECURITY__PWD__PWD_KEY", "80c9a35c0f231219ca14c44fe10c728d").unwrap();
-  ///
-  /// let configuration = FusionConfigRegistry::load().unwrap();
-  /// let uc = configuration.fusion_config();
-  ///
-  /// assert_eq!(uc.security().pwd().pwd_key(), b"80c9a35c0f231219ca14c44fe10c728d");
-  /// assert_eq!(
-  ///     uc.security().token().secret_key(),
-  ///     b"8462b1ec9af827ebed13926f8f1e5409774fa1a21a1c8f726a4a34cf7dcabaf2"
-  /// );
-  ///
-  /// // 由默认配置文件提供
-  /// assert_eq!(uc.app().name(), "fusion");
-  /// # }
-  /// ```
-  ///
-  pub fn load() -> ConfigureResult<Self> {
-    let c = load_config()?;
-    // let fusion_config = (&c).try_into()?;
-    let fusion_config = c.get("fusion")?;
-    Ok(Self::new(Arc::new(c), Arc::new(fusion_config)))
+  pub fn builder() -> FusionConfigRegistryBuilder {
+    FusionConfigRegistryBuilder::default()
+  }
+
+  pub fn new(underling: Arc<Config>, fusion_config: Arc<FusionConfig>) -> Self {
+    Self { config: Arc::new(RwLock::new(underling)), fusion_config: Arc::new(RwLock::new(fusion_config)) }
   }
 
   pub fn reload(&self) -> Result<(), ConfigureError> {
@@ -62,10 +35,6 @@ impl FusionConfigRegistry {
     *fusion_config_write = fusion_config;
 
     Ok(())
-  }
-
-  pub(crate) fn new(underling: Arc<Config>, fusion_config: Arc<FusionConfig>) -> Self {
-    Self { config: Arc::new(RwLock::new(underling)), fusion_config: Arc::new(RwLock::new(fusion_config)) }
   }
 
   pub fn fusion_config(&self) -> Arc<FusionConfig> {
@@ -115,9 +84,36 @@ impl FusionConfigRegistry {
 
 impl Default for FusionConfigRegistry {
   fn default() -> Self {
-    match Self::load() {
+    match Self::builder().build() {
       Ok(c) => c,
       Err(e) => panic!("Error loading configuration: {:?}", e),
     }
+  }
+}
+
+#[derive(Default)]
+pub struct FusionConfigRegistryBuilder {
+  config: Option<Config>,
+  fusion_config: Option<FusionConfig>,
+}
+
+impl FusionConfigRegistryBuilder {
+  pub fn with_config(mut self, config: Config) -> Self {
+    self.config = Some(config);
+    self
+  }
+
+  pub fn with_fusion_config(mut self, fusion_config: FusionConfig) -> Self {
+    self.fusion_config = Some(fusion_config);
+    self
+  }
+
+  pub fn build(self) -> ConfigureResult<FusionConfigRegistry> {
+    let config = load_config_with(self.config)?;
+    let fusion_config = match self.fusion_config {
+      Some(fusion_config) => fusion_config,
+      None => FusionConfig::try_from(&config)?,
+    };
+    Ok(FusionConfigRegistry::new(Arc::new(config), Arc::new(fusion_config)))
   }
 }

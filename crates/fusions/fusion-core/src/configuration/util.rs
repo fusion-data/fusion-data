@@ -1,7 +1,10 @@
 use std::{collections::HashMap, env, path::Path};
 
 use config::{Config, ConfigBuilder, Environment, File, FileFormat, builder::DefaultState};
-use fusion_common::runtime;
+use fusion_common::{
+  env::{get_env, get_envs},
+  runtime,
+};
 use log::{debug, trace};
 
 use super::ConfigureResult;
@@ -9,18 +12,18 @@ use super::ConfigureResult;
 /// 加载配置
 ///
 /// [crate::RunModel]
-pub(crate) fn load_config() -> ConfigureResult<Config> {
-  load_config_with_env(None)
+pub fn load_config() -> ConfigureResult<Config> {
+  load_config_with(None)
 }
 
-pub(crate) fn load_config_with_env(custom_env: Option<HashMap<String, String>>) -> ConfigureResult<Config> {
+pub fn load_config_with(custom_config: Option<Config>) -> ConfigureResult<Config> {
   let mut b = Config::builder().add_source(load_default_source());
 
   // load from default files, if exists
   b = load_from_files(&["app.toml".to_string(), "app.yaml".to_string(), "app.yml".to_string()], b);
 
   // load from profile files, if exists
-  let profile_files = if let Ok(profiles_active) = env::var("FUSION__PROFILES__ACTIVE") {
+  let profile_files = if let Some(profiles_active) = env::var("FUSION__PROFILES__ACTIVE").ok() {
     vec![
       format!("app-{profiles_active}.toml"),
       format!("app-{profiles_active}.yaml"),
@@ -33,14 +36,18 @@ pub(crate) fn load_config_with_env(custom_env: Option<HashMap<String, String>>) 
   b = load_from_files(&profile_files, b);
 
   // load from file of env, if exists
-  if let Ok(file) = std::env::var("FUSION_CONFIG_FILE") {
+  if let Ok(file) = get_env("FUSION_CONFIG_FILE") {
     let path = Path::new(&file);
     if path.exists() {
       b = b.add_source(File::from(path));
     }
   }
 
-  b = add_environment_with_source(b, custom_env);
+  b = add_environment(b);
+
+  if let Some(custom_config) = custom_config {
+    b = b.add_source(custom_config);
+  }
 
   let c = b.build()?;
 
@@ -76,17 +83,8 @@ pub fn load_default_source() -> File<config::FileSourceString, FileFormat> {
 }
 
 pub fn add_environment(b: ConfigBuilder<DefaultState>) -> ConfigBuilder<DefaultState> {
-  add_environment_with_source(b, None)
-}
-
-pub fn add_environment_with_source(
-  b: ConfigBuilder<DefaultState>,
-  custom_env: Option<HashMap<String, String>>,
-) -> ConfigBuilder<DefaultState> {
-  let mut env = Environment::default();
-  env = env.separator("__");
-  if let Some(custom_env) = custom_env {
-    env = env.source(Some(custom_env));
-  }
+  // Load all latest variables from current environment
+  let envs = get_envs();
+  let env = Environment::default().separator("__").source(Some(envs.into_iter().collect::<HashMap<_, _>>()));
   b.add_source(env)
 }

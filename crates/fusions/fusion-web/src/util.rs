@@ -4,7 +4,6 @@ use axum::Json;
 use axum::extract::Query;
 use axum::http::StatusCode;
 use axum::http::request::Parts;
-use fusion_common::time;
 #[cfg(feature = "with-ulid")]
 use fusion_core::IdUlidResult;
 use fusion_core::configuration::SecurityConfig;

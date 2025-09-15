@@ -62,7 +62,7 @@ fn create_sample_data() -> Value {
         ("age".to_string(), Value::Number(28.0)),
         ("active".to_string(), Value::Bool(true)),
         (
-          "tags".to_string(),
+          "labels".to_string(),
           Value::Array(vec![
             Value::String("developer".to_string()),
             Value::String("rust".to_string()),
@@ -165,7 +165,7 @@ fn demo_basic_access(evaluator: &ExpressionEvaluator, proxy: &DefaultDataProxy, 
     ("$json", "获取完整的 JSON 数据"),
     ("$json.user.name", "获取用户名称"),
     ("$json.user.profile.city", "获取用户城市"),
-    ("$json.user.tags[0]", "获取第一个标签"),
+    ("$json.user.labels[0]", "获取第一个标签"),
     ("$json.orders[1].amount", "获取第二个订单金额"),
     ("$now", "获取当前时间"),
     ("$workflow.name", "获取工作流名称"),
@@ -260,7 +260,7 @@ fn demo_conditional_expressions(
     ("$json.user.profile.score > 90 ? \"优秀\" : \"良好\"", "分数等级判断"),
     ("$json.orders[0].status == \"completed\" ? \"已完成\" : \"进行中\"", "订单状态判断"),
     ("$json.user.age > 25 && $json.user.active", "复合条件判断"),
-    ("$json.user.profile.score >= 95 || $json.user.tags.length() > 2", "或条件判断"),
+    ("$json.user.profile.score >= 95 || $json.user.labels.length() > 2", "或条件判断"),
   ];
 
   for (expr, desc) in examples {
@@ -277,12 +277,12 @@ fn demo_array_operations(
   context: &ExpressionExecutionContext,
 ) {
   let examples = vec![
-    ("$json.user.tags.length()", "标签数量"),
-    ("$json.user.tags.first()", "第一个标签"),
-    ("$json.user.tags.last()", "最后一个标签"),
-    ("$json.user.tags.join(\", \")", "标签连接"),
-    ("$json.user.tags.sort()", "标签排序"),
-    ("$json.user.tags.reverse()", "标签反转"),
+    ("$json.user.labels.length()", "标签数量"),
+    ("$json.user.labels.first()", "第一个标签"),
+    ("$json.user.labels.last()", "最后一个标签"),
+    ("$json.user.labels.join(\", \")", "标签连接"),
+    ("$json.user.labels.sort()", "标签排序"),
+    ("$json.user.labels.reverse()", "标签反转"),
     ("$json.orders.map(\"amount\")", "提取所有订单金额"),
     ("$json.orders.filter(\"status\")", "过滤有状态的订单"),
   ];
@@ -342,7 +342,7 @@ fn demo_complex_expressions(
     ("\"用户 \" + $json.user.name + \" 的分数是 \" + $json.user.profile.score", "动态字符串构建"),
     ("$json.orders[0].amount + $json.orders[1].amount", "计算总订单金额"),
     ("$json.user.age > 25 && $json.user.profile.score > 90 ? \"高级用户\" : \"普通用户\"", "复合条件用户分类"),
-    ("$json.user.tags.length() > 2 ? $json.user.tags.join(\", \") : \"标签较少\"", "条件性数组操作"),
+    ("$json.user.labels.length() > 2 ? $json.user.labels.join(\", \") : \"标签较少\"", "条件性数组操作"),
   ];
 
   for (expr, desc) in examples {

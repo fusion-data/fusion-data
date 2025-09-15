@@ -229,51 +229,45 @@ impl TaskGenerationSvc {
   /// 为失败的任务创建重试任务实例
   pub async fn generate_retry_tasks(&self) -> Result<Vec<Uuid>, DataError> {
     let mut retry_task_ids = Vec::new();
-    
+
     // 查找需要重试的任务
-     let retryable_tasks = TaskBmc::find_retryable_tasks(&self.mm).await?;
-     
-     for task in retryable_tasks {
-       // 获取最大重试次数配置
-       let max_retries = task.config.as_ref().map(|c| c.max_retries as i32).unwrap_or(3);
-       
-       // 检查是否已达到最大重试次数
-       if task.retry_count >= max_retries {
-         continue;
-       }
-      
+    let retryable_tasks = TaskBmc::find_retryable_tasks(&self.mm).await?;
+
+    for task in retryable_tasks {
+      // 获取最大重试次数配置
+      let max_retries = task.config.max_retries as i32;
+
+      // 检查是否已达到最大重试次数
+      if task.retry_count >= max_retries {
+        continue;
+      }
+
       // 获取关联的 Job
-       let job = JobBmc::find_by_id(&self.mm, &task.job_id).await?;
-      
+      let job = JobBmc::find_by_id(&self.mm, &task.job_id).await?;
+
       let mm = self.mm.get_txn_clone();
       mm.dbx().begin_txn().await?;
-      
+
       // 创建重试任务
-      let retry_task_id = self.create_retry_task_and_instance(
-        &mm,
-        &job,
-        &task,
-        now_offset(),
-      ).await?;
-      
+      let retry_task_id = self.create_retry_task_and_instance(&mm, &job, &task, now_offset()).await?;
+
       mm.dbx().commit_txn().await?;
-      
+
       retry_task_ids.push(retry_task_id);
       info!("Generated retry task {} for failed task {}", retry_task_id, task.id);
     }
-    
+
     Ok(retry_task_ids)
   }
 
   async fn create_retry_task_and_instance(
-     &self,
-     mm: &ModelManager,
-     job: &SchedJob,
-     original_task: &SchedTask,
-     scheduled_at: OffsetDateTime,
-   ) -> Result<Uuid, DataError> {
-     let task_id = Uuid::now_v7();
-     let max_retries = original_task.config.as_ref().map(|c| c.max_retries as i32).unwrap_or(3);
+    &self,
+    mm: &ModelManager,
+    job: &SchedJob,
+    original_task: &SchedTask,
+    scheduled_at: OffsetDateTime,
+  ) -> Result<Uuid, DataError> {
+    let task_id = Uuid::now_v7();
     let task = TaskForCreate {
       id: task_id,
       job_id: job.id,
@@ -282,21 +276,14 @@ impl TaskGenerationSvc {
       priority: original_task.priority,
       scheduled_at,
       status: TaskStatus::Pending,
-      tags: job.tags(),
       parameters: original_task.parameters.clone(),
       environment: job.environment.clone(),
-      job_config: job.config.clone(),
-       retry_count: original_task.retry_count + 1,
-       max_retries,
-       dependencies: original_task.dependencies.clone(),
+      config: Some(job.config.clone()),
+      retry_count: original_task.retry_count + 1,
+      dependencies: original_task.dependencies.clone(),
     };
-    let task_instance = TaskInstanceForCreate {
-      id: Some(Uuid::now_v7()),
-      task_id,
-      server_id: None,
-      agent_id: None,
-      status: TaskInstanceStatus::Pending,
-    };
+    let task_instance =
+      TaskInstanceForCreate { id: Some(Uuid::now_v7()), task_id, agent_id: None, status: TaskInstanceStatus::Pending };
 
     TaskBmc::insert(mm, task).await.map_err(DataError::from)?;
     TaskInstanceBmc::insert(mm, task_instance).await.map_err(DataError::from)?;
@@ -322,21 +309,14 @@ impl TaskGenerationSvc {
       priority: priority.unwrap_or_default(),
       scheduled_at,
       status: TaskStatus::Pending,
-      tags: job.tags(),
       parameters,
       environment: job.environment.clone(),
-      job_config: job.config.clone(),
+      config: Some(job.config.clone()),
       retry_count: 0,
-      max_retries: 3,
       dependencies: None,
     };
-    let task_instance = TaskInstanceForCreate {
-      id: Some(Uuid::now_v7()),
-      task_id,
-      server_id: None,
-      agent_id: None,
-      status: TaskInstanceStatus::Pending,
-    };
+    let task_instance =
+      TaskInstanceForCreate { id: Some(Uuid::now_v7()), task_id, agent_id: None, status: TaskInstanceStatus::Pending };
 
     TaskBmc::insert(mm, task).await.map_err(DataError::from)?; // 入库。等待 Agent 主动 poll 任务执行
     TaskInstanceBmc::insert(mm, task_instance).await.map_err(DataError::from)?;

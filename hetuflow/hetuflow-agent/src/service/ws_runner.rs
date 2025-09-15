@@ -158,10 +158,15 @@ impl WsRunner {
   ) -> Result<(), DataError> {
     let capabilities = AgentCapabilities {
       max_concurrent_tasks: self.setting.process.max_concurrent_processes,
-      tags: self.setting.tags.iter().map(|tag| (tag.clone(), Default::default())).collect(),
+      labels: self.setting.labels.clone(),
       metadata: self.setting.metadata.clone(),
     };
-    let register_req = AgentRegisterRequest { agent_id: self.setting.agent_id, capabilities, address };
+    let register_req = AgentRegisterRequest {
+      agent_id: self.setting.agent_id.clone(),
+      capabilities,
+      address,
+      jwe_token: self.setting.jwe_token.clone(),
+    };
     let message = serde_json::to_string(&WebSocketEvent::new(EventKind::AgentRegister, register_req)).unwrap();
     ws_tx
       .send(Message::Text(message.into()))
@@ -199,6 +204,10 @@ fn process_command(
     CommandKind::CancelTask => {
       let resp: IdUuidResult = serde_json::from_value(cmd.parameters).unwrap();
       let _ = command_publisher.send(HetuflowCommand::CancelTask(Arc::new(resp.id)));
+    }
+    CommandKind::LogForward => {
+      // TODO: 实现日志转发命令处理
+      warn!("LogForward command received but not implemented yet");
     }
   }
   Ok(())

@@ -284,7 +284,7 @@ impl ConnectionManager {
   }
 
   // 添加一个新连接
-  pub async fn add_connection(&self, agent_id: Uuid, connection: AgentConnection) -> Result<(), DataError> {
+  pub async fn add_connection(&self, agent_id: AgentId, connection: AgentConnection) -> Result<(), DataError> {
     // 记录连接日志
     info!("Agent {} connected successfully", agent_id);
 
@@ -297,7 +297,7 @@ impl ConnectionManager {
   }
 
   // 移除一个连接
-  pub async fn remove_connection(&self, agent_id: &Uuid, reason: &str) -> Result<(), DataError> {
+  pub async fn remove_connection(&self, agent_id: &AgentId, reason: &str) -> Result<(), DataError> {
     // 更新数据库中的 Agent 状态
     let update = AgentForUpdate {
       status: Some("offline".to_string()),
@@ -330,7 +330,7 @@ impl ConnectionManager {
   // 发送消息给指定 Agent
   pub async fn send_message_to_agent(
     &self,
-    agent_id: &Uuid,
+    agent_id: &AgentId,
     message: WebSocketMessage
   ) -> Result<(), DataError> {
     let connections = self.connections.read().await;
@@ -442,7 +442,7 @@ impl MessageHandler {
   }
 
   // 处理来自 Agent 的消息
-  pub async fn process_message(&self, agent_id: &Uuid, message: WebSocketMessage) -> Result<(), DataError> {
+  pub async fn process_message(&self, agent_id: &AgentId, message: WebSocketMessage) -> Result<(), DataError> {
     match message.message_kind {
       MessageKind::AgentRegister => {
         let request: AgentRegisterRequest = serde_json::from_value(message.payload)
@@ -467,7 +467,7 @@ impl MessageHandler {
   }
 
   // 处理 Agent 注册
-  async fn handle_agent_register(&self, agent_id: &Uuid, request: AgentRegisterRequest) -> Result<(), DataError> {
+  async fn handle_agent_register(&self, agent_id: &AgentId, request: AgentRegisterRequest) -> Result<(), DataError> {
     // 创建或更新 Agent 记录
     let agent_data = AgentForCreate {
       id: agent_id.to_string(),
@@ -509,7 +509,7 @@ impl MessageHandler {
   }
 
   // 处理 Agent 心跳
-  async fn handle_heartbeat(&self, agent_id: &Uuid, request: HeartbeatRequest) -> Result<(), DataError> {
+  async fn handle_heartbeat(&self, agent_id: &AgentId, request: HeartbeatRequest) -> Result<(), DataError> {
     // 更新心跳时间
     self.connection_manager.update_heartbeat(agent_id).await?;
 
@@ -522,7 +522,7 @@ impl MessageHandler {
   }
 
   // 处理任务状态更新
-  async fn handle_task_status_update(&self, agent_id: &Uuid, update: TaskInstanceUpdate) -> Result<(), DataError> {
+  async fn handle_task_status_update(&self, agent_id: &AgentId, update: TaskInstanceUpdate) -> Result<(), DataError> {
     // 发送状态更新事件
     let event = GatewayEvent::TaskStatusUpdated(update);
     self.event_sender.send(event)
@@ -640,16 +640,16 @@ pub struct GatewayCommand {
 // 发送给 Scheduler 的事件
 #[derive(Debug)]
 pub enum GatewayEvent {
-  AgentConnected { agent_id: Uuid },
+  AgentConnected { agent_id: AgentId },
   AgentRegistered(AgentRegisterRequest), // 来自 core
   AgentHeartbeat(HeartbeatRequest),      // 来自 core
   TaskStatusUpdated(TaskInstanceUpdate),   // 来自 core
-  AgentDisconnected { agent_id: Uuid, reason: String },
+  AgentDisconnected { agent_id: AgentId, reason: String },
 }
 
 // Agent 连接信息（扩展版本）
 pub struct AgentConnection {
-  pub agent_id: Uuid,
+  pub agent_id: AgentId,
   pub websocket: Arc<Mutex<WebSocketStream<tokio::net::TcpStream>>>,
   pub last_heartbeat: Instant,
   pub capabilities: AgentCapabilities, // 来自 core
@@ -675,12 +675,12 @@ impl AgentConnection {
 // 连接事件
 #[derive(Debug, Clone)]
 pub enum ConnectionEvent {
-  AgentConnected { agent_id: Uuid, capabilities: AgentCapabilities },
-  AgentDisconnected { agent_id: Uuid, reason: String },
-  AgentHeartbeat { agent_id: Uuid, metrics: AgentMetrics },
-  MessageReceived { agent_id: Uuid, message: WebSocketMessage },
-  MessageSent { agent_id: Uuid, message_id: String },
-  ConnectionError { agent_id: Uuid, error: WebSocketError },
+  AgentConnected { agent_id: AgentId, capabilities: AgentCapabilities },
+  AgentDisconnected { agent_id: AgentId, reason: String },
+  AgentHeartbeat { agent_id: AgentId, metrics: AgentMetrics },
+  MessageReceived { agent_id: AgentId, message: WebSocketMessage },
+  MessageSent { agent_id: AgentId, message_id: String },
+  ConnectionError { agent_id: AgentId, error: WebSocketError },
 }
 ```
 
@@ -737,7 +737,7 @@ pub enum GatewayError {
   Database(#[from]fusion_core::DataError),
 
   #[error("Connection not found: {agent_id}")]
-  ConnectionNotFound { agent_id: Uuid },
+  ConnectionNotFound { agent_id: AgentId },
 
   #[error("Authentication failed: {reason}")]
   AuthenticationFailed { reason: String },

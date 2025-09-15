@@ -1,4 +1,5 @@
 use fusion_common::time::OffsetDateTime;
+use modelsql::filter::OpValsString;
 use modelsql_core::{
   field::FieldMask,
   filter::{OpValsDateTime, OpValsInt32, OpValsUuid, Page},
@@ -6,7 +7,7 @@ use modelsql_core::{
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::types::TaskInstanceStatus;
+use crate::types::{AgentId, ServerId, TaskInstanceStatus};
 
 /// SchedTaskInstance 数据模型
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -19,7 +20,7 @@ pub struct SchedTaskInstance {
   pub id: Uuid,
   pub task_id: Uuid,
   pub job_id: Uuid,
-  pub agent_id: Uuid,
+  pub agent_id: AgentId,
   pub status: TaskInstanceStatus,
   pub started_at: OffsetDateTime,
   pub completed_at: Option<OffsetDateTime>,
@@ -38,8 +39,7 @@ pub struct SchedTaskInstance {
 pub struct TaskInstanceForCreate {
   pub id: Option<Uuid>,
   pub task_id: Uuid,
-  pub server_id: Option<Uuid>,
-  pub agent_id: Option<Uuid>,
+  pub agent_id: Option<AgentId>,
   pub status: TaskInstanceStatus,
 }
 
@@ -47,8 +47,7 @@ pub struct TaskInstanceForCreate {
 #[derive(Debug, Clone, Default, Deserialize)]
 #[cfg_attr(feature = "with-db", derive(modelsql::Fields))]
 pub struct TaskInstanceForUpdate {
-  pub server_id: Option<Uuid>,
-  pub agent_id: Option<Uuid>,
+  pub agent_id: Option<AgentId>,
   pub status: Option<TaskInstanceStatus>,
   pub started_at: Option<OffsetDateTime>,
   pub completed_at: Option<OffsetDateTime>,
@@ -72,8 +71,7 @@ pub struct TaskInstanceForQuery {
 pub struct TaskInstanceFilter {
   pub id: Option<OpValsUuid>,
   pub task_id: Option<OpValsUuid>,
-  pub server_id: Option<OpValsUuid>,
-  pub agent_id: Option<OpValsUuid>,
+  pub agent_id: Option<OpValsString>,
   pub status: Option<OpValsInt32>,
   pub started_at: Option<OpValsDateTime>,
   pub completed_at: Option<OpValsDateTime>,
@@ -86,7 +84,7 @@ pub struct TaskInstanceFilter {
 pub struct TaskStatusInfo {
   pub task_id: Uuid,              // 任务ID
   pub status: TaskInstanceStatus, // 执行状态
-  pub agent_id: Uuid,             // Agent ID
+  pub agent_id: AgentId,          // Agent ID
   pub start_time: Option<i64>,    // 开始时间
   pub progress: Option<f64>,      // 执行进度 (0.0-1.0)
 }

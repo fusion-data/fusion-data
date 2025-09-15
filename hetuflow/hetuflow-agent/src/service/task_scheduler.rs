@@ -8,7 +8,7 @@ use log::{debug, error, info, warn};
 use mea::shutdown::ShutdownRecv;
 use tokio::sync::broadcast;
 use tokio::task::JoinHandle;
-use tokio::time::{Instant, interval};
+use tokio::time::interval;
 
 use hetuflow_core::protocol::{AcquireTaskRequest, ScheduledTask, WebSocketEvent};
 use hetuflow_core::types::{EventKind, HetuflowCommand};
@@ -153,10 +153,10 @@ impl PollTaskRunner {
 
         // 发送轮询请求
         let poll_request = AcquireTaskRequest {
-          agent_id: self.setting.agent_id,
+          agent_id: self.setting.agent_id.clone(),
           max_tasks: self.setting.process.max_concurrent_processes,
           acquire_count,
-          tags: self.setting.tags.clone(),
+          labels: self.setting.labels.clone(),
         };
 
         if let Err(e) =

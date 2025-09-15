@@ -62,9 +62,9 @@ impl ServerBmc {
     let db = mm.dbx().db_postgres()?;
     let ctx = mm.ctx_ref()?;
     let query = sqlx::query(sql)
-      .bind(server.id)
-      .bind(server.name.clone())
-      .bind(server.address)
+      .bind(&server.id)
+      .bind(&server.name)
+      .bind(&server.address)
       .bind(server.status as i32)
       .bind(ctx.uid())
       .bind(UtcDateTime::from(*ctx.req_time()));
@@ -82,7 +82,7 @@ impl ServerBmc {
   /// 更新服务器的 namespace_id 绑定
   pub async fn update_server_namespace_bind(
     mm: &ModelManager,
-    server_id: Uuid,
+    server_id: &str,
     bind_namespaces: Vec<Uuid>,
   ) -> Result<(), SqlError> {
     let entity_u = ServerForUpdate { bind_namespaces: Some(bind_namespaces), ..Default::default() };

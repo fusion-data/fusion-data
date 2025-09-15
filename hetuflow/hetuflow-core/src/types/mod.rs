@@ -1,5 +1,8 @@
 #[cfg(feature = "with-cli")]
 mod cli;
+mod label;
+
+pub use label::*;
 
 use std::sync::Arc;
 
@@ -118,6 +121,8 @@ pub enum TaskInstanceStatus {
   Succeeded = 100,
 }
 
+pub type ServerId = String;
+
 #[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy, PartialEq)]
 #[cfg_attr(feature = "with-db", derive(sqlx::Type))]
 #[repr(i32)]
@@ -127,6 +132,8 @@ pub enum ServerStatus {
   /// 从节点
   Active = 100,
 }
+
+pub type AgentId = String;
 
 /// Agent 状态
 #[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy, PartialEq, Eq)]
@@ -154,6 +161,7 @@ pub enum CommandKind {
   AgentRegistered = 5, // Agent 注册成功
   DispatchTask = 6,    // 分发任务
   CancelTask = 7,      // 取消任务
+  LogForward = 8,      // 日志转发
 }
 
 #[derive(Clone)]
@@ -200,6 +208,8 @@ pub enum EventKind {
 
   /// Agent 事件 AgentEvent
   TaskChangedEvent = 6,
+  /// 任务日志事件
+  TaskLog = 7,
 }
 
 #[cfg(feature = "with-db")]

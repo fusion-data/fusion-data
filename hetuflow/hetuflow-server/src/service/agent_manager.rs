@@ -2,39 +2,43 @@ use std::sync::Arc;
 
 use fusion_common::{
   ahash::{HashMap, HashSet},
-  time::{now_epoch_millis, now_offset},
+  time::now_offset,
 };
 use fusion_core::DataError;
-use hetuflow_core::{
-  models::*,
-  protocol::{
-    AcquireTaskRequest, AcquireTaskResponse, AgentRegisterResponse, ScheduledTask, TaskInstanceUpdated,
-    WebSocketCommand,
-  },
-  types::{AgentStatus, CommandKind, TaskInstanceStatus, TaskStatus},
-};
 use log::{debug, error, info, warn};
 use modelsql::{
   ModelManager,
-  filter::{OpValsInt32, OpValsUuid},
+  filter::{OpValsInt32, OpValsString, OpValsUuid},
 };
 use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
 use uuid::Uuid;
 
-use crate::{gateway::ConnectionManager, model::AgentEvent};
-use crate::{infra::bmc::*, service::AgentSvc};
+use hetuflow_core::{
+  models::*,
+  protocol::{AcquireTaskRequest, AcquireTaskResponse, ScheduledTask, TaskInstanceUpdated, WebSocketCommand},
+  types::{AgentId, AgentStatus, CommandKind, TaskInstanceStatus, TaskStatus},
+};
+
+use crate::{
+  gateway::ConnectionManager, infra::bmc::*, model::AgentEvent, service::AgentSvc, setting::HetuflowServerSetting,
+};
 
 /// Agent 管理器 - 负责调度策略、可靠性统计和任务分发
 pub struct AgentManager {
   mm: ModelManager,
   connection_manager: Arc<ConnectionManager>,
+  setting: Arc<HetuflowServerSetting>,
 }
 
 impl AgentManager {
   /// 创建新的 Agent 管理器
-  pub fn new(mm: ModelManager, connection_manager: Arc<ConnectionManager>) -> Self {
-    Self { mm, connection_manager }
+  pub fn new(
+    mm: ModelManager,
+    connection_manager: Arc<ConnectionManager>,
+    setting: Arc<HetuflowServerSetting>,
+  ) -> Self {
+    Self { mm, connection_manager, setting }
   }
 
   /// 运行 Agent 管理器（订阅事件流）
@@ -47,6 +51,7 @@ impl AgentManager {
     let run_loop = AgentEventRunLoop {
       mm: self.mm.clone(),
       connection_manager: self.connection_manager.clone(),
+      setting: self.setting.clone(),
       event_rx: event_receiver,
     };
     let join_handle = tokio::spawn(run_loop.run_loop());
@@ -128,28 +133,19 @@ impl AgentManager {
   }
 
   /// 获取在线 Agent 列表（通过 AgentRegistry）
-  pub async fn get_agents(&self, server_ids: &[Uuid]) -> Result<Vec<SchedAgent>, DataError> {
+  pub async fn get_agents(&self) -> Result<Vec<SchedAgent>, DataError> {
     let online_agents = self.connection_manager.get_online_agents()?;
     if online_agents.is_empty() {
       return Ok(vec![]);
     }
 
-    let online_agent_ids: Vec<Uuid> = online_agents.into_iter().map(|agent| agent.agent_id).collect();
-
     let agent_svc = AgentSvc::new(self.mm.clone());
-
-    let filter = AgentFilter {
-      id: Some(OpValsUuid::in_(online_agent_ids)),
-      server_id: if server_ids.is_empty() { None } else { Some(OpValsUuid::in_(server_ids.to_vec())) },
-      status: Some(OpValsInt32::eq(AgentStatus::Online as i32)),
-      ..Default::default()
-    };
-    let agents = agent_svc.find_many(filter, None).await?;
+    let agents = agent_svc.find_online_agents().await?;
     Ok(agents)
   }
 
   /// 获取 Agent 详细信息（包含可靠性统计）
-  pub async fn get_agent_details(&self, agent_id: &Uuid) -> Result<Option<serde_json::Value>, DataError> {
+  pub async fn get_agent_details(&self, agent_id: &AgentId) -> Result<Option<serde_json::Value>, DataError> {
     // 通过 AgentRegistry 获取基础信息
     if let Some(agent) = self.connection_manager.get_agent(agent_id)? {
       // 获取可靠性统计
@@ -164,7 +160,7 @@ impl AgentManager {
   pub async fn select_best_agent(
     &self,
     _task_requirements: Option<serde_json::Value>,
-  ) -> Result<Option<Uuid>, DataError> {
+  ) -> Result<Option<AgentId>, DataError> {
     let online_agents = self.connection_manager.get_online_agents()?;
 
     if online_agents.is_empty() {
@@ -180,13 +176,13 @@ impl AgentManager {
       })
       .cloned();
 
-    Ok(best_agent.map(|agent| agent.agent_id))
+    Ok(best_agent.map(|agent| agent.agent_id.clone()))
   }
 
   /// 更新任务执行统计
   pub async fn update_task_stats(
     &self,
-    agent_id: &Uuid,
+    agent_id: &AgentId,
     success: bool,
     response_time_ms: f64,
   ) -> Result<(), DataError> {
@@ -243,13 +239,20 @@ impl AgentManager {
 struct AgentEventRunLoop {
   mm: ModelManager,
   connection_manager: Arc<ConnectionManager>,
+  setting: Arc<HetuflowServerSetting>,
   event_rx: mpsc::UnboundedReceiver<AgentEvent>,
 }
 
 impl AgentEventRunLoop {
   /// 处理 Agent 事件
   async fn run_loop(mut self) {
-    let agent_svc = AgentSvc::new(self.mm.clone());
+    let agent_svc = match AgentSvc::new_with_setting(self.mm.clone(), &self.setting) {
+      Ok(svc) => svc,
+      Err(e) => {
+        error!("Failed to create AgentSvc with JWE config: {:?}", e);
+        return;
+      }
+    };
     while let Some(event) = self.event_rx.recv().await {
       match event {
         AgentEvent::Heartbeat { agent_id, .. } => {
@@ -258,12 +261,12 @@ impl AgentEventRunLoop {
           }
         }
         AgentEvent::TaskInstanceChanged { agent_id, payload } => {
-          if let Err(e) = self.process_task_instance_changed(agent_id, payload).await {
+          if let Err(e) = self.process_task_instance_changed(&agent_id, payload).await {
             error!("Failed to process task instance changed agent {}: {:?}", agent_id, e);
           }
         }
         AgentEvent::TaskPollRequest { agent_id, request } => {
-          if let Err(e) = self.process_task_poll(agent_id, request).await {
+          if let Err(e) = self.process_task_poll(&agent_id, request).await {
             error!("Failed to process task poll request agent {}: {:?}", agent_id, e);
           }
         }
@@ -293,7 +296,7 @@ impl AgentEventRunLoop {
   }
 
   /// Agent poll task 时不对 Server 绑定的 Namespace 进行过滤，直接拉取符合要求的最紧急的 SchedTaskInstance。按 request 条件进行过滤
-  async fn process_task_poll(&self, agent_id: Uuid, request: Arc<AcquireTaskRequest>) -> Result<(), DataError> {
+  async fn process_task_poll(&self, agent_id: &AgentId, request: Arc<AcquireTaskRequest>) -> Result<(), DataError> {
     info!("Agent {} task poll request: {:?}", agent_id, request);
     let task_instances = TaskInstanceBmc::find_many_by_poll(&self.mm, &request).await?;
     let task_map = TaskBmc::find_many(
@@ -326,14 +329,14 @@ impl AgentEventRunLoop {
     // 向 Agent 发送 TaskPollResponse
     let parameters = serde_json::to_value(AcquireTaskResponse { tasks, has_more: false, next_poll_interval: 0 })?;
     let command = WebSocketCommand::new(CommandKind::DispatchTask, parameters);
-    self.connection_manager.send_to_agent(&agent_id, command)?;
+    self.connection_manager.send_to_agent(agent_id, command)?;
 
     Ok(())
   }
 
   async fn process_task_instance_changed(
     &self,
-    agent_id: Uuid,
+    agent_id: &AgentId,
     payload: Arc<TaskInstanceUpdated>,
   ) -> Result<(), DataError> {
     info!("Processing task instance changed for agent {}, instance {}", agent_id, payload.instance_id);
@@ -341,7 +344,10 @@ impl AgentEventRunLoop {
     // 1. 更新任务实例状态
     let instance_update = TaskInstanceForUpdate {
       status: Some(payload.status),
-      completed_at: if matches!(payload.status, TaskInstanceStatus::Succeeded | TaskInstanceStatus::Failed | TaskInstanceStatus::Cancelled) {
+      completed_at: if matches!(
+        payload.status,
+        TaskInstanceStatus::Succeeded | TaskInstanceStatus::Failed | TaskInstanceStatus::Cancelled
+      ) {
         Some(now_offset())
       } else {
         None
@@ -362,7 +368,7 @@ impl AgentEventRunLoop {
       let current_task = TaskBmc::find_by_id(&self.mm, &task_instance.task_id).await?;
 
       let new_retry_count = current_task.retry_count + 1;
-      let max_retries = current_task.config.as_ref().map(|c| c.max_retries as i32).unwrap_or(3);
+      let max_retries = current_task.config.max_retries as i32;
       let new_status = if new_retry_count >= max_retries {
         TaskStatus::Failed // 达到最大重试次数，标记为最终失败
       } else {
@@ -370,21 +376,15 @@ impl AgentEventRunLoop {
       };
 
       // 更新任务状态和重试计数
-      let task_update = TaskForUpdate {
-        status: Some(new_status),
-        retry_count: Some(new_retry_count),
-        ..Default::default()
-      };
+      let task_update =
+        TaskForUpdate { status: Some(new_status), retry_count: Some(new_retry_count), ..Default::default() };
 
       TaskBmc::update_by_id(&self.mm, task_instance.task_id, task_update).await?;
 
       info!("Updated task {} retry count to {}, status: {:?}", task_instance.task_id, new_retry_count, new_status);
     } else if payload.status == TaskInstanceStatus::Succeeded {
       // 任务成功完成，更新任务状态
-      let task_update = TaskForUpdate {
-        status: Some(TaskStatus::Succeeded),
-        ..Default::default()
-      };
+      let task_update = TaskForUpdate { status: Some(TaskStatus::Succeeded), ..Default::default() };
 
       TaskBmc::update_by_id(&self.mm, task_instance.task_id, task_update).await?;
       info!("Task {} completed successfully", task_instance.task_id);
@@ -392,11 +392,13 @@ impl AgentEventRunLoop {
 
     // 4. 更新 Agent 统计信息
     let success = payload.status == TaskInstanceStatus::Succeeded;
-    let response_time_ms = payload.metrics.as_ref()
+    let response_time_ms = payload
+      .metrics
+      .as_ref()
       .and_then(|m| m.end_time.map(|end| (end - m.start_time) as f64))
       .unwrap_or(0.0);
-    
-    if let Some(agent) = self.connection_manager.get_agent(&agent_id)? {
+
+    if let Some(agent) = self.connection_manager.get_agent(agent_id)? {
       agent.update_stats(success, response_time_ms);
     }
 

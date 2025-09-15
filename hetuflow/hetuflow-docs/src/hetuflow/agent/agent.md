@@ -380,7 +380,7 @@ sequenceDiagram
   ConnectionManager->>Server: 发起 WebSocket 连接
   Server-->>ConnectionManager: 连接成功, 返回握手信息
 
-  ConnectionManager->>Server: 发送 Agent 注册信息 (ID, tags, metadata)
+  ConnectionManager->>Server: 发送 Agent 注册信息 (ID, labels, metadata)
   Server-->>ConnectionManager: 注册成功
 
   note over ConnectionManager, Server: Agent 请求全量任务进行状态恢复

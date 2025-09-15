@@ -3,13 +3,15 @@ use std::{path::PathBuf, time::Duration};
 use duration_str::deserialize_duration;
 use fusion_common::env::get_env;
 use fusion_core::{DataError, configuration::FusionConfigRegistry};
-use hetuflow_core::utils::config::write_app_config;
+use hetuflow_core::{types::ServerId, utils::config::write_app_config};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
+use crate::service::JweConfig;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServerConfig {
-  pub server_id: Uuid,
+  pub server_id: ServerId,
   pub server_name: String,
   pub allow_leader_election: bool,
 
@@ -43,6 +45,53 @@ pub struct HetuflowServerSetting {
   #[serde(deserialize_with = "deserialize_duration")]
   pub history_ttl: Duration,
   pub server: ServerConfig,
+  /// JWE Token 认证配置
+  pub jwe: Option<JweConfig>,
+  /// 任务日志配置
+  pub task_log: TaskLogConfig,
+}
+
+/// 任务日志配置
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TaskLogConfig {
+  /// 启用任务日志收集
+  pub enabled: bool,
+
+  /// 日志存储根目录
+  pub log_dir: String,
+
+  /// 日志文件最大大小（字节）
+  pub max_file_size: u64,
+
+  /// 日志文件保留天数
+  pub retention_days: u32,
+
+  /// 启用日志压缩
+  pub enable_compression: bool,
+
+  /// 日志轮转检查间隔（秒）
+  #[serde(deserialize_with = "deserialize_duration")]
+  pub rotation_check_interval: Duration,
+
+  /// WebSocket 日志推送配置
+  pub websocket: WebSocketLogConfig,
+}
+
+/// WebSocket 日志推送配置
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WebSocketLogConfig {
+  /// 启用实时日志推送
+  pub enabled: bool,
+
+  /// 推送缓冲区大小（条数）
+  pub buffer_size: usize,
+
+  /// 推送间隔（毫秒）
+  #[serde(deserialize_with = "deserialize_duration")]
+  pub push_interval: Duration,
+
+  /// 最大订阅者数量
+  pub max_subscribers: usize,
 }
 
 const KEY_PATH_SERVER_ID: &str = "hetuflow.server.server_id";
