@@ -4,6 +4,8 @@
 //! 采用 ECDH-ES 密钥协商 + A256GCM 内容加密算法
 
 use chrono::Utc;
+use fusion_core::DataError;
+use hetuflow_core::types::{AgentId, ServerId};
 use josekit::{
   jwe::{JweContext, JweHeader},
   jwk::{
@@ -70,8 +72,7 @@ pub struct JweTokenPayload {
   pub jti: String, // JWT ID
 
   /// 自定义 Claims
-  pub agent_id: Uuid, // Agent ID (双重验证)
-  pub server_id: Uuid,          // Server ID
+  pub server_id: ServerId, // Server ID
   pub permissions: Vec<String>, // 权限列表
 }
 
@@ -91,7 +92,7 @@ pub enum JweServiceError {
   TokenValidationFailed(String),
 
   #[error("Agent ID 不匹配: expected {expected}, got {actual}")]
-  AgentIdMismatch { expected: Uuid, actual: Uuid },
+  AgentIdMismatch { expected: String, actual: String },
 
   #[error("Token 已过期")]
   TokenExpired,
@@ -101,6 +102,22 @@ pub enum JweServiceError {
 
   #[error("JSON 序列化/反序列化错误: {0}")]
   JsonError(#[from] serde_json::Error),
+}
+impl From<JweServiceError> for DataError {
+  fn from(error: JweServiceError) -> Self {
+    match error {
+      JweServiceError::InvalidKeyFormat(msg) => DataError::bad_request(msg),
+      JweServiceError::TokenGenerationFailed(msg) => DataError::server_error(msg),
+      JweServiceError::TokenDecryptionFailed(msg) => DataError::bad_request(msg),
+      JweServiceError::TokenValidationFailed(msg) => DataError::bad_request(msg),
+      JweServiceError::AgentIdMismatch { expected, actual } => {
+        DataError::bad_request(format!("Agent ID mismatch: expected {}, got {}", expected, actual))
+      }
+      JweServiceError::TokenExpired => DataError::unauthorized("Token has expired"),
+      JweServiceError::TokenNotYetValid => DataError::unauthorized("Token is not yet valid"),
+      JweServiceError::JsonError(e) => DataError::bad_request(e.to_string()),
+    }
+  }
 }
 
 /// JWE Token 认证服务
@@ -128,8 +145,8 @@ impl JweService {
   /// 生成 JWE Token
   pub fn generate_token(
     &self,
-    agent_id: Uuid,
-    server_id: Uuid,
+    agent_id: &AgentId,
+    server_id: &ServerId,
     permissions: Vec<String>,
   ) -> Result<String, JweServiceError> {
     let now = Utc::now();
@@ -145,8 +162,7 @@ impl JweService {
       nbf: now.timestamp(),
       iat: now.timestamp(),
       jti,
-      agent_id,
-      server_id,
+      server_id: server_id.to_string(),
       permissions,
     };
 
@@ -172,7 +188,7 @@ impl JweService {
   }
 
   /// 验证并解密 JWE Token
-  pub fn verify_token(&self, token: &str, expected_agent_id: Uuid) -> Result<JweTokenPayload, JweServiceError> {
+  pub fn verify_token(&self, token: &str, expected_agent_id: AgentId) -> Result<JweTokenPayload, JweServiceError> {
     // 解密 JWE Token
     let context = JweContext::new();
     let decrypter = josekit::jwe::ECDH_ES
@@ -194,15 +210,8 @@ impl JweService {
       return Err(JweServiceError::TokenNotYetValid);
     }
 
-    // 双重验证 Agent ID
-    if payload.agent_id != expected_agent_id {
-      return Err(JweServiceError::AgentIdMismatch { expected: expected_agent_id, actual: payload.agent_id });
-    }
-
     // 验证 sub 字段与 agent_id 一致性
-    let sub_uuid = Uuid::parse_str(&payload.sub)
-      .map_err(|e| JweServiceError::TokenValidationFailed(format!("sub 字段格式错误: {}", e)))?;
-    if sub_uuid != payload.agent_id {
+    if payload.sub != expected_agent_id {
       return Err(JweServiceError::TokenValidationFailed("sub 字段与 agent_id 不一致".to_string()));
     }
 
@@ -242,20 +251,19 @@ mod tests {
     };
 
     let service = JweService::new(config).unwrap();
-    let agent_id = Uuid::new_v4();
-    let server_id = Uuid::new_v4();
+    let agent_id = Uuid::new_v4().to_string();
+    let server_id = Uuid::new_v4().to_string();
     let permissions = vec!["read".to_string(), "write".to_string()];
 
     // 生成 Token
-    let token = service.generate_token(agent_id, server_id, permissions.clone()).unwrap();
+    let token = service.generate_token(&agent_id, &server_id, permissions.clone()).unwrap();
     assert!(!token.is_empty());
 
     // 验证 Token
-    let payload = service.verify_token(&token, agent_id).unwrap();
-    assert_eq!(payload.agent_id, agent_id);
+    let payload = service.verify_token(&token, agent_id.clone()).unwrap();
+    assert_eq!(payload.sub, agent_id);
     assert_eq!(payload.server_id, server_id);
     assert_eq!(payload.permissions, permissions);
-    assert_eq!(payload.sub, agent_id.to_string());
   }
 
   #[tokio::test]
@@ -271,13 +279,13 @@ mod tests {
     };
 
     let service = JweService::new(config).unwrap();
-    let agent_id = Uuid::new_v4();
-    let different_agent_id = Uuid::new_v4();
-    let server_id = Uuid::new_v4();
+    let agent_id = Uuid::new_v4().to_string();
+    let different_agent_id = Uuid::new_v4().to_string();
+    let server_id = Uuid::new_v4().to_string();
     let permissions = vec!["read".to_string()];
 
     // 生成 Token
-    let token = service.generate_token(agent_id, server_id, permissions).unwrap();
+    let token = service.generate_token(&agent_id, &server_id, permissions).unwrap();
 
     // 使用不同的 agent_id 验证应该失败
     let result = service.verify_token(&token, different_agent_id);
@@ -297,12 +305,12 @@ mod tests {
     };
 
     let service = JweService::new(config).unwrap();
-    let agent_id = Uuid::new_v4();
-    let server_id = Uuid::new_v4();
+    let agent_id = Uuid::new_v4().to_string();
+    let server_id = Uuid::new_v4().to_string();
     let permissions = vec!["read".to_string()];
 
     // 生成 Token
-    let token = service.generate_token(agent_id, server_id, permissions).unwrap();
+    let token = service.generate_token(&agent_id, &server_id, permissions).unwrap();
 
     // 等待 Token 过期
     tokio::time::sleep(tokio::time::Duration::from_secs(2)).await;
@@ -325,11 +333,11 @@ mod tests {
     };
 
     let service = JweService::new(config).unwrap();
-    let agent_id = Uuid::new_v4();
+    let agent_id = Uuid::new_v4().to_string();
 
     // 测试无效的 Token 格式
     let invalid_token = "invalid.token.format";
-    let result = service.verify_token(invalid_token, agent_id);
+    let result = service.verify_token(invalid_token, agent_id.clone());
     assert!(matches!(result, Err(JweServiceError::TokenDecryptionFailed(_))));
   }
 
@@ -366,12 +374,12 @@ mod tests {
     };
 
     let service = JweService::new(config).unwrap();
-    let agent_id = Uuid::new_v4();
-    let server_id = Uuid::new_v4();
+    let agent_id = Uuid::new_v4().to_string();
+    let server_id = Uuid::new_v4().to_string();
     let permissions = vec!["read".to_string(), "write".to_string(), "execute".to_string(), "admin".to_string()];
 
     // 生成 Token
-    let token = service.generate_token(agent_id, server_id, permissions.clone()).unwrap();
+    let token = service.generate_token(&agent_id, &server_id, permissions.clone()).unwrap();
 
     // 验证 Token
     let payload = service.verify_token(&token, agent_id).unwrap();

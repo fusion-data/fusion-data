@@ -12,6 +12,7 @@ use axum::{
   routing::post,
 };
 use chrono::Utc;
+use hetuflow_core::types::AgentId;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -35,7 +36,7 @@ pub struct GenerateTokenResponse {
   /// JWE Token
   pub token: String,
   /// Agent ID
-  pub agent_id: Uuid,
+  pub agent_id: AgentId,
   /// Token 类型
   pub token_type: String,
   /// 过期时间 (Unix 时间戳)
@@ -83,16 +84,7 @@ pub async fn generate_token(
   }
 
   // 解析 agent_id
-  let agent_id = Uuid::parse_str(&request.agent_id).map_err(|e| {
-    (
-      StatusCode::BAD_REQUEST,
-      Json(ErrorResponse {
-        code: "INVALID_AGENT_ID".to_string(),
-        message: "Agent ID 格式错误".to_string(),
-        details: Some(e.to_string()),
-      }),
-    )
-  })?;
+  let agent_id = &request.agent_id;
 
   // 获取 JWE 配置
   let jwe_config = app.setting().jwe.as_ref().ok_or_else(|| {
@@ -120,7 +112,7 @@ pub async fn generate_token(
 
   // 生成 Token
   let permissions = request.permissions.unwrap_or_default();
-  let server_id = app.setting().server.server_id;
+  let server_id = &app.setting().server.server_id;
 
   let token = jwe_service.generate_token(agent_id, server_id, permissions).map_err(|e| match e {
     JweServiceError::TokenGenerationFailed(msg) => (
@@ -154,7 +146,13 @@ pub async fn generate_token(
   let expires_at = now.timestamp() + jwe_config.token_ttl as i64;
   let issued_at = now.to_rfc3339();
 
-  Ok(Json(GenerateTokenResponse { token, agent_id, token_type: "JWE".to_string(), expires_at, issued_at }))
+  Ok(Json(GenerateTokenResponse {
+    token,
+    agent_id: agent_id.clone(),
+    token_type: "JWE".to_string(),
+    expires_at,
+    issued_at,
+  }))
 }
 
 /// 认证相关路由

@@ -11,10 +11,9 @@ use modelsql::ModelManager;
 use modelsql::filter::{OpValsDateTime, OpValsInt32};
 use tokio::sync::broadcast;
 use tokio::time::interval;
-use uuid::Uuid;
 
 use hetuflow_core::models::{AgentFilter, AgentForUpdate, ServerFilter, ServerForRegister, ServerForUpdate};
-use hetuflow_core::types::{AgentStatus, ServerStatus};
+use hetuflow_core::types::{AgentStatus, ServerId, ServerStatus};
 
 use crate::infra::bmc::{AgentBmc, ServerBmc};
 use crate::service::TaskGenerationSvc;
@@ -58,7 +57,7 @@ impl SchedulerSvc {
   /// 启动心跳任务
   async fn start_heartbeat_task(&self) {
     let mm = self.mm.clone();
-    let server_id = self.server_config.server_id;
+    let server_id = self.server_config.server_id.clone();
     let mut shutdown_rx = self.shutdown_tx.subscribe();
 
     tokio::spawn(async move {
@@ -68,7 +67,7 @@ impl SchedulerSvc {
         tokio::select! {
           _ = interval.tick() => {
             // 更新服务器心跳时间
-            if let Err(e) = Self::update_server_heartbeat(&mm, server_id).await {
+            if let Err(e) = Self::update_server_heartbeat(&mm, &server_id).await {
               error!("Failed to update server heartbeat: {}", e);
             }
           }
@@ -82,13 +81,10 @@ impl SchedulerSvc {
   }
 
   /// 更新服务器心跳时间
-  async fn update_server_heartbeat(mm: &ModelManager, server_id: Uuid) -> Result<(), DataError> {
-    let server_update = ServerForUpdate {
-      status: Some(ServerStatus::Active),
-      ..Default::default()
-    };
-    
-    ServerBmc::update_by_id(mm, server_id, server_update).await?;
+  async fn update_server_heartbeat(mm: &ModelManager, server_id: &ServerId) -> Result<(), DataError> {
+    let server_update = ServerForUpdate { status: Some(ServerStatus::Active), ..Default::default() };
+
+    ServerBmc::update_by_id(mm, server_id.as_str(), server_update).await?;
     Ok(())
   }
 
@@ -127,54 +123,48 @@ impl SchedulerSvc {
   /// 检查Agent心跳超时
   async fn check_agent_timeouts(mm: &ModelManager, timeout: Duration) -> Result<(), DataError> {
     let timeout_threshold = now_offset() - timeout;
-    
+
     // 查找心跳超时的在线Agent
     let filter = AgentFilter {
       status: Some(OpValsInt32::eq(AgentStatus::Online as i32)),
       last_heartbeat: Some(OpValsDateTime::lt(timeout_threshold)),
       ..Default::default()
     };
-    
+
     let timeout_agents = AgentBmc::find_many(mm, vec![filter], None).await?;
-    
+
     for agent in timeout_agents {
       info!("Agent {} heartbeat timeout, marking as offline", agent.id);
-      
-      let update = AgentForUpdate {
-        status: Some(AgentStatus::Offline),
-        ..Default::default()
-      };
-      
+
+      let update = AgentForUpdate { status: Some(AgentStatus::Offline), ..Default::default() };
+
       AgentBmc::update_by_id(mm, agent.id, update).await?;
     }
-    
+
     Ok(())
   }
 
   /// 检查Server心跳超时
   async fn check_server_timeouts(mm: &ModelManager, timeout: Duration) -> Result<(), DataError> {
     let timeout_threshold = now_offset() - timeout;
-    
+
     // 查找心跳超时的活跃Server
     let filter = ServerFilter {
       status: Some(OpValsInt32::eq(ServerStatus::Active as i32)),
       updated_at: Some(OpValsDateTime::lt(timeout_threshold)),
       ..Default::default()
     };
-    
+
     let timeout_servers = ServerBmc::find_many(mm, vec![filter], None).await?;
-    
+
     for server in timeout_servers {
       info!("Server {} heartbeat timeout, marking as inactive", server.id);
-      
-      let update = ServerForUpdate {
-        status: Some(ServerStatus::Inactive),
-        ..Default::default()
-      };
-      
+
+      let update = ServerForUpdate { status: Some(ServerStatus::Inactive), ..Default::default() };
+
       ServerBmc::update_by_id(mm, server.id, update).await?;
     }
-    
+
     Ok(())
   }
 
@@ -185,7 +175,7 @@ impl SchedulerSvc {
     let web_config: WebConfig = Application::global().get_config()?;
 
     let server = ServerForRegister {
-      id: self.server_config.server_id,
+      id: self.server_config.server_id.clone(),
       name: self.server_config.server_name.clone(),
       address: web_config.server_addr().to_string(),
       status: ServerStatus::Active,
@@ -211,7 +201,7 @@ impl SchedulerSvc {
                 if let Err(e) = task_generation_svc.generate_tasks_for_schedule(from_time, to_time).await {
                     error!("Task generation failed: {}", e);
                 }
-                
+
                 // 生成重试任务
                 if let Err(e) = task_generation_svc.generate_retry_tasks().await {
                     error!("Retry task generation failed: {}", e);

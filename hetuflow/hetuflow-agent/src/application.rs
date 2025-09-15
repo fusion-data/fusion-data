@@ -3,11 +3,11 @@ use std::sync::Arc;
 use fusion_core::DataError;
 use fusion_core::application::Application;
 use fusion_core::timer::{Timer, TimerPlugin};
+use hetuflow_core::types::AgentId;
 use log::info;
 use mea::mutex::Mutex;
 use mea::shutdown::{ShutdownRecv, ShutdownSend};
 use tokio::task::JoinHandle;
-use uuid::Uuid;
 
 use crate::service::{ConnectionManager, ProcessManager, TaskExecutor, TaskScheduler};
 use crate::setting::HetuflowAgentSetting;
@@ -15,7 +15,7 @@ use crate::setting::HetuflowAgentSetting;
 /// Agent 应用程序
 #[derive(Clone)]
 pub struct AgentApplication {
-  setting: Arc<HetuflowAgentSetting>,
+  pub setting: Arc<HetuflowAgentSetting>,
   connection_manager: Arc<ConnectionManager>,
   task_scheduler: Arc<TaskScheduler>,
   process_manager: Arc<ProcessManager>,
@@ -26,9 +26,20 @@ pub struct AgentApplication {
 
 impl AgentApplication {
   pub async fn new() -> Result<Self, DataError> {
-    let application = Application::builder()
-      .add_plugin(TimerPlugin)
-      .run().await?;
+    Self::new_with_source::<config::Environment>(None).await
+  }
+
+  pub async fn new_with_source<S>(config_source: Option<S>) -> Result<Self, DataError>
+  where
+    S: config::Source + Send + Sync + 'static,
+  {
+    let application = Application::builder().add_plugin(TimerPlugin).run().await?;
+    if let Some(config_source) = config_source {
+      let config_registry = application.config_registry();
+      config_registry.add_config_source(config_source)?;
+      config_registry.reload()?;
+    }
+
     let setting: Arc<HetuflowAgentSetting> = Arc::new(HetuflowAgentSetting::load(application.config_registry())?);
     info!("Creating AgentApplication with agent_id: {}", setting.agent_id);
 
@@ -62,8 +73,8 @@ impl AgentApplication {
   }
 
   /// 获取 Agent ID
-  pub fn get_agent_id(&self) -> Uuid {
-    self.setting.agent_id
+  pub fn get_agent_id(&self) -> &AgentId {
+    &self.setting.agent_id
   }
 
   /// 启动应用程序

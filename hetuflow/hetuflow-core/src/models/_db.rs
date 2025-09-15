@@ -5,6 +5,8 @@ use sqlx::postgres::{PgArgumentBuffer, PgHasArrayType, PgTypeInfo, PgValueRef};
 use sqlx::types::Json;
 use sqlx::{Decode, Encode, Postgres, Type};
 
+use crate::types::Labels;
+
 use super::*;
 
 impl From<Labels> for sea_query::Value {

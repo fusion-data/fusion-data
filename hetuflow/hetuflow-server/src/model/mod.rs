@@ -12,9 +12,8 @@ use std::sync::{
 use fusion_common::time::now_epoch_millis;
 use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc;
-use uuid::Uuid;
 
-use hetuflow_core::protocol::WebSocketCommand;
+use hetuflow_core::{protocol::WebSocketCommand, types::AgentId};
 
 use crate::gateway::GatewayError;
 
@@ -22,7 +21,7 @@ use crate::gateway::GatewayError;
 #[derive(Deserialize)]
 #[serde(tag = "type", rename_all = "lowercase")]
 pub enum GatewayCommandRequest {
-  Single { agent_id: Uuid, command: WebSocketCommand },
+  Single { agent_id: AgentId, command: WebSocketCommand },
   Broadcast { command: WebSocketCommand },
 }
 
@@ -64,7 +63,7 @@ pub struct AgentReliabilityStats {
 #[derive(Debug, Serialize)]
 pub struct AgentConnection {
   /// Agent ID
-  pub agent_id: Uuid,
+  pub agent_id: AgentId,
   /// Agent 地址
   pub address: String,
   /// 最后心跳时间（毫秒）
@@ -77,7 +76,7 @@ pub struct AgentConnection {
 }
 
 impl AgentConnection {
-  pub fn new(agent_id: Uuid, address: String, sender: mpsc::UnboundedSender<WebSocketCommand>) -> Self {
+  pub fn new(agent_id: AgentId, address: String, sender: mpsc::UnboundedSender<WebSocketCommand>) -> Self {
     Self {
       agent_id,
       address,
@@ -160,14 +159,14 @@ mod tests {
 
   #[test]
   fn test_agent_connection() {
-    let agent_id = Uuid::new_v4();
+    let agent_id = Uuid::new_v4().to_string();
     let address = "127.0.0.1:8080".to_string();
     let (sender, _) = mpsc::unbounded_channel();
-    let agent_conn = AgentConnection::new(agent_id, address.clone(), sender);
+    let agent_conn = AgentConnection::new(agent_id.clone(), address.clone(), sender);
     let json_text = serde_json::to_string_pretty(&agent_conn).unwrap();
     println!("{}", json_text);
 
-    assert_eq!(agent_conn.agent_id, agent_id);
+    assert_eq!(&agent_conn.agent_id, &agent_id);
     assert_eq!(agent_conn.address, address);
   }
 }

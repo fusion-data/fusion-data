@@ -8,7 +8,7 @@ use hetuflow_core::models::{
   SchedTask, SchedTaskInstance, TaskFilter, TaskForCreate, TaskForQuery, TaskForUpdate, TaskInstanceFilter,
   TaskInstanceForCreate, TaskInstanceForQuery, TaskInstanceForUpdate,
 };
-use hetuflow_core::types::{TaskInstanceStatus, TaskStatus};
+use hetuflow_core::types::{AgentId, TaskInstanceStatus, TaskStatus};
 use modelsql::page::PageResult;
 
 use crate::infra::bmc::{JobBmc, ScheduleBmc, TaskBmc, TaskInstanceBmc};
@@ -45,11 +45,11 @@ impl TaskSvc {
   }
 
   /// 批量分发任务
-  pub async fn dispatch_tasks(&self, task_ids: Vec<Uuid>, agent_id: &Uuid) -> Result<(), DataError> {
+  pub async fn dispatch_tasks(&self, task_ids: Vec<Uuid>, agent_id: &AgentId) -> Result<(), DataError> {
     for task_id in task_ids {
       let update = TaskForUpdate {
         status: Some(TaskStatus::Dispatched),
-        agent_id: Some(*agent_id),
+        agent_id: Some(agent_id.clone()),
         server_id: None,
         lock_version: Some(1),
         ..Default::default()

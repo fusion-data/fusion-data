@@ -11,7 +11,7 @@ use uuid::Uuid;
 
 use hetuflow_core::{
   protocol::AcquireTaskRequest,
-  types::{TaskInstanceStatus, TaskStatus},
+  types::{AgentId, ServerId, TaskInstanceStatus, TaskStatus},
 };
 
 use hetuflow_core::models::{SchedTaskInstance, TaskInstanceFilter, TaskInstanceForCreate, TaskInstanceForUpdate};
@@ -38,24 +38,12 @@ generate_pg_bmc_filter!(
 
 impl TaskInstanceBmc {
   /// 开始执行任务实例
-  pub async fn start_instance(
-    mm: &ModelManager,
-    instance_id: &Uuid,
-    server_id: &Uuid,
-    agent_id: &Uuid,
-  ) -> Result<(), SqlError> {
+  pub async fn start_instance(mm: &ModelManager, instance_id: &Uuid, agent_id: AgentId) -> Result<(), SqlError> {
     let update = TaskInstanceForUpdate {
-      server_id: Some(*server_id),
-      agent_id: Some(*agent_id),
+      agent_id: Some(agent_id),
       status: Some(TaskInstanceStatus::Running),
       started_at: Some(now_offset()),
-      update_mask: Some(FieldMask::new(vec![
-        "server_id".to_string(),
-        "agent_id".to_string(),
-        "status".to_string(),
-        "started_at".to_string(),
-        "updated_at".to_string(),
-      ])),
+      update_mask: Some(FieldMask::new(vec!["agent_id", "status", "started_at", "updated_at"])),
       ..Default::default()
     };
 
@@ -253,7 +241,7 @@ impl TaskInstanceBmc {
         .bind(TaskStatus::Dispatched)
         .bind(TaskStatus::Pending)
         .bind(TaskInstanceStatus::Dispatched)
-        .bind(request.agent_id)
+        .bind(&request.agent_id)
     } else {
       let agent_labels_json = serde_json::to_value(&*request.labels)
         .map_err(|e| SqlError::InvalidArgument { message: format!("Failed to serialize agent labels: {}", e) })?;
@@ -264,7 +252,7 @@ impl TaskInstanceBmc {
         .bind(TaskStatus::Dispatched)
         .bind(TaskStatus::Pending)
         .bind(TaskInstanceStatus::Dispatched)
-        .bind(request.agent_id)
+        .bind(&request.agent_id)
     };
 
     let task_instances = mm.dbx().db_postgres()?.fetch_all(query).await?;

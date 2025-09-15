@@ -278,17 +278,12 @@ impl TaskGenerationSvc {
       status: TaskStatus::Pending,
       parameters: original_task.parameters.clone(),
       environment: job.environment.clone(),
-      task_config: Some(job.config.clone()),
+      config: Some(job.config.clone()),
       retry_count: original_task.retry_count + 1,
       dependencies: original_task.dependencies.clone(),
     };
-    let task_instance = TaskInstanceForCreate {
-      id: Some(Uuid::now_v7()),
-      task_id,
-      server_id: None,
-      agent_id: None,
-      status: TaskInstanceStatus::Pending,
-    };
+    let task_instance =
+      TaskInstanceForCreate { id: Some(Uuid::now_v7()), task_id, agent_id: None, status: TaskInstanceStatus::Pending };
 
     TaskBmc::insert(mm, task).await.map_err(DataError::from)?;
     TaskInstanceBmc::insert(mm, task_instance).await.map_err(DataError::from)?;
@@ -316,17 +311,12 @@ impl TaskGenerationSvc {
       status: TaskStatus::Pending,
       parameters,
       environment: job.environment.clone(),
-      task_config: Some(job.config.clone()),
+      config: Some(job.config.clone()),
       retry_count: 0,
       dependencies: None,
     };
-    let task_instance = TaskInstanceForCreate {
-      id: Some(Uuid::now_v7()),
-      task_id,
-      server_id: None,
-      agent_id: None,
-      status: TaskInstanceStatus::Pending,
-    };
+    let task_instance =
+      TaskInstanceForCreate { id: Some(Uuid::now_v7()), task_id, agent_id: None, status: TaskInstanceStatus::Pending };
 
     TaskBmc::insert(mm, task).await.map_err(DataError::from)?; // 入库。等待 Agent 主动 poll 任务执行
     TaskInstanceBmc::insert(mm, task_instance).await.map_err(DataError::from)?;

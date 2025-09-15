@@ -162,7 +162,7 @@ impl WsRunner {
       metadata: self.setting.metadata.clone(),
     };
     let register_req = AgentRegisterRequest {
-      agent_id: self.setting.agent_id,
+      agent_id: self.setting.agent_id.clone(),
       capabilities,
       address,
       jwe_token: self.setting.jwe_token.clone(),

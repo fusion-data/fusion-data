@@ -3,7 +3,7 @@ use std::{path::PathBuf, time::Duration};
 use duration_str::deserialize_duration;
 use fusion_common::env::get_env;
 use fusion_core::{DataError, configuration::FusionConfigRegistry};
-use hetuflow_core::utils::config::write_app_config;
+use hetuflow_core::{types::ServerId, utils::config::write_app_config};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -11,7 +11,7 @@ use crate::service::JweConfig;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ServerConfig {
-  pub server_id: Uuid,
+  pub server_id: ServerId,
   pub server_name: String,
   pub allow_leader_election: bool,
 

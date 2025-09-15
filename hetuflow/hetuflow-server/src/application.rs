@@ -27,15 +27,15 @@ use crate::{
 /// Hetuflow 应用容器
 #[derive(Clone)]
 pub struct ServerApplication {
-  pub(crate) config: Arc<HetuflowServerSetting>,
-  pub(crate) is_leader: Arc<AtomicBool>,
+  pub setting: Arc<HetuflowServerSetting>,
+  pub is_leader: Arc<AtomicBool>,
   shutdown_tx: broadcast::Sender<()>,
-  pub(crate) mm: ModelManager,
-  pub(crate) scheduler_svc: Arc<SchedulerSvc>,
-  pub(crate) gateway_svc: Arc<GatewaySvc>,
+  pub mm: ModelManager,
+  pub scheduler_svc: Arc<SchedulerSvc>,
+  pub gateway_svc: Arc<GatewaySvc>,
   agent_manager: Arc<AgentManager>,
-  pub(crate) connection_manager: Arc<ConnectionManager>,
-  pub(crate) message_handler: Arc<MessageHandler>,
+  pub connection_manager: Arc<ConnectionManager>,
+  pub message_handler: Arc<MessageHandler>,
   load_balancer: Arc<LoadBalancer>,
   gateway_command_tx: mpsc::UnboundedSender<GatewayCommandRequest>,
   log_receiver: Arc<tokio::sync::Mutex<LogReceiver>>,
@@ -43,8 +43,20 @@ pub struct ServerApplication {
 
 impl ServerApplication {
   pub async fn new() -> Result<Self, DataError> {
+    Self::new_with_source::<config::Environment>(None).await
+  }
+
+  pub async fn new_with_source<S>(config_source: Option<S>) -> Result<Self, DataError>
+  where
+    S: config::Source + Send + Sync + 'static,
+  {
     // 构建底层 Application 与插件
     let application = Application::builder().add_plugin(DbPlugin).build().await?;
+    if let Some(config_source) = config_source {
+      let config_registry = application.config_registry();
+      config_registry.add_config_source(config_source)?;
+      config_registry.reload()?;
+    }
 
     let config = Arc::new(HetuflowServerSetting::load(application.config_registry())?);
 
@@ -71,7 +83,7 @@ impl ServerApplication {
       Arc::new(GatewaySvc::new(connection_manager.clone(), message_handler.clone(), gateway_command_rx));
 
     let is_leader = Arc::new(AtomicBool::new(false));
-    let load_balancer = Arc::new(LoadBalancer::new(mm.clone(), config.server.server_id));
+    let load_balancer = Arc::new(LoadBalancer::new(mm.clone(), config.server.server_id.clone()));
 
     // 创建日志接收器
     let mut log_receiver = LogReceiver::new(Arc::new(config.task_log.clone()));
@@ -79,7 +91,7 @@ impl ServerApplication {
     let log_receiver = Arc::new(tokio::sync::Mutex::new(log_receiver));
 
     Ok(Self {
-      config,
+      setting: config,
       is_leader,
       shutdown_tx,
       mm,
@@ -121,7 +133,7 @@ impl ServerApplication {
     // 启动领导者选举监控
     let is_leader = self.is_leader.clone();
     let mm = self.mm.clone();
-    let server_id = self.config.server.server_id.to_string();
+    let server_id = self.setting.server.server_id.to_string();
     let mut shutdown_rx = self.shutdown_tx.subscribe();
     let load_balancer = self.load_balancer.clone();
     tokio::spawn(async move {
@@ -200,7 +212,7 @@ impl ServerApplication {
 
     // Agent 心跳超时清理
     let connection_manager = self.connection_manager.clone();
-    let agent_heartbeat_ttl = self.config.server.agent_overdue_ttl;
+    let agent_heartbeat_ttl = self.setting.server.agent_overdue_ttl;
     tokio::spawn(async move {
       let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(60));
       loop {
@@ -291,7 +303,7 @@ impl ServerApplication {
 
   /// 获取应用配置
   pub fn setting(&self) -> &HetuflowServerSetting {
-    &self.config
+    &self.setting
   }
 
   /// 处理Agent转发的日志消息

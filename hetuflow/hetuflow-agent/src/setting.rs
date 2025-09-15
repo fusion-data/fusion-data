@@ -3,7 +3,10 @@ use std::{path::PathBuf, sync::Arc, time::Duration};
 use duration_str::deserialize_duration;
 use fusion_common::{ahash::HashMap, env::get_env};
 use fusion_core::{DataError, configuration::FusionConfigRegistry};
-use hetuflow_core::{models::Labels, utils::config::write_app_config};
+use hetuflow_core::{
+  types::{AgentId, Labels},
+  utils::config::write_app_config,
+};
 use log::{info, warn};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -184,7 +187,7 @@ pub struct TaskConfig {
 /// Agent 配置
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct HetuflowAgentSetting {
-  pub agent_id: Uuid,
+  pub agent_id: AgentId,
 
   /// Agent 名称
   pub name: Option<String>,
@@ -269,7 +272,7 @@ mod tests {
     set_env("FUSION_CONFIG_FILE", "resources/app.toml").unwrap();
 
     // 尝试加载配置
-    let config_registry = FusionConfigRegistry::load().unwrap();
+    let config_registry = FusionConfigRegistry::builder().build().unwrap();
     println!("{:?}", config_registry.fusion_config().app());
 
     let setting = HetuflowAgentSetting::load(&config_registry).unwrap();

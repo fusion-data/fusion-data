@@ -49,7 +49,7 @@ impl SchedulerSvc {
     async fn calculate_dispatch_time(
         &self,
         task: &SchedTask,
-        agent_id: &Uuid,
+        agent_id: &AgentId,
     ) -> Result<DateTime<Utc>, DataError> {
         let agent_info = self.agent_manager.get_agent_info(agent_id).await?;
         let base_advance = self.early_dispatch_config.default_advance_seconds;
@@ -117,7 +117,7 @@ pub struct PendingAck {
     pub message_id: Uuid,
     pub sent_at: DateTime<Utc>,
     pub retry_count: u32,
-    pub agent_id: Uuid,
+    pub agent_id: AgentId,
     pub message_type: String,
 }
 
@@ -125,7 +125,7 @@ impl SchedulerSvc {
     /// 发送需要 ACK 确认的消息
     pub async fn send_with_ack(
         &self,
-        agent_id: &Uuid,
+        agent_id: &AgentId,
         message: WebSocketMessage,
     ) -> Result<(), DataError> {
         let message_id = Uuid::new_v4();
@@ -185,7 +185,7 @@ impl SchedulerSvc {
     /// Agent 重连后的状态同步
     pub async fn handle_agent_reconnect(
         &self,
-        agent_id: &Uuid,
+        agent_id: &AgentId,
         session_id: &str,
     ) -> Result<Vec<SchedTask>, DataError> {
         info!("Agent {} reconnected with session {}", agent_id, session_id);
@@ -219,7 +219,7 @@ impl SchedulerSvc {
     }
 
     /// 处理 Agent 断线
-    pub async fn handle_agent_disconnect(&self, agent_id: &Uuid) -> Result<(), DataError> {
+    pub async fn handle_agent_disconnect(&self, agent_id: &AgentId) -> Result<(), DataError> {
         warn!("Agent {} disconnected", agent_id);
 
         // 1. 标记 Agent 为离线状态
@@ -313,7 +313,7 @@ impl SchedulerSvc {
     async fn create_idempotent_task_instance(
         &self,
         task: &SchedTask,
-        agent_id: &Uuid,
+        agent_id: &AgentId,
     ) -> Result<SchedTaskInstance, DataError> {
         let idempotency_key = self.generate_idempotency_key(task);
 
@@ -635,7 +635,7 @@ impl TaskPoller {
   async fn acquire_pending_tasks(
     mm: &ModelManager,
     batch_size: usize,
-    server_id: Uuid,
+    server_id: ServerId,
   ) -> Result<Vec<SchedTask>, DataError> {
     mm
       .dbx()
@@ -828,7 +828,7 @@ pub struct SchedulerSvc {
   mm: ModelManager,
   gateway_command_sender: mpsc::UnboundedSender<GatewayCommand>,
   task_poller: Option<TaskPoller>,
-  server_id: Uuid,
+  server_id: ServerId,
 }
 
 impl SchedulerSvc {
@@ -971,7 +971,7 @@ impl SchedulerSvc {
   /// 更新服务器心跳
   async fn update_server_heartbeat(
     mm: &ModelManager,
-    server_id: &Uuid,
+    server_id: &ServerId,
   ) -> Result<(), DataError> {
     mm
       .dbx()
@@ -1061,7 +1061,7 @@ impl SchedulerSvc {
     &self,
     task_id: i64,
     status: String,
-    agent_id: Uuid,
+    agent_id: AgentId,
     output: Option<String>,
     error_message: Option<String>,
     exit_code: Option<i32>,
@@ -1103,7 +1103,7 @@ impl SchedulerSvc {
   }
 
   /// 处理 Agent 断线事件
-  pub async fn handle_agent_disconnect(&self, agent_id: &Uuid) -> Result<(), DataError> {
+  pub async fn handle_agent_disconnect(&self, agent_id: &AgentId) -> Result<(), DataError> {
     info!("Handling agent disconnect: {}", agent_id);
 
     // 查找该 Agent 上处于 'dispatched' 或 'locked' 状态的任务
@@ -1155,7 +1155,7 @@ pub enum SchedulerEvent {
     exit_code: Option<i32>,
   },
   AgentDisconnected {
-    agent_id: Uuid,
+    agent_id: AgentId,
   },
 }
 ```
@@ -1173,7 +1173,7 @@ use fusion_common::time::OffsetDateTime;
 
 #[derive(Debug, Clone)]
 pub struct AgentInfo {
-  pub agent_id: Uuid,
+  pub agent_id: AgentId,
   pub status: String,
   pub capabilities: serde_json::Value,
   pub last_heartbeat: OffsetDateTime,
@@ -1194,7 +1194,7 @@ impl AgentManager {
   }
 
   // 注册 Agent
-  pub async fn register_agent(&self, agent_id: Uuid, capabilities: serde_json::Value) -> Result<(), DataError> {
+  pub async fn register_agent(&self, agent_id: AgentId, capabilities: serde_json::Value) -> Result<(), DataError> {
     let agent_info = AgentInfo {
       agent_id: agent_id.clone(),
       status: "online".to_string(),
@@ -1210,7 +1210,7 @@ impl AgentManager {
   }
 
   // 更新 Agent 心跳
-  pub async fn update_heartbeat(&self, agent_id: &Uuid) -> Result<(), DataError> {
+  pub async fn update_heartbeat(&self, agent_id: &AgentId) -> Result<(), DataError> {
     let mut agents = self.agents.write().await;
     if let Some(agent) = agents.get_mut(agent_id) {
       agent.last_heartbeat = now_offset();
@@ -1232,7 +1232,7 @@ impl AgentManager {
   }
 
   // 处理 Agent 断线
-  pub async fn handle_agent_disconnect(&self, agent_id: &Uuid) -> Result<(), DataError> {
+  pub async fn handle_agent_disconnect(&self, agent_id: &AgentId) -> Result<(), DataError> {
     warn!("Agent {} disconnected, reassigning tasks", agent_id);
 
     // 查找该 Agent 上处于 'dispatched' 状态的任务
@@ -1474,7 +1474,7 @@ pub enum GatewayEvent {
   AgentRegistered(AgentRegisterRequest),
   AgentHeartbeat(HeartbeatRequest),
   TaskStatusUpdated(TaskInstanceUpdate),
-  AgentDisconnected { agent_id: Uuid },
+  AgentDisconnected { agent_id: AgentId },
 }
 
 // 从 Scheduler 发送到 Gateway 的指令
@@ -1616,7 +1616,7 @@ impl SchedulerSvc {
   }
 
   // 发送任务到 Gateway
-  pub async fn dispatch_task(&self, request: DispatchTaskRequest, agent_id: &Uuid) {
+  pub async fn dispatch_task(&self, request: DispatchTaskRequest, agent_id: &AgentId) {
     let message = WebSocketMessage {
       message_id: Uuid::now_v7(),
       timestamp: now_epoch_millis(),

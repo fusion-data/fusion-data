@@ -153,7 +153,7 @@ impl PollTaskRunner {
 
         // 发送轮询请求
         let poll_request = AcquireTaskRequest {
-          agent_id: self.setting.agent_id,
+          agent_id: self.setting.agent_id.clone(),
           max_tasks: self.setting.process.max_concurrent_processes,
           acquire_count,
           labels: self.setting.labels.clone(),

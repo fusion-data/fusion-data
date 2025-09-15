@@ -1,10 +1,11 @@
 use std::sync::Arc;
 
 use log::warn;
-use uuid::Uuid;
 
-use hetuflow_core::protocol::WebSocketEvent;
-use hetuflow_core::types::EventKind;
+use hetuflow_core::{
+  protocol::WebSocketEvent,
+  types::{AgentId, EventKind},
+};
 
 use crate::model::{AgentConnection, AgentEvent};
 
@@ -22,7 +23,7 @@ impl MessageHandler {
   }
 
   /// 处理来自 Agent 的消息
-  pub async fn process_message(&self, agent_id: Uuid, event: WebSocketEvent) -> Result<(), GatewayError> {
+  pub async fn process_message(&self, agent_id: AgentId, event: WebSocketEvent) -> Result<(), GatewayError> {
     self.connection_manager.update_heartbeat(&agent_id, event.timestamp)?;
     match event.kind {
       EventKind::AgentHeartbeat => {
@@ -48,16 +49,18 @@ impl MessageHandler {
     Ok(())
   }
 
-  pub fn add_connection(&self, agent_id: Uuid, agent_connection: AgentConnection) -> Result<(), GatewayError> {
+  pub fn add_connection(&self, agent_id: &AgentId, agent_connection: AgentConnection) -> Result<(), GatewayError> {
     let remote_addr = agent_connection.address.clone();
     self.connection_manager.add_connection(agent_id, agent_connection)?;
-    self.connection_manager.publish_event(AgentEvent::Connected { agent_id, remote_addr })
+    self
+      .connection_manager
+      .publish_event(AgentEvent::Connected { agent_id: agent_id.clone(), remote_addr })
   }
 
-  pub fn remove_connection(&self, agent_id: Uuid, reason: &str) -> Result<(), GatewayError> {
+  pub fn remove_connection(&self, agent_id: &AgentId, reason: &str) -> Result<(), GatewayError> {
     self.connection_manager.remove_connection(agent_id, reason)?;
     self
       .connection_manager
-      .publish_event(AgentEvent::Unconnected { agent_id, reason: reason.to_string() })
+      .publish_event(AgentEvent::Unconnected { agent_id: agent_id.clone(), reason: reason.to_string() })
   }
 }

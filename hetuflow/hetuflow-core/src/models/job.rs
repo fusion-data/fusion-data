@@ -6,10 +6,7 @@ use modelsql_core::{
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::{
-  models::Labels,
-  types::{JobStatus, ResourceLimits},
-};
+use crate::types::{JobStatus, Labels, ResourceLimits};
 
 /// 任务配置
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]

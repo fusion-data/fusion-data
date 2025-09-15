@@ -1,44 +1,8 @@
-用户需要我为 hetuflow-agent 和 hetuflow-server 制定集成测试计划和方案，我需要先查看当前项目结构和现有测试代码，了解系统架构后制定详细的集成测试方案。
-
-toolName: search_codebase
-
-status: success
-
-query: hetuflow-agent 和 hetuflow-server 的架构设计、通信方式、现有测试代码结构，以及 agent 和 server 之间的交互接口
-
-现在我需要查看更多关于测试结构和现有测试代码的信息，以便制定完整的集成测试方案。
-
-toolName: search_codebase
-
-status: success
-
-query: hetuflow-agent 和 hetuflow-server 现有的测试代码结构、单元测试、集成测试示例，以及测试工具和框架的使用情况
-
-现在我需要查看项目的测试目录结构和现有测试文件，以了解当前的测试框架和测试组织方式。
-
-toolName: view_folder
-
-status: success
-
-/Users/yangjing/workspaces/fusion-data/hetuflow
-
-我需要查看 hetuflow-server 和 hetuflow-agent 的测试目录结构，看看是否有专门的 tests 目录。
-
-toolName: search_by_regex
-
-status: success
-
-query: #\[cfg\(test\)\]|#\[test\]|mod tests
-
-现在我需要创建一个详细的集成测试计划和方案。基于我收集的信息，我了解了 hetuflow 的架构、现有测试结构和通信协议，可以制定完整的集成测试方案。
-
-toolName: todo_write
-
-status: success
-
-Todos updated: 5 items
-
 # Hetuflow Agent-Server 集成测试计划和方案
+
+```text
+
+```
 
 基于对 hetuflow 系统架构的分析，我为您制定了完整的集成测试计划和方案。该方案涵盖端到端测试、负载测试和故障测试三个核心领域。
 

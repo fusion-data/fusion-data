@@ -2,12 +2,11 @@ use fusion_common::{ahash::HashMap, time::OffsetDateTime};
 use garde::Validate;
 use modelsql_core::{
   field::FieldMask,
-  filter::{OpValsDateTime, OpValsInt32, OpValsString, OpValsUuid, Page},
+  filter::{OpValsDateTime, OpValsInt32, OpValsString, Page},
 };
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 
-use crate::{models::Labels, types::AgentStatus};
+use crate::types::{AgentId, AgentStatus, Labels};
 
 /// Agent 性能指标
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
@@ -41,7 +40,7 @@ pub struct AgentCapabilities {
   sea_query::enum_def(table_name = "sched_agent")
 )]
 pub struct SchedAgent {
-  pub id: Uuid,
+  pub id: AgentId,
   pub description: Option<String>,
   pub address: String,
   pub status: AgentStatus,
@@ -54,9 +53,7 @@ pub struct SchedAgent {
 #[cfg_attr(feature = "with-db", derive(modelsql::Fields))]
 pub struct AgentForCreate {
   #[garde(skip)]
-  pub id: Uuid,
-  #[garde(skip)]
-  pub server_id: Uuid,
+  pub id: AgentId,
   #[garde(skip)]
   pub description: Option<String>,
   #[garde(ip)]
@@ -73,7 +70,6 @@ pub struct AgentForCreate {
 #[derive(Debug, Clone, Deserialize, Default)]
 #[cfg_attr(feature = "with-db", derive(modelsql::Fields))]
 pub struct AgentForUpdate {
-  pub server_id: Option<Uuid>,
   pub description: Option<String>,
   pub host: Option<String>,
   pub port: Option<i32>,
@@ -87,8 +83,7 @@ pub struct AgentForUpdate {
 #[derive(Default, Deserialize)]
 #[cfg_attr(feature = "with-db", derive(modelsql::FilterNodes))]
 pub struct AgentFilter {
-  pub id: Option<OpValsUuid>,
-  pub server_id: Option<OpValsUuid>,
+  pub id: Option<OpValsString>,
   pub status: Option<OpValsInt32>,
   pub host: Option<OpValsString>,
   pub port: Option<OpValsInt32>,

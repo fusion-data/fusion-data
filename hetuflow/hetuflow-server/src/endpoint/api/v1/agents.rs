@@ -3,7 +3,7 @@ use axum::{
   extract::Path,
   routing::{get, post},
 };
-use fusion_core::IdUuidResult;
+use fusion_core::IdStringResult;
 use fusion_web::{Router, WebResult, ok_json};
 use modelsql::page::PageResult;
 
@@ -25,9 +25,9 @@ async fn query_agents(agent_svc: AgentSvc, Json(input): Json<AgentForQuery>) -> 
   ok_json!(result)
 }
 
-async fn create_agent(agent_svc: AgentSvc, Json(input): Json<AgentForCreate>) -> WebResult<IdUuidResult> {
+async fn create_agent(agent_svc: AgentSvc, Json(input): Json<AgentForCreate>) -> WebResult<IdStringResult> {
   let id = agent_svc.create(input).await?;
-  ok_json!(id.into())
+  ok_json!(IdStringResult::new(id))
 }
 
 async fn get_agent(agent_svc: AgentSvc, Path(id): Path<Uuid>) -> WebResult<Option<SchedAgent>> {

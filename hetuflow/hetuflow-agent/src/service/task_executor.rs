@@ -9,7 +9,7 @@ use uuid::Uuid;
 
 use hetuflow_core::{
   protocol::{ProcessEvent, ProcessEventKind, ScheduledTask, TaskExecutionError, TaskInstanceUpdated, WebSocketEvent},
-  types::{EventKind, TaskInstanceStatus},
+  types::{AgentId, EventKind, TaskInstanceStatus},
 };
 
 use crate::{
@@ -77,7 +77,7 @@ impl TaskExecutor {
 
   fn run_process_event_loop(&self) -> JoinHandle<()> {
     let mut process_event_rx = self.process_manager.subscribe_events();
-    let agent_id = self.setting.agent_id;
+    let agent_id = self.setting.agent_id.clone();
     let connection_manager = self.connection_manager.clone();
     let shutdown_rx = self.shutdown_rx.lock().unwrap().clone().unwrap();
 
@@ -86,7 +86,7 @@ impl TaskExecutor {
         tokio::select! {
           event_result = process_event_rx.recv() => {
             match event_result {
-              Ok(event) => Self::handle_process_event(agent_id, connection_manager.clone(), event).await,
+              Ok(event) => Self::handle_process_event(agent_id.clone(), connection_manager.clone(), event).await,
               Err(e) => {
                 info!("The process_event_rx channel closed: {}", e);
                 break;
@@ -110,7 +110,7 @@ impl TaskExecutor {
     Ok(())
   }
 
-  async fn handle_process_event(agent_id: Uuid, connection_manager: Arc<ConnectionManager>, event: ProcessEvent) {
+  async fn handle_process_event(agent_id: AgentId, connection_manager: Arc<ConnectionManager>, event: ProcessEvent) {
     let status = match event.kind {
       ProcessEventKind::Started => TaskInstanceStatus::Running,
       ProcessEventKind::Exited => TaskInstanceStatus::Succeeded,
@@ -144,7 +144,7 @@ impl TaskExecutor {
     task: ScheduledTask,
   ) {
     let instance_id = task.task_instance_id();
-    let agent_id = setting.agent_id;
+    let agent_id = setting.agent_id.clone();
 
     // 执行任务（单次执行）
     if let Err(error) = Self::_execute_task(process_manager, task).await {
@@ -181,7 +181,7 @@ impl TaskExecutor {
     Ok(())
   }
 
-  fn process_execution_error(agent_id: Uuid, instance_id: Uuid, error: TaskExecutionError) -> WebSocketEvent {
+  fn process_execution_error(agent_id: AgentId, instance_id: Uuid, error: TaskExecutionError) -> WebSocketEvent {
     let mut payload = TaskInstanceUpdated {
       instance_id,
       agent_id,

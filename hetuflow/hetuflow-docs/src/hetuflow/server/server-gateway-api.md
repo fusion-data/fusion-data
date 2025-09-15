@@ -1101,7 +1101,7 @@ pub async fn start_task_instance(
   // 更新任务实例状态为运行中
   let update_data = TaskInstanceForUpdate {
     status: Some("running".to_string()),
-    started_at: Some(ultimate_common::time::now_utc()),
+    started_at: Some(fusion_common::time::now_utc()),
     ..Default::default()
   };
   let task_instance = TaskInstanceBmc::update(mm, instance_id, update_data).await?;
@@ -1138,7 +1138,7 @@ pub async fn complete_task_instance(
 
   let update_data = TaskInstanceForUpdate {
     status: Some("completed".to_string()),
-    completed_at: Some(ultimate_common::time::now_utc()),
+    completed_at: Some(fusion_common::time::now_utc()),
     result: request.result,
     ..Default::default()
   };
@@ -1169,7 +1169,7 @@ pub async fn cancel_task_instance(
 
   let update_data = TaskInstanceForUpdate {
     status: Some("cancelled".to_string()),
-    completed_at: Some(ultimate_common::time::now_utc()),
+    completed_at: Some(fusion_common::time::now_utc()),
     ..Default::default()
   };
   let task_instance = TaskInstanceBmc::update(mm, instance_id, update_data).await?;
@@ -1430,7 +1430,7 @@ pub struct BroadcastMessageRequest {
 #[derive(Debug, Serialize)]
 pub struct ConnectionInfo {
   /// Agent ID
-  pub agent_id: Uuid,
+  pub agent_id: AgentId,
   /// 连接状态
   pub status: AgentStatus,
   /// 连接建立时间

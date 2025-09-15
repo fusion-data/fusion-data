@@ -5,9 +5,11 @@ use modelsql::{
   filter::{OpValsDateTime, OpValsInt32},
   generate_pg_bmc_common, generate_pg_bmc_filter,
 };
-use uuid::Uuid;
 
-use hetuflow_core::{protocol::AgentRegisterRequest, types::AgentStatus};
+use hetuflow_core::{
+  protocol::AgentRegisterRequest,
+  types::{AgentId, AgentStatus},
+};
 
 use hetuflow_core::models::{AgentFilter, AgentForCreate, AgentForUpdate, SchedAgent};
 
@@ -41,7 +43,7 @@ impl AgentBmc {
   }
 
   /// 更新 Agent 状态
-  pub async fn update_status(mm: &ModelManager, agent_id: &Uuid, status: AgentStatus) -> Result<(), SqlError> {
+  pub async fn update_status(mm: &ModelManager, agent_id: &str, status: AgentStatus) -> Result<(), SqlError> {
     let mut update = AgentForUpdate { status: Some(status), ..Default::default() };
     if status == AgentStatus::Online {
       update.last_heartbeat = Some(now_offset());
@@ -65,7 +67,7 @@ impl AgentBmc {
 
   pub async fn register(
     mm: &ModelManager,
-    agent_id: &Uuid,
+    agent_id: &AgentId,
     payload: &AgentRegisterRequest,
   ) -> Result<SchedAgent, SqlError> {
     let sql = r#"

@@ -1,4 +1,5 @@
 use fusion_common::time::OffsetDateTime;
+use modelsql::filter::OpValsValue;
 use modelsql_core::{
   field::FieldMask,
   filter::{OpValsDateTime, OpValsInt32, OpValsString, OpValsUuid, Page},
@@ -6,7 +7,7 @@ use modelsql_core::{
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::types::{ScheduleKind, TaskStatus};
+use crate::types::{AgentId, ScheduleKind, ServerId, TaskStatus};
 
 use super::TaskConfig;
 
@@ -81,7 +82,7 @@ pub struct TaskForCreate {
   pub scheduled_at: OffsetDateTime,
   pub parameters: serde_json::Value,
   pub environment: Option<serde_json::Value>,
-  pub task_config: Option<TaskConfig>,
+  pub config: Option<TaskConfig>,
   pub retry_count: i32,
   pub dependencies: Option<serde_json::Value>,
 }
@@ -90,8 +91,8 @@ pub struct TaskForCreate {
 #[derive(Debug, Clone, Default, Deserialize)]
 #[cfg_attr(feature = "with-db", derive(modelsql::Fields))]
 pub struct TaskForUpdate {
-  pub agent_id: Option<Uuid>,
-  pub server_id: Option<Uuid>,
+  pub agent_id: Option<AgentId>,
+  pub server_id: Option<ServerId>,
   pub priority: Option<i32>,
   pub namespace_id: Option<Uuid>,
   pub status: Option<TaskStatus>,
@@ -99,7 +100,7 @@ pub struct TaskForUpdate {
   pub completed_at: Option<OffsetDateTime>,
   pub parameters: Option<serde_json::Value>,
   pub environment: Option<serde_json::Value>,
-  pub task_config: Option<TaskConfig>,
+  pub config: Option<TaskConfig>,
   pub retry_count: Option<i32>,
   pub max_retries: Option<i32>,
   pub dependencies: Option<serde_json::Value>,
@@ -124,8 +125,8 @@ pub struct TaskFilter {
   pub schedule_id: Option<OpValsUuid>,
   pub namespace_id: Option<OpValsUuid>,
   pub agent_id: Option<OpValsString>,
-  pub server_id: Option<OpValsUuid>,
-  pub labels: Option<OpValsString>,
+  pub server_id: Option<OpValsString>,
+  pub task_config: Option<OpValsValue>,
   pub status: Option<OpValsInt32>,
   pub scheduled_at: Option<OpValsDateTime>,
   pub locked_at: Option<OpValsDateTime>,

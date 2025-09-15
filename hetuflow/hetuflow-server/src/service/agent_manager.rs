@@ -8,7 +8,7 @@ use fusion_core::DataError;
 use log::{debug, error, info, warn};
 use modelsql::{
   ModelManager,
-  filter::{OpValsInt32, OpValsUuid},
+  filter::{OpValsInt32, OpValsString, OpValsUuid},
 };
 use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
@@ -17,7 +17,7 @@ use uuid::Uuid;
 use hetuflow_core::{
   models::*,
   protocol::{AcquireTaskRequest, AcquireTaskResponse, ScheduledTask, TaskInstanceUpdated, WebSocketCommand},
-  types::{AgentStatus, CommandKind, TaskInstanceStatus, TaskStatus},
+  types::{AgentId, AgentStatus, CommandKind, TaskInstanceStatus, TaskStatus},
 };
 
 use crate::{
@@ -133,28 +133,19 @@ impl AgentManager {
   }
 
   /// 获取在线 Agent 列表（通过 AgentRegistry）
-  pub async fn get_agents(&self, server_ids: &[Uuid]) -> Result<Vec<SchedAgent>, DataError> {
+  pub async fn get_agents(&self) -> Result<Vec<SchedAgent>, DataError> {
     let online_agents = self.connection_manager.get_online_agents()?;
     if online_agents.is_empty() {
       return Ok(vec![]);
     }
 
-    let online_agent_ids: Vec<Uuid> = online_agents.into_iter().map(|agent| agent.agent_id).collect();
-
     let agent_svc = AgentSvc::new(self.mm.clone());
-
-    let filter = AgentFilter {
-      id: Some(OpValsUuid::in_(online_agent_ids)),
-      server_id: if server_ids.is_empty() { None } else { Some(OpValsUuid::in_(server_ids.to_vec())) },
-      status: Some(OpValsInt32::eq(AgentStatus::Online as i32)),
-      ..Default::default()
-    };
-    let agents = agent_svc.find_many(filter, None).await?;
+    let agents = agent_svc.find_online_agents().await?;
     Ok(agents)
   }
 
   /// 获取 Agent 详细信息（包含可靠性统计）
-  pub async fn get_agent_details(&self, agent_id: &Uuid) -> Result<Option<serde_json::Value>, DataError> {
+  pub async fn get_agent_details(&self, agent_id: &AgentId) -> Result<Option<serde_json::Value>, DataError> {
     // 通过 AgentRegistry 获取基础信息
     if let Some(agent) = self.connection_manager.get_agent(agent_id)? {
       // 获取可靠性统计
@@ -169,7 +160,7 @@ impl AgentManager {
   pub async fn select_best_agent(
     &self,
     _task_requirements: Option<serde_json::Value>,
-  ) -> Result<Option<Uuid>, DataError> {
+  ) -> Result<Option<AgentId>, DataError> {
     let online_agents = self.connection_manager.get_online_agents()?;
 
     if online_agents.is_empty() {
@@ -185,13 +176,13 @@ impl AgentManager {
       })
       .cloned();
 
-    Ok(best_agent.map(|agent| agent.agent_id))
+    Ok(best_agent.map(|agent| agent.agent_id.clone()))
   }
 
   /// 更新任务执行统计
   pub async fn update_task_stats(
     &self,
-    agent_id: &Uuid,
+    agent_id: &AgentId,
     success: bool,
     response_time_ms: f64,
   ) -> Result<(), DataError> {
@@ -255,7 +246,7 @@ struct AgentEventRunLoop {
 impl AgentEventRunLoop {
   /// 处理 Agent 事件
   async fn run_loop(mut self) {
-    let agent_svc = match AgentSvc::with_jwe_config(self.mm.clone(), &self.setting) {
+    let agent_svc = match AgentSvc::new_with_setting(self.mm.clone(), &self.setting) {
       Ok(svc) => svc,
       Err(e) => {
         error!("Failed to create AgentSvc with JWE config: {:?}", e);
@@ -270,12 +261,12 @@ impl AgentEventRunLoop {
           }
         }
         AgentEvent::TaskInstanceChanged { agent_id, payload } => {
-          if let Err(e) = self.process_task_instance_changed(agent_id, payload).await {
+          if let Err(e) = self.process_task_instance_changed(&agent_id, payload).await {
             error!("Failed to process task instance changed agent {}: {:?}", agent_id, e);
           }
         }
         AgentEvent::TaskPollRequest { agent_id, request } => {
-          if let Err(e) = self.process_task_poll(agent_id, request).await {
+          if let Err(e) = self.process_task_poll(&agent_id, request).await {
             error!("Failed to process task poll request agent {}: {:?}", agent_id, e);
           }
         }
@@ -305,7 +296,7 @@ impl AgentEventRunLoop {
   }
 
   /// Agent poll task 时不对 Server 绑定的 Namespace 进行过滤，直接拉取符合要求的最紧急的 SchedTaskInstance。按 request 条件进行过滤
-  async fn process_task_poll(&self, agent_id: Uuid, request: Arc<AcquireTaskRequest>) -> Result<(), DataError> {
+  async fn process_task_poll(&self, agent_id: &AgentId, request: Arc<AcquireTaskRequest>) -> Result<(), DataError> {
     info!("Agent {} task poll request: {:?}", agent_id, request);
     let task_instances = TaskInstanceBmc::find_many_by_poll(&self.mm, &request).await?;
     let task_map = TaskBmc::find_many(
@@ -338,14 +329,14 @@ impl AgentEventRunLoop {
     // 向 Agent 发送 TaskPollResponse
     let parameters = serde_json::to_value(AcquireTaskResponse { tasks, has_more: false, next_poll_interval: 0 })?;
     let command = WebSocketCommand::new(CommandKind::DispatchTask, parameters);
-    self.connection_manager.send_to_agent(&agent_id, command)?;
+    self.connection_manager.send_to_agent(agent_id, command)?;
 
     Ok(())
   }
 
   async fn process_task_instance_changed(
     &self,
-    agent_id: Uuid,
+    agent_id: &AgentId,
     payload: Arc<TaskInstanceUpdated>,
   ) -> Result<(), DataError> {
     info!("Processing task instance changed for agent {}, instance {}", agent_id, payload.instance_id);
@@ -407,7 +398,7 @@ impl AgentEventRunLoop {
       .and_then(|m| m.end_time.map(|end| (end - m.start_time) as f64))
       .unwrap_or(0.0);
 
-    if let Some(agent) = self.connection_manager.get_agent(&agent_id)? {
+    if let Some(agent) = self.connection_manager.get_agent(agent_id)? {
       agent.update_stats(success, response_time_ms);
     }
 
