@@ -11,7 +11,7 @@ use uuid::Uuid;
 
 use hetuflow_core::{
   protocol::AcquireTaskRequest,
-  types::{AgentId, ServerId, TaskInstanceStatus, TaskStatus},
+  types::{TaskInstanceStatus, TaskStatus},
 };
 
 use hetuflow_core::models::{SchedTaskInstance, TaskInstanceFilter, TaskInstanceForCreate, TaskInstanceForUpdate};
@@ -38,7 +38,7 @@ generate_pg_bmc_filter!(
 
 impl TaskInstanceBmc {
   /// 开始执行任务实例
-  pub async fn start_instance(mm: &ModelManager, instance_id: &Uuid, agent_id: AgentId) -> Result<(), SqlError> {
+  pub async fn start_instance(mm: &ModelManager, instance_id: &Uuid, agent_id: String) -> Result<(), SqlError> {
     let update = TaskInstanceForUpdate {
       agent_id: Some(agent_id),
       status: Some(TaskInstanceStatus::Running),

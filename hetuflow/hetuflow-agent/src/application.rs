@@ -3,7 +3,6 @@ use std::sync::Arc;
 use fusion_core::DataError;
 use fusion_core::application::Application;
 use fusion_core::timer::{Timer, TimerPlugin};
-use hetuflow_core::types::AgentId;
 use log::info;
 use mea::mutex::Mutex;
 use mea::shutdown::{ShutdownRecv, ShutdownSend};
@@ -73,7 +72,7 @@ impl AgentApplication {
   }
 
   /// 获取 Agent ID
-  pub fn get_agent_id(&self) -> &AgentId {
+  pub fn get_agent_id(&self) -> &str {
     &self.setting.agent_id
   }
 

@@ -8,6 +8,7 @@ use crate::types::{CommandKind, EventKind};
 
 /// 服务器下发的指令。 Server -> Agent
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct WebSocketCommand {
   /// 指令ID，全局唯一。可选参数，默认使用 UUID v7
   id: Uuid,
@@ -60,6 +61,7 @@ impl WebSocketCommand {
 
 /// WebSocket 事件统一包装器，Agent -> Server
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct WebSocketEvent {
   /// 消息唯一标识
   pub event_id: Uuid,

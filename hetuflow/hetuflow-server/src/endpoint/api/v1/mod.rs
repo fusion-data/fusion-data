@@ -6,12 +6,12 @@ mod system;
 mod task_instances;
 mod tasks;
 
-use fusion_web::Router;
+use utoipa_axum::router::OpenApiRouter;
 
 use crate::application::ServerApplication;
 
-pub fn routes() -> Router<ServerApplication> {
-  Router::new()
+pub fn routes() -> OpenApiRouter<ServerApplication> {
+  OpenApiRouter::new()
     .nest("/agents", agents::routes())
     .nest("/auth", auth::routes())
     .nest("/jobs", jobs::routes())

@@ -3,12 +3,12 @@ use modelsql::{
   ModelManager, SqlError,
   base::DbBmc,
   field::FieldMask,
-  filter::{OpValsDateTime, OpValsInt32, OpValsString, OpValsUuid},
+  filter::{OpValsDateTime, OpValsInt32, OpValsUuid},
   generate_pg_bmc_common, generate_pg_bmc_filter,
 };
 use uuid::Uuid;
 
-use hetuflow_core::types::{AgentId, ServerId, TaskStatus};
+use hetuflow_core::types::TaskStatus;
 
 use hetuflow_core::models::{SchedTask, TaskFilter, TaskForCreate, TaskForUpdate};
 
@@ -62,20 +62,14 @@ impl TaskBmc {
   }
 
   /// 重置失败任务为待处理状态
-  pub async fn reset_failed_tasks_by_agent(mm: &ModelManager, agent_id: &AgentId) -> Result<Vec<SchedTask>, SqlError> {
-    let filter = TaskFilter {
-      agent_id: Some(OpValsString::eq(agent_id.to_string())),
-      status: Some(OpValsInt32::eq(TaskStatus::Dispatched as i32)),
-      ..Default::default()
-    };
+  pub async fn reset_failed_tasks_by_agent(mm: &ModelManager, agent_id: &str) -> Result<Vec<SchedTask>, SqlError> {
+    let filter = TaskFilter { status: Some(OpValsInt32::eq(TaskStatus::Dispatched as i32)), ..Default::default() };
 
     let tasks = Self::find_many(mm, vec![filter], None).await?;
 
     for task in &tasks {
       let update = TaskForUpdate {
         status: Some(TaskStatus::Pending),
-        agent_id: Some(agent_id.to_string()),
-        server_id: None,
         locked_at: None,
         lock_version: Some(task.lock_version + 1),
         update_mask: Some(FieldMask::new(vec![
@@ -95,21 +89,17 @@ impl TaskBmc {
   }
 
   /// 使用 SELECT FOR UPDATE SKIP LOCKED 获取任务
-  pub async fn acquire_pending_tasks(
-    mm: &ModelManager,
-    server_id: &ServerId,
-    limit: i32,
-  ) -> Result<Vec<SchedTask>, SqlError> {
+  pub async fn acquire_pending_tasks(mm: &ModelManager, limit: i32) -> Result<Vec<SchedTask>, SqlError> {
     mm.dbx()
       .use_postgres(|dbx| async move {
         let query = r#"
           UPDATE sched_task
-          SET status = $1, server_id = $2, locked_at = NOW(), lock_version = lock_version + 1, updated_at = NOW()
+          SET status = $1, locked_at = NOW(), lock_version = lock_version + 1, updated_at = NOW()
           WHERE id IN (
             SELECT id FROM sched_task
-            WHERE status = $3 AND scheduled_at <= NOW()
+            WHERE status = $2 AND scheduled_at <= NOW()
             ORDER BY priority DESC, scheduled_at ASC
-            LIMIT $4
+            LIMIT $3
             FOR UPDATE SKIP LOCKED
           )
           RETURNING *
@@ -117,7 +107,6 @@ impl TaskBmc {
 
         let rows = sqlx::query_as::<_, SchedTask>(query)
           .bind(TaskStatus::Dispatched as i32)
-          .bind(server_id)
           .bind(TaskStatus::Pending as i32)
           .bind(limit)
           .fetch_all(dbx.db())
@@ -169,9 +158,8 @@ impl TaskBmc {
     Self::find_unique(mm, vec![filter]).await
   }
 
-  pub async fn count_active_tasks_by_server(mm: &ModelManager, server_id: ServerId) -> Result<u64, SqlError> {
+  pub async fn count_active_tasks_by_server(mm: &ModelManager, server_id: String) -> Result<u64, SqlError> {
     let filter = TaskFilter {
-      server_id: Some(OpValsString::eq(server_id)),
       status: Some(OpValsInt32::in_([TaskStatus::Locked as i32, TaskStatus::Dispatched as i32])),
       ..Default::default()
     };

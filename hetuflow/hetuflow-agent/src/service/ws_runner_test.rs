@@ -10,7 +10,7 @@ use crate::setting::{ConnectionConfig, HetuflowAgentSetting, PollingConfig, Proc
 /// 创建测试用的 Agent 设置
 fn create_test_agent_setting(jwe_token: Option<String>) -> HetuflowAgentSetting {
   HetuflowAgentSetting {
-    agent_id: AgentId::new_v4(),
+    agent_id: String::new_v4(),
     name: Some("test-agent".to_string()),
     labels: vec!["test".to_string()],
     work_dir: Some("/tmp/test".to_string()),

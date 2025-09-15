@@ -13,19 +13,19 @@ use fusion_common::time::now_epoch_millis;
 use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc;
 
-use hetuflow_core::{protocol::WebSocketCommand, types::AgentId};
+use hetuflow_core::protocol::WebSocketCommand;
 
 use crate::gateway::GatewayError;
 
 /// 数据流动方向: Server -> Agent
-#[derive(Deserialize)]
+#[derive(Deserialize, utoipa::ToSchema)]
 #[serde(tag = "type", rename_all = "lowercase")]
 pub enum GatewayCommandRequest {
-  Single { agent_id: AgentId, command: WebSocketCommand },
+  Single { agent_id: String, command: WebSocketCommand },
   Broadcast { command: WebSocketCommand },
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, utoipa::ToSchema)]
 pub struct HealthStatus {
   /// 系统状态
   status: bool,
@@ -63,7 +63,7 @@ pub struct AgentReliabilityStats {
 #[derive(Debug, Serialize)]
 pub struct AgentConnection {
   /// Agent ID
-  pub agent_id: AgentId,
+  pub agent_id: String,
   /// Agent 地址
   pub address: String,
   /// 最后心跳时间（毫秒）
@@ -76,7 +76,7 @@ pub struct AgentConnection {
 }
 
 impl AgentConnection {
-  pub fn new(agent_id: AgentId, address: String, sender: mpsc::UnboundedSender<WebSocketCommand>) -> Self {
+  pub fn new(agent_id: String, address: String, sender: mpsc::UnboundedSender<WebSocketCommand>) -> Self {
     Self {
       agent_id,
       address,

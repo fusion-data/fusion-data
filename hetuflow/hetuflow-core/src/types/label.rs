@@ -4,6 +4,7 @@ use fusion_common::ahash::HashMap;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct Labels(HashMap<String, String>);
 
 impl Deref for Labels {

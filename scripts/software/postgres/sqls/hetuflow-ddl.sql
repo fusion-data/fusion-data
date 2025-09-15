@@ -16,6 +16,7 @@ create table sched_server (
   bind_namespaces uuid[] not null default '{}',
   status int not null default 100, -- 见 ServerStatus
   description text,
+  last_heartbeat timestamptz not null default now(),
   created_by bigint not null,
   created_at timestamptz not null default now(),
   updated_by bigint,
@@ -30,7 +31,7 @@ create table sched_agent (
   address varchar(255) not null,
   status int not null default 100, -- 见 AgentStatus
   capabilities jsonb not null, -- Agent 能力描述
-  last_heartbeat timestamptz default now()
+  last_heartbeat timestamptz not null default now()
 );
 
 -- indexes for sched_agent

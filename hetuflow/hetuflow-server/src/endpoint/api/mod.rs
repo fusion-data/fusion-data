@@ -1,9 +1,9 @@
 pub mod v1;
 
-use fusion_web::Router;
+use utoipa_axum::router::OpenApiRouter;
 
 use crate::application::ServerApplication;
 
-pub fn routes() -> Router<ServerApplication> {
-  Router::new().nest("/v1", v1::routes())
+pub fn routes() -> OpenApiRouter<ServerApplication> {
+  OpenApiRouter::new().nest("/v1", v1::routes())
 }

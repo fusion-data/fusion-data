@@ -9,7 +9,7 @@ use uuid::Uuid;
 
 use hetuflow_core::{
   protocol::{ProcessEvent, ProcessEventKind, ScheduledTask, TaskExecutionError, TaskInstanceUpdated, WebSocketEvent},
-  types::{AgentId, EventKind, TaskInstanceStatus},
+  types::{EventKind, TaskInstanceStatus},
 };
 
 use crate::{
@@ -110,7 +110,7 @@ impl TaskExecutor {
     Ok(())
   }
 
-  async fn handle_process_event(agent_id: AgentId, connection_manager: Arc<ConnectionManager>, event: ProcessEvent) {
+  async fn handle_process_event(agent_id: String, connection_manager: Arc<ConnectionManager>, event: ProcessEvent) {
     let status = match event.kind {
       ProcessEventKind::Started => TaskInstanceStatus::Running,
       ProcessEventKind::Exited => TaskInstanceStatus::Succeeded,
@@ -181,7 +181,7 @@ impl TaskExecutor {
     Ok(())
   }
 
-  fn process_execution_error(agent_id: AgentId, instance_id: Uuid, error: TaskExecutionError) -> WebSocketEvent {
+  fn process_execution_error(agent_id: String, instance_id: Uuid, error: TaskExecutionError) -> WebSocketEvent {
     let mut payload = TaskInstanceUpdated {
       instance_id,
       agent_id,

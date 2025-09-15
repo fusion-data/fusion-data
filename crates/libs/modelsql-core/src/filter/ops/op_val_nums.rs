@@ -9,6 +9,7 @@ macro_rules! impl_op_val {
 		$(
 
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct $ovs(pub Vec<$ov>);
 
 impl $ovs {
@@ -56,6 +57,7 @@ impl $ovs {
 }
 
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub enum $ov {
 	Eq($nt),
 	Not($nt),

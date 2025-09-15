@@ -15,6 +15,7 @@ unsafe_code = "allow"
 [features]
 default = ["std"]
 with-uuid = ["uuid"]
+with-openapi = ["utoipa"]
 std = ["ahash/std"]
 
 [dependencies]
@@ -33,6 +34,7 @@ rand.workspace = true
 regex.workspace = true
 log = { workspace = true }
 uuid = { workspace = true, optional = true }
+utoipa = { workspace = true, optional = true }
 
 [dev-dependencies]
 dotenvy.workspace = true

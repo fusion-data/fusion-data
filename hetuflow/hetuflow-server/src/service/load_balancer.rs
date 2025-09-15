@@ -3,12 +3,8 @@ use std::sync::Arc;
 
 use fusion_common::time::{OffsetDateTime, now_offset};
 use fusion_core::DataError;
-use hetuflow_core::types::{AgentStatus, ServerId};
 use log::{debug, info, warn};
-use modelsql::{
-  ModelManager,
-  filter::{OpValsInt32, OpValsUuid},
-};
+use modelsql::ModelManager;
 use uuid::Uuid;
 
 use crate::infra::bmc::*;
@@ -17,7 +13,7 @@ use hetuflow_core::models::*;
 /// 负载均衡缓存
 #[derive(Debug, Clone)]
 struct LoadBalanceCache {
-  servers: HashMap<ServerId, ServerLoadInfo>,
+  servers: HashMap<String, ServerLoadInfo>,
   last_updated: OffsetDateTime,
 }
 
@@ -50,14 +46,14 @@ impl Default for RebalanceThreshold {
 /// 负载均衡器 - 负责服务器间的负载均衡和命名空间分配。只有 Leader 节点可以执行负载均衡操作。
 pub struct LoadBalancer {
   mm: ModelManager,
-  server_id: ServerId,
+  server_id: String,
   // 负载均衡策略缓存
   balance_cache: Arc<tokio::sync::RwLock<LoadBalanceCache>>,
 }
 
 impl LoadBalancer {
   /// 创建新的负载均衡器
-  pub fn new(mm: ModelManager, server_id: ServerId) -> Self {
+  pub fn new(mm: ModelManager, server_id: String) -> Self {
     Self {
       mm,
       server_id,
@@ -80,7 +76,7 @@ impl LoadBalancer {
       info!("Load imbalance detected, starting rebalancing");
       self.perform_rebalance().await?;
     } else {
-      debug!("No rebalancing needed");
+      log::trace!("No rebalancing needed");
     }
 
     Ok(())
@@ -98,7 +94,7 @@ impl LoadBalancer {
 
     *self.balance_cache.write().await = new_cache;
 
-    debug!("Updated load balance cache with {} servers", self.balance_cache.read().await.servers.len());
+    log::trace!("Updated load balance cache with {} servers", self.balance_cache.read().await.servers.len());
     Ok(())
   }
 
@@ -113,8 +109,7 @@ impl LoadBalancer {
   /// 计算负载评分
   fn calculate_load_score(&self, active_tasks: u32) -> f64 {
     let task_weight = 1.0;
-    let task_score = active_tasks as f64 * task_weight;
-    task_score
+    active_tasks as f64 * task_weight
   }
 
   /// 检查是否需要重平衡

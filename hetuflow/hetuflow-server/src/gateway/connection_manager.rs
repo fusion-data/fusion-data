@@ -4,10 +4,9 @@ use std::{
 };
 
 use fusion_common::{ahash::HashMap, time::now_epoch_millis};
-use hetuflow_core::{protocol::WebSocketCommand, types::AgentId};
+use hetuflow_core::protocol::WebSocketCommand;
 use log::{debug, error, info};
 use tokio::sync::mpsc;
-use uuid::Uuid;
 
 use crate::model::{AgentConnection, AgentEvent, ConnectionStats, GatewayCommandRequest};
 
@@ -15,7 +14,7 @@ use super::GatewayError;
 
 /// 连接管理器
 pub struct ConnectionManager {
-  connections: Arc<RwLock<HashMap<AgentId, Arc<AgentConnection>>>>,
+  connections: Arc<RwLock<HashMap<String, Arc<AgentConnection>>>>,
   event_listeners: Arc<RwLock<Vec<mpsc::UnboundedSender<AgentEvent>>>>,
 }
 
@@ -32,17 +31,17 @@ impl ConnectionManager {
   }
 
   /// 添加新连接
-  pub fn add_connection(&self, agent_id: &AgentId, connection: AgentConnection) -> Result<(), GatewayError> {
+  pub fn add_connection(&self, agent_id: &str, connection: AgentConnection) -> Result<(), GatewayError> {
     // 添加到内存连接池
     let mut connections = self.connections.write().unwrap();
-    connections.insert(agent_id.clone(), Arc::new(connection));
+    connections.insert(agent_id.to_string(), Arc::new(connection));
 
     info!("Agent {} connected successfully", agent_id);
     Ok(())
   }
 
   /// 连接丢失：发送消息失败，但未触发 remove 连接操作
-  fn lost_connection(&self, agent_id: &AgentId) -> Result<(), GatewayError> {
+  fn lost_connection(&self, agent_id: &str) -> Result<(), GatewayError> {
     // 更新可靠性统计
     let connections = self.connections.read().unwrap();
     if let Some(agent) = connections.get(agent_id) {
@@ -52,7 +51,7 @@ impl ConnectionManager {
   }
 
   /// 移除连接
-  pub fn remove_connection(&self, agent_id: &AgentId, reason: &str) -> Result<(), GatewayError> {
+  pub fn remove_connection(&self, agent_id: &str, reason: &str) -> Result<(), GatewayError> {
     let mut connections = self.connections.write().unwrap();
     connections.remove(agent_id);
     info!("Agent {} disconnected: {}", agent_id, reason);
@@ -60,7 +59,7 @@ impl ConnectionManager {
   }
 
   /// 更新心跳时间
-  pub fn update_heartbeat(&self, agent_id: &AgentId, timestamp: i64) -> Result<(), GatewayError> {
+  pub fn update_heartbeat(&self, agent_id: &str, timestamp: i64) -> Result<(), GatewayError> {
     let connections = self.connections.write().unwrap();
     if let Some(agent) = connections.get(agent_id) {
       agent.set_last_heartbeat_ms(timestamp);
@@ -93,7 +92,7 @@ impl ConnectionManager {
 
     // 清理内存中的连接
     let mut connections = self.connections.write().unwrap();
-    let agent_ids: Vec<AgentId> = connections.keys().cloned().collect();
+    let agent_ids: Vec<String> = connections.keys().cloned().collect();
     let mut cleaned_count = 0;
 
     for agent_id in &agent_ids {
@@ -132,12 +131,12 @@ impl ConnectionManager {
   }
 
   /// 发送消息给指定 Agent
-  pub fn send_to_agent(&self, agent_id: &AgentId, command: WebSocketCommand) -> Result<(), GatewayError> {
+  pub fn send_to_agent(&self, agent_id: &str, command: WebSocketCommand) -> Result<(), GatewayError> {
     let connections = self.connections.read().unwrap();
     if let Some(connection) = connections.get(agent_id) {
       connection.send_command(command)
     } else {
-      Err(GatewayError::connection_not_found(agent_id.clone()))
+      Err(GatewayError::connection_not_found(agent_id.to_string()))
     }
   }
 
@@ -169,18 +168,18 @@ impl ConnectionManager {
     Ok(online_agents)
   }
 
-  pub fn get_agent(&self, agent_id: &AgentId) -> Result<Option<Arc<AgentConnection>>, GatewayError> {
+  pub fn get_agent(&self, agent_id: &str) -> Result<Option<Arc<AgentConnection>>, GatewayError> {
     let connections = self.connections.read().unwrap();
     if let Some(conn) = connections.get(agent_id) { Ok(Some(conn.clone())) } else { Ok(None) }
   }
 
-  pub fn find_online_agent(&self, agent_id: &AgentId) -> Result<Arc<AgentConnection>, GatewayError> {
+  pub fn find_online_agent(&self, agent_id: &str) -> Result<Arc<AgentConnection>, GatewayError> {
     if let Some(conn) = self.get_agent(agent_id)?
       && conn.is_online()
     {
       Ok(conn.clone())
     } else {
-      Err(GatewayError::connection_not_found(agent_id.clone()))
+      Err(GatewayError::connection_not_found(agent_id.to_string()))
     }
   }
 
@@ -195,7 +194,7 @@ impl ConnectionManager {
     Ok(conns.len() as u32)
   }
 
-  pub fn is_agent_online(&self, agent_id: &AgentId) -> Result<bool, GatewayError> {
+  pub fn is_agent_online(&self, agent_id: &str) -> Result<bool, GatewayError> {
     let conns = self.connections.read().unwrap();
     Ok(conns.contains_key(agent_id))
   }

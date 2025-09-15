@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 
 /// 文件传输状态
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct FileTransferStatus {
   pub transfer_id: String,           // 传输ID
   pub file_name: String,             // 文件名

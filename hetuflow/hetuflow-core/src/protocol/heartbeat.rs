@@ -2,14 +2,14 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
   models::{AgentMetrics, TaskStatusInfo},
-  types::{AgentId, AgentStatus},
+  types::AgentStatus,
 };
 
 /// 心跳请求
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct HeartbeatRequest {
   /// Agent ID
-  pub agent_id: AgentId,
+  pub agent_id: String,
   /// 心跳时间
   pub timestamp: i64,
   /// Agent 状态

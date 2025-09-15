@@ -4,13 +4,11 @@ use log::{error, warn};
 use modelsql::SqlError;
 use thiserror::Error;
 
-use hetuflow_core::types::AgentId;
-
 /// Gateway 模块专用错误类型
 #[derive(Debug, Error)]
 pub enum GatewayError {
   #[error("Connection not found: {agent_id}")]
-  ConnectionNotFound { agent_id: AgentId },
+  ConnectionNotFound { agent_id: String },
 
   #[error("Async queue error: {0}")]
   AsyncQueueError(String),
@@ -61,7 +59,7 @@ impl GatewayError {
   }
 
   /// 创建连接未找到错误
-  pub fn connection_not_found(agent_id: AgentId) -> Self {
+  pub fn connection_not_found(agent_id: String) -> Self {
     GatewayError::ConnectionNotFound { agent_id }
   }
 

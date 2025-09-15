@@ -1430,7 +1430,7 @@ pub struct BroadcastMessageRequest {
 #[derive(Debug, Serialize)]
 pub struct ConnectionInfo {
   /// Agent ID
-  pub agent_id: AgentId,
+  pub agent_id: String,
   /// 连接状态
   pub status: AgentStatus,
   /// 连接建立时间

@@ -6,18 +6,14 @@ use fusion_common::{
 };
 use fusion_core::DataError;
 use log::{debug, error, info, warn};
-use modelsql::{
-  ModelManager,
-  filter::{OpValsInt32, OpValsString, OpValsUuid},
-};
+use modelsql::{ModelManager, filter::OpValsUuid};
 use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
-use uuid::Uuid;
 
 use hetuflow_core::{
   models::*,
   protocol::{AcquireTaskRequest, AcquireTaskResponse, ScheduledTask, TaskInstanceUpdated, WebSocketCommand},
-  types::{AgentId, AgentStatus, CommandKind, TaskInstanceStatus, TaskStatus},
+  types::{CommandKind, TaskInstanceStatus, TaskStatus},
 };
 
 use crate::{
@@ -145,7 +141,7 @@ impl AgentManager {
   }
 
   /// 获取 Agent 详细信息（包含可靠性统计）
-  pub async fn get_agent_details(&self, agent_id: &AgentId) -> Result<Option<serde_json::Value>, DataError> {
+  pub async fn get_agent_details(&self, agent_id: &str) -> Result<Option<serde_json::Value>, DataError> {
     // 通过 AgentRegistry 获取基础信息
     if let Some(agent) = self.connection_manager.get_agent(agent_id)? {
       // 获取可靠性统计
@@ -160,7 +156,7 @@ impl AgentManager {
   pub async fn select_best_agent(
     &self,
     _task_requirements: Option<serde_json::Value>,
-  ) -> Result<Option<AgentId>, DataError> {
+  ) -> Result<Option<String>, DataError> {
     let online_agents = self.connection_manager.get_online_agents()?;
 
     if online_agents.is_empty() {
@@ -180,12 +176,7 @@ impl AgentManager {
   }
 
   /// 更新任务执行统计
-  pub async fn update_task_stats(
-    &self,
-    agent_id: &AgentId,
-    success: bool,
-    response_time_ms: f64,
-  ) -> Result<(), DataError> {
+  pub async fn update_task_stats(&self, agent_id: &str, success: bool, response_time_ms: f64) -> Result<(), DataError> {
     if let Some(agent) = self.connection_manager.get_agent(agent_id)? {
       agent.update_stats(success, response_time_ms);
     }
@@ -296,7 +287,7 @@ impl AgentEventRunLoop {
   }
 
   /// Agent poll task 时不对 Server 绑定的 Namespace 进行过滤，直接拉取符合要求的最紧急的 SchedTaskInstance。按 request 条件进行过滤
-  async fn process_task_poll(&self, agent_id: &AgentId, request: Arc<AcquireTaskRequest>) -> Result<(), DataError> {
+  async fn process_task_poll(&self, agent_id: &str, request: Arc<AcquireTaskRequest>) -> Result<(), DataError> {
     info!("Agent {} task poll request: {:?}", agent_id, request);
     let task_instances = TaskInstanceBmc::find_many_by_poll(&self.mm, &request).await?;
     let task_map = TaskBmc::find_many(
@@ -336,7 +327,7 @@ impl AgentEventRunLoop {
 
   async fn process_task_instance_changed(
     &self,
-    agent_id: &AgentId,
+    agent_id: &str,
     payload: Arc<TaskInstanceUpdated>,
   ) -> Result<(), DataError> {
     info!("Processing task instance changed for agent {}, instance {}", agent_id, payload.instance_id);

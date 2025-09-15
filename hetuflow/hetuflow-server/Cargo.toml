@@ -13,12 +13,16 @@ publish = false
 workspace = true
 
 [dependencies]
-hetuflow-core = { workspace = true, features = ["with-db", "with-cli"] }
+hetuflow-core = { workspace = true, features = [
+  "with-db",
+  "with-cli",
+  "with-openapi",
+] }
 fusion-common = { workspace = true, features = ["with-uuid"] }
-fusion-core = { workspace = true, features = ["with-uuid"] }
+fusion-core = { workspace = true, features = ["with-uuid", "with-openapi"] }
 fusion-web = { workspace = true }
 fusion-db = { workspace = true, features = ["with-postgres", "with-uuid"] }
-modelsql = { workspace = true, features = ["with-uuid"] }
+modelsql = { workspace = true, features = ["with-uuid", "with-openapi"] }
 sqlx = { workspace = true, features = [
   "runtime-tokio",
   "chrono",
@@ -41,6 +45,9 @@ thiserror = { workspace = true }
 uuid = { workspace = true }
 axum = { workspace = true, features = ["ws"] }
 axum-extra = { workspace = true }
+utoipa = { workspace = true }
+utoipa-axum = { workspace = true }
+utoipa-swagger-ui = { workspace = true }
 garde = { workspace = true }
 axum-valid = { workspace = true }
 serde = { workspace = true }

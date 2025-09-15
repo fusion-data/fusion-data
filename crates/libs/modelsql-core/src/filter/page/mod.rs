@@ -5,6 +5,7 @@ mod order_by;
 pub use order_by::*;
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct Page {
   /// 指定返回的页码
   pub page: Option<u64>,

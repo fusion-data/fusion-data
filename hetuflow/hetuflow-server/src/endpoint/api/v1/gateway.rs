@@ -1,7 +1,7 @@
 use std::{net::SocketAddr, sync::Arc};
 
 use axum::{
-  Json, Router,
+  Json,
   extract::{
     ConnectInfo, Query, State, WebSocketUpgrade,
     ws::{Message, WebSocket},
@@ -16,10 +16,8 @@ use log::{error, info};
 use serde_json::Value;
 use tokio::sync::mpsc;
 
-use hetuflow_core::{
-  protocol::{WebSocketCommand, WebSocketEvent, WebSocketParams},
-  types::AgentId,
-};
+use hetuflow_core::protocol::{WebSocketCommand, WebSocketEvent, WebSocketParams};
+use utoipa_axum::router::OpenApiRouter;
 
 use crate::{
   application::ServerApplication,
@@ -27,13 +25,25 @@ use crate::{
   model::{AgentConnection, GatewayCommandRequest},
 };
 
-pub fn routes() -> Router<ServerApplication> {
-  Router::new()
+pub fn routes() -> OpenApiRouter<ServerApplication> {
+  OpenApiRouter::new()
     .route("/ws", any(websocket_handler))
     .route("/status", post(get_status))
     .route("/command", post(send_command))
 }
 
+/// 获取网关状态
+///
+/// 获取网关和Agent连接状态信息
+#[utoipa::path(
+  post,
+  path = "/api/v1/gateway/status",
+  responses(
+    (status = 200, description = "状态获取成功", body = Value),
+    (status = 500, description = "服务器内部错误")
+  ),
+  tag = "Gateway"
+)]
 async fn get_status(State(app): State<ServerApplication>) -> WebResult<Value> {
   let info = app.agent_stats().await?;
   ok_json!(info)
@@ -42,6 +52,17 @@ async fn get_status(State(app): State<ServerApplication>) -> WebResult<Value> {
 /// 发送命令
 ///
 /// 发送网关命令并返回命令 ID 列表
+#[utoipa::path(
+  post,
+  path = "/api/v1/gateway/command",
+  request_body = GatewayCommandRequest,
+  responses(
+    (status = 200, description = "命令发送成功", body = IdUuidResult),
+    (status = 400, description = "请求参数错误"),
+    (status = 500, description = "服务器内部错误")
+  ),
+  tag = "Gateway"
+)]
 async fn send_command(
   State(app): State<ServerApplication>,
   Json(command): Json<GatewayCommandRequest>,
@@ -68,7 +89,7 @@ async fn websocket_handler(
 pub async fn handle_websocket_connection(
   socket: WebSocket,
   address: String,
-  agent_id: AgentId,
+  agent_id: String,
   message_handler: Arc<MessageHandler>,
 ) {
   let (mut ws_tx, mut ws_rx) = socket.split();

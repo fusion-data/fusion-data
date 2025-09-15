@@ -186,7 +186,7 @@ impl ServerApplication {
     // 启动 HTTP API 服务 (/api/v1)
     let app_state = self.clone();
     tokio::spawn(async move {
-      let router = fusion_web::Router::new().nest("/api", crate::endpoint::api::routes()).with_state(app_state);
+      let router = crate::endpoint::routes().with_state(app_state);
       if let Err(e) = fusion_web::server::init_server(router).await {
         error!("HTTP server error: {:?}", e);
       }

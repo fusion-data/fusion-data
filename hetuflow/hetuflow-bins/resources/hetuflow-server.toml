@@ -17,24 +17,20 @@ log_writer = "both"
 log_dir = "./var/logs/server/"
 log_name = "hetuflow-server"
 log_targets = [
-  "tower_http=debug",
-  "fusion_iam=debug",
-  "fusion_flow=debug",
-  "fusion_metadata=debug",
-  "hetumind=debug",
-  "hetumind_context=debug",
-  "fusion_grpc=debug",
-  "fusion_db=debug",
-  "fusion=debug",
-  "fusion_common=debug",
+  #   "tower_http=debug",
+  #   "fusion_iam=debug",
+  #   "fusion_metadata=debug",
+  #   "hetumind=debug",
+  #   "hetumind_context=debug",
+  #   "fusion_grpc=debug",
+  #   "fusion_db=debug",
+  #   "fusion=debug",
+  #   "fusion_common=debug",
+  "modelsql=debug",
   "hetuflow_core=debug",
   "hetuflow_server=debug",
 ]
 
-[fusion.log.otel]
-enable = false
-traces_sample = "always_on"
-exporter_otlp_endpoint = "http://localhost:4317"
 
 [fusion.db]
 enable = true
@@ -101,12 +97,12 @@ max_subscribers = 100
 # JWE Token 认证配置（可选）
 [hetuflow.jwe]
 # 私钥（用于解密 JWE Token）
-# private_key = "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQg...\n-----END PRIVATE KEY-----"
+private_key = "-----BEGIN EC PRIVATE KEY-----\nMHcCAQEEILbW/tgwCUtATHBYidQ+fgdMxomJBwnzKltNGpnKVE+ToAoGCCqGSM49\nAwEHoUQDQgAEhT3tLFIRL/n1vlL+/eD1FPCFqNSm1qDglnXc4/jaRKHcHveL7QD4\nnXbKJPYYyFZdyl3hls5x1SHGcgzcEPNyHQ==\n-----END EC PRIVATE KEY-----"
 # 公钥（用于加密 JWE Token）
-# public_key = "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE...\n-----END PUBLIC KEY-----"
+public_key = "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEhT3tLFIRL/n1vlL+/eD1FPCFqNSm\n1qDglnXc4/jaRKHcHveL7QD4nXbKJPYYyFZdyl3hls5x1SHGcgzcEPNyHQ==\n-----END PUBLIC KEY-----"
 # 密钥协商算法
-# key_agreement_algorithm = "ECDH-ES"
+key_agreement_algorithm = "ECDH-ES"
 # 内容加密算法
-# content_encryption_algorithm = "A256GCM"
+content_encryption_algorithm = "A256GCM"
 # Token 有效期（秒）
 # token_ttl = 3600

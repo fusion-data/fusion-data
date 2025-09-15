@@ -3,7 +3,7 @@ use uuid::Uuid;
 
 use crate::{
   models::{SchedTask, SchedTaskInstance, TaskMetrics},
-  types::{AgentId, Labels, TaskInstanceStatus},
+  types::{Labels, TaskInstanceStatus},
 };
 
 /// 任务分发请求
@@ -75,7 +75,7 @@ pub struct TaskInstanceUpdated {
   /// 任务实例 ID
   pub instance_id: Uuid,
   /// Agent ID
-  pub agent_id: AgentId,
+  pub agent_id: String,
   /// 执行状态
   pub status: TaskInstanceStatus,
   /// 状态更新时间
@@ -113,7 +113,7 @@ impl TaskInstanceUpdated {
 /// Task pull request
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct AcquireTaskRequest {
-  pub agent_id: AgentId,  // Agent ID
+  pub agent_id: String,   // Agent ID
   pub max_tasks: u32,     // 允许最大并发任务数
   pub labels: Labels,     // 当前 Agent 拥有的标签，用于过滤任务
   pub acquire_count: u32, // 拉取任务数
@@ -131,7 +131,7 @@ pub struct AcquireTaskResponse {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CreateTaskInstanceRequest {
   pub task_id: Uuid,          // 任务ID
-  pub agent_id: AgentId,      // Agent ID
+  pub agent_id: String,       // Agent ID
   pub retry_count: i32,       // 重试次数
   pub reason: Option<String>, // 创建原因
 }

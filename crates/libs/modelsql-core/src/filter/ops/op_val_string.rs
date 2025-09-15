@@ -1,6 +1,7 @@
 use crate::filter::OpVal;
 
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct OpValsString(pub Vec<OpValString>);
 
 impl OpValsString {
@@ -162,6 +163,7 @@ impl OpValsString {
 }
 
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub enum OpValString {
   Eq(String),
   Not(String),

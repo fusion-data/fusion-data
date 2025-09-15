@@ -4,43 +4,92 @@ use axum::{
   routing::{get, post},
 };
 use fusion_core::IdStringResult;
-use fusion_web::{Router, WebResult, ok_json};
+use fusion_web::{WebResult, ok_json};
 use modelsql::page::PageResult;
+use serde_json::Value;
 
 use hetuflow_core::models::{AgentForCreate, AgentForQuery, AgentForUpdate, SchedAgent};
+use utoipa_axum::router::OpenApiRouter;
 use uuid::Uuid;
 
 use crate::{application::ServerApplication, service::AgentSvc};
 
-pub fn routes() -> Router<ServerApplication> {
-  Router::new()
-    .route("/query", post(query_agents))
-    .route("/create", post(create_agent))
-    .route("/{id}", get(get_agent).delete(delete_agent))
-    .route("/{id}/update", post(update_agent))
+pub fn routes() -> OpenApiRouter<ServerApplication> {
+  OpenApiRouter::new().routes(utoipa_axum::routes!(query_agents, create_agent, get_agent, update_agent, delete_agent))
 }
 
+#[utoipa::path(
+  post,
+  path = "/query",
+  request_body = AgentForQuery,
+  responses(
+    (status = 200, body = PageResult<SchedAgent>)
+  )
+)]
 async fn query_agents(agent_svc: AgentSvc, Json(input): Json<AgentForQuery>) -> WebResult<PageResult<SchedAgent>> {
   let result = agent_svc.query(input).await?;
   ok_json!(result)
 }
 
+#[utoipa::path(
+  post,
+  path = "/create",
+  request_body = AgentForCreate,
+  responses(
+    (status = 200, description = "Success", body = IdStringResult)
+  )
+)]
 async fn create_agent(agent_svc: AgentSvc, Json(input): Json<AgentForCreate>) -> WebResult<IdStringResult> {
   let id = agent_svc.create(input).await?;
   ok_json!(IdStringResult::new(id))
 }
 
+#[utoipa::path(
+  get,
+  path = "/{id}",
+  params(
+    ("id" = Uuid, Path, description = "Agent ID")
+  ),
+  responses(
+    (status = 200, description = "Success", body = Option<SchedAgent>)
+  )
+)]
 async fn get_agent(agent_svc: AgentSvc, Path(id): Path<Uuid>) -> WebResult<Option<SchedAgent>> {
   let result = agent_svc.get_by_id(&id).await?;
   ok_json!(result)
 }
 
-async fn update_agent(agent_svc: AgentSvc, Path(id): Path<Uuid>, Json(input): Json<AgentForUpdate>) -> WebResult<()> {
+#[utoipa::path(
+  post,
+  path = "/{id}/update",
+  params(
+    ("id" = Uuid, Path, description = "Agent ID")
+  ),
+  request_body = AgentForUpdate,
+  responses(
+    (status = 200, description = "Success", body = Value)
+  )
+)]
+async fn update_agent(
+  agent_svc: AgentSvc,
+  Path(id): Path<Uuid>,
+  Json(input): Json<AgentForUpdate>,
+) -> WebResult<Value> {
   agent_svc.update_by_id(&id, input).await?;
   ok_json!()
 }
 
-async fn delete_agent(agent_svc: AgentSvc, Path(id): Path<Uuid>) -> WebResult<()> {
+#[utoipa::path(
+  delete,
+  path = "/{id}",
+  params(
+    ("id" = Uuid, Path, description = "Agent ID")
+  ),
+  responses(
+    (status = 200, description = "Success", body = Value)
+  )
+)]
+async fn delete_agent(agent_svc: AgentSvc, Path(id): Path<Uuid>) -> WebResult<Value> {
   agent_svc.delete_by_id(&id).await?;
   ok_json!()
 }

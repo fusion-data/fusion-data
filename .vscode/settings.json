@@ -114,6 +114,7 @@
     "unplugin",
     "ureq",
     "urlencoding",
+    "utoipa",
     "valkey",
     "varchar",
     "wechat",

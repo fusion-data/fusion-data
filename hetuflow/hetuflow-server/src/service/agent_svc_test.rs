@@ -32,7 +32,7 @@ fn create_test_jwe_config() -> JweConfig {
 /// 创建测试用的 Agent 注册请求
 fn create_test_register_request(jwe_token: Option<String>) -> AgentRegisterRequest {
   AgentRegisterRequest {
-    agent_id: AgentId::new_v4(),
+    agent_id: String::new_v4(),
     name: Some("test-agent".to_string()),
     labels: vec!["test".to_string()],
     metadata: std::collections::HashMap::new(),
@@ -66,7 +66,7 @@ mod tests {
       max_concurrent_tasks: 100,
       history_ttl: std::time::Duration::from_secs(3600),
       server: ServerConfig {
-        server_id: ServerId::new_v4(),
+        server_id: String::new_v4(),
         bind_address: "127.0.0.1:9500".to_string(),
         heartbeat_interval: std::time::Duration::from_secs(30),
         agent_overdue_ttl: std::time::Duration::from_secs(300),

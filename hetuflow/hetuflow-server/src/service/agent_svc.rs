@@ -3,7 +3,7 @@ use fusion_core::DataError;
 use log::{info, warn};
 use modelsql::{
   ModelManager,
-  filter::{OpValsDateTime, OpValsInt32, OpValsString, OpValsUuid, Page},
+  filter::{OpValsDateTime, OpValsInt32, OpValsString, Page},
   page::PageResult,
 };
 use uuid::Uuid;
@@ -14,7 +14,7 @@ use hetuflow_core::{
     TaskInstanceForUpdate,
   },
   protocol::{AgentRegisterRequest, AgentRegisterResponse},
-  types::{AgentId, AgentStatus, TaskInstanceStatus, TaskStatus},
+  types::{AgentStatus, TaskInstanceStatus, TaskStatus},
 };
 
 use crate::{
@@ -41,7 +41,7 @@ impl AgentSvc {
   }
 
   /// 创建新的 Agent
-  pub async fn create(&self, agent_data: AgentForCreate) -> Result<AgentId, DataError> {
+  pub async fn create(&self, agent_data: AgentForCreate) -> Result<String, DataError> {
     let id = agent_data.id.clone();
     AgentBmc::insert(&self.mm, agent_data).await?;
     Ok(id)
@@ -63,22 +63,22 @@ impl AgentSvc {
   }
 
   /// 注册新的 Agent
-  pub async fn create_agent(&self, agent_data: AgentForCreate) -> Result<AgentId, DataError> {
+  pub async fn create_agent(&self, agent_data: AgentForCreate) -> Result<String, DataError> {
     let id = agent_data.id.clone();
     AgentBmc::insert(&self.mm, agent_data).await?;
     Ok(id)
   }
 
   /// 更新 Agent 状态
-  pub async fn update_agent_status(&self, agent_id: &AgentId, status: AgentStatus) -> Result<(), DataError> {
+  pub async fn update_agent_status(&self, agent_id: &str, status: AgentStatus) -> Result<(), DataError> {
     AgentBmc::update_status(&self.mm, agent_id, status).await.map_err(DataError::from)
   }
 
   /// 更新 Agent 心跳
-  pub async fn update_agent_heartbeat(&self, agent_id: &AgentId) -> Result<(), DataError> {
+  pub async fn update_agent_heartbeat(&self, agent_id: &str) -> Result<(), DataError> {
     let update =
       AgentForUpdate { status: Some(AgentStatus::Online), last_heartbeat: Some(now_offset()), ..Default::default() };
-    AgentBmc::update_by_id(&self.mm, agent_id.as_str(), update).await.map_err(DataError::from)
+    AgentBmc::update_by_id(&self.mm, agent_id, update).await.map_err(DataError::from)
   }
 
   /// 查找在线的 Agent
@@ -87,8 +87,8 @@ impl AgentSvc {
   }
 
   /// 根据 ID 查找 Agent
-  pub async fn find_by_id(&self, agent_id: &AgentId) -> Result<SchedAgent, DataError> {
-    AgentBmc::find_by_id(&self.mm, agent_id.as_str()).await.map_err(DataError::from)
+  pub async fn find_by_id(&self, agent_id: &str) -> Result<SchedAgent, DataError> {
+    AgentBmc::find_by_id(&self.mm, agent_id).await.map_err(DataError::from)
   }
 
   /// 检查离线的 Agent（心跳超时）
@@ -112,7 +112,7 @@ impl AgentSvc {
   }
 
   /// 处理 Agent 离线
-  pub async fn handle_agent_offline(&self, agent_id: &AgentId) -> Result<(), DataError> {
+  pub async fn handle_agent_offline(&self, agent_id: &str) -> Result<(), DataError> {
     info!("Handling offline agent: {}", agent_id);
 
     let mm = self.mm.get_txn_clone();
@@ -168,7 +168,7 @@ impl AgentSvc {
 
   pub async fn handle_register(
     &self,
-    agent_id: &AgentId,
+    agent_id: &str,
     payload: &AgentRegisterRequest,
   ) -> Result<AgentRegisterResponse, DataError> {
     // JWE双重验证逻辑
@@ -180,7 +180,7 @@ impl AgentSvc {
         .ok_or_else(|| DataError::bad_request("JWE Token is required for agent registration"))?;
 
       // 验证JWE Token
-      match jwe_service.verify_token(jwe_token, agent_id.clone()) {
+      match jwe_service.verify_token(jwe_token, agent_id.to_string()) {
         Ok(token_payload) => {
           info!("Agent {} JWE token verified successfully, server_id: {}", agent_id, token_payload.server_id);
         }

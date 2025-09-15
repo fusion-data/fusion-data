@@ -6,7 +6,7 @@ use modelsql_core::{
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::types::{ServerId, ServerStatus};
+use crate::types::ServerStatus;
 
 /// SchedServer 数据模型
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -15,24 +15,29 @@ use crate::types::{ServerId, ServerStatus};
   derive(modelsql::Fields, sqlx::FromRow),
   sea_query::enum_def(table_name = "sched_server")
 )]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct SchedServer {
-  pub id: ServerId,
+  pub id: String,
   pub name: String,
   pub address: String,
   pub bind_namespaces: Vec<Uuid>,
   pub status: ServerStatus,
   pub description: Option<String>,
+  #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
   pub last_heartbeat: OffsetDateTime,
   pub created_by: i64,
+  #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
   pub created_at: OffsetDateTime,
+  #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
   pub deleted_at: Option<OffsetDateTime>,
 }
 
 /// Server 创建模型
 #[derive(Debug, Deserialize)]
 #[cfg_attr(feature = "with-db", derive(modelsql::Fields))]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct ServerForRegister {
-  pub id: ServerId,
+  pub id: String,
   pub name: String,
   pub address: String,
   pub status: ServerStatus,
@@ -41,6 +46,7 @@ pub struct ServerForRegister {
 /// Server 更新模型
 #[derive(Debug, Clone, Default, Deserialize)]
 #[cfg_attr(feature = "with-db", derive(modelsql::Fields))]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct ServerForUpdate {
   pub name: Option<String>,
   pub address: Option<String>,
@@ -52,6 +58,7 @@ pub struct ServerForUpdate {
 
 /// Server 查询请求
 #[derive(Default, Deserialize)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct ServerForQuery {
   pub filter: ServerFilter,
   pub page: Page,
@@ -60,6 +67,7 @@ pub struct ServerForQuery {
 /// Server 过滤器
 #[derive(Default, Deserialize)]
 #[cfg_attr(feature = "with-db", derive(modelsql::FilterNodes))]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct ServerFilter {
   pub id: Option<OpValsString>,
   pub name: Option<OpValsString>,

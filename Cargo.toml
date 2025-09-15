@@ -1,5 +1,14 @@
 [workspace]
-members = ["crates/fusions/*", "crates/libs/*", "hetuflow/*", "hetumind/*"]
+members = [
+  "crates/fusions/*",
+  "crates/libs/*",
+  "hetuflow/hetuflow-core",
+  "hetuflow/hetuflow-server",
+  "hetuflow/hetuflow-agent",
+  "hetuflow/hetuflow-bins",
+  "hetuflow/hetuflow-docs",
+  "hetumind/*",
+]
 resolver = "2"
 
 [workspace.package]
@@ -241,6 +250,18 @@ axum-core = { version = "0.5" }
 axum-extra = { version = "0.10", features = ["typed-header"] }
 axum-macros = { version = "0.5" }
 axum-test = { version = "18", features = ["reqwest", "typed-routing", "ws"] }
+utoipa = { version = "5.4", features = [
+  "axum_extras",
+  "chrono",
+  "decimal",
+  "uuid",
+  "rc_schema",
+] }
+utoipa-axum = "0.2"
+utoipa-swagger-ui = { version = "9.0", features = [
+  # "vendored",
+  "axum",
+] }
 # -- validator
 garde = { version = "0.22", features = ["derive"] }
 axum-valid = { version = "0.24", default-features = false, features = [

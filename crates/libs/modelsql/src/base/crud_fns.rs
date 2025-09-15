@@ -133,12 +133,11 @@ where
     Dbx::Postgres(dbx_postgres) => {
       let query_str = stmt.to_string(sea_query::PostgresQueryBuilder);
 
-      let result = sqlx::query(&query_str)
-        .fetch_one(dbx_postgres.db())
-        .await
-        .map_err(|_| SqlError::CountFail { schema: MC::SCHEMA, table: MC::TABLE })?;
-      let count: i64 =
-        result.try_get("count").map_err(|_| SqlError::CountFail { schema: MC::SCHEMA, table: MC::TABLE })?;
+      let result = sqlx::query(&query_str).fetch_one(dbx_postgres.db()).await.map_err(|e| {
+        log::error!("count fail: {:?}", e);
+        SqlError::CountFail { schema: MC::SCHEMA, table: MC::TABLE }
+      })?;
+      let count: i64 = result.try_get("count")?;
       Ok(count as u64)
     }
     #[cfg(feature = "with-sqlite")]
@@ -173,10 +172,10 @@ where
     Dbx::Postgres(dbx_postgres) => {
       let query_str = stmt.to_string(sea_query::PostgresQueryBuilder);
 
-      let result = sqlx::query(&query_str)
-        .fetch_one(dbx_postgres.db())
-        .await
-        .map_err(|_| SqlError::CountFail { schema: MC::SCHEMA, table: MC::TABLE })?;
+      let result = sqlx::query(&query_str).fetch_one(dbx_postgres.db()).await.map_err(|e| {
+        log::error!("count_on fail: {:?}", e);
+        SqlError::CountFail { schema: MC::SCHEMA, table: MC::TABLE }
+      })?;
       let count: i64 =
         result.try_get("count").map_err(|_| SqlError::CountFail { schema: MC::SCHEMA, table: MC::TABLE })?;
       Ok(count)

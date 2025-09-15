@@ -5,16 +5,14 @@
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 
 use axum::{
-  Router,
   extract::{ConnectInfo, State},
   http::StatusCode,
   response::Json,
   routing::post,
 };
 use chrono::Utc;
-use hetuflow_core::types::AgentId;
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
+use utoipa_axum::router::OpenApiRouter;
 
 use crate::{
   application::ServerApplication,
@@ -22,7 +20,7 @@ use crate::{
 };
 
 /// 生成 Token 请求
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, utoipa::ToSchema)]
 pub struct GenerateTokenRequest {
   /// Agent ID (必填，UUID 格式)
   pub agent_id: String,
@@ -31,12 +29,12 @@ pub struct GenerateTokenRequest {
 }
 
 /// 生成 Token 响应
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct GenerateTokenResponse {
   /// JWE Token
   pub token: String,
   /// Agent ID
-  pub agent_id: AgentId,
+  pub agent_id: String,
   /// Token 类型
   pub token_type: String,
   /// 过期时间 (Unix 时间戳)
@@ -46,7 +44,7 @@ pub struct GenerateTokenResponse {
 }
 
 /// 错误响应
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, utoipa::ToSchema)]
 pub struct ErrorResponse {
   /// 错误代码
   pub code: String,
@@ -65,6 +63,16 @@ fn is_localhost(addr: &SocketAddr) -> bool {
 }
 
 /// 生成 JWE Token (仅本机访问)
+#[utoipa::path(
+  post,
+  path = "/generate-token",
+  request_body = GenerateTokenRequest,
+  responses(
+    (status = 200, description = "Success", body = GenerateTokenResponse),
+    (status = 403, description = "Access Denied", body = ErrorResponse),
+    (status = 500, description = "Internal Server Error", body = ErrorResponse)
+  )
+)]
 #[axum::debug_handler]
 pub async fn generate_token(
   ConnectInfo(addr): ConnectInfo<SocketAddr>,
@@ -156,8 +164,8 @@ pub async fn generate_token(
 }
 
 /// 认证相关路由
-pub fn routes() -> Router<ServerApplication> {
-  Router::new().route("/generate-token", post(generate_token))
+pub fn routes() -> OpenApiRouter<ServerApplication> {
+  OpenApiRouter::new().routes(utoipa_axum::routes!(generate_token))
 }
 
 #[cfg(test)]

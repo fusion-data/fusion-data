@@ -15,6 +15,7 @@ use crate::protocol::{AcquireTaskResponse, AgentRegisterResponse};
 /// 作业类型 (ScheduleKind) - 定义了 Job 的核心调度和行为模式
 #[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy, PartialEq, Eq, AsRefStr)]
 #[cfg_attr(feature = "with-db", derive(sqlx::Type))]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 #[repr(i32)]
 pub enum ScheduleKind {
   /// Cron 定时作业
@@ -33,6 +34,7 @@ pub enum ScheduleKind {
 #[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "with-db", derive(sqlx::Type))]
 #[repr(i32)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub enum JobStatus {
   /// 已创建
   Created = 1,
@@ -45,6 +47,7 @@ pub enum JobStatus {
 /// 调度状态
 #[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "with-db", derive(sqlx::Type))]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 #[repr(i32)]
 pub enum ScheduleStatus {
   /// 已创建
@@ -78,6 +81,7 @@ pub enum ScheduleStatus {
 /// ```
 #[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "with-db", derive(sqlx::Type))]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 #[repr(i32)]
 pub enum TaskStatus {
   /// 等待分发
@@ -99,6 +103,7 @@ pub enum TaskStatus {
 /// 任务执行状态
 #[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "with-db", derive(sqlx::Type))]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 #[repr(i32)]
 pub enum TaskInstanceStatus {
   /// 等待执行
@@ -121,10 +126,9 @@ pub enum TaskInstanceStatus {
   Succeeded = 100,
 }
 
-pub type ServerId = String;
-
 #[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy, PartialEq)]
 #[cfg_attr(feature = "with-db", derive(sqlx::Type))]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 #[repr(i32)]
 pub enum ServerStatus {
   /// 不活跃
@@ -133,11 +137,10 @@ pub enum ServerStatus {
   Active = 100,
 }
 
-pub type AgentId = String;
-
 /// Agent 状态
 #[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "with-db", derive(sqlx::Type))]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 #[repr(i32)]
 pub enum AgentStatus {
   Idle = 10,          // 空闲
@@ -152,6 +155,7 @@ pub enum AgentStatus {
 /// 从 Server 发向 Agent 的命令类型
 #[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "with-db", derive(sqlx::Type))]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 #[repr(i32)]
 pub enum CommandKind {
   Shutdown = 1,        // 关闭指令
@@ -191,6 +195,7 @@ pub enum TaskControlKind {
 
 /// WebSocket 消息类型枚举
 #[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 #[repr(i32)]
 pub enum EventKind {
   /// 确认消息
@@ -227,6 +232,7 @@ modelsql::generate_enum_i32_to_sea_query_value!(
 
 /// 资源限制配置
 #[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct ResourceLimits {
   /// 最大内存使用量 (MB)
   pub max_memory_mb: Option<u64>,

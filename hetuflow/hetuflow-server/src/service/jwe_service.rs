@@ -5,7 +5,6 @@
 
 use chrono::Utc;
 use fusion_core::DataError;
-use hetuflow_core::types::{AgentId, ServerId};
 use josekit::{
   jwe::{JweContext, JweHeader},
   jwk::{
@@ -72,7 +71,7 @@ pub struct JweTokenPayload {
   pub jti: String, // JWT ID
 
   /// 自定义 Claims
-  pub server_id: ServerId, // Server ID
+  pub server_id: String, // Server ID
   pub permissions: Vec<String>, // 权限列表
 }
 
@@ -145,8 +144,8 @@ impl JweService {
   /// 生成 JWE Token
   pub fn generate_token(
     &self,
-    agent_id: &AgentId,
-    server_id: &ServerId,
+    agent_id: &str,
+    server_id: &str,
     permissions: Vec<String>,
   ) -> Result<String, JweServiceError> {
     let now = Utc::now();
@@ -188,7 +187,7 @@ impl JweService {
   }
 
   /// 验证并解密 JWE Token
-  pub fn verify_token(&self, token: &str, expected_agent_id: AgentId) -> Result<JweTokenPayload, JweServiceError> {
+  pub fn verify_token(&self, token: &str, expected_agent_id: String) -> Result<JweTokenPayload, JweServiceError> {
     // 解密 JWE Token
     let context = JweContext::new();
     let decrypter = josekit::jwe::ECDH_ES

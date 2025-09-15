@@ -1,21 +1,17 @@
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 
-use crate::{
-  models::{AgentCapabilities, SchedAgent},
-  types::AgentId,
-};
+use crate::models::{AgentCapabilities, SchedAgent};
 
 #[derive(Debug, Deserialize)]
 pub struct WebSocketParams {
-  pub agent_id: AgentId,
+  pub agent_id: String,
 }
 
 /// Agent 注册请求。Agent 连接上 Server 后发送的第一个请求，用于描述当前 Agent 的能力和元数据
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct AgentRegisterRequest {
   /// Agent 唯一标识
-  pub agent_id: AgentId,
+  pub agent_id: String,
   /// Agent 能力描述
   pub capabilities: AgentCapabilities,
   /// Agent 地址

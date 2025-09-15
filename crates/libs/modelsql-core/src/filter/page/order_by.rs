@@ -2,6 +2,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 // region:    --- OrderBy
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub enum OrderBy {
   Asc(String),
   Desc(String),
@@ -78,6 +79,7 @@ impl<'de> Deserialize<'de> for OrderBy {
 
 // region:    --- OrderBys
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct OrderBys(Vec<OrderBy>);
 
 impl OrderBys {

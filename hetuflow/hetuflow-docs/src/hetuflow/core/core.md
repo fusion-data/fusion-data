@@ -136,7 +136,7 @@ pub enum CommandKind {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct AgentRegisterRequest {
   /// Agent 唯一标识
-  pub agent_id: AgentId,
+  pub agent_id: String,
   /// Agent 能力描述
   pub capabilities: AgentCapabilities,
   /// Agent 地址
@@ -177,7 +177,7 @@ pub struct AgentCapabilities {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct HeartbeatRequest {
   /// Agent ID
-  pub agent_id: AgentId,
+  pub agent_id: String,
   /// 心跳时间戳
   pub timestamp: i64,
   /// Agent 状态
@@ -268,7 +268,7 @@ pub struct TaskInstanceUpdated {
   /// 任务实例 ID
   pub instance_id: Uuid,
   /// Agent ID
-  pub agent_id: AgentId,
+  pub agent_id: String,
   /// 执行状态
   pub status: TaskInstanceStatus,
   /// 状态更新时间
@@ -284,7 +284,7 @@ pub struct TaskInstanceUpdated {
 /// Task pull request
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct AcquireTaskRequest {
-  pub agent_id: AgentId,     // Agent ID
+  pub agent_id: String,     // Agent ID
   pub max_tasks: u32,     // 允许最大并发任务数
   pub labels: Labels,  // 当前 Agent 拥有的标签，用于过滤任务
   pub acquire_count: u32, // 拉取任务数

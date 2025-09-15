@@ -15,6 +15,12 @@ workspace = true
 [features]
 with-db = ["modelsql", "sqlx", "sea-query", "modelsql-core/with-sea-query"]
 with-cli = ["clap"]
+with-openapi = [
+  "utoipa",
+  "fusion-common/with-openapi",
+  "modelsql/with-openapi",
+  "modelsql-core/with-openapi",
+]
 
 [dependencies]
 fusion-common = { workspace = true, features = ["with-uuid"] }
@@ -44,6 +50,8 @@ garde = { workspace = true }
 duration-str = { workspace = true }
 config = { workspace = true }
 toml = { workspace = true }
+utoipa = { workspace = true, optional = true }
+
 
 [dev-dependencies]
 tokio-test = { workspace = true }

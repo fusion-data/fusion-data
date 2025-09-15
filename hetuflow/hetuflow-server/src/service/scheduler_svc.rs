@@ -13,7 +13,7 @@ use tokio::sync::broadcast;
 use tokio::time::interval;
 
 use hetuflow_core::models::{AgentFilter, AgentForUpdate, ServerFilter, ServerForRegister, ServerForUpdate};
-use hetuflow_core::types::{AgentStatus, ServerId, ServerStatus};
+use hetuflow_core::types::{AgentStatus, ServerStatus};
 
 use crate::infra::bmc::{AgentBmc, ServerBmc};
 use crate::service::TaskGenerationSvc;
@@ -81,10 +81,10 @@ impl SchedulerSvc {
   }
 
   /// 更新服务器心跳时间
-  async fn update_server_heartbeat(mm: &ModelManager, server_id: &ServerId) -> Result<(), DataError> {
+  async fn update_server_heartbeat(mm: &ModelManager, server_id: &str) -> Result<(), DataError> {
     let server_update = ServerForUpdate { status: Some(ServerStatus::Active), ..Default::default() };
 
-    ServerBmc::update_by_id(mm, server_id.as_str(), server_update).await?;
+    ServerBmc::update_by_id(mm, server_id, server_update).await?;
     Ok(())
   }
 
