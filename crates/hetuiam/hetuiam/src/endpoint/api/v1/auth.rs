@@ -15,7 +15,7 @@ pub fn routes() -> OpenApiRouter<Application> {
 /// 用户登录
 #[utoipa::path(
   post,
-  path = "/auth/signin",
+  path = "/signin",
   request_body = SigninRequest,
   responses(
     (status = 200, description = "登录成功", body = SigninResponse),

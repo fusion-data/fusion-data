@@ -1,4 +1,4 @@
-use axum::{extract::State, routing::get};
+use axum::extract::State;
 use fusion_web::{WebResult, ok_json};
 use utoipa_axum::router::OpenApiRouter;
 
@@ -6,14 +6,14 @@ use crate::{application::ServerApplication, model::HealthStatus};
 
 pub fn routes() -> OpenApiRouter<ServerApplication> {
   OpenApiRouter::new()
-    .route("/health", get(health))
-    .route("/info", get(info))
-    .route("/metrics", get(metrics))
+    .routes(utoipa_axum::routes!(health))
+    .routes(utoipa_axum::routes!(info))
+    .routes(utoipa_axum::routes!(metrics))
 }
 
 #[utoipa::path(
   get,
-  path = "/api/v1/system/health",
+  path = "/health",
   responses(
     (status = 200, description = "Get system health status", body = HealthStatus)
   )
@@ -25,7 +25,7 @@ async fn health(State(app): State<ServerApplication>) -> WebResult<HealthStatus>
 
 #[utoipa::path(
   get,
-  path = "/api/v1/system/info",
+  path = "/info",
   responses(
     (status = 200, description = "Get system information", body = serde_json::Value)
   )
@@ -37,7 +37,7 @@ async fn info(State(app): State<ServerApplication>) -> WebResult<serde_json::Val
 
 #[utoipa::path(
   get,
-  path = "/api/v1/system/metrics",
+  path = "/metrics",
   responses(
     (status = 200, description = "Get system metrics", body = serde_json::Value)
   )

@@ -9,16 +9,21 @@ use utoipa_axum::router::OpenApiRouter;
 
 use hetuiam_core::types::{CreateRoleDto, Role, RoleFilters, RoleForUpdate};
 
-use crate::{ctx_w::CtxW, role::RoleSvc};
+use crate::role::RoleSvc;
 
 pub fn routes() -> OpenApiRouter<Application> {
-  OpenApiRouter::new().routes(utoipa_axum::routes!(create_role, get_role, update_role, delete_role, list_roles))
+  OpenApiRouter::new()
+    .routes(utoipa_axum::routes!(create_role))
+    .routes(utoipa_axum::routes!(get_role))
+    .routes(utoipa_axum::routes!(update_role))
+    .routes(utoipa_axum::routes!(delete_role))
+    .routes(utoipa_axum::routes!(page_roles))
 }
 
 /// 创建角色
 #[utoipa::path(
   post,
-  path = "/roles",
+  path = "/item",
   request_body = CreateRoleDto,
   responses(
     (status = 201, description = "角色创建成功", body = i64),
@@ -36,7 +41,7 @@ async fn create_role(State(app): State<Application>, Json(req): Json<CreateRoleD
 /// 获取角色详情
 #[utoipa::path(
   get,
-  path = "/roles/{id}",
+  path = "/item/{id}",
   params(
     ("id" = i64, Path, description = "角色ID")
   ),
@@ -56,7 +61,7 @@ async fn get_role(State(app): State<Application>, Path(id): Path<i64>) -> WebRes
 /// 更新角色
 #[utoipa::path(
   put,
-  path = "/roles/{id}",
+  path = "/item/{id}",
   params(
     ("id" = i64, Path, description = "角色ID")
   ),
@@ -81,7 +86,7 @@ async fn update_role(
 /// 删除角色
 #[utoipa::path(
   delete,
-  path = "/roles/{id}",
+  path = "/item/{id}",
   params(
     ("id" = i64, Path, description = "角色ID")
   ),
@@ -101,7 +106,7 @@ async fn delete_role(State(app): State<Application>, Path(id): Path<i64>) -> Web
 /// 分页查询角色列表
 #[utoipa::path(
   post,
-  path = "/roles/list",
+  path = "/page",
   request_body = RoleFilters,
   responses(
     (status = 200, description = "查询成功", body = modelsql::page::PageResult<Role>),
@@ -109,7 +114,7 @@ async fn delete_role(State(app): State<Application>, Path(id): Path<i64>) -> Web
   ),
   tag = "角色管理"
 )]
-async fn list_roles(State(app): State<Application>, Json(req): Json<RoleFilters>) -> WebResult<PageResult<Role>> {
+async fn page_roles(State(app): State<Application>, Json(req): Json<RoleFilters>) -> WebResult<PageResult<Role>> {
   let mm = app.get_component::<ModelManager>().unwrap();
   let role_svc = RoleSvc::new(mm);
   let result = role_svc.page(req).await?;

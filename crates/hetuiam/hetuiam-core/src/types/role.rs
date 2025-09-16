@@ -31,14 +31,14 @@ impl From<i32> for RoleStatus {
 pub struct Role {
   pub id: i64,
   pub name: String,
-  pub description: String,
+  pub description: Option<String>,
   pub status: RoleStatus,
-  pub cid: i64,
+  pub created_by: i64,
   #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
-  pub ctime: OffsetDateTime,
-  pub mid: Option<i64>,
+  pub created_at: OffsetDateTime,
+  pub updated_by: Option<i64>,
   #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
-  pub mtime: Option<OffsetDateTime>,
+  pub updated_at: Option<OffsetDateTime>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

@@ -1,9 +1,8 @@
-mod access_control;
-mod auth;
-pub mod ctx_w;
-mod endpoint;
+pub mod access_control;
+pub mod auth;
+pub mod endpoint;
 pub mod iam;
-mod permission;
+pub mod permission;
 pub mod role;
 pub mod start;
 pub mod user;

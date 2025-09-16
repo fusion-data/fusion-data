@@ -7,7 +7,6 @@ use axum::{
     ws::{Message, WebSocket},
   },
   response::Response,
-  routing::{any, post},
 };
 use fusion_core::IdUuidResult;
 use fusion_web::{WebResult, ok_json};
@@ -27,17 +26,17 @@ use crate::{
 
 pub fn routes() -> OpenApiRouter<ServerApplication> {
   OpenApiRouter::new()
-    .route("/ws", any(websocket_handler))
-    .route("/status", post(get_status))
-    .route("/command", post(send_command))
+    .routes(utoipa_axum::routes!(websocket_handler))
+    .routes(utoipa_axum::routes!(get_status))
+    .routes(utoipa_axum::routes!(send_command))
 }
 
 /// 获取网关状态
 ///
 /// 获取网关和Agent连接状态信息
 #[utoipa::path(
-  post,
-  path = "/api/v1/gateway/status",
+  get,
+  path = "/status",
   responses(
     (status = 200, description = "状态获取成功", body = Value),
     (status = 500, description = "服务器内部错误")
@@ -54,7 +53,7 @@ async fn get_status(State(app): State<ServerApplication>) -> WebResult<Value> {
 /// 发送网关命令并返回命令 ID 列表
 #[utoipa::path(
   post,
-  path = "/api/v1/gateway/command",
+  path = "/command",
   request_body = GatewayCommandRequest,
   responses(
     (status = 200, description = "命令发送成功", body = IdUuidResult),
@@ -72,6 +71,17 @@ async fn send_command(
 }
 
 /// WebSocket 升级处理器
+#[utoipa::path(
+  get,
+  path = "/ws",
+  params(
+    ("agent_id" = String, Query, description = "Agent ID")
+  ),
+  responses(
+    (status = 101, description = "WebSocket connection established")
+  ),
+  tag = "Gateway"
+)]
 async fn websocket_handler(
   ws: WebSocketUpgrade,
   Query(params): Query<WebSocketParams>,

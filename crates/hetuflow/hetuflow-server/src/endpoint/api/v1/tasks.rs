@@ -1,8 +1,4 @@
-use axum::{
-  Json,
-  extract::Path,
-  // routing::{get, post},
-};
+use axum::{Json, extract::Path};
 use fusion_core::IdUuidResult;
 use fusion_web::{WebResult, ok_json};
 use hetuflow_core::models::{SchedTask, TaskForCreate, TaskForQuery, TaskForUpdate};
@@ -14,15 +10,14 @@ use uuid::Uuid;
 use crate::{application::ServerApplication, service::TaskSvc};
 
 pub fn routes() -> OpenApiRouter<ServerApplication> {
-  OpenApiRouter::new().routes(utoipa_axum::routes!(
-    query_tasks,
-    create_task,
-    get_task,
-    update_task,
-    delete_task,
-    retry_task,
-    cancel_task
-  ))
+  OpenApiRouter::new()
+    .routes(utoipa_axum::routes!(query_tasks))
+    .routes(utoipa_axum::routes!(create_task))
+    .routes(utoipa_axum::routes!(get_task))
+    .routes(utoipa_axum::routes!(update_task))
+    .routes(utoipa_axum::routes!(delete_task))
+    .routes(utoipa_axum::routes!(retry_task))
+    .routes(utoipa_axum::routes!(cancel_task))
 }
 
 // parent: /api/v1/tasks

@@ -5,8 +5,8 @@ use fusion_common::time::OffsetDateTime;
 pub struct UserRole {
   pub user_id: i64,
   pub role_id: i64,
-  pub ctime: OffsetDateTime,
-  pub cid: i64,
+  pub created_at: OffsetDateTime,
+  pub created_by: i64,
 }
 
 #[derive(Debug)]

@@ -8,9 +8,9 @@ use serde::{Deserialize, Serialize};
 pub struct RolePermission {
   role_id: i64,
   permission_id: i64,
-  cid: i64,
+  created_by: i64,
   #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
-  ctime: OffsetDateTime,
+  created_at: OffsetDateTime,
 }
 
 #[derive(Debug)]

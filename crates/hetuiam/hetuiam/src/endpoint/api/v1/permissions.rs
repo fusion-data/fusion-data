@@ -7,24 +7,23 @@ use fusion_web::{WebResult, ok_json};
 use modelsql::ModelManager;
 use utoipa_axum::router::OpenApiRouter;
 
-use hetuiam_core::types::{Permission, PermissionFilters, PermissionForCreate, PermissionForUpdate};
+use hetuiam_core::types::{Permission, PermissionForCreate, PermissionForPage, PermissionForUpdate};
 
 use crate::permission::PermissionSvc;
 
 pub fn routes() -> OpenApiRouter<Application> {
-  OpenApiRouter::new().routes(utoipa_axum::routes!(
-    create_permission,
-    get_permission,
-    update_permission,
-    delete_permission,
-    list_permissions
-  ))
+  OpenApiRouter::new()
+    .routes(utoipa_axum::routes!(create_permission))
+    .routes(utoipa_axum::routes!(get_permission))
+    .routes(utoipa_axum::routes!(update_permission))
+    .routes(utoipa_axum::routes!(delete_permission))
+    .routes(utoipa_axum::routes!(list_permissions))
 }
 
 /// 创建权限
 #[utoipa::path(
   post,
-  path = "/permissions",
+  path = "/item",
   request_body = PermissionForCreate,
   responses(
     (status = 201, description = "权限创建成功", body = i64),
@@ -42,7 +41,7 @@ async fn create_permission(State(app): State<Application>, Json(req): Json<Permi
 /// 获取权限详情
 #[utoipa::path(
   get,
-  path = "/permissions/{id}",
+  path = "/item/{id}",
   params(
     ("id" = i64, Path, description = "权限ID")
   ),
@@ -62,7 +61,7 @@ async fn get_permission(State(app): State<Application>, Path(id): Path<i64>) -> 
 /// 更新权限
 #[utoipa::path(
   put,
-  path = "/permissions/{id}",
+  path = "/item/{id}",
   params(
     ("id" = i64, Path, description = "权限ID")
   ),
@@ -87,7 +86,7 @@ async fn update_permission(
 /// 删除权限
 #[utoipa::path(
   delete,
-  path = "/permissions/{id}",
+  path = "/item/{id}",
   params(
     ("id" = i64, Path, description = "权限ID")
   ),
@@ -107,8 +106,8 @@ async fn delete_permission(State(app): State<Application>, Path(id): Path<i64>) 
 /// 分页查询权限列表
 #[utoipa::path(
   post,
-  path = "/permissions/list",
-  request_body = PermissionFilters,
+  path = "/page",
+  request_body = PermissionForPage,
   responses(
     (status = 200, description = "查询成功", body = modelsql::page::PageResult<Permission>),
     (status = 400, description = "请求参数错误")
@@ -117,7 +116,7 @@ async fn delete_permission(State(app): State<Application>, Path(id): Path<i64>) 
 )]
 async fn list_permissions(
   State(app): State<Application>,
-  Json(req): Json<PermissionFilters>,
+  Json(req): Json<PermissionForPage>,
 ) -> WebResult<modelsql::page::PageResult<Permission>> {
   let mm = app.get_component::<ModelManager>().unwrap();
   let permission_svc = PermissionSvc::new(mm);

@@ -4,29 +4,21 @@ name = "fusion-iam"
 
 [fusion.security.pwd]
 expires_in = 604800
-default_pwd = "2024.Fusiondata"
+default_pwd = "2025.Fusiondata"
 
 [fusion.web]
 enable = true
 server_addr = "0.0.0.0:58000"
-
-[fusion.grpc]
-enable = true
-server_addr = "0.0.0.0:58010"
-plaintext = true
 
 [fusion.log]
 enable = true
 log_writer = "both"
 with_span_events = []
 log_targets = [
-  "fusion_iam=debug",
-  "fusiondata=debug",
-  "fusiondata_context=debug",
-  "fusion_grpc=debug",
   "fusion_db=debug",
-  "fusion=debug",
   "fusion_common=debug",
+  "fusion_web=debug",
+  "hetuiam=debug",
 ]
 
 [fusion.log.otel]
@@ -36,9 +28,4 @@ traces_sample = "always_on"
 
 [fusion.db]
 enable = true
-host = "localhost"
-port = 45432
-database = "fusiondata"
-username = "fusiondata"
-password = "2024.Fusiondata"
-schema_search_path = "fusiondata"
+url = "postgres://fusiondata:2025.Fusiondata@localhost:5432/fusiondata"

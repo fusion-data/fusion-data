@@ -1,8 +1,4 @@
-use axum::{
-  Json,
-  extract::Path,
-  routing::{get, post},
-};
+use axum::{Json, extract::Path};
 use fusion_core::IdUuidResult;
 use fusion_web::{WebResult, ok_json};
 use modelsql::page::PageResult;
@@ -18,17 +14,18 @@ use crate::{application::ServerApplication, service::JobSvc};
 
 pub fn routes() -> OpenApiRouter<ServerApplication> {
   OpenApiRouter::new()
-    .route("/query", post(query_jobs))
-    .route("/create", post(create_job))
-    .route("/{id}", get(get_job).delete(delete_job))
-    .route("/{id}/update", post(update_job))
-    .route("/{id}/enable", post(enable_job))
-    .route("/{id}/disable", post(disable_job))
+    .routes(utoipa_axum::routes!(query_jobs))
+    .routes(utoipa_axum::routes!(create_job))
+    .routes(utoipa_axum::routes!(get_job))
+    .routes(utoipa_axum::routes!(update_job))
+    .routes(utoipa_axum::routes!(enable_job))
+    .routes(utoipa_axum::routes!(disable_job))
+    .routes(utoipa_axum::routes!(delete_job))
 }
 
 #[utoipa::path(
   post,
-  path = "/api/v1/jobs/query",
+  path = "/page",
   request_body = JobForQuery,
   responses(
     (status = 200, description = "Query jobs successfully", body = PageResult<SchedJob>)
@@ -41,7 +38,7 @@ async fn query_jobs(job_svc: JobSvc, Json(input): Json<JobForQuery>) -> WebResul
 
 #[utoipa::path(
   post,
-  path = "/api/v1/jobs/create",
+  path = "/item",
   request_body = JobForCreate,
   responses(
     (status = 200, description = "Create job successfully", body = IdUuidResult)
@@ -54,7 +51,7 @@ async fn create_job(job_svc: JobSvc, Json(input): Json<JobForCreate>) -> WebResu
 
 #[utoipa::path(
   get,
-  path = "/api/v1/jobs/{id}",
+  path = "/item/{id}",
   params(
     ("id" = Uuid, Path, description = "Job ID")
   ),
@@ -68,8 +65,8 @@ async fn get_job(job_svc: JobSvc, Path(id): Path<Uuid>) -> WebResult<Option<Sche
 }
 
 #[utoipa::path(
-  post,
-  path = "/api/v1/jobs/{id}/update",
+  put,
+  path = "/item/{id}",
   params(
     ("id" = Uuid, Path, description = "Job ID")
   ),
@@ -85,7 +82,7 @@ async fn update_job(job_svc: JobSvc, Path(id): Path<Uuid>, Json(input): Json<Job
 
 #[utoipa::path(
   delete,
-  path = "/api/v1/jobs/{id}",
+  path = "/item/{id}",
   params(
     ("id" = Uuid, Path, description = "Job ID")
   ),
@@ -100,7 +97,7 @@ async fn delete_job(job_svc: JobSvc, Path(id): Path<Uuid>) -> WebResult<()> {
 
 #[utoipa::path(
   post,
-  path = "/api/v1/jobs/{id}/enable",
+  path = "/item/{id}/enable",
   params(
     ("id" = Uuid, Path, description = "Job ID")
   ),
@@ -115,7 +112,7 @@ async fn enable_job(job_svc: JobSvc, Path(id): Path<Uuid>) -> WebResult<()> {
 
 #[utoipa::path(
   post,
-  path = "/api/v1/jobs/{id}/disable",
+  path = "/item/{id}/disable",
   params(
     ("id" = Uuid, Path, description = "Job ID")
   ),

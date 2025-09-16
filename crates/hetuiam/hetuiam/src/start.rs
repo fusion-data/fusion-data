@@ -4,7 +4,7 @@ use fusion_web::server::init_server;
 
 use crate::endpoint::routes;
 
-pub async fn start_fusion_iam() -> Result<(), DataError> {
+pub async fn start_hetuiam() -> Result<(), DataError> {
   Application::builder().add_plugin(DbPlugin).run().await?;
   let app = Application::global();
 

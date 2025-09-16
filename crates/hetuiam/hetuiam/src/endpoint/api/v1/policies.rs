@@ -7,24 +7,23 @@ use fusion_web::{WebResult, ok_json};
 use modelsql::{ModelManager, page::PageResult};
 use utoipa_axum::router::OpenApiRouter;
 
-use hetuiam_core::types::{Policy, PolicyFilter, PolicyForCreate, PolicyForPage, PolicyForUpdate};
+use hetuiam_core::types::{Policy, PolicyForCreate, PolicyForPage, PolicyForUpdate};
 
 use crate::access_control::PolicySvc;
 
 pub fn routes() -> OpenApiRouter<Application> {
-  OpenApiRouter::new().routes(utoipa_axum::routes!(
-    create_policy,
-    get_policy,
-    update_policy,
-    delete_policy,
-    list_policies
-  ))
+  OpenApiRouter::new()
+    .routes(utoipa_axum::routes!(create_policy))
+    .routes(utoipa_axum::routes!(get_policy))
+    .routes(utoipa_axum::routes!(update_policy))
+    .routes(utoipa_axum::routes!(delete_policy))
+    .routes(utoipa_axum::routes!(list_policies))
 }
 
 /// 创建策略
 #[utoipa::path(
   post,
-  path = "/policies",
+  path = "/item",
   request_body = PolicyForCreate,
   responses(
     (status = 201, description = "策略创建成功", body = i64),
@@ -42,7 +41,7 @@ async fn create_policy(State(app): State<Application>, Json(req): Json<PolicyFor
 /// 获取策略详情
 #[utoipa::path(
   get,
-  path = "/policies/{id}",
+  path = "/item/{id}",
   params(
     ("id" = i64, Path, description = "策略ID")
   ),
@@ -62,7 +61,7 @@ async fn get_policy(State(app): State<Application>, Path(id): Path<i64>) -> WebR
 /// 更新策略
 #[utoipa::path(
   put,
-  path = "/policies/{id}",
+  path = "/item/{id}",
   params(
     ("id" = i64, Path, description = "策略ID")
   ),
@@ -87,7 +86,7 @@ async fn update_policy(
 /// 删除策略
 #[utoipa::path(
   delete,
-  path = "/policies/{id}",
+  path = "/item/{id}",
   params(
     ("id" = i64, Path, description = "策略ID")
   ),
@@ -107,8 +106,8 @@ async fn delete_policy(State(app): State<Application>, Path(id): Path<i64>) -> W
 /// 查询策略列表
 #[utoipa::path(
   post,
-  path = "/policies/list",
-  request_body = PolicyFilter,
+  path = "/page",
+  request_body = PolicyForPage,
   responses(
     (status = 200, description = "查询成功", body = modelsql::page::PageResult<Policy>),
     (status = 400, description = "请求参数错误")

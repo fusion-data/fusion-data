@@ -9,9 +9,9 @@ use utoipa_axum::router::OpenApiRouter;
 
 pub fn routes() -> OpenApiRouter<Application> {
   OpenApiRouter::new()
-    .merge(auth::routes())
-    .merge(users::routes())
-    .merge(roles::routes())
-    .merge(permissions::routes())
-    .merge(policies::routes())
+    .nest("/users", users::routes())
+    .nest("/roles", roles::routes())
+    .nest("/permissions", permissions::routes())
+    .nest("/policies", policies::routes())
+    .nest("/auth", auth::routes())
 }

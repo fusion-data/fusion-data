@@ -1,24 +1,30 @@
 use axum::{
   Json,
   extract::{Path, State},
+  http::StatusCode,
 };
 use fusion_core::{IdI64Result, application::Application};
-use fusion_web::{WebResult, ok_json};
+use fusion_web::{WebError, WebResult, ok_json};
 use modelsql::ModelManager;
 use utoipa_axum::router::OpenApiRouter;
 
 use hetuiam_core::types::{User, UserForCreate, UserForPage, UserForUpdate};
 
-use crate::{UserSvc, ctx_w::CtxW};
+use crate::UserSvc;
 
 pub fn routes() -> OpenApiRouter<Application> {
-  OpenApiRouter::new().routes(utoipa_axum::routes!(create_user, get_user, update_user, delete_user, list_users))
+  OpenApiRouter::new()
+    .routes(utoipa_axum::routes!(user_create))
+    .routes(utoipa_axum::routes!(user_get))
+    .routes(utoipa_axum::routes!(user_update))
+    .routes(utoipa_axum::routes!(user_delete))
+    .routes(utoipa_axum::routes!(user_page))
 }
 
 /// 创建用户
 #[utoipa::path(
   post,
-  path = "/users",
+  path = "/item",
   request_body = UserForCreate,
   responses(
     (status = 201, description = "用户创建成功", body = i64),
@@ -26,17 +32,20 @@ pub fn routes() -> OpenApiRouter<Application> {
   ),
   tag = "用户管理"
 )]
-async fn create_user(State(app): State<Application>, Json(req): Json<UserForCreate>) -> WebResult<IdI64Result> {
+async fn user_create(
+  State(app): State<Application>,
+  Json(req): Json<UserForCreate>,
+) -> Result<(StatusCode, Json<IdI64Result>), WebError> {
   let mm = app.get_component::<ModelManager>().unwrap();
   let user_svc = UserSvc::new(mm);
   let id = user_svc.create(req).await?;
-  ok_json!(IdI64Result::new(id))
+  Ok((StatusCode::CREATED, Json(IdI64Result::new(id))))
 }
 
 /// 获取用户详情
 #[utoipa::path(
   get,
-  path = "/users/{id}",
+  path = "/item/{id}",
   params(
     ("id" = i64, Path, description = "用户ID")
   ),
@@ -46,7 +55,7 @@ async fn create_user(State(app): State<Application>, Json(req): Json<UserForCrea
   ),
   tag = "用户管理"
 )]
-async fn get_user(State(app): State<Application>, Path(id): Path<i64>) -> WebResult<Option<User>> {
+async fn user_get(State(app): State<Application>, Path(id): Path<i64>) -> WebResult<Option<User>> {
   let mm = app.get_component::<ModelManager>().unwrap();
   let user_svc = UserSvc::new(mm);
   let user = user_svc.find_option_by_id(id).await?;
@@ -56,7 +65,7 @@ async fn get_user(State(app): State<Application>, Path(id): Path<i64>) -> WebRes
 /// 更新用户
 #[utoipa::path(
   put,
-  path = "/users/{id}",
+  path = "/item/{id}",
   params(
     ("id" = i64, Path, description = "用户ID")
   ),
@@ -67,7 +76,7 @@ async fn get_user(State(app): State<Application>, Path(id): Path<i64>) -> WebRes
   ),
   tag = "用户管理"
 )]
-async fn update_user(
+async fn user_update(
   State(app): State<Application>,
   Path(id): Path<i64>,
   Json(req): Json<UserForUpdate>,
@@ -81,7 +90,7 @@ async fn update_user(
 /// 删除用户
 #[utoipa::path(
   delete,
-  path = "/users/{id}",
+  path = "/item/{id}",
   params(
     ("id" = i64, Path, description = "用户ID")
   ),
@@ -91,7 +100,7 @@ async fn update_user(
   ),
   tag = "用户管理"
 )]
-async fn delete_user(State(app): State<Application>, Path(id): Path<i64>) -> WebResult<()> {
+async fn user_delete(State(app): State<Application>, Path(id): Path<i64>) -> WebResult<()> {
   let mm = app.get_component::<ModelManager>().unwrap();
   let user_svc = UserSvc::new(mm);
   user_svc.delete_by_id(id).await?;
@@ -101,7 +110,7 @@ async fn delete_user(State(app): State<Application>, Path(id): Path<i64>) -> Web
 /// 分页查询用户列表
 #[utoipa::path(
   post,
-  path = "/users/list",
+  path = "/query",
   request_body = UserForPage,
   responses(
     (status = 200, description = "查询成功", body = modelsql::page::PageResult<User>),
@@ -109,7 +118,7 @@ async fn delete_user(State(app): State<Application>, Path(id): Path<i64>) -> Web
   ),
   tag = "用户管理"
 )]
-async fn list_users(
+async fn user_page(
   State(app): State<Application>,
   Json(req): Json<UserForPage>,
 ) -> WebResult<modelsql::page::PageResult<User>> {

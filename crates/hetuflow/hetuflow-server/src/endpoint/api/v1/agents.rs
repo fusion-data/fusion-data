@@ -1,8 +1,4 @@
-use axum::{
-  Json,
-  extract::Path,
-  routing::{get, post},
-};
+use axum::{Json, extract::Path};
 use fusion_core::IdStringResult;
 use fusion_web::{WebResult, ok_json};
 use modelsql::page::PageResult;
@@ -15,7 +11,12 @@ use uuid::Uuid;
 use crate::{application::ServerApplication, service::AgentSvc};
 
 pub fn routes() -> OpenApiRouter<ServerApplication> {
-  OpenApiRouter::new().routes(utoipa_axum::routes!(query_agents, create_agent, get_agent, update_agent, delete_agent))
+  OpenApiRouter::new()
+    .routes(utoipa_axum::routes!(query_agents))
+    .routes(utoipa_axum::routes!(create_agent))
+    .routes(utoipa_axum::routes!(get_agent))
+    .routes(utoipa_axum::routes!(update_agent))
+    .routes(utoipa_axum::routes!(delete_agent))
 }
 
 #[utoipa::path(

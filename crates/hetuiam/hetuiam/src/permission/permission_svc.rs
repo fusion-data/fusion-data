@@ -1,8 +1,8 @@
 use fusion_core::Result;
-use modelsql::{ModelManager, filter::Page, page::PageResult};
+use modelsql::{ModelManager, page::PageResult};
 
 use hetuiam_core::types::{
-  Permission, PermissionFilters, PermissionForCreate, PermissionForUpdate, RolePermissionForCreate,
+  Permission, PermissionForCreate, PermissionForPage, PermissionForUpdate, RolePermissionForCreate,
 };
 
 use crate::role::RolePermissionBmc;
@@ -45,14 +45,13 @@ impl PermissionSvc {
     Ok(())
   }
 
-  pub async fn page(&self, filters: PermissionFilters) -> Result<PageResult<Permission>> {
-    let pagination = Page::default();
-    let page = PermissionBmc::page(&self.mm, filters, pagination).await?;
+  pub async fn page(&self, req: PermissionForPage) -> Result<PageResult<Permission>> {
+    let page = PermissionBmc::page(&self.mm, req.filters, req.page).await?;
     Ok(page)
   }
 
-  pub async fn find_many(&self, filters: PermissionFilters, pagination: Option<Page>) -> Result<Vec<Permission>> {
-    let list = PermissionBmc::find_many(&self.mm, filters, pagination.map(Into::into)).await?;
+  pub async fn find_many(&self, req: PermissionForPage) -> Result<Vec<Permission>> {
+    let list = PermissionBmc::find_many(&self.mm, req.filters, Some(req.page)).await?;
     Ok(list)
   }
 

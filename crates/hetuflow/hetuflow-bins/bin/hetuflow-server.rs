@@ -1,7 +1,4 @@
-use fusion_core::DataError;
-use log::info;
-use tokio::select;
-use tokio::signal::unix::{SignalKind, signal};
+use fusion_core::{DataError, utils::wait_exit_signals};
 
 use hetuflow_server::application::ServerApplication;
 
@@ -14,18 +11,6 @@ use hetuflow_server::application::ServerApplication;
 async fn main() -> Result<(), DataError> {
   let app = ServerApplication::new().await?;
   app.start().await?;
-
-  // 同时监听 ctrl_c 和 kill 信号（SIGTERM）
-  let mut sigterm = signal(SignalKind::terminate())?;
-  let ctrl_c = tokio::signal::ctrl_c();
-  select! {
-    _ = ctrl_c => {
-      info!("收到 Ctrl+C 信号，准备关闭...");
-    }
-    _ = sigterm.recv() => {
-      info!("收到 kill(SIGTERM) 信号，准备关闭...");
-    }
-  }
-
+  wait_exit_signals().await;
   app.shutdown().await
 }

@@ -8,7 +8,6 @@ use axum::{
   extract::{ConnectInfo, State},
   http::StatusCode,
   response::Json,
-  routing::post,
 };
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
@@ -18,6 +17,11 @@ use crate::{
   application::ServerApplication,
   service::{JweService, JweServiceError},
 };
+
+/// 认证相关路由
+pub fn routes() -> OpenApiRouter<ServerApplication> {
+  OpenApiRouter::new().routes(utoipa_axum::routes!(generate_token))
+}
 
 /// 生成 Token 请求
 #[derive(Debug, Deserialize, utoipa::ToSchema)]
@@ -161,11 +165,6 @@ pub async fn generate_token(
     expires_at,
     issued_at,
   }))
-}
-
-/// 认证相关路由
-pub fn routes() -> OpenApiRouter<ServerApplication> {
-  OpenApiRouter::new().routes(utoipa_axum::routes!(generate_token))
 }
 
 #[cfg(test)]

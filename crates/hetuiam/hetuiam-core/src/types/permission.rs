@@ -1,4 +1,5 @@
 use fusion_common::time::OffsetDateTime;
+use modelsql::filter::Page;
 use modelsql_core::filter::{OpValsInt64, OpValsString};
 use serde::{Deserialize, Serialize};
 
@@ -17,13 +18,12 @@ pub struct Permission {
   pub description: String,
   pub resource: String,
   pub action: String,
-
-  pub cid: i64,
+  pub created_by: i64,
   #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
-  pub ctime: OffsetDateTime,
-  pub mid: Option<i64>,
+  pub created_at: OffsetDateTime,
+  pub updated_by: Option<i64>,
   #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
-  pub mtime: Option<OffsetDateTime>,
+  pub updated_at: Option<OffsetDateTime>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -59,7 +59,8 @@ pub struct PermissionFilter {
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
-pub struct PermissionFilters {
-  pub filter: Vec<PermissionFilter>,
+pub struct PermissionForPage {
+  pub page: Page,
+  pub filters: Vec<PermissionFilter>,
   pub role_perm_filter: RolePermissionFilter,
 }

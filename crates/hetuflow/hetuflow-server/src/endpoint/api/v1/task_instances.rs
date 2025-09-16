@@ -1,8 +1,4 @@
-use axum::{
-  Json,
-  extract::Path,
-  routing::{get, post},
-};
+use axum::{Json, extract::Path};
 use fusion_web::{WebResult, ok_json};
 use hetuflow_core::models::{SchedTaskInstance, TaskInstanceForCreate, TaskInstanceForQuery, TaskInstanceForUpdate};
 use modelsql::page::PageResult;
@@ -14,15 +10,16 @@ use crate::{application::ServerApplication, service::TaskSvc};
 
 pub fn routes() -> OpenApiRouter<ServerApplication> {
   OpenApiRouter::new()
-    .route("/query", post(query_task_instances))
-    .route("/create", post(create_task_instance))
-    .route("/{id}", get(get_task_instance).delete(delete_task_instance))
-    .route("/{id}/update", post(update_task_instance))
+    .routes(utoipa_axum::routes!(query_task_instances))
+    .routes(utoipa_axum::routes!(create_task_instance))
+    .routes(utoipa_axum::routes!(get_task_instance))
+    .routes(utoipa_axum::routes!(delete_task_instance))
+    .routes(utoipa_axum::routes!(update_task_instance))
 }
 
 #[utoipa::path(
   post,
-  path = "/api/v1/task_instances/query",
+  path = "/page",
   request_body = TaskInstanceForQuery,
   responses(
     (status = 200, description = "Query task instances successfully", body = PageResult<SchedTaskInstance>)
@@ -38,7 +35,7 @@ async fn query_task_instances(
 
 #[utoipa::path(
   post,
-  path = "/api/v1/task_instances/create",
+  path = "/item",
   request_body = TaskInstanceForCreate,
   responses(
     (status = 200, description = "Create task instance successfully", body = Uuid)
@@ -51,7 +48,7 @@ async fn create_task_instance(task_svc: TaskSvc, Json(input): Json<TaskInstanceF
 
 #[utoipa::path(
   get,
-  path = "/api/v1/task_instances/{id}",
+  path = "/item/{id}",
   params(
     ("id" = Uuid, Path, description = "Task instance ID")
   ),
@@ -66,7 +63,7 @@ async fn get_task_instance(task_svc: TaskSvc, Path(id): Path<Uuid>) -> WebResult
 
 #[utoipa::path(
   delete,
-  path = "/api/v1/task_instances/{id}",
+  path = "/item/{id}",
   params(
     ("id" = Uuid, Path, description = "Task instance ID")
   ),
@@ -81,7 +78,7 @@ async fn delete_task_instance(task_svc: TaskSvc, Path(id): Path<Uuid>) -> WebRes
 
 #[utoipa::path(
   post,
-  path = "/api/v1/task_instances/{id}/update",
+  path = "/item/update",
   params(
     ("id" = Uuid, Path, description = "Task instance ID")
   ),

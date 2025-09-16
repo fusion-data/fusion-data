@@ -56,12 +56,12 @@ pub struct User {
   pub name: String,
   pub status: UserStatus,
   pub gender: Gender,
-  pub cid: i64,
+  pub created_by: i64,
   #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
-  pub ctime: OffsetDateTime,
-  pub mid: Option<i64>,
+  pub created_at: OffsetDateTime,
+  pub updated_by: Option<i64>,
   #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
-  pub mtime: Option<OffsetDateTime>,
+  pub updated_at: Option<OffsetDateTime>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -105,15 +105,15 @@ pub struct UserFilter {
 
   pub gender: Option<OpValsInt32>,
 
-  pub cid: Option<OpValsInt64>,
+  pub created_by: Option<OpValsInt64>,
 
   #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
-  pub ctime: Option<OpValsDateTime>,
+  pub created_at: Option<OpValsDateTime>,
 
-  pub mid: Option<OpValsInt64>,
+  pub updated_by: Option<OpValsInt64>,
 
   #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
-  pub mtime: Option<OpValsDateTime>,
+  pub updated_at: Option<OpValsDateTime>,
 }
 
 #[cfg_attr(feature = "with-db", derive(sqlx::FromRow, modelsql::field::Fields), sea_query::enum_def)]
@@ -121,12 +121,12 @@ pub struct UserFilter {
 pub struct UserCredential {
   pub id: i64,
   pub encrypted_pwd: String,
-  pub cid: i64,
+  pub created_by: i64,
   #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
-  pub ctime: OffsetDateTime,
-  pub mid: Option<i64>,
+  pub created_at: OffsetDateTime,
+  pub updated_by: Option<i64>,
   #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
-  pub mtime: Option<OffsetDateTime>,
+  pub updated_at: Option<OffsetDateTime>,
 }
 
 #[cfg_attr(feature = "with-db", derive(modelsql::field::Fields))]
@@ -147,11 +147,11 @@ pub struct UserCredentialForUpdate {
 pub struct UserCredentialFilter {
   pub id: Option<OpValsInt64>,
 
-  pub cid: Option<OpValsInt64>,
+  pub created_by: Option<OpValsInt64>,
 
-  pub ctime: Option<OpValsDateTime>,
+  pub created_at: Option<OpValsDateTime>,
 
-  pub mid: Option<OpValsInt64>,
+  pub updated_by: Option<OpValsInt64>,
 
-  pub mtime: Option<OpValsDateTime>,
+  pub updated_at: Option<OpValsDateTime>,
 }
