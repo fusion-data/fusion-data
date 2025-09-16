@@ -45,7 +45,7 @@ token = "your-api-token-here"
 你也可以通过环境变量指定配置文件路径：
 
 ```bash
-export GUIXU_CONFIG_PATH="/path/to/your/config.toml"
+export HETUMIND_CONFIG_PATH="/path/to/your/config.toml"
 ```
 
 ## 🛠️ 使用指南
@@ -216,11 +216,11 @@ done
 
 ```bash
 # 开发环境
-export GUIXU_CONFIG_PATH="~/.hetumind/dev-config.toml"
+export HETUMIND_CONFIG_PATH="~/.hetumind/dev-config.toml"
 hetumind-studio-cli workflow list
 
 # 生产环境
-export GUIXU_CONFIG_PATH="~/.hetumind/prod-config.toml"
+export HETUMIND_CONFIG_PATH="~/.hetumind/prod-config.toml"
 hetumind-studio-cli workflow list
 ```
 

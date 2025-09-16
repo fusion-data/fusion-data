@@ -6,7 +6,7 @@ use serde::{
 use std::fmt::Display;
 
 fn default_log_dir() -> String {
-  std::option_env!("FUSION__LOG_DIR").unwrap_or_else(|| "./var/logs/").to_string()
+  std::option_env!("FUSION__LOG_DIR").unwrap_or_else(|| "./runs/logs/").to_string()
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]

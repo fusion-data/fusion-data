@@ -14,7 +14,7 @@ with_span_events = []
 time_format = "%Y-%m-%d %H:%M:%S%.3f"
 log_level = "info"
 log_writer = "both"
-log_dir = "./var/logs/server/"
+log_dir = "./runs/logs/server/"
 log_name = "hetuflow-server"
 log_targets = [
   #   "tower_http=debug",
@@ -73,7 +73,7 @@ agent_overdue_ttl = "5m"
 # 启用任务日志收集
 enabled = true
 # 日志存储根目录
-log_dir = "./var/logs/tasks/"
+log_dir = "./runs/logs/tasks/"
 # 日志文件最大大小（字节，默认100MB）
 max_file_size = 104857600
 # 日志文件保留天数

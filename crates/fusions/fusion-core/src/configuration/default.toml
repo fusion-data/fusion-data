@@ -36,7 +36,7 @@ time_format = ""
 log_level = "info"
 # log_targets = []
 log_writer = "stdout"
-# 默认为 "./var/logs/"，可以通过环境变量设置 FUSION__LOG_DIR 覆盖。当同时设置时，环境变量优先级更高。
+# 默认为 "./runs/logs/"，可以通过环境变量设置 FUSION__LOG_DIR 覆盖。当同时设置时，环境变量优先级更高。
 # log_dir =
 
 # 默认 log_name 同 fusion.app.name

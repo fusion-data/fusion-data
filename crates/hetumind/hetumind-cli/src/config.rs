@@ -70,10 +70,10 @@ impl CliConfig {
   }
 
   /// 获取默认配置文件路径：~/.hetumind/config.toml
-  /// 支持通过环境变量 GUIXU_CONFIG_PATH 覆盖默认路径
+  /// 支持通过环境变量 HETUMIND_CONFIG_PATH 覆盖默认路径
   pub fn default_config_path() -> CliResult<PathBuf> {
     // 优先使用环境变量指定的配置路径
-    if let Ok(config_path) = std::env::var("GUIXU_CONFIG_PATH") {
+    if let Ok(config_path) = std::env::var("HETUMIND_CONFIG_PATH") {
       return Ok(PathBuf::from(config_path));
     }
 
@@ -191,14 +191,14 @@ mod tests {
     let custom_config = temp_dir.path().join("custom_config.toml");
 
     // 设置环境变量
-    set_env("GUIXU_CONFIG_PATH", custom_config.to_str().unwrap()).unwrap();
+    set_env("HETUMIND_CONFIG_PATH", custom_config.to_str().unwrap()).unwrap();
 
     let config_path = CliConfig::default_config_path().unwrap();
     assert_eq!(config_path, custom_config);
 
     // 清理环境变量
     unsafe {
-      std::env::remove_var("GUIXU_CONFIG_PATH");
+      std::env::remove_var("HETUMIND_CONFIG_PATH");
     }
   }
 }
