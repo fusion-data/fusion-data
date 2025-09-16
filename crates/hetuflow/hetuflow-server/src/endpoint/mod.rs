@@ -5,7 +5,6 @@ use fusion_web::Router;
 use hetuflow_core::models::{SchedTask, SchedTaskInstance};
 use utoipa::OpenApi;
 use utoipa_axum::router::OpenApiRouter;
-use utoipa_axum::routes;
 use utoipa_swagger_ui::SwaggerUi;
 
 use crate::application::ServerApplication;

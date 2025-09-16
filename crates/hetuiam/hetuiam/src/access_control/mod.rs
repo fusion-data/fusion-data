@@ -1,8 +1,6 @@
 //! 访问控制服务
-mod bmc;
-mod helper;
-mod model;
+mod policy_bmc;
 mod policy_svc;
 
-pub use model::*;
+use policy_bmc::PolicyBmc;
 pub use policy_svc::PolicySvc;

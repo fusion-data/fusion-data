@@ -1,0 +1,30 @@
+[package]
+name = "hetuiam-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+publish = true
+
+[lints]
+workspace = true
+
+[features]
+with-openapi = ["dep:utoipa"]
+with-db = ["dep:sqlx", "dep:modelsql", "dep:sea-query"]
+
+[dependencies]
+fusion-corelib = { workspace = true }
+fusion-common = { workspace = true, features = ["with-uuid"] }
+uuid = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_repr = { workspace = true }
+utoipa = { workspace = true, optional = true }
+sqlx = { workspace = true, optional = true }
+sea-query = { workspace = true, optional = true }
+modelsql = { workspace = true, optional = true }
+modelsql-core = { workspace = true }

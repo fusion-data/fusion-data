@@ -1,10 +1,13 @@
 use modelsql::{base::DbBmc, generate_pg_bmc_common, generate_pg_bmc_filter};
 
-use super::{UserCredential, UserCredentialFilter, UserCredentialForCreate, UserCredentialForUpdate};
+use hetuiam_core::{
+  infra::tables::TABLE_USER_CREDENTIAL,
+  types::{UserCredential, UserCredentialFilter, UserCredentialForCreate, UserCredentialForUpdate},
+};
 
 pub struct UserCredentialBmc;
 impl DbBmc for UserCredentialBmc {
-  const TABLE: &'static str = "user_credential";
+  const TABLE: &'static str = TABLE_USER_CREDENTIAL;
 }
 
 generate_pg_bmc_common!(

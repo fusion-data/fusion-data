@@ -1,7 +1,7 @@
 mod bmc;
-mod model;
-pub mod role_permission;
-mod svc;
+mod role_permissions_bmc;
+mod role_svc;
 
-pub use model::*;
-pub use svc::RoleSvc;
+use bmc::RoleBmc;
+pub use role_permissions_bmc::RolePermissionBmc;
+pub use role_svc::RoleSvc;

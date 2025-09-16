@@ -1,5 +1,4 @@
-mod model;
-mod svc;
+mod auth_svc;
 pub mod utils;
 
-pub use svc::AuthSvc;
+pub use auth_svc::AuthSvc;

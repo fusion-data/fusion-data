@@ -1,7 +1,7 @@
 use fusion_common::ctx::CtxPayload;
-use fusion_core::{DataError, Result, configuration::SecurityConfig, security::SecurityUtils};
+use fusion_core::{DataError, Result, configuration::SecuritySetting, security::SecurityUtils};
 
-pub fn make_token(sc: &SecurityConfig, uid: i64) -> Result<String> {
+pub fn make_token(sc: &SecuritySetting, uid: i64) -> Result<String> {
   let mut payload = CtxPayload::default();
   payload.set_subject(uid.to_string());
 

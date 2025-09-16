@@ -1,7 +1,5 @@
-mod bmc;
-mod helper;
-mod model;
-mod svc;
+mod permission_bmc;
+mod permission_svc;
 
-pub use model::*;
-pub use svc::PermissionSvc;
+pub use permission_bmc::PermissionBmc;
+pub use permission_svc::PermissionSvc;

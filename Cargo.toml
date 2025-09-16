@@ -67,6 +67,7 @@ fusion-db = { version = "0.1.1", path = "crates/fusions/fusion-db" }
 fusion-web = { version = "0.1.1", path = "crates/fusions/fusion-web" }
 fusion-grpc = { version = "0.1.1", path = "crates/fusions/fusion-grpc" }
 fusions = { version = "0.1.1", path = "crates/fusions/fusions" }
+hetuiam-core = { version = "0.1.1", path = "crates/hetuiam/hetuiam-core" }
 hetuflow-core = { version = "0.1.1", path = "crates/hetuflow/hetuflow-core" }
 hetumind-core = { version = "0.1.1", path = "crates/hetumind/hetumind-core" }
 hetumind-context = { version = "0.1.1", path = "crates/hetumind/hetumind-context" }

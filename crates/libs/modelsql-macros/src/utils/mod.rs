@@ -1,5 +1,5 @@
 // region:    --- Modules
-pub mod modql_field;
+pub mod modelsql_field;
 pub mod struct_modql_attr;
 
 use quote::ToTokens;
@@ -24,8 +24,8 @@ pub fn get_field_attribute<'a>(field: &'a Field, name: &str) -> Option<&'a Attri
   field.attrs.iter().find(|a| a.path().is_ident(name))
 }
 
-pub fn get_dinput_attribute<'a>(dinput: &'a DeriveInput, name: &str) -> Option<&'a Attribute> {
-  dinput.attrs.iter().find(|a| a.path().is_ident(name))
+pub fn get_input_attribute<'a>(input: &'a DeriveInput, name: &str) -> Option<&'a Attribute> {
+  input.attrs.iter().find(|a| a.path().is_ident(name))
 }
 
 pub fn get_meta_value_string(nv: MetaNameValue) -> Option<String> {

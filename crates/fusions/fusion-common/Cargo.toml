@@ -17,6 +17,7 @@ default = ["std"]
 with-uuid = ["uuid"]
 with-openapi = ["utoipa"]
 std = ["ahash/std"]
+with-db = ["sqlx", "modelsql-core", "sea-query"]
 
 [dependencies]
 fusion-corelib = { workspace = true }
@@ -35,6 +36,9 @@ regex.workspace = true
 log = { workspace = true }
 uuid = { workspace = true, optional = true }
 utoipa = { workspace = true, optional = true }
+sqlx = { workspace = true, optional = true }
+modelsql-core = { workspace = true, optional = true }
+sea-query = { workspace = true, optional = true }
 
 [dev-dependencies]
 dotenvy.workspace = true

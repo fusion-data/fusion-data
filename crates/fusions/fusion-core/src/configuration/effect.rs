@@ -58,7 +58,7 @@ mod tests {
 
   use fusion_common::env::set_env;
 
-  use crate::configuration::{FusionConfig, load_config, model::KeyConf};
+  use crate::configuration::{FusionSetting, load_config, model::KeyConf};
 
   #[test]
   fn test_config_load() {
@@ -71,7 +71,7 @@ mod tests {
 
     let c = load_config().unwrap();
     println!("Config cache: {}", c.cache);
-    let qc: FusionConfig = c.get("fusion").unwrap();
+    let qc: FusionSetting = c.get("fusion").unwrap();
 
     assert_eq!(qc.security().pwd().pwd_key(), b"80c9a35c0f231219ca14c44fe10c728d");
     assert_eq!(qc.security().token().secret_key(), b"8462b1ec9af827ebed13926f8f1e5409774fa1a21a1c8f726a4a34cf7dcabaf2");

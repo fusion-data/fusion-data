@@ -7,7 +7,7 @@ use logforth::filter::EnvFilter;
 use logforth::layout::TextLayout;
 use logforth::{DropGuard, LoggerBuilder};
 
-use crate::configuration::LogConfig;
+use crate::configuration::LogSetting;
 use std::sync::Once;
 
 pub fn get_trace_id() -> Option<String> {
@@ -15,7 +15,7 @@ pub fn get_trace_id() -> Option<String> {
   None
 }
 
-pub fn init_log(conf: &LogConfig) {
+pub fn init_log(conf: &LogSetting) {
   // 如果日志未启用，则不进行配置
   if !conf.enable() {
     return;
@@ -56,7 +56,7 @@ pub fn init_log(conf: &LogConfig) {
 static mut LOG_GUARD: Option<DropGuard> = None;
 static INIT: Once = Once::new();
 
-fn dispatch_file(conf: &LogConfig, level_filter: LevelFilter, builder: LoggerBuilder) -> LoggerBuilder {
+fn dispatch_file(conf: &LogSetting, level_filter: LevelFilter, builder: LoggerBuilder) -> LoggerBuilder {
   let log_name = conf.log_name.as_deref().unwrap_or("app.log");
   let log_path = Path::new(&conf.log_dir);
   let _ = std::fs::create_dir_all(log_path);
@@ -81,14 +81,14 @@ fn dispatch_file(conf: &LogConfig, level_filter: LevelFilter, builder: LoggerBui
   builder.dispatch(|d| d.filter(env_filter2).append(file_appender))
 }
 
-fn dispatch_stdout(conf: &LogConfig, level_filter: LevelFilter, builder: LoggerBuilder) -> LoggerBuilder {
+fn dispatch_stdout(conf: &LogSetting, level_filter: LevelFilter, builder: LoggerBuilder) -> LoggerBuilder {
   let env_filter = build_env_filter(conf, level_filter);
   let layout = build_text_layout(conf);
   builder.dispatch(|d| d.filter(env_filter).append(Stdout::default().with_layout(layout)))
 }
 
 /// 构建 EnvFilter，支持 log_targets 配置
-fn build_env_filter(conf: &LogConfig, default_level: LevelFilter) -> EnvFilter {
+fn build_env_filter(conf: &LogSetting, default_level: LevelFilter) -> EnvFilter {
   let mut filter_parts = Vec::new();
 
   // 添加默认级别
@@ -126,7 +126,7 @@ fn level_filter_to_string(level: LevelFilter) -> String {
 }
 
 /// 根据配置构建文本布局
-fn build_text_layout(_conf: &LogConfig) -> TextLayout {
+fn build_text_layout(_conf: &LogSetting) -> TextLayout {
   let tz = jiff::tz::TimeZone::fixed(jiff::tz::offset(8));
   TextLayout::default().timezone(tz)
 }

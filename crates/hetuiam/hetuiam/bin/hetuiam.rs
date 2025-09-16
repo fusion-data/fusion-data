@@ -1,8 +1,4 @@
-use fusion_iam::start;
-
-#[cfg(all(not(target_env = "msvc"), feature = "tikv-jemallocator"))]
-#[global_allocator]
-static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
+use hetuiam::start;
 
 #[tokio::main]
 async fn main() -> fusion_core::Result<()> {

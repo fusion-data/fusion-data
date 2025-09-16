@@ -84,7 +84,7 @@ mod tests {
     time::{Duration, SystemTime},
   };
 
-  use crate::configuration::{KeyConf, SecurityConfig, load_config};
+  use crate::configuration::{KeyConf, SecuritySetting, load_config};
 
   use super::*;
 
@@ -177,10 +177,10 @@ mod tests {
   // static PRIVATE_KEY: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/data/pem/EC_P-256_private.pem");
   // static PUBLIC_KEY: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/data/pem/EC_P-256_public.pem");
   static EXPIRES_AT: OnceLock<SystemTime> = OnceLock::new();
-  static SECURITY_CONFIG: OnceLock<SecurityConfig> = OnceLock::new();
-  fn helper() -> (&'static SecurityConfig, &'static SystemTime) {
+  static SECURITY_CONFIG: OnceLock<SecuritySetting> = OnceLock::new();
+  fn helper() -> (&'static SecuritySetting, &'static SystemTime) {
     (
-      SECURITY_CONFIG.get_or_init(|| load_config().unwrap().get::<SecurityConfig>("fusion.security").unwrap()),
+      SECURITY_CONFIG.get_or_init(|| load_config().unwrap().get::<SecuritySetting>("fusion.security").unwrap()),
       EXPIRES_AT.get_or_init(|| SystemTime::now().checked_add(Duration::from_secs(60 * 60 * 24 * 30)).unwrap()),
     )
   }

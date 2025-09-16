@@ -9,6 +9,14 @@ pub struct CtxW {
 }
 
 impl CtxW {
+  /// 创建新的上下文包装器实例
+  pub fn new(mm: ModelManager) -> Self {
+    Self {
+      ctx: Ctx::new_root(),
+      mm,
+    }
+  }
+
   pub fn app(&self) -> Application {
     Application::global()
   }

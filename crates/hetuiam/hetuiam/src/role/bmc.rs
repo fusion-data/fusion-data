@@ -7,16 +7,13 @@ use modelsql::{
 };
 use sea_query::{Condition, Expr, Query, SelectStatement};
 
-use crate::{pb::CreateRoleDto, role::RoleIden};
+use hetuiam_core::types::{CreateRoleDto, Role, RoleFilters, RoleForUpdate, RoleIden, RolePermissionIden};
 
-use super::{
-  Role, RoleFilters, RoleForUpdate,
-  role_permission::{RolePermissionBmc, RolePermissionIden},
-};
+use super::RolePermissionBmc;
 
 pub struct RoleBmc;
 impl DbBmc for RoleBmc {
-  const TABLE: &'static str = "role";
+  const TABLE: &'static str = "iam_role";
 }
 
 generate_pg_bmc_common!(
