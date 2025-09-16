@@ -2,12 +2,12 @@
 members = [
   "crates/fusions/*",
   "crates/libs/*",
-  "hetuflow/hetuflow-core",
-  "hetuflow/hetuflow-server",
-  "hetuflow/hetuflow-agent",
-  "hetuflow/hetuflow-bins",
-  "hetuflow/hetuflow-docs",
-  "hetumind/*",
+  "crates/hetuflow/hetuflow-core",
+  "crates/hetuflow/hetuflow-server",
+  "crates/hetuflow/hetuflow-agent",
+  "crates/hetuflow/hetuflow-bins",
+  "crates/hetuflow/hetuflow-docs",
+  "crates/hetumind/*",
 ]
 resolver = "2"
 
@@ -66,10 +66,10 @@ fusion-db = { version = "0.1.1", path = "crates/fusions/fusion-db" }
 fusion-web = { version = "0.1.1", path = "crates/fusions/fusion-web" }
 fusion-grpc = { version = "0.1.1", path = "crates/fusions/fusion-grpc" }
 fusions = { version = "0.1.1", path = "crates/fusions/fusions" }
-hetuflow-core = { version = "0.1.1", path = "hetuflow/hetuflow-core" }
-hetumind-core = { version = "0.1.1", path = "hetumind/hetumind-core" }
-hetumind-context = { version = "0.1.1", path = "hetumind/hetumind-context" }
-hetumind-nodes = { version = "0.1.1", path = "hetumind/hetumind-nodes" }
+hetuflow-core = { version = "0.1.1", path = "crates/hetuflow/hetuflow-core" }
+hetumind-core = { version = "0.1.1", path = "crates/hetumind/hetumind-core" }
+hetumind-context = { version = "0.1.1", path = "crates/hetumind/hetumind-context" }
+hetumind-nodes = { version = "0.1.1", path = "crates/hetumind/hetumind-nodes" }
 # -- projects end
 mdbook = "0.4"
 mdbook-mermaid = "0.15"
@@ -110,7 +110,7 @@ uuid = { version = "1", features = [
 ] }
 rust_decimal = { version = "1", features = ["serde-str"] }
 rust_decimal_macros = "1"
-typed-builder = "0.21"
+typed-builder = "0.22"
 derive_builder = "0.20"
 derive-getters = "0.5"
 clap = { version = "4.5", features = ["derive"] }
@@ -191,7 +191,6 @@ duration-str = "0.17"
 # -- scheduler
 croner = "3.0"
 hierarchical_hash_wheel_timer = { version = "1.3", features = ["uuid"] }
-tokio-cron-scheduler = { version = "0.14", features = ["has_bytes", "signal"] }
 # -- Database
 sqlx = { version = "0.8", features = ["runtime-tokio", "chrono", "json"] }
 sea-query = { version = "0.32", features = ["attr", "thread-safe"] }
@@ -279,8 +278,8 @@ tonic-reflection = "0.14"
 tonic-web = "0.14"
 tonic-build = { version = "0.14" }
 # -- Protocol Buffers
-protobuf = "4.32.0-release"
-protobuf-codegen = "4.32.0-release"
+protobuf = "4.32.1-release"
+protobuf-codegen = "4.32.1-release"
 protobuf-json-mapping = "3"
 protobuf-parse = "3"
 # protoc-bin-vendored = "3"
@@ -301,9 +300,9 @@ opendal = { version = "0.54", features = [
 ] }
 minio = { version = "0.3" }
 # -- LLM
-rig-core = { version = "0.19", features = ["derive"] }
+rig-core = { version = "0.20", features = ["derive"] }
 rig-postgres = { version = "0.1" }
-graph-flow = { version = "0.3" }
+graph-flow = { version = "0.4" }
 rmcp = { version = "0.6", features = [
   "client",
   "reqwest",

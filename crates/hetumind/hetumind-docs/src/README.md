@@ -79,7 +79,6 @@ graph TB
 [dependencies]
 # 异步运行时
 tokio = { version = "1.40", features = ["full"] }
-tokio-cron-scheduler = "0.11"
 
 # Web 框架
 axum = "0.7"

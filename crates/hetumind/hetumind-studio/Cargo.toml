@@ -79,7 +79,6 @@ metrics = { workspace = true }
 fastrace = { workspace = true }
 
 # -- scheduler & cron
-tokio-cron-scheduler = { workspace = true }
 croner = { workspace = true }
 
 # -- serde

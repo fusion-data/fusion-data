@@ -139,7 +139,7 @@
 
 - [ ] **触发器节点**
   - [ ] `WebhookTriggerNode`: 实现一个统一的 Webhook 入口 `/webhooks/{webhook_id}`，根据 ID 查找并触发工作流
-  - [ ] `ScheduleTriggerNode`: 集成 `tokio-cron-scheduler`，在服务启动时加载并启动所有激活的定时任务
+  - [ ] `ScheduleTriggerNode`: 在服务启动时加载并启动所有激活的定时任务
 - [ ] **AI 编排节点 (`hetumind-nodes`)**
   - [ ] `LLMCallNode`: 实现对主流 LLM API (Deepseek, Tongyi) 的调用
   - [ ] `PromptTemplateNode`: 使用类似 `Handlebars` 或 `liquid` 的模板引擎渲染 Prompt
