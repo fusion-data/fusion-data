@@ -2,6 +2,7 @@
 members = [
   "crates/fusions/*",
   "crates/libs/*",
+  "crates/hetuiam/*",
   "crates/hetuflow/hetuflow-core",
   "crates/hetuflow/hetuflow-server",
   "crates/hetuflow/hetuflow-agent",

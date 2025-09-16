@@ -50,7 +50,7 @@ impl SchedulerSvc {
         &self,
         task: &SchedTask,
         agent_id: &str,
-    ) -> Result<DateTime<Utc>, DataError> {
+    ) -> Result<DateTime<FixedOffset>, DataError> {
         let agent_info = self.agent_manager.get_agent_info(agent_id).await?;
         let base_advance = self.early_dispatch_config.default_advance_seconds;
 
@@ -115,7 +115,7 @@ pub struct AckConfig {
 
 pub struct PendingAck {
     pub message_id: Uuid,
-    pub sent_at: DateTime<Utc>,
+    pub sent_at: DateTime<FixedOffset>,
     pub retry_count: u32,
     pub agent_id: String,
     pub message_type: String,
@@ -281,7 +281,7 @@ impl SchedulerSvc {
 #[derive(Debug, Clone)]
 pub struct TaskIdempotencyKey {
     pub job_id: Uuid,
-    pub scheduled_time: DateTime<Utc>,
+    pub scheduled_time: DateTime<FixedOffset>,
     pub execution_round: i32,
 }
 
@@ -1323,8 +1323,8 @@ impl TaskGenerationSvc {
   pub async fn generate_tasks_for_schedule(
     &self,
     schedule: &SchedSchedule,
-    from_time: DateTime<Utc>,
-    to_time: DateTime<Utc>,
+    from_time: DateTime<FixedOffset>,
+    to_time: DateTime<FixedOffset>,
   ) -> Result<Vec<TaskId>, DataError> {
     let mut generated_tasks = Vec::new();
 

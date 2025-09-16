@@ -154,7 +154,7 @@ where
   }
 }
 
-pub async fn count_on<MC, F>(mm: &ModelManager, f: F) -> Result<i64>
+pub async fn count_on<MC, F>(mm: &ModelManager, f: F) -> Result<u64>
 where
   MC: DbBmc,
   F: FnOnce(&mut SelectStatement) -> Result<()>,
@@ -178,7 +178,7 @@ where
       })?;
       let count: i64 =
         result.try_get("count").map_err(|_| SqlError::CountFail { schema: MC::SCHEMA, table: MC::TABLE })?;
-      Ok(count)
+      Ok(count as u64)
     }
     #[cfg(feature = "with-sqlite")]
     Dbx::Sqlite(dbx_sqlite) => {
@@ -189,7 +189,7 @@ where
         .map_err(|_| SqlError::CountFail { schema: MC::SCHEMA, table: MC::TABLE })?;
       let count: i64 =
         result.try_get("count").map_err(|_| SqlError::CountFail { schema: MC::SCHEMA, table: MC::TABLE })?;
-      Ok(count)
+      Ok(count as u64)
     }
   }
 }

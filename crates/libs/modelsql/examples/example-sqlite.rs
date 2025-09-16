@@ -25,7 +25,7 @@ pub struct User {
   pub id: i64,
   pub name: String,
   pub status: i32,
-  pub created_at: DateTime<Utc>,
+  pub created_at: DateTime<FixedOffset>,
   pub created_by: i64,
 }
 impl SqliteRowType for User {}

@@ -40,8 +40,8 @@ impl CtxPayload {
   }
 
   /// Set the expiration time in seconds since the Unix epoch.
-  pub fn set_exp(&mut self, value: i64) {
-    self.set_i64(Ctx::EXP, value);
+  pub fn set_exp(&mut self, epoch_seconds: i64) {
+    self.set_i64(Ctx::EXP, epoch_seconds);
   }
 
   pub fn set_string(&mut self, key: &str, value: impl Into<String>) {
