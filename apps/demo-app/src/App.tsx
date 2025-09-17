@@ -7,9 +7,11 @@ import {
   GithubOutlined,
   RocketOutlined,
   ApiOutlined,
+  HolderOutlined,
 } from "@ant-design/icons";
 import { formatDate, generateId } from "@fusion-data/shared-utils";
 import HetuflowDemo from "./components/HetuflowDemo";
+import DragDropDemo from "./components/DragDropDemo";
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -106,6 +108,16 @@ function App() {
         </span>
       ),
       children: <HetuflowDemo />,
+    },
+    {
+      key: "dragdrop",
+      label: (
+        <span>
+          <HolderOutlined />
+          拖拽演示
+        </span>
+      ),
+      children: <DragDropDemo />,
     },
   ];
 

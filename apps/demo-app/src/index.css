@@ -13,3 +13,39 @@ body {
   text-align: center;
   width: 100%;
 }
+
+/* 拖拽相关样式 */
+.draggable-card {
+  cursor: grab;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+.draggable-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.draggable-card:active {
+  cursor: grabbing;
+}
+
+.task-item {
+  cursor: grab;
+  padding: 8px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  background: #fafafa;
+  border: 1px solid #f0f0f0;
+  transition: all 0.2s ease;
+}
+
+.task-item:hover {
+  background: #f0f0f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.task-item:active {
+  cursor: grabbing;
+  transform: rotate(5deg);
+}

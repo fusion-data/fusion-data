@@ -196,7 +196,8 @@ impl TaskInstanceBmc {
 
   /// 找到所有僵尸任务实例
   pub async fn find_zombie_instances(_mm: &ModelManager) -> Result<Vec<SchedTaskInstance>, SqlError> {
-    todo!()
+    // TODO: 找到所有僵尸任务实例，Server 端需要判断僵尸任务实例吗？
+    Ok(vec![])
   }
 
   /// 拉取到 SchedTaskInstance 后，将 request.agent_id 绑定到 SchedTaskInstance.agent_id 上
@@ -214,18 +215,13 @@ impl TaskInstanceBmc {
 
     // 构建标签匹配条件：使用 JSON 包含查询，类似 k8s label selector
     // Agent 的 labels 必须是 Task config.labels 的子集
-    let where_labels = if request.labels.is_empty() {
-      "(t.config->'labels' = '{}' OR t.config->'labels' IS NULL)"
-    } else {
-      "t.config->'labels' @> $2"
-    };
+    let where_labels = if request.labels.is_empty() { "" } else { "and t.config->'labels' @> $2" };
 
     let sql = format!(
       r#"with sti as (select ti.*
                   from sched_task_instance ti
                           inner join sched_task t on t.id = ti.task_id
-                  where ti.status = $1
-                    and {})
+                  where ti.status = $1 {}),
               update_task as (update sched_task set status = $3 where id in (select task_id from sti) and status = $4)
       update sched_task_instance
       set status   = $5,

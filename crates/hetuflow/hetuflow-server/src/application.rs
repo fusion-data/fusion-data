@@ -20,7 +20,7 @@ use crate::{
   model::DistributedLockIds,
 };
 use crate::{
-  model::{GatewayCommandRequest, HealthStatus},
+  model::{GatewayCommandRequest, SystemStatus},
   setting::HetuflowSetting,
 };
 
@@ -278,13 +278,13 @@ impl ServerApplication {
     self.is_leader.load(Ordering::Relaxed)
   }
 
-  pub async fn health_status(&self) -> Result<HealthStatus, DataError> {
+  pub async fn health_status(&self) -> Result<SystemStatus, DataError> {
     let db = self.mm.dbx().db_postgres()?;
     let db_size = db.db().size();
 
     let agent_size = self.connection_manager.get_online_count()?;
 
-    let body = HealthStatus::new(db_size, agent_size);
+    let body = SystemStatus::new(db_size, agent_size);
     Ok(body)
   }
 

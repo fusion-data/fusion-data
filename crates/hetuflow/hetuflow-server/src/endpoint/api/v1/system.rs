@@ -2,7 +2,7 @@ use axum::extract::State;
 use fusion_web::{WebResult, ok_json};
 use utoipa_axum::router::OpenApiRouter;
 
-use crate::{application::ServerApplication, model::HealthStatus};
+use crate::{application::ServerApplication, model::SystemStatus};
 
 pub fn routes() -> OpenApiRouter<ServerApplication> {
   OpenApiRouter::new()
@@ -15,10 +15,10 @@ pub fn routes() -> OpenApiRouter<ServerApplication> {
   get,
   path = "/health",
   responses(
-    (status = 200, description = "Get system health status", body = HealthStatus)
+    (status = 200, description = "Get system health status", body = SystemStatus)
   )
 )]
-async fn health(State(app): State<ServerApplication>) -> WebResult<HealthStatus> {
+async fn health(State(app): State<ServerApplication>) -> WebResult<SystemStatus> {
   let body = app.health_status().await?;
   ok_json!(body)
 }

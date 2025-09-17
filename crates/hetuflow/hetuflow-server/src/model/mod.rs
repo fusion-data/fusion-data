@@ -26,19 +26,31 @@ pub enum GatewayCommandRequest {
 }
 
 #[derive(Serialize, utoipa::ToSchema)]
-pub struct HealthStatus {
+#[serde(rename_all = "lowercase")]
+pub enum HealthStatus {
+  Healthy,
+  Unhealthy,
+}
+
+#[derive(Serialize, utoipa::ToSchema)]
+pub struct SystemStatus {
   /// 系统状态
-  status: bool,
+  status: HealthStatus,
   /// 数据库连接数量
-  db_size: u32,
+  db_conn_size: u32,
   /// Agent 在线数量
   agent_size: u32,
   timestamp: i64,
 }
 
-impl HealthStatus {
+impl SystemStatus {
   pub fn new(db_size: u32, agent_size: u32) -> Self {
-    Self { status: db_size > 0 && agent_size > 0, db_size, agent_size, timestamp: now_epoch_millis() }
+    Self {
+      status: if db_size > 0 && agent_size > 0 { HealthStatus::Healthy } else { HealthStatus::Unhealthy },
+      db_conn_size: db_size,
+      agent_size,
+      timestamp: now_epoch_millis(),
+    }
   }
 }
 
