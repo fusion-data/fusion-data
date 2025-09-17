@@ -1,0 +1,39 @@
+[package]
+name = "hetuflow-agent"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+hetuflow-core = { workspace = true }
+fusion-common = { workspace = true, features = ["with-uuid"] }
+fusion-core = { workspace = true, features = ["with-uuid"] }
+fusion-web = { workspace = true }
+tokio = { workspace = true }
+tokio-tungstenite = { workspace = true }
+mea = { workspace = true }
+kanal = { workspace = true }
+config = { workspace = true }
+futures-util = { workspace = true }
+hierarchical_hash_wheel_timer = { workspace = true }
+croner = { workspace = true }
+axum = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+clap = { workspace = true }
+log = { workspace = true }
+logforth = { workspace = true }
+uuid = { workspace = true }
+rand = { workspace = true }
+duration-str = { workspace = true }
+sysinfo = { workspace = true }
+
+[target.'cfg(unix)'.dependencies]
+nix = { version = "0.30", features = ["signal"] }

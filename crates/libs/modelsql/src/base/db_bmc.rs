@@ -40,20 +40,20 @@ pub trait DbBmc {
   /// This will allow the code to update those as needed.
   ///
   /// default: true
-  fn _has_creation_timestamps() -> bool {
+  fn _has_created_at() -> bool {
     true
   }
 
-  fn _has_creation_id() -> bool {
+  fn _has_created_by() -> bool {
     true
   }
 
   /// default: true
-  fn _has_modification_timestamps() -> bool {
+  fn _has_updated_at() -> bool {
     true
   }
 
-  fn _has_modification_id() -> bool {
+  fn _has_updated_by() -> bool {
     true
   }
 

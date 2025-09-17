@@ -31,6 +31,7 @@ with-rust_decimal = [
   "sea-query-binder/with-rust_decimal",
 ]
 with-pgvector = ["dep:pgvector"]
+with-openapi = ["utoipa", "modelsql-core/with-openapi"]
 
 [[example]]
 name = "example-sqlite"
@@ -65,6 +66,7 @@ sea-query-binder.workspace = true
 pgvector = { workspace = true, optional = true }
 chrono = { workspace = true }
 tonic = { workspace = true, optional = true }
+utoipa = { workspace = true, optional = true }
 
 [dev-dependencies]
 anyhow.workspace = true

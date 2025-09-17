@@ -3,6 +3,7 @@ use uuid::Uuid;
 use crate::filter::OpVal;
 
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct OpValsUuid(pub Vec<OpValUuid>);
 impl OpValsUuid {
   pub fn eq(uuid: impl Into<Uuid>) -> Self {
@@ -55,6 +56,7 @@ impl OpValsUuid {
 }
 
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub enum OpValUuid {
   Eq(Uuid),
   Not(Uuid),

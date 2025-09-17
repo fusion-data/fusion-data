@@ -1,9 +1,9 @@
-mod app_config;
-mod fusion_config;
-mod log_config;
-mod security_config;
+mod app_setting;
+mod fusion_setting;
+mod log_setting;
+mod security_setting;
 
-pub use app_config::*;
-pub use fusion_config::*;
-pub use log_config::*;
-pub use security_config::*;
+pub use app_setting::*;
+pub use fusion_setting::*;
+pub use log_setting::*;
+pub use security_setting::*;

@@ -31,11 +31,18 @@ pub fn set_env(name: &str, value: &str) -> Result<(), Error> {
   })
 }
 
-pub fn remove_env(name: &'static str) -> Result<(), Error> {
+pub fn remove_env(name: &str) -> Result<(), Error> {
   std::panic::catch_unwind(|| unsafe {
     env::remove_var(name);
   })
   .map_err(|e| Error::FailedToRemoveEnv(name.to_string(), panic_message(e)))
+}
+
+pub fn remove_envs(names: &[&str]) -> Result<(), Error> {
+  for name in names {
+    remove_env(name)?;
+  }
+  Ok(())
 }
 
 fn panic_message(e: Box<dyn std::any::Any + Send>) -> String {

@@ -2,7 +2,7 @@
 
 use std::time::Duration;
 
-use fusion_core::configuration::{LogConfig, LogWriterType};
+use fusion_core::configuration::{LogSetting, LogWriterType};
 use fusion_core::log::init_log;
 use log::Level;
 
@@ -11,7 +11,7 @@ fn main() {
 
   // 演示同时输出到控制台和文件的配置
   println!("\n测试同时输出到控制台和文件:");
-  let config = LogConfig {
+  let config = LogSetting {
     enable: true,
     with_target: true,
     with_file: true,

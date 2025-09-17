@@ -1,0 +1,43 @@
+{
+  "name": "@fusion-data/hetuflow-sdk",
+  "version": "1.0.0",
+  "description": "Hetuflow TypeScript SDK for API access",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "jest",
+    "lint": "eslint src/**/*.ts",
+    "clean": "rm -rf dist",
+    "generate": "openapi-typescript http://localhost:9500/docs/openapi.json -o src/types/openapi.ts"
+  },
+  "keywords": [
+    "hetuflow",
+    "sdk",
+    "typescript",
+    "api"
+  ],
+  "license": "Apache-2.0",
+  "dependencies": {
+    "axios": "^1.6.8"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.0.0",
+    "jest": "^29.0.0",
+    "typescript": "^5.0.0",
+    "eslint": "^9.0.0",
+    "openapi-typescript": "^6.7.4"
+  },
+  "files": [
+    "dist"
+  ]
+}

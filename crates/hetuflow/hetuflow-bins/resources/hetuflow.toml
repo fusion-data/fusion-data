@@ -1,0 +1,96 @@
+[fusion.app]
+run_mode = "dev"
+name = "hetuflow-server"
+time_offset = "+08:00"
+
+[fusion.log]
+enable = true
+with_target = true
+with_file = true
+with_thread_ids = false
+with_thread_names = true
+with_line_number = true
+with_span_events = []
+time_format = "%Y-%m-%d %H:%M:%S%.3f"
+log_level = "info"
+log_writer = "both"
+log_dir = "./runs/logs/server/"
+log_name = "hetuflow-server"
+log_targets = ["modelsql=debug", "hetuflow_core=debug", "hetuflow_server=debug"]
+
+
+[fusion.db]
+enable = true
+url = "postgres://fusiondata:2025.Fusiondata@localhost:5432/fusiondata"
+
+[fusion.web]
+enable = true
+server_addr = "0.0.0.0:9500"
+enable_remote_addr = true
+
+[hetuflow]
+# 整个集群最大同时运行的任务数量
+max_concurrent_tasks = 1000
+# 历史记录保留时间
+history_ttl = "30d"
+
+[hetuflow.server]
+server_id = "019888ad-965d-7871-8d47-562ac1e1e5ac"
+server_name = "hetuflow-server"
+# 是否允许参与 leader 选举
+allow_leader_election = true
+# 任务轮询间隔
+task_poll_interval = "30s"
+# Job 检查间隔
+job_check_interval = "30s"
+# Job 检查持续时间
+job_check_duration = "3m"
+# Agent 心跳检查间隔
+agent_heartbeat_interval = "10s"
+# Agent 心跳检查超时
+agent_heartbeat_ttl = "60s"
+# 负载均衡间隔
+load_balance_interval = "30s"
+# 服务器过期时间
+server_overdue_ttl = "5m"
+# Agent 过期时间
+agent_overdue_ttl = "5m"
+
+# 任务日志配置
+[hetuflow.task_log]
+# 启用任务日志收集
+enabled = true
+# 日志存储根目录
+log_dir = "./runs/logs/tasks/"
+# 日志文件最大大小（字节，默认100MB）
+max_file_size = 104857600
+# 日志文件保留天数
+retention_days = 30
+# 启用日志压缩
+enable_compression = true
+# 日志轮转检查间隔
+rotation_check_interval = "1h"
+
+# WebSocket 日志推送配置
+[hetuflow.task_log.websocket]
+# 启用实时日志推送
+enabled = true
+# 推送缓冲区大小（条数）
+buffer_size = 1000
+# 推送间隔
+push_interval = "100ms"
+# 最大订阅者数量
+max_subscribers = 100
+
+# JWE Token 认证配置（可选）
+[hetuflow.jwe]
+# 私钥（用于解密 JWE Token）
+private_key = "-----BEGIN EC PRIVATE KEY-----\nMHcCAQEEILbW/tgwCUtATHBYidQ+fgdMxomJBwnzKltNGpnKVE+ToAoGCCqGSM49\nAwEHoUQDQgAEhT3tLFIRL/n1vlL+/eD1FPCFqNSm1qDglnXc4/jaRKHcHveL7QD4\nnXbKJPYYyFZdyl3hls5x1SHGcgzcEPNyHQ==\n-----END EC PRIVATE KEY-----"
+# 公钥（用于加密 JWE Token）
+public_key = "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEhT3tLFIRL/n1vlL+/eD1FPCFqNSm\n1qDglnXc4/jaRKHcHveL7QD4nXbKJPYYyFZdyl3hls5x1SHGcgzcEPNyHQ==\n-----END PUBLIC KEY-----"
+# 密钥协商算法
+key_agreement_algorithm = "ECDH-ES"
+# 内容加密算法
+content_encryption_algorithm = "A256GCM"
+# Token 有效期（秒）
+# token_ttl = 3600

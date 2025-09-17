@@ -25,7 +25,7 @@ pub struct User {
   pub id: i64,
   pub name: String,
   pub status: i32,
-  pub created_at: DateTime<Utc>,
+  pub created_at: DateTime<FixedOffset>,
   pub created_by: i64,
 }
 impl SqliteRowType for User {}
@@ -128,7 +128,7 @@ async fn main() -> Result<()> {
 
   // 获取当前目录的绝对路径
   let current_dir = env::current_dir()?;
-  let db_path = format!("file:{}?mode=rwc", current_dir.join("var").join("test.db").display());
+  let db_path = format!("file:{}?mode=rwc", current_dir.join("runs").join("test.db").display());
 
   println!("Database path: {}", db_path);
 

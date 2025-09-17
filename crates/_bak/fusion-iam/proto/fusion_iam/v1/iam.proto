@@ -1,5 +1,0 @@
-syntax = "proto3";
-
-package fusion_iam.v1;
-
-message Empty {}

@@ -6,7 +6,7 @@ use axum::http::StatusCode;
 use axum::http::request::Parts;
 #[cfg(feature = "with-ulid")]
 use fusion_core::IdUlidResult;
-use fusion_core::configuration::SecurityConfig;
+use fusion_core::configuration::SecuritySetting;
 use fusion_core::log::get_trace_id;
 use fusion_core::security::{AccessToken, SecurityUtils};
 use fusion_core::{DataError, IdI64Result};
@@ -53,7 +53,7 @@ pub fn unauthorized_app_error(msg: impl Into<String>) -> (StatusCode, Json<WebEr
 }
 
 /// 从 Http Request Parts 中获取 [Ctx]
-pub fn extract_ctx(parts: &Parts, sc: &SecurityConfig) -> Result<Ctx, DataError> {
+pub fn extract_ctx(parts: &Parts, sc: &SecuritySetting) -> Result<Ctx, DataError> {
   let req_time = SystemTime::now();
 
   let token = if let Some(Authorization(bearer)) = parts.headers.typed_get::<Authorization<Bearer>>() {

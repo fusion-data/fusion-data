@@ -1,6 +1,6 @@
 # 设置运行 cargo 时的系统环境变量
 [env]
-RUST_LOG = "info,hetuflow_core=debug,hetuflow_agent=debug,hetuflow_server=debug"
+RUST_LOG = "info,modelsql=debug,hetuflow_core=debug,hetuflow_agent=debug,hetuflow_server=debug"
 
 [alias]
 clippy-all = "clippy --all-features -- -D warnings"
@@ -9,7 +9,6 @@ check-all = "check --all-features"
 # 设置 rustc 编译器参数
 # [build]
 # rustflags = ["-C", "force-unwind-tables"]
-
 
 
 # On Windows

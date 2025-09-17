@@ -5,12 +5,12 @@ use serde::de::DeserializeOwned;
 
 use crate::configuration::load_config_with;
 
-use super::{Configurable, ConfigureError, ConfigureResult, FusionConfig, util::load_config};
+use super::{Configurable, ConfigureError, ConfigureResult, FusionSetting, util::load_config};
 
 #[derive(Clone)]
 pub struct FusionConfigRegistry {
   config: Arc<RwLock<Arc<Config>>>,
-  fusion_config: Arc<RwLock<Arc<FusionConfig>>>,
+  fusion_config: Arc<RwLock<Arc<FusionSetting>>>,
 }
 
 impl FusionConfigRegistry {
@@ -18,13 +18,13 @@ impl FusionConfigRegistry {
     FusionConfigRegistryBuilder::default()
   }
 
-  pub fn new(underling: Arc<Config>, fusion_config: Arc<FusionConfig>) -> Self {
+  pub fn new(underling: Arc<Config>, fusion_config: Arc<FusionSetting>) -> Self {
     Self { config: Arc::new(RwLock::new(underling)), fusion_config: Arc::new(RwLock::new(fusion_config)) }
   }
 
   pub fn reload(&self) -> Result<(), ConfigureError> {
     let config = Arc::new(load_config()?);
-    let fusion_config = Arc::new(FusionConfig::try_from(config.as_ref())?);
+    let fusion_config = Arc::new(FusionSetting::try_from(config.as_ref())?);
 
     {
       let mut config_write = self.config.write().unwrap();
@@ -37,7 +37,7 @@ impl FusionConfigRegistry {
     Ok(())
   }
 
-  pub fn fusion_config(&self) -> Arc<FusionConfig> {
+  pub fn fusion_config(&self) -> Arc<FusionSetting> {
     self.fusion_config.read().unwrap().clone()
   }
 
@@ -55,7 +55,7 @@ impl FusionConfigRegistry {
     let new_config = Arc::new(b.build()?);
 
     // 同时更新 fusion_config
-    let new_fusion_config = Arc::new(FusionConfig::try_from(new_config.as_ref())?);
+    let new_fusion_config = Arc::new(FusionSetting::try_from(new_config.as_ref())?);
 
     *config = new_config;
     drop(config); // 释放 config 的写锁
@@ -94,7 +94,7 @@ impl Default for FusionConfigRegistry {
 #[derive(Default)]
 pub struct FusionConfigRegistryBuilder {
   config: Option<Config>,
-  fusion_config: Option<FusionConfig>,
+  fusion_config: Option<FusionSetting>,
 }
 
 impl FusionConfigRegistryBuilder {
@@ -103,7 +103,7 @@ impl FusionConfigRegistryBuilder {
     self
   }
 
-  pub fn with_fusion_config(mut self, fusion_config: FusionConfig) -> Self {
+  pub fn with_fusion_config(mut self, fusion_config: FusionSetting) -> Self {
     self.fusion_config = Some(fusion_config);
     self
   }
@@ -112,7 +112,7 @@ impl FusionConfigRegistryBuilder {
     let config = load_config_with(self.config)?;
     let fusion_config = match self.fusion_config {
       Some(fusion_config) => fusion_config,
-      None => FusionConfig::try_from(&config)?,
+      None => FusionSetting::try_from(&config)?,
     };
     Ok(FusionConfigRegistry::new(Arc::new(config), Arc::new(fusion_config)))
   }

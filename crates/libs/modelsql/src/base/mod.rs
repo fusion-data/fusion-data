@@ -29,8 +29,8 @@ pub enum CommonIden {
 
 #[derive(Iden)]
 pub enum TimestampIden {
-  Cid,
-  Ctime,
-  Mid,
-  Mtime,
+  CreatedBy,
+  CreatedAt,
+  UpdatedBy,
+  UpdatedAt,
 }

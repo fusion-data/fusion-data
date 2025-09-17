@@ -7,6 +7,7 @@ mod error;
 pub mod helper;
 pub mod meta;
 pub mod model;
+pub mod process;
 pub mod regex;
 pub mod runtime;
 pub mod serde;
@@ -17,6 +18,10 @@ pub mod uuid;
 
 pub mod ahash {
   pub use ::ahash::*;
+}
+
+pub mod ctx {
+  pub use fusion_corelib::ctx::*;
 }
 
 pub use error::{Error, Result};

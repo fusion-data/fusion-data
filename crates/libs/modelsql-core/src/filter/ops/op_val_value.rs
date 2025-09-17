@@ -2,6 +2,7 @@ use crate::filter::OpVal;
 use serde_json::Value;
 
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct OpValsValue(pub Vec<OpValValue>);
 
 impl OpValsValue {
@@ -49,6 +50,7 @@ impl OpValsValue {
 }
 
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub enum OpValValue {
   Eq(Value),
   Not(Value),

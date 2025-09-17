@@ -1,7 +1,7 @@
 use std::{future::Future, time::Duration};
 
 use fusion_common::env::set_env;
-use fusion_core::{DataError, configuration::SecurityConfig, security::SecurityUtils};
+use fusion_core::{DataError, configuration::SecuritySetting, security::SecurityUtils};
 use fusion_corelib::ctx::CtxPayload;
 use futures::TryFutureExt;
 use log::info;
@@ -64,7 +64,10 @@ pub async fn init_grpc_server(
 }
 
 #[allow(clippy::result_large_err)]
-pub fn extract_payload_from_metadata(sc: &SecurityConfig, metadata: &MetadataMap) -> Result<CtxPayload, tonic::Status> {
+pub fn extract_payload_from_metadata(
+  sc: &SecuritySetting,
+  metadata: &MetadataMap,
+) -> Result<CtxPayload, tonic::Status> {
   let token = extract_token_from_metadata(metadata)?;
   let (payload, _) = SecurityUtils::decrypt_jwt(sc.pwd(), token).map_err(|e| Status::unauthenticated(e.to_string()))?;
   Ok(payload)

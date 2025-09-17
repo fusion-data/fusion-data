@@ -133,12 +133,11 @@ where
     Dbx::Postgres(dbx_postgres) => {
       let query_str = stmt.to_string(sea_query::PostgresQueryBuilder);
 
-      let result = sqlx::query(&query_str)
-        .fetch_one(dbx_postgres.db())
-        .await
-        .map_err(|_| SqlError::CountFail { schema: MC::SCHEMA, table: MC::TABLE })?;
-      let count: i64 =
-        result.try_get("count").map_err(|_| SqlError::CountFail { schema: MC::SCHEMA, table: MC::TABLE })?;
+      let result = sqlx::query(&query_str).fetch_one(dbx_postgres.db()).await.map_err(|e| {
+        log::error!("count fail: {:?}", e);
+        SqlError::CountFail { schema: MC::SCHEMA, table: MC::TABLE }
+      })?;
+      let count: i64 = result.try_get("count")?;
       Ok(count as u64)
     }
     #[cfg(feature = "with-sqlite")]
@@ -155,7 +154,7 @@ where
   }
 }
 
-pub async fn count_on<MC, F>(mm: &ModelManager, f: F) -> Result<i64>
+pub async fn count_on<MC, F>(mm: &ModelManager, f: F) -> Result<u64>
 where
   MC: DbBmc,
   F: FnOnce(&mut SelectStatement) -> Result<()>,
@@ -173,13 +172,13 @@ where
     Dbx::Postgres(dbx_postgres) => {
       let query_str = stmt.to_string(sea_query::PostgresQueryBuilder);
 
-      let result = sqlx::query(&query_str)
-        .fetch_one(dbx_postgres.db())
-        .await
-        .map_err(|_| SqlError::CountFail { schema: MC::SCHEMA, table: MC::TABLE })?;
+      let result = sqlx::query(&query_str).fetch_one(dbx_postgres.db()).await.map_err(|e| {
+        log::error!("count_on fail: {:?}", e);
+        SqlError::CountFail { schema: MC::SCHEMA, table: MC::TABLE }
+      })?;
       let count: i64 =
         result.try_get("count").map_err(|_| SqlError::CountFail { schema: MC::SCHEMA, table: MC::TABLE })?;
-      Ok(count)
+      Ok(count as u64)
     }
     #[cfg(feature = "with-sqlite")]
     Dbx::Sqlite(dbx_sqlite) => {
@@ -190,7 +189,7 @@ where
         .map_err(|_| SqlError::CountFail { schema: MC::SCHEMA, table: MC::TABLE })?;
       let count: i64 =
         result.try_get("count").map_err(|_| SqlError::CountFail { schema: MC::SCHEMA, table: MC::TABLE })?;
-      Ok(count)
+      Ok(count as u64)
     }
   }
 }
@@ -204,7 +203,7 @@ where
 
   // -- Prep Fields
   let mut fields = data.not_none_sea_fields();
-  if MC::_has_modification_timestamps() {
+  if MC::_has_updated_at() {
     fields = prep_fields_for_update::<MC>(fields, ctx);
   }
 
@@ -244,7 +243,7 @@ where
 
   // -- Prep Fields
   let mut fields = data.not_none_sea_fields();
-  if MC::_has_modification_timestamps() {
+  if MC::_has_updated_at() {
     fields = prep_fields_for_update::<MC>(fields, ctx);
   }
 
@@ -285,7 +284,7 @@ where
   let (sql, values) = if MC::_use_logical_deletion() {
     // -- Prep Fields
     let mut fields = SeaFields::new(vec![SeaField::new(CommonIden::LogiscalDeletion, true)]);
-    if MC::_has_modification_timestamps() {
+    if MC::_has_updated_at() {
       fields = prep_fields_for_update::<MC>(fields, ctx);
     }
 
@@ -331,7 +330,7 @@ where
   let (sql, values) = if MC::_use_logical_deletion() {
     // -- Prep Fields
     let mut fields = SeaFields::new(vec![SeaField::new(CommonIden::LogiscalDeletion, true)]);
-    if MC::_has_modification_timestamps() {
+    if MC::_has_updated_at() {
       fields = prep_fields_for_update::<MC>(fields, ctx);
     }
     let fields = fields.for_sea_update();
@@ -375,7 +374,7 @@ where
   let (sql, values) = if MC::_use_logical_deletion() {
     // -- Prep Fields
     let mut fields = SeaFields::new(vec![SeaField::new(CommonIden::LogiscalDeletion, true)]);
-    if MC::_has_modification_timestamps() {
+    if MC::_has_updated_at() {
       fields = prep_fields_for_update::<MC>(fields, ctx);
     }
     let fields = fields.for_sea_update();

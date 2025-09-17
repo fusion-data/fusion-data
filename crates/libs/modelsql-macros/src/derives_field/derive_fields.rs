@@ -1,6 +1,6 @@
-use crate::utils::modql_field::ModelsqlFieldProp;
+use crate::utils::get_struct_fields;
+use crate::utils::modelsql_field::{ModelsqlFieldProp, get_modelsql_field_props_and_skips};
 use crate::utils::struct_modql_attr::{StructModqlFieldProps, get_struct_modelsql_props};
-use crate::utils::{get_struct_fields, modql_field};
 use proc_macro::TokenStream;
 use proc_macro2::{Ident, Span};
 use quote::quote;
@@ -14,7 +14,7 @@ pub(crate) fn derive_fields_inner(input: TokenStream) -> TokenStream {
 
   // -- Collect Elements
   // Properties for all fields (with potential additional info with #[field(...)])
-  let modelsql_fields_and_skips = modql_field::get_modelsql_field_props_and_skips(fields);
+  let modelsql_fields_and_skips = get_modelsql_field_props_and_skips(fields);
   let field_props = modelsql_fields_and_skips.modelsql_fields; //modql_field::get_modelsql_field_props(fields);
   let field_mask_field = modelsql_fields_and_skips.field_mask_field;
 
@@ -96,7 +96,7 @@ fn impl_has_fields(
 
   // -- Build the FieldMeta quotes
   let props_field_metas = field_props.iter().map(|field_prop| {
-    // This below is resolved in the FieldMeta implemntation (same logic)
+    // This below is resolved in the FieldMeta implementation (same logic)
     // let name = field_prop.name.to_string();
 
     let prop_name = field_prop.prop_name.to_string();

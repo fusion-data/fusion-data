@@ -1,0 +1,6 @@
+//! 访问控制服务
+mod policy_bmc;
+mod policy_svc;
+
+use policy_bmc::PolicyBmc;
+pub use policy_svc::PolicySvc;

@@ -3,6 +3,7 @@ use chrono::{DateTime, FixedOffset};
 use super::OpVal;
 
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct OpValsDateTime(pub Vec<OpValDateTime>);
 
 impl OpValsDateTime {
@@ -50,6 +51,7 @@ impl OpValsDateTime {
 }
 
 #[derive(Debug, Clone)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub enum OpValDateTime {
   Eq(DateTime<FixedOffset>),
   Not(DateTime<FixedOffset>),

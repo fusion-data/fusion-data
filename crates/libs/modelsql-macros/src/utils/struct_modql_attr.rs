@@ -1,4 +1,4 @@
-use crate::utils::{get_dinput_attribute, get_meta_value_string};
+use crate::utils::{get_input_attribute, get_meta_value_string};
 use syn::punctuated::Punctuated;
 use syn::{DeriveInput, Meta, Token};
 
@@ -10,7 +10,7 @@ pub struct StructModqlFieldProps {
 
 pub fn get_struct_modelsql_props(dinput: &DeriveInput) -> Result<StructModqlFieldProps, syn::Error> {
   // FIXME: We should remove this, 'sqlb' should not be a thing anymore.
-  let sqlb_attr = get_dinput_attribute(dinput, "modelsql");
+  let sqlb_attr = get_input_attribute(dinput, "modelsql");
   let mut rel = None;
   let mut names_as_consts = None;
 

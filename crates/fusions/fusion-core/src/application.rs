@@ -16,7 +16,7 @@ use fusion_common::time::OffsetDateTime;
 use crate::{
   Result,
   component::{ComponentArc, ComponentError, ComponentResult, DynComponentArc, auto_inject_component},
-  configuration::{ConfigRegistry, Configurable, ConfigureResult, FusionConfig, FusionConfigRegistry},
+  configuration::{ConfigRegistry, Configurable, ConfigureResult, FusionConfigRegistry, FusionSetting},
   log::LogPlugin,
   plugin::{Plugin, PluginRef},
 };
@@ -131,7 +131,7 @@ impl Application {
     debug!("added component: {}", component_name);
   }
 
-  pub fn fusion_config(&self) -> Arc<FusionConfig> {
+  pub fn fusion_config(&self) -> Arc<FusionSetting> {
     self.0.config_registry.fusion_config()
   }
 
@@ -181,7 +181,7 @@ unsafe impl Send for ApplicationBuilder {}
 unsafe impl Sync for ApplicationBuilder {}
 
 impl ApplicationBuilder {
-  pub fn get_fusion_config(&self) -> Arc<FusionConfig> {
+  pub fn get_fusion_config(&self) -> Arc<FusionSetting> {
     self.config_registry.fusion_config()
   }
 
@@ -373,11 +373,19 @@ impl ConfigRegistry for ApplicationBuilder {
 }
 #[cfg(test)]
 mod tests {
+  use fusion_common::env::remove_envs;
+
   use super::*;
-  use std::env;
 
   #[tokio::test]
   async fn test_application_run() {
+    remove_envs(&[
+      "FUSION__APP__NAME",
+      "FUSION__WEB__SERVER_ADDR",
+      "FUSION__SECURITY__TOKEN__SECRET_KEY",
+      "FUSION__SECURITY__PWD__PWD_KEY",
+    ])
+    .unwrap();
     Application::builder().run().await.unwrap();
     let app = Application::global();
     assert_eq!(app.fusion_config().app().name(), "fusion");
