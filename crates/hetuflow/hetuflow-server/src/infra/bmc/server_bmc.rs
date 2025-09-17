@@ -13,11 +13,11 @@ pub struct ServerBmc;
 impl DbBmc for ServerBmc {
   const TABLE: &str = "sched_server";
 
-  fn _has_modification_timestamps() -> bool {
+  fn _has_updated_at() -> bool {
     false
   }
 
-  fn _has_modification_id() -> bool {
+  fn _has_updated_by() -> bool {
     false
   }
 }

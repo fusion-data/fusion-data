@@ -373,11 +373,19 @@ impl ConfigRegistry for ApplicationBuilder {
 }
 #[cfg(test)]
 mod tests {
+  use fusion_common::env::remove_envs;
+
   use super::*;
-  use std::env;
 
   #[tokio::test]
   async fn test_application_run() {
+    remove_envs(&[
+      "FUSION__APP__NAME",
+      "FUSION__WEB__SERVER_ADDR",
+      "FUSION__SECURITY__TOKEN__SECRET_KEY",
+      "FUSION__SECURITY__PWD__PWD_KEY",
+    ])
+    .unwrap();
     Application::builder().run().await.unwrap();
     let app = Application::global();
     assert_eq!(app.fusion_config().app().name(), "fusion");

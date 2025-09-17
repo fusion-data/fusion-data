@@ -1,8 +1,7 @@
 use chrono::{DateTime, FixedOffset};
-use modelsql::filter::OpValsString;
 use modelsql_core::{
   field::FieldMask,
-  filter::{OpValsDateTime, OpValsInt32, OpValsUuid, Page},
+  filter::{OpValsDateTime, OpValsInt32, OpValsString, OpValsUuid, Page},
 };
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;

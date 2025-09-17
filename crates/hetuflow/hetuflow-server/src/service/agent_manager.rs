@@ -17,23 +17,19 @@ use hetuflow_core::{
 };
 
 use crate::{
-  gateway::ConnectionManager, infra::bmc::*, model::AgentEvent, service::AgentSvc, setting::HetuflowServerSetting,
+  gateway::ConnectionManager, infra::bmc::*, model::AgentEvent, service::AgentSvc, setting::HetuflowSetting,
 };
 
 /// Agent 管理器 - 负责调度策略、可靠性统计和任务分发
 pub struct AgentManager {
   mm: ModelManager,
   connection_manager: Arc<ConnectionManager>,
-  setting: Arc<HetuflowServerSetting>,
+  setting: Arc<HetuflowSetting>,
 }
 
 impl AgentManager {
   /// 创建新的 Agent 管理器
-  pub fn new(
-    mm: ModelManager,
-    connection_manager: Arc<ConnectionManager>,
-    setting: Arc<HetuflowServerSetting>,
-  ) -> Self {
+  pub fn new(mm: ModelManager, connection_manager: Arc<ConnectionManager>, setting: Arc<HetuflowSetting>) -> Self {
     Self { mm, connection_manager, setting }
   }
 
@@ -230,7 +226,7 @@ impl AgentManager {
 struct AgentEventRunLoop {
   mm: ModelManager,
   connection_manager: Arc<ConnectionManager>,
-  setting: Arc<HetuflowServerSetting>,
+  setting: Arc<HetuflowSetting>,
   event_rx: mpsc::UnboundedReceiver<AgentEvent>,
 }
 

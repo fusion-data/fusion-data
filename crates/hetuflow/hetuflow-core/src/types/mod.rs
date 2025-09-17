@@ -168,7 +168,7 @@ pub enum CommandKind {
   LogForward = 8,      // 日志转发
 }
 
-#[derive(Clone)]
+#[derive(Clone, AsRefStr)]
 pub enum HetuflowCommand {
   Shutdown,
   UpdateConfig,

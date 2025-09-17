@@ -2,13 +2,19 @@
 members = [
   "crates/fusions/*",
   "crates/libs/*",
-  "crates/hetuiam/*",
+  "crates/jieyuan/jieyuan-core",
+  "crates/jieyuan/jieyuan",
   "crates/hetuflow/hetuflow-core",
   "crates/hetuflow/hetuflow-server",
   "crates/hetuflow/hetuflow-agent",
   "crates/hetuflow/hetuflow-bins",
   "crates/hetuflow/hetuflow-docs",
-  "crates/hetumind/*",
+  "crates/hetumind/hetumind-core",
+  "crates/hetumind/hetumind-nodes",
+  "crates/hetumind/hetumind-context",
+  "crates/hetumind/hetumind-cli",
+  "crates/hetumind/hetumind-studio",
+  "crates/hetumind/hetumind-docs",
 ]
 resolver = "2"
 
@@ -67,7 +73,7 @@ fusion-db = { version = "0.1.1", path = "crates/fusions/fusion-db" }
 fusion-web = { version = "0.1.1", path = "crates/fusions/fusion-web" }
 fusion-grpc = { version = "0.1.1", path = "crates/fusions/fusion-grpc" }
 fusions = { version = "0.1.1", path = "crates/fusions/fusions" }
-hetuiam-core = { version = "0.1.1", path = "crates/hetuiam/hetuiam-core" }
+jieyuan-core = { version = "0.1.1", path = "crates/jieyuan/jieyuan-core" }
 hetuflow-core = { version = "0.1.1", path = "crates/hetuflow/hetuflow-core" }
 hetumind-core = { version = "0.1.1", path = "crates/hetumind/hetumind-core" }
 hetumind-context = { version = "0.1.1", path = "crates/hetumind/hetumind-context" }
@@ -82,6 +88,13 @@ tikv-jemallocator = "0.6"
 qrcode-rs = { version = "0.1" }
 image = { version = "0.25" }
 # -- Misc
+windows-sys = { version = "0.61", features = [
+  "Win32_Security",
+  "Win32_System_Threading",
+  "Win32_UI_WindowsAndMessaging",
+] }
+libc = "0.2"
+sysinfo = "0.37"
 dotenvy = "0.15"
 zeroize = { version = "1.8", features = ["derive"] }
 derive_more = { version = "2.0", features = [

@@ -128,11 +128,11 @@ where
   if MC::_has_owner_id() {
     fields.push(SeaField::new(CommonIden::OwnerId.into_iden(), ctx.uid()));
   }
-  if MC::_has_creation_id() && !fields.exists(TimestampIden::Cid.into_iden()) {
-    fields.push(SeaField::new(TimestampIden::Cid, ctx.uid()));
+  if MC::_has_created_by() && !fields.exists(TimestampIden::CreatedBy.into_iden()) {
+    fields.push(SeaField::new(TimestampIden::CreatedBy, ctx.uid()));
   }
-  if MC::_has_creation_timestamps() && !fields.exists(TimestampIden::Ctime.into_iden()) {
-    fields.push(SeaField::new(TimestampIden::Ctime, DateTime::<Utc>::from(*ctx.req_time())));
+  if MC::_has_created_at() && !fields.exists(TimestampIden::CreatedAt.into_iden()) {
+    fields.push(SeaField::new(TimestampIden::CreatedAt, DateTime::<Utc>::from(*ctx.req_time())));
   }
 }
 
@@ -142,11 +142,11 @@ fn fill_modifications<MC>(fields: &mut SeaFields, ctx: &Ctx)
 where
   MC: DbBmc,
 {
-  if MC::_has_modification_id() && !fields.exists(TimestampIden::Mid.into_iden()) {
-    fields.push(SeaField::new(TimestampIden::Mid, ctx.uid()));
+  if MC::_has_updated_by() && !fields.exists(TimestampIden::UpdatedBy.into_iden()) {
+    fields.push(SeaField::new(TimestampIden::UpdatedBy, ctx.uid()));
   }
-  if MC::_has_modification_timestamps() && !fields.exists(TimestampIden::Mtime.into_iden()) {
-    fields.push(SeaField::new(TimestampIden::Mtime, DateTime::<Utc>::from(*ctx.req_time())));
+  if MC::_has_updated_at() && !fields.exists(TimestampIden::UpdatedAt.into_iden()) {
+    fields.push(SeaField::new(TimestampIden::UpdatedAt, DateTime::<Utc>::from(*ctx.req_time())));
   }
 }
 

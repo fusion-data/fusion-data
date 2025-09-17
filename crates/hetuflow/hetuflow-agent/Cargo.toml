@@ -33,6 +33,7 @@ logforth = { workspace = true }
 uuid = { workspace = true }
 rand = { workspace = true }
 duration-str = { workspace = true }
+sysinfo = { workspace = true }
 
 [target.'cfg(unix)'.dependencies]
 nix = { version = "0.30", features = ["signal"] }

@@ -34,7 +34,7 @@ with_line_number = true
 with_span_events = []
 time_format = ""
 log_level = "info"
-# log_targets = []
+log_targets = []
 log_writer = "stdout"
 # 默认为 "./runs/logs/"，可以通过环境变量设置 FUSION__LOG__LOG_DIR 覆盖。当同时设置时，环境变量优先级更高。
 # log_dir =

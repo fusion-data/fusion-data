@@ -25,10 +25,7 @@ struct ApiDoc;
 
 pub fn routes() -> Router<ServerApplication> {
   let openapi = ApiDoc::openapi();
-  let (router, api) = OpenApiRouter::with_openapi(openapi)
-  // .routes(routes!(api::routes()))
-.nest("/api", api::routes())
-  .split_for_parts();
+  let (router, api) = OpenApiRouter::with_openapi(openapi).nest("/api", api::routes()).split_for_parts();
 
   router.merge(SwaggerUi::new("/docs/swagger-ui").url("/docs/openapi.json", api))
 }

@@ -2,7 +2,7 @@
 
 ## 清除脚本
 
-### hetuiam
+### jieyuan
 
 ```sql
 drop table if exists iam_user_role cascade;

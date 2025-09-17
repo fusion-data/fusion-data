@@ -10,7 +10,7 @@ use uuid::Uuid;
 use crate::service::JweConfig;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ServerConfig {
+pub struct ServerSetting {
   pub server_id: String,
   pub server_name: String,
   pub allow_leader_election: bool,
@@ -40,11 +40,11 @@ pub struct ServerConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct HetuflowServerSetting {
+pub struct HetuflowSetting {
   pub max_concurrent_tasks: u32,
   #[serde(deserialize_with = "deserialize_duration")]
   pub history_ttl: Duration,
-  pub server: ServerConfig,
+  pub server: ServerSetting,
   /// JWE Token 认证配置
   pub jwe: Option<JweConfig>,
   /// 任务日志配置
@@ -96,13 +96,13 @@ pub struct WebSocketLogConfig {
 
 const KEY_PATH_SERVER_ID: &str = "hetuflow.server.server_id";
 
-impl HetuflowServerSetting {
+impl HetuflowSetting {
   pub fn load(config_registry: &FusionConfigRegistry) -> Result<Self, DataError> {
     let config = config_registry.config();
     // Check if server_id not exists or invalid uuid in config
-    if let Err(_e) = config.get::<Uuid>(KEY_PATH_SERVER_ID) {
+    if let Err(_e) = config.get::<String>(KEY_PATH_SERVER_ID) {
       // Generate new UUID and write to config file
-      let server_id = Uuid::new_v4();
+      let server_id = Uuid::new_v4().to_string();
       let path = match get_env("CARGO_MANIFEST_DIR") {
         Ok(dir) => PathBuf::from(dir).join("resources").join("app.toml"),
         Err(_) => PathBuf::from(get_env("HOME")?).join(".hetuflow").join("server.toml"),

@@ -9,7 +9,7 @@ pub type WebResult<T> = core::result::Result<Json<T>, WebError>;
 
 /// A default error response for most API errors.
 #[derive(Debug, Serialize)]
-// #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct WebError {
   /// A unique error ID.
   // TODO 应从 tracing 中获取

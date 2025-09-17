@@ -7,6 +7,7 @@ mod error;
 pub mod helper;
 pub mod meta;
 pub mod model;
+pub mod process;
 pub mod regex;
 pub mod runtime;
 pub mod serde;

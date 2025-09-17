@@ -36,8 +36,13 @@ impl TaskScheduler {
   ) -> Self {
     let (scheduled_task_tx, scheduled_task_rx) = kanal::unbounded_async();
     let command_rx = connection_manager.subscribe_command();
-    let schedule_task_runner =
-      ScheduleTaskRunner { scheduled_task_tx, shutdown_rx: shutdown_rx.clone(), timer_ref, command_rx };
+    let schedule_task_runner = ScheduleTaskRunner {
+      setting: setting.clone(),
+      scheduled_task_tx,
+      shutdown_rx: shutdown_rx.clone(),
+      timer_ref,
+      command_rx,
+    };
     let schedule_task_runner = Arc::new(Mutex::new(Some(schedule_task_runner)));
 
     let poll_task_runner = PollTaskRunner { setting, shutdown_rx, process_manager, connection_manager };
@@ -82,6 +87,7 @@ impl TaskScheduler {
 }
 
 struct ScheduleTaskRunner {
+  setting: Arc<HetuflowAgentSetting>,
   scheduled_task_tx: kanal::AsyncSender<ScheduledTask>,
   shutdown_rx: ShutdownRecv,
   timer_ref: TimerRef,
@@ -107,8 +113,20 @@ impl ScheduleTaskRunner {
                 });
               }
             }
-            Ok(_) => {
-              debug!("Command that doesn't care");
+            Ok(HetuflowCommand::AgentRegistered(resp)) => {
+              if resp.success {
+                info!("Agent registered successfully, agent_id: {}", self.setting.agent_id);
+              } else {
+                error!("Agent registration failed, agent_id: {}, response: {:?}", self.setting.agent_id, resp);
+                // Send SIGTERM signal to self to terminate the process
+                #[cfg(any(unix, windows))]
+                fusion_common::process::send_sigterm_to_self();
+                #[cfg(not(any(unix, windows)))]
+                panic!("Exit");
+              }
+            }
+            Ok(cmd) => {
+              debug!("Command that doesn't care: {}", cmd.as_ref());
             }
             Err(e) => {
               error!("Failed to receive command: {}", e);

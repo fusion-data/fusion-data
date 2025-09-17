@@ -20,7 +20,7 @@ use hetuflow_core::{
 use crate::{
   infra::bmc::{AgentBmc, TaskBmc, TaskInstanceBmc},
   service::{JweService, JweServiceError},
-  setting::HetuflowServerSetting,
+  setting::HetuflowSetting,
 };
 
 pub struct AgentSvc {
@@ -34,7 +34,7 @@ impl AgentSvc {
   }
 
   /// 创建带有JWE配置的AgentSvc
-  pub fn new_with_setting(mm: ModelManager, setting: &HetuflowServerSetting) -> Result<Self, DataError> {
+  pub fn new_with_setting(mm: ModelManager, setting: &HetuflowSetting) -> Result<Self, DataError> {
     let jwe_service =
       if let Some(jwe_config) = &setting.jwe { Some(JweService::new(jwe_config.clone())?) } else { None };
     Ok(Self { mm, jwe_service })
@@ -185,7 +185,7 @@ impl AgentSvc {
           info!("Agent {} JWE token verified successfully, server_id: {}", agent_id, token_payload.server_id);
         }
         Err(JweServiceError::TokenExpired) => {
-          warn!("Agent {} registration failed: JWE token expired", agent_id);
+          warn!("Agent registration failed: JWE token expired, agent_id: {}", agent_id);
           return Ok(AgentRegisterResponse {
             success: false,
             message: "JWE token has expired, please generate a new token".to_string(),
@@ -195,7 +195,7 @@ impl AgentSvc {
         }
         Err(JweServiceError::AgentIdMismatch { expected, actual }) => {
           warn!(
-            "Agent {} registration failed: Agent ID mismatch (expected: {}, actual: {})",
+            "Agent registration failed: Agent ID: {} mismatch (expected: {}, actual: {})",
             agent_id, expected, actual
           );
           return Ok(AgentRegisterResponse {
@@ -206,7 +206,7 @@ impl AgentSvc {
           });
         }
         Err(e) => {
-          warn!("Agent {} registration failed: JWE token verification error: {:?}", agent_id, e);
+          warn!("Agent registration failed: JWE token verification agent_Id: {}, error: {:?}", agent_id, e);
           return Ok(AgentRegisterResponse {
             success: false,
             message: format!("JWE token verification failed: {}", e),

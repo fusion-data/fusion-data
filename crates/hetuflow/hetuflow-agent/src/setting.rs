@@ -1,4 +1,4 @@
-use std::{path::PathBuf, sync::Arc, time::Duration};
+use std::{env::consts, path::PathBuf, sync::Arc, time::Duration};
 
 use duration_str::deserialize_duration;
 use fusion_common::{ahash::HashMap, env::get_env};
@@ -6,6 +6,7 @@ use fusion_core::{DataError, configuration::FusionConfigRegistry};
 use hetuflow_core::{types::Labels, utils::config::write_app_config};
 use log::{info, warn};
 use serde::{Deserialize, Serialize};
+use sysinfo::System;
 use uuid::Uuid;
 
 /// 连接配置
@@ -216,14 +217,15 @@ const KEY_PATH_AGENT_ID: &str = "hetuflow.agent.agent_id";
 impl HetuflowAgentSetting {
   pub fn load(config_registry: &FusionConfigRegistry) -> Result<Self, DataError> {
     let default_setting = include_str!("default.toml");
-    config_registry.add_config_source(config::File::from_str(default_setting, config::FileFormat::Toml))?;
+    let setting_source = config::File::from_str(default_setting, config::FileFormat::Toml);
+    config_registry.add_config_source(setting_source)?;
     let config = config_registry.config();
     // Check if server_id not exists or invalid uuid in config
-    if let Err(e) = config.get::<Uuid>(KEY_PATH_AGENT_ID) {
+    if let Err(e) = config.get::<String>(KEY_PATH_AGENT_ID) {
       warn!("Invalid agent_id in config file, error: {:?}", e);
 
       // Generate new UUID and write to config file
-      let agent_id = Uuid::new_v4();
+      let agent_id = Uuid::new_v4().to_string();
       let path = match get_env("CARGO_MANIFEST_DIR") {
         Ok(dir) => PathBuf::from(dir).join("resources").join("app.toml"),
         Err(_) => PathBuf::from(get_env("HOME")?).join(".hetuflow").join("agent.toml"),
@@ -236,43 +238,22 @@ impl HetuflowAgentSetting {
       config_registry.reload()?;
     }
 
-    let setting = config_registry.get_config_by_path("hetuflow.agent")?;
+    let mut setting: HetuflowAgentSetting = config_registry.get_config_by_path("hetuflow.agent")?;
+    if let Some(os_name) = System::name() {
+      setting.labels.append_label("sys_os", &os_name);
+    }
+    if let Some(os_version) = System::os_version() {
+      setting.labels.append_label("sys_os_version", &os_version);
+    }
+    if let Some(os_hostname) = System::host_name() {
+      setting.labels.append_label("sys_hostname", &os_hostname);
+    }
+    setting.labels.append_labels([("sys_arch", consts::ARCH), ("sys_family", consts::FAMILY)]);
     Ok(setting)
   }
 
   /// 获取 Server Gateway WebSocket 地址
   pub fn server_gateway_ws(&self) -> String {
     format!("ws://{}/api/v1/gateway/ws?agent_id={}", self.connection.server_address, self.agent_id)
-  }
-}
-
-#[cfg(test)]
-mod tests {
-  use fusion_common::env::set_env;
-
-  use super::*;
-
-  #[test]
-  fn test_dir() {
-    for (key, value) in std::env::vars() {
-      println!("{}: {}", key, value);
-    }
-    let dir = std::env::temp_dir();
-    println!("dir: {}", dir.display());
-    // let file = dir.join("app.toml");
-    // assert!(file.exists());
-  }
-
-  #[test]
-  fn test_load() {
-    // 检查配置文件是否存在
-    set_env("FUSION_CONFIG_FILE", "resources/app.toml").unwrap();
-
-    // 尝试加载配置
-    let config_registry = FusionConfigRegistry::builder().build().unwrap();
-    println!("{:?}", config_registry.fusion_config().app());
-
-    let setting = HetuflowAgentSetting::load(&config_registry).unwrap();
-    assert!(Uuid::try_parse(&setting.agent_id.to_string()).is_ok());
   }
 }

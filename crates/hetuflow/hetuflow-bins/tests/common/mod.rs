@@ -12,12 +12,12 @@ use hetuflow_agent::application::AgentApplication;
 use hetuflow_agent::setting::HetuflowAgentSetting;
 use hetuflow_core::types::Labels;
 use hetuflow_server::application::ServerApplication;
-use hetuflow_server::setting::HetuflowServerSetting;
+use hetuflow_server::setting::HetuflowSetting;
 
 /// Server 端测试上下文
 pub struct ServerTestContext {
   pub server: ServerApplication,
-  pub server_setting: Arc<HetuflowServerSetting>,
+  pub server_setting: Arc<HetuflowSetting>,
 }
 
 /// Agent 端测试上下文

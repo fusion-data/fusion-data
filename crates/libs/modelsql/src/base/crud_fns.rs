@@ -203,7 +203,7 @@ where
 
   // -- Prep Fields
   let mut fields = data.not_none_sea_fields();
-  if MC::_has_modification_timestamps() {
+  if MC::_has_updated_at() {
     fields = prep_fields_for_update::<MC>(fields, ctx);
   }
 
@@ -243,7 +243,7 @@ where
 
   // -- Prep Fields
   let mut fields = data.not_none_sea_fields();
-  if MC::_has_modification_timestamps() {
+  if MC::_has_updated_at() {
     fields = prep_fields_for_update::<MC>(fields, ctx);
   }
 
@@ -284,7 +284,7 @@ where
   let (sql, values) = if MC::_use_logical_deletion() {
     // -- Prep Fields
     let mut fields = SeaFields::new(vec![SeaField::new(CommonIden::LogiscalDeletion, true)]);
-    if MC::_has_modification_timestamps() {
+    if MC::_has_updated_at() {
       fields = prep_fields_for_update::<MC>(fields, ctx);
     }
 
@@ -330,7 +330,7 @@ where
   let (sql, values) = if MC::_use_logical_deletion() {
     // -- Prep Fields
     let mut fields = SeaFields::new(vec![SeaField::new(CommonIden::LogiscalDeletion, true)]);
-    if MC::_has_modification_timestamps() {
+    if MC::_has_updated_at() {
       fields = prep_fields_for_update::<MC>(fields, ctx);
     }
     let fields = fields.for_sea_update();
@@ -374,7 +374,7 @@ where
   let (sql, values) = if MC::_use_logical_deletion() {
     // -- Prep Fields
     let mut fields = SeaFields::new(vec![SeaField::new(CommonIden::LogiscalDeletion, true)]);
-    if MC::_has_modification_timestamps() {
+    if MC::_has_updated_at() {
       fields = prep_fields_for_update::<MC>(fields, ctx);
     }
     let fields = fields.for_sea_update();

@@ -29,7 +29,7 @@ sequenceDiagram
 
 ```bash
 # 进入 Hetuflow 项目目录
-cd hetuflow
+cd crates/hetuflow
 
 # 生成密钥对
 ./scripts/generate-jwe-keys.sh
@@ -63,7 +63,7 @@ openssl ec -in jwe-private.pem -pubout -out jwe-public.pem
 
 ### 配置文件设置
 
-在 `hetuflow-server/resources/app.toml` 中添加 JWE 配置：
+在 `crates/hetuflow-bins/resources/hetuflow.toml` 中添加 JWE 配置：
 
 ```toml
 [hetuflow.jwe]
@@ -99,12 +99,22 @@ export HETUFLOW__JWE__TOKEN_TTL=3600
 首先需要从 Server 端获取 JWE Token。可以通过以下方式：
 
 1. **管理 API**（推荐）：通过 Server 提供的管理接口生成 Token
+   ```shell
+   curl -X 'POST' \
+     'http://localhost:9500/api/v1/auth/generate-token' \
+     -H 'accept: application/json' \
+     -H 'Content-Type: application/json' \
+     -d '{
+       "agent_id": "agent001",
+       "permissions": []
+     }'
+   ```
 2. **命令行工具**：使用 Server 端的 CLI 工具生成 Token
 3. **手动生成**：使用 JWE 库手动生成 Token
 
 ### 配置文件设置
 
-在 `hetuflow-agent/resources/app.toml` 中配置 JWE Token：
+在 `crates/hetuflow-agent/resources/hetuflow-agent.toml` 中配置 JWE Token：
 
 ```toml
 [hetuflow.agent]

@@ -10,7 +10,7 @@
 ├── README.md
 ├── resources
 │   ├── hetuflow-agent.toml   # Agent 端配置文件
-│   └── hetuflow-server.toml  # Server 端配置文件
+│   └── hetuflow.toml         # Server 端配置文件
 ├── src
 │   └── lib.rs
 ├── tests

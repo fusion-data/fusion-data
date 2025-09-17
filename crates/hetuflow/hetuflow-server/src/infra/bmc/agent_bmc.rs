@@ -15,7 +15,19 @@ pub struct AgentBmc;
 
 impl DbBmc for AgentBmc {
   const TABLE: &str = "sched_agent";
-  const ID_GENERATED_BY_DB: bool = false; // Agent ID 由客户端生成
+  const ID_GENERATED_BY_DB: bool = false;
+  fn _has_created_by() -> bool {
+    false
+  }
+  fn _has_created_at() -> bool {
+    false
+  }
+  fn _has_updated_by() -> bool {
+    false
+  }
+  fn _has_updated_at() -> bool {
+    false
+  }
 }
 
 generate_pg_bmc_common!(

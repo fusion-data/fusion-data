@@ -29,7 +29,7 @@ pub struct JweConfig {
   /// 内容加密算法 (默认: A256GCM)
   #[serde(default = "default_content_encryption_algorithm")]
   pub content_encryption_algorithm: String,
-  /// Token 有效期 (秒，默认: 3600)
+  /// Token 有效期 (秒，默认: 永久)
   #[serde(default = "default_token_ttl")]
   pub token_ttl: u64,
 }
@@ -43,7 +43,7 @@ fn default_content_encryption_algorithm() -> String {
 }
 
 fn default_token_ttl() -> u64 {
-  3600 // 1 hour
+  0 // 永久有效
 }
 
 impl Default for JweConfig {
@@ -149,7 +149,7 @@ impl JweService {
     permissions: Vec<String>,
   ) -> Result<String, JweServiceError> {
     let now = Utc::now();
-    let exp = now.timestamp() + self.config.token_ttl as i64;
+    let exp = if self.config.token_ttl > 0 { now.timestamp() + self.config.token_ttl as i64 } else { i64::MAX };
     let jti = Uuid::new_v4().to_string();
 
     // 创建 Payload

@@ -168,7 +168,7 @@ impl LogReceiver {
     // 尝试解析为日志批次
     if let Some(batch_data) = payload.get("batch") {
       let log_batch: LogBatch = serde_json::from_value(batch_data.clone())
-        .map_err(|e| DataError::server_error(&format!("解析日志批次失败: {}", e)))?;
+        .map_err(|e| DataError::server_error(format!("解析日志批次失败: {}", e)))?;
 
       self.write_log_batch(&log_batch).await?
     } else {

@@ -66,7 +66,7 @@ impl LoadBalancer {
 
   /// 检查是否需要重平衡并执行
   pub async fn rebalance_if_needed(&self) -> Result<(), DataError> {
-    debug!("Checking if rebalancing is needed");
+    log::trace!("Checking if rebalancing is needed");
 
     // 更新服务器负载信息
     self.update_server_load_cache().await?;

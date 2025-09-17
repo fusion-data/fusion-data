@@ -121,7 +121,7 @@ impl WsRunner {
       let connect_result = tokio::time::timeout(timeout_duration, tokio_tungstenite::connect_async(&url)).await;
       match connect_result {
         Ok(Ok((ws_stream, _response))) => {
-          info!("Connected to Hetuflow Server: {}, attempts: {}", url, attempts);
+          info!("Successfully connected to Hetuflow Server: {}, attempts: {}", url, attempts);
           let tcp_stream = ws_stream.get_ref();
           let local_address = match tcp_stream {
             MaybeTlsStream::Plain(t) => t.local_addr()?.to_string(),

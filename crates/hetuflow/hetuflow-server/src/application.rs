@@ -21,13 +21,13 @@ use crate::{
 };
 use crate::{
   model::{GatewayCommandRequest, HealthStatus},
-  setting::HetuflowServerSetting,
+  setting::HetuflowSetting,
 };
 
 /// Hetuflow 应用容器
 #[derive(Clone)]
 pub struct ServerApplication {
-  pub setting: Arc<HetuflowServerSetting>,
+  pub setting: Arc<HetuflowSetting>,
   pub is_leader: Arc<AtomicBool>,
   shutdown_tx: broadcast::Sender<()>,
   pub mm: ModelManager,
@@ -58,7 +58,7 @@ impl ServerApplication {
       config_registry.reload()?;
     }
 
-    let config = Arc::new(HetuflowServerSetting::load(application.config_registry())?);
+    let config = Arc::new(HetuflowSetting::load(application.config_registry())?);
 
     // 获取 ModelManager
     let mm = application.get_component::<ModelManager>()?;
@@ -302,7 +302,7 @@ impl ServerApplication {
   }
 
   /// 获取应用配置
-  pub fn setting(&self) -> &HetuflowServerSetting {
+  pub fn setting(&self) -> &HetuflowSetting {
     &self.setting
   }
 
