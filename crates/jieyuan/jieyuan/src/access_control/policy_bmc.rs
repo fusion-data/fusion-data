@@ -1,9 +1,6 @@
 use modelsql::{base::DbBmc, generate_pg_bmc_common, generate_pg_bmc_filter};
 
-use jieyuan_core::{
-  infra::tables::TABLE_POLICY,
-  types::{Policy, PolicyFilter, PolicyForCreate, PolicyForUpdate},
-};
+use jieyuan_core::model::{Policy, PolicyFilter, PolicyForCreate, PolicyForUpdate, TABLE_POLICY};
 
 pub struct PolicyBmc;
 impl DbBmc for PolicyBmc {

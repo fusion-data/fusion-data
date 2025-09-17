@@ -6,12 +6,9 @@ use modelsql::{
 };
 use sea_query::{Condition, Expr, Query, SelectStatement};
 
-use jieyuan_core::{
-  infra::tables::TABLE_PERMISSION,
-  types::{
-    Permission, PermissionFilter, PermissionForCreate, PermissionForPage, PermissionForUpdate, PermissionIden,
-    RolePermissionIden,
-  },
+use jieyuan_core::model::{
+  Permission, PermissionFilter, PermissionForCreate, PermissionForPage, PermissionForUpdate, PermissionIden,
+  RolePermissionIden, TABLE_PERMISSION,
 };
 
 use crate::role::RolePermissionBmc;

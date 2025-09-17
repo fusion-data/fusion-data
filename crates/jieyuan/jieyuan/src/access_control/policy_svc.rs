@@ -1,7 +1,7 @@
 use fusion_core::Result;
 use modelsql::{ModelManager, page::PageResult};
 
-use jieyuan_core::types::{Policy, PolicyForCreate, PolicyForPage, PolicyForUpdate};
+use jieyuan_core::model::{Policy, PolicyForCreate, PolicyForPage, PolicyForUpdate};
 
 use super::PolicyBmc;
 

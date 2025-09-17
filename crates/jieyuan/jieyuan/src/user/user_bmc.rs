@@ -1,9 +1,6 @@
 use modelsql::{base::DbBmc, generate_pg_bmc_common, generate_pg_bmc_filter};
 
-use jieyuan_core::{
-  infra::tables::TABLE_USER,
-  types::{User, UserFilter, UserForCreate, UserForUpdate},
-};
+use jieyuan_core::model::{TABLE_USER, User, UserFilter, UserForCreate, UserForUpdate};
 
 pub struct UserBmc;
 impl DbBmc for UserBmc {

@@ -7,7 +7,7 @@ use fusion_web::{WebResult, ok_json};
 use modelsql::{ModelManager, page::PageResult};
 use utoipa_axum::router::OpenApiRouter;
 
-use jieyuan_core::types::{CreateRoleDto, Role, RoleFilters, RoleForUpdate};
+use jieyuan_core::model::{CreateRoleDto, Role, RoleFilters, RoleForUpdate};
 
 use crate::role::RoleSvc;
 

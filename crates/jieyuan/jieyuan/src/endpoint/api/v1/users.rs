@@ -8,7 +8,7 @@ use fusion_web::{WebError, WebResult, ok_json};
 use modelsql::ModelManager;
 use utoipa_axum::router::OpenApiRouter;
 
-use jieyuan_core::types::{User, UserForCreate, UserForPage, UserForUpdate};
+use jieyuan_core::model::{User, UserForCreate, UserForPage, UserForUpdate};
 
 use crate::UserSvc;
 

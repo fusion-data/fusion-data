@@ -3,7 +3,7 @@ use modelsql::{
   base::{self, DbBmc},
 };
 
-use jieyuan_core::{infra::tables::TABLE_ROLE_PERMISSION, types::RolePermissionForCreate};
+use jieyuan_core::model::{RolePermissionForCreate, TABLE_ROLE_PERMISSION};
 
 pub struct RolePermissionBmc;
 impl DbBmc for RolePermissionBmc {

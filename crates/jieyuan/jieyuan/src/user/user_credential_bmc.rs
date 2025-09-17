@@ -1,8 +1,7 @@
 use modelsql::{base::DbBmc, generate_pg_bmc_common, generate_pg_bmc_filter};
 
-use jieyuan_core::{
-  infra::tables::TABLE_USER_CREDENTIAL,
-  types::{UserCredential, UserCredentialFilter, UserCredentialForCreate, UserCredentialForUpdate},
+use jieyuan_core::model::{
+  TABLE_USER_CREDENTIAL, UserCredential, UserCredentialFilter, UserCredentialForCreate, UserCredentialForUpdate,
 };
 
 pub struct UserCredentialBmc;

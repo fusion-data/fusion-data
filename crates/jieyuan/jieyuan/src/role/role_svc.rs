@@ -1,7 +1,7 @@
 use fusion_core::Result;
 use modelsql::{ModelManager, filter::Page, page::PageResult};
 
-use jieyuan_core::types::{CreateRoleDto, Role, RoleFilters, RoleForUpdate, RolePermissionForCreate};
+use jieyuan_core::model::{CreateRoleDto, Role, RoleFilters, RoleForUpdate, RolePermissionForCreate};
 
 use super::{RolePermissionBmc, bmc::RoleBmc};
 

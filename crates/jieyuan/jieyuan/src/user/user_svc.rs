@@ -2,7 +2,7 @@ use fusion_common::regex;
 use fusion_core::{DataError, Result};
 use modelsql::{ModelManager, filter::OpValsInt64, page::PageResult};
 
-use jieyuan_core::types::{
+use jieyuan_core::model::{
   User, UserCredential, UserFilter, UserForCreate, UserForPage, UserForUpdate, UserRoleForCreate,
 };
 

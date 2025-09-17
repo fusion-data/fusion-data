@@ -7,7 +7,7 @@ use modelsql::{
 };
 use sea_query::{Condition, Expr, Query, SelectStatement};
 
-use jieyuan_core::types::{CreateRoleDto, Role, RoleFilters, RoleForUpdate, RoleIden, RolePermissionIden};
+use jieyuan_core::model::{CreateRoleDto, Role, RoleFilters, RoleForUpdate, RoleIden, RolePermissionIden};
 
 use super::RolePermissionBmc;
 

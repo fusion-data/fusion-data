@@ -1,7 +1,7 @@
 use fusion_core::Result;
 use modelsql::{ModelManager, page::PageResult};
 
-use jieyuan_core::types::{
+use jieyuan_core::model::{
   Permission, PermissionForCreate, PermissionForPage, PermissionForUpdate, RolePermissionForCreate,
 };
 

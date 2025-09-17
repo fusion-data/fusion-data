@@ -1,9 +1,6 @@
 use modelsql::{base::DbBmc, generate_pg_bmc_common};
 
-use jieyuan_core::{
-  infra::tables::TABLE_USER_ROLE,
-  types::{UserRole, UserRoleForCreate, UserRoleForUpdate},
-};
+use jieyuan_core::model::{TABLE_USER_ROLE, UserRole, UserRoleForCreate, UserRoleForUpdate};
 
 pub struct UserRoleBmc;
 impl DbBmc for UserRoleBmc {

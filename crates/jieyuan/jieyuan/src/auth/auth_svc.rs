@@ -1,6 +1,6 @@
 use fusion_core::{Result, application::Application, security::pwd::verify_pwd};
 
-use jieyuan_core::types::{SigninRequest, SigninResponse, TokenType};
+use jieyuan_core::model::{SigninRequest, SigninResponse, TokenType};
 
 use crate::user::UserSvc;
 

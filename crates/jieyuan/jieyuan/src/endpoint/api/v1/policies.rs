@@ -7,7 +7,7 @@ use fusion_web::{WebResult, ok_json};
 use modelsql::{ModelManager, page::PageResult};
 use utoipa_axum::router::OpenApiRouter;
 
-use jieyuan_core::types::{Policy, PolicyForCreate, PolicyForPage, PolicyForUpdate};
+use jieyuan_core::model::{Policy, PolicyForCreate, PolicyForPage, PolicyForUpdate};
 
 use crate::access_control::PolicySvc;
 

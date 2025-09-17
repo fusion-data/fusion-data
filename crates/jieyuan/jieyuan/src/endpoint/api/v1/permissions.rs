@@ -7,7 +7,7 @@ use fusion_web::{WebResult, ok_json};
 use modelsql::ModelManager;
 use utoipa_axum::router::OpenApiRouter;
 
-use jieyuan_core::types::{Permission, PermissionForCreate, PermissionForPage, PermissionForUpdate};
+use jieyuan_core::model::{Permission, PermissionForCreate, PermissionForPage, PermissionForUpdate};
 
 use crate::permission::PermissionSvc;
 

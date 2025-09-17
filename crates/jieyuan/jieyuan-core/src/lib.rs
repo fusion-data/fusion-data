@@ -1,3 +1,2 @@
-pub mod infra;
-pub mod types;
+pub mod model;
 pub mod utils;
