@@ -93,8 +93,7 @@ pub struct AgentForUpdate {
 pub struct AgentFilter {
   pub id: Option<OpValsString>,
   pub status: Option<OpValsInt32>,
-  pub host: Option<OpValsString>,
-  pub port: Option<OpValsInt32>,
+  pub address: Option<OpValsString>,
   pub last_heartbeat: Option<OpValsDateTime>,
   pub created_at: Option<OpValsDateTime>,
   pub updated_at: Option<OpValsDateTime>,
