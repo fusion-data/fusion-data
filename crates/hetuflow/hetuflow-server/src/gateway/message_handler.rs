@@ -39,15 +39,18 @@ impl MessageHandler {
         let event = AgentEvent::new_register(agent_id, serde_json::from_value(event.payload)?);
         self.connection_manager.publish_event(event)?;
       }
-      _ => {
-        warn!("Unhandled message: {:?}", event);
+      EventKind::TaskLog => {
+        let event = AgentEvent::new_task_log(agent_id, serde_json::from_value(event.payload)?);
+        self.connection_manager.publish_event(event)?;
       }
+      EventKind::Ack => { /* ignore */ }
+      EventKind::Nack => { /* ignore */ }
     }
     Ok(())
   }
 
   pub fn add_connection(&self, agent_id: &str, agent_connection: AgentConnection) -> Result<(), GatewayError> {
-    let remote_addr = agent_connection.address.clone();
+    let remote_addr = Arc::new(agent_connection.address.clone());
     self.connection_manager.add_connection(agent_id, agent_connection)?;
     self
       .connection_manager
@@ -58,6 +61,6 @@ impl MessageHandler {
     self.connection_manager.remove_connection(agent_id, reason)?;
     self
       .connection_manager
-      .publish_event(AgentEvent::Unconnected { agent_id: agent_id.to_string(), reason: reason.to_string() })
+      .publish_event(AgentEvent::Unconnected { agent_id: agent_id.to_string(), reason: Arc::new(reason.to_string()) })
   }
 }

@@ -7,9 +7,9 @@ use fusion_core::application::Application;
 use fusion_core::configuration::ConfigRegistry;
 use fusion_web::config::WebConfig;
 use log::{error, info};
+use mea::shutdown::ShutdownRecv;
 use modelsql::ModelManager;
 use modelsql::filter::{OpValsDateTime, OpValsInt32};
-use tokio::sync::broadcast;
 use tokio::time::interval;
 
 use hetuflow_core::models::{AgentFilter, AgentForUpdate, ServerFilter, ServerForRegister, ServerForUpdate};
@@ -24,41 +24,41 @@ pub struct SchedulerSvc {
   mm: ModelManager,
   server_config: Arc<ServerSetting>,
   task_generation_svc: Arc<TaskGenerationSvc>,
-  shutdown_tx: broadcast::Sender<()>,
+  shutdown_rx: std::sync::Mutex<Option<ShutdownRecv>>,
 }
 
 impl SchedulerSvc {
   /// 创建新的调度器服务
-  pub fn new(mm: ModelManager, server_config: Arc<ServerSetting>, shutdown_tx: broadcast::Sender<()>) -> Self {
+  pub fn new(mm: ModelManager, server_config: Arc<ServerSetting>, shutdown_rx: ShutdownRecv) -> Self {
     let task_generation_svc = Arc::new(TaskGenerationSvc::new(mm.clone()));
-    Self { mm, server_config, task_generation_svc, shutdown_tx }
+    Self { mm, server_config, task_generation_svc, shutdown_rx: std::sync::Mutex::new(Some(shutdown_rx)) }
   }
 
   /// 启动调度器服务
   pub async fn start(&self) -> Result<(), DataError> {
     info!("Starting Scheduler Server with server_id: {}", &self.server_config.server_id);
+    let shutdown_rx = self.shutdown_rx.lock().unwrap().take().unwrap();
 
     // 注册服务器
     self.register_server().await?;
 
     // 启动生成 Task 循环
-    self.start_task_generation().await?;
+    self.start_task_generation(shutdown_rx.clone()).await?;
 
     // 启动心跳任务
-    self.start_heartbeat_task().await;
+    self.start_heartbeat_task(shutdown_rx.clone()).await;
 
     // 启动心跳监控任务
-    self.start_heartbeat_monitor_task().await;
+    self.start_heartbeat_monitor_task(shutdown_rx.clone()).await;
 
     info!("Scheduler Service started successfully");
     Ok(())
   }
 
   /// 启动心跳任务
-  async fn start_heartbeat_task(&self) {
+  async fn start_heartbeat_task(&self, shutdown_rx: ShutdownRecv) {
     let mm = self.mm.clone();
     let server_id = self.server_config.server_id.clone();
-    let mut shutdown_rx = self.shutdown_tx.subscribe();
 
     tokio::spawn(async move {
       let mut interval = interval(Duration::from_secs(30));
@@ -71,7 +71,7 @@ impl SchedulerSvc {
               error!("Failed to update server heartbeat: {}", e);
             }
           }
-          _ = shutdown_rx.recv() => {
+          _ = shutdown_rx.is_shutdown() => {
             info!("Server heartbeat shutting down");
             break;
           }
@@ -89,11 +89,10 @@ impl SchedulerSvc {
   }
 
   /// 启动心跳监控任务
-  async fn start_heartbeat_monitor_task(&self) {
+  async fn start_heartbeat_monitor_task(&self, shutdown_rx: ShutdownRecv) {
     let mm = self.mm.clone();
     let agent_overdue_ttl = self.server_config.agent_overdue_ttl;
     let server_overdue_ttl = self.server_config.server_overdue_ttl;
-    let mut shutdown_rx = self.shutdown_tx.subscribe();
 
     tokio::spawn(async move {
       let mut interval = interval(Duration::from_secs(60)); // 每分钟检查一次
@@ -111,7 +110,7 @@ impl SchedulerSvc {
               error!("Failed to check server timeouts: {}", e);
             }
           }
-          _ = shutdown_rx.recv() => {
+          _ = shutdown_rx.is_shutdown() => {
             info!("Heartbeat monitor shutting down");
             break;
           }
@@ -185,9 +184,8 @@ impl SchedulerSvc {
     Ok(())
   }
 
-  async fn start_task_generation(&self) -> Result<(), DataError> {
+  async fn start_task_generation(&self, shutdown_rx: ShutdownRecv) -> Result<(), DataError> {
     let task_generation_svc = self.task_generation_svc.clone();
-    let mut shutdown_rx = self.shutdown_tx.subscribe();
     let mut interval = interval(self.server_config.job_check_interval);
     let duration = self.server_config.job_check_duration;
     tokio::spawn(async move {
@@ -207,7 +205,7 @@ impl SchedulerSvc {
                     error!("Retry task generation failed: {}", e);
                 }
             }
-            _ = shutdown_rx.recv() => {
+            _ = shutdown_rx.is_shutdown() => {
                 info!("Task generation shutting down");
                 break;
             }

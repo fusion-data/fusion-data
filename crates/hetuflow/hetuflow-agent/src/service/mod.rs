@@ -1,12 +1,10 @@
 mod connection_manager;
-mod log_forwarder;
 mod process_manager;
 mod task_executor;
 mod task_scheduler;
 mod ws_runner;
 
 pub use connection_manager::*;
-pub use log_forwarder::*;
 pub use process_manager::*;
 pub use task_executor::*;
 pub use task_scheduler::*;

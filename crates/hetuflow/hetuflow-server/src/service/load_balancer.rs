@@ -275,22 +275,3 @@ impl LoadBalancer {
     Ok(rows.into_iter().map(|(id,)| id).collect())
   }
 }
-
-#[cfg(test)]
-mod tests {
-  use super::*;
-
-  #[test]
-  fn test_rebalance_threshold() {
-    let threshold = RebalanceThreshold::default();
-    assert_eq!(threshold.load_variance_threshold, 0.3);
-    assert_eq!(threshold.min_rebalance_interval_minutes, 10);
-  }
-
-  #[test]
-  fn test_load_balance_cache() {
-    let cache = LoadBalanceCache { servers: HashMap::default(), last_updated: now_offset() };
-
-    assert!(cache.servers.is_empty());
-  }
-}

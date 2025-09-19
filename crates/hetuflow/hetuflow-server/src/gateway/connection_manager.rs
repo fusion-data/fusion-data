@@ -109,7 +109,7 @@ impl ConnectionManager {
         // 发布断连事件
         self.publish_event(AgentEvent::Unconnected {
           agent_id: agent_id.to_string(),
-          reason: "Heartbeat timeout".to_string(),
+          reason: Arc::new("Heartbeat timeout".to_owned()),
         })?;
       }
     }

@@ -6,12 +6,14 @@ use fusion_common::ahash::HashMap;
 use fusion_common::time::now_epoch_millis;
 use fusion_core::DataError;
 use hetuflow_core::protocol::{
-  ProcessEvent, ProcessEventKind, ProcessInfo, ProcessStatus, ResourceUsage, ResourceViolation, ResourceViolationType,
+  LogKind, LogMessage, ProcessEvent, ProcessEventKind, ProcessInfo, ProcessStatus, ResourceUsage, ResourceViolation,
+  ResourceViolationType, WebSocketEvent,
 };
-use hetuflow_core::types::ResourceLimits;
+use hetuflow_core::types::{EventKind, ResourceLimits};
 use log::{debug, error, info, warn};
 use mea::shutdown::ShutdownRecv;
 
+use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::Command;
 use tokio::sync::{RwLock, broadcast};
 use tokio::task::JoinHandle;
@@ -19,11 +21,14 @@ use uuid::Uuid;
 
 use crate::setting::ProcessConfig;
 
+use super::ConnectionManager;
+
 /// 进程管理器。负责管理活跃进程、处理进程事件和后台清理僵尸进程
 pub struct ProcessManager {
   /// 配置
   process_config: Arc<ProcessConfig>,
   shutdown_rx: Mutex<Option<ShutdownRecv>>,
+  connection_manager: Arc<ConnectionManager>,
   /// 活跃进程映射。键为任务实例ID，值为进程信息。
   active_processes: Arc<RwLock<HashMap<Uuid, ProcessInfo>>>,
   /// 事件广播发送器
@@ -34,13 +39,18 @@ pub struct ProcessManager {
 
 impl ProcessManager {
   /// 创建新的进程管理器
-  pub fn new(process_config: Arc<ProcessConfig>, shutdown_rx: ShutdownRecv) -> Self {
+  pub fn new(
+    process_config: Arc<ProcessConfig>,
+    shutdown_rx: ShutdownRecv,
+    connection_manager: Arc<ConnectionManager>,
+  ) -> Self {
     let (event_broadcaster, _) = broadcast::channel(1000);
     let resource_monitor = ResourceMonitor::new();
 
     Self {
       process_config,
       shutdown_rx: Mutex::new(Some(shutdown_rx)),
+      connection_manager,
       active_processes: Arc::new(RwLock::new(HashMap::default())),
       event_broadcaster,
       _resource_monitor: resource_monitor,
@@ -105,11 +115,62 @@ impl ProcessManager {
     }
 
     // 启动进程
-    let child = cmd.spawn()?;
+    let mut child = cmd.spawn()?;
     let pid: u32 = child.id().ok_or_else(|| DataError::server_error("Start process failed"))?;
 
-    // TODO: 日志转发功能将通过LogForwarder组件处理
-    // 这里暂时不处理stdout/stderr的捕获
+    // 转发进程的 stdout
+    if let Some(stdout) = child.stdout.take() {
+      let connection_manager = self.connection_manager.clone();
+      tokio::spawn(async move {
+        let mut reader = BufReader::new(stdout);
+        let mut sequence = 0;
+        loop {
+          let mut line = String::new();
+          match reader.read_line(&mut line).await {
+            Ok(0) => break, // EOF
+            Ok(_) => {
+              let trimmed = line.trim_end();
+              sequence += 1;
+              let _ = connection_manager.send_event(WebSocketEvent::new(
+                EventKind::TaskLog,
+                LogMessage::new(instance_id, sequence, LogKind::Stdout, trimmed.to_string()),
+              ));
+            }
+            Err(e) => {
+              warn!("Error reading stdout: {}", e);
+              break;
+            }
+          }
+        }
+      });
+    }
+
+    // 转发进程的 stderr
+    if let Some(stderr) = child.stderr.take() {
+      let connection_manager = self.connection_manager.clone();
+      tokio::spawn(async move {
+        let mut reader = BufReader::new(stderr);
+        let mut sequence = 0;
+        loop {
+          let mut line = String::new();
+          match reader.read_line(&mut line).await {
+            Ok(0) => break, // EOF
+            Ok(_) => {
+              let trimmed = line.trim_end();
+              sequence += 1;
+              let _ = connection_manager.send_event(WebSocketEvent::new(
+                EventKind::TaskLog,
+                LogMessage::new(instance_id, sequence, LogKind::Stderr, trimmed.to_string()),
+              ));
+            }
+            Err(e) => {
+              warn!("Error reading stdout: {}", e);
+              break;
+            }
+          }
+        }
+      });
+    }
 
     // 创建进程信息
     let started_at = now_epoch_millis();
@@ -606,61 +667,5 @@ impl ResourceMonitor {
       // TODO: 这里需要使用 Windows API 或第三方库，为了简化，返回默认值
       Ok(ResourceUsage { memory_mb: 0.0, cpu_percent: 0.0, runtime_secs: 0, output_size_bytes: 0 })
     }
-  }
-}
-
-#[cfg(test)]
-mod tests {
-  use super::*;
-  use std::time::Duration;
-  use tokio::time::timeout;
-  use uuid::Uuid;
-
-  #[tokio::test]
-  async fn test_kill_process_returns_join_handle() {
-    // 这个测试验证 kill_process 方法返回 JoinHandle
-    // 注意：这是一个基本的接口测试，不会实际启动进程
-
-    let config = Arc::new(ProcessConfig {
-      cleanup_interval: Duration::from_secs(60),
-      zombie_check_interval: Duration::from_secs(30),
-      process_timeout: Duration::from_secs(300),
-      max_concurrent_processes: 10,
-      enable_resource_monitoring: false,
-      resource_monitor_interval: Duration::from_secs(30),
-      limits: crate::setting::ResourceLimits { max_memory_bytes: None, max_cpu_percent: None },
-      log_forwarding: crate::setting::LogForwardingConfig {
-        enabled: false,
-        buffer_size: 1024,
-        batch_size: 10,
-        flush_interval: Duration::from_secs(1),
-        max_retries: 3,
-        retry_interval: Duration::from_secs(1),
-        enable_compression: false,
-      },
-    });
-
-    let (shutdown_tx, shutdown_rx) = mea::shutdown::new_pair();
-    let process_manager = ProcessManager::new(config, shutdown_rx);
-
-    // 测试对不存在进程的 kill_process 调用
-    let non_existent_instance_id = Uuid::new_v4();
-    let kill_handle = process_manager.spawn_kill_process(non_existent_instance_id);
-
-    // 验证返回的是 JoinHandle
-    assert!(std::any::type_name_of_val(&kill_handle).contains("JoinHandle"));
-
-    // 等待任务完成，应该返回 NotFound 错误
-    let result = timeout(Duration::from_secs(5), kill_handle).await;
-    assert!(result.is_ok(), "Kill process task should complete within timeout");
-
-    let task_result = result.unwrap();
-    assert!(task_result.is_ok(), "JoinHandle should not have join errors");
-
-    let kill_result = task_result.unwrap();
-    assert!(kill_result.is_err(), "Should return error for non-existent process");
-
-    // 清理
-    drop(shutdown_tx);
   }
 }

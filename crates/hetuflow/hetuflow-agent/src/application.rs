@@ -45,7 +45,8 @@ impl AgentApplication {
     let (shutdown_tx, shutdown_rx) = mea::shutdown::new_pair();
 
     let connection_manager = Arc::new(ConnectionManager::new(setting.clone(), shutdown_rx.clone()));
-    let process_manager = Arc::new(ProcessManager::new(setting.process.clone(), shutdown_rx.clone()));
+    let process_manager =
+      Arc::new(ProcessManager::new(setting.process.clone(), shutdown_rx.clone(), connection_manager.clone()));
     let task_scheduler = Arc::new(TaskScheduler::new(
       setting.clone(),
       process_manager.clone(),

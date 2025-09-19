@@ -213,6 +213,7 @@ pub enum EventKind {
 
   /// Agent 事件 AgentEvent
   TaskChangedEvent = 6,
+
   /// 任务日志事件
   TaskLog = 7,
 }

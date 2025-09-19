@@ -9,8 +9,9 @@ use std::{
 use fusion_core::{DataError, application::Application};
 use fusion_db::DbPlugin;
 use log::{debug, error, info};
+use mea::shutdown::{ShutdownRecv, ShutdownSend};
 use modelsql::{ModelManager, store::DbxError};
-use tokio::sync::{broadcast, mpsc};
+use tokio::sync::mpsc;
 use uuid::Uuid;
 
 use crate::service::{AgentManager, LoadBalancer, LogReceiver, SchedulerSvc};
@@ -29,7 +30,7 @@ use crate::{
 pub struct ServerApplication {
   pub setting: Arc<HetuflowSetting>,
   pub is_leader: Arc<AtomicBool>,
-  shutdown_tx: broadcast::Sender<()>,
+  shutdown: Arc<std::sync::Mutex<Option<(ShutdownSend, ShutdownRecv)>>>,
   pub mm: ModelManager,
   pub scheduler_svc: Arc<SchedulerSvc>,
   pub gateway_svc: Arc<GatewaySvc>,
@@ -58,13 +59,13 @@ impl ServerApplication {
       config_registry.reload()?;
     }
 
-    let config = Arc::new(HetuflowSetting::load(application.config_registry())?);
+    let setting = Arc::new(HetuflowSetting::load(application.config_registry())?);
 
     // 获取 ModelManager
     let mm = application.get_component::<ModelManager>()?;
 
     // 创建关闭信号通道
-    let (shutdown_tx, _) = broadcast::channel(1);
+    let (shutdown_tx, shutdown_rx) = mea::shutdown::new_pair();
 
     // 创建通信通道
     let (gateway_command_tx, gateway_command_rx) = mpsc::unbounded_channel();
@@ -74,26 +75,26 @@ impl ServerApplication {
     let message_handler = Arc::new(MessageHandler::new(connection_manager.clone()));
 
     // 初始化核心组件
-    let scheduler_svc = Arc::new(SchedulerSvc::new(mm.clone(), Arc::new(config.server.clone()), shutdown_tx.clone()));
+    let scheduler_svc = Arc::new(SchedulerSvc::new(mm.clone(), Arc::new(setting.server.clone()), shutdown_rx.clone()));
 
     // 将 ConnectionManager 作为 AgentRegistry 传递给 AgentManager
-    let agent_manager = Arc::new(AgentManager::new(mm.clone(), connection_manager.clone(), config.clone()));
+    let agent_manager = Arc::new(AgentManager::new(mm.clone(), connection_manager.clone(), setting.clone()));
 
     let gateway_svc =
       Arc::new(GatewaySvc::new(connection_manager.clone(), message_handler.clone(), gateway_command_rx));
 
     let is_leader = Arc::new(AtomicBool::new(false));
-    let load_balancer = Arc::new(LoadBalancer::new(mm.clone(), config.server.server_id.clone()));
+    let load_balancer = Arc::new(LoadBalancer::new(mm.clone(), setting.server.server_id.clone()));
 
     // 创建日志接收器
-    let mut log_receiver = LogReceiver::new(Arc::new(config.task_log.clone()));
-    log_receiver.set_gateway_sender(gateway_command_tx.clone());
+    let log_receiver =
+      LogReceiver::new(Arc::new(setting.task_log.clone()), shutdown_rx.clone(), connection_manager.clone())?;
     let log_receiver = Arc::new(tokio::sync::Mutex::new(log_receiver));
 
     Ok(Self {
-      setting: config,
+      setting,
       is_leader,
-      shutdown_tx,
+      shutdown: Arc::new(std::sync::Mutex::new(Some((shutdown_tx, shutdown_rx)))),
       mm,
       scheduler_svc,
       gateway_svc,
@@ -123,6 +124,10 @@ impl ServerApplication {
     Ok(())
   }
 
+  pub fn get_shutdown_recv(&self) -> ShutdownRecv {
+    self.shutdown.lock().unwrap().as_ref().unwrap().1.clone()
+  }
+
   /// 启动获取领导者身份（或刷新领导者身份过期时间）循环
   ///
   /// 该循环会尝试获取领导者身份，如果获取失败，则会等待 heartbeat_interval 后重试。
@@ -134,7 +139,7 @@ impl ServerApplication {
     let is_leader = self.is_leader.clone();
     let mm = self.mm.clone();
     let server_id = self.setting.server.server_id.to_string();
-    let mut shutdown_rx = self.shutdown_tx.subscribe();
+    let shutdown_rx = self.get_shutdown_recv();
     let load_balancer = self.load_balancer.clone();
     tokio::spawn(async move {
       let (ttl, token_increment_interval, heartbeat_interval) = DistributedLockBmc::get_recommended_config();
@@ -144,7 +149,7 @@ impl ServerApplication {
           _ = interval.tick() => {
             _try_acquire_or_heartbeat_leadership(&mm, &server_id, &is_leader, &load_balancer, &ttl, &token_increment_interval).await;
           }
-          _ = shutdown_rx.recv() => {
+          _ = shutdown_rx.is_shutdown() => {
             info!("Shutdown signal received, stopping leader and follower loop.");
             break;
           }
@@ -252,6 +257,7 @@ impl ServerApplication {
   /// 优雅关闭
   pub async fn shutdown(&self) -> Result<(), DataError> {
     info!("Shutting down Hetuflow Application");
+    let (shtudown_tx, _) = self.shutdown.lock().unwrap().take().unwrap();
 
     // 释放领导者身份
     if self.is_leader.load(Ordering::Relaxed)
@@ -261,14 +267,8 @@ impl ServerApplication {
     }
 
     // 发送关闭信号
-    self.shutdown_tx.send(()).unwrap();
-
-    // 停止各种服务
-    // TODO: 各服务的关闭是否有先后顺序？
-    self.gateway_svc.stop().await?;
-    // self.connection_manager.stop().await?;
-    // self.message_handler.stop().await?;
-    // self.agent_manager.stop().await?;
+    shtudown_tx.shutdown();
+    shtudown_tx.await_shutdown().await;
 
     info!("Hetuflow Application shutdown complete");
     Ok(())
@@ -304,20 +304,6 @@ impl ServerApplication {
   /// 获取应用配置
   pub fn setting(&self) -> &HetuflowSetting {
     &self.setting
-  }
-
-  /// 处理Agent转发的日志消息
-  pub async fn handle_log_message(&self, log_batch: hetuflow_core::protocol::LogBatch) -> Result<(), DataError> {
-    let log_receiver = self.log_receiver.clone();
-    let receiver = log_receiver.lock().await;
-    // 处理日志批次 - 直接调用内部方法
-    match receiver.write_log_batch(&log_batch).await {
-      Ok(_) => Ok(()),
-      Err(e) => {
-        log::error!("处理日志批次失败: {}", e);
-        Err(e)
-      }
-    }
   }
 }
 
