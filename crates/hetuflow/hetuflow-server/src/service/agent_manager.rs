@@ -6,6 +6,7 @@ use fusion_common::{
 };
 use fusion_core::DataError;
 use log::{debug, error, info, warn};
+use mea::shutdown::ShutdownRecv;
 use modelsql::{ModelManager, filter::OpValsUuid};
 use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
@@ -17,7 +18,11 @@ use hetuflow_core::{
 };
 
 use crate::{
-  gateway::ConnectionManager, infra::bmc::*, model::AgentEvent, service::AgentSvc, setting::HetuflowSetting,
+  gateway::ConnectionManager,
+  infra::bmc::*,
+  model::AgentEvent,
+  service::{AgentSvc, LogService},
+  setting::HetuflowSetting,
 };
 
 /// Agent 管理器 - 负责调度策略、可靠性统计和任务分发
@@ -278,6 +283,7 @@ impl AgentEventRunLoop {
             error!("Failed to handle offline agent {}: {:?}", agent_id, e);
           }
         }
+        AgentEvent::TaskLog { .. } => { /* do nothing */ }
       }
     }
   }

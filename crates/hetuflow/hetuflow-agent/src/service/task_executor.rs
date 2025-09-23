@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use fusion_common::time::now_epoch_millis;
-use fusion_core::DataError;
+use fusion_core::{DataError, concurrent::handle::ServiceHandle};
 use log::{error, info};
 use mea::shutdown::ShutdownRecv;
 use tokio::task::JoinHandle;
@@ -12,10 +12,7 @@ use hetuflow_core::{
   types::{EventKind, TaskInstanceStatus},
 };
 
-use crate::{
-  service::{ConnectionManager, ProcessManager},
-  setting::HetuflowAgentSetting,
-};
+use crate::{connection::ConnectionManager, process::ProcessManager, setting::HetuflowAgentSetting};
 
 /// 任务执行器。负责执行具体的任务，包括进程管理和状态上报
 pub struct TaskExecutor {
@@ -39,10 +36,10 @@ impl TaskExecutor {
     Self { setting, process_manager, connection_manager, scheduled_task_rx, shutdown_rx }
   }
 
-  pub fn start(&self) -> Result<Vec<JoinHandle<()>>, DataError> {
+  pub fn start(&self) -> Result<Vec<ServiceHandle>, DataError> {
     info!("Starting TaskExecutor");
-    let h1 = self.run_scheduled_task_loop();
-    let h2 = self.run_process_event_loop();
+    let h1 = ServiceHandle::new("TaskExecutor::run_scheduled_task_loop", self.run_scheduled_task_loop());
+    let h2 = ServiceHandle::new("TaskExecutor::run_process_event_loop", self.run_process_event_loop());
 
     // discard ShutdownRecv
     let _ = self.shutdown_rx.lock().unwrap().take();
@@ -131,7 +128,7 @@ impl TaskExecutor {
         status,
       },
     );
-    if let Err(e) = connection_manager.send_event(event) {
+    if let Err(e) = connection_manager.send_event(event).await {
       error!("Failed to send event with process event. error: {:?}", e);
     }
   }
@@ -149,7 +146,7 @@ impl TaskExecutor {
     // 执行任务（单次执行）
     if let Err(error) = Self::_execute_task(process_manager, task).await {
       let event = Self::process_execution_error(agent_id, instance_id, error);
-      if let Err(e) = connection_manager.send_event(event) {
+      if let Err(e) = connection_manager.send_event(event).await {
         error!("Failed to send event: {:?}", e);
       }
     }
@@ -157,25 +154,8 @@ impl TaskExecutor {
 
   /// 执行单次任务尝试
   async fn _execute_task(process_manager: Arc<ProcessManager>, task: ScheduledTask) -> Result<(), TaskExecutionError> {
-    // 获取任务配置
-    let task_config = &task.task.config;
-
-    // 准备环境变量
-    let environment =
-      if let Some(value) = task.task.environment.clone() { serde_json::from_value(value).ok() } else { None };
-
     // 使用ProcessManager启动进程
-    let instance_id = process_manager
-      .spawn_process(
-        task.task_instance_id(),
-        &task_config.cmd,
-        &task_config.args,
-        task_config.working_directory.as_deref(),
-        environment.as_ref(),
-        task_config.resource_limits.as_ref(),
-      )
-      .await
-      .map_err(|_e| TaskExecutionError::ProcessStartFailed)?;
+    let instance_id = process_manager.spawn_process(task).await.map_err(|_e| TaskExecutionError::ProcessStartFailed)?;
 
     info!("Started process for task instance {}", instance_id);
     Ok(())

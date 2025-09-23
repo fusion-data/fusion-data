@@ -1,7 +1,5 @@
-use std::sync::Arc;
-
+use fusion_common::time::now_epoch_millis;
 use serde::{Deserialize, Serialize};
-use tokio::process::Child;
 use uuid::Uuid;
 
 /// 进程信息
@@ -19,9 +17,6 @@ pub struct ProcessInfo {
   pub completed_at: Option<i64>,
   /// 退出码
   pub exit_code: Option<i32>,
-  /// 子进程
-  #[serde(skip)]
-  pub child: Arc<mea::mutex::Mutex<Child>>,
 }
 
 /// 进程状态
@@ -93,6 +88,26 @@ pub struct ProcessEvent {
   pub timestamp: i64,
   /// 事件数据
   pub data: Option<String>,
+}
+
+impl ProcessEvent {
+  pub fn new(instance_id: Uuid, kind: ProcessEventKind) -> Self {
+    Self::new_with_data(instance_id, kind, None)
+  }
+
+  pub fn new_with_data(instance_id: Uuid, kind: ProcessEventKind, data: Option<String>) -> Self {
+    Self { instance_id, kind, timestamp: now_epoch_millis(), data }
+  }
+
+  pub fn with_data(mut self, data: String) -> Self {
+    self.data = Some(data);
+    self
+  }
+
+  pub fn with_timestamp(mut self, timestamp: i64) -> Self {
+    self.timestamp = timestamp;
+    self
+  }
 }
 
 /// 进程事件类型

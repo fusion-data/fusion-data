@@ -15,26 +15,26 @@ use tokio::{
 };
 use tokio_tungstenite::{MaybeTlsStream, WebSocketStream, tungstenite::Message};
 
-use crate::setting::HetuflowAgentSetting;
+use crate::{connection::ConnectionManager, setting::HetuflowAgentSetting};
 
 pub struct WsRunner {
   setting: Arc<HetuflowAgentSetting>,
+  connection_manager: Arc<ConnectionManager>,
   command_publisher: broadcast::Sender<HetuflowCommand>,
-  event_rx: mpsc::UnboundedReceiver<WebSocketEvent>,
   shutdown_rx: ShutdownRecv,
 }
 
 impl WsRunner {
   pub fn new(
     setting: Arc<HetuflowAgentSetting>,
-    command_publisher: broadcast::Sender<HetuflowCommand>,
-    event_rx: mpsc::UnboundedReceiver<WebSocketEvent>,
+    connection_manager: Arc<ConnectionManager>,
     shutdown_rx: ShutdownRecv,
   ) -> Self {
-    Self { setting, command_publisher, event_rx, shutdown_rx }
+    let command_publisher = connection_manager.command_publisher();
+    Self { setting, connection_manager, command_publisher, shutdown_rx }
   }
 
-  pub async fn run_loop(&mut self) {
+  pub async fn run_loop(&self) {
     while let Err(e) = self.run_websocket_loop().await
       && !self.shutdown_rx.is_shutdown_now()
     {
@@ -48,11 +48,14 @@ impl WsRunner {
     info!("WsRunner websocket loop closed");
   }
 
-  async fn run_websocket_loop(&mut self) -> Result<(), DataError> {
+  async fn run_websocket_loop(&self) -> Result<(), DataError> {
     let (ws_stream, local_address) = self.connect_with_timeout_and_retry().await?;
     let (mut ws_tx, mut ws_rx) = ws_stream.split();
 
     self.register_agent(&mut ws_tx, local_address).await?;
+
+    let (event_sender, mut event_rx) = mpsc::unbounded_channel();
+    self.connection_manager.set_event_sender(event_sender).await;
 
     loop {
       tokio::select! {
@@ -60,7 +63,7 @@ impl WsRunner {
           info!("Shutdown signal received, stopping ConnectionManager loop");
           return Ok(());
         }
-        event = self.event_rx.recv() => { // Send event to Server
+        event = event_rx.recv() => { // Send event to Server
           if let Some(event) = event {
             let msg = serde_json::to_string(&event).unwrap();
             if let Err(e) = ws_tx.send(Message::Text(msg.into())).await {
@@ -125,11 +128,11 @@ impl WsRunner {
           let tcp_stream = ws_stream.get_ref();
           let local_address = match tcp_stream {
             MaybeTlsStream::Plain(t) => t.local_addr()?.to_string(),
-            #[cfg(feature = "native-tls")]
-            MaybeTlsStream::NativeTls(t) => t.local_addr()?.to_string(),
-            /// Encrypted socket stream using `rustls`.
-            #[cfg(feature = "__rustls-tls")]
-            MaybeTlsStream::Rustls(t) => t.local_addr()?.to_string(),
+            // #[cfg(feature = "native-tls")]
+            // MaybeTlsStream::NativeTls(t) => t.local_addr()?.to_string(),
+            // /// Encrypted socket stream using `rustls`.
+            // #[cfg(feature = "__rustls-tls")]
+            // MaybeTlsStream::Rustls(t) => t.local_addr()?.to_string(),
             _ => "".to_string(),
           };
           return Ok((ws_stream, local_address));

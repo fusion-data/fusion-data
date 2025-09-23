@@ -1,4 +1,5 @@
 use chrono::{DateTime, FixedOffset};
+use fusion_common::ahash::HashMap;
 use modelsql_core::{
   field::FieldMask,
   filter::{OpValsDateTime, OpValsInt32, OpValsUuid, OpValsValue, Page},
@@ -71,6 +72,25 @@ pub struct SchedTask {
   pub updated_by: Option<i64>,
   #[cfg_attr(feature = "with-openapi", schema(value_type = Option<String>, format = DateTime, example = "2023-01-01T00:00:00Z"))]
   pub updated_at: Option<DateTime<FixedOffset>>,
+}
+
+impl SchedTask {
+  pub fn environments(&self) -> HashMap<String, String> {
+    let mut map = HashMap::default();
+    if let Some(value) = self.environment.as_ref()
+      && let serde_json::Value::Object(env) = value
+    {
+      for (k, v) in env {
+        if let serde_json::Value::String(s) = v {
+          map.insert(k.clone(), s.to_string());
+        } else if let serde_json::Value::Number(n) = v {
+          map.insert(k.clone(), n.to_string());
+        }
+      }
+    }
+
+    map
+  }
 }
 
 /// SchedTask 创建模型

@@ -3,6 +3,7 @@ use std::time::Duration;
 
 use fusion_common::time::now_offset;
 use fusion_core::DataError;
+use fusion_core::concurrent::handle::ServiceHandle;
 use fusion_core::timer::TimerRef;
 use log::{debug, error, info, warn};
 use mea::shutdown::ShutdownRecv;
@@ -13,7 +14,8 @@ use tokio::time::interval;
 use hetuflow_core::protocol::{AcquireTaskRequest, ScheduledTask, WebSocketEvent};
 use hetuflow_core::types::{EventKind, HetuflowCommand};
 
-use crate::service::{ConnectionManager, ProcessManager};
+use crate::connection::ConnectionManager;
+use crate::process::ProcessManager;
 use crate::setting::HetuflowAgentSetting;
 
 /// 任务调度器。负责 Agent Poll 机制、任务调度和容量计算。
@@ -57,11 +59,11 @@ impl TaskScheduler {
   }
 
   /// 启动任务调度器
-  pub fn start(&self) -> Result<Vec<JoinHandle<()>>, DataError> {
+  pub fn start(&self) -> Result<Vec<ServiceHandle>, DataError> {
     info!("Starting TaskScheduler");
 
-    let h1 = self.start_poll_task_runner();
-    let h2 = self.start_task_run_loop();
+    let h1 = ServiceHandle::new("TaskScheduler::start_poll_task_runner", self.start_poll_task_runner());
+    let h2 = ServiceHandle::new("TaskScheduler::start_task_run_loop", self.start_task_run_loop());
 
     info!("TaskScheduler started successfully");
     Ok(vec![h1, h2])
@@ -176,10 +178,8 @@ impl PollTaskRunner {
           acquire_count,
           labels: self.setting.labels.clone(),
         };
-
-        if let Err(e) =
-          self.connection_manager.send_event(WebSocketEvent::new(EventKind::PollTaskRequest, poll_request))
-        {
+        let event = WebSocketEvent::new(EventKind::PollTaskRequest, poll_request);
+        if let Err(e) = self.connection_manager.send_event(event).await {
           error!("Failed to send poll request: {}", e);
         }
       } else {

@@ -9,12 +9,15 @@ use std::{
 use fusion_core::{DataError, application::Application};
 use fusion_db::DbPlugin;
 use log::{debug, error, info};
-use mea::shutdown::{ShutdownRecv, ShutdownSend};
+use mea::{
+  mutex::Mutex,
+  shutdown::{ShutdownRecv, ShutdownSend},
+};
 use modelsql::{ModelManager, store::DbxError};
-use tokio::sync::mpsc;
+use tokio::{sync::mpsc, task::JoinHandle};
 use uuid::Uuid;
 
-use crate::service::{AgentManager, LoadBalancer, LogReceiver, SchedulerSvc};
+use crate::service::{AgentManager, LoadBalancer, LogService, SchedulerSvc};
 use crate::{
   gateway::{ConnectionManager, GatewaySvc, MessageHandler},
   infra::bmc::DistributedLockBmc,
@@ -30,7 +33,7 @@ use crate::{
 pub struct ServerApplication {
   pub setting: Arc<HetuflowSetting>,
   pub is_leader: Arc<AtomicBool>,
-  shutdown: Arc<std::sync::Mutex<Option<(ShutdownSend, ShutdownRecv)>>>,
+  shutdown: Arc<mea::mutex::Mutex<Option<(ShutdownSend, ShutdownRecv)>>>,
   pub mm: ModelManager,
   pub scheduler_svc: Arc<SchedulerSvc>,
   pub gateway_svc: Arc<GatewaySvc>,
@@ -39,7 +42,8 @@ pub struct ServerApplication {
   pub message_handler: Arc<MessageHandler>,
   load_balancer: Arc<LoadBalancer>,
   gateway_command_tx: mpsc::UnboundedSender<GatewayCommandRequest>,
-  log_receiver: Arc<tokio::sync::Mutex<LogReceiver>>,
+  log_receiver: Arc<mea::mutex::Mutex<LogService>>,
+  handles: Arc<Mutex<Vec<JoinHandle<()>>>>,
 }
 
 impl ServerApplication {
@@ -74,10 +78,8 @@ impl ServerApplication {
     let connection_manager = Arc::new(ConnectionManager::new());
     let message_handler = Arc::new(MessageHandler::new(connection_manager.clone()));
 
-    // 初始化核心组件
     let scheduler_svc = Arc::new(SchedulerSvc::new(mm.clone(), Arc::new(setting.server.clone()), shutdown_rx.clone()));
 
-    // 将 ConnectionManager 作为 AgentRegistry 传递给 AgentManager
     let agent_manager = Arc::new(AgentManager::new(mm.clone(), connection_manager.clone(), setting.clone()));
 
     let gateway_svc =
@@ -86,15 +88,14 @@ impl ServerApplication {
     let is_leader = Arc::new(AtomicBool::new(false));
     let load_balancer = Arc::new(LoadBalancer::new(mm.clone(), setting.server.server_id.clone()));
 
-    // 创建日志接收器
     let log_receiver =
-      LogReceiver::new(Arc::new(setting.task_log.clone()), shutdown_rx.clone(), connection_manager.clone())?;
-    let log_receiver = Arc::new(tokio::sync::Mutex::new(log_receiver));
+      LogService::new(Arc::new(setting.task_log.clone()), shutdown_rx.clone(), connection_manager.clone())?;
+    let log_receiver = Arc::new(mea::mutex::Mutex::new(log_receiver));
 
     Ok(Self {
       setting,
       is_leader,
-      shutdown: Arc::new(std::sync::Mutex::new(Some((shutdown_tx, shutdown_rx)))),
+      shutdown: Arc::new(mea::mutex::Mutex::new(Some((shutdown_tx, shutdown_rx)))),
       mm,
       scheduler_svc,
       gateway_svc,
@@ -104,6 +105,7 @@ impl ServerApplication {
       load_balancer,
       gateway_command_tx,
       log_receiver,
+      handles: Arc::new(Mutex::new(Vec::new())),
     })
   }
 
@@ -124,24 +126,25 @@ impl ServerApplication {
     Ok(())
   }
 
-  pub fn get_shutdown_recv(&self) -> ShutdownRecv {
-    self.shutdown.lock().unwrap().as_ref().unwrap().1.clone()
+  pub async fn get_shutdown_recv(&self) -> ShutdownRecv {
+    let maybe = self.shutdown.lock().await;
+    maybe.as_ref().unwrap().1.clone()
   }
 
   /// 启动获取领导者身份（或刷新领导者身份过期时间）循环
   ///
   /// 该循环会尝试获取领导者身份，如果获取失败，则会等待 heartbeat_interval 后重试。
   /// 如果获取成功，则会将 `is_leader` 设置为 `true`，否则设置为 `false`。
-  async fn start_leader_and_follower_loop(&self) -> Result<(), DataError> {
+  async fn start_leader_and_follower_loop(&self) -> Result<JoinHandle<()>, DataError> {
     info!("Starting follower mode");
 
     // 启动领导者选举监控
     let is_leader = self.is_leader.clone();
     let mm = self.mm.clone();
     let server_id = self.setting.server.server_id.to_string();
-    let shutdown_rx = self.get_shutdown_recv();
+    let shutdown_rx = self.get_shutdown_recv().await;
     let load_balancer = self.load_balancer.clone();
-    tokio::spawn(async move {
+    let handle = tokio::spawn(async move {
       let (ttl, token_increment_interval, heartbeat_interval) = DistributedLockBmc::get_recommended_config();
       let mut interval = tokio::time::interval(heartbeat_interval);
       loop {
@@ -157,7 +160,7 @@ impl ServerApplication {
       }
     });
 
-    Ok(())
+    Ok(handle)
   }
 
   /// 启动通用服务
@@ -180,13 +183,11 @@ impl ServerApplication {
     }
 
     // 启动日志接收器
-    let log_receiver = self.log_receiver.clone();
-    tokio::spawn(async move {
-      let mut receiver = log_receiver.lock().await;
-      if let Err(e) = receiver.start().await {
-        error!("LogReceiver start error: {:?}", e);
-      }
-    });
+    let mut log_receiver = self.log_receiver.lock().await;
+    if let Err(e) = log_receiver.start().await {
+      error!("LogReceiver start error: {:?}", e);
+    }
+    drop(log_receiver);
 
     // 启动 HTTP API 服务 (/api/v1)
     let app_state = self.clone();
@@ -255,9 +256,12 @@ impl ServerApplication {
   }
 
   /// 优雅关闭
-  pub async fn shutdown(&self) -> Result<(), DataError> {
+  pub async fn shutdown(self) -> Result<(), DataError> {
     info!("Shutting down Hetuflow Application");
-    let (shtudown_tx, _) = self.shutdown.lock().unwrap().take().unwrap();
+    let shutdown_tx = match self.shutdown.lock().await.take() {
+      Some((tx, _)) => tx, // discard ShutdownRecv
+      None => return Err(DataError::server_error("AgentApplication is not running")),
+    };
 
     // 释放领导者身份
     if self.is_leader.load(Ordering::Relaxed)
@@ -267,8 +271,25 @@ impl ServerApplication {
     }
 
     // 发送关闭信号
-    shtudown_tx.shutdown();
-    shtudown_tx.await_shutdown().await;
+    shutdown_tx.shutdown();
+
+    drop(self.connection_manager);
+    drop(self.scheduler_svc);
+    drop(self.gateway_svc);
+    drop(self.agent_manager);
+    drop(self.log_receiver);
+    drop(self.mm);
+
+    shutdown_tx.await_shutdown().await;
+
+    let mut handles_guard = self.handles.lock().await;
+    let handles = std::mem::take(&mut *handles_guard);
+    for handle in handles {
+      let id = handle.id();
+      if let Err(e) = handle.await {
+        error!("Failed to join task id: {}, error: {}", id, e);
+      }
+    }
 
     info!("Hetuflow Application shutdown complete");
     Ok(())

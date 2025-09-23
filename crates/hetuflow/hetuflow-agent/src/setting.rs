@@ -105,6 +105,9 @@ pub enum RetryCondition {
 /// 进程管理配置
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ProcessConfig {
+  /// 进程运行基目录
+  pub run_base_dir: String,
+
   /// 清理间隔（秒）
   #[serde(deserialize_with = "deserialize_duration")]
   pub cleanup_interval: Duration,

@@ -50,12 +50,13 @@ capacity_weight = 50
 load_factor_threshold = 1
 
 [hetuflow.agent.process]
+run_base_dir = "runs/var/hetuflow-agent/runs"
 enable_resource_monitoring = true
 resource_monitor_interval = "30s"
-cleanup_interval = "1h"
 max_concurrent_processes = 8
+cleanup_interval = "1m"
 process_timeout = "2h"
-zombie_check_interval = "1h"
+zombie_check_interval = "30m"
 
 [hetuflow.agent.process.limits]
 max_cpu_percent = 0.7

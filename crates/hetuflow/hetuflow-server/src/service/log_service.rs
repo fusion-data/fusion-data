@@ -7,10 +7,10 @@ use fusion_common::time::now_epoch_millis;
 use fusion_core::DataError;
 use hetuflow_core::protocol::{LogBatch, LogMessage};
 use log::{debug, error, info};
-use mea::shutdown::ShutdownRecv;
+use mea::{mutex::Mutex, shutdown::ShutdownRecv};
 use tokio::fs::{File, OpenOptions};
 use tokio::io::{AsyncWriteExt, BufWriter};
-use tokio::sync::{Mutex, RwLock, mpsc};
+use tokio::sync::{RwLock, mpsc};
 use tokio::time::interval;
 use uuid::Uuid;
 
@@ -44,18 +44,15 @@ pub struct LogStats {
 }
 
 /// 日志接收器，负责接收Agent转发的日志并存储到文件
-pub struct LogReceiver {
-  /// 任务日志配置
+pub struct LogService {
   config: Arc<TaskLogConfig>,
-  /// 文件写入器缓存
-  file_writers: Arc<RwLock<FileWriters>>,
   /// 日志统计信息
   stats: Arc<RwLock<LogStats>>,
-  log_writer_runner: std::sync::Mutex<Option<LogWriterRunner>>,
-  log_clean_runner: std::sync::Mutex<Option<LogCleanRunner>>,
+  log_writer_runner: Mutex<Option<LogWriterRunner>>,
+  log_clean_runner: Mutex<Option<LogCleanRunner>>,
 }
 
-impl LogReceiver {
+impl LogService {
   /// 创建新的日志接收器
   pub fn new(
     config: Arc<TaskLogConfig>,
@@ -81,10 +78,9 @@ impl LogReceiver {
 
     Ok(Self {
       config,
-      file_writers,
       stats,
-      log_writer_runner: std::sync::Mutex::new(Some(log_writer_runner)),
-      log_clean_runner: std::sync::Mutex::new(Some(log_clean_runner)),
+      log_writer_runner: Mutex::new(Some(log_writer_runner)),
+      log_clean_runner: Mutex::new(Some(log_clean_runner)),
     })
   }
 
@@ -101,22 +97,14 @@ impl LogReceiver {
     }
 
     // 启动处理接收日志任务
-    let mut runner = self.log_writer_runner.lock().unwrap().take().unwrap();
+    let mut runner = self.log_writer_runner.lock().await.take().unwrap();
     tokio::spawn(async move { runner.run_loop().await });
 
     // 启动定期清理任务
-    let mut runner = self.log_clean_runner.lock().unwrap().take().unwrap();
+    let mut runner = self.log_clean_runner.lock().await.take().unwrap();
     tokio::spawn(async move { runner.run_loop().await });
 
     info!("日志接收器已启动，日志目录: {}", self.config.log_dir);
-    Ok(())
-  }
-
-  async fn start_clean_task(&self) -> Result<(), DataError> {
-    Ok(())
-  }
-
-  async fn start_process_loop(&self) -> Result<(), DataError> {
     Ok(())
   }
 
@@ -178,7 +166,7 @@ impl LogCleanRunner {
   /// 轮转大文件
   async fn rotate_large_files(
     config: &TaskLogConfig,
-    file_writers: &Arc<RwLock<HashMap<String, Arc<Mutex<BufWriter<File>>>>>>,
+    file_writers: &Arc<RwLock<FileWriters>>,
   ) -> Result<(), DataError> {
     let writers_to_rotate = {
       let writers = file_writers.read().await;
@@ -220,9 +208,7 @@ impl LogCleanRunner {
   }
 
   /// 刷新所有文件写入器
-  async fn flush_all_writers(
-    file_writers: &Arc<RwLock<HashMap<String, Arc<Mutex<BufWriter<File>>>>>>,
-  ) -> Result<(), DataError> {
+  async fn flush_all_writers(file_writers: &Arc<RwLock<FileWriters>>) -> Result<(), DataError> {
     let writers = file_writers.read().await;
 
     for (path, writer) in writers.iter() {
@@ -249,23 +235,12 @@ impl LogWriterRunner {
     while let Some(event) = self.event_rx.recv().await
       && !self.shutdown_rx.is_shutdown_now()
     {
-      if let AgentEvent::TaskLog { agent_id, payload } = event {
-        if let Err(e) = self.process_log_payload(agent_id, payload).await {
-          log::warn!("process log payload failed: {:?}", e);
-        }
+      if let AgentEvent::TaskLog { agent_id, payload } = event
+        && let Err(e) = self.process_log_payload(agent_id, payload).await
+      {
+        log::warn!("process log payload failed: {:?}", e);
       }
     }
-    Ok(())
-  }
-
-  /// 写入日志批次
-  pub async fn write_log_batch(&self, batch: &LogBatch) -> Result<(), DataError> {
-    debug!("处理日志批次: {}, 包含 {} 条日志", batch.batch_id, batch.messages.len());
-
-    for log_message in &batch.messages {
-      self.write_single_log(log_message).await?;
-    }
-
     Ok(())
   }
 
@@ -344,7 +319,7 @@ impl LogWriterRunner {
       .append(true)
       .open(file_path)
       .await
-      .map_err(|e| DataError::server_error(&format!("打开日志文件失败: {}", e)))?;
+      .map_err(|e| DataError::server_error(format!("打开日志文件失败: {}", e)))?;
 
     let writer = Arc::new(Mutex::new(BufWriter::new(file)));
 

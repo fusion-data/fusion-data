@@ -99,6 +99,7 @@
     "retryable",
     "rmcp",
     "rustc",
+    "rwlock",
     "sched",
     "serde",
     "serv",
