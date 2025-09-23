@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use hetuflow_core::protocol::{
-  AcquireTaskRequest, AgentRegisterRequest, HeartbeatRequest, LogMessage, TaskInstanceUpdated,
+  AcquireTaskRequest, AgentRegisterRequest, HeartbeatRequest, LogMessage, TaskInstanceChanged,
 };
 
 /// Agent 事件类型 - 统一的运行态事件
@@ -17,7 +17,7 @@ pub enum AgentEvent {
   /// Agent 心跳更新
   Heartbeat { agent_id: String, payload: Arc<HeartbeatRequest> },
   /// Agent 任务实例状态变更
-  TaskInstanceChanged { agent_id: String, payload: Arc<TaskInstanceUpdated> },
+  TaskInstanceChanged { agent_id: String, payload: Arc<TaskInstanceChanged> },
   /// Agent 任务轮询请求
   TaskPollRequest { agent_id: String, request: Arc<AcquireTaskRequest> },
   /// Agent 断开连接
@@ -37,7 +37,7 @@ impl AgentEvent {
     Self::TaskPollRequest { agent_id, request: Arc::new(request) }
   }
 
-  pub fn new_task_instance_changed(agent_id: String, request: TaskInstanceUpdated) -> Self {
+  pub fn new_task_instance_changed(agent_id: String, request: TaskInstanceChanged) -> Self {
     Self::TaskInstanceChanged { agent_id, payload: Arc::new(request) }
   }
 

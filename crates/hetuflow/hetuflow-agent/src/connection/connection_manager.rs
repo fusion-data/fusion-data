@@ -17,6 +17,12 @@ pub struct ConnectionManager {
   event_sender: RwLock<Option<mpsc::UnboundedSender<WebSocketEvent>>>,
 }
 
+impl Default for ConnectionManager {
+  fn default() -> Self {
+    Self::new()
+  }
+}
+
 impl ConnectionManager {
   /// 创建新的连接管理器
   pub fn new() -> Self {
@@ -24,10 +30,6 @@ impl ConnectionManager {
     let (acquire_task_broadcaster, _) = broadcast::channel(100);
 
     Self { acquire_task_broadcaster, command_publisher, event_sender: RwLock::new(None) }
-  }
-
-  pub fn command_publisher(&self) -> broadcast::Sender<HetuflowCommand> {
-    self.command_publisher.clone()
   }
 
   pub async fn send_event(&self, event: WebSocketEvent) -> Result<(), DataError> {
@@ -53,8 +55,16 @@ impl ConnectionManager {
     older
   }
 
+  /// Subscribe to commands sent from the Server
   pub fn subscribe_command(&self) -> broadcast::Receiver<HetuflowCommand> {
     self.command_publisher.subscribe()
+  }
+
+  pub fn publish_command(&self, command: HetuflowCommand) -> Result<usize, DataError> {
+    self
+      .command_publisher
+      .send(command)
+      .map_err(|e| DataError::server_error(format!("Publish command error: {}", e)))
   }
 
   pub fn subscribe_acquire_task(&self) -> broadcast::Receiver<Arc<AcquireTaskResponse>> {

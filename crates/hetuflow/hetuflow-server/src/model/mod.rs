@@ -5,13 +5,13 @@ pub use agent::*;
 pub use distributed_lock::*;
 
 use std::sync::{
-  Arc, RwLock,
+  Arc,
   atomic::{AtomicI64, Ordering},
 };
 
 use fusion_common::time::now_epoch_millis;
+use mea::{mpsc, rwlock::RwLock};
 use serde::{Deserialize, Serialize};
-use tokio::sync::mpsc;
 
 use hetuflow_core::protocol::WebSocketCommand;
 
@@ -71,8 +71,19 @@ pub struct AgentReliabilityStats {
   pub consecutive_failures: u32,
 }
 
+#[derive(Serialize)]
+pub struct AgentConnInfo {
+  /// Agent ID
+  pub agent_id: String,
+  /// Agent 地址
+  pub address: String,
+  /// 最后心跳时间（毫秒）
+  last_heartbeat_ms: AtomicI64,
+  /// 统计信息
+  stats: AgentReliabilityStats,
+}
+
 /// Agent 连接信息
-#[derive(Debug, Serialize)]
 pub struct AgentConnection {
   /// Agent ID
   pub agent_id: String,
@@ -83,7 +94,6 @@ pub struct AgentConnection {
   /// 统计信息
   stats: Arc<RwLock<AgentReliabilityStats>>,
   // 当离线时，sender 为 None
-  #[serde(skip)]
   pub sender: Option<mpsc::UnboundedSender<WebSocketCommand>>,
 }
 
@@ -98,8 +108,8 @@ impl AgentConnection {
     }
   }
 
-  pub fn is_online(&self) -> bool {
-    self.sender.is_some() && self.stats.read().unwrap().consecutive_failures == 0
+  pub async fn is_online(&self) -> bool {
+    self.sender.is_some() && self.stats.read().await.consecutive_failures == 0
   }
 
   /// 发送消息给 Agent
@@ -122,23 +132,23 @@ impl AgentConnection {
     self.last_heartbeat_ms.store(ms, Ordering::Relaxed);
   }
 
-  pub fn stats(&self) -> AgentReliabilityStats {
-    self.stats.read().unwrap().clone()
+  pub async fn stats(&self) -> AgentReliabilityStats {
+    self.stats.read().await.clone()
   }
 
-  pub fn reset_consecutive_failures(&self) {
-    let mut stats = self.stats.write().unwrap();
+  pub async fn reset_consecutive_failures(&self) {
+    let mut stats = self.stats.write().await;
     stats.consecutive_failures = 0;
   }
 
-  pub fn update_consecutive_failures(&self) {
-    let mut stats = self.stats.write().unwrap();
+  pub async fn update_consecutive_failures(&self) {
+    let mut stats = self.stats.write().await;
     stats.consecutive_failures += 1;
     stats.last_failure_ms = now_epoch_millis();
   }
 
-  pub fn update_stats(&self, success: bool, response_time_ms: f64) {
-    let mut stats = self.stats.write().unwrap();
+  pub async fn update_stats(&self, success: bool, response_time_ms: f64) {
+    let mut stats = self.stats.write().await;
     stats.total_tasks += 1;
     if success {
       stats.success_count += 1;
@@ -161,24 +171,4 @@ pub struct ConnectionStats {
   pub total_agents: usize,
   pub online_agents: usize,
   pub offline_agents: usize,
-}
-
-#[cfg(test)]
-mod tests {
-  use uuid::Uuid;
-
-  use super::*;
-
-  #[test]
-  fn test_agent_connection() {
-    let agent_id = Uuid::new_v4().to_string();
-    let address = "127.0.0.1:8080".to_string();
-    let (sender, _) = mpsc::unbounded_channel();
-    let agent_conn = AgentConnection::new(agent_id.clone(), address.clone(), sender);
-    let json_text = serde_json::to_string_pretty(&agent_conn).unwrap();
-    println!("{}", json_text);
-
-    assert_eq!(&agent_conn.agent_id, &agent_id);
-    assert_eq!(agent_conn.address, address);
-  }
 }

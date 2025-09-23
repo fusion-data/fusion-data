@@ -165,7 +165,6 @@ pub enum CommandKind {
   AgentRegistered = 5, // Agent 注册成功
   DispatchTask = 6,    // 分发任务
   CancelTask = 7,      // 取消任务
-  LogForward = 8,      // 日志转发
 }
 
 #[derive(Clone, AsRefStr)]
@@ -212,7 +211,7 @@ pub enum EventKind {
   PollTaskRequest = 5,
 
   /// Agent 事件 AgentEvent
-  TaskChangedEvent = 6,
+  TaskInstanceChanged = 6,
 
   /// 任务日志事件
   TaskLog = 7,

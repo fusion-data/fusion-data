@@ -3,14 +3,15 @@ use std::sync::Arc;
 use fusion_core::DataError;
 use fusion_core::application::Application;
 use fusion_core::concurrent::handle::ServiceHandle;
-use fusion_core::timer::{Timer, TimerPlugin};
+use fusion_core::timer::TimerPlugin;
 use log::info;
 use mea::mutex::Mutex;
 use mea::shutdown::{ShutdownRecv, ShutdownSend};
 
-use crate::connection::{CommandRunner, ConnectionManager, WsRunner};
+use crate::connection::{ConnectionManager, WsRunner};
+use crate::executor::{ProcessEventRunner, TaskExecuteRunner};
 use crate::process::{ProcessCleanupRunner, ProcessManager};
-use crate::service::{TaskExecutor, TaskScheduler};
+use crate::scheduler::{CommandProcessRunner, PollTaskRunner};
 use crate::setting::HetuflowAgentSetting;
 
 /// Agent 应用程序
@@ -18,9 +19,7 @@ use crate::setting::HetuflowAgentSetting;
 pub struct AgentApplication {
   pub setting: Arc<HetuflowAgentSetting>,
   connection_manager: Arc<ConnectionManager>,
-  task_scheduler: Arc<TaskScheduler>,
   process_manager: Arc<ProcessManager>,
-  task_executor: Arc<TaskExecutor>,
   shutdown: Arc<Mutex<Option<(ShutdownSend, ShutdownRecv)>>>,
   handles: Arc<Mutex<Vec<ServiceHandle<()>>>>,
 }
@@ -48,26 +47,11 @@ impl AgentApplication {
 
     let connection_manager = Arc::new(ConnectionManager::new());
     let process_manager = Arc::new(ProcessManager::new(setting.process.clone(), connection_manager.clone()));
-    let task_scheduler = Arc::new(TaskScheduler::new(
-      setting.clone(),
-      process_manager.clone(),
-      shutdown_rx.clone(),
-      connection_manager.clone(),
-      application.component::<Timer>().timer_ref(),
-    ));
-    let task_executor = Arc::new(TaskExecutor::new(
-      setting.clone(),
-      process_manager.clone(),
-      connection_manager.clone(),
-      task_scheduler.scheduled_task_rx(),
-      shutdown_rx.clone(),
-    ));
+
     Ok(Self {
       setting,
       connection_manager,
-      task_scheduler,
       process_manager,
-      task_executor,
       shutdown: Arc::new(Mutex::new(Some((shutdown_tx, shutdown_rx)))),
       handles: Arc::new(Mutex::new(Vec::new())),
     })
@@ -81,18 +65,54 @@ impl AgentApplication {
   /// 启动应用程序
   pub async fn start(&self) -> Result<(), DataError> {
     info!("Starting AgentApplication: {}", self.setting.agent_id);
-
-    let mut handles = self.handles.lock().await;
-    handles.extend(self.task_executor.start()?);
-    handles.extend(self.task_scheduler.start()?);
-
     let shutdown_rx = self.shutdown_recv().await;
 
-    let ws_runner = WsRunner::new(self.setting.clone(), self.connection_manager.clone(), shutdown_rx.clone());
-    handles.push(ServiceHandle::new("WsRunner", tokio::spawn(async move { ws_runner.run_loop().await })));
+    let mut handles = self.handles.lock().await;
 
-    let command_runner = CommandRunner::new(self.connection_manager.clone(), shutdown_rx.clone());
-    handles.push(ServiceHandle::new("CommandRunner", tokio::spawn(async move { command_runner.run_loop().await })));
+    let event_process_runner = ProcessEventRunner::new(
+      self.setting.clone(),
+      self.connection_manager.clone(),
+      self.process_manager.clone(),
+      shutdown_rx.clone(),
+    );
+    handles.push(ServiceHandle::new(
+      "ProcessEventRunner",
+      tokio::spawn(async move { event_process_runner.run_loop().await }),
+    ));
+
+    let (scheduled_task_tx, scheduled_task_rx) = mea::mpsc::unbounded();
+
+    let mut task_execute_runner = TaskExecuteRunner::new(
+      self.setting.clone(),
+      self.connection_manager.clone(),
+      self.process_manager.clone(),
+      scheduled_task_rx,
+    );
+    handles
+      .push(ServiceHandle::new("TaskExecuteRunner", tokio::spawn(async move { task_execute_runner.run_loop().await })));
+
+    let mut schedule_task_runner = CommandProcessRunner::new(
+      self.setting.clone(),
+      scheduled_task_tx,
+      shutdown_rx.clone(),
+      Application::global().component(),
+      self.connection_manager.subscribe_command(),
+    );
+    handles.push(ServiceHandle::new(
+      "ScheduleTaskRunner",
+      tokio::spawn(async move { schedule_task_runner.run_loop().await }),
+    ));
+
+    let poll_task_runner = PollTaskRunner::new(
+      self.setting.clone(),
+      self.connection_manager.clone(),
+      self.process_manager.clone(),
+      shutdown_rx.clone(),
+    );
+    handles.push(ServiceHandle::new("PollTaskRunner", tokio::spawn(async move { poll_task_runner.run_loop().await })));
+
+    let mut ws_runner = WsRunner::new(self.setting.clone(), self.connection_manager.clone(), shutdown_rx.clone()).await;
+    handles.push(ServiceHandle::new("WsRunner", tokio::spawn(async move { ws_runner.run_loop().await })));
 
     let process_cleanup_runner = ProcessCleanupRunner::new(self.process_manager.clone(), shutdown_rx.clone());
     handles.push(ServiceHandle::new(
@@ -122,11 +142,10 @@ impl AgentApplication {
     // 发送关闭信号
     shutdown_tx.shutdown();
 
+    self.process_manager.kill_all_processes().await?;
+
     drop(self.connection_manager);
-    drop(self.task_scheduler);
     drop(self.process_manager);
-    self.task_executor.stop().await?;
-    drop(self.task_executor);
 
     // 等待各组件停止完成
     shutdown_tx.await_shutdown().await;

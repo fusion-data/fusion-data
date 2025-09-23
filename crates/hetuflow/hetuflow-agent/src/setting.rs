@@ -35,19 +35,8 @@ pub struct ConnectionConfig {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct PollingConfig {
   /// 轮询间隔（秒）
-  pub interval_seconds: u64,
-
-  /// 最大并发任务数
-  pub max_concurrent_tasks: usize,
-
-  /// 容量计算权重
-  pub capacity_weight: f64,
-
-  /// 负载因子阈值
-  pub load_factor_threshold: f64,
-
-  /// 启用自适应轮询
-  pub enable_adaptive_polling: bool,
+  #[serde(deserialize_with = "deserialize_duration")]
+  pub interval: Duration,
 }
 
 /// 重试配置

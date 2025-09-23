@@ -12,8 +12,8 @@ use fusion_core::IdUuidResult;
 use fusion_web::{WebResult, ok_json};
 use futures_util::{SinkExt, StreamExt};
 use log::{error, info};
+use mea::mpsc;
 use serde_json::Value;
-use tokio::sync::mpsc;
 
 use hetuflow_core::protocol::{WebSocketCommand, WebSocketEvent, WebSocketParams};
 use utoipa_axum::router::OpenApiRouter;
@@ -105,7 +105,7 @@ pub async fn handle_websocket_connection(
   let (mut ws_tx, mut ws_rx) = socket.split();
 
   // 为当前 WebSocket 连接创建一个 MPSC 通道，用于从其他任务发送消息到此连接
-  let (command_tx, mut command_rx) = mpsc::unbounded_channel::<WebSocketCommand>();
+  let (command_tx, mut command_rx) = mpsc::unbounded();
   let agent_connection = AgentConnection::new(agent_id.clone(), address, command_tx);
   if let Err(e) = message_handler.add_connection(&agent_id, agent_connection) {
     error!("Failed to add agent connection: {:?}", e);

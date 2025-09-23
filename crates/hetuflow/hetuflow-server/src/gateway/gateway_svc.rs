@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use log::{error, info};
-use tokio::sync::{Mutex, mpsc};
+use mea::{mpsc, mutex::Mutex};
 
 use crate::model::{AgentEvent, GatewayCommandRequest};
 
@@ -21,7 +21,7 @@ impl GatewaySvc {
     message_handler: Arc<MessageHandler>,
     command_receiver: mpsc::UnboundedReceiver<GatewayCommandRequest>,
   ) -> Self {
-    let (event_sender, event_receiver) = mpsc::unbounded_channel();
+    let (event_sender, event_receiver) = mpsc::unbounded();
 
     Self {
       connection_manager,

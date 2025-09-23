@@ -5,12 +5,12 @@ use std::sync::Arc;
 use fusion_common::time::OffsetDateTime;
 use fusion_common::time::now_epoch_millis;
 use fusion_core::DataError;
-use hetuflow_core::protocol::{LogBatch, LogMessage};
+use hetuflow_core::protocol::LogMessage;
 use log::{debug, error, info};
+use mea::{mpsc, rwlock::RwLock};
 use mea::{mutex::Mutex, shutdown::ShutdownRecv};
 use tokio::fs::{File, OpenOptions};
 use tokio::io::{AsyncWriteExt, BufWriter};
-use tokio::sync::{RwLock, mpsc};
 use tokio::time::interval;
 use uuid::Uuid;
 
@@ -59,7 +59,7 @@ impl LogService {
     shutdown_rx: ShutdownRecv,
     connection_manager: Arc<ConnectionManager>,
   ) -> Result<Self, DataError> {
-    let (event_tx, event_rx) = mpsc::unbounded_channel();
+    let (event_tx, event_rx) = mpsc::unbounded();
     connection_manager.subscribe_event(event_tx)?;
 
     let file_writers = Arc::new(RwLock::new(HashMap::new()));

@@ -821,7 +821,7 @@ impl TaskPoller {
 
 ```rust
 use fusion_core::DataError;
-use tokio::sync::mpsc;
+use mea::mpsc;
 use std::sync::Arc;
 
 pub struct SchedulerSvc {
@@ -1463,7 +1463,7 @@ sequenceDiagram
 
 ## 8. 与网关的交互
 
-调度器与网关之间通过 `tokio::sync::mpsc` 无界通道进行通信，实现完全解耦。
+调度器与网关之间通过 `mea::sync` 无界通道进行通信，实现完全解耦。
 
 **通道定义 (示例)**:
 

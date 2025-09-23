@@ -1808,6 +1808,7 @@ dependencies = [
  "josekit",
  "log",
  "logforth",
+ "mea",
  "modelsql",
  "protobuf",
  "protobuf-codegen",

@@ -152,7 +152,7 @@ impl AgentApplication {
 
 ```rust
 // hetuflow-core/src/protocol.rs
-use tokio::sync::mpsc;
+use mea::mpsc;
 
 /// 发往 Server 的消息
 pub enum ToServerMessage {
@@ -204,7 +204,7 @@ impl ConnectionManager {
 
 ```rust
 use std::sync::Arc;
-use tokio::sync::mpsc;
+use mea::mpsc;
 use kanal::{AsyncSender, AsyncReceiver};
 
 /// 调度的任务结构

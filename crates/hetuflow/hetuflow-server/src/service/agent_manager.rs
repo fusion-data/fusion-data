@@ -6,22 +6,21 @@ use fusion_common::{
 };
 use fusion_core::DataError;
 use log::{debug, error, info, warn};
-use mea::shutdown::ShutdownRecv;
+use mea::mpsc;
 use modelsql::{ModelManager, filter::OpValsUuid};
-use tokio::sync::mpsc;
 use tokio::task::JoinHandle;
 
 use hetuflow_core::{
   models::*,
-  protocol::{AcquireTaskRequest, AcquireTaskResponse, ScheduledTask, TaskInstanceUpdated, WebSocketCommand},
+  protocol::{AcquireTaskRequest, AcquireTaskResponse, ScheduledTask, TaskInstanceChanged, WebSocketCommand},
   types::{CommandKind, TaskInstanceStatus, TaskStatus},
 };
 
 use crate::{
   gateway::ConnectionManager,
   infra::bmc::*,
-  model::AgentEvent,
-  service::{AgentSvc, LogService},
+  model::{AgentEvent, AgentReliabilityStats},
+  service::AgentSvc,
   setting::HetuflowSetting,
 };
 
@@ -42,7 +41,7 @@ impl AgentManager {
   pub async fn start(&self) -> Result<JoinHandle<()>, DataError> {
     info!("Starting AgentManager with event subscription");
     // 订阅 Agent 事件
-    let (tx, event_receiver) = mpsc::unbounded_channel();
+    let (tx, event_receiver) = mpsc::unbounded();
     self.connection_manager.subscribe_event(tx)?;
 
     let run_loop = AgentEventRunLoop {
@@ -141,13 +140,11 @@ impl AgentManager {
     Ok(agents)
   }
 
-  /// 获取 Agent 详细信息（包含可靠性统计）
-  pub async fn get_agent_details(&self, agent_id: &str) -> Result<Option<serde_json::Value>, DataError> {
-    // 通过 AgentRegistry 获取基础信息
+  /// 获取 Agent 可靠性统计
+  pub async fn get_agent_details(&self, agent_id: &str) -> Result<Option<AgentReliabilityStats>, DataError> {
     if let Some(agent) = self.connection_manager.get_agent(agent_id)? {
-      // 获取可靠性统计
-      let details = serde_json::to_value(&agent)?;
-      Ok(Some(details))
+      let stats = agent.stats().await;
+      Ok(Some(stats))
     } else {
       Ok(None)
     }
@@ -164,16 +161,26 @@ impl AgentManager {
       return Ok(None);
     }
 
-    // 简单的负载均衡：选择连续失败次数最少、任务数最少的 Agent
-    let best_agent = online_agents
-      .iter()
-      .min_by_key(|agent| {
-        let stats = agent.stats();
-        (stats.consecutive_failures, stats.total_tasks)
+    let futures: Vec<JoinHandle<(String, AgentReliabilityStats)>> = online_agents
+      .into_iter()
+      .map(|agent| {
+        let agent_id = agent.agent_id.clone();
+        tokio::spawn(async move {
+          let stats = agent.stats().await;
+          (agent_id, stats)
+        })
       })
+      .collect();
+    let agent_stats_vec = futures_util::future::join_all(futures).await;
+
+    // 简单的负载均衡：选择连续失败次数最少、任务数最少的 Agent
+    let best_agent = agent_stats_vec
+      .iter()
+      .filter_map(|result| result.as_ref().ok())
+      .min_by_key(|(_, stats)| (stats.consecutive_failures, stats.total_tasks))
       .cloned();
 
-    Ok(best_agent.map(|agent| agent.agent_id.clone()))
+    Ok(best_agent.map(|(agent_id, _)| agent_id))
   }
 
   /// 更新任务执行统计
@@ -192,7 +199,11 @@ impl AgentManager {
     // 获取当前在线 Agent 数量和列表，用于统计信息更新
     let online_count = self.connection_manager.get_online_count()?;
     let online_agents = self.connection_manager.get_online_agents()?;
-    info!("Current online agents: {}, agent list: {:?}", online_count, online_agents);
+    info!(
+      "Current online agents: {}, agent list: {:?}",
+      online_count,
+      online_agents.iter().map(|agent| agent.agent_id.as_str()).collect::<Vec<_>>()
+    );
 
     // TODO: 待实现
 
@@ -209,7 +220,7 @@ impl AgentManager {
     let mut agents_with_failures: u64 = 0;
 
     for agent in online_agents {
-      let stats = agent.stats();
+      let stats = agent.stats().await;
       total_tasks += stats.total_tasks;
       total_successes += stats.success_count;
       if stats.consecutive_failures > 0 {
@@ -330,7 +341,7 @@ impl AgentEventRunLoop {
   async fn process_task_instance_changed(
     &self,
     agent_id: &str,
-    payload: Arc<TaskInstanceUpdated>,
+    payload: Arc<TaskInstanceChanged>,
   ) -> Result<(), DataError> {
     info!("Processing task instance changed for agent {}, instance {}", agent_id, payload.instance_id);
 

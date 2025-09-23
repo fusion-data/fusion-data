@@ -71,7 +71,7 @@ impl ScheduledTask {
 
 /// 任务状态更新 (Reports status for a 'Task', which the server records as a 'TaskInstance')
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct TaskInstanceUpdated {
+pub struct TaskInstanceChanged {
   /// 任务实例 ID
   pub instance_id: Uuid,
   /// Agent ID
@@ -88,7 +88,7 @@ pub struct TaskInstanceUpdated {
   pub metrics: Option<TaskMetrics>,
 }
 
-impl TaskInstanceUpdated {
+impl TaskInstanceChanged {
   pub fn with_status(&mut self, status: TaskInstanceStatus) -> &Self {
     self.status = status;
     self

@@ -31,7 +31,7 @@ impl MessageHandler {
         let event = AgentEvent::new_task_poll_request(agent_id, serde_json::from_value(event.payload)?);
         self.connection_manager.publish_event(event)?;
       }
-      EventKind::TaskChangedEvent => {
+      EventKind::TaskInstanceChanged => {
         let event = AgentEvent::new_task_instance_changed(agent_id, serde_json::from_value(event.payload)?);
         self.connection_manager.publish_event(event)?;
       }

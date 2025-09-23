@@ -6,7 +6,7 @@ use std::{
 use fusion_common::{ahash::HashMap, time::now_epoch_millis};
 use hetuflow_core::protocol::WebSocketCommand;
 use log::{debug, error, info};
-use tokio::sync::mpsc;
+use mea::mpsc;
 
 use crate::model::{AgentConnection, AgentEvent, ConnectionStats, GatewayCommandRequest};
 
@@ -173,9 +173,9 @@ impl ConnectionManager {
     if let Some(conn) = connections.get(agent_id) { Ok(Some(conn.clone())) } else { Ok(None) }
   }
 
-  pub fn find_online_agent(&self, agent_id: &str) -> Result<Arc<AgentConnection>, GatewayError> {
+  pub async fn find_online_agent(&self, agent_id: &str) -> Result<Arc<AgentConnection>, GatewayError> {
     if let Some(conn) = self.get_agent(agent_id)?
-      && conn.is_online()
+      && conn.is_online().await
     {
       Ok(conn.clone())
     } else {

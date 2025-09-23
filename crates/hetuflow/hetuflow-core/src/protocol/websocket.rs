@@ -4,7 +4,12 @@ use fusion_common::time::now_epoch_millis;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::types::{CommandKind, EventKind};
+use crate::{
+  protocol::AgentRegisterRequest,
+  types::{CommandKind, EventKind},
+};
+
+use super::{AcquireTaskRequest, LogMessage, TaskInstanceChanged};
 
 /// 服务器下发的指令。 Server -> Agent
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -76,8 +81,20 @@ pub struct WebSocketEvent {
 }
 
 impl WebSocketEvent {
-  pub fn new<T: Serialize>(kind: EventKind, payload: T) -> Self {
-    Self::new_with_id(Uuid::now_v7(), kind, payload)
+  pub fn new_task_log(message: LogMessage) -> Self {
+    Self::new_with_id(Uuid::now_v7(), EventKind::TaskLog, message)
+  }
+
+  pub fn new_task_instance_updated(message: TaskInstanceChanged) -> Self {
+    Self::new_with_id(Uuid::now_v7(), EventKind::TaskInstanceChanged, message)
+  }
+
+  pub fn new_poll_task(message: AcquireTaskRequest) -> Self {
+    Self::new_with_id(Uuid::now_v7(), EventKind::PollTaskRequest, message)
+  }
+
+  pub fn new_agent_register(message: AgentRegisterRequest) -> Self {
+    Self::new_with_id(Uuid::now_v7(), EventKind::AgentRegister, message)
   }
 
   pub fn new_with_id<T: Serialize>(event_id: Uuid, kind: EventKind, payload: T) -> Self {

@@ -101,7 +101,10 @@ fn test_basic_variables() {
   let json_data = Value::Object(HashMap::from_iter([
     ("name".to_string(), Value::String("John".to_string())),
     ("age".to_string(), Value::Number(30.0)),
-    ("labels".to_string(), Value::Array(vec![Value::String("developer".to_string()), Value::String("rust".to_string())])),
+    (
+      "labels".to_string(),
+      Value::Array(vec![Value::String("developer".to_string()), Value::String("rust".to_string())]),
+    ),
   ]));
   let proxy = DefaultDataProxy::new(json_data);
   let context = create_context_test_data();

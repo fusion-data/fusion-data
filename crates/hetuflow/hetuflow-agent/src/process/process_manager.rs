@@ -150,10 +150,14 @@ impl ProcessManager {
             Ok(_) => {
               let trimmed = line.trim_end();
               sequence += 1;
-              let _ = connection_manager.send_event(WebSocketEvent::new(
-                EventKind::TaskLog,
-                LogMessage::new(instance_id, sequence, LogKind::Stderr, trimmed.to_string()),
-              ));
+              let _ = connection_manager
+                .send_event(WebSocketEvent::new_task_log(LogMessage::new(
+                  instance_id,
+                  sequence,
+                  LogKind::Stderr,
+                  trimmed.to_string(),
+                )))
+                .await;
             }
             Err(e) => {
               warn!("Error reading stdout: {}", e);
@@ -179,10 +183,14 @@ impl ProcessManager {
             Ok(_) => {
               let trimmed = line.trim_end();
               sequence += 1;
-              let _ = connection_manager.send_event(WebSocketEvent::new(
-                EventKind::TaskLog,
-                LogMessage::new(instance_id, sequence, LogKind::Stdout, trimmed.to_string()),
-              ));
+              let _ = connection_manager
+                .send_event(WebSocketEvent::new_task_log(LogMessage::new(
+                  instance_id,
+                  sequence,
+                  LogKind::Stdout,
+                  trimmed.to_string(),
+                )))
+                .await;
             }
             Err(e) => {
               warn!("Error reading stdout: {}", e);

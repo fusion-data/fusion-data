@@ -10,11 +10,12 @@ use fusion_core::{DataError, application::Application};
 use fusion_db::DbPlugin;
 use log::{debug, error, info};
 use mea::{
+  mpsc,
   mutex::Mutex,
   shutdown::{ShutdownRecv, ShutdownSend},
 };
 use modelsql::{ModelManager, store::DbxError};
-use tokio::{sync::mpsc, task::JoinHandle};
+use tokio::task::JoinHandle;
 use uuid::Uuid;
 
 use crate::service::{AgentManager, LoadBalancer, LogService, SchedulerSvc};
@@ -72,7 +73,7 @@ impl ServerApplication {
     let (shutdown_tx, shutdown_rx) = mea::shutdown::new_pair();
 
     // 创建通信通道
-    let (gateway_command_tx, gateway_command_rx) = mpsc::unbounded_channel();
+    let (gateway_command_tx, gateway_command_rx) = mpsc::unbounded();
 
     // 创建网关组件
     let connection_manager = Arc::new(ConnectionManager::new());

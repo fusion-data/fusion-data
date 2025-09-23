@@ -5,14 +5,11 @@ use futures_util::{SinkExt, StreamExt, stream::SplitSink};
 use hetuflow_core::{
   models::AgentCapabilities,
   protocol::{AcquireTaskResponse, AgentRegisterRequest, WebSocketCommand, WebSocketEvent},
-  types::{CommandKind, EventKind, HetuflowCommand},
+  types::{CommandKind, HetuflowCommand},
 };
 use log::{error, info, warn};
 use mea::shutdown::ShutdownRecv;
-use tokio::{
-  net::TcpStream,
-  sync::{broadcast, mpsc},
-};
+use tokio::{net::TcpStream, sync::mpsc};
 use tokio_tungstenite::{MaybeTlsStream, WebSocketStream, tungstenite::Message};
 
 use crate::{connection::ConnectionManager, setting::HetuflowAgentSetting};
@@ -20,21 +17,22 @@ use crate::{connection::ConnectionManager, setting::HetuflowAgentSetting};
 pub struct WsRunner {
   setting: Arc<HetuflowAgentSetting>,
   connection_manager: Arc<ConnectionManager>,
-  command_publisher: broadcast::Sender<HetuflowCommand>,
   shutdown_rx: ShutdownRecv,
+  event_rx: mpsc::UnboundedReceiver<WebSocketEvent>,
 }
 
 impl WsRunner {
-  pub fn new(
+  pub async fn new(
     setting: Arc<HetuflowAgentSetting>,
     connection_manager: Arc<ConnectionManager>,
     shutdown_rx: ShutdownRecv,
   ) -> Self {
-    let command_publisher = connection_manager.command_publisher();
-    Self { setting, connection_manager, command_publisher, shutdown_rx }
+    let (event_sender, event_rx) = mpsc::unbounded_channel();
+    connection_manager.set_event_sender(event_sender).await;
+    Self { setting, connection_manager, shutdown_rx, event_rx }
   }
 
-  pub async fn run_loop(&self) {
+  pub async fn run_loop(&mut self) {
     while let Err(e) = self.run_websocket_loop().await
       && !self.shutdown_rx.is_shutdown_now()
     {
@@ -48,14 +46,11 @@ impl WsRunner {
     info!("WsRunner websocket loop closed");
   }
 
-  async fn run_websocket_loop(&self) -> Result<(), DataError> {
+  async fn run_websocket_loop(&mut self) -> Result<(), DataError> {
     let (ws_stream, local_address) = self.connect_with_timeout_and_retry().await?;
     let (mut ws_tx, mut ws_rx) = ws_stream.split();
 
     self.register_agent(&mut ws_tx, local_address).await?;
-
-    let (event_sender, mut event_rx) = mpsc::unbounded_channel();
-    self.connection_manager.set_event_sender(event_sender).await;
 
     loop {
       tokio::select! {
@@ -63,7 +58,7 @@ impl WsRunner {
           info!("Shutdown signal received, stopping ConnectionManager loop");
           return Ok(());
         }
-        event = event_rx.recv() => { // Send event to Server
+        event = self.event_rx.recv() => { // Send event to Server
           if let Some(event) = event {
             let msg = serde_json::to_string(&event).unwrap();
             if let Err(e) = ws_tx.send(Message::Text(msg.into())).await {
@@ -88,14 +83,14 @@ impl WsRunner {
           match msg {
             Message::Text(text) => {
               if let Ok(cmd) = serde_json::from_str::<WebSocketCommand>(&text)
-                && let Err(e) = process_command(&self.command_publisher, cmd)
+                && let Err(e) = process_command(&self.connection_manager, cmd)
               {
                 return Err(DataError::server_error(format!("Failed to send WebSocket command: {}", e)));
               }
             }
             Message::Binary(bin) => {
               if let Ok(cmd) = serde_json::from_slice::<WebSocketCommand>(&bin)
-                && let Err(e) = process_command(&self.command_publisher, cmd)
+                && let Err(e) = process_command(&self.connection_manager, cmd)
               {
                 return Err(DataError::server_error(format!("Failed to send WebSocket command: {}", e)));
               }
@@ -170,7 +165,7 @@ impl WsRunner {
       address,
       jwe_token: self.setting.jwe_token.clone(),
     };
-    let message = serde_json::to_string(&WebSocketEvent::new(EventKind::AgentRegister, register_req)).unwrap();
+    let message = serde_json::to_string(&WebSocketEvent::new_agent_register(register_req)).unwrap();
     ws_tx
       .send(Message::Text(message.into()))
       .await
@@ -179,38 +174,31 @@ impl WsRunner {
 }
 
 /// 处理从 Server 接收到的命令消息
-fn process_command(
-  command_publisher: &broadcast::Sender<HetuflowCommand>,
-  cmd: WebSocketCommand,
-) -> Result<(), DataError> {
+fn process_command(connection_manager: &ConnectionManager, cmd: WebSocketCommand) -> Result<(), DataError> {
   match cmd.kind {
     CommandKind::DispatchTask => {
       let resp: AcquireTaskResponse = serde_json::from_value(cmd.parameters).unwrap();
-      let _ = command_publisher.send(HetuflowCommand::AcquiredTask(Arc::new(resp)));
+      let _ = connection_manager.publish_command(HetuflowCommand::AcquiredTask(Arc::new(resp)));
     }
     CommandKind::Shutdown => {
-      let _ = command_publisher.send(HetuflowCommand::Shutdown);
+      let _ = connection_manager.publish_command(HetuflowCommand::Shutdown);
     }
     CommandKind::UpdateConfig => {
-      let _ = command_publisher.send(HetuflowCommand::UpdateConfig);
+      let _ = connection_manager.publish_command(HetuflowCommand::UpdateConfig);
     }
     CommandKind::ClearCache => {
-      let _ = command_publisher.send(HetuflowCommand::ClearCache);
+      let _ = connection_manager.publish_command(HetuflowCommand::ClearCache);
     }
     CommandKind::FetchMetrics => {
-      let _ = command_publisher.send(HetuflowCommand::FetchMetrics);
+      let _ = connection_manager.publish_command(HetuflowCommand::FetchMetrics);
     }
     CommandKind::AgentRegistered => {
       let resp = serde_json::from_value(cmd.parameters).unwrap();
-      let _ = command_publisher.send(HetuflowCommand::AgentRegistered(Arc::new(resp)));
+      let _ = connection_manager.publish_command(HetuflowCommand::AgentRegistered(Arc::new(resp)));
     }
     CommandKind::CancelTask => {
       let resp: IdUuidResult = serde_json::from_value(cmd.parameters).unwrap();
-      let _ = command_publisher.send(HetuflowCommand::CancelTask(Arc::new(resp.id)));
-    }
-    CommandKind::LogForward => {
-      // TODO: 实现日志转发命令处理
-      warn!("LogForward command received but not implemented yet");
+      let _ = connection_manager.publish_command(HetuflowCommand::CancelTask(Arc::new(resp.id)));
     }
   }
   Ok(())

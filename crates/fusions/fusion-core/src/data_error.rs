@@ -288,3 +288,9 @@ impl From<SecurityError> for DataError {
     }
   }
 }
+
+impl<T> From<mea::mpsc::SendError<T>> for DataError {
+  fn from(value: mea::mpsc::SendError<T>) -> Self {
+    DataError::server_error(format!("Send to mea::mpsc error, {}", value))
+  }
+}
