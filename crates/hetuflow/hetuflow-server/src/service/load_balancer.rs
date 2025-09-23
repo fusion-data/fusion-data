@@ -21,7 +21,7 @@ struct LoadBalanceCache {
 #[derive(Debug, Clone)]
 struct ServerLoadInfo {
   server: SchedServer,
-  active_tasks: u32,
+  namespace_count: u32,
   load_score: f64,
 }
 
@@ -100,16 +100,16 @@ impl LoadBalancer {
 
   /// 计算服务器负载
   async fn calculate_server_load(&self, server: &SchedServer) -> Result<ServerLoadInfo, DataError> {
-    let active_tasks = TaskBmc::count_active_tasks_by_server(&self.mm, server.id.clone()).await? as u32;
-    let load_score = self.calculate_load_score(active_tasks);
+    let namespace_count = ServerBmc::count_namespace_by_server(&self.mm, &server.id).await? as u32;
+    let load_score = self.calculate_load_score(namespace_count);
 
-    Ok(ServerLoadInfo { server: server.clone(), active_tasks, load_score })
+    Ok(ServerLoadInfo { server: server.clone(), namespace_count, load_score })
   }
 
   /// 计算负载评分
-  fn calculate_load_score(&self, active_tasks: u32) -> f64 {
+  fn calculate_load_score(&self, namespace_count: u32) -> f64 {
     let task_weight = 1.0;
-    active_tasks as f64 * task_weight
+    namespace_count as f64 * task_weight
   }
 
   /// 检查是否需要重平衡
@@ -170,7 +170,7 @@ impl LoadBalancer {
         serde_json::json!({
           "server_id": info.server.id,
           "server_name": info.server.name,
-          "active_tasks": info.active_tasks,
+          "namespace_count": info.namespace_count,
           "load_score": info.load_score,
         })
       })
@@ -187,7 +187,6 @@ impl LoadBalancer {
   pub async fn get_stats(&self) -> serde_json::Value {
     let cache = self.balance_cache.read().await;
 
-    let total_tasks: u32 = cache.servers.values().map(|info| info.active_tasks).sum();
     let load_scores: Vec<f64> = cache.servers.values().map(|info| info.load_score).collect();
     let avg_load =
       if !load_scores.is_empty() { load_scores.iter().sum::<f64>() / load_scores.len() as f64 } else { 0.0 };
@@ -195,8 +194,6 @@ impl LoadBalancer {
     serde_json::json!({
       "server_id": self.server_id,
       "total_servers": cache.servers.len(),
-      "total_tasks": total_tasks,
-
       "average_load": avg_load,
       "last_updated": cache.last_updated,
     })

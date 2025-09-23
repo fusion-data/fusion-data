@@ -12,7 +12,6 @@ use uuid::Uuid;
 use hetuflow_core::protocol::{
   LogKind, LogMessage, ProcessEvent, ProcessEventKind, ProcessInfo, ProcessStatus, ScheduledTask, WebSocketEvent,
 };
-use hetuflow_core::types::EventKind;
 
 use crate::connection::ConnectionManager;
 use crate::setting::ProcessConfig;

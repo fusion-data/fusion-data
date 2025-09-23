@@ -88,4 +88,12 @@ impl ServerBmc {
     let entity_u = ServerForUpdate { bind_namespaces: Some(bind_namespaces), ..Default::default() };
     Self::update_by_id(mm, server_id, entity_u).await
   }
+
+  pub async fn count_namespace_by_server(mm: &ModelManager, server_id: &str) -> Result<u32, SqlError> {
+    let sql = "select sum(coalesce(array_length(bind_namespaces, 1), 0)) from sched_server where id = $1";
+    let db = mm.dbx().db_postgres()?;
+    let query = sqlx::query_as::<_, (i64,)>(sql).bind(server_id);
+    let (count,) = db.fetch_one(query).await?;
+    Ok(count as u32)
+  }
 }

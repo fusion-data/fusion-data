@@ -42,7 +42,7 @@ impl AgentManager {
     info!("Starting AgentManager with event subscription");
     // 订阅 Agent 事件
     let (tx, event_receiver) = mpsc::unbounded();
-    self.connection_manager.subscribe_event(tx)?;
+    self.connection_manager.subscribe_event(tx).await?;
 
     let run_loop = AgentEventRunLoop {
       mm: self.mm.clone(),
@@ -73,7 +73,7 @@ impl AgentManager {
       warn!("Found zombie task instance: {}", instance_ref.id);
 
       // 通过 AgentRegistry 检查对应的 Agent 是否还在线
-      let is_online = self.connection_manager.is_agent_online(&instance_ref.agent_id)?;
+      let is_online = self.connection_manager.is_agent_online(&instance_ref.agent_id).await?;
 
       if !is_online {
         // Agent 离线，取消任务
@@ -130,7 +130,7 @@ impl AgentManager {
 
   /// 获取在线 Agent 列表（通过 AgentRegistry）
   pub async fn get_agents(&self) -> Result<Vec<SchedAgent>, DataError> {
-    let online_agents = self.connection_manager.get_online_agents()?;
+    let online_agents = self.connection_manager.get_online_agents().await?;
     if online_agents.is_empty() {
       return Ok(vec![]);
     }
@@ -142,7 +142,7 @@ impl AgentManager {
 
   /// 获取 Agent 可靠性统计
   pub async fn get_agent_details(&self, agent_id: &str) -> Result<Option<AgentReliabilityStats>, DataError> {
-    if let Some(agent) = self.connection_manager.get_agent(agent_id)? {
+    if let Some(agent) = self.connection_manager.get_agent(agent_id).await? {
       let stats = agent.stats().await;
       Ok(Some(stats))
     } else {
@@ -155,7 +155,7 @@ impl AgentManager {
     &self,
     _task_requirements: Option<serde_json::Value>,
   ) -> Result<Option<String>, DataError> {
-    let online_agents = self.connection_manager.get_online_agents()?;
+    let online_agents = self.connection_manager.get_online_agents().await?;
 
     if online_agents.is_empty() {
       return Ok(None);
@@ -185,8 +185,8 @@ impl AgentManager {
 
   /// 更新任务执行统计
   pub async fn update_task_stats(&self, agent_id: &str, success: bool, response_time_ms: f64) -> Result<(), DataError> {
-    if let Some(agent) = self.connection_manager.get_agent(agent_id)? {
-      agent.update_stats(success, response_time_ms);
+    if let Some(agent) = self.connection_manager.get_agent(agent_id).await? {
+      agent.update_stats(success, response_time_ms).await;
     }
 
     Ok(())
@@ -197,8 +197,8 @@ impl AgentManager {
     debug!("Refreshing agent status from AgentRegistry");
 
     // 获取当前在线 Agent 数量和列表，用于统计信息更新
-    let online_count = self.connection_manager.get_online_count()?;
-    let online_agents = self.connection_manager.get_online_agents()?;
+    let online_count = self.connection_manager.get_online_count().await?;
+    let online_agents = self.connection_manager.get_online_agents().await?;
     info!(
       "Current online agents: {}, agent list: {:?}",
       online_count,
@@ -212,7 +212,7 @@ impl AgentManager {
 
   /// 获取统计信息（包含可靠性数据）
   pub async fn get_stats(&self) -> Result<serde_json::Value, DataError> {
-    let online_agents = self.connection_manager.get_online_agents()?;
+    let online_agents = self.connection_manager.get_online_agents().await?;
     let online_count = online_agents.len();
 
     let mut total_tasks: u64 = 0;
@@ -276,7 +276,7 @@ impl AgentEventRunLoop {
         AgentEvent::Registered { agent_id, payload } => match agent_svc.handle_register(&agent_id, &payload).await {
           Ok(response) => {
             let message = WebSocketCommand::new(CommandKind::AgentRegistered, response);
-            if let Err(e) = self.connection_manager.send_to_agent(&agent_id, message) {
+            if let Err(e) = self.connection_manager.send_to_agent(&agent_id, message).await {
               error!("Failed to send registered message to agent {}: {:?}", agent_id, e);
             }
           }
@@ -333,7 +333,7 @@ impl AgentEventRunLoop {
     // 向 Agent 发送 TaskPollResponse
     let parameters = serde_json::to_value(AcquireTaskResponse { tasks, has_more: false, next_poll_interval: 0 })?;
     let command = WebSocketCommand::new(CommandKind::DispatchTask, parameters);
-    self.connection_manager.send_to_agent(agent_id, command)?;
+    self.connection_manager.send_to_agent(agent_id, command).await?;
 
     Ok(())
   }
@@ -402,8 +402,8 @@ impl AgentEventRunLoop {
       .and_then(|m| m.end_time.map(|end| (end - m.start_time) as f64))
       .unwrap_or(0.0);
 
-    if let Some(agent) = self.connection_manager.get_agent(agent_id)? {
-      agent.update_stats(success, response_time_ms);
+    if let Some(agent) = self.connection_manager.get_agent(agent_id).await? {
+      agent.update_stats(success, response_time_ms).await;
     }
 
     Ok(())

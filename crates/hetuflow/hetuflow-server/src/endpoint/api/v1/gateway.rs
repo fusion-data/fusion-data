@@ -15,7 +15,7 @@ use log::{error, info};
 use mea::mpsc;
 use serde_json::Value;
 
-use hetuflow_core::protocol::{WebSocketCommand, WebSocketEvent, WebSocketParams};
+use hetuflow_core::protocol::{WebSocketEvent, WebSocketParams};
 use utoipa_axum::router::OpenApiRouter;
 
 use crate::{
@@ -107,7 +107,7 @@ pub async fn handle_websocket_connection(
   // 为当前 WebSocket 连接创建一个 MPSC 通道，用于从其他任务发送消息到此连接
   let (command_tx, mut command_rx) = mpsc::unbounded();
   let agent_connection = AgentConnection::new(agent_id.clone(), address, command_tx);
-  if let Err(e) = message_handler.add_connection(&agent_id, agent_connection) {
+  if let Err(e) = message_handler.add_connection(&agent_id, agent_connection).await {
     error!("Failed to add agent connection: {:?}", e);
     return;
   }
@@ -150,7 +150,7 @@ pub async fn handle_websocket_connection(
   }
 
   // 清理连接
-  if let Err(e) = message_handler.remove_connection(&agent_id, "Connection closed") {
+  if let Err(e) = message_handler.remove_connection(&agent_id, "Connection closed").await {
     error!("Failed to remove connection for agent {}: {:?}", agent_id, e);
   }
 

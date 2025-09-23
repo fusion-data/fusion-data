@@ -6,7 +6,7 @@ use std::{
   time::Duration,
 };
 
-use fusion_core::{DataError, application::Application};
+use fusion_core::{DataError, application::Application, configuration::ConfigRegistry};
 use fusion_db::DbPlugin;
 use log::{debug, error, info};
 use mea::{
@@ -90,7 +90,7 @@ impl ServerApplication {
     let load_balancer = Arc::new(LoadBalancer::new(mm.clone(), setting.server.server_id.clone()));
 
     let log_receiver =
-      LogService::new(Arc::new(setting.task_log.clone()), shutdown_rx.clone(), connection_manager.clone())?;
+      LogService::new(Arc::new(setting.task_log.clone()), shutdown_rx.clone(), connection_manager.clone()).await?;
     let log_receiver = Arc::new(mea::mutex::Mutex::new(log_receiver));
 
     Ok(Self {
@@ -129,7 +129,8 @@ impl ServerApplication {
 
   pub async fn get_shutdown_recv(&self) -> ShutdownRecv {
     let maybe = self.shutdown.lock().await;
-    maybe.as_ref().unwrap().1.clone()
+    let tuple = maybe.as_ref().unwrap();
+    tuple.1.clone()
   }
 
   /// 启动获取领导者身份（或刷新领导者身份过期时间）循环
@@ -192,9 +193,11 @@ impl ServerApplication {
 
     // 启动 HTTP API 服务 (/api/v1)
     let app_state = self.clone();
+    let shutdown_rx = self.get_shutdown_recv().await;
     tokio::spawn(async move {
       let router = crate::endpoint::routes().with_state(app_state);
-      if let Err(e) = fusion_web::server::init_server(router).await {
+      let conf = Application::global().get_config().expect("WebConfig not valid");
+      if let Err(e) = fusion_web::server::init_server_with_config(&conf, router, Some(shutdown_rx)).await {
         error!("HTTP server error: {:?}", e);
       }
     });
@@ -206,13 +209,21 @@ impl ServerApplication {
   async fn start_health_checks(&self) -> Result<(), DataError> {
     // 数据库健康检查
     let mm = self.mm.clone();
+    let shutdown_rx = self.get_shutdown_recv().await;
     tokio::spawn(async move {
       let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(30));
       loop {
-        interval.tick().await;
-        match Self::check_database_health(&mm).await {
-          Ok(_) => debug!("Database health check passed"),
-          Err(e) => error!("Database health check failed: {:?}", e),
+        tokio::select! {
+          _ = interval.tick() => {
+            match Self::check_database_health(&mm).await {
+              Ok(_) => debug!("Database health check passed"),
+              Err(e) => error!("Database health check failed: {:?}", e),
+            }
+          }
+          _ = shutdown_rx.is_shutdown() => {
+            info!("Shutdown signal received, stopping database health check loop.");
+            break;
+          }
         }
       }
     });
@@ -220,24 +231,40 @@ impl ServerApplication {
     // Agent 心跳超时清理
     let connection_manager = self.connection_manager.clone();
     let agent_heartbeat_ttl = self.setting.server.agent_overdue_ttl;
+    let shutdown_rx = self.get_shutdown_recv().await;
     tokio::spawn(async move {
       let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(60));
       loop {
-        interval.tick().await;
-        if let Err(e) = connection_manager.cleanup_stale_connections(agent_heartbeat_ttl).await {
-          error!("Connection cleanup failed: {:?}", e);
+        tokio::select! {
+          _ = interval.tick() => {
+            if let Err(e) = connection_manager.cleanup_stale_connections(agent_heartbeat_ttl).await {
+              error!("Connection cleanup failed: {:?}", e);
+            }
+          }
+          _ = shutdown_rx.is_shutdown() => {
+            info!("Shutdown signal received, stopping agent heartbeat timeout check loop.");
+            break;
+          }
         }
       }
     });
 
     // Agent 健康检查与僵尸任务清理
     let agent_manager = self.agent_manager.clone();
+    let shutdown_rx = self.get_shutdown_recv().await;
     tokio::spawn(async move {
       let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(120));
       loop {
-        interval.tick().await;
-        if let Err(e) = agent_manager.check_agent_health().await {
-          error!("Agent health check failed: {:?}", e);
+        tokio::select! {
+          _ = interval.tick() => {
+            if let Err(e) = agent_manager.check_agent_health().await {
+              error!("Agent health check failed: {:?}", e);
+            }
+          }
+          _ = shutdown_rx.is_shutdown() => {
+            info!("Shutdown signal received, stopping agent health check loop.");
+            break;
+          }
         }
       }
     });
@@ -283,6 +310,7 @@ impl ServerApplication {
 
     shutdown_tx.await_shutdown().await;
 
+    info!("Waiting for all service tasks to complete");
     let mut handles_guard = self.handles.lock().await;
     let handles = std::mem::take(&mut *handles_guard);
     for handle in handles {
@@ -304,7 +332,7 @@ impl ServerApplication {
     let db = self.mm.dbx().db_postgres()?;
     let db_size = db.db().size();
 
-    let agent_size = self.connection_manager.get_online_count()?;
+    let agent_size = self.connection_manager.get_online_count().await?;
 
     let body = SystemStatus::new(db_size, agent_size);
     Ok(body)

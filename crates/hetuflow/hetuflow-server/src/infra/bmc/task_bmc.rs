@@ -62,7 +62,7 @@ impl TaskBmc {
   }
 
   /// 重置失败任务为待处理状态
-  pub async fn reset_failed_tasks_by_agent(mm: &ModelManager, agent_id: &str) -> Result<Vec<SchedTask>, SqlError> {
+  pub async fn reset_failed_tasks(mm: &ModelManager) -> Result<Vec<SchedTask>, SqlError> {
     let filter = TaskFilter { status: Some(OpValsInt32::eq(TaskStatus::Dispatched as i32)), ..Default::default() };
 
     let tasks = Self::find_many(mm, vec![filter], None).await?;
@@ -156,15 +156,6 @@ impl TaskBmc {
     };
 
     Self::find_unique(mm, vec![filter]).await
-  }
-
-  pub async fn count_active_tasks_by_server(mm: &ModelManager, server_id: String) -> Result<u64, SqlError> {
-    let filter = TaskFilter {
-      status: Some(OpValsInt32::in_([TaskStatus::Locked as i32, TaskStatus::Dispatched as i32])),
-      ..Default::default()
-    };
-
-    Self::count(mm, vec![filter]).await
   }
 
   pub async fn find_retryable_tasks(mm: &ModelManager) -> Result<Vec<SchedTask>, SqlError> {

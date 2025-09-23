@@ -22,6 +22,7 @@ fusion-common.workspace = true
 fusion-core.workspace = true
 futures.workspace = true
 tokio.workspace = true
+mea.workspace = true
 log.workspace = true
 bytes.workspace = true
 config.workspace = true

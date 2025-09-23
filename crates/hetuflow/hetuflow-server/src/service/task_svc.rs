@@ -45,7 +45,7 @@ impl TaskSvc {
   }
 
   /// 批量分发任务
-  pub async fn dispatch_tasks(&self, task_ids: Vec<Uuid>, agent_id: &str) -> Result<(), DataError> {
+  pub async fn dispatch_tasks(&self, task_ids: Vec<Uuid>) -> Result<(), DataError> {
     for task_id in task_ids {
       let update = TaskForUpdate { status: Some(TaskStatus::Dispatched), lock_version: Some(1), ..Default::default() };
 

@@ -54,13 +54,13 @@ pub struct LogService {
 
 impl LogService {
   /// 创建新的日志接收器
-  pub fn new(
+  pub async fn new(
     config: Arc<TaskLogConfig>,
     shutdown_rx: ShutdownRecv,
     connection_manager: Arc<ConnectionManager>,
   ) -> Result<Self, DataError> {
     let (event_tx, event_rx) = mpsc::unbounded();
-    connection_manager.subscribe_event(event_tx)?;
+    connection_manager.subscribe_event(event_tx).await?;
 
     let file_writers = Arc::new(RwLock::new(HashMap::new()));
     let stats = Arc::new(RwLock::new(LogStats::default()));
@@ -73,8 +73,7 @@ impl LogService {
       file_writers: file_writers.clone(),
     };
 
-    let log_clean_runner =
-      LogCleanRunner { config: config.clone(), shutdown_rx: shutdown_rx.clone(), file_writers: file_writers.clone() };
+    let log_clean_runner = LogCleanRunner { config: config.clone(), shutdown_rx, file_writers: file_writers.clone() };
 
     Ok(Self {
       config,
@@ -147,7 +146,7 @@ impl LogCleanRunner {
           }
         }
         _ = self.shutdown_rx.is_shutdown() => {
-          debug!("收到停止信号，执行最后一次清理");
+          debug!("Received stop signal, stop LogCleanRunner");
           let _ = Self::flush_all_writers(&self.file_writers).await;
           break;
         }
@@ -214,7 +213,7 @@ impl LogCleanRunner {
     for (path, writer) in writers.iter() {
       let mut writer_guard = writer.lock().await;
       if let Err(e) = writer_guard.flush().await {
-        error!("刷新文件写入器失败: {} - {}", path, e);
+        error!("Refresh file writer failed: {} - {}", path, e);
       }
     }
 
@@ -232,13 +231,19 @@ struct LogWriterRunner {
 
 impl LogWriterRunner {
   pub async fn run_loop(&mut self) -> Result<(), DataError> {
-    while let Some(event) = self.event_rx.recv().await
-      && !self.shutdown_rx.is_shutdown_now()
-    {
-      if let AgentEvent::TaskLog { agent_id, payload } = event
-        && let Err(e) = self.process_log_payload(agent_id, payload).await
-      {
-        log::warn!("process log payload failed: {:?}", e);
+    loop {
+      tokio::select! {
+        Some(event) = self.event_rx.recv() => {
+          if let AgentEvent::TaskLog { agent_id, payload } = event
+            && let Err(e) = self.process_log_payload(agent_id, payload).await
+          {
+            log::warn!("process log payload failed: {:?}", e);
+          }
+        }
+        _ = self.shutdown_rx.is_shutdown() => {
+          info!("Received stop signal, stop LogWriterRunner");
+          break;
+        }
       }
     }
     Ok(())

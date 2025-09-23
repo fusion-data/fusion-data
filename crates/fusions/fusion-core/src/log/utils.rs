@@ -127,6 +127,6 @@ fn level_filter_to_string(level: LevelFilter) -> String {
 
 /// 根据配置构建文本布局
 fn build_text_layout(_conf: &LogSetting) -> TextLayout {
-  let tz = jiff::tz::TimeZone::fixed(jiff::tz::offset(8));
-  TextLayout::default().timezone(tz)
+  // let tz = jiff::tz::TimeZone::fixed(jiff::tz::offset(8));
+  TextLayout::default() //.timezone(tz)
 }

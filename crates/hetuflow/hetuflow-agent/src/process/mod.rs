@@ -1,10 +1,7 @@
-use fusion_common::{ahash::HashMap, time::now_epoch_millis};
+use fusion_common::ahash::HashMap;
 use hetuflow_core::protocol::ProcessInfo;
 use mea::rwlock::RwLock;
-use std::{
-  ops::{Deref, DerefMut},
-  sync::Arc,
-};
+use std::{ops::Deref, sync::Arc};
 use utils::*;
 use uuid::Uuid;
 

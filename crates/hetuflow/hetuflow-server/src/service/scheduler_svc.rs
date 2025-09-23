@@ -15,7 +15,8 @@ use tokio::time::interval;
 use hetuflow_core::models::{AgentFilter, AgentForUpdate, ServerFilter, ServerForRegister, ServerForUpdate};
 use hetuflow_core::types::{AgentStatus, ServerStatus};
 
-use crate::infra::bmc::{AgentBmc, ServerBmc};
+use crate::infra::bmc::{AgentBmc, DistributedLockBmc, ServerBmc};
+use crate::model::DistributedLockIds;
 use crate::service::TaskGenerationSvc;
 use crate::setting::ServerSetting;
 
@@ -49,7 +50,7 @@ impl SchedulerSvc {
     self.start_heartbeat_task(shutdown_rx.clone()).await;
 
     // 启动心跳监控任务
-    self.start_heartbeat_monitor_task(shutdown_rx.clone()).await;
+    self.start_heartbeat_monitor_task(shutdown_rx).await;
 
     info!("Scheduler Service started successfully");
     Ok(())
@@ -218,8 +219,13 @@ impl SchedulerSvc {
 
   /// 释放领导权
   pub async fn release_leadership(&self) -> Result<(), DataError> {
-    // TODO: 实现释放领导权的逻辑
-    info!("Releasing leadership for server: {}", self.server_config.server_id);
+    DistributedLockBmc::release_leadership(
+      &self.mm,
+      DistributedLockIds::SCHED_SERVER_LEADER,
+      &self.server_config.server_id,
+    )
+    .await?;
+    info!("Released leadership for server: {}", self.server_config.server_id);
     Ok(())
   }
 }
