@@ -84,7 +84,7 @@ impl LogService {
   }
 
   /// 启动日志接收器
-  pub async fn start(&mut self) -> Result<(), DataError> {
+  pub async fn start(&self) -> Result<(), DataError> {
     // 确保日志目录存在
     tokio::fs::create_dir_all(&self.config.log_dir)
       .await
@@ -146,7 +146,7 @@ impl LogCleanRunner {
           }
         }
         _ = self.shutdown_rx.is_shutdown() => {
-          debug!("Received stop signal, stop LogCleanRunner");
+          info!("Received stop signal, stop LogCleanRunner");
           let _ = Self::flush_all_writers(&self.file_writers).await;
           break;
         }

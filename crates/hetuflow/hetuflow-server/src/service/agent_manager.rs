@@ -57,74 +57,6 @@ impl AgentManager {
   /// 检查 Agent 健康状态（现在主要关注任务清理）
   pub async fn check_agent_health(&self) -> Result<(), DataError> {
     debug!("Checking agent health and cleaning up zombie tasks");
-
-    // 清理僵尸任务
-    self.cleanup_zombie_tasks().await
-  }
-
-  /// 清理僵尸任务
-  async fn cleanup_zombie_tasks(&self) -> Result<(), DataError> {
-    debug!("Cleaning up zombie tasks");
-
-    // 查找运行时间过长的任务实例
-    let zombie_instances = TaskInstanceBmc::find_zombie_instances(&self.mm).await?;
-
-    for instance_ref in zombie_instances.iter() {
-      warn!("Found zombie task instance: {}", instance_ref.id);
-
-      // 通过 AgentRegistry 检查对应的 Agent 是否还在线
-      let is_online = self.connection_manager.is_agent_online(&instance_ref.agent_id).await?;
-
-      if !is_online {
-        // Agent 离线，取消任务
-        self.cancel_zombie_task(instance_ref).await?;
-      } else {
-        // Agent 在线但任务可能卡住，发送取消命令
-        self.request_task_cancellation(instance_ref).await?;
-      }
-    }
-
-    if !zombie_instances.is_empty() {
-      info!("Cleaned up {} zombie tasks", zombie_instances.len());
-    }
-
-    Ok(())
-  }
-
-  /// 取消僵尸任务
-  async fn cancel_zombie_task(&self, instance: &SchedTaskInstance) -> Result<(), DataError> {
-    info!("Cancelling zombie task instance: {}", instance.id);
-
-    // 更新任务实例状态
-    let instance_update = TaskInstanceForUpdate {
-      status: Some(TaskInstanceStatus::Failed),
-      completed_at: Some(now_offset()),
-      error_message: Some("Task became zombie (cleanup)".to_string()),
-      ..Default::default()
-    };
-
-    TaskInstanceBmc::update_by_id(&self.mm, instance.id, instance_update).await?;
-
-    // 更新任务状态
-    let task_update = TaskForUpdate { status: Some(TaskStatus::Failed), ..Default::default() };
-
-    TaskBmc::update_by_id(&self.mm, instance.task_id, task_update).await?;
-
-    Ok(())
-  }
-
-  /// 请求任务取消
-  async fn request_task_cancellation(&self, instance: &SchedTaskInstance) -> Result<(), DataError> {
-    info!("Requesting cancellation for task instance: {}", instance.id);
-
-    // TODO: 发送取消命令给 Agent
-    // 这里应该通过消息队列或 gRPC 发送取消命令
-
-    // 标记任务为取消中
-    let instance_update = TaskInstanceForUpdate { status: Some(TaskInstanceStatus::Cancelled), ..Default::default() };
-
-    TaskInstanceBmc::update_by_id(&self.mm, instance.id, instance_update).await?;
-
     Ok(())
   }
 
@@ -302,9 +234,12 @@ impl AgentEventRunLoop {
   /// Agent poll task 时不对 Server 绑定的 Namespace 进行过滤，直接拉取符合要求的最紧急的 SchedTaskInstance。按 request 条件进行过滤
   async fn process_task_poll(&self, agent_id: &str, request: Arc<AcquireTaskRequest>) -> Result<(), DataError> {
     info!("Agent {} task poll request: {:?}", agent_id, request);
-    let task_instances = TaskInstanceBmc::find_many_by_poll(&self.mm, &request).await?;
+    let mm = self.mm.get_txn_clone();
+    mm.dbx().begin_txn().await?;
+
+    let task_instances = TaskInstanceBmc::find_many_by_poll(&mm, &request).await?;
     let task_map = TaskBmc::find_many(
-      &self.mm,
+      &mm,
       vec![TaskFilter {
         id: Some(OpValsUuid::in_(task_instances.iter().map(|ti| ti.task_id).collect::<HashSet<_>>())),
         ..Default::default()
@@ -331,10 +266,12 @@ impl AgentEventRunLoop {
       .collect::<Vec<_>>();
 
     // 向 Agent 发送 TaskPollResponse
+    info!("Find {} tasks for agent {}", tasks.len(), agent_id);
     let parameters = serde_json::to_value(AcquireTaskResponse { tasks, has_more: false, next_poll_interval: 0 })?;
     let command = WebSocketCommand::new(CommandKind::DispatchTask, parameters);
     self.connection_manager.send_to_agent(agent_id, command).await?;
 
+    mm.dbx().commit_txn().await?;
     Ok(())
   }
 

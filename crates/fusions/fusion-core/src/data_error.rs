@@ -41,16 +41,16 @@ impl DataError {
     DataError::BizError { code: 409, msg: msg.into(), detail: None }
   }
 
-  pub fn server_error(msg: impl Into<String>) -> Self {
-    DataError::BizError { code: 500, msg: msg.into(), detail: None }
-  }
-
   pub fn unauthorized(msg: impl Into<String>) -> Self {
     DataError::BizError { code: 401, msg: msg.into(), detail: None }
   }
 
   pub fn forbidden(msg: impl Into<String>) -> Self {
     DataError::BizError { code: 403, msg: msg.into(), detail: None }
+  }
+
+  pub fn server_error(msg: impl Into<String>) -> Self {
+    DataError::BizError { code: 500, msg: msg.into(), detail: None }
   }
 
   pub fn internal(code: i32, msg: impl Into<String>, cause: Option<Box<dyn std::error::Error + Send + Sync>>) -> Self {

@@ -16,7 +16,7 @@ log_level = "info"
 log_writer = "both"
 log_dir = "./runs/logs/server/"
 log_name = "hetuflow-server"
-log_targets = ["modelsql=debug", "hetuflow_core=debug", "hetuflow_server=debug"]
+log_targets = ["modelsql=info", "hetuflow_core=debug", "hetuflow_server=info"]
 
 
 [fusion.db]

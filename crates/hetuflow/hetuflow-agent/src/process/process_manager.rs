@@ -1,3 +1,4 @@
+use std::path::Path;
 use std::process::Stdio;
 use std::sync::Arc;
 
@@ -14,13 +15,13 @@ use hetuflow_core::protocol::{
 };
 
 use crate::connection::ConnectionManager;
-use crate::setting::ProcessConfig;
+use crate::setting::ProcessSetting;
 
 use super::{ActiveProcesses, ProcessItem, spawn_kill_process};
 
 /// 进程管理器。负责管理活跃进程、处理进程事件和后台清理僵尸进程
 pub struct ProcessManager {
-  pub(super) config: Arc<ProcessConfig>,
+  pub(super) config: Arc<ProcessSetting>,
   connection_manager: Arc<ConnectionManager>,
   /// active processes, key: task instance id, value: process info
   pub(super) active_processes: ActiveProcesses,
@@ -30,7 +31,7 @@ pub struct ProcessManager {
 
 impl ProcessManager {
   /// 创建新的进程管理器
-  pub fn new(process_config: Arc<ProcessConfig>, connection_manager: Arc<ConnectionManager>) -> Self {
+  pub fn new(process_config: Arc<ProcessSetting>, connection_manager: Arc<ConnectionManager>) -> Self {
     let (event_broadcaster, _) = broadcast::channel(1000);
 
     Self { config: process_config, connection_manager, active_processes: Default::default(), event_broadcaster }
@@ -56,7 +57,7 @@ impl ProcessManager {
     }
 
     // Build command
-    let mut cmd = Command::new(&task.task.config.cmd);
+    let mut cmd = Command::new(task.task.config.cmd.as_ref());
     cmd.args(&task.task.config.args).stdout(Stdio::piped()).stderr(Stdio::piped()).stdin(Stdio::null());
 
     // Set working directory
@@ -66,7 +67,11 @@ impl ProcessManager {
       .working_directory
       .clone()
       .unwrap_or_else(|| format!("{}/{}/{}", self.config.run_base_dir, task.job_id(), instance_id));
-    cmd.current_dir(&work_dir);
+    let work_dir_path = Path::new(&work_dir);
+    if !work_dir_path.exists() {
+      tokio::fs::create_dir_all(work_dir_path).await?;
+    }
+    cmd.current_dir(work_dir_path);
 
     // Set environment variables
     for (key, value) in task.task.environments() {
@@ -78,6 +83,8 @@ impl ProcessManager {
     {
       cmd.process_group(0);
     }
+
+    info!("Spawning process, instance id: {}, cmd: {:?}", instance_id, cmd);
 
     // Spawn process
     let mut child = cmd.spawn()?;
@@ -121,6 +128,11 @@ impl ProcessManager {
         }
       };
       if let Some(mut process_item) = active_processes.write().await.remove(&instance_id) {
+        if exit_code == 0 {
+          process_item.info.status = ProcessStatus::Succeed;
+        } else {
+          process_item.info.status = ProcessStatus::Failed;
+        };
         process_item.info.exit_code = Some(exit_code);
         process_item.info.completed_at = Some(now_epoch_millis());
         let _ = event_broadcaster.send(ProcessEvent::new_with_data(

@@ -20,7 +20,7 @@ pub struct SchedTaskInstance {
   pub id: Uuid,
   pub task_id: Uuid,
   pub job_id: Uuid,
-  pub agent_id: String,
+  pub agent_id: Option<String>,
   pub status: TaskInstanceStatus,
   #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
   pub started_at: DateTime<FixedOffset>,
@@ -43,9 +43,11 @@ pub struct SchedTaskInstance {
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct TaskInstanceForCreate {
   pub id: Option<Uuid>,
+  pub job_id: Uuid,
   pub task_id: Uuid,
   pub agent_id: Option<String>,
   pub status: TaskInstanceStatus,
+  pub started_at: DateTime<FixedOffset>,
 }
 
 /// TaskInstance 更新模型

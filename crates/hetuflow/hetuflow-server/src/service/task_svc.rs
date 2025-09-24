@@ -1,3 +1,4 @@
+use fusion_common::time::now_offset;
 use fusion_core::DataError;
 use modelsql::ModelManager;
 use modelsql::field::FieldMask;
@@ -8,7 +9,7 @@ use hetuflow_core::models::{
   SchedTask, SchedTaskInstance, TaskFilter, TaskForCreate, TaskForQuery, TaskForUpdate, TaskInstanceFilter,
   TaskInstanceForCreate, TaskInstanceForQuery, TaskInstanceForUpdate,
 };
-use hetuflow_core::types::{TaskInstanceStatus, TaskStatus};
+use hetuflow_core::types::{ScheduleKind, TaskInstanceStatus, TaskStatus};
 use modelsql::page::PageResult;
 
 use crate::infra::bmc::{JobBmc, ScheduleBmc, TaskBmc, TaskInstanceBmc};
@@ -27,10 +28,46 @@ impl TaskSvc {
   }
 
   /// 创建新任务
-  pub async fn create_task(&self, task_data: TaskForCreate) -> Result<Uuid, DataError> {
-    let id = task_data.id;
-    TaskBmc::insert(&self.mm, task_data).await?;
-    Ok(id)
+  pub async fn create_task(&self, mut task_data: TaskForCreate) -> Result<Uuid, DataError> {
+    println!("create task {:?}", task_data);
+    let task_id = match task_data.id {
+      Some(id) => id,
+      None => {
+        let id = Uuid::now_v7();
+        task_data.id = Some(id);
+        id
+      }
+    };
+    let mm = self.mm.get_txn_clone();
+    mm.dbx().begin_txn().await?;
+
+    let job = JobBmc::find_by_id(&mm, task_data.job_id).await?;
+    task_data.config = Some(job.config.clone());
+
+    if let Some(schedule_id) = &task_data.schedule_id {
+      let schedule = ScheduleBmc::find_by_id(&mm, schedule_id).await?;
+      if !schedule.is_valid() {
+        return Err(DataError::conflicted(format!("schedule {} is not valid", schedule.id)));
+      }
+      if schedule.schedule_kind != ScheduleKind::Event || schedule.schedule_kind != ScheduleKind::Flow {
+        return Err(DataError::server_error(format!("schedule {} kind is not event or flow", schedule.id)));
+      }
+    }
+    let instance_id = Uuid::now_v7();
+    let task_instance = TaskInstanceForCreate {
+      id: Some(instance_id),
+      job_id: job.id,
+      task_id,
+      agent_id: None,
+      status: TaskInstanceStatus::Pending,
+      started_at: now_offset(),
+    };
+
+    TaskBmc::insert(&mm, task_data).await?;
+    TaskInstanceBmc::insert(&mm, task_instance).await?;
+
+    mm.dbx().commit_txn().await?;
+    Ok(task_id)
   }
 
   /// 更新任务状态
@@ -42,16 +79,6 @@ impl TaskSvc {
     };
 
     TaskBmc::update_by_id(&self.mm, task_id, update).await.map_err(DataError::from).map(|_| ())
-  }
-
-  /// 批量分发任务
-  pub async fn dispatch_tasks(&self, task_ids: Vec<Uuid>) -> Result<(), DataError> {
-    for task_id in task_ids {
-      let update = TaskForUpdate { status: Some(TaskStatus::Dispatched), lock_version: Some(1), ..Default::default() };
-
-      TaskBmc::update_by_id(&self.mm, task_id, update).await.map_err(DataError::from)?;
-    }
-    Ok(())
   }
 
   /// 根据作业 ID 查找任务

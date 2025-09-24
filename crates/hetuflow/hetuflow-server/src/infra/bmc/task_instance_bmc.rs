@@ -215,41 +215,40 @@ impl TaskInstanceBmc {
 
     // 构建标签匹配条件：使用 JSON 包含查询，类似 k8s label selector
     // Agent 的 labels 必须是 Task config.labels 的子集
-    let where_labels = if request.labels.is_empty() { "" } else { "and t.config->'labels' @> $2" };
+    let where_labels =
+      if request.labels.is_empty() { "" } else { "and (t.config->'labels' is null or t.config->'labels' @> $4)" };
 
     let sql = format!(
       r#"with sti as (select ti.*
                   from sched_task_instance ti
                           inner join sched_task t on t.id = ti.task_id
-                  where ti.status = $1 {}),
-              update_task as (update sched_task set status = $3 where id in (select task_id from sti) and status = $4)
+                  where ti.status = $1 and t.status = any($2) and t.scheduled_at <= $3 {}
+                  limit $5),
+              update_task as (update sched_task set status = $6 where id in (select task_id from sti) and status = $7)
       update sched_task_instance
-      set status   = $5,
-          agent_id = $6
+      set status   = $8,
+          agent_id = $9
       where id in (select id from sti)
       returning sched_task_instance.*"#,
       where_labels
     );
 
-    let query = if request.labels.is_empty() {
-      sqlx::query_as::<_, SchedTaskInstance>(&sql)
-        .bind(TaskInstanceStatus::Pending)
-        .bind(TaskStatus::Dispatched)
-        .bind(TaskStatus::Pending)
-        .bind(TaskInstanceStatus::Dispatched)
-        .bind(&request.agent_id)
-    } else {
-      let agent_labels_json = serde_json::to_value(&*request.labels)
-        .map_err(|e| SqlError::InvalidArgument { message: format!("Failed to serialize agent labels: {}", e) })?;
-
-      sqlx::query_as::<_, SchedTaskInstance>(&sql)
-        .bind(TaskInstanceStatus::Pending)
-        .bind(agent_labels_json)
-        .bind(TaskStatus::Dispatched)
-        .bind(TaskStatus::Pending)
-        .bind(TaskInstanceStatus::Dispatched)
-        .bind(&request.agent_id)
+    let mut query = sqlx::query_as::<_, SchedTaskInstance>(&sql)
+      .bind(TaskInstanceStatus::Pending)
+      .bind(TaskStatus::runnables())
+      .bind(request.max_scheduled_at);
+    if !request.labels.is_empty() {
+      let agent_labels_json = serde_json::to_value(&request.labels).map_err(|e| SqlError::InvalidArgument {
+        message: format!("Failed to serialize Labels to JSON, error: {}", e),
+      })?;
+      query = query.bind(agent_labels_json);
     };
+    query = query
+      .bind(request.acquire_count as i32)
+      .bind(TaskStatus::Doing)
+      .bind(TaskStatus::Pending)
+      .bind(TaskInstanceStatus::Dispatched)
+      .bind(&request.agent_id);
 
     let task_instances = mm.dbx().db_postgres()?.fetch_all(query).await?;
 

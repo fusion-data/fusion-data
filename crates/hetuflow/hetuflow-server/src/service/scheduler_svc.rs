@@ -3,16 +3,13 @@ use std::time::Duration;
 
 use fusion_common::time::now_offset;
 use fusion_core::DataError;
-use fusion_core::application::Application;
-use fusion_core::configuration::ConfigRegistry;
-use fusion_web::config::WebConfig;
 use log::{error, info};
 use mea::shutdown::ShutdownRecv;
 use modelsql::ModelManager;
 use modelsql::filter::{OpValsDateTime, OpValsInt32};
 use tokio::time::interval;
 
-use hetuflow_core::models::{AgentFilter, AgentForUpdate, ServerFilter, ServerForRegister, ServerForUpdate};
+use hetuflow_core::models::{AgentFilter, AgentForUpdate, ServerFilter, ServerForUpdate};
 use hetuflow_core::types::{AgentStatus, ServerStatus};
 
 use crate::infra::bmc::{AgentBmc, DistributedLockBmc, ServerBmc};
@@ -39,9 +36,6 @@ impl SchedulerSvc {
   pub async fn start(&self) -> Result<(), DataError> {
     info!("Starting Scheduler Server with server_id: {}", &self.server_config.server_id);
     let shutdown_rx = self.shutdown_rx.lock().unwrap().take().unwrap();
-
-    // 注册服务器
-    self.register_server().await?;
 
     // 启动生成 Task 循环
     self.start_task_generation(shutdown_rx.clone()).await?;
@@ -165,23 +159,6 @@ impl SchedulerSvc {
       ServerBmc::update_by_id(mm, server.id, update).await?;
     }
 
-    Ok(())
-  }
-
-  /// 注册服务器
-  async fn register_server(&self) -> Result<(), DataError> {
-    info!("Registering server: {}", &self.server_config.server_id);
-
-    let web_config: WebConfig = Application::global().get_config()?;
-
-    let server = ServerForRegister {
-      id: self.server_config.server_id.clone(),
-      name: self.server_config.server_name.clone(),
-      address: web_config.server_addr.clone(),
-      status: ServerStatus::Active,
-    };
-    ServerBmc::register(&self.mm, server).await?;
-    info!("Server {} registered", &self.server_config.server_id);
     Ok(())
   }
 

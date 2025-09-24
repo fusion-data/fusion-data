@@ -63,7 +63,7 @@ impl TaskBmc {
 
   /// 重置失败任务为待处理状态
   pub async fn reset_failed_tasks(mm: &ModelManager) -> Result<Vec<SchedTask>, SqlError> {
-    let filter = TaskFilter { status: Some(OpValsInt32::eq(TaskStatus::Dispatched as i32)), ..Default::default() };
+    let filter = TaskFilter { status: Some(OpValsInt32::eq(TaskStatus::Doing as i32)), ..Default::default() };
 
     let tasks = Self::find_many(mm, vec![filter], None).await?;
 
@@ -88,36 +88,6 @@ impl TaskBmc {
     Ok(tasks)
   }
 
-  /// 使用 SELECT FOR UPDATE SKIP LOCKED 获取任务
-  pub async fn acquire_pending_tasks(mm: &ModelManager, limit: i32) -> Result<Vec<SchedTask>, SqlError> {
-    mm.dbx()
-      .use_postgres(|dbx| async move {
-        let query = r#"
-          UPDATE sched_task
-          SET status = $1, locked_at = NOW(), lock_version = lock_version + 1, updated_at = NOW()
-          WHERE id IN (
-            SELECT id FROM sched_task
-            WHERE status = $2 AND scheduled_at <= NOW()
-            ORDER BY priority DESC, scheduled_at ASC
-            LIMIT $3
-            FOR UPDATE SKIP LOCKED
-          )
-          RETURNING *
-        "#;
-
-        let rows = sqlx::query_as::<_, SchedTask>(query)
-          .bind(TaskStatus::Dispatched as i32)
-          .bind(TaskStatus::Pending as i32)
-          .bind(limit)
-          .fetch_all(dbx.db())
-          .await?;
-
-        Ok(rows)
-      })
-      .await
-      .map_err(SqlError::from)
-  }
-
   /// 根据命名空间过滤获取任务
   pub async fn acquire_task_for_execution(mm: &ModelManager, task_id: Uuid) -> Result<Option<SchedTask>, SqlError> {
     mm.dbx()
@@ -132,7 +102,7 @@ impl TaskBmc {
         "#;
 
         let task = sqlx::query_as::<_, SchedTask>(query)
-          .bind(TaskStatus::Locked as i32)
+          .bind(TaskStatus::Doing as i32)
           .bind(task_id)
           .bind(TaskStatus::Pending as i32)
           .fetch_optional(dbx.db())

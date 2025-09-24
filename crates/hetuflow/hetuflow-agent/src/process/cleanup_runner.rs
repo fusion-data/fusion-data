@@ -8,12 +8,12 @@ use mea::shutdown::ShutdownRecv;
 
 use tokio::sync::broadcast;
 
-use crate::setting::ProcessConfig;
+use crate::setting::ProcessSetting;
 
 use super::{ActiveProcesses, ProcessManager, spawn_kill_process};
 
 pub struct ProcessCleanupRunner {
-  config: Arc<ProcessConfig>,
+  config: Arc<ProcessSetting>,
   active_processes: ActiveProcesses,
   event_broadcaster: broadcast::Sender<ProcessEvent>,
   shutdown_rx: ShutdownRecv,
@@ -54,7 +54,7 @@ impl ProcessCleanupRunner {
 
   /// 清理超时进程
   async fn cleanup_timeout_processes(
-    config: &Arc<ProcessConfig>,
+    config: &Arc<ProcessSetting>,
     active_processes: ActiveProcesses,
     event_broadcaster: broadcast::Sender<ProcessEvent>,
   ) {

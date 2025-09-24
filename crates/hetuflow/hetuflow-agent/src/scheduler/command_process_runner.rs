@@ -42,15 +42,12 @@ impl CommandProcessRunner {
                 let start_at = &task.task_instance.started_at;
                 let timeout = start_at.signed_duration_since(now_offset()).to_std().unwrap_or(Duration::ZERO);
 
-
                 let tx = self.scheduled_task_tx.clone();
                 self.timer_ref.schedule_action_once(task.task_instance_id(), timeout, move |task_instance_id| {
                   // 发送到 TaskExecutor ，由 TaskExecutor 执行任务
-                  tokio::spawn(async move {
-                    if let Err(e) = tx.send(task) {
-                      warn!("Failed to send task to TaskExecutor. TaskInstanceId: {}, Error: {}", task_instance_id, e);
-                    }
-                  });
+                  if let Err(e) = tx.send(task) {
+                    warn!("Failed to send task to TaskExecutor. TaskInstanceId: {}, Error: {}", task_instance_id, e);
+                  }
                 });
               }
             }

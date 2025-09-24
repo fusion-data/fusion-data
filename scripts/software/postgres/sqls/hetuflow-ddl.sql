@@ -114,7 +114,7 @@ create table sched_task_instance (
   id uuid primary key,
   task_id uuid not null references sched_task (id),
   job_id uuid not null references sched_job (id), -- 绑定的 Job ID，用于任务分发
-  agent_id varchar(40) not null references sched_agent (id), -- 绑定的 Agent ID，用于任务执行
+  agent_id varchar(40) references sched_agent (id), -- 绑定的 Agent ID，用于任务执行
   status int not null default 1, -- 见 TaskInstanceStatus 枚举
   started_at timestamptz not null, -- 任务实例开始（计划）时间，实际运行时可能会有微小的偏差
   completed_at timestamptz,

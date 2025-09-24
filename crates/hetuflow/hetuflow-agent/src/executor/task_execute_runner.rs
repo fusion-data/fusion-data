@@ -2,14 +2,16 @@ use std::sync::Arc;
 
 use fusion_common::time::now_epoch_millis;
 use hetuflow_core::{
-  protocol::{ScheduledTask, TaskExecutionError, TaskInstanceChanged, WebSocketEvent},
+  protocol::{ScheduledTask, TaskInstanceChanged, WebSocketEvent},
   types::TaskInstanceStatus,
 };
 use log::{error, info};
 use mea::mpsc;
 use uuid::Uuid;
 
-use crate::{connection::ConnectionManager, process::ProcessManager, setting::HetuflowAgentSetting};
+use crate::{
+  connection::ConnectionManager, error::TaskExecutionError, process::ProcessManager, setting::HetuflowAgentSetting,
+};
 
 pub struct TaskExecuteRunner {
   setting: Arc<HetuflowAgentSetting>,
@@ -60,11 +62,7 @@ impl TaskExecuteRunner {
   /// 执行单次任务尝试
   async fn _execute_task(&self, task: ScheduledTask) -> Result<(), TaskExecutionError> {
     // 使用ProcessManager启动进程
-    let instance_id = self
-      .process_manager
-      .spawn_process(task)
-      .await
-      .map_err(|_e| TaskExecutionError::ProcessStartFailed)?;
+    let instance_id = self.process_manager.spawn_process(task).await.map_err(TaskExecutionError::ProcessStartFailed)?;
 
     info!("Started process for task instance {}", instance_id);
     Ok(())
@@ -82,7 +80,7 @@ impl TaskExecuteRunner {
     };
     match error {
       TaskExecutionError::Cancelled => payload.with_status(TaskInstanceStatus::Cancelled),
-      TaskExecutionError::ProcessStartFailed => payload.with_error_message("Process start failed"),
+      TaskExecutionError::ProcessStartFailed(e) => payload.with_error_message(e.to_string()),
       TaskExecutionError::ProcessTimeout => payload.with_status(TaskInstanceStatus::Timeout),
       TaskExecutionError::ProcessKilled => payload.with_error_message("Killed"),
       TaskExecutionError::ResourceExhausted => payload.with_error_message("Resource exhausted"),

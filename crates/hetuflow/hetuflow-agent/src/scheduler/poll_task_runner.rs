@@ -1,5 +1,6 @@
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
 
+use fusion_common::time::now_offset;
 use hetuflow_core::protocol::{AcquireTaskRequest, WebSocketEvent};
 use log::{debug, error, info};
 use mea::shutdown::ShutdownRecv;
@@ -51,6 +52,7 @@ impl PollTaskRunner {
       max_tasks: self.setting.process.max_concurrent_processes,
       acquire_count,
       labels: self.setting.labels.clone(),
+      max_scheduled_at: now_offset() + Duration::from_secs(60 * 5),
     };
     let event = WebSocketEvent::new_poll_task(poll_request);
     if let Err(e) = self.connection_manager.send_event(event).await {

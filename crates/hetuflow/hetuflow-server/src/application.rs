@@ -8,6 +8,8 @@ use std::{
 
 use fusion_core::{DataError, application::Application, configuration::ConfigRegistry};
 use fusion_db::DbPlugin;
+use fusion_web::config::WebConfig;
+use hetuflow_core::{models::ServerForRegister, types::ServerStatus};
 use log::{debug, error, info};
 use mea::{
   mpsc,
@@ -18,18 +20,20 @@ use modelsql::{ModelManager, store::DbxError};
 use tokio::task::JoinHandle;
 use uuid::Uuid;
 
-use crate::service::{AgentManager, LoadBalancer, LogService, SchedulerSvc};
 use crate::{
   gateway::{ConnectionManager, GatewaySvc, MessageHandler},
   infra::bmc::DistributedLockBmc,
   model::DistributedLockIds,
 };
 use crate::{
+  infra::bmc::ServerBmc,
+  service::{AgentManager, LoadBalancer, LogService, SchedulerSvc},
+};
+use crate::{
   model::{GatewayCommandRequest, SystemStatus},
   setting::HetuflowSetting,
 };
 
-/// Hetuflow 应用容器
 #[derive(Clone)]
 pub struct ServerApplication {
   pub setting: Arc<HetuflowSetting>,
@@ -43,7 +47,7 @@ pub struct ServerApplication {
   pub message_handler: Arc<MessageHandler>,
   load_balancer: Arc<LoadBalancer>,
   gateway_command_tx: mpsc::UnboundedSender<GatewayCommandRequest>,
-  log_receiver: Arc<mea::mutex::Mutex<LogService>>,
+  log_receiver: Arc<LogService>,
   handles: Arc<Mutex<Vec<JoinHandle<()>>>>,
 }
 
@@ -89,14 +93,14 @@ impl ServerApplication {
     let is_leader = Arc::new(AtomicBool::new(false));
     let load_balancer = Arc::new(LoadBalancer::new(mm.clone(), setting.server.server_id.clone()));
 
-    let log_receiver =
-      LogService::new(Arc::new(setting.task_log.clone()), shutdown_rx.clone(), connection_manager.clone()).await?;
-    let log_receiver = Arc::new(mea::mutex::Mutex::new(log_receiver));
+    let log_receiver = Arc::new(
+      LogService::new(Arc::new(setting.task_log.clone()), shutdown_rx.clone(), connection_manager.clone()).await?,
+    );
 
     Ok(Self {
       setting,
       is_leader,
-      shutdown: Arc::new(mea::mutex::Mutex::new(Some((shutdown_tx, shutdown_rx)))),
+      shutdown: Arc::new(Mutex::new(Some((shutdown_tx, shutdown_rx)))),
       mm,
       scheduler_svc,
       gateway_svc,
@@ -113,6 +117,9 @@ impl ServerApplication {
   /// 启动调度器应用
   pub async fn start(&self) -> Result<(), DataError> {
     info!("Starting Hetuflow Application");
+
+    // 0. 注册服务器
+    self.register_server().await?;
 
     // 1. 尝试获取领导者身份
     self.start_leader_and_follower_loop().await?;
@@ -138,8 +145,6 @@ impl ServerApplication {
   /// 该循环会尝试获取领导者身份，如果获取失败，则会等待 heartbeat_interval 后重试。
   /// 如果获取成功，则会将 `is_leader` 设置为 `true`，否则设置为 `false`。
   async fn start_leader_and_follower_loop(&self) -> Result<JoinHandle<()>, DataError> {
-    info!("Starting follower mode");
-
     // 启动领导者选举监控
     let is_leader = self.is_leader.clone();
     let mm = self.mm.clone();
@@ -165,6 +170,23 @@ impl ServerApplication {
     Ok(handle)
   }
 
+  /// 注册服务器
+  async fn register_server(&self) -> Result<(), DataError> {
+    info!("Registering server: {}", &self.setting.server.server_id);
+
+    let web_config: WebConfig = Application::global().get_config()?;
+
+    let server = ServerForRegister {
+      id: self.setting.server.server_id.clone(),
+      name: self.setting.server.server_name.clone(),
+      address: web_config.server_addr.clone(),
+      status: ServerStatus::Active,
+    };
+    ServerBmc::register(&self.mm, server).await?;
+    info!("Server {} registered", &self.setting.server.server_id);
+    Ok(())
+  }
+
   /// 启动通用服务
   async fn start_common_services(&self) -> Result<(), DataError> {
     info!("Starting common services");
@@ -173,23 +195,13 @@ impl ServerApplication {
     self.scheduler_svc.start().await?;
 
     // 启动 Agent 管理器（事件订阅）
-    let agent_manager = self.agent_manager.clone();
-    if let Err(e) = agent_manager.start().await {
-      error!("AgentManager start error: {:?}", e);
-    }
+    self.agent_manager.start().await?;
 
     // 启动网关服务
-    let gateway_svc = self.gateway_svc.clone();
-    if let Err(e) = gateway_svc.start().await {
-      error!("Gateway service error: {:?}", e);
-    }
+    self.gateway_svc.start().await?;
 
     // 启动日志接收器
-    let mut log_receiver = self.log_receiver.lock().await;
-    if let Err(e) = log_receiver.start().await {
-      error!("LogReceiver start error: {:?}", e);
-    }
-    drop(log_receiver);
+    self.log_receiver.start().await?;
 
     // 启动 HTTP API 服务 (/api/v1)
     let app_state = self.clone();
@@ -197,8 +209,13 @@ impl ServerApplication {
     tokio::spawn(async move {
       let router = crate::endpoint::routes().with_state(app_state);
       let conf = Application::global().get_config().expect("WebConfig not valid");
-      if let Err(e) = fusion_web::server::init_server_with_config(&conf, router, Some(shutdown_rx)).await {
-        error!("HTTP server error: {:?}", e);
+      match fusion_web::server::init_server_with_config(&conf, router, Some(shutdown_rx)).await {
+        Ok(_) => {
+          info!("HTTP server has been shutdown");
+        }
+        Err(e) => {
+          error!("HTTP server error: {:?}", e);
+        }
       }
     });
 

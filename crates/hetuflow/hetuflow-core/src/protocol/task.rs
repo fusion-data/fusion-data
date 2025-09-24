@@ -1,3 +1,4 @@
+use fusion_common::time::OffsetDateTime;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -44,13 +45,16 @@ impl ScheduledTask {
   }
 
   /// 获取任务标签
-  pub fn labels(&self) -> &Labels {
-    &self.task.config.labels
+  pub fn labels(&self) -> Labels {
+    self.task.config.labels()
   }
 
   /// 检查任务是否匹配指定的标签
   pub fn match_label(&self, label: &str, value: &str) -> bool {
-    self.task.config.labels.get(label).is_some_and(|v| v == value)
+    match self.task.config.labels.as_ref() {
+      Some(labels) => labels.get(label).is_some_and(|v| v == value),
+      None => false,
+    }
   }
 
   /// 检查任务是否为定时任务
@@ -113,10 +117,16 @@ impl TaskInstanceChanged {
 /// Task pull request
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct AcquireTaskRequest {
-  pub agent_id: String,   // Agent ID
-  pub max_tasks: u32,     // 允许最大并发任务数
-  pub labels: Labels,     // 当前 Agent 拥有的标签，用于过滤任务
-  pub acquire_count: u32, // 拉取任务数
+  /// Agent ID
+  pub agent_id: String,
+  /// The maximum number of concurrent tasks allowed by the agent
+  pub max_tasks: u32,
+  /// The labels currently owned by the Agent are used to filter tasks
+  pub labels: Labels,
+  /// Poll task count
+  pub acquire_count: u32,
+  /// The maximum execution time, only tasks that are lte this time will be retrieved
+  pub max_scheduled_at: OffsetDateTime,
 }
 
 /// Task response, for task pull requests or direct task assignments from Server to Agent
@@ -174,27 +184,4 @@ pub struct TaskExecutionResult {
   pub error_message: Option<String>, // 错误信息
   pub metrics: Option<TaskMetrics>,  // 执行指标
   pub duration_ms: u64,              // 执行时长(毫秒)
-}
-
-/// 任务执行错误类型
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub enum TaskExecutionError {
-  /// 任务被取消
-  Cancelled,
-  /// 进程启动失败
-  ProcessStartFailed,
-  /// 进程执行超时
-  ProcessTimeout,
-  /// 进程被杀死
-  ProcessKilled,
-  /// 资源不足
-  ResourceExhausted,
-  /// 依赖检查失败
-  DependencyCheckFailed,
-  /// 配置错误
-  ConfigurationError,
-  /// 网络错误
-  NetworkError,
-  /// 其他错误
-  Failed,
 }

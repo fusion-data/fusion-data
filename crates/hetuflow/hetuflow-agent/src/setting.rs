@@ -11,7 +11,7 @@ use uuid::Uuid;
 
 /// 连接配置
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ConnectionConfig {
+pub struct ConnectionSetting {
   /// Server URL
   pub server_address: String,
 
@@ -33,7 +33,7 @@ pub struct ConnectionConfig {
 
 /// 轮询配置
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct PollingConfig {
+pub struct PollingSetting {
   /// 轮询间隔（秒）
   #[serde(deserialize_with = "deserialize_duration")]
   pub interval: Duration,
@@ -41,7 +41,7 @@ pub struct PollingConfig {
 
 /// 重试配置
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct RetryConfig {
+pub struct RetrySetting {
   /// 最大重试次数
   pub max_attempts: u32,
 
@@ -93,7 +93,7 @@ pub enum RetryCondition {
 
 /// 进程管理配置
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ProcessConfig {
+pub struct ProcessSetting {
   /// 进程运行基目录
   pub run_base_dir: String,
 
@@ -135,7 +135,7 @@ pub struct ResourceLimits {
 
 /// 任务执行配置
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct TaskConfig {
+pub struct TaskSetting {
   /// 默认任务超时时间（秒）
   #[serde(deserialize_with = "deserialize_duration")]
   pub default_timeout: Duration,
@@ -165,13 +165,13 @@ pub struct HetuflowAgentSetting {
   pub jwe_token: Option<String>,
 
   /// 连接配置
-  pub connection: Arc<ConnectionConfig>,
+  pub connection: Arc<ConnectionSetting>,
 
   /// 轮询配置
-  pub polling: Arc<PollingConfig>,
+  pub polling: Arc<PollingSetting>,
 
   /// 进程管理配置
-  pub process: Arc<ProcessConfig>,
+  pub process: Arc<ProcessSetting>,
 }
 
 const KEY_PATH_AGENT_ID: &str = "hetuflow.agent.agent_id";

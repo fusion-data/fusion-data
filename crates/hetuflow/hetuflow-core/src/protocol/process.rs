@@ -22,19 +22,14 @@ pub struct ProcessInfo {
 /// 进程状态
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum ProcessStatus {
-  /// 启动中
   Starting,
-  /// 运行中
   Running,
-  /// 已完成
-  Completed,
-  /// 已失败
+  /// Process ends with 0 exit code
+  Succeed,
+  /// Process ends with non-0 exit code
   Failed,
-  /// 被杀死
   Killed,
-  /// 超时
   Timeout,
-  /// 僵尸进程
   Zombie,
 }
 
@@ -91,10 +86,6 @@ pub struct ProcessEvent {
 }
 
 impl ProcessEvent {
-  pub fn new(instance_id: Uuid, kind: ProcessEventKind) -> Self {
-    Self::new_with_data(instance_id, kind, None)
-  }
-
   pub fn new_with_data(instance_id: Uuid, kind: ProcessEventKind, data: Option<String>) -> Self {
     Self { instance_id, kind, timestamp: now_epoch_millis(), data }
   }

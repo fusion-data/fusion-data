@@ -86,18 +86,22 @@ pub enum ScheduleStatus {
 pub enum TaskStatus {
   /// 等待分发
   Pending = 1,
-  /// 已锁定，等待分发到 agent 执行
-  Locked = 10,
-  /// 已分发到 agent
-  Dispatched = 20,
-  /// 等待重试
-  WaitingRetry = 30,
+  /// 进行中，具体情况见最新的 SchedTaskInstance
+  Doing = 10,
   /// 错误
   Failed = 90,
   /// 取消完成
   Cancelled = 99,
   /// 成功完成
   Succeeded = 100,
+}
+
+impl TaskStatus {
+  const RUNNABLES: &[TaskStatus] = &[TaskStatus::Pending, TaskStatus::Doing];
+
+  pub fn runnables() -> Vec<i32> {
+    Self::RUNNABLES.iter().map(|s| *s as i32).collect()
+  }
 }
 
 /// 任务执行状态

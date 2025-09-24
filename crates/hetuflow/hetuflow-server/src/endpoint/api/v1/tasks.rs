@@ -46,6 +46,7 @@ async fn create_task(task_svc: TaskSvc, Json(input): Json<TaskForCreate>) -> Web
   let id = task_svc.create_task(input).await?;
   ok_json!(id.into())
 }
+
 #[utoipa::path(
   get,
   path = "/{id}",

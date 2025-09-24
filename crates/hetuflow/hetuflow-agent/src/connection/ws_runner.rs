@@ -33,16 +33,14 @@ impl WsRunner {
   }
 
   pub async fn run_loop(&mut self) {
-    while let Err(e) = self.run_websocket_loop().await
-      && !self.shutdown_rx.is_shutdown_now()
-    {
-      error!("Failed to run websocket loop: {}. Retrying in 10 seconds...", e);
+    while let Err(e) = self.run_websocket_loop().await {
+      if self.shutdown_rx.is_shutdown_now() {
+        break;
+      }
 
-      // 等待 10 秒后重试
+      error!("Failed to run websocket loop: {}. Retrying in 10 seconds...", e);
       tokio::time::sleep(std::time::Duration::from_secs(10)).await;
     }
-
-    // 正常退出
     info!("WsRunner websocket loop closed");
   }
 
@@ -116,6 +114,13 @@ impl WsRunner {
     info!("Connecting to Hetuflow Server: {}", url);
 
     for attempts in 0..self.setting.connection.max_reconnect_attempts {
+      if self.shutdown_rx.is_shutdown_now() {
+        return Err(DataError::BizError {
+          code: 503,
+          msg: "Shutdown signal received, stopped connect to Server".into(),
+          detail: None,
+        });
+      }
       let connect_result = tokio::time::timeout(timeout_duration, tokio_tungstenite::connect_async(&url)).await;
       match connect_result {
         Ok(Ok((ws_stream, _response))) => {
@@ -133,11 +138,16 @@ impl WsRunner {
           return Ok((ws_stream, local_address));
         }
         Ok(Err(e)) => {
-          error!("Failed to connect to gateway: {}", e);
+          error!("Failed to connect to gateway: {}, attempts: {}", e, attempts);
           tokio::time::sleep(self.setting.connection.reconnect_interval).await;
         }
         Err(elapsed) => {
-          warn!("WebSocket connection timed out after {} seconds: {}", timeout_duration.as_secs(), elapsed);
+          warn!(
+            "WebSocket connection timed out after {} seconds: {}, attempts: {}",
+            timeout_duration.as_secs(),
+            elapsed,
+            attempts
+          );
           tokio::time::sleep(self.setting.connection.reconnect_interval).await;
         }
       }

@@ -5,11 +5,67 @@ use modelsql_core::{
   filter::{OpValsDateTime, OpValsInt32, OpValsUuid, OpValsValue, Page},
 };
 use serde::{Deserialize, Serialize};
+use strum::AsRefStr;
 use uuid::Uuid;
 
-use crate::types::{ScheduleKind, TaskStatus};
+use crate::types::{Labels, ResourceLimits, ScheduleKind, TaskStatus};
 
-use super::TaskConfig;
+/// Executable program command
+#[derive(Debug, Clone, Default, Serialize, Deserialize, AsRefStr)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
+pub enum ExecuteCommand {
+  #[strum(serialize = "uv run")]
+  #[serde(rename = "uv run")]
+  UvRun,
+  #[default]
+  #[strum(serialize = "bash")]
+  #[serde(rename = "bash")]
+  Bash,
+  #[strum(serialize = "python")]
+  #[serde(rename = "python")]
+  Python,
+  #[strum(serialize = "node")]
+  #[serde(rename = "node")]
+  Node,
+  #[strum(serialize = "npx")]
+  #[serde(rename = "npx")]
+  Npx,
+  #[strum(serialize = "cargo run")]
+  #[serde(rename = "cargo run")]
+  CargoRun,
+}
+
+/// 任务配置
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
+pub struct TaskConfig {
+  /// 超时时间(秒)
+  pub timeout: u32,
+  /// 最大重试次数
+  pub max_retries: u32,
+  /// 重试间隔(秒)
+  pub retry_interval: u32,
+  /// Executable program command
+  pub cmd: ExecuteCommand,
+  /// 命令参数
+  pub args: Vec<String>,
+  /// 工作目录，不设置则使用默认值
+  pub working_directory: Option<String>,
+  /// 是否捕获输出
+  pub capture_output: bool,
+  /// 最大输出大小(字节)
+  pub max_output_size: u64,
+  /// 任务标签。可用于限制哪些 Agent 允许执行该任务
+  pub labels: Option<Labels>,
+  /// 资源限制
+  pub resource_limits: Option<ResourceLimits>,
+}
+
+impl TaskConfig {
+  pub fn labels(&self) -> Labels {
+    self.labels.clone().unwrap_or_default()
+  }
+}
 
 /// 任务执行指标
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
@@ -98,19 +154,28 @@ impl SchedTask {
 #[cfg_attr(feature = "with-db", derive(modelsql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct TaskForCreate {
-  pub id: Uuid,
+  pub id: Option<Uuid>,
   pub job_id: Uuid,
   pub namespace_id: Uuid,
   pub status: TaskStatus,
   pub priority: i32,
-  /// 关联的 Schedule ID，若为 None 则表示为通过事件或手动触发创建的任务
+
+  /// The associated Schedule ID, if None, indicates a task created through an event or manually triggered
   pub schedule_id: Option<Uuid>,
-  pub scheduled_at: DateTime<FixedOffset>,
+
+  /// The expected scheduling execution time, if None, indicates that the task was created through an event or
+  /// manually triggered, and will be executed as soon as possible
+  pub scheduled_at: Option<DateTime<FixedOffset>>,
+
+  pub schedule_kind: Option<ScheduleKind>,
   pub parameters: serde_json::Value,
   pub environment: Option<serde_json::Value>,
-  pub config: Option<TaskConfig>,
   pub retry_count: i32,
   pub dependencies: Option<serde_json::Value>,
+
+  /// Task configuration, obtained from SchedJob
+  #[serde(skip)]
+  pub config: Option<TaskConfig>,
 }
 
 /// SchedTask 更新模型

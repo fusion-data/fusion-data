@@ -269,12 +269,13 @@ impl TaskGenerationSvc {
   ) -> Result<Uuid, DataError> {
     let task_id = Uuid::now_v7();
     let task = TaskForCreate {
-      id: task_id,
+      id: Some(task_id),
       job_id: job.id,
       namespace_id: job.namespace_id,
       schedule_id: original_task.schedule_id,
+      schedule_kind: Some(ScheduleKind::Event),
       priority: original_task.priority,
-      scheduled_at,
+      scheduled_at: Some(scheduled_at),
       status: TaskStatus::Pending,
       parameters: original_task.parameters.clone(),
       environment: job.environment.clone(),
@@ -282,8 +283,14 @@ impl TaskGenerationSvc {
       retry_count: original_task.retry_count + 1,
       dependencies: original_task.dependencies.clone(),
     };
-    let task_instance =
-      TaskInstanceForCreate { id: Some(Uuid::now_v7()), task_id, agent_id: None, status: TaskInstanceStatus::Pending };
+    let task_instance = TaskInstanceForCreate {
+      id: Some(Uuid::now_v7()),
+      job_id: job.id,
+      task_id,
+      agent_id: None,
+      status: TaskInstanceStatus::Pending,
+      started_at: now_offset(),
+    };
 
     TaskBmc::insert(mm, task).await.map_err(DataError::from)?;
     TaskInstanceBmc::insert(mm, task_instance).await.map_err(DataError::from)?;
@@ -302,12 +309,13 @@ impl TaskGenerationSvc {
   ) -> Result<Uuid, DataError> {
     let task_id = Uuid::now_v7();
     let task = TaskForCreate {
-      id: task_id,
+      id: Some(task_id),
       job_id: job.id,
       namespace_id: job.namespace_id,
       schedule_id,
+      schedule_kind: Some(ScheduleKind::Event),
       priority: priority.unwrap_or_default(),
-      scheduled_at,
+      scheduled_at: Some(scheduled_at),
       status: TaskStatus::Pending,
       parameters,
       environment: job.environment.clone(),
@@ -315,8 +323,14 @@ impl TaskGenerationSvc {
       retry_count: 0,
       dependencies: None,
     };
-    let task_instance =
-      TaskInstanceForCreate { id: Some(Uuid::now_v7()), task_id, agent_id: None, status: TaskInstanceStatus::Pending };
+    let task_instance = TaskInstanceForCreate {
+      id: Some(Uuid::now_v7()),
+      job_id: job.id,
+      task_id,
+      agent_id: None,
+      status: TaskInstanceStatus::Pending,
+      started_at: now_offset(),
+    };
 
     TaskBmc::insert(mm, task).await.map_err(DataError::from)?; // 入库。等待 Agent 主动 poll 任务执行
     TaskInstanceBmc::insert(mm, task_instance).await.map_err(DataError::from)?;

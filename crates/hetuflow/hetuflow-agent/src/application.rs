@@ -3,7 +3,7 @@ use std::sync::Arc;
 use fusion_core::DataError;
 use fusion_core::application::Application;
 use fusion_core::concurrent::handle::ServiceHandle;
-use fusion_core::timer::TimerPlugin;
+use fusion_core::timer::{Timer, TimerPlugin};
 use log::info;
 use mea::mutex::Mutex;
 use mea::shutdown::{ShutdownRecv, ShutdownSend};
@@ -95,7 +95,7 @@ impl AgentApplication {
       self.setting.clone(),
       scheduled_task_tx,
       shutdown_rx.clone(),
-      Application::global().component(),
+      Application::global().component::<Timer>().timer_ref(),
       self.connection_manager.subscribe_command(),
     );
     handles.push(ServiceHandle::new(
