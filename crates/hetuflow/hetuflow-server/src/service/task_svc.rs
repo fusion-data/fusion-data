@@ -60,7 +60,7 @@ impl TaskSvc {
       task_id,
       agent_id: None,
       status: TaskInstanceStatus::Pending,
-      started_at: now_offset(),
+      started_at: None,
     };
 
     TaskBmc::insert(&mm, task_data).await?;

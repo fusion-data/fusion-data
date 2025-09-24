@@ -80,14 +80,14 @@ pub struct ProcessEvent {
   /// 事件类型
   pub kind: ProcessEventKind,
   /// 事件时间
-  pub timestamp: i64,
+  pub epoch_millis: i64,
   /// 事件数据
   pub data: Option<String>,
 }
 
 impl ProcessEvent {
   pub fn new_with_data(instance_id: Uuid, kind: ProcessEventKind, data: Option<String>) -> Self {
-    Self { instance_id, kind, timestamp: now_epoch_millis(), data }
+    Self { instance_id, kind, epoch_millis: now_epoch_millis(), data }
   }
 
   pub fn with_data(mut self, data: String) -> Self {
@@ -96,7 +96,7 @@ impl ProcessEvent {
   }
 
   pub fn with_timestamp(mut self, timestamp: i64) -> Self {
-    self.timestamp = timestamp;
+    self.epoch_millis = timestamp;
     self
   }
 }
@@ -105,7 +105,7 @@ impl ProcessEvent {
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum ProcessEventKind {
   /// 进程启动
-  Started,
+  Running,
   /// 进程运行结束退出
   Exited,
   /// 进程收到 SIGTERM 信号退出

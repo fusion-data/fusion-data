@@ -1,11 +1,11 @@
 use std::sync::Arc;
 
-use fusion_common::time::now_epoch_millis;
+use fusion_common::time::{now_epoch_millis, now_offset};
 use hetuflow_core::{
   protocol::{ScheduledTask, TaskInstanceChanged, WebSocketEvent},
   types::TaskInstanceStatus,
 };
-use log::{error, info};
+use log::{error, info, warn};
 use mea::mpsc;
 use uuid::Uuid;
 
@@ -60,8 +60,26 @@ impl TaskExecuteRunner {
   }
 
   /// 执行单次任务尝试
-  async fn _execute_task(&self, task: ScheduledTask) -> Result<(), TaskExecutionError> {
+  async fn _execute_task(&self, mut task: ScheduledTask) -> Result<(), TaskExecutionError> {
     // 使用ProcessManager启动进程
+    if task.task_instance.started_at.is_none() {
+      task.task_instance.started_at = Some(now_offset());
+    }
+    if let Err(e) = self
+      .connection_manager
+      .send_event(WebSocketEvent::new_task_instance_updated(TaskInstanceChanged {
+        instance_id: task.task_instance_id(),
+        agent_id: self.setting.agent_id.clone(),
+        status: TaskInstanceStatus::Running,
+        epoch_millis: now_epoch_millis(),
+        data: None,
+        error_message: None,
+        metrics: None,
+      }))
+      .await
+    {
+      warn!("Failed to send task instance updated(running) event: {:?}", e);
+    }
     let instance_id = self.process_manager.spawn_process(task).await.map_err(TaskExecutionError::ProcessStartFailed)?;
 
     info!("Started process for task instance {}", instance_id);
@@ -72,7 +90,7 @@ impl TaskExecuteRunner {
     let mut payload = TaskInstanceChanged {
       instance_id,
       agent_id,
-      timestamp: now_epoch_millis(),
+      epoch_millis: now_epoch_millis(),
       data: None,
       error_message: None,
       metrics: None,

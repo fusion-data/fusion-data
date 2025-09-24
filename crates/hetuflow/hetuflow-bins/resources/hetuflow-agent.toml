@@ -25,7 +25,7 @@ run_mode = "dev"
 
 [hetuflow.agent]
 agent_id = "agent001"
-labels = { gpu = "enabled" }
+labels = { env = "dev" }
 jwe_token = "eyJhbGciOiJFQ0RILUVTIiwiZW5jIjoiQTI1NkdDTSIsInR5cCI6IkpXRSIsImVwayI6eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2IiwieCI6Iks5RmpXcThla0Fyd3ZONUZWQTRxQXhrT0lsckt3bXNucnR3bl91UWVhUzAiLCJ5Ijoia2tmOHh6OE5OQVBkVWVVZ3dZd2dFLWduTm5yQ3pMbmJtaDNGOG03M0pYZyJ9fQ..Ir8Nxg7fFvcLpnr0.zNa171oI5QksuAXN-gOiL9bHxERINR8y4qvxMRBoTc-vqy2blm_0CeEIuSlORYh5KXc32S5WtL4JwbTOKquhcIJQaxE1B5Oa4LPvkhTX1jxHRmv0mw1hCMx4EslQLd2UR47TslSjmyP7AtlLbtryt6wYVFmepsd-tu6i8shh2i9ECAezH_ljYcjfMSMVBwsQxdoJVDFbOaooVBOatqpoweqlMenVtU2nXO7XybwGjdt6P2pEEChhtSttZ6ZiQp0_BN74bEY-3YgvoMF7p78mQ7bk-J2J09Z84oSHrIYsxEdM9vzDVOVaJ8zTGOenow.G7TdY9nuY0WhBN8rTtPIpw"
 
 [hetuflow.agent.metadata]

@@ -12,27 +12,34 @@ use crate::types::{Labels, ResourceLimits, ScheduleKind, TaskStatus};
 
 /// Executable program command
 #[derive(Debug, Clone, Default, Serialize, Deserialize, AsRefStr)]
+#[serde(rename_all = "snake_case")]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub enum ExecuteCommand {
-  #[strum(serialize = "uv run")]
-  #[serde(rename = "uv run")]
-  UvRun,
   #[default]
   #[strum(serialize = "bash")]
-  #[serde(rename = "bash")]
   Bash,
+  #[strum(serialize = "uv")]
+  Uv,
   #[strum(serialize = "python")]
-  #[serde(rename = "python")]
   Python,
   #[strum(serialize = "node")]
-  #[serde(rename = "node")]
   Node,
   #[strum(serialize = "npx")]
   #[serde(rename = "npx")]
   Npx,
-  #[strum(serialize = "cargo run")]
-  #[serde(rename = "cargo run")]
-  CargoRun,
+  #[strum(serialize = "cargo")]
+  Cargo,
+  #[strum(serialize = "java")]
+  Java,
+}
+
+impl ExecuteCommand {
+  pub const ALL: &[ExecuteCommand] =
+    &[Self::Bash, Self::Uv, Self::Python, Self::Node, Self::Npx, Self::Cargo, Self::Java];
+
+  pub fn is_valid(cmd: &str) -> bool {
+    Self::ALL.iter().any(|c| c.as_ref() == cmd)
+  }
 }
 
 /// 任务配置
@@ -154,8 +161,9 @@ impl SchedTask {
 pub struct TaskForCreate {
   pub id: Option<Uuid>,
   pub job_id: Uuid,
-  pub namespace_id: Uuid,
-  pub status: TaskStatus,
+  pub namespace_id: Option<Uuid>,
+  pub status: Option<TaskStatus>,
+  #[serde(default = "Default::default")]
   pub priority: i32,
 
   /// The associated Schedule ID, if None, indicates a task created through an event or manually triggered
@@ -166,14 +174,20 @@ pub struct TaskForCreate {
   pub scheduled_at: Option<DateTime<FixedOffset>>,
 
   pub schedule_kind: Option<ScheduleKind>,
+  #[serde(default = "default_parameters")]
   pub parameters: serde_json::Value,
   pub environment: Option<serde_json::Value>,
+  #[serde(default = "Default::default")]
   pub retry_count: i32,
   pub dependencies: Option<serde_json::Value>,
 
   /// Task configuration, obtained from SchedJob
   #[serde(skip)]
   pub config: Option<TaskConfig>,
+}
+
+fn default_parameters() -> serde_json::Value {
+  serde_json::Value::Object(Default::default())
 }
 
 /// SchedTask 更新模型

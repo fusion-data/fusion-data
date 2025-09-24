@@ -83,7 +83,7 @@ pub struct TaskInstanceChanged {
   /// 执行状态
   pub status: TaskInstanceStatus,
   /// 状态更新时间
-  pub timestamp: i64,
+  pub epoch_millis: i64,
   /// 任务数据
   pub data: Option<String>,
   /// 错误信息

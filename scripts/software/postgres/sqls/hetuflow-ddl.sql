@@ -85,7 +85,7 @@ create table sched_task (
   priority int not null default 0, -- 任务优先级，数值越大优先级越高
   status int not null default 1, -- 见 TaskStatus 枚举
   schedule_id uuid references sched_schedule (id), -- 为空时表示手动触发：Event, Flow
-  scheduled_at timestamptz not null, -- 计划执行时间
+  scheduled_at timestamptz not null default now(), -- 计划执行时间
   schedule_kind int not null, -- 见 ScheduleKind 枚举
   completed_at timestamptz, -- 任务完成时间，具体的任务明细见对应的 sched_task_instance 表
   parameters jsonb not null default '{}'::jsonb, -- 任务参数
@@ -116,7 +116,7 @@ create table sched_task_instance (
   job_id uuid not null references sched_job (id), -- 绑定的 Job ID，用于任务分发
   agent_id varchar(40) references sched_agent (id), -- 绑定的 Agent ID，用于任务执行
   status int not null default 1, -- 见 TaskInstanceStatus 枚举
-  started_at timestamptz not null, -- 任务实例开始（计划）时间，实际运行时可能会有微小的偏差
+  started_at timestamptz, -- 任务实例实际开始时间，实际运行时可能会有微小的偏差
   completed_at timestamptz,
   output text,
   error_message text,

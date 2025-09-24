@@ -39,8 +39,8 @@ impl CommandProcessRunner {
           match command {
             Ok(HetuflowCommand::AcquiredTask(task_poll_resp)) => {
               for task in task_poll_resp.tasks.iter().cloned() {
-                let start_at = &task.task_instance.started_at;
-                let timeout = start_at.signed_duration_since(now_offset()).to_std().unwrap_or(Duration::ZERO);
+                let scheduled_at = &task.task.scheduled_at;
+                let timeout = scheduled_at.signed_duration_since(now_offset()).to_std().unwrap_or(Duration::ZERO);
 
                 let tx = self.scheduled_task_tx.clone();
                 self.timer_ref.schedule_action_once(task.task_instance_id(), timeout, move |task_instance_id| {

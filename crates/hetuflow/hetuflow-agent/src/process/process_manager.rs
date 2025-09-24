@@ -99,7 +99,7 @@ impl ProcessManager {
     // Send process start event
     let _ = self.event_broadcaster.send(ProcessEvent::new_with_data(
       instance_id,
-      ProcessEventKind::Started,
+      ProcessEventKind::Running,
       serde_json::to_string(&info).ok(),
     ));
 

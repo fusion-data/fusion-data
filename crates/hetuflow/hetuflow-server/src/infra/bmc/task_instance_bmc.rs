@@ -216,7 +216,7 @@ impl TaskInstanceBmc {
     // 构建标签匹配条件：使用 JSON 包含查询，类似 k8s label selector
     // Agent 的 labels 必须是 Task config.labels 的子集
     let where_labels =
-      if request.labels.is_empty() { "" } else { "and (t.config->'labels' is null or t.config->'labels' @> $4)" };
+      if request.labels.is_empty() { "" } else { "and (t.config->'labels' is null or t.config->'labels' <@ $4)" };
 
     let sql = format!(
       r#"with sti as (select ti.*

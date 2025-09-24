@@ -271,12 +271,12 @@ impl TaskGenerationSvc {
     let task = TaskForCreate {
       id: Some(task_id),
       job_id: job.id,
-      namespace_id: job.namespace_id,
+      namespace_id: Some(job.namespace_id),
       schedule_id: original_task.schedule_id,
       schedule_kind: Some(ScheduleKind::Event),
       priority: original_task.priority,
       scheduled_at: Some(scheduled_at),
-      status: TaskStatus::Pending,
+      status: Some(TaskStatus::Pending),
       parameters: original_task.parameters.clone(),
       environment: job.environment.clone(),
       config: Some(job.config.clone()),
@@ -289,7 +289,7 @@ impl TaskGenerationSvc {
       task_id,
       agent_id: None,
       status: TaskInstanceStatus::Pending,
-      started_at: now_offset(),
+      started_at: Some(scheduled_at),
     };
 
     TaskBmc::insert(mm, task).await.map_err(DataError::from)?;
@@ -311,12 +311,12 @@ impl TaskGenerationSvc {
     let task = TaskForCreate {
       id: Some(task_id),
       job_id: job.id,
-      namespace_id: job.namespace_id,
+      namespace_id: Some(job.namespace_id),
       schedule_id,
       schedule_kind: Some(ScheduleKind::Event),
       priority: priority.unwrap_or_default(),
       scheduled_at: Some(scheduled_at),
-      status: TaskStatus::Pending,
+      status: Some(TaskStatus::Pending),
       parameters,
       environment: job.environment.clone(),
       config: Some(job.config.clone()),
@@ -329,7 +329,7 @@ impl TaskGenerationSvc {
       task_id,
       agent_id: None,
       status: TaskInstanceStatus::Pending,
-      started_at: now_offset(),
+      started_at: None,
     };
 
     TaskBmc::insert(mm, task).await.map_err(DataError::from)?; // 入库。等待 Agent 主动 poll 任务执行

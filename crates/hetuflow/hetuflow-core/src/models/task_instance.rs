@@ -1,4 +1,5 @@
 use chrono::{DateTime, FixedOffset};
+use fusion_common::time::OffsetDateTime;
 use modelsql_core::{
   field::FieldMask,
   filter::{OpValsDateTime, OpValsInt32, OpValsString, OpValsUuid, Page},
@@ -22,18 +23,14 @@ pub struct SchedTaskInstance {
   pub job_id: Uuid,
   pub agent_id: Option<String>,
   pub status: TaskInstanceStatus,
-  #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
-  pub started_at: DateTime<FixedOffset>,
-  #[cfg_attr(feature = "with-openapi", schema(value_type = Option<String>, format = DateTime, example = "2023-01-01T00:00:00Z"))]
+  pub started_at: Option<DateTime<FixedOffset>>,
   pub completed_at: Option<DateTime<FixedOffset>>,
   pub output: Option<String>,
   pub error_message: Option<String>,
   pub exit_code: Option<i32>,
   pub metrics: Option<serde_json::Value>,
-  // #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
   pub created_at: DateTime<FixedOffset>,
   pub updated_by: Option<i64>,
-  // #[cfg_attr(feature = "with-openapi", schema(value_type = Option<String>, format = DateTime, example = "2023-01-01T00:00:00Z"))]
   pub updated_at: Option<DateTime<FixedOffset>>,
 }
 
@@ -47,7 +44,7 @@ pub struct TaskInstanceForCreate {
   pub task_id: Uuid,
   pub agent_id: Option<String>,
   pub status: TaskInstanceStatus,
-  pub started_at: DateTime<FixedOffset>,
+  pub started_at: Option<DateTime<FixedOffset>>,
 }
 
 /// TaskInstance 更新模型

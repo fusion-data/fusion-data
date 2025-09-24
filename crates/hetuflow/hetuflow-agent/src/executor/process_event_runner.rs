@@ -50,7 +50,7 @@ impl ProcessEventRunner {
 
   async fn handle_process_event(&self, event: ProcessEvent) {
     let status = match event.kind {
-      ProcessEventKind::Started => TaskInstanceStatus::Running,
+      ProcessEventKind::Running => TaskInstanceStatus::Running,
       ProcessEventKind::Exited => TaskInstanceStatus::Succeeded,
       ProcessEventKind::Sigterm => TaskInstanceStatus::Failed,
       ProcessEventKind::Sigkill => TaskInstanceStatus::Failed,
@@ -60,7 +60,7 @@ impl ProcessEventRunner {
     let event = WebSocketEvent::new_task_instance_updated(TaskInstanceChanged {
       instance_id: event.instance_id,
       agent_id: self.setting.agent_id.clone(),
-      timestamp: event.timestamp,
+      epoch_millis: event.epoch_millis,
       data: event.data,
       error_message: None,
       metrics: None,
