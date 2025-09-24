@@ -49,8 +49,6 @@ pub struct TaskConfig {
   pub cmd: ExecuteCommand,
   /// 命令参数
   pub args: Vec<String>,
-  /// 工作目录，不设置则使用默认值
-  pub working_directory: Option<String>,
   /// 是否捕获输出
   pub capture_output: bool,
   /// 最大输出大小(字节)

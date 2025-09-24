@@ -35,7 +35,8 @@ region = "cn-chongqing"
 interval = "30"
 
 [hetuflow.agent.process]
-run_base_dir = "runs/var/hetuflow-agent/runs"
+# 进程运行基础目录，默认为用户主目录下的 $HOME/.hetu/agent/runs
+# run_base_dir =
 enable_resource_monitoring = true
 resource_monitor_interval = "30s"
 max_concurrent_processes = 8

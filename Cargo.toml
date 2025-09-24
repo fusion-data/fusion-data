@@ -80,7 +80,7 @@ hetumind-context = { version = "0.1.1", path = "crates/hetumind/hetumind-context
 hetumind-nodes = { version = "0.1.1", path = "crates/hetumind/hetumind-nodes" }
 # -- projects end
 mdbook = "0.4"
-mdbook-mermaid = "0.15"
+mdbook-mermaid = "0.16"
 # begin -- memory allocator
 tikv-jemallocator = "0.6"
 # end   -- memory allocator
@@ -95,6 +95,7 @@ windows-sys = { version = "0.61", features = [
 ] }
 libc = "0.2"
 sysinfo = "0.37"
+dirs = { version = "6" }
 dotenvy = "0.15"
 zeroize = { version = "1.8", features = ["derive"] }
 derive_more = { version = "2.0", features = [
@@ -188,7 +189,6 @@ tokio-mpmc = { version = "0.2" }
 arc-swap = { version = "1.7", features = ["serde"] }
 dashmap = { version = "6.1" }
 mea = { version = "0.4" }
-kanal = { version = "0.1" }
 # -- Logging
 log = "0.4"
 logforth = { version = "0.27", features = ["colored", "append-rolling-file"] }

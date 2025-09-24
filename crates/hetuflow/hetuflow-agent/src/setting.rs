@@ -1,4 +1,4 @@
-use std::{env::consts, path::PathBuf, sync::Arc, time::Duration};
+use std::{env::consts, os, path::PathBuf, sync::Arc, time::Duration};
 
 use duration_str::deserialize_duration;
 use fusion_common::{ahash::HashMap, env::get_env};
@@ -95,7 +95,7 @@ pub enum RetryCondition {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ProcessSetting {
   /// 进程运行基目录
-  pub run_base_dir: String,
+  run_base_dir: Option<String>,
 
   /// 清理间隔（秒）
   #[serde(deserialize_with = "deserialize_duration")]
@@ -121,6 +121,23 @@ pub struct ProcessSetting {
 
   /// 默认资源限制
   pub limits: ResourceLimits,
+}
+
+impl ProcessSetting {
+  pub fn run_base_dir(&self) -> Result<PathBuf, DataError> {
+    match self.run_base_dir.as_deref() {
+      Some(dir) => Ok(PathBuf::from(dir)),
+      None => {
+        let default_dir = dirs::home_dir()
+          .ok_or_else(|| DataError::server_error("Failed to get home dir"))?
+          .join(".hetu")
+          .join("agent")
+          .join("runs");
+        info!("Default run base dir: {:?}", default_dir);
+        Ok(default_dir)
+      }
+    }
+  }
 }
 
 /// 资源限制

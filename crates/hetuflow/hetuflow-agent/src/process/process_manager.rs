@@ -1,4 +1,3 @@
-use std::path::Path;
 use std::process::Stdio;
 use std::sync::Arc;
 
@@ -61,15 +60,9 @@ impl ProcessManager {
     cmd.args(&task.task.config.args).stdout(Stdio::piped()).stderr(Stdio::piped()).stdin(Stdio::null());
 
     // Set working directory
-    let work_dir = task
-      .task
-      .config
-      .working_directory
-      .clone()
-      .unwrap_or_else(|| format!("{}/{}/{}", self.config.run_base_dir, task.job_id(), instance_id));
-    let work_dir_path = Path::new(&work_dir);
+    let work_dir_path = self.config.run_base_dir()?.join(task.job_id().to_string()).join(instance_id.to_string());
     if !work_dir_path.exists() {
-      tokio::fs::create_dir_all(work_dir_path).await?;
+      tokio::fs::create_dir_all(&work_dir_path).await?;
     }
     cmd.current_dir(work_dir_path);
 
