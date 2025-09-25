@@ -3,6 +3,7 @@ mod distributed_lock;
 
 pub use agent::*;
 pub use distributed_lock::*;
+use uuid::Uuid;
 
 use std::sync::{
   Arc,
@@ -13,16 +14,25 @@ use fusion_common::time::now_epoch_millis;
 use mea::{mpsc, rwlock::RwLock};
 use serde::{Deserialize, Serialize};
 
-use hetuflow_core::protocol::WebSocketCommand;
+use hetuflow_core::protocol::CommandMessage;
 
-use crate::gateway::GatewayError;
+use crate::connection::GatewayError;
 
 /// 数据流动方向: Server -> Agent
 #[derive(Deserialize, utoipa::ToSchema)]
 #[serde(tag = "type", rename_all = "lowercase")]
-pub enum GatewayCommandRequest {
-  Single { agent_id: String, command: WebSocketCommand },
-  Broadcast { command: WebSocketCommand },
+pub enum CommandMessageRequest {
+  Single { command: CommandMessage, agent_id: String },
+  Broadcast { command: CommandMessage },
+}
+
+impl CommandMessageRequest {
+  pub fn command_id(&self) -> &Uuid {
+    match self {
+      CommandMessageRequest::Single { command, .. } => command.id(),
+      CommandMessageRequest::Broadcast { command } => command.id(),
+    }
+  }
 }
 
 #[derive(Serialize, utoipa::ToSchema)]
@@ -94,11 +104,11 @@ pub struct AgentConnection {
   /// 统计信息
   stats: Arc<RwLock<AgentReliabilityStats>>,
   // 当离线时，sender 为 None
-  pub sender: Option<mpsc::UnboundedSender<WebSocketCommand>>,
+  pub sender: Option<mpsc::UnboundedSender<CommandMessage>>,
 }
 
 impl AgentConnection {
-  pub fn new(agent_id: String, address: String, sender: mpsc::UnboundedSender<WebSocketCommand>) -> Self {
+  pub fn new(agent_id: String, address: String, sender: mpsc::UnboundedSender<CommandMessage>) -> Self {
     Self {
       agent_id,
       address,
@@ -113,7 +123,7 @@ impl AgentConnection {
   }
 
   /// 发送消息给 Agent
-  pub fn send_command(&self, message: WebSocketCommand) -> Result<(), GatewayError> {
+  pub fn send_command(&self, message: CommandMessage) -> Result<(), GatewayError> {
     if let Some(sender) = &self.sender {
       sender
         .send(message)

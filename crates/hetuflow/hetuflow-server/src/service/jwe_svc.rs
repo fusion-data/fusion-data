@@ -77,7 +77,7 @@ pub struct JweTokenPayload {
 
 /// JWE 服务错误类型
 #[derive(Debug, Error)]
-pub enum JweServiceError {
+pub enum JweError {
   #[error("密钥格式错误: {0}")]
   InvalidKeyFormat(String),
 
@@ -102,37 +102,37 @@ pub enum JweServiceError {
   #[error("JSON 序列化/反序列化错误: {0}")]
   JsonError(#[from] serde_json::Error),
 }
-impl From<JweServiceError> for DataError {
-  fn from(error: JweServiceError) -> Self {
+impl From<JweError> for DataError {
+  fn from(error: JweError) -> Self {
     match error {
-      JweServiceError::InvalidKeyFormat(msg) => DataError::bad_request(msg),
-      JweServiceError::TokenGenerationFailed(msg) => DataError::server_error(msg),
-      JweServiceError::TokenDecryptionFailed(msg) => DataError::bad_request(msg),
-      JweServiceError::TokenValidationFailed(msg) => DataError::bad_request(msg),
-      JweServiceError::AgentIdMismatch { expected, actual } => {
+      JweError::InvalidKeyFormat(msg) => DataError::bad_request(msg),
+      JweError::TokenGenerationFailed(msg) => DataError::server_error(msg),
+      JweError::TokenDecryptionFailed(msg) => DataError::bad_request(msg),
+      JweError::TokenValidationFailed(msg) => DataError::bad_request(msg),
+      JweError::AgentIdMismatch { expected, actual } => {
         DataError::bad_request(format!("Agent ID mismatch: expected {}, got {}", expected, actual))
       }
-      JweServiceError::TokenExpired => DataError::unauthorized("Token has expired"),
-      JweServiceError::TokenNotYetValid => DataError::unauthorized("Token is not yet valid"),
-      JweServiceError::JsonError(e) => DataError::bad_request(e.to_string()),
+      JweError::TokenExpired => DataError::unauthorized("Token has expired"),
+      JweError::TokenNotYetValid => DataError::unauthorized("Token is not yet valid"),
+      JweError::JsonError(e) => DataError::bad_request(e.to_string()),
     }
   }
 }
 
 /// JWE Token 认证服务
 #[derive(Debug, Clone)]
-pub struct JweService {
+pub struct JweSvc {
   config: JweConfig,
   private_key: Jwk,
   public_key: Jwk,
 }
 
-impl JweService {
+impl JweSvc {
   /// 创建新的 JWE 服务实例
-  pub fn new(config: JweConfig) -> Result<Self, JweServiceError> {
+  pub fn new(config: JweConfig) -> Result<Self, JweError> {
     // 解析私钥 (PEM 格式)
     let ec_key_pair = EcKeyPair::from_pem(&config.private_key, Some(EcCurve::P256))
-      .map_err(|e| JweServiceError::InvalidKeyFormat(format!("私钥解析失败: {}", e)))?;
+      .map_err(|e| JweError::InvalidKeyFormat(format!("私钥解析失败: {}", e)))?;
     let private_key = ec_key_pair.to_jwk_private_key();
 
     // 解析公钥 (PEM 格式) - 从私钥生成对应的公钥
@@ -142,12 +142,7 @@ impl JweService {
   }
 
   /// 生成 JWE Token
-  pub fn generate_token(
-    &self,
-    agent_id: &str,
-    server_id: &str,
-    permissions: Vec<String>,
-  ) -> Result<String, JweServiceError> {
+  pub fn generate_token(&self, agent_id: &str, server_id: &str, permissions: Vec<String>) -> Result<String, JweError> {
     let now = Utc::now();
     let exp = if self.config.token_ttl > 0 { now.timestamp() + self.config.token_ttl as i64 } else { i64::MAX };
     let jti = Uuid::new_v4().to_string();
@@ -178,24 +173,24 @@ impl JweService {
     let context = JweContext::new();
     let encrypter = josekit::jwe::ECDH_ES
       .encrypter_from_jwk(&self.public_key)
-      .map_err(|e| JweServiceError::TokenGenerationFailed(format!("创建加密器失败: {}", e)))?;
+      .map_err(|e| JweError::TokenGenerationFailed(format!("创建加密器失败: {}", e)))?;
     let token = context
       .serialize_compact(payload_json.as_bytes(), &header, &encrypter)
-      .map_err(|e| JweServiceError::TokenGenerationFailed(format!("JWE 加密失败: {}", e)))?;
+      .map_err(|e| JweError::TokenGenerationFailed(format!("JWE 加密失败: {}", e)))?;
 
     Ok(token)
   }
 
   /// 验证并解密 JWE Token
-  pub fn verify_token(&self, token: &str, expected_agent_id: String) -> Result<JweTokenPayload, JweServiceError> {
+  pub fn verify_token(&self, token: &str, expected_agent_id: String) -> Result<JweTokenPayload, JweError> {
     // 解密 JWE Token
     let context = JweContext::new();
     let decrypter = josekit::jwe::ECDH_ES
       .decrypter_from_jwk(&self.private_key)
-      .map_err(|e| JweServiceError::TokenDecryptionFailed(format!("创建解密器失败: {}", e)))?;
+      .map_err(|e| JweError::TokenDecryptionFailed(format!("创建解密器失败: {}", e)))?;
     let (payload_bytes, _header) = context
       .deserialize_compact(token, &decrypter)
-      .map_err(|e| JweServiceError::TokenDecryptionFailed(format!("JWE 解密失败: {}", e)))?;
+      .map_err(|e| JweError::TokenDecryptionFailed(format!("JWE 解密失败: {}", e)))?;
 
     // 反序列化 Payload
     let payload: JweTokenPayload = serde_json::from_slice(&payload_bytes)?;
@@ -203,30 +198,30 @@ impl JweService {
     // 验证时间
     let now = Utc::now().timestamp();
     if payload.exp < now {
-      return Err(JweServiceError::TokenExpired);
+      return Err(JweError::TokenExpired);
     }
     if payload.nbf > now {
-      return Err(JweServiceError::TokenNotYetValid);
+      return Err(JweError::TokenNotYetValid);
     }
 
     // 验证 sub 字段与 agent_id 一致性
     if payload.sub != expected_agent_id {
-      return Err(JweServiceError::TokenValidationFailed("sub 字段与 agent_id 不一致".to_string()));
+      return Err(JweError::TokenValidationFailed("sub 字段与 agent_id 不一致".to_string()));
     }
 
     Ok(payload)
   }
 
   /// 生成 ECDH-ES 密钥对
-  pub fn generate_key_pair() -> Result<(String, String), JweServiceError> {
-    let key_pair = EcKeyPair::generate(EcCurve::P256)
-      .map_err(|e| JweServiceError::InvalidKeyFormat(format!("密钥生成失败: {}", e)))?;
+  pub fn generate_key_pair() -> Result<(String, String), JweError> {
+    let key_pair =
+      EcKeyPair::generate(EcCurve::P256).map_err(|e| JweError::InvalidKeyFormat(format!("密钥生成失败: {}", e)))?;
 
     let private_key_pem = String::from_utf8(key_pair.to_pem_private_key())
-      .map_err(|e| JweServiceError::InvalidKeyFormat(format!("私钥转换失败: {}", e)))?;
+      .map_err(|e| JweError::InvalidKeyFormat(format!("私钥转换失败: {}", e)))?;
 
     let public_key_pem = String::from_utf8(key_pair.to_pem_public_key())
-      .map_err(|e| JweServiceError::InvalidKeyFormat(format!("公钥转换失败: {}", e)))?;
+      .map_err(|e| JweError::InvalidKeyFormat(format!("公钥转换失败: {}", e)))?;
 
     Ok((private_key_pem, public_key_pem))
   }
@@ -239,7 +234,7 @@ mod tests {
   #[tokio::test]
   async fn test_jwe_token_generation_and_verification() {
     // 生成测试密钥对
-    let (private_key, public_key) = JweService::generate_key_pair().unwrap();
+    let (private_key, public_key) = JweSvc::generate_key_pair().unwrap();
 
     let config = JweConfig {
       private_key,
@@ -249,7 +244,7 @@ mod tests {
       token_ttl: 3600,
     };
 
-    let service = JweService::new(config).unwrap();
+    let service = JweSvc::new(config).unwrap();
     let agent_id = Uuid::new_v4().to_string();
     let server_id = Uuid::new_v4().to_string();
     let permissions = vec!["read".to_string(), "write".to_string()];
@@ -267,7 +262,7 @@ mod tests {
 
   #[tokio::test]
   async fn test_agent_id_mismatch() {
-    let (private_key, public_key) = JweService::generate_key_pair().unwrap();
+    let (private_key, public_key) = JweSvc::generate_key_pair().unwrap();
 
     let config = JweConfig {
       private_key,
@@ -277,7 +272,7 @@ mod tests {
       token_ttl: 3600,
     };
 
-    let service = JweService::new(config).unwrap();
+    let service = JweSvc::new(config).unwrap();
     let agent_id = Uuid::new_v4().to_string();
     let different_agent_id = Uuid::new_v4().to_string();
     let server_id = Uuid::new_v4().to_string();
@@ -288,12 +283,12 @@ mod tests {
 
     // 使用不同的 agent_id 验证应该失败
     let result = service.verify_token(&token, different_agent_id);
-    assert!(matches!(result, Err(JweServiceError::AgentIdMismatch { .. })));
+    assert!(matches!(result, Err(JweError::AgentIdMismatch { .. })));
   }
 
   #[tokio::test]
   async fn test_token_expiration() {
-    let (private_key, public_key) = JweService::generate_key_pair().unwrap();
+    let (private_key, public_key) = JweSvc::generate_key_pair().unwrap();
 
     let config = JweConfig {
       private_key,
@@ -303,7 +298,7 @@ mod tests {
       token_ttl: 1, // 1秒过期
     };
 
-    let service = JweService::new(config).unwrap();
+    let service = JweSvc::new(config).unwrap();
     let agent_id = Uuid::new_v4().to_string();
     let server_id = Uuid::new_v4().to_string();
     let permissions = vec!["read".to_string()];
@@ -316,12 +311,12 @@ mod tests {
 
     // 验证过期的 Token 应该失败
     let result = service.verify_token(&token, agent_id);
-    assert!(matches!(result, Err(JweServiceError::TokenExpired)));
+    assert!(matches!(result, Err(JweError::TokenExpired)));
   }
 
   #[tokio::test]
   async fn test_invalid_token_format() {
-    let (private_key, public_key) = JweService::generate_key_pair().unwrap();
+    let (private_key, public_key) = JweSvc::generate_key_pair().unwrap();
 
     let config = JweConfig {
       private_key,
@@ -331,18 +326,18 @@ mod tests {
       token_ttl: 3600,
     };
 
-    let service = JweService::new(config).unwrap();
+    let service = JweSvc::new(config).unwrap();
     let agent_id = Uuid::new_v4().to_string();
 
     // 测试无效的 Token 格式
     let invalid_token = "invalid.token.format";
     let result = service.verify_token(invalid_token, agent_id.clone());
-    assert!(matches!(result, Err(JweServiceError::TokenDecryptionFailed(_))));
+    assert!(matches!(result, Err(JweError::TokenDecryptionFailed(_))));
   }
 
   #[tokio::test]
   async fn test_key_pair_generation() {
-    let result = JweService::generate_key_pair();
+    let result = JweSvc::generate_key_pair();
     assert!(result.is_ok());
 
     let (private_key, public_key) = result.unwrap();
@@ -362,7 +357,7 @@ mod tests {
 
   #[tokio::test]
   async fn test_multiple_permissions() {
-    let (private_key, public_key) = JweService::generate_key_pair().unwrap();
+    let (private_key, public_key) = JweSvc::generate_key_pair().unwrap();
 
     let config = JweConfig {
       private_key,
@@ -372,7 +367,7 @@ mod tests {
       token_ttl: 3600,
     };
 
-    let service = JweService::new(config).unwrap();
+    let service = JweSvc::new(config).unwrap();
     let agent_id = Uuid::new_v4().to_string();
     let server_id = Uuid::new_v4().to_string();
     let permissions = vec!["read".to_string(), "write".to_string(), "execute".to_string(), "admin".to_string()];

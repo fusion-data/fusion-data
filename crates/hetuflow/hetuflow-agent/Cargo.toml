@@ -11,6 +11,10 @@ authors.workspace = true
 [lints]
 workspace = true
 
+[[bin]]
+name = "hetuflow-agent"
+path = "bin/hetuflow-agent.rs"
+
 [dependencies]
 hetuflow-core = { workspace = true }
 fusion-common = { workspace = true, features = ["with-uuid"] }

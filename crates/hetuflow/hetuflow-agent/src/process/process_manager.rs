@@ -10,7 +10,7 @@ use tokio::sync::broadcast;
 use uuid::Uuid;
 
 use hetuflow_core::protocol::{
-  LogKind, LogMessage, ProcessEvent, ProcessEventKind, ProcessInfo, ProcessStatus, ScheduledTask, WebSocketEvent,
+  AgentLogMessage, EventMessage, LogKind, ProcessEvent, ProcessEventKind, ProcessInfo, ProcessStatus, ScheduledTask,
 };
 
 use crate::connection::ConnectionManager;
@@ -155,7 +155,7 @@ impl ProcessManager {
               let trimmed = line.trim_end();
               sequence += 1;
               let _ = connection_manager
-                .send_event(WebSocketEvent::new_task_log(LogMessage::new(
+                .send_event(EventMessage::new_log_message(AgentLogMessage::new(
                   instance_id,
                   sequence,
                   LogKind::Stderr,
@@ -188,7 +188,7 @@ impl ProcessManager {
               let trimmed = line.trim_end();
               sequence += 1;
               let _ = connection_manager
-                .send_event(WebSocketEvent::new_task_log(LogMessage::new(
+                .send_event(EventMessage::new_log_message(AgentLogMessage::new(
                   instance_id,
                   sequence,
                   LogKind::Stdout,

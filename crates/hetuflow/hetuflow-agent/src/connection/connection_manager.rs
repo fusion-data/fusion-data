@@ -4,17 +4,14 @@ use fusion_core::DataError;
 use mea::rwlock::RwLock;
 use tokio::sync::{broadcast, mpsc};
 
-use hetuflow_core::{
-  protocol::{AcquireTaskResponse, WebSocketEvent},
-  types::HetuflowCommand,
-};
+use hetuflow_core::protocol::{AcquireTaskResponse, CommandMessage, EventMessage};
 
 /// 连接管理器
 /// 负责与 HetuFlow Gateway 的连接管理、心跳机制和消息传输
 pub struct ConnectionManager {
   acquire_task_broadcaster: broadcast::Sender<Arc<AcquireTaskResponse>>,
-  command_publisher: broadcast::Sender<HetuflowCommand>,
-  event_sender: RwLock<Option<mpsc::UnboundedSender<WebSocketEvent>>>,
+  command_publisher: broadcast::Sender<CommandMessage>,
+  event_sender: RwLock<Option<mpsc::UnboundedSender<EventMessage>>>,
 }
 
 impl Default for ConnectionManager {
@@ -32,7 +29,7 @@ impl ConnectionManager {
     Self { acquire_task_broadcaster, command_publisher, event_sender: RwLock::new(None) }
   }
 
-  pub async fn send_event(&self, event: WebSocketEvent) -> Result<(), DataError> {
+  pub async fn send_event(&self, event: EventMessage) -> Result<(), DataError> {
     let guard = self.event_sender.read().await;
     let event_tx = guard.as_ref().ok_or_else(|| DataError::server_error("Event sender not initialized"))?;
     event_tx.send(event).map_err(DataError::from)
@@ -40,15 +37,15 @@ impl ConnectionManager {
 
   pub async fn set_event_sender(
     &self,
-    event_sender: mpsc::UnboundedSender<WebSocketEvent>,
-  ) -> Option<mpsc::UnboundedSender<WebSocketEvent>> {
+    event_sender: mpsc::UnboundedSender<EventMessage>,
+  ) -> Option<mpsc::UnboundedSender<EventMessage>> {
     let mut guard = self.event_sender.write().await;
     let older = guard.take();
     *guard = Some(event_sender);
     older
   }
 
-  pub async fn clean_event_sender(&self) -> Option<mpsc::UnboundedSender<WebSocketEvent>> {
+  pub async fn clean_event_sender(&self) -> Option<mpsc::UnboundedSender<EventMessage>> {
     let mut guard = self.event_sender.write().await;
     let older = guard.take();
     *guard = None;
@@ -56,11 +53,11 @@ impl ConnectionManager {
   }
 
   /// Subscribe to commands sent from the Server
-  pub fn subscribe_command(&self) -> broadcast::Receiver<HetuflowCommand> {
+  pub fn subscribe_command(&self) -> broadcast::Receiver<CommandMessage> {
     self.command_publisher.subscribe()
   }
 
-  pub fn publish_command(&self, command: HetuflowCommand) -> Result<usize, DataError> {
+  pub fn publish_command(&self, command: CommandMessage) -> Result<usize, DataError> {
     self
       .command_publisher
       .send(command)

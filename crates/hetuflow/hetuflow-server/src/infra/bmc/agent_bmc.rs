@@ -6,7 +6,7 @@ use modelsql::{
   generate_pg_bmc_common, generate_pg_bmc_filter,
 };
 
-use hetuflow_core::{protocol::AgentRegisterRequest, types::AgentStatus};
+use hetuflow_core::{protocol::RegisterAgentRequest, types::AgentStatus};
 
 use hetuflow_core::models::{AgentFilter, AgentForCreate, AgentForUpdate, SchedAgent};
 
@@ -77,7 +77,7 @@ impl AgentBmc {
   pub async fn register(
     mm: &ModelManager,
     agent_id: &str,
-    payload: &AgentRegisterRequest,
+    payload: &RegisterAgentRequest,
   ) -> Result<SchedAgent, SqlError> {
     let sql = r#"
       insert into sched_agent (id, address, status, capabilities, last_heartbeat)

@@ -75,33 +75,26 @@ impl AgentApplication {
       self.process_manager.clone(),
       shutdown_rx.clone(),
     );
-    handles.push(ServiceHandle::new(
-      "ProcessEventRunner",
-      tokio::spawn(async move { event_process_runner.run_loop().await }),
-    ));
+    handles.push(event_process_runner.run());
 
     let (scheduled_task_tx, scheduled_task_rx) = mea::mpsc::unbounded();
 
-    let mut task_execute_runner = TaskExecuteRunner::new(
+    let task_execute_runner = TaskExecuteRunner::new(
       self.setting.clone(),
       self.connection_manager.clone(),
       self.process_manager.clone(),
       scheduled_task_rx,
     );
-    handles
-      .push(ServiceHandle::new("TaskExecuteRunner", tokio::spawn(async move { task_execute_runner.run_loop().await })));
+    handles.push(task_execute_runner.run());
 
-    let mut schedule_task_runner = CommandProcessRunner::new(
+    let schedule_task_runner = CommandProcessRunner::new(
       self.setting.clone(),
       scheduled_task_tx,
       shutdown_rx.clone(),
       Application::global().component::<Timer>().timer_ref(),
       self.connection_manager.subscribe_command(),
     );
-    handles.push(ServiceHandle::new(
-      "ScheduleTaskRunner",
-      tokio::spawn(async move { schedule_task_runner.run_loop().await }),
-    ));
+    handles.push(schedule_task_runner.run());
 
     let poll_task_runner = PollTaskRunner::new(
       self.setting.clone(),
@@ -109,16 +102,13 @@ impl AgentApplication {
       self.process_manager.clone(),
       shutdown_rx.clone(),
     );
-    handles.push(ServiceHandle::new("PollTaskRunner", tokio::spawn(async move { poll_task_runner.run_loop().await })));
+    handles.push(poll_task_runner.run());
 
-    let mut ws_runner = WsRunner::new(self.setting.clone(), self.connection_manager.clone(), shutdown_rx.clone()).await;
-    handles.push(ServiceHandle::new("WsRunner", tokio::spawn(async move { ws_runner.run_loop().await })));
+    let ws_runner = WsRunner::new(self.setting.clone(), self.connection_manager.clone(), shutdown_rx.clone()).await;
+    handles.push(ws_runner.run());
 
     let process_cleanup_runner = ProcessCleanupRunner::new(self.process_manager.clone(), shutdown_rx.clone());
-    handles.push(ServiceHandle::new(
-      "ProcessCleanupRunner",
-      tokio::spawn(async move { process_cleanup_runner.run_loop().await }),
-    ));
+    handles.push(process_cleanup_runner.run());
 
     info!("AgentApplication started successfully");
     Ok(())

@@ -7,6 +7,8 @@ use crate::{
   types::{Labels, TaskInstanceStatus},
 };
 
+use super::{Command, Event};
+
 /// 任务分发请求
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ScheduledTask {
@@ -92,6 +94,8 @@ pub struct TaskInstanceChanged {
   pub metrics: Option<TaskMetrics>,
 }
 
+impl Event for TaskInstanceChanged {}
+
 impl TaskInstanceChanged {
   pub fn with_status(&mut self, status: TaskInstanceStatus) -> &Self {
     self.status = status;
@@ -129,6 +133,8 @@ pub struct AcquireTaskRequest {
   pub max_scheduled_at: OffsetDateTime,
 }
 
+impl Event for AcquireTaskRequest {}
+
 /// Task response, for task pull requests or direct task assignments from Server to Agent
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct AcquireTaskResponse {
@@ -136,6 +142,7 @@ pub struct AcquireTaskResponse {
   pub has_more: bool,            // 是否还有更多任务
   pub next_poll_interval: u32,   // 下次拉取间隔(秒)
 }
+impl Command for AcquireTaskResponse {}
 
 /// 创建任务实例请求
 #[derive(Serialize, Deserialize, Debug, Clone)]

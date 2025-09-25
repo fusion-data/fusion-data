@@ -1,11 +1,11 @@
 use std::{sync::Arc, time::Duration};
 
 use fusion_common::{ahash::HashMap, time::now_epoch_millis};
-use hetuflow_core::protocol::WebSocketCommand;
+use hetuflow_core::protocol::CommandMessage;
 use log::{debug, error, info};
 use mea::{mpsc, rwlock::RwLock};
 
-use crate::model::{AgentConnection, AgentEvent, ConnectionStats, GatewayCommandRequest};
+use crate::model::{AgentConnection, AgentEvent, CommandMessageRequest, ConnectionStats};
 
 use super::GatewayError;
 
@@ -66,14 +66,6 @@ impl ConnectionManager {
     Ok(())
   }
 
-  /// 发送消息
-  pub async fn send(&self, command: GatewayCommandRequest) -> Result<(), GatewayError> {
-    match command {
-      GatewayCommandRequest::Single { agent_id, command } => self.send_to_agent(&agent_id, command).await,
-      GatewayCommandRequest::Broadcast { command } => self.send_to_all(command).await,
-    }
-  }
-
   /// 获取连接统计信息
   pub async fn get_connection_stats(&self) -> Result<ConnectionStats, GatewayError> {
     let connections = self.connections.read().await;
@@ -129,10 +121,19 @@ impl ConnectionManager {
     Ok(())
   }
 
+  /// 发送消息
+  pub async fn send(&self, command: CommandMessageRequest) -> Result<(), GatewayError> {
+    match command {
+      CommandMessageRequest::Single { agent_id, command } => self.send_to_agent(&agent_id, command).await,
+      CommandMessageRequest::Broadcast { command } => self.send_to_all(command).await,
+    }
+  }
+
   /// 发送消息给指定 Agent
-  pub async fn send_to_agent(&self, agent_id: &str, command: WebSocketCommand) -> Result<(), GatewayError> {
+  pub async fn send_to_agent(&self, agent_id: &str, command: CommandMessage) -> Result<(), GatewayError> {
     let connections = self.connections.read().await;
     if let Some(connection) = connections.get(agent_id) {
+      info!("Sending command to agent {}: {:?}", agent_id, command);
       connection.send_command(command)
     } else {
       Err(GatewayError::connection_not_found(agent_id.to_string()))
@@ -140,7 +141,7 @@ impl ConnectionManager {
   }
 
   /// 广播消息给所有在线 Agent
-  async fn send_to_all(&self, command: WebSocketCommand) -> Result<(), GatewayError> {
+  async fn send_to_all(&self, command: CommandMessage) -> Result<(), GatewayError> {
     let connections = self.get_online_agents().await?;
     let mut failed_agents = Vec::new();
 

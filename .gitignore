@@ -347,3 +347,6 @@ runs/
 .trae/
 .claude/
 CLAUDE.md
+.qwen/
+QWEN.md
+

@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use fusion_common::process::is_zombie_process;
 use fusion_common::time::now_epoch_millis;
+use fusion_core::concurrent::handle::ServiceHandle;
 use hetuflow_core::protocol::{ProcessEvent, ProcessEventKind, ProcessStatus};
 use log::{info, warn};
 use mea::shutdown::ShutdownRecv;
@@ -29,8 +30,12 @@ impl ProcessCleanupRunner {
     }
   }
 
+  pub fn run(self) -> ServiceHandle {
+    ServiceHandle::new("ProcessCleanupRunner", tokio::spawn(async move { self.run_loop().await }))
+  }
+
   /// 清理循环
-  pub async fn run_loop(&self) {
+  async fn run_loop(&self) {
     info!("ProcessManager cleanup loop started");
 
     let mut cleanup_interval = tokio::time::interval(self.config.cleanup_interval);

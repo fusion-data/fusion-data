@@ -1,4 +1,4 @@
-use std::{env::consts, os, path::PathBuf, sync::Arc, time::Duration};
+use std::{env::consts, path::PathBuf, sync::Arc, time::Duration};
 
 use duration_str::deserialize_duration;
 use fusion_common::{ahash::HashMap, env::get_env};

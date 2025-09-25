@@ -1,8 +1,9 @@
 use std::sync::Arc;
 
 use fusion_common::time::{now_epoch_millis, now_offset};
+use fusion_core::concurrent::handle::ServiceHandle;
 use hetuflow_core::{
-  protocol::{ScheduledTask, TaskInstanceChanged, WebSocketEvent},
+  protocol::{EventMessage, ScheduledTask, TaskInstanceChanged},
   types::TaskInstanceStatus,
 };
 use log::{error, info, warn};
@@ -30,8 +31,12 @@ impl TaskExecuteRunner {
     Self { setting, connection_manager, process_manager, scheduled_task_rx }
   }
 
+  pub fn run(mut self) -> ServiceHandle {
+    ServiceHandle::new("TaskExecuteRunner", tokio::spawn(async move { self.run_loop().await }))
+  }
+
   /// 启动任务执行器
-  pub async fn run_loop(&mut self) {
+  async fn run_loop(&mut self) {
     info!("Starting TaskExecutor for agent {}", self.setting.agent_id);
 
     loop {
@@ -67,7 +72,7 @@ impl TaskExecuteRunner {
     }
     if let Err(e) = self
       .connection_manager
-      .send_event(WebSocketEvent::new_task_instance_updated(TaskInstanceChanged {
+      .send_event(EventMessage::new_task_instance_changed(TaskInstanceChanged {
         instance_id: task.task_instance_id(),
         agent_id: self.setting.agent_id.clone(),
         status: TaskInstanceStatus::Running,
@@ -86,7 +91,7 @@ impl TaskExecuteRunner {
     Ok(())
   }
 
-  fn process_execution_error(agent_id: String, instance_id: Uuid, error: TaskExecutionError) -> WebSocketEvent {
+  fn process_execution_error(agent_id: String, instance_id: Uuid, error: TaskExecutionError) -> EventMessage {
     let mut payload = TaskInstanceChanged {
       instance_id,
       agent_id,
@@ -107,6 +112,6 @@ impl TaskExecuteRunner {
       TaskExecutionError::NetworkError => payload.with_error_message("Network error"),
       TaskExecutionError::Failed => payload.with_error_message("Failed"),
     };
-    WebSocketEvent::new_task_instance_updated(payload)
+    EventMessage::new_task_instance_changed(payload)
   }
 }

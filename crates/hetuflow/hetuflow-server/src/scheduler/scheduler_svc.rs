@@ -15,16 +15,13 @@ use hetuflow_core::types::{ScheduleKind, ScheduleStatus, TaskInstanceStatus, Tas
 
 use crate::infra::bmc::{JobBmc, ScheduleBmc, TaskBmc, TaskInstanceBmc};
 
-/// 任务生成服务
-///
-/// 负责：
-/// - 根据 Schedule 预生成未来一段时间的 SchedTaskInstance
-/// - 基于外部事件或 API 调用按需生成 SchedTaskInstance
-pub struct TaskGenerationSvc {
+/// 调度服务
+#[derive(Clone)]
+pub struct SchedulerSvc {
   mm: ModelManager,
 }
 
-impl TaskGenerationSvc {
+impl SchedulerSvc {
   /// 创建任务生成服务
   pub fn new(mm: ModelManager) -> Self {
     Self { mm }
@@ -49,7 +46,7 @@ impl TaskGenerationSvc {
 
     let mm = self.mm.get_txn_clone();
     mm.dbx().begin_txn().await?;
-    let task_id = self.create_task_and_instance(&mm, &job, None, now_offset(), parameters, priority).await?;
+    let task_id = Self::create_task_and_instance(&mm, &job, None, now_offset(), parameters, priority).await?;
     mm.dbx().commit_txn().await?;
 
     info!("Generated event-driven task {} for job {}", task_id, job_id);
@@ -69,21 +66,23 @@ impl TaskGenerationSvc {
     to_time: OffsetDateTime,
   ) -> Result<Vec<Uuid>, DataError> {
     let mut generated_task_ids = Vec::new();
+    let mm = self.mm.get_txn_clone();
+    mm.dbx().begin_txn().await?;
 
     // 1. 读取 schedule_kind 为 (Cron, Time) 且有效的 SchedSchedule
-    let schedule_entities = ScheduleBmc::find_schedulable_entities(&self.mm).await?;
+    let schedule_entities = ScheduleBmc::find_schedulable_entities(&mm).await?;
 
     // 2. 遍历 schedule_entities，找到对应的有效 SchedJob
     for schedule in schedule_entities {
       // 3. 检查是否过期
       if schedule.end_time.is_some_and(|end_time| end_time < from_time) {
         info!("Schedule {} is expired, end time is {:?}", schedule.id, schedule.end_time);
-        ScheduleBmc::update_status_by_id(&self.mm, schedule.id, ScheduleStatus::Expired).await?;
+        ScheduleBmc::update_status_by_id(&mm, schedule.id, ScheduleStatus::Expired).await?;
         continue;
       }
 
       // 获取关联的 Job
-      let job = match JobBmc::find_enabled_by_id(&self.mm, schedule.job_id).await? {
+      let job = match JobBmc::find_enabled_by_id(&mm, schedule.job_id).await? {
         Some(job) => job,
         None => {
           info!("Job {} not found for schedule {}, skipping", schedule.job_id, schedule.id);
@@ -93,21 +92,22 @@ impl TaskGenerationSvc {
 
       // 4. 根据 schedule_entity.schedule_kind 调用不同的生成方法
       let task_ids = match schedule.schedule_kind {
-        ScheduleKind::Cron => self.generate_cron_tasks(&schedule, &job, from_time, to_time).await?,
-        ScheduleKind::Interval => self.generate_interval_tasks(&schedule, &job, from_time, to_time).await?,
+        ScheduleKind::Cron => Self::generate_cron_tasks(&mm, &schedule, &job, from_time, to_time).await?,
+        ScheduleKind::Interval => Self::generate_interval_tasks(&mm, &schedule, &job, from_time, to_time).await?,
         _ => continue, // 其他类型暂不处理
       };
 
       generated_task_ids.extend(task_ids);
     }
 
+    mm.dbx().commit_txn().await?;
     info!("Generated {} tasks for time range {:?} to {:?}", generated_task_ids.len(), from_time, to_time);
     Ok(generated_task_ids)
   }
 
   /// 为 Cron 类型的 Schedule 生成任务
   async fn generate_cron_tasks(
-    &self,
+    mm: &ModelManager,
     schedule: &SchedSchedule,
     job: &SchedJob,
     from_time: OffsetDateTime,
@@ -133,9 +133,6 @@ impl TaskGenerationSvc {
     let max_iterations = 1000; // 防止无限循环
     let mut iteration_count = 0;
 
-    let mm = self.mm.get_txn_clone();
-    mm.dbx().begin_txn().await?;
-
     while current_time < to_time && iteration_count < max_iterations {
       iteration_count += 1;
 
@@ -157,13 +154,13 @@ impl TaskGenerationSvc {
       };
 
       // 3. 检查任务是否已存在（去重）
-      let existing_task = TaskBmc::find_task_by_schedule_and_time(&self.mm, &schedule.id, scheduled_at).await?;
+      let existing_task = TaskBmc::find_task_by_schedule_and_time(mm, &schedule.id, scheduled_at).await?;
       if existing_task.is_some() {
         current_time = scheduled_at + Duration::from_secs(1);
         continue;
       }
 
-      let task_id = self.create_task_and_instance(&mm, job, Some(schedule.id), scheduled_at, json!({}), None).await?;
+      let task_id = Self::create_task_and_instance(mm, job, Some(schedule.id), scheduled_at, json!({}), None).await?;
       task_ids.push(task_id);
 
       info!("Generated cron task {} for schedule {} at {}", task_id, schedule.id, scheduled_at);
@@ -171,8 +168,6 @@ impl TaskGenerationSvc {
       // 移动到下一个时间点
       current_time = scheduled_at + Duration::from_secs(1);
     }
-
-    mm.dbx().commit_txn().await?;
 
     if iteration_count >= max_iterations {
       warn!("Reached maximum iterations ({}) when generating cron tasks for schedule {}", max_iterations, schedule.id);
@@ -183,7 +178,7 @@ impl TaskGenerationSvc {
 
   /// 为 Interval 类型的 Schedule 生成任务
   async fn generate_interval_tasks(
-    &self,
+    mm: &ModelManager,
     schedule: &SchedSchedule,
     job: &SchedJob,
     from_time: OffsetDateTime,
@@ -200,26 +195,21 @@ impl TaskGenerationSvc {
 
     let mut task_ids = Vec::new();
 
-    let mm = self.mm.get_txn_clone();
-    mm.dbx().begin_txn().await?;
-
     // Calculate execution times within the range
     let mut schedule_at = schedule.start_time.unwrap_or(from_time);
     while schedule_at < to_time {
       // Check for existing tasks at this time
-      let existing_task = TaskBmc::find_task_by_schedule_and_time(&self.mm, &schedule.id, schedule_at).await?;
+      let existing_task = TaskBmc::find_task_by_schedule_and_time(mm, &schedule.id, schedule_at).await?;
       if existing_task.is_some() {
         continue;
       }
 
-      let task_id = self.create_task_and_instance(&mm, job, Some(schedule.id), schedule_at, json!({}), None).await?;
+      let task_id = Self::create_task_and_instance(mm, job, Some(schedule.id), schedule_at, json!({}), None).await?;
       task_ids.push(task_id);
 
       // Move to next interval
       schedule_at += Duration::from_secs(interval_secs as u64);
     }
-
-    mm.dbx().commit_txn().await?;
 
     Ok(task_ids)
   }
@@ -299,7 +289,6 @@ impl TaskGenerationSvc {
   }
 
   async fn create_task_and_instance(
-    &self,
     mm: &ModelManager,
     job: &SchedJob,
     schedule_id: Option<Uuid>,

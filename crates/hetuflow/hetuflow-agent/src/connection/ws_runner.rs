@@ -1,11 +1,10 @@
 use std::sync::Arc;
 
-use fusion_core::{DataError, IdUuidResult};
+use fusion_core::{DataError, concurrent::handle::ServiceHandle};
 use futures_util::{SinkExt, StreamExt, stream::SplitSink};
 use hetuflow_core::{
   models::AgentCapabilities,
-  protocol::{AcquireTaskResponse, AgentRegisterRequest, WebSocketCommand, WebSocketEvent},
-  types::{CommandKind, HetuflowCommand},
+  protocol::{CommandMessage, EventMessage, RegisterAgentRequest},
 };
 use log::{error, info, warn};
 use mea::shutdown::ShutdownRecv;
@@ -18,7 +17,7 @@ pub struct WsRunner {
   setting: Arc<HetuflowAgentSetting>,
   connection_manager: Arc<ConnectionManager>,
   shutdown_rx: ShutdownRecv,
-  event_rx: mpsc::UnboundedReceiver<WebSocketEvent>,
+  event_rx: mpsc::UnboundedReceiver<EventMessage>,
 }
 
 impl WsRunner {
@@ -32,7 +31,11 @@ impl WsRunner {
     Self { setting, connection_manager, shutdown_rx, event_rx }
   }
 
-  pub async fn run_loop(&mut self) {
+  pub fn run(mut self) -> ServiceHandle {
+    ServiceHandle::new("WsRunner", tokio::spawn(async move { self.run_loop().await }))
+  }
+
+  async fn run_loop(&mut self) {
     while let Err(e) = self.run_websocket_loop().await {
       if self.shutdown_rx.is_shutdown_now() {
         break;
@@ -80,15 +83,8 @@ impl WsRunner {
           };
           match msg {
             Message::Text(text) => {
-              if let Ok(cmd) = serde_json::from_str::<WebSocketCommand>(&text)
-                && let Err(e) = process_command(&self.connection_manager, cmd)
-              {
-                return Err(DataError::server_error(format!("Failed to send WebSocket command: {}", e)));
-              }
-            }
-            Message::Binary(bin) => {
-              if let Ok(cmd) = serde_json::from_slice::<WebSocketCommand>(&bin)
-                && let Err(e) = process_command(&self.connection_manager, cmd)
+              if let Ok(cmd) = serde_json::from_str::<CommandMessage>(&text)
+                && let Err(e) = self.connection_manager.publish_command(cmd)
               {
                 return Err(DataError::server_error(format!("Failed to send WebSocket command: {}", e)));
               }
@@ -97,9 +93,7 @@ impl WsRunner {
               info!("WebSocketMessage channel closed");
               return Ok(());
             }
-            _ => {
-              // do nothing
-            }
+            _ => { /* Ignore other message types */}
           }
         }
       }
@@ -169,47 +163,16 @@ impl WsRunner {
       labels: self.setting.labels.clone(),
       metadata: self.setting.metadata.clone(),
     };
-    let register_req = AgentRegisterRequest {
+    let register_req = RegisterAgentRequest {
       agent_id: self.setting.agent_id.clone(),
       capabilities,
       address,
       jwe_token: self.setting.jwe_token.clone(),
     };
-    let message = serde_json::to_string(&WebSocketEvent::new_agent_register(register_req)).unwrap();
+    let message = serde_json::to_string(&EventMessage::new_register_agent(register_req)).unwrap();
     ws_tx
       .send(Message::Text(message.into()))
       .await
       .map_err(|e| DataError::server_error(format!("Send message to Server error: {}", e)))
   }
-}
-
-/// 处理从 Server 接收到的命令消息
-fn process_command(connection_manager: &ConnectionManager, cmd: WebSocketCommand) -> Result<(), DataError> {
-  match cmd.kind {
-    CommandKind::DispatchTask => {
-      let resp: AcquireTaskResponse = serde_json::from_value(cmd.parameters).unwrap();
-      let _ = connection_manager.publish_command(HetuflowCommand::AcquiredTask(Arc::new(resp)));
-    }
-    CommandKind::Shutdown => {
-      let _ = connection_manager.publish_command(HetuflowCommand::Shutdown);
-    }
-    CommandKind::UpdateConfig => {
-      let _ = connection_manager.publish_command(HetuflowCommand::UpdateConfig);
-    }
-    CommandKind::ClearCache => {
-      let _ = connection_manager.publish_command(HetuflowCommand::ClearCache);
-    }
-    CommandKind::FetchMetrics => {
-      let _ = connection_manager.publish_command(HetuflowCommand::FetchMetrics);
-    }
-    CommandKind::AgentRegistered => {
-      let resp = serde_json::from_value(cmd.parameters).unwrap();
-      let _ = connection_manager.publish_command(HetuflowCommand::AgentRegistered(Arc::new(resp)));
-    }
-    CommandKind::CancelTask => {
-      let resp: IdUuidResult = serde_json::from_value(cmd.parameters).unwrap();
-      let _ = connection_manager.publish_command(HetuflowCommand::CancelTask(Arc::new(resp.id)));
-    }
-  }
-  Ok(())
 }

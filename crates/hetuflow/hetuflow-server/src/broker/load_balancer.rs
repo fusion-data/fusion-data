@@ -7,7 +7,7 @@ use log::{debug, info, warn};
 use modelsql::ModelManager;
 use uuid::Uuid;
 
-use crate::infra::bmc::*;
+use crate::{infra::bmc::*, setting::HetuflowSetting};
 use hetuflow_core::models::*;
 
 /// 负载均衡缓存
@@ -45,18 +45,18 @@ impl Default for RebalanceThreshold {
 
 /// 负载均衡器 - 负责服务器间的负载均衡和命名空间分配。只有 Leader 节点可以执行负载均衡操作。
 pub struct LoadBalancer {
+  setting: Arc<HetuflowSetting>,
   mm: ModelManager,
-  server_id: String,
   // 负载均衡策略缓存
   balance_cache: Arc<tokio::sync::RwLock<LoadBalanceCache>>,
 }
 
 impl LoadBalancer {
   /// 创建新的负载均衡器
-  pub fn new(mm: ModelManager, server_id: String) -> Self {
+  pub fn new(setting: Arc<HetuflowSetting>, mm: ModelManager) -> Self {
     Self {
+      setting,
       mm,
-      server_id,
       balance_cache: Arc::new(tokio::sync::RwLock::new(LoadBalanceCache {
         servers: HashMap::default(),
         last_updated: now_offset(),
@@ -192,7 +192,7 @@ impl LoadBalancer {
       if !load_scores.is_empty() { load_scores.iter().sum::<f64>() / load_scores.len() as f64 } else { 0.0 };
 
     serde_json::json!({
-      "server_id": self.server_id,
+      "server_id": self.setting.server.server_id.clone(),
       "total_servers": cache.servers.len(),
       "average_load": avg_load,
       "last_updated": cache.last_updated,

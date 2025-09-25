@@ -1,7 +1,8 @@
 use std::{sync::Arc, time::Duration};
 
 use fusion_common::time::now_offset;
-use hetuflow_core::protocol::{AcquireTaskRequest, WebSocketEvent};
+use fusion_core::concurrent::handle::ServiceHandle;
+use hetuflow_core::protocol::{AcquireTaskRequest, EventMessage};
 use log::{debug, error, info};
 use mea::shutdown::ShutdownRecv;
 
@@ -24,8 +25,12 @@ impl PollTaskRunner {
     Self { setting, connection_manager, process_manager, shutdown_rx }
   }
 
+  pub fn run(self) -> ServiceHandle {
+    ServiceHandle::new("PollTaskRunner", tokio::spawn(async move { self.run_loop().await }))
+  }
+
   /// Scheduled polling request task
-  pub async fn run_loop(&self) {
+  async fn run_loop(&self) {
     let mut poll_interval = tokio::time::interval(self.setting.polling.interval);
 
     loop {
@@ -54,7 +59,7 @@ impl PollTaskRunner {
       labels: self.setting.labels.clone(),
       max_scheduled_at: now_offset() + Duration::from_secs(60 * 5),
     };
-    let event = WebSocketEvent::new_poll_task(poll_request);
+    let event = EventMessage::new_acquire_task(poll_request);
     if let Err(e) = self.connection_manager.send_event(event).await {
       error!("Failed to send poll request: {}", e);
     }

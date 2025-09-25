@@ -4,19 +4,15 @@ mod label;
 
 pub use label::*;
 
-use std::sync::Arc;
-
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use strum::AsRefStr;
-use uuid::Uuid;
-
-use crate::protocol::{AcquireTaskResponse, AgentRegisterResponse};
 
 /// 作业类型 (ScheduleKind) - 定义了 Job 的核心调度和行为模式
 #[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy, PartialEq, Eq, AsRefStr)]
 #[cfg_attr(feature = "with-db", derive(sqlx::Type))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 #[repr(i32)]
+#[strum(serialize_all = "snake_case")]
 pub enum ScheduleKind {
   /// Cron 定时作业
   Cron = 1,
@@ -167,20 +163,8 @@ pub enum CommandKind {
   ClearCache = 3,      // 清理缓存
   FetchMetrics = 4,    // 更新指标
   AgentRegistered = 5, // Agent 注册成功
-  DispatchTask = 6,    // 分发任务
+  TaskAcquired = 6,    // 分发任务
   CancelTask = 7,      // 取消任务
-}
-
-#[derive(Clone, AsRefStr)]
-pub enum HetuflowCommand {
-  Shutdown,
-  UpdateConfig,
-  ClearCache,
-  FetchMetrics,
-  AgentRegistered(Arc<AgentRegisterResponse>),
-  AcquiredTask(Arc<AcquireTaskResponse>),
-  /// TaskInstanceId
-  CancelTask(Arc<Uuid>),
 }
 
 /// 任务控制类型
@@ -207,18 +191,18 @@ pub enum EventKind {
   Nack = 2,
 
   /// Agent 注册
-  AgentRegister = 3,
+  RegisterAgent = 3,
   /// Agent 心跳
-  AgentHeartbeat = 4,
+  Heartbeat = 4,
 
   /// Agent 请求 AgentRequest <-> GatewayResponse
-  PollTaskRequest = 5,
+  AcquireTask = 5,
 
   /// Agent 事件 AgentEvent
   TaskInstanceChanged = 6,
 
   /// 任务日志事件
-  TaskLog = 7,
+  LogMessage = 7,
 }
 
 #[cfg(feature = "with-db")]

@@ -5,9 +5,11 @@ use crate::{
   types::AgentStatus,
 };
 
+use super::Event;
+
 /// 心跳请求
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct HeartbeatRequest {
+pub struct AgentHeartbeat {
   /// Agent ID
   pub agent_id: String,
   /// 心跳时间
@@ -21,6 +23,7 @@ pub struct HeartbeatRequest {
   /// 最后处理的任务ID
   pub last_task_id: Option<String>,
 }
+impl Event for AgentHeartbeat {}
 
 /// 心跳响应
 #[derive(Serialize, Deserialize, Debug, Clone)]

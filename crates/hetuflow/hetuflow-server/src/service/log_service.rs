@@ -5,7 +5,7 @@ use std::sync::Arc;
 use fusion_common::time::OffsetDateTime;
 use fusion_common::time::now_epoch_millis;
 use fusion_core::DataError;
-use hetuflow_core::protocol::LogMessage;
+use hetuflow_core::protocol::AgentLogMessage;
 use log::{debug, error, info};
 use mea::{mpsc, rwlock::RwLock};
 use mea::{mutex::Mutex, shutdown::ShutdownRecv};
@@ -14,7 +14,7 @@ use tokio::io::{AsyncWriteExt, BufWriter};
 use tokio::time::interval;
 use uuid::Uuid;
 
-use crate::gateway::ConnectionManager;
+use crate::connection::ConnectionManager;
 use crate::model::AgentEvent;
 use crate::setting::TaskLogConfig;
 
@@ -44,7 +44,7 @@ pub struct LogStats {
 }
 
 /// 日志接收器，负责接收Agent转发的日志并存储到文件
-pub struct LogService {
+pub struct LogSvc {
   config: Arc<TaskLogConfig>,
   /// 日志统计信息
   stats: Arc<RwLock<LogStats>>,
@@ -52,7 +52,7 @@ pub struct LogService {
   log_clean_runner: Mutex<Option<LogCleanRunner>>,
 }
 
-impl LogService {
+impl LogSvc {
   /// 创建新的日志接收器
   pub async fn new(
     config: Arc<TaskLogConfig>,
@@ -250,14 +250,14 @@ impl LogWriterRunner {
   }
 
   /// 处理日志载荷数据
-  async fn process_log_payload(&self, _agent_id: String, payload: Arc<LogMessage>) -> Result<(), DataError> {
+  async fn process_log_payload(&self, _agent_id: String, payload: Arc<AgentLogMessage>) -> Result<(), DataError> {
     self.write_single_log(&payload).await?;
 
     Ok(())
   }
 
   /// 写入单条日志
-  async fn write_single_log(&self, log: &LogMessage) -> Result<(), DataError> {
+  async fn write_single_log(&self, log: &AgentLogMessage) -> Result<(), DataError> {
     let log_file_path = self.get_log_file_path(&log.task_instance_id);
     let writer = self.get_or_create_writer(&log_file_path).await?;
 
@@ -294,7 +294,7 @@ impl LogWriterRunner {
   }
 
   /// 通过WebSocket转发日志消息
-  async fn forward_log_via_websocket(&self, log_msg: &LogMessage) -> Result<(), DataError> {
+  async fn forward_log_via_websocket(&self, log_msg: &AgentLogMessage) -> Result<(), DataError> {
     // WebSocket转发功能暂时禁用，等待相关类型定义
     debug!("Log forwarding disabled - instance: {}", log_msg.task_instance_id);
     Ok(())
@@ -338,7 +338,7 @@ impl LogWriterRunner {
   }
 
   /// 格式化日志行
-  fn format_log_line(&self, log: &LogMessage) -> String {
+  fn format_log_line(&self, log: &AgentLogMessage) -> String {
     format!("[{}] [{:?}] {}", log.task_instance_id, log.kind, log.content)
   }
 }

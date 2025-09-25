@@ -13,39 +13,20 @@ use fusion_web::{WebResult, ok_json};
 use futures_util::{SinkExt, StreamExt};
 use log::{error, info};
 use mea::mpsc;
-use serde_json::Value;
 
-use hetuflow_core::protocol::{WebSocketEvent, WebSocketParams};
+use hetuflow_core::protocol::{EventMessage, WebSocketParams};
 use utoipa_axum::router::OpenApiRouter;
 
 use crate::{
   application::ServerApplication,
-  gateway::MessageHandler,
-  model::{AgentConnection, GatewayCommandRequest},
+  connection::MessageHandler,
+  model::{AgentConnection, CommandMessageRequest},
 };
 
 pub fn routes() -> OpenApiRouter<ServerApplication> {
   OpenApiRouter::new()
     .routes(utoipa_axum::routes!(websocket_handler))
-    .routes(utoipa_axum::routes!(get_status))
     .routes(utoipa_axum::routes!(send_command))
-}
-
-/// 获取网关状态
-///
-/// 获取网关和Agent连接状态信息
-#[utoipa::path(
-  get,
-  path = "/status",
-  responses(
-    (status = 200, description = "状态获取成功", body = Value),
-    (status = 500, description = "服务器内部错误")
-  ),
-  tag = "Gateway"
-)]
-async fn get_status(State(app): State<ServerApplication>) -> WebResult<Value> {
-  let info = app.agent_stats().await?;
-  ok_json!(info)
 }
 
 /// 发送命令
@@ -54,7 +35,7 @@ async fn get_status(State(app): State<ServerApplication>) -> WebResult<Value> {
 #[utoipa::path(
   post,
   path = "/command",
-  request_body = GatewayCommandRequest,
+  request_body = CommandMessageRequest,
   responses(
     (status = 200, description = "命令发送成功", body = IdUuidResult),
     (status = 400, description = "请求参数错误"),
@@ -64,13 +45,14 @@ async fn get_status(State(app): State<ServerApplication>) -> WebResult<Value> {
 )]
 async fn send_command(
   State(app): State<ServerApplication>,
-  Json(command): Json<GatewayCommandRequest>,
+  Json(command): Json<CommandMessageRequest>,
 ) -> WebResult<IdUuidResult> {
-  let message_id = app.send_gateway_command(command).await?;
+  let message_id = *command.command_id();
+  app.connection_manager.send(command).await?;
   ok_json!(message_id.into())
 }
 
-/// WebSocket 升级处理器
+/// Accept WebSocket connection from Agent
 #[utoipa::path(
   get,
   path = "/ws",
@@ -95,8 +77,7 @@ async fn websocket_handler(
   })
 }
 
-/// 处理 WebSocket 连接
-pub async fn handle_websocket_connection(
+async fn handle_websocket_connection(
   socket: WebSocket,
   address: String,
   agent_id: String,
@@ -104,7 +85,7 @@ pub async fn handle_websocket_connection(
 ) {
   let (mut ws_tx, mut ws_rx) = socket.split();
 
-  // 为当前 WebSocket 连接创建一个 MPSC 通道，用于从其他任务发送消息到此连接
+  // Create an MPSC channel for the current WebSocket connection to send messages from other tasks to this connection
   let (command_tx, mut command_rx) = mpsc::unbounded();
   let agent_connection = AgentConnection::new(agent_id.clone(), address, command_tx);
   if let Err(e) = message_handler.add_connection(&agent_id, agent_connection).await {
@@ -112,7 +93,7 @@ pub async fn handle_websocket_connection(
     return;
   }
 
-  // 启动一个独立的任务，负责从 MPSC（agent_rx） 通道接收消息并发送到 WebSocket（对端）
+  // Start an independent task responsible for receiving messages from MPSC (agent_rx) channel and sending them to WebSocket (peer)
   let agent_id2 = agent_id.clone();
   let sender_task = tokio::spawn(async move {
     while let Some(msg) = command_rx.recv().await {
@@ -125,12 +106,11 @@ pub async fn handle_websocket_connection(
     info!("WebSocket sender task for agent {} terminated.", agent_id2);
   });
 
-  // 接收循环
   while let Some(Ok(msg)) = ws_rx.next().await {
     match msg {
       Message::Text(text) => {
         let text_str = text.as_str();
-        match serde_json::from_str::<WebSocketEvent>(text_str) {
+        match serde_json::from_str::<EventMessage>(text_str) {
           Ok(ws_event) => {
             if let Err(e) = message_handler.process_message(agent_id.clone(), ws_event).await {
               error!("Failed to process message: {:?}", e);
@@ -145,15 +125,14 @@ pub async fn handle_websocket_connection(
         info!("WebSocket connection closed for agent {}", agent_id);
         break;
       }
-      _ => {} // 忽略其他消息类型
+      _ => { /* Ignore other message types */ }
     }
   }
 
-  // 清理连接
   if let Err(e) = message_handler.remove_connection(&agent_id, "Connection closed").await {
     error!("Failed to remove connection for agent {}: {:?}", agent_id, e);
   }
 
-  // TODO: 是否有更优雅的处理方式？
+  //  Abord WebSocket sender loop
   sender_task.abort();
 }

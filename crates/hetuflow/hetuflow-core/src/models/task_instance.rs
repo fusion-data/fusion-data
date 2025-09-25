@@ -1,5 +1,4 @@
 use chrono::{DateTime, FixedOffset};
-use fusion_common::time::OffsetDateTime;
 use modelsql_core::{
   field::FieldMask,
   filter::{OpValsDateTime, OpValsInt32, OpValsString, OpValsUuid, Page},

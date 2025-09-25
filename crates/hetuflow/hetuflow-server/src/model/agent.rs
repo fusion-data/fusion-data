@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use hetuflow_core::protocol::{
-  AcquireTaskRequest, AgentRegisterRequest, HeartbeatRequest, LogMessage, TaskInstanceChanged,
+  AcquireTaskRequest, AgentHeartbeat, AgentLogMessage, RegisterAgentRequest, TaskInstanceChanged,
 };
 
 /// Agent 事件类型 - 统一的运行态事件
@@ -11,11 +11,11 @@ pub enum AgentEvent {
   /// Agent 连接建立
   Connected { agent_id: String, remote_addr: Arc<String> },
   /// Agent 注册
-  Registered { agent_id: String, payload: Arc<AgentRegisterRequest> },
+  Registered { agent_id: String, payload: Arc<RegisterAgentRequest> },
   /// Task Log 上报
-  TaskLog { agent_id: String, payload: Arc<LogMessage> },
+  TaskLog { agent_id: String, payload: Arc<AgentLogMessage> },
   /// Agent 心跳更新
-  Heartbeat { agent_id: String, payload: Arc<HeartbeatRequest> },
+  Heartbeat { agent_id: String, payload: Arc<AgentHeartbeat> },
   /// Agent 任务实例状态变更
   TaskInstanceChanged { agent_id: String, payload: Arc<TaskInstanceChanged> },
   /// Agent 任务轮询请求
@@ -25,11 +25,11 @@ pub enum AgentEvent {
 }
 
 impl AgentEvent {
-  pub fn new_register(agent_id: String, request: AgentRegisterRequest) -> Self {
+  pub fn new_register(agent_id: String, request: RegisterAgentRequest) -> Self {
     Self::Registered { agent_id, payload: Arc::new(request) }
   }
 
-  pub fn new_heartbeat(agent_id: String, request: HeartbeatRequest) -> Self {
+  pub fn new_heartbeat(agent_id: String, request: AgentHeartbeat) -> Self {
     Self::Heartbeat { agent_id, payload: Arc::new(request) }
   }
 
@@ -41,7 +41,7 @@ impl AgentEvent {
     Self::TaskInstanceChanged { agent_id, payload: Arc::new(request) }
   }
 
-  pub fn new_task_log(agent_id: String, payload: LogMessage) -> AgentEvent {
+  pub fn new_task_log(agent_id: String, payload: AgentLogMessage) -> AgentEvent {
     Self::TaskLog { agent_id, payload: Arc::new(payload) }
   }
 }

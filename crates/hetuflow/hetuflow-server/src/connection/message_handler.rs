@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
-use hetuflow_core::{protocol::WebSocketEvent, types::EventKind};
+use hetuflow_core::{protocol::EventMessage, types::EventKind};
+use log::info;
 
 use crate::model::{AgentConnection, AgentEvent};
 
@@ -18,27 +19,27 @@ impl MessageHandler {
   }
 
   /// 处理来自 Agent 的消息
-  pub async fn process_message(&self, agent_id: String, event: WebSocketEvent) -> Result<(), GatewayError> {
-    self.connection_manager.update_heartbeat(&agent_id, event.timestamp).await?;
-    match event.kind {
-      EventKind::AgentHeartbeat => {
-        let event = AgentEvent::new_heartbeat(agent_id, serde_json::from_value(event.payload)?);
+  pub async fn process_message(&self, agent_id: String, event: EventMessage) -> Result<(), GatewayError> {
+    self.connection_manager.update_heartbeat(&agent_id, event.timestamp()).await?;
+    match event.kind() {
+      EventKind::Heartbeat => {
+        let event = AgentEvent::new_heartbeat(agent_id, event.as_heartbeat()?);
         self.connection_manager.publish_event(event).await?;
       }
-      EventKind::PollTaskRequest => {
-        let event = AgentEvent::new_task_poll_request(agent_id, serde_json::from_value(event.payload)?);
+      EventKind::AcquireTask => {
+        let event = AgentEvent::new_task_poll_request(agent_id, event.as_acquire_task()?);
         self.connection_manager.publish_event(event).await?;
       }
       EventKind::TaskInstanceChanged => {
-        let event = AgentEvent::new_task_instance_changed(agent_id, serde_json::from_value(event.payload)?);
+        let event = AgentEvent::new_task_instance_changed(agent_id, event.as_task_instance_changed()?);
         self.connection_manager.publish_event(event).await?;
       }
-      EventKind::AgentRegister => {
-        let event = AgentEvent::new_register(agent_id, serde_json::from_value(event.payload)?);
+      EventKind::RegisterAgent => {
+        let event = AgentEvent::new_register(agent_id, event.as_register_agent()?);
         self.connection_manager.publish_event(event).await?;
       }
-      EventKind::TaskLog => {
-        let event = AgentEvent::new_task_log(agent_id, serde_json::from_value(event.payload)?);
+      EventKind::LogMessage => {
+        let event = AgentEvent::new_task_log(agent_id, event.as_log_message()?);
         self.connection_manager.publish_event(event).await?;
       }
       EventKind::Ack => { /* ignore */ }
@@ -56,11 +57,14 @@ impl MessageHandler {
       .await
   }
 
-  pub async fn remove_connection(&self, agent_id: &str, reason: &str) -> Result<(), GatewayError> {
-    self.connection_manager.remove_connection(agent_id, reason).await?;
+  pub async fn remove_connection(&self, agent_id: &str, reason: impl Into<String>) -> Result<(), GatewayError> {
+    let reason: String = reason.into();
+    self.connection_manager.remove_connection(agent_id, &reason).await?;
     self
       .connection_manager
-      .publish_event(AgentEvent::Unconnected { agent_id: agent_id.to_string(), reason: Arc::new(reason.to_string()) })
-      .await
+      .publish_event(AgentEvent::Unconnected { agent_id: agent_id.to_string(), reason: Arc::new(reason) })
+      .await?;
+    info!("Agent connection has been closed, agent_id: {}", agent_id);
+    Ok(())
   }
 }

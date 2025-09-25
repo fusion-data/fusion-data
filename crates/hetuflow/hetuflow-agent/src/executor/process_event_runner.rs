@@ -1,7 +1,8 @@
 use std::sync::Arc;
 
+use fusion_core::concurrent::handle::ServiceHandle;
 use hetuflow_core::{
-  protocol::{ProcessEvent, ProcessEventKind, TaskInstanceChanged, WebSocketEvent},
+  protocol::{EventMessage, ProcessEvent, ProcessEventKind, TaskInstanceChanged},
   types::TaskInstanceStatus,
 };
 use log::{error, info};
@@ -26,7 +27,11 @@ impl ProcessEventRunner {
     Self { setting, connection_manager, process_manager, shutdown_rx }
   }
 
-  pub async fn run_loop(&self) {
+  pub fn run(self) -> ServiceHandle {
+    ServiceHandle::new("ProcessEventRunner", tokio::spawn(async move { self.run_loop().await }))
+  }
+
+  async fn run_loop(&self) {
     let mut process_event_rx = self.process_manager.subscribe_events();
 
     loop {
@@ -57,7 +62,7 @@ impl ProcessEventRunner {
       ProcessEventKind::ResourceViolation => TaskInstanceStatus::Failed,
       ProcessEventKind::BecameZombie => TaskInstanceStatus::Failed,
     };
-    let event = WebSocketEvent::new_task_instance_updated(TaskInstanceChanged {
+    let event = EventMessage::new_task_instance_changed(TaskInstanceChanged {
       instance_id: event.instance_id,
       agent_id: self.setting.agent_id.clone(),
       epoch_millis: event.epoch_millis,
