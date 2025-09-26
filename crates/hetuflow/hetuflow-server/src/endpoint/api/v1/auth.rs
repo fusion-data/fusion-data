@@ -17,7 +17,7 @@ use utoipa_axum::router::OpenApiRouter;
 
 use crate::{
   application::ServerApplication,
-  service::{JweService, JweServiceError},
+  service::{JweSvc, JweError},
 };
 
 /// 认证相关路由
@@ -96,7 +96,7 @@ pub async fn generate_token(
     })?;
 
   // 创建 JWE 服务
-  let jwe_service = JweService::new(jwe_config.clone()).map_err(|e| {
+  let jwe_service = JweSvc::new(jwe_config.clone()).map_err(|e| {
     (
       StatusCode::INTERNAL_SERVER_ERROR,
       Json(WebError::new(500, "JWE service initialization failed", Some(Box::new(json!({"error": e.to_string()}))))),
@@ -108,11 +108,11 @@ pub async fn generate_token(
   let server_id = &app.setting().server.server_id;
 
   let token = jwe_service.generate_token(agent_id, server_id, permissions).map_err(|e| match e {
-    JweServiceError::TokenGenerationFailed(msg) => (
+    JweError::TokenGenerationFailed(msg) => (
       StatusCode::INTERNAL_SERVER_ERROR,
       Json(WebError::new(500, "Token generation failed", Some(Box::new(json!({"error": msg}))))),
     ),
-    JweServiceError::InvalidKeyFormat(msg) => (
+    JweError::InvalidKeyFormat(msg) => (
       StatusCode::INTERNAL_SERVER_ERROR,
       Json(WebError::new(500, "JWE key format error", Some(Box::new(json!({"error": msg}))))),
     ),

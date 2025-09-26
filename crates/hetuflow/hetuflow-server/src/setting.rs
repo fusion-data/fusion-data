@@ -72,26 +72,6 @@ pub struct TaskLogConfig {
   /// 日志轮转检查间隔（秒）
   #[serde(deserialize_with = "deserialize_duration")]
   pub rotation_check_interval: Duration,
-
-  /// WebSocket 日志推送配置
-  pub websocket: WebSocketLogConfig,
-}
-
-/// WebSocket 日志推送配置
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct WebSocketLogConfig {
-  /// 启用实时日志推送
-  pub enabled: bool,
-
-  /// 推送缓冲区大小（条数）
-  pub buffer_size: usize,
-
-  /// 推送间隔（毫秒）
-  #[serde(deserialize_with = "deserialize_duration")]
-  pub push_interval: Duration,
-
-  /// 最大订阅者数量
-  pub max_subscribers: usize,
 }
 
 const KEY_PATH_SERVER_ID: &str = "hetuflow.server.server_id";

@@ -1,74 +1,8 @@
-use std::{sync::Arc, time::Duration};
-
-use futures_util::StreamExt;
 use mea::mpsc;
-use tokio::sync::broadcast;
 
 #[tokio::main]
 async fn main() {
   demo_mea_mpsc().await;
-  demo_kanal_mpmc().await;
-}
-
-async fn demo_kanal_mpmc() {
-  let (tx, rx) = kanal::bounded_async(2);
-  let rx = Arc::new(rx);
-  let (shutdown_tx, _) = broadcast::channel::<()>(1);
-
-  let rx0 = rx.clone();
-  let mut shutdown_rx = shutdown_tx.subscribe();
-  tokio::spawn(async move {
-    let mut rx0_stream = rx0.stream();
-    tokio::select! {
-      v = rx0_stream.next() => {
-        println!("rx0 recv: {:?}", v);
-      }
-      _ = shutdown_rx.recv() => {
-        println!("rx0 recv shutdown signal");
-      }
-    }
-  });
-
-  let rx1 = rx.clone();
-  tokio::spawn(async move {
-    println!("rx1 started");
-    loop {
-      match rx1.recv().await {
-        Ok(v) => {
-          println!("rx1 recv: {:?}", v);
-        }
-        Err(e) => {
-          println!("rx1 recv error: {:?}", e);
-          break;
-        }
-      }
-    }
-  });
-
-  let rx2 = rx.clone();
-  tokio::spawn(async move {
-    println!("rx2 started");
-    loop {
-      match rx2.recv().await {
-        Ok(v2) => {
-          println!("rx2 recv: {:?}", v2);
-        }
-        Err(e) => {
-          println!("rx2 recv error: {:?}", e);
-          break;
-        }
-      }
-    }
-  });
-
-  println!("Rx count: {:?}", rx.receiver_count());
-  tokio::time::sleep(Duration::from_secs(1)).await;
-  for i in 0..6 {
-    tx.send(i).await.unwrap();
-    tokio::time::sleep(Duration::from_millis(50)).await;
-  }
-  tx.close().unwrap();
-  tokio::time::sleep(Duration::from_millis(100)).await;
 }
 
 async fn demo_mea_mpsc() {

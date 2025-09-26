@@ -1,4 +1,4 @@
-use fusion_common::time::OffsetDateTime;
+use fusion_common::time::{OffsetDateTime, now_offset};
 use modelsql_core::{
   field::FieldMask,
   filter::{OpValsDateTime, OpValsInt32, OpValsUuid},
@@ -49,6 +49,15 @@ pub struct SchedSchedule {
   pub updated_by: Option<i64>,
   #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
   pub updated_at: Option<OffsetDateTime>,
+}
+
+impl SchedSchedule {
+  pub fn is_valid(&self) -> bool {
+    let now = now_offset();
+    self.status == ScheduleStatus::Enabled
+      && self.start_time.map(|start_time| start_time <= now).unwrap_or(true)
+      && self.end_time.map(|end_time| end_time >= now).unwrap_or(true)
+  }
 }
 
 /// Schedule 创建模型

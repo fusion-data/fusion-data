@@ -6,33 +6,9 @@ use modelsql_core::{
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::types::{JobStatus, Labels, ResourceLimits};
+use crate::types::JobStatus;
 
-/// 任务配置
-#[derive(Serialize, Deserialize, Debug, Clone, Default)]
-#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
-pub struct TaskConfig {
-  /// 超时时间(秒)
-  pub timeout: u32,
-  /// 最大重试次数
-  pub max_retries: u32,
-  /// 重试间隔(秒)
-  pub retry_interval: u32,
-  /// 命令。如： python, uv/uvx, npx, node, bash, sh, cargo, rustc 等
-  pub cmd: String,
-  /// 命令参数
-  pub args: Vec<String>,
-  /// 工作目录，不设置则使用默认值
-  pub working_directory: Option<String>,
-  /// 是否捕获输出
-  pub capture_output: bool,
-  /// 最大输出大小(字节)
-  pub max_output_size: u64,
-  /// 任务标签。可用于限制哪些 Agent 允许执行该任务
-  pub labels: Labels,
-  /// 资源限制
-  pub resource_limits: Option<ResourceLimits>,
-}
+use super::TaskConfig;
 
 /// SchedJob 数据模型
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -62,8 +38,8 @@ pub struct JobForCreate {
   pub name: String,
   pub description: Option<String>,
   pub environment: Option<serde_json::Value>,
-  pub config: Option<serde_json::Value>,
-  pub status: JobStatus,
+  pub config: Option<TaskConfig>,
+  pub status: Option<JobStatus>,
 }
 
 /// Job 更新模型

@@ -11,7 +11,7 @@ use uuid::Uuid;
 
 /// 连接配置
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ConnectionConfig {
+pub struct ConnectionSetting {
   /// Server URL
   pub server_address: String,
 
@@ -33,26 +33,15 @@ pub struct ConnectionConfig {
 
 /// 轮询配置
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct PollingConfig {
+pub struct PollingSetting {
   /// 轮询间隔（秒）
-  pub interval_seconds: u64,
-
-  /// 最大并发任务数
-  pub max_concurrent_tasks: usize,
-
-  /// 容量计算权重
-  pub capacity_weight: f64,
-
-  /// 负载因子阈值
-  pub load_factor_threshold: f64,
-
-  /// 启用自适应轮询
-  pub enable_adaptive_polling: bool,
+  #[serde(deserialize_with = "deserialize_duration")]
+  pub interval: Duration,
 }
 
 /// 重试配置
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct RetryConfig {
+pub struct RetrySetting {
   /// 最大重试次数
   pub max_attempts: u32,
 
@@ -104,7 +93,10 @@ pub enum RetryCondition {
 
 /// 进程管理配置
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ProcessConfig {
+pub struct ProcessSetting {
+  /// 进程运行基目录
+  run_base_dir: Option<String>,
+
   /// 清理间隔（秒）
   #[serde(deserialize_with = "deserialize_duration")]
   pub cleanup_interval: Duration,
@@ -129,36 +121,23 @@ pub struct ProcessConfig {
 
   /// 默认资源限制
   pub limits: ResourceLimits,
-
-  /// 日志转发配置
-  pub log_forwarding: LogForwardingConfig,
 }
 
-/// 日志转发配置
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct LogForwardingConfig {
-  /// 启用日志转发
-  pub enabled: bool,
-
-  /// 日志缓冲区大小（字节）
-  pub buffer_size: usize,
-
-  /// 批次大小（条数）
-  pub batch_size: usize,
-
-  /// 刷新间隔（毫秒）
-  #[serde(deserialize_with = "deserialize_duration")]
-  pub flush_interval: Duration,
-
-  /// 最大重试次数
-  pub max_retries: u32,
-
-  /// 重试间隔（毫秒）
-  #[serde(deserialize_with = "deserialize_duration")]
-  pub retry_interval: Duration,
-
-  /// 启用压缩
-  pub enable_compression: bool,
+impl ProcessSetting {
+  pub fn run_base_dir(&self) -> Result<PathBuf, DataError> {
+    match self.run_base_dir.as_deref() {
+      Some(dir) => Ok(PathBuf::from(dir)),
+      None => {
+        let default_dir = dirs::home_dir()
+          .ok_or_else(|| DataError::server_error("Failed to get home dir"))?
+          .join(".hetu")
+          .join("agent")
+          .join("runs");
+        info!("Default run base dir: {:?}", default_dir);
+        Ok(default_dir)
+      }
+    }
+  }
 }
 
 /// 资源限制
@@ -173,7 +152,7 @@ pub struct ResourceLimits {
 
 /// 任务执行配置
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct TaskConfig {
+pub struct TaskSetting {
   /// 默认任务超时时间（秒）
   #[serde(deserialize_with = "deserialize_duration")]
   pub default_timeout: Duration,
@@ -203,13 +182,13 @@ pub struct HetuflowAgentSetting {
   pub jwe_token: Option<String>,
 
   /// 连接配置
-  pub connection: Arc<ConnectionConfig>,
+  pub connection: Arc<ConnectionSetting>,
 
   /// 轮询配置
-  pub polling: Arc<PollingConfig>,
+  pub polling: Arc<PollingSetting>,
 
   /// 进程管理配置
-  pub process: Arc<ProcessConfig>,
+  pub process: Arc<ProcessSetting>,
 }
 
 const KEY_PATH_AGENT_ID: &str = "hetuflow.agent.agent_id";

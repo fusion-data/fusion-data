@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(transparent)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct FieldMask {
   pub paths: Vec<String>,

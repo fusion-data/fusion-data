@@ -24,7 +24,7 @@
 ## Phase 0: 项目设置与基础 (Project Setup & Foundation)
 
 - [x] **项目结构**
-  - [x] 初始化 Rust Workspace `guixuflow`
+  - [x] 初始化 Rust Workspace `hetumid`
   - [x] 创建核心 crates: `hetumind`, `hetumind-nodes`, `hetumind-core`
   - [x] 创建前端项目目录 `hetumind-web`
   - [x] 创建文档目录 `docs` 和设计文档目录 `datum`

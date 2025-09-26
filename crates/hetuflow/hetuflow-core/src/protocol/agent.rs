@@ -2,6 +2,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::models::{AgentCapabilities, SchedAgent};
 
+use super::{Command, Event};
+
 #[derive(Debug, Deserialize)]
 pub struct WebSocketParams {
   pub agent_id: String,
@@ -9,7 +11,7 @@ pub struct WebSocketParams {
 
 /// Agent 注册请求。Agent 连接上 Server 后发送的第一个请求，用于描述当前 Agent 的能力和元数据
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct AgentRegisterRequest {
+pub struct RegisterAgentRequest {
   /// Agent 唯一标识
   pub agent_id: String,
   /// Agent 能力描述
@@ -19,6 +21,8 @@ pub struct AgentRegisterRequest {
   /// JWE Token (用于身份认证)
   pub jwe_token: Option<String>,
 }
+
+impl Event for RegisterAgentRequest {}
 
 /// Agent 注册响应
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -37,3 +41,5 @@ pub struct AgentRegisterResponse {
   // /// - 3. 消息路由: 在多 Agent 环境中， session_id 帮助服务器准确地将任务分发给正确的 Agent
   // pub session_id: String,
 }
+
+impl Command for AgentRegisterResponse {}

@@ -29,7 +29,8 @@ pub fn routes() -> OpenApiRouter<ServerApplication> {
   request_body = JobForQuery,
   responses(
     (status = 200, description = "Query jobs successfully", body = PageResult<SchedJob>)
-  )
+  ),
+  tag = "Jobs"
 )]
 async fn query_jobs(job_svc: JobSvc, Json(input): Json<JobForQuery>) -> WebResult<PageResult<SchedJob>> {
   let result = job_svc.query(input).await?;
@@ -42,7 +43,8 @@ async fn query_jobs(job_svc: JobSvc, Json(input): Json<JobForQuery>) -> WebResul
   request_body = JobForCreate,
   responses(
     (status = 200, description = "Create job successfully", body = IdUuidResult)
-  )
+  ),
+  tag = "Jobs"
 )]
 async fn create_job(job_svc: JobSvc, Json(input): Json<JobForCreate>) -> WebResult<IdUuidResult> {
   let id = job_svc.create(input).await?;
@@ -57,7 +59,8 @@ async fn create_job(job_svc: JobSvc, Json(input): Json<JobForCreate>) -> WebResu
   ),
   responses(
     (status = 200, description = "Get job successfully", body = Option<SchedJob>)
-  )
+  ),
+  tag = "Jobs"
 )]
 async fn get_job(job_svc: JobSvc, Path(id): Path<Uuid>) -> WebResult<Option<SchedJob>> {
   let result = job_svc.get_by_id(&id).await?;
@@ -73,7 +76,8 @@ async fn get_job(job_svc: JobSvc, Path(id): Path<Uuid>) -> WebResult<Option<Sche
   request_body = JobForUpdate,
   responses(
     (status = 200, description = "Update job successfully")
-  )
+  ),
+  tag = "Jobs"
 )]
 async fn update_job(job_svc: JobSvc, Path(id): Path<Uuid>, Json(input): Json<JobForUpdate>) -> WebResult<()> {
   job_svc.update_by_id(&id, input).await?;
@@ -88,7 +92,8 @@ async fn update_job(job_svc: JobSvc, Path(id): Path<Uuid>, Json(input): Json<Job
   ),
   responses(
     (status = 200, description = "Delete job successfully")
-  )
+  ),
+  tag = "Jobs"
 )]
 async fn delete_job(job_svc: JobSvc, Path(id): Path<Uuid>) -> WebResult<()> {
   job_svc.delete_by_id(&id).await?;
@@ -103,7 +108,8 @@ async fn delete_job(job_svc: JobSvc, Path(id): Path<Uuid>) -> WebResult<()> {
   ),
   responses(
     (status = 200, description = "Enable job successfully")
-  )
+  ),
+  tag = "Jobs"
 )]
 async fn enable_job(job_svc: JobSvc, Path(id): Path<Uuid>) -> WebResult<()> {
   job_svc.update_status(&id, JobStatus::Enabled).await?;
@@ -118,7 +124,8 @@ async fn enable_job(job_svc: JobSvc, Path(id): Path<Uuid>) -> WebResult<()> {
   ),
   responses(
     (status = 200, description = "Disable job successfully")
-  )
+  ),
+  tag = "Jobs"
 )]
 async fn disable_job(job_svc: JobSvc, Path(id): Path<Uuid>) -> WebResult<()> {
   job_svc.update_status(&id, JobStatus::Disabled).await?;

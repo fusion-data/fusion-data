@@ -1,7 +1,5 @@
-use std::sync::Arc;
-
+use fusion_common::time::now_epoch_millis;
 use serde::{Deserialize, Serialize};
-use tokio::process::Child;
 use uuid::Uuid;
 
 /// 进程信息
@@ -19,27 +17,19 @@ pub struct ProcessInfo {
   pub completed_at: Option<i64>,
   /// 退出码
   pub exit_code: Option<i32>,
-  /// 子进程
-  #[serde(skip)]
-  pub child: Arc<mea::mutex::Mutex<Child>>,
 }
 
 /// 进程状态
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum ProcessStatus {
-  /// 启动中
   Starting,
-  /// 运行中
   Running,
-  /// 已完成
-  Completed,
-  /// 已失败
+  /// Process ends with 0 exit code
+  Succeed,
+  /// Process ends with non-0 exit code
   Failed,
-  /// 被杀死
   Killed,
-  /// 超时
   Timeout,
-  /// 僵尸进程
   Zombie,
 }
 
@@ -90,16 +80,32 @@ pub struct ProcessEvent {
   /// 事件类型
   pub kind: ProcessEventKind,
   /// 事件时间
-  pub timestamp: i64,
+  pub epoch_millis: i64,
   /// 事件数据
   pub data: Option<String>,
+}
+
+impl ProcessEvent {
+  pub fn new_with_data(instance_id: Uuid, kind: ProcessEventKind, data: Option<String>) -> Self {
+    Self { instance_id, kind, epoch_millis: now_epoch_millis(), data }
+  }
+
+  pub fn with_data(mut self, data: String) -> Self {
+    self.data = Some(data);
+    self
+  }
+
+  pub fn with_timestamp(mut self, timestamp: i64) -> Self {
+    self.epoch_millis = timestamp;
+    self
+  }
 }
 
 /// 进程事件类型
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum ProcessEventKind {
   /// 进程启动
-  Started,
+  Running,
   /// 进程运行结束退出
   Exited,
   /// 进程收到 SIGTERM 信号退出

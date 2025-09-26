@@ -46,16 +46,14 @@ impl ValueEnum for JobStatus {
 
 impl ValueEnum for TaskStatus {
   fn value_variants<'a>() -> &'a [Self] {
-    &[Self::Pending, Self::Locked, Self::Dispatched, Self::WaitingRetry, Self::Failed, Self::Succeeded]
+    &[Self::Pending, Self::Doing, Self::Failed, Self::Cancelled, Self::Succeeded]
   }
 
   fn to_possible_value<'a>(&self) -> Option<PossibleValue> {
     let b = PossibleValue::new(format!("{}", *self as i32));
     Some(match self {
       TaskStatus::Pending => b.help("Pending"),
-      TaskStatus::Locked => b.help("Locked"),
-      TaskStatus::Dispatched => b.help("Dispatched"),
-      TaskStatus::WaitingRetry => b.help("WaitingRetry"),
+      TaskStatus::Doing => b.help("Doing"),
       TaskStatus::Failed => b.help("Failed"),
       TaskStatus::Cancelled => b.help("Cancelled"),
       TaskStatus::Succeeded => b.help("Succeeded"),

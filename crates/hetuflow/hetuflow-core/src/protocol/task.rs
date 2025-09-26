@@ -1,3 +1,4 @@
+use fusion_common::time::OffsetDateTime;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -5,6 +6,8 @@ use crate::{
   models::{SchedTask, SchedTaskInstance, TaskMetrics},
   types::{Labels, TaskInstanceStatus},
 };
+
+use super::{Command, Event};
 
 /// 任务分发请求
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -44,13 +47,16 @@ impl ScheduledTask {
   }
 
   /// 获取任务标签
-  pub fn labels(&self) -> &Labels {
-    &self.task.config.labels
+  pub fn labels(&self) -> Labels {
+    self.task.config.labels()
   }
 
   /// 检查任务是否匹配指定的标签
   pub fn match_label(&self, label: &str, value: &str) -> bool {
-    self.task.config.labels.get(label).is_some_and(|v| v == value)
+    match self.task.config.labels.as_ref() {
+      Some(labels) => labels.get(label).is_some_and(|v| v == value),
+      None => false,
+    }
   }
 
   /// 检查任务是否为定时任务
@@ -71,7 +77,7 @@ impl ScheduledTask {
 
 /// 任务状态更新 (Reports status for a 'Task', which the server records as a 'TaskInstance')
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct TaskInstanceUpdated {
+pub struct TaskInstanceChanged {
   /// 任务实例 ID
   pub instance_id: Uuid,
   /// Agent ID
@@ -79,7 +85,7 @@ pub struct TaskInstanceUpdated {
   /// 执行状态
   pub status: TaskInstanceStatus,
   /// 状态更新时间
-  pub timestamp: i64,
+  pub epoch_millis: i64,
   /// 任务数据
   pub data: Option<String>,
   /// 错误信息
@@ -88,7 +94,9 @@ pub struct TaskInstanceUpdated {
   pub metrics: Option<TaskMetrics>,
 }
 
-impl TaskInstanceUpdated {
+impl Event for TaskInstanceChanged {}
+
+impl TaskInstanceChanged {
   pub fn with_status(&mut self, status: TaskInstanceStatus) -> &Self {
     self.status = status;
     self
@@ -113,11 +121,19 @@ impl TaskInstanceUpdated {
 /// Task pull request
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct AcquireTaskRequest {
-  pub agent_id: String,   // Agent ID
-  pub max_tasks: u32,     // 允许最大并发任务数
-  pub labels: Labels,     // 当前 Agent 拥有的标签，用于过滤任务
-  pub acquire_count: u32, // 拉取任务数
+  /// Agent ID
+  pub agent_id: String,
+  /// The maximum number of concurrent tasks allowed by the agent
+  pub max_tasks: u32,
+  /// The labels currently owned by the Agent are used to filter tasks
+  pub labels: Labels,
+  /// Poll task count
+  pub acquire_count: u32,
+  /// The maximum execution time, only tasks that are lte this time will be retrieved
+  pub max_scheduled_at: OffsetDateTime,
 }
+
+impl Event for AcquireTaskRequest {}
 
 /// Task response, for task pull requests or direct task assignments from Server to Agent
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -126,6 +142,7 @@ pub struct AcquireTaskResponse {
   pub has_more: bool,            // 是否还有更多任务
   pub next_poll_interval: u32,   // 下次拉取间隔(秒)
 }
+impl Command for AcquireTaskResponse {}
 
 /// 创建任务实例请求
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -174,27 +191,4 @@ pub struct TaskExecutionResult {
   pub error_message: Option<String>, // 错误信息
   pub metrics: Option<TaskMetrics>,  // 执行指标
   pub duration_ms: u64,              // 执行时长(毫秒)
-}
-
-/// 任务执行错误类型
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-pub enum TaskExecutionError {
-  /// 任务被取消
-  Cancelled,
-  /// 进程启动失败
-  ProcessStartFailed,
-  /// 进程执行超时
-  ProcessTimeout,
-  /// 进程被杀死
-  ProcessKilled,
-  /// 资源不足
-  ResourceExhausted,
-  /// 依赖检查失败
-  DependencyCheckFailed,
-  /// 配置错误
-  ConfigurationError,
-  /// 网络错误
-  NetworkError,
-  /// 其他错误
-  Failed,
 }

@@ -60,7 +60,7 @@ pub fn now_utc_plus_sec_str(sec: u64) -> Result<String, ParseError> {
 }
 
 pub fn utc_from_millis(milliseconds: i64) -> DateTime<Utc> {
-  DateTime::<Utc>::MIN_UTC + Duration::milliseconds(milliseconds)
+  DateTime::<Utc>::UNIX_EPOCH + Duration::milliseconds(milliseconds)
 }
 
 pub fn datetime_from_millis(milliseconds: i64) -> DateTime<FixedOffset> {

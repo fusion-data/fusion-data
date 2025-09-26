@@ -25,22 +25,6 @@ zombie_check_interval = "1h"
 max_cpu_percent = 0.7
 max_memory_bytes = 4194304
 
-[hetuflow.agent.process.log_forwarding]
-# 启用日志转发
-enabled = true
-# 日志缓冲区大小（字节）
-buffer_size = 65536
-# 批次大小（条数）
-batch_size = 100
-# 刷新间隔（毫秒）
-flush_interval = "1s"
-# 最大重试次数
-max_retries = 3
-# 重试间隔（毫秒）
-retry_interval = "500ms"
-# 启用压缩
-enable_compression = false
-
 [hetuflow.agent.connection]
 connect_timeout = "30s"
 heartbeat_interval = "30s"

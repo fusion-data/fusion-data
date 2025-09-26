@@ -12,14 +12,6 @@ publish.workspace = true
 [lints]
 workspace = true
 
-[[bin]]
-name = "hetuflow-server"
-path = "bin/hetuflow-server.rs"
-
-[[bin]]
-name = "hetuflow-agent"
-path = "bin/hetuflow-agent.rs"
-
 [dependencies]
 fusion-corelib = { workspace = true }
 fusion-common = { workspace = true, features = ["with-uuid"] }

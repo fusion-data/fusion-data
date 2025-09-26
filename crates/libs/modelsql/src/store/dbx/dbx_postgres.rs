@@ -180,7 +180,7 @@ impl DbxPostgres {
       } else {
         // 嵌套事务场景，未到最外层提交，记录警告以帮助定位不匹配的 begin/commit 次数
         // 如果 counter < 0，说明出现了计数下溢，强烈提示修复调用逻辑
-        warn!(
+        debug!(
           "DbxPostgres.commit_txn: nested commit called with depth {}; transaction will not be committed until it reaches 0",
           counter
         );

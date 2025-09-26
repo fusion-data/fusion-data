@@ -1,16 +1,18 @@
 mod agent;
+mod command;
+mod event;
 mod heartbeat;
 mod log;
 mod process;
 mod task;
-mod websocket;
 
 pub use agent::*;
+pub use command::*;
+pub use event::*;
 pub use heartbeat::*;
 pub use log::*;
 pub use process::*;
 pub use task::*;
-pub use websocket::*;
 
 use std::collections::HashMap;
 

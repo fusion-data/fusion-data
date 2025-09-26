@@ -25,7 +25,8 @@ pub fn routes() -> OpenApiRouter<ServerApplication> {
   request_body = AgentForQuery,
   responses(
     (status = 200, body = PageResult<SchedAgent>)
-  )
+  ),
+  tag = "Agents"
 )]
 async fn query_agents(agent_svc: AgentSvc, Json(input): Json<AgentForQuery>) -> WebResult<PageResult<SchedAgent>> {
   let result = agent_svc.query(input).await?;
@@ -38,7 +39,8 @@ async fn query_agents(agent_svc: AgentSvc, Json(input): Json<AgentForQuery>) -> 
   request_body = AgentForCreate,
   responses(
     (status = 200, description = "Success", body = IdStringResult)
-  )
+  ),
+  tag = "Agents"
 )]
 async fn create_agent(agent_svc: AgentSvc, Json(input): Json<AgentForCreate>) -> WebResult<IdStringResult> {
   let id = agent_svc.create(input).await?;
@@ -53,7 +55,8 @@ async fn create_agent(agent_svc: AgentSvc, Json(input): Json<AgentForCreate>) ->
   ),
   responses(
     (status = 200, description = "Success", body = Option<SchedAgent>)
-  )
+  ),
+  tag = "Agents"
 )]
 async fn get_agent(agent_svc: AgentSvc, Path(id): Path<Uuid>) -> WebResult<Option<SchedAgent>> {
   let result = agent_svc.get_by_id(&id).await?;
@@ -69,7 +72,8 @@ async fn get_agent(agent_svc: AgentSvc, Path(id): Path<Uuid>) -> WebResult<Optio
   request_body = AgentForUpdate,
   responses(
     (status = 200, description = "Success", body = Value)
-  )
+  ),
+  tag = "Agents"
 )]
 async fn update_agent(
   agent_svc: AgentSvc,
@@ -88,7 +92,8 @@ async fn update_agent(
   ),
   responses(
     (status = 200, description = "Success", body = Value)
-  )
+  ),
+  tag = "Agents"
 )]
 async fn delete_agent(agent_svc: AgentSvc, Path(id): Path<Uuid>) -> WebResult<Value> {
   agent_svc.delete_by_id(&id).await?;

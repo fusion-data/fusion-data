@@ -198,7 +198,7 @@ pub enum ExecuteCommands {
 ### 3.1 本地执行器
 
 ```rust
-use tokio::sync::mpsc;
+use mea::mpsc;
 use std::collections::HashMap;
 
 pub struct LocalWorkflowRunner {
