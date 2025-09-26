@@ -165,3 +165,9 @@
 - [*] **Server 配置模板** - 完善 hetuflow-server 的 app.toml 配置模板
 - [*] **Agent 配置模板** - 完善 hetuflow-agent 的 app.toml 配置模板
 - [*] **环境变量支持** - 实现敏感配置通过环境变量覆盖
+
+## 六、测试与质量保证
+
+### 6.3 文档
+
+- [*] **API 文档** - 生成完整的 API 接口文档，使用 utoipa 自动生成 OpenAPI 文档

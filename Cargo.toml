@@ -181,7 +181,7 @@ tokio = { version = "1.47", features = [
   "sync",            # Synchronization primitives
   "process",         # Process primitives
 ] }
-tokio-tungstenite = { version = "0.27" }
+tokio-tungstenite = { version = "0.28" }
 tokio-stream = { version = "0.1", features = ["full"] }
 tokio-util = { version = "0.7", features = ["full"] }
 tokio-test = { version = "0.4" }
@@ -223,7 +223,7 @@ jsonpath-rust = { version = "1.0" }
 json-patch = { version = "4" }
 nom = "8.0"
 # -- Web
-url = "2.4"
+url = "2.5"
 urlencoding = "2.1"
 serde_urlencoded = "0.7"
 headers = "0.4"
@@ -301,7 +301,7 @@ protobuf-parse = "3"
 # -- Template Engin
 minijinja = { version = "2.5" }
 # -- Data Science
-polars = "0.50"
+polars = "0.51"
 # An Excel/OpenDocument Spreadsheets reader and deserializer in pure rust
 calamine = "0.30"
 # -- Redis & Valkey client
@@ -318,7 +318,7 @@ minio = { version = "0.3" }
 rig-core = { version = "0.20", features = ["derive"] }
 rig-postgres = { version = "0.1" }
 graph-flow = { version = "0.4" }
-rmcp = { version = "0.6", features = [
+rmcp = { version = "0.7", features = [
   "client",
   "reqwest",
   "transport-streamable-http-client-reqwest",
