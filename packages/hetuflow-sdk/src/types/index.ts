@@ -1,12 +1,4 @@
-// Generated from Hetuflow OpenAPI Schema
-
-export interface Page {
-  page?: number;
-  limit?: number;
-  offset?: number;
-  // `!field`: `field desc`, `field`: `field asc`
-  order_bys?: string[];
-}
+import { Page, Paged, PageResult } from "@fusion-data/modelsql/page";
 
 export interface AgentForCreate {
   name: string;
@@ -157,15 +149,6 @@ export interface GatewayCommandRequest {
 export interface HealthStatus {
   status: "healthy" | "unhealthy";
   checks: Record<string, any>;
-}
-
-export interface Paged {
-  total: number;
-}
-
-export interface PageResult<T> {
-  result: T[];
-  page: Paged;
 }
 
 export type PageResult_SchedAgent = PageResult<SchedAgent>;

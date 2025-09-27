@@ -8,25 +8,6 @@ pub enum OrderBy {
   Desc(String),
 }
 
-impl core::fmt::Display for OrderBy {
-  fn fmt(&self, fmt: &mut core::fmt::Formatter) -> core::fmt::Result {
-    match self {
-      OrderBy::Asc(val) => {
-        fmt.write_str(val)?;
-        fmt.write_str(" ")?;
-        fmt.write_str("asc")?;
-      }
-      OrderBy::Desc(val) => {
-        fmt.write_str(val)?;
-        fmt.write_str(" ")?;
-        fmt.write_str("desc")?;
-      }
-    };
-
-    Ok(())
-  }
-}
-
 impl From<&str> for OrderBy {
   fn from(value: &str) -> Self {
     if let Some(stripped) = value.strip_prefix('!') {
@@ -75,6 +56,24 @@ impl<'de> Deserialize<'de> for OrderBy {
   }
 }
 
+impl core::fmt::Display for OrderBy {
+  fn fmt(&self, fmt: &mut core::fmt::Formatter) -> core::fmt::Result {
+    match self {
+      OrderBy::Asc(val) => {
+        fmt.write_str(val)?;
+        fmt.write_str(" ")?;
+        fmt.write_str("asc")?;
+      }
+      OrderBy::Desc(val) => {
+        fmt.write_str(val)?;
+        fmt.write_str(" ")?;
+        fmt.write_str("desc")?;
+      }
+    };
+
+    Ok(())
+  }
+}
 // endregion: --- OrderBy
 
 // region:    --- OrderBys

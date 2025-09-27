@@ -1,5 +1,5 @@
 {
-  "name": "@fusion-data/hetuflow",
+  "name": "@fusion-data/hetuflow-web",
   "version": "1.0.0",
   "description": "Demo React 19 app with Ant Design v5 and TypeScript",
   "private": true,
@@ -17,7 +17,8 @@
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
-    "@fusion-data/hetuflow-sdk": "workspace:^",
+    "@fusion-data/modelsql": "workspace:*",
+    "@fusion-data/hetuflow-sdk": "workspace:*",
     "@fusion-data/fusion-core": "workspace:*",
     "antd": "^5.27.4",
     "react": "^19.1.1",
