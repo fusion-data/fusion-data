@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
 
 use fusion_core::{
   DataError,
@@ -159,8 +159,18 @@ impl ServerApplication {
     let mut handles_guard = self.handles.lock().await;
     let handles = std::mem::take(&mut *handles_guard);
     for handle in handles {
-      if let Err((name, e)) = handle.complete().await {
-        error!("Failed to join task name: {}, error: {}", name, e);
+      let name = handle.name().to_string();
+      let ret = tokio::time::timeout(Duration::from_secs(10), handle.complete()).await;
+      match ret {
+        Ok(Ok((name, _))) => {
+          info!("Task name: {} completed successfully", name);
+        }
+        Ok(Err((name, e))) => {
+          error!("Failed to join task name: {}, error: {}", name, e);
+        }
+        Err(e) => {
+          error!("Waiting for join ServiceHandle name: {} timeout, error: {}", name, e);
+        }
       }
     }
 

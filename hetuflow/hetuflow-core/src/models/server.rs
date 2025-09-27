@@ -23,10 +23,8 @@ pub struct SchedServer {
   pub bind_namespaces: Vec<Uuid>,
   pub status: ServerStatus,
   pub description: Option<String>,
-  pub last_heartbeat: DateTime<FixedOffset>,
-  pub created_by: i64,
+  pub last_heartbeat_at: DateTime<FixedOffset>,
   pub created_at: DateTime<FixedOffset>,
-  pub deleted_at: Option<DateTime<FixedOffset>>,
 }
 
 /// Server 创建模型
@@ -50,6 +48,7 @@ pub struct ServerForUpdate {
   pub bind_namespaces: Option<Vec<Uuid>>,
   pub status: Option<ServerStatus>,
   pub description: Option<String>,
+  pub last_heartbeat_at: Option<DateTime<FixedOffset>>,
   pub update_mask: Option<FieldMask>,
 }
 
@@ -72,5 +71,5 @@ pub struct ServerFilter {
   pub status: Option<OpValsInt32>,
   pub address: Option<OpValsString>,
   pub created_at: Option<OpValsDateTime>,
-  pub updated_at: Option<OpValsDateTime>,
+  pub last_heartbeat_at: Option<OpValsDateTime>,
 }

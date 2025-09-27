@@ -21,6 +21,7 @@ pub struct TaskInstanceBmc;
 
 impl DbBmc for TaskInstanceBmc {
   const TABLE: &str = "sched_task_instance";
+  const ID_GENERATED_BY_DB: bool = false;
 }
 
 generate_pg_bmc_common!(

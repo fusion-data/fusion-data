@@ -1,4 +1,4 @@
-use fusion_common::time::UtcDateTime;
+use fusion_common::time::now_offset;
 use modelsql::{
   ModelManager, SqlError, base::DbBmc, filter::OpValsInt32, generate_pg_bmc_common, generate_pg_bmc_filter,
 };
@@ -12,11 +12,13 @@ pub struct ServerBmc;
 
 impl DbBmc for ServerBmc {
   const TABLE: &str = "sched_server";
-
+  const ID_GENERATED_BY_DB: bool = false;
+  fn _has_created_by() -> bool {
+    false
+  }
   fn _has_updated_at() -> bool {
     false
   }
-
   fn _has_updated_by() -> bool {
     false
   }
@@ -52,22 +54,19 @@ impl ServerBmc {
   }
 
   pub async fn register(mm: &ModelManager, server: ServerForRegister) -> Result<(), SqlError> {
-    let sql = r#"insert into sched_server(id, name, address, status, created_by, created_at)
-      values ($1, $2, $3, $4, $5, $6)
+    let sql = r#"insert into sched_server(id, name, address, status, last_heartbeat_at)
+      values ($1, $2, $3, $4, $5)
       on conflict (id) do update set name           = excluded.name,
                                     address         = excluded.address,
                                     status          = excluded.status,
-                                    updated_by      = excluded.created_by,
-                                    updated_at      = excluded.created_at"#;
+                                    last_heartbeat_at = excluded.last_heartbeat_at"#;
     let db = mm.dbx().db_postgres()?;
-    let ctx = mm.ctx_ref()?;
     let query = sqlx::query(sql)
       .bind(&server.id)
       .bind(&server.name)
       .bind(&server.address)
       .bind(server.status as i32)
-      .bind(ctx.uid())
-      .bind(UtcDateTime::from(*ctx.req_time()));
+      .bind(now_offset());
     let rows_affected = db.execute(query).await?;
     if rows_affected == 1 {
       Ok(())

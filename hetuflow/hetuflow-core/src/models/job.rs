@@ -22,10 +22,8 @@ pub struct SchedJob {
   pub environment: Option<serde_json::Value>,
   pub config: TaskConfig,
   pub status: JobStatus,
-  pub created_by: i64,
   pub created_at: DateTime<FixedOffset>,
-  pub updated_by: Option<i64>,
-  pub updated_at: Option<DateTime<FixedOffset>>,
+  pub last_heartbeat_at: Option<DateTime<FixedOffset>>,
 }
 
 /// Job 创建模型
@@ -75,5 +73,5 @@ pub struct JobFilter {
   pub namespace_id: Option<OpValsUuid>,
   pub status: Option<OpValsInt32>,
   pub created_at: Option<OpValsDateTime>,
-  pub updated_at: Option<OpValsDateTime>,
+  pub last_heartbeat_at: Option<OpValsDateTime>,
 }

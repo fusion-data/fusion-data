@@ -57,7 +57,7 @@ agent_heartbeat_ttl = "60s"
 # 负载均衡间隔
 load_balance_interval = "30s"
 # 服务器过期时间
-server_overdue_ttl = "5m"
+server_heartbeat_ttl = "5m"
 # Agent 过期时间
 agent_overdue_ttl = "5m"
 

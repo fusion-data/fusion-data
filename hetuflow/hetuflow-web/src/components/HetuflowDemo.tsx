@@ -106,8 +106,8 @@ const HetuflowDemo: React.FC = () => {
     },
     {
       title: "最后心跳时间",
-      dataIndex: "last_heartbeat",
-      key: "last_heartbeat",
+      dataIndex: "last_heartbeat_at",
+      key: "last_heartbeat_at",
       render: (text: string) => new Date(text).toLocaleString("zh-CN"),
     },
     {

@@ -102,6 +102,13 @@ const Servers: React.FC = () => {
       onFilter: (value, record) => record.status === value,
     },
     {
+      title: "最后心跳",
+      dataIndex: "last_heartbeat_at",
+      key: "last_heartbeat_at",
+      render: (time: string) => dayjs(time).format("YYYY-MM-DD HH:mm:ss"),
+      sorter: (a, b) => new Date(a.last_heartbeat_at).getTime() - new Date(b.last_heartbeat_at).getTime(),
+    },
+    {
       title: "绑定命名空间",
       dataIndex: "bind_namespaces",
       key: "bind_namespaces",
@@ -118,13 +125,6 @@ const Servers: React.FC = () => {
       dataIndex: "description",
       key: "description",
       ellipsis: true,
-    },
-    {
-      title: "最后心跳",
-      dataIndex: "last_heartbeat",
-      key: "last_heartbeat",
-      render: (time: string) => dayjs(time).format("YYYY-MM-DD HH:mm:ss"),
-      sorter: (a, b) => new Date(a.last_heartbeat).getTime() - new Date(b.last_heartbeat).getTime(),
     },
     {
       title: "创建时间",

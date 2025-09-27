@@ -977,11 +977,11 @@ impl SchedulerSvc {
       .dbx()
       .use_postgres(|dbx| async move {
         let query = r#"
-          INSERT INTO sched_server (id, last_heartbeat, status)
+          INSERT INTO sched_server (id, last_heartbeat_at, status)
           VALUES ($1, NOW(), 'active')
           ON CONFLICT (id)
           DO UPDATE SET
-            last_heartbeat = NOW(),
+            last_heartbeat_at = NOW(),
             status = 'active'
         "#;
 
@@ -1039,7 +1039,7 @@ impl SchedulerSvc {
         let query = r#"
           UPDATE sched_server
           SET status = $1,
-              last_heartbeat = NOW()
+              last_heartbeat_at = NOW()
           WHERE id = $2
         "#;
 
@@ -1176,7 +1176,7 @@ pub struct AgentInfo {
   pub agent_id: String,
   pub status: String,
   pub capabilities: serde_json::Value,
-  pub last_heartbeat: OffsetDateTime,
+  pub last_heartbeat_at: OffsetDateTime,
   pub active_tasks: i32,
 }
 
@@ -1199,7 +1199,7 @@ impl AgentManager {
       agent_id: agent_id.clone(),
       status: "online".to_string(),
       capabilities,
-      last_heartbeat: now_offset(),
+      last_heartbeat_at: now_offset(),
       active_tasks: 0,
     };
 
@@ -1213,7 +1213,7 @@ impl AgentManager {
   pub async fn update_heartbeat(&self, agent_id: &str) -> Result<(), DataError> {
     let mut agents = self.agents.write().await;
     if let Some(agent) = agents.get_mut(agent_id) {
-      agent.last_heartbeat = now_offset();
+      agent.last_heartbeat_at = now_offset();
     }
 
     Ok(())

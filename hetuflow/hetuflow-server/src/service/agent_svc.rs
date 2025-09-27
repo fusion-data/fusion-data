@@ -13,13 +13,13 @@ use hetuflow_core::{
     AgentFilter, AgentForCreate, AgentForQuery, AgentForUpdate, SchedAgent, TaskForUpdate, TaskInstanceFilter,
     TaskInstanceForUpdate,
   },
-  protocol::{RegisterAgentRequest, AgentRegisterResponse},
+  protocol::{AgentRegisterResponse, RegisterAgentRequest},
   types::{AgentStatus, TaskInstanceStatus, TaskStatus},
 };
 
 use crate::{
   infra::bmc::{AgentBmc, TaskBmc, TaskInstanceBmc},
-  service::{JweSvc, JweError},
+  service::{JweError, JweSvc},
   setting::HetuflowSetting,
 };
 
@@ -35,8 +35,7 @@ impl AgentSvc {
 
   /// 创建带有JWE配置的AgentSvc
   pub fn new_with_setting(mm: ModelManager, setting: &HetuflowSetting) -> Result<Self, DataError> {
-    let jwe_service =
-      if let Some(jwe_config) = &setting.jwe { Some(JweSvc::new(jwe_config.clone())?) } else { None };
+    let jwe_service = if let Some(jwe_config) = &setting.jwe { Some(JweSvc::new(jwe_config.clone())?) } else { None };
     Ok(Self { mm, jwe_service })
   }
 
@@ -77,7 +76,7 @@ impl AgentSvc {
   /// 更新 Agent 心跳
   pub async fn update_agent_heartbeat(&self, agent_id: &str) -> Result<(), DataError> {
     let update =
-      AgentForUpdate { status: Some(AgentStatus::Online), last_heartbeat: Some(now_offset()), ..Default::default() };
+      AgentForUpdate { status: Some(AgentStatus::Online), last_heartbeat_at: Some(now_offset()), ..Default::default() };
     AgentBmc::update_by_id(&self.mm, agent_id, update).await.map_err(DataError::from)
   }
 
@@ -97,7 +96,7 @@ impl AgentSvc {
 
     let filter = AgentFilter {
       status: Some(OpValsInt32::eq(AgentStatus::Online as i32)),
-      last_heartbeat: Some(OpValsDateTime::lt(timeout_time)),
+      last_heartbeat_at: Some(OpValsDateTime::lt(timeout_time)),
       ..Default::default()
     };
 

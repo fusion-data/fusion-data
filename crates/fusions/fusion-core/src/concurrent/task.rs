@@ -94,12 +94,15 @@ where
       let retry_limit = retry_strategy.retry_limit();
       loop {
         match self.run_loop().await {
-          Ok(result) => return Ok(TaskResult { result, retry_count }),
+          Ok(result) => {
+            log::info!("The ServiceTask: [{}] has been executed successfully after {} retries", &name, retry_count);
+            return Ok(TaskResult { result, retry_count });
+          }
           Err(err) => {
             retry_count += 1;
             if retry_count > retry_limit {
               log::error!(
-                "The {} stop after {} retries has reached the retry limit: {}",
+                "The ServiceTask: [{}] stop after {} retries has reached the retry limit: {}",
                 &name,
                 retry_count,
                 retry_limit

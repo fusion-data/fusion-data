@@ -47,13 +47,14 @@ impl AgentManager {
 
     let mut handles = Vec::new();
 
-    handles.push(self.run_agent_cleanup(shutdown_rx));
+    handles.push(self.run_agent_cleanup(shutdown_rx.clone()));
 
     let agent_event_runner = AgentEventRunner {
       mm: self.mm.clone(),
       connection_manager: self.connection_manager.clone(),
       setting: self.setting.clone(),
       event_rx,
+      shutdown_rx,
     };
     handles.push(agent_event_runner.start());
 
@@ -91,6 +92,7 @@ struct AgentEventRunner {
   connection_manager: Arc<ConnectionManager>,
   setting: Arc<HetuflowSetting>,
   event_rx: mpsc::UnboundedReceiver<AgentEvent>,
+  shutdown_rx: ShutdownRecv,
 }
 
 impl ServiceTask<()> for AgentEventRunner {
@@ -103,45 +105,20 @@ impl ServiceTask<()> for AgentEventRunner {
         return Err(e);
       }
     };
-    while let Some(event) = self.event_rx.recv().await {
-      match event {
-        AgentEvent::Heartbeat { agent_id, .. } => {
-          if let Err(e) = agent_svc.update_agent_heartbeat(&agent_id).await {
-            error!("Failed to update agent heartbeat agent {}: {:?}", agent_id, e);
+    loop {
+      tokio::select! {
+        _ = self.shutdown_rx.is_shutdown() => {
+          info!("Shutdown signal received, stopping agent event runner loop.");
+          break;
+        }
+        event = self.event_rx.recv() => {
+          if let Some(event) = event {
+            self.process_event(&agent_svc, event).await;
+          } else {
+            info!("AgentEventRunner event channel closed, stopping loop.");
+            break;
           }
         }
-        AgentEvent::TaskInstanceChanged { agent_id, payload } => {
-          if let Err(e) = self.process_task_instance_changed(&agent_id, payload).await {
-            error!("Failed to process task instance changed agent {}: {:?}", agent_id, e);
-          }
-        }
-        AgentEvent::TaskPollRequest { agent_id, request } => {
-          if let Err(e) = self.process_task_poll(&agent_id, request).await {
-            error!("Failed to process task poll request agent {}: {:?}", agent_id, e);
-          }
-        }
-        AgentEvent::Registered { agent_id, payload } => match agent_svc.handle_register(&agent_id, &payload).await {
-          Ok(response) => {
-            let message = CommandMessage::new_agent_registered(response);
-            if let Err(e) = self.connection_manager.send_to_agent(&agent_id, message).await {
-              error!("Failed to send registered message to agent {}: {:?}", agent_id, e);
-            }
-          }
-          Err(e) => {
-            error!("Failed to handle register agent {}: {:?}", agent_id, e);
-          }
-        },
-        AgentEvent::Connected { .. } => {
-          // do nothing
-        }
-        AgentEvent::Unconnected { agent_id, reason } => {
-          warn!("Agent {} disconnected: {}", agent_id, reason);
-          // 处理 Agent 离线导致的任务失败
-          if let Err(e) = agent_svc.handle_agent_offline(&agent_id).await {
-            error!("Failed to handle offline agent {}: {:?}", agent_id, e);
-          }
-        }
-        AgentEvent::TaskLog { .. } => { /* do nothing */ }
       }
     }
 
@@ -272,5 +249,47 @@ impl AgentEventRunner {
 
     mm.dbx().commit_txn().await?;
     Ok(())
+  }
+
+  async fn process_event(&mut self, agent_svc: &AgentSvc, event: AgentEvent) {
+    match event {
+      AgentEvent::Heartbeat { agent_id, .. } => {
+        if let Err(e) = agent_svc.update_agent_heartbeat(&agent_id).await {
+          error!("Failed to update agent heartbeat agent {}: {:?}", agent_id, e);
+        }
+      }
+      AgentEvent::TaskInstanceChanged { agent_id, payload } => {
+        if let Err(e) = self.process_task_instance_changed(&agent_id, payload).await {
+          error!("Failed to process task instance changed agent {}: {:?}", agent_id, e);
+        }
+      }
+      AgentEvent::TaskPollRequest { agent_id, request } => {
+        if let Err(e) = self.process_task_poll(&agent_id, request).await {
+          error!("Failed to process task poll request agent {}: {:?}", agent_id, e);
+        }
+      }
+      AgentEvent::Registered { agent_id, payload } => match agent_svc.handle_register(&agent_id, &payload).await {
+        Ok(response) => {
+          let message = CommandMessage::new_agent_registered(response);
+          if let Err(e) = self.connection_manager.send_to_agent(&agent_id, message).await {
+            error!("Failed to send registered message to agent {}: {:?}", agent_id, e);
+          }
+        }
+        Err(e) => {
+          error!("Failed to handle register agent {}: {:?}", agent_id, e);
+        }
+      },
+      AgentEvent::Connected { .. } => {
+        // do nothing
+      }
+      AgentEvent::Unconnected { agent_id, reason } => {
+        warn!("Agent {} disconnected: {}", agent_id, reason);
+        // 处理 Agent 离线导致的任务失败
+        if let Err(e) = agent_svc.handle_agent_offline(&agent_id).await {
+          error!("Failed to handle offline agent {}: {:?}", agent_id, e);
+        }
+      }
+      AgentEvent::TaskLog { .. } => { /* do nothing */ }
+    }
   }
 }

@@ -18,6 +18,9 @@ impl DbBmc for AgentBmc {
   fn _has_created_by() -> bool {
     false
   }
+  fn _has_updated_at() -> bool {
+    false
+  }
   fn _has_updated_by() -> bool {
     false
   }
@@ -48,7 +51,7 @@ impl AgentBmc {
   pub async fn update_status(mm: &ModelManager, agent_id: &str, status: AgentStatus) -> Result<(), SqlError> {
     let mut update = AgentForUpdate { status: Some(status), ..Default::default() };
     if status == AgentStatus::Online {
-      update.last_heartbeat = Some(now_offset());
+      update.last_heartbeat_at = Some(now_offset());
     }
 
     Self::update_by_id(mm, agent_id, update).await.map(|_| ())
@@ -59,7 +62,7 @@ impl AgentBmc {
     let cutoff_time = now_offset() - chrono::Duration::seconds(timeout_seconds);
 
     let filter = AgentFilter {
-      last_heartbeat: Some(OpValsDateTime::lt(cutoff_time)),
+      last_heartbeat_at: Some(OpValsDateTime::lt(cutoff_time)),
       status: Some(OpValsInt32::eq(AgentStatus::Offline as i32)),
       ..Default::default()
     };
@@ -73,13 +76,13 @@ impl AgentBmc {
     payload: &RegisterAgentRequest,
   ) -> Result<SchedAgent, SqlError> {
     let sql = r#"
-      insert into sched_agent (id, address, status, capabilities, last_heartbeat)
+      insert into sched_agent (id, address, status, capabilities, last_heartbeat_at)
       values ($1, $2, $3, $4, $5)
       on conflict (id) do update set
         address = excluded.address,
         status = excluded.status,
         capabilities = excluded.capabilities,
-        last_heartbeat = excluded.last_heartbeat
+        last_heartbeat_at = excluded.last_heartbeat_at
       returning *"#;
     let query = sqlx::query_as(sql)
       .bind(agent_id)

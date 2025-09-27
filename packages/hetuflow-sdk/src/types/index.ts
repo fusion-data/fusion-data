@@ -16,7 +16,7 @@ export interface AgentFilter {
   id?: Record<string, string>;
   status?: Record<string, number>;
   address?: Record<string, string>;
-  last_heartbeat?: Record<string, string>;
+  last_heartbeat_at?: Record<string, string>;
   created_at?: Record<string, string>;
   updated_at?: Record<string, string>;
 }
@@ -57,7 +57,7 @@ export interface JobFilter {
   namespace_id?: Record<string, string | undefined>;
   status?: Record<string, number | undefined>;
   created_at?: Record<string, string | undefined>;
-  updated_at?: Record<string, string | undefined>;
+  last_heartbeat_at?: Record<string, string | undefined>;
 }
 
 export interface JobForQuery {
@@ -188,10 +188,8 @@ export interface SchedServer {
   bind_namespaces: string[];
   status: ServerStatus;
   description?: string;
-  last_heartbeat: string;
-  created_by: number;
+  last_heartbeat_at: string;
   created_at: string;
-  deleted_at?: string;
 }
 
 export interface GenerateTokenRequest {

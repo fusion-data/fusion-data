@@ -187,7 +187,7 @@ impl AgentBmc {
   /// 更新 Agent 心跳时间
   pub async fn update_heartbeat(mm: &ModelManager, agent_id: &str) -> Result<(), SqlError> {
     let update = AgentForUpdate {
-      last_heartbeat: Some(now_offset()),
+      last_heartbeat_at: Some(now_offset()),
       ..Default::default()
     };
     Self::update_by_id(mm, agent_id, update).await.map(|_| ())
@@ -383,7 +383,7 @@ impl ConnectionManager {
 
     let filter = AgentFilter {
       status: Some(OpValString::Eq("online").into()),
-      last_heartbeat: Some(OpValsDateTime::lt(stale_threshold)),
+      last_heartbeat_at: Some(OpValsDateTime::lt(stale_threshold)),
       ..Default::default()
     };
 
@@ -475,7 +475,7 @@ impl MessageHandler {
       capabilities: request.capabilities.map(|c| serde_json::to_value(c).unwrap()),
       metadata: request.metadata,
       status: "online".to_string(),
-      last_heartbeat: Some(now_offset()),
+      last_heartbeat_at: Some(now_offset()),
       registered_at: Some(now_offset()),
       updated_at: Some(now_offset()),
       ..Default::default()
@@ -490,7 +490,7 @@ impl MessageHandler {
           status: Some("online".to_string()),
           capabilities: request.capabilities.map(|c| serde_json::to_value(c).unwrap()),
           metadata: request.metadata,
-          last_heartbeat: Some(now_offset()),
+          last_heartbeat_at: Some(now_offset()),
           updated_at: Some(now_offset()),
           ..Default::default()
         };
@@ -587,7 +587,7 @@ sequenceDiagram
     Conn->>Router: process_message(agent_id, message)
     Router->>Router: 解析消息, 识别 MessageKind
     Router->>BMC: update_heartbeat(mm, agent_id)
-    BMC->>DB: UPDATE sched_agent SET last_heartbeat = NOW()
+    BMC->>DB: UPDATE sched_agent SET last_heartbeat_at = NOW()
     Router->>Scheduler: mpsc::send(GatewayEvent::TaskStatusUpdated(...))
 ```
 
@@ -651,7 +651,7 @@ pub enum GatewayEvent {
 pub struct AgentConnection {
   pub agent_id: String,
   pub websocket: Arc<Mutex<WebSocketStream<tokio::net::TcpStream>>>,
-  pub last_heartbeat: Instant,
+  pub last_heartbeat_at: Instant,
   pub capabilities: AgentCapabilities, // 来自 core
   pub status: AgentStatus,             // 来自 core
   // 用于向该 Agent 的 WebSocket Sink 发送消息

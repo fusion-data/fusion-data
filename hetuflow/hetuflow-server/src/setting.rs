@@ -32,7 +32,7 @@ pub struct ServerSetting {
 
   /// Server 过期超时
   #[serde(deserialize_with = "deserialize_duration")]
-  pub server_overdue_ttl: Duration,
+  pub server_heartbeat_ttl: Duration,
 
   /// Agent 过期超时
   #[serde(deserialize_with = "deserialize_duration")]

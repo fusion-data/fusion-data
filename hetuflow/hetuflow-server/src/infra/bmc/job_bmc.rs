@@ -15,6 +15,7 @@ pub struct JobBmc;
 
 impl DbBmc for JobBmc {
   const TABLE: &str = "sched_job";
+  const ID_GENERATED_BY_DB: bool = false;
 }
 
 generate_pg_bmc_common!(

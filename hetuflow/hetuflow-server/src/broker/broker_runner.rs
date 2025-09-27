@@ -80,7 +80,7 @@ impl LeaderOrFollowerRunner {
     // 查找心跳超时的在线Agent
     let filter = AgentFilter {
       status: Some(OpValsInt32::eq(AgentStatus::Online as i32)),
-      last_heartbeat: Some(OpValsDateTime::lt(timeout_threshold)),
+      last_heartbeat_at: Some(OpValsDateTime::lt(timeout_threshold)),
       ..Default::default()
     };
     let timeout_agents = AgentBmc::find_many(&mm, vec![filter], None).await?;
@@ -97,14 +97,14 @@ impl LeaderOrFollowerRunner {
 
   /// 检查Server心跳超时
   async fn check_server_timeouts(&self) -> Result<(), DataError> {
-    let timeout_threshold = now_offset() - self.setting.server.server_overdue_ttl;
+    let timeout_threshold = now_offset() - self.setting.server.server_heartbeat_ttl;
     let mm = self.mm.get_txn_clone();
     mm.dbx().begin_txn().await?;
 
     // 查找心跳超时的在线Server
     let filter = ServerFilter {
       status: Some(OpValsInt32::eq(ServerStatus::Active as i32)),
-      updated_at: Some(OpValsDateTime::lt(timeout_threshold)),
+      last_heartbeat_at: Some(OpValsDateTime::lt(timeout_threshold)),
       ..Default::default()
     };
     let timeout_servers = ServerBmc::find_many(&mm, vec![filter], None).await?;
@@ -151,7 +151,11 @@ impl LeaderOrFollowerRunner {
     }
 
     // 更新服务器心跳时间
-    let server_update = ServerForUpdate { status: Some(ServerStatus::Active), ..Default::default() };
+    let server_update = ServerForUpdate {
+      status: Some(ServerStatus::Active),
+      last_heartbeat_at: Some(now_offset()),
+      ..Default::default()
+    };
     if let Err(e) = ServerBmc::update_by_id(&mm, server_id, server_update).await {
       error!("Failed to update server heartbeat: {:?}", e);
     }

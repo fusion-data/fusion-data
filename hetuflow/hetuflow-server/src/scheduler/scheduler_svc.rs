@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use fusion_core::DataError;
-use log::{info, warn};
+use log::{debug, info, warn};
 use modelsql::ModelManager;
 use uuid::Uuid;
 
@@ -101,7 +101,7 @@ impl SchedulerSvc {
     }
 
     mm.dbx().commit_txn().await?;
-    info!("Generated {} tasks for time range {:?} to {:?}", generated_task_ids.len(), from_time, to_time);
+    debug!("Generated {} tasks for time range {:?} to {:?}", generated_task_ids.len(), from_time, to_time);
     Ok(generated_task_ids)
   }
 

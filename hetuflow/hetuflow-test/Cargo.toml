@@ -1,5 +1,5 @@
 [package]
-name = "hetuflow-bins"
+name = "hetuflow-test"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

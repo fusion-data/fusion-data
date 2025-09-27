@@ -16,7 +16,7 @@ create table sched_server (
   bind_namespaces uuid[] not null default '{}',
   status int not null default 100, -- 见 ServerStatus
   description text,
-  last_heartbeat timestamptz not null default now(),
+  last_heartbeat_at timestamptz not null default now(),
   created_by bigint not null,
   created_at timestamptz not null default now(),
   updated_by bigint,
@@ -32,7 +32,7 @@ create table sched_agent (
   status int not null default 100, -- 见 AgentStatus
   statistics jsonb not null default '{}'::jsonb, -- Agent 统计信息
   capabilities jsonb not null default '{}'::jsonb, -- Agent 能力描述
-  last_heartbeat timestamptz not null default now(),
+  last_heartbeat_at timestamptz not null default now(),
   created_at timestamptz not null default now(),
   updated_at timestamptz
 );
@@ -40,7 +40,7 @@ create table sched_agent (
 -- indexes for sched_agent
 create index if not exists idx_sched_agent_status on sched_agent (status);
 
-create index if not exists idx_sched_agent_last_heartbeat on sched_agent (last_heartbeat);
+create index if not exists idx_sched_agent_last_heartbeat on sched_agent (last_heartbeat_at);
 
 -- 作业定义表 (sched_job)
 create table sched_job (

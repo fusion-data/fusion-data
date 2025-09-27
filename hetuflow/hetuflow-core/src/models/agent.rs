@@ -8,6 +8,7 @@ use modelsql_core::{
 use serde::{Deserialize, Serialize};
 
 use crate::types::{AgentStatus, Labels};
+use crate::utils::defaults;
 
 /// Agent 性能指标
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
@@ -39,16 +40,22 @@ pub struct AgentCapabilities {
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct AgentStatistics {
   /// 成功任务数
+  #[serde(default = "defaults::default_u64")]
   pub success_count: u64,
   /// 失败任务数
+  #[serde(default = "defaults::default_u64")]
   pub failure_count: u64,
   /// 总任务数
+  #[serde(default = "defaults::default_u64")]
   pub total_tasks: u64,
   /// 平均响应时间（毫秒）
+  #[serde(default = "defaults::default_f64")]
   pub avg_response_ms: f64,
   /// 最后失败时间（毫秒）
+  #[serde(default = "defaults::default_i64")]
   pub last_failure_ms: i64,
   /// 连续失败次数
+  #[serde(default = "defaults::default_u32")]
   pub consecutive_failures: u32,
 }
 
@@ -67,9 +74,8 @@ pub struct SchedAgent {
   pub status: AgentStatus,
   pub capabilities: AgentCapabilities,
   pub statistics: AgentStatistics,
-  pub last_heartbeat: DateTime<FixedOffset>,
+  pub last_heartbeat_at: DateTime<FixedOffset>,
   pub created_at: DateTime<FixedOffset>,
-  pub updated_at: Option<DateTime<FixedOffset>>,
 }
 
 /// Agent 创建模型
@@ -101,7 +107,7 @@ pub struct AgentForUpdate {
   pub port: Option<i32>,
   pub status: Option<AgentStatus>,
   pub capabilities: Option<AgentCapabilities>,
-  pub last_heartbeat: Option<DateTime<FixedOffset>>,
+  pub last_heartbeat_at: Option<DateTime<FixedOffset>>,
   #[serde(skip)]
   pub update_mask: Option<FieldMask>,
 }
@@ -114,9 +120,8 @@ pub struct AgentFilter {
   pub id: Option<OpValsString>,
   pub status: Option<OpValsInt32>,
   pub address: Option<OpValsString>,
-  pub last_heartbeat: Option<OpValsDateTime>,
+  pub last_heartbeat_at: Option<OpValsDateTime>,
   pub created_at: Option<OpValsDateTime>,
-  pub updated_at: Option<OpValsDateTime>,
 }
 
 /// Agent 查询请求

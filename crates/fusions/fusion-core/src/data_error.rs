@@ -265,7 +265,26 @@ impl From<modelsql::SqlError> for DataError {
       modelsql::SqlError::UniqueViolation { table, constraint } => {
         DataError::conflicted(format!("UniqueViolation, {table}:{constraint}"))
       }
-      _ => DataError::server_error(value.to_string()),
+      modelsql::SqlError::ExecuteError { table, message } => {
+        DataError::server_error(format!("ExecuteError, {}:{}", table, message))
+      }
+      modelsql::SqlError::ExecuteFail { schema, table } => {
+        DataError::server_error(format!("ExecuteFail, {:?}:{}", schema, table))
+      }
+      modelsql::SqlError::CountFail { schema, table } => {
+        DataError::server_error(format!("CountFail, {:?}:{}", schema, table))
+      }
+      e @ modelsql::SqlError::InvalidDatabase(_) => DataError::server_error(e.to_string()),
+      e @ modelsql::SqlError::CantCreateModelManagerProvider(_) => DataError::server_error(e.to_string()),
+      e @ modelsql::SqlError::IntoSeaError(_) => DataError::server_error(e.to_string()),
+      e @ modelsql::SqlError::SeaQueryError(_) => DataError::server_error(e.to_string()),
+      e @ modelsql::SqlError::JsonError(_) => DataError::server_error(e.to_string()),
+      modelsql::SqlError::DbxError(e) => {
+        DataError::InternalError { code: 500, msg: "Dbx Error".to_string(), cause: Some(Box::new(e)) }
+      }
+      modelsql::SqlError::Sqlx(e) => {
+        DataError::InternalError { code: 500, msg: "Sqlx Error".to_string(), cause: Some(Box::new(e)) }
+      }
     }
   }
 }
