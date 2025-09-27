@@ -1,4 +1,4 @@
-use fusion_common::time::OffsetDateTime;
+use chrono::{DateTime, FixedOffset};
 use modelsql_core::{
   field::FieldMask,
   filter::{OpValsDateTime, OpValsInt32, OpValsString, OpValsUuid, Page},
@@ -23,13 +23,10 @@ pub struct SchedServer {
   pub bind_namespaces: Vec<Uuid>,
   pub status: ServerStatus,
   pub description: Option<String>,
-  #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
-  pub last_heartbeat: OffsetDateTime,
+  pub last_heartbeat: DateTime<FixedOffset>,
   pub created_by: i64,
-  #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
-  pub created_at: OffsetDateTime,
-  #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
-  pub deleted_at: Option<OffsetDateTime>,
+  pub created_at: DateTime<FixedOffset>,
+  pub deleted_at: Option<DateTime<FixedOffset>>,
 }
 
 /// Server 创建模型

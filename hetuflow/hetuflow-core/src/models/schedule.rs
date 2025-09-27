@@ -1,3 +1,4 @@
+use chrono::{DateTime, FixedOffset};
 use fusion_common::time::{OffsetDateTime, now_offset};
 use modelsql_core::{
   field::FieldMask,
@@ -22,10 +23,8 @@ pub struct SchedSchedule {
   pub name: Option<String>,
   pub description: Option<String>,
   pub schedule_kind: ScheduleKind,
-  #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
-  pub start_time: Option<OffsetDateTime>,
-  #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
-  pub end_time: Option<OffsetDateTime>,
+  pub start_time: Option<DateTime<FixedOffset>>,
+  pub end_time: Option<DateTime<FixedOffset>>,
   pub status: ScheduleStatus,
 
   /// ScheduleKind::Cron 时有效

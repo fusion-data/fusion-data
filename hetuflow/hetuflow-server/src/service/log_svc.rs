@@ -44,12 +44,13 @@ pub struct LogStats {
 }
 
 /// 日志接收器，负责接收Agent转发的日志并存储到文件
+#[derive(Clone)]
 pub struct LogSvc {
   config: Arc<TaskLogConfig>,
   /// 日志统计信息
   stats: Arc<RwLock<LogStats>>,
-  log_writer_runner: Mutex<Option<LogWriterRunner>>,
-  log_clean_runner: Mutex<Option<LogCleanRunner>>,
+  log_writer_runner: Arc<Mutex<Option<LogWriterRunner>>>,
+  log_clean_runner: Arc<Mutex<Option<LogCleanRunner>>>,
 }
 
 impl LogSvc {
@@ -78,8 +79,8 @@ impl LogSvc {
     Ok(Self {
       config,
       stats,
-      log_writer_runner: Mutex::new(Some(log_writer_runner)),
-      log_clean_runner: Mutex::new(Some(log_clean_runner)),
+      log_writer_runner: Arc::new(Mutex::new(Some(log_writer_runner))),
+      log_clean_runner: Arc::new(Mutex::new(Some(log_clean_runner))),
     })
   }
 

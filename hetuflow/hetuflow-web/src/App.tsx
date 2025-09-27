@@ -1,141 +1,71 @@
-import { Button, Card, Space, Typography, Row, Col, Divider, message, Tabs } from "antd";
-import {
-  SmileOutlined,
-  HeartOutlined,
-  StarOutlined,
-  GithubOutlined,
-  RocketOutlined,
-  ApiOutlined,
-  HolderOutlined,
-} from "@ant-design/icons";
-import { generateId } from "@fusion-data/fusion-core";
-import { formatDate } from "@fusion-data/fusion-core/time";
-import HetuflowDemo from "./components/HetuflowDemo";
-import DragDropDemo from "./components/DragDropDemo";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { ConfigProvider } from "antd";
+import zhCN from "antd/locale/zh_CN";
+import { ThemeProvider, useTheme, getAntdTheme } from "./contexts/ThemeContext";
+import MainLayout from "./components/Layout/MainLayout";
+import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
+import Servers from "./pages/Servers";
+import Agents from "./pages/Agents";
+import Jobs from "./pages/Jobs";
+import Tasks from "./pages/Tasks";
+import TaskInstances from "./pages/TaskInstances";
+import "./App.css";
 
-const { Title, Paragraph, Text } = Typography;
-
-function App() {
-  const handleUtilsDemo = () => {
-    const today = formatDate(new Date());
-    const id = generateId();
-    message.success(`今天是 ${today}，生成的ID: ${id}`);
-  };
-
-  const tabItems = [
-    {
-      key: "overview",
-      label: (
-        <span>
-          <SmileOutlined />
-          项目概览
-        </span>
-      ),
-      children: (
-        <>
-          <Row gutter={[16, 16]}>
-            <Col xs={24} sm={12} md={8}>
-              <Card
-                title="技术栈"
-                hoverable
-                actions={[<StarOutlined key="star" />, <HeartOutlined key="heart" />, <SmileOutlined key="smile" />]}
-              >
-                <ul>
-                  <li>React 19</li>
-                  <li>TypeScript</li>
-                  <li>Ant Design v5</li>
-                  <li>Vite</li>
-                  <li>pnpm workspaces</li>
-                </ul>
-              </Card>
-            </Col>
-
-            <Col xs={24} sm={12} md={8}>
-              <Card
-                title="Fusion Data 特性"
-                hoverable
-                actions={[
-                  <GithubOutlined key="github" />,
-                  <RocketOutlined key="rocket" />,
-                  <StarOutlined key="star" />,
-                ]}
-              >
-                <ul>
-                  <li>模块化 Rust 架构</li>
-                  <li>AI Agent 编排</li>
-                  <li>分布式任务调度</li>
-                  <li>类型安全的数据库访问</li>
-                  <li>高性能 Web 服务</li>
-                </ul>
-              </Card>
-            </Col>
-
-            <Col xs={24} sm={12} md={8}>
-              <Card title="共享工具演示" hoverable>
-                <Paragraph>
-                  点击下面的按钮演示来自 <Text code>@fusion-data/fusion-core</Text> 包的工具函数：
-                </Paragraph>
-                <Button type="primary" onClick={handleUtilsDemo} icon={<SmileOutlined />}>
-                  测试工具函数
-                </Button>
-              </Card>
-            </Col>
-          </Row>
-
-          <Divider />
-
-          <Space size="middle">
-            <Button type="primary" size="large">
-              主要操作
-            </Button>
-            <Button size="large">次要操作</Button>
-            <Button type="dashed" size="large">
-              虚线按钮
-            </Button>
-            <Button type="link" size="large">
-              链接按钮
-            </Button>
-          </Space>
-        </>
-      ),
-    },
-    {
-      key: "hetuflow",
-      label: (
-        <span>
-          <ApiOutlined />
-          Hetuflow SDK
-        </span>
-      ),
-      children: <HetuflowDemo />,
-    },
-    {
-      key: "dragdrop",
-      label: (
-        <span>
-          <HolderOutlined />
-          拖拽演示
-        </span>
-      ),
-      children: <DragDropDemo />,
-    },
-  ];
+/**
+ * HetuFlow 分布式作业调度系统主应用组件
+ * 配置路由系统和全局主题
+ */
+const AppContent: React.FC = () => {
+  const { currentTheme } = useTheme();
 
   return (
-    <div style={{ padding: "24px" }}>
-      <Title level={1}>
-        <RocketOutlined /> Fusion Data Demo App
-      </Title>
+    <ConfigProvider
+      locale={zhCN}
+      theme={getAntdTheme(currentTheme)}
+    >
+      <Router>
+        <Routes>
+          {/* 登录页面 */}
+          <Route path="/login" element={<Login />} />
 
-      <Paragraph>
-        这是一个基于 <Text strong>React 19</Text> + <Text strong>Ant Design v5</Text> + <Text strong>TypeScript</Text>{" "}
-        的示例应用程序。
-      </Paragraph>
+          {/* 主应用布局 */}
+          <Route path="/" element={<MainLayout />}>
+            {/* 默认重定向到仪表板 */}
+            <Route index element={<Navigate to="/dashboard" replace />} />
 
-      <Divider />
+            {/* 仪表板 */}
+            <Route path="dashboard" element={<Dashboard />} />
 
-      <Tabs defaultActiveKey="overview" size="large" items={tabItems} />
-    </div>
+            {/* 服务器管理 */}
+            <Route path="servers" element={<Servers />} />
+
+            {/* 执行代理管理 */}
+            <Route path="agents" element={<Agents />} />
+
+            {/* 作业管理 */}
+            <Route path="jobs" element={<Jobs />} />
+
+            {/* 任务管理 */}
+            <Route path="tasks" element={<Tasks />} />
+
+            {/* 任务实例管理 */}
+            <Route path="task-instances" element={<TaskInstances />} />
+          </Route>
+
+          {/* 未匹配路由重定向到登录页 */}
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </Router>
+    </ConfigProvider>
+  );
+};
+
+function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
   );
 }
 

@@ -6,6 +6,7 @@ export { HetuflowClient, HetuflowError, type HetuflowClientConfig } from "./util
 
 // 导出所有 API 类
 export { AgentAPI } from "./api/agents.js";
+export { ServerAPI } from "./api/servers.js";
 export { JobAPI } from "./api/jobs.js";
 export { TaskAPI } from "./api/tasks.js";
 export { TaskInstanceAPI } from "./api/task-instances.js";

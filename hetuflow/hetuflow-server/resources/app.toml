@@ -16,7 +16,12 @@ log_level = "info"
 log_writer = "both"
 log_dir = "./runs/logs/server/"
 log_name = "hetuflow-server"
-log_targets = ["modelsql=info", "hetuflow_core=debug", "hetuflow_server=info"]
+log_targets = [
+  "modelsql=info",
+  "fusion_web=info",
+  "hetuflow_core=debug",
+  "hetuflow_server=info",
+]
 
 
 [fusion.db]
@@ -35,7 +40,7 @@ max_concurrent_tasks = 1000
 history_ttl = "30d"
 
 [hetuflow.server]
-server_id = "019888ad-965d-7871-8d47-562ac1e1e5ac"
+server_id = "server001"
 server_name = "hetuflow-server"
 # 是否允许参与 leader 选举
 allow_leader_election = true

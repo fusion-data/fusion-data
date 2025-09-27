@@ -2,6 +2,7 @@ mod agents;
 mod auth;
 mod gateway;
 mod jobs;
+mod servers;
 mod system;
 mod task_instances;
 mod tasks;
@@ -13,6 +14,7 @@ use crate::application::ServerApplication;
 pub fn routes() -> OpenApiRouter<ServerApplication> {
   OpenApiRouter::new()
     .nest("/agents", agents::routes())
+    .nest("/servers", servers::routes())
     .nest("/jobs", jobs::routes())
     .nest("/tasks", tasks::routes())
     .nest("/task-instances", task_instances::routes())

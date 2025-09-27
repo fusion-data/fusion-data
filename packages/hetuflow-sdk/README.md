@@ -38,7 +38,7 @@ const agent = await sdk.agents.createAgent({
 // 查询 Agent 列表
 const agents = await sdk.agents.queryAgents({
   page: 1,
-  page_size: 10,
+  limit: 10,
   name: "My",
 });
 
@@ -69,7 +69,7 @@ const job = await sdk.jobs.createJob({
 // 查询 Job 列表
 const jobs = await sdk.jobs.queryJobs({
   page: 1,
-  page_size: 10,
+  limit: 10,
   agent_id: "agent-uuid",
 });
 
@@ -92,7 +92,7 @@ const task = await sdk.tasks.createTask({
 // 查询 Task 列表
 const tasks = await sdk.tasks.queryTasks({
   page: 1,
-  page_size: 10,
+  limit: 10,
   job_id: "job-uuid",
 });
 
@@ -113,7 +113,7 @@ const instanceId = await sdk.taskInstances.createTaskInstance({
 // 查询 TaskInstance 列表
 const instances = await sdk.taskInstances.queryTaskInstances({
   page: 1,
-  page_size: 10,
+  limit: 10,
   task_id: "task-uuid",
   status: "running",
 });

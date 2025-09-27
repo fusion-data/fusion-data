@@ -29,7 +29,7 @@ pub struct ServerApplication {
   pub connection_manager: Arc<ConnectionManager>,
   pub message_handler: Arc<MessageHandler>,
   agent_manager: Arc<AgentManager>,
-  log_svc: Arc<LogSvc>,
+  pub log_svc: LogSvc,
   shutdown: Arc<Mutex<Option<(ShutdownSend, ShutdownRecv)>>>,
   handles: Arc<Mutex<Vec<TaskServiceHandle>>>,
 }
@@ -62,8 +62,8 @@ impl ServerApplication {
     let agent_manager =
       Arc::new(AgentManager::new(application.component(), connection_manager.clone(), setting.clone()));
 
-    let log_receiver =
-      Arc::new(LogSvc::new(Arc::new(setting.task_log.clone()), shutdown_rx.clone(), connection_manager.clone()).await?);
+    let log_svc =
+      LogSvc::new(Arc::new(setting.task_log.clone()), shutdown_rx.clone(), connection_manager.clone()).await?;
 
     let broker = Broker::new(setting.clone(), application.component());
 
@@ -73,7 +73,7 @@ impl ServerApplication {
       connection_manager,
       message_handler,
       agent_manager,
-      log_svc: log_receiver,
+      log_svc,
       shutdown: Arc::new(Mutex::new(Some((shutdown_tx, shutdown_rx)))),
       handles: Arc::new(Mutex::new(Vec::new())),
     })
