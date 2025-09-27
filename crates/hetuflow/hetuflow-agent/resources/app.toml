@@ -53,5 +53,5 @@ connect_timeout = "30s"
 heartbeat_interval = "30s"
 max_reconnect_attempts = 10
 reconnect_interval = "10s"
-# ip:port or domain:port
-server_address = "127.0.0.1:9500"
+# schema://ip:port or shema://domain:port
+server_base_url = "ws://127.0.0.1:9500"

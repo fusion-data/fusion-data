@@ -71,6 +71,68 @@ impl<'r> Decode<'r, Postgres> for TaskConfig {
   }
 }
 
+impl From<AgentCapabilities> for sea_query::Value {
+  fn from(value: AgentCapabilities) -> Self {
+    sea_query::Value::Json(Some(Box::new(serde_json::to_value(value).unwrap())))
+  }
+}
+impl sea_query::Nullable for AgentCapabilities {
+  fn null() -> sea_query::Value {
+    sea_query::Value::Json(None)
+  }
+}
+impl Type<Postgres> for AgentCapabilities {
+  fn type_info() -> PgTypeInfo {
+    <Json<Self> as Type<Postgres>>::type_info()
+  }
+}
+impl PgHasArrayType for AgentCapabilities {
+  fn array_type_info() -> PgTypeInfo {
+    <Json<Self> as PgHasArrayType>::array_type_info()
+  }
+}
+impl Encode<'_, Postgres> for AgentCapabilities {
+  fn encode_by_ref(&self, buf: &mut PgArgumentBuffer) -> Result<IsNull, BoxDynError> {
+    Json(self).encode_by_ref(buf)
+  }
+}
+impl<'r> Decode<'r, Postgres> for AgentCapabilities {
+  fn decode(value: PgValueRef<'r>) -> Result<Self, BoxDynError> {
+    Ok(Json::<Self>::decode(value)?.0)
+  }
+}
+
+impl From<AgentStatistics> for sea_query::Value {
+  fn from(value: AgentStatistics) -> Self {
+    Self::Json(Some(Box::new(serde_json::to_value(value).unwrap())))
+  }
+}
+impl sea_query::Nullable for AgentStatistics {
+  fn null() -> sea_query::Value {
+    sea_query::Value::Json(None)
+  }
+}
+impl Type<Postgres> for AgentStatistics {
+  fn type_info() -> PgTypeInfo {
+    <Json<Self> as Type<Postgres>>::type_info()
+  }
+}
+impl PgHasArrayType for AgentStatistics {
+  fn array_type_info() -> PgTypeInfo {
+    <Json<Self> as PgHasArrayType>::array_type_info()
+  }
+}
+impl Encode<'_, Postgres> for AgentStatistics {
+  fn encode_by_ref(&self, buf: &mut PgArgumentBuffer) -> Result<IsNull, BoxDynError> {
+    Json(self).encode_by_ref(buf)
+  }
+}
+impl<'r> Decode<'r, Postgres> for AgentStatistics {
+  fn decode(value: PgValueRef<'r>) -> Result<Self, BoxDynError> {
+    Ok(Json::<Self>::decode(value)?.0)
+  }
+}
+
 impl PgRowType for SchedServer {}
 impl PgRowType for SchedAgent {}
 impl PgRowType for SchedJob {}

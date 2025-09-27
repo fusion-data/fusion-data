@@ -6,9 +6,8 @@ use modelsql::{
   generate_pg_bmc_common, generate_pg_bmc_filter,
 };
 
-use hetuflow_core::{protocol::RegisterAgentRequest, types::AgentStatus};
-
 use hetuflow_core::models::{AgentFilter, AgentForCreate, AgentForUpdate, SchedAgent};
+use hetuflow_core::{protocol::RegisterAgentRequest, types::AgentStatus};
 
 /// AgentBmc 实现
 pub struct AgentBmc;
@@ -19,13 +18,7 @@ impl DbBmc for AgentBmc {
   fn _has_created_by() -> bool {
     false
   }
-  fn _has_created_at() -> bool {
-    false
-  }
   fn _has_updated_by() -> bool {
-    false
-  }
-  fn _has_updated_at() -> bool {
     false
   }
 }

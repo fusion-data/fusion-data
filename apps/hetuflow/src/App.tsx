@@ -1,4 +1,3 @@
-import React from "react";
 import { Button, Card, Space, Typography, Row, Col, Divider, message, Tabs } from "antd";
 import {
   SmileOutlined,
@@ -9,7 +8,8 @@ import {
   ApiOutlined,
   HolderOutlined,
 } from "@ant-design/icons";
-import { formatDate, generateId } from "@fusion-data/shared-utils";
+import { generateId } from "@fusion-data/fusion-core";
+import { formatDate } from "@fusion-data/fusion-core/time";
 import HetuflowDemo from "./components/HetuflowDemo";
 import DragDropDemo from "./components/DragDropDemo";
 
@@ -73,7 +73,7 @@ function App() {
             <Col xs={24} sm={12} md={8}>
               <Card title="共享工具演示" hoverable>
                 <Paragraph>
-                  点击下面的按钮演示来自 <Text code>@fusion-data/shared-utils</Text> 包的工具函数：
+                  点击下面的按钮演示来自 <Text code>@fusion-data/fusion-core</Text> 包的工具函数：
                 </Paragraph>
                 <Button type="primary" onClick={handleUtilsDemo} icon={<SmileOutlined />}>
                   测试工具函数

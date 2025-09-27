@@ -3,6 +3,7 @@ use std::{net::AddrParseError, num::ParseIntError};
 use config::ConfigError;
 use fusion_corelib::ctx::CtxError;
 use serde::{Serialize, ser::SerializeMap};
+use serde_json::json;
 use thiserror::Error;
 
 use crate::{configuration::ConfigureError, security::Error as SecurityError};
@@ -55,6 +56,11 @@ impl DataError {
 
   pub fn internal(code: i32, msg: impl Into<String>, cause: Option<Box<dyn std::error::Error + Send + Sync>>) -> Self {
     DataError::InternalError { code, msg: msg.into(), cause }
+  }
+
+  pub fn retry_limit(msg: impl Into<String>, retry_limit: u32) -> Self {
+    let detail = json!({ "retry_limit": retry_limit });
+    DataError::BizError { code: 1429, msg: msg.into(), detail: Some(Box::new(detail)) }
   }
 }
 

@@ -1,12 +1,13 @@
 use std::sync::Arc;
 
-use fusion_core::concurrent::handle::ServiceHandle;
+use fusion_core::{DataError, concurrent::ServiceTask};
 use hetuflow_core::{
   protocol::{EventMessage, ProcessEvent, ProcessEventKind, TaskInstanceChanged},
   types::TaskInstanceStatus,
 };
-use log::{error, info};
+use log::{error, info, warn};
 use mea::shutdown::ShutdownRecv;
+use tokio::sync::broadcast;
 
 use crate::{connection::ConnectionManager, process::ProcessManager, setting::HetuflowAgentSetting};
 
@@ -17,6 +18,33 @@ pub struct ProcessEventRunner {
   shutdown_rx: ShutdownRecv,
 }
 
+impl ServiceTask<()> for ProcessEventRunner {
+  async fn run_loop(&mut self) -> Result<(), DataError> {
+    let mut process_event_rx = self.process_manager.subscribe_events();
+
+    loop {
+      tokio::select! {
+        event_result = process_event_rx.recv() => {
+          match event_result {
+            Ok(event) => self.handle_process_event(event).await,
+            Err(broadcast::error::RecvError::Closed) => {
+              info!("The process_event_rx channel closed");
+              return Ok(());
+            }
+            Err(broadcast::error::RecvError::Lagged(lagged)) => {
+              warn!("The process_event_rx channel lagged: {}",lagged);
+            }
+          }
+        },
+        _ = self.shutdown_rx.is_shutdown() => {
+          info!("TaskExecutor process_event_rx loop stopped");
+          return Ok(());
+        }
+      }
+    }
+  }
+}
+
 impl ProcessEventRunner {
   pub fn new(
     setting: Arc<HetuflowAgentSetting>,
@@ -25,32 +53,6 @@ impl ProcessEventRunner {
     shutdown_rx: ShutdownRecv,
   ) -> Self {
     Self { setting, connection_manager, process_manager, shutdown_rx }
-  }
-
-  pub fn run(self) -> ServiceHandle {
-    ServiceHandle::new("ProcessEventRunner", tokio::spawn(async move { self.run_loop().await }))
-  }
-
-  async fn run_loop(&self) {
-    let mut process_event_rx = self.process_manager.subscribe_events();
-
-    loop {
-      tokio::select! {
-        event_result = process_event_rx.recv() => {
-          match event_result {
-            Ok(event) => self.handle_process_event(event).await,
-            Err(e) => {
-              info!("The process_event_rx channel closed: {}", e);
-              break;
-            }
-          }
-        },
-        _ = self.shutdown_rx.is_shutdown() => {
-          info!("TaskExecutor process_event_rx loop stopped");
-          break;
-        }
-      }
-    }
   }
 
   async fn handle_process_event(&self, event: ProcessEvent) {

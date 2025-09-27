@@ -1,7 +1,10 @@
 use std::sync::Arc;
 
 use fusion_core::{
-  DataError, application::Application, concurrent::handle::ServiceHandle, configuration::ConfigRegistry,
+  DataError,
+  application::Application,
+  concurrent::{ServiceHandle, ServiceTask, TaskResult, TaskServiceHandle},
+  configuration::ConfigRegistry,
 };
 use fusion_db::DbPlugin;
 use log::{error, info};
@@ -22,13 +25,13 @@ use crate::{model::SystemStatus, setting::HetuflowSetting};
 #[derive(Clone)]
 pub struct ServerApplication {
   pub setting: Arc<HetuflowSetting>,
-  shutdown: Arc<Mutex<Option<(ShutdownSend, ShutdownRecv)>>>,
   pub broker: Broker,
-  agent_manager: Arc<AgentManager>,
   pub connection_manager: Arc<ConnectionManager>,
   pub message_handler: Arc<MessageHandler>,
+  agent_manager: Arc<AgentManager>,
   log_svc: Arc<LogSvc>,
-  handles: Arc<Mutex<Vec<ServiceHandle>>>,
+  shutdown: Arc<Mutex<Option<(ShutdownSend, ShutdownRecv)>>>,
+  handles: Arc<Mutex<Vec<TaskServiceHandle>>>,
 }
 
 impl ServerApplication {
@@ -66,12 +69,12 @@ impl ServerApplication {
 
     Ok(Self {
       setting,
-      shutdown: Arc::new(Mutex::new(Some((shutdown_tx, shutdown_rx)))),
       broker,
-      agent_manager,
       connection_manager,
       message_handler,
+      agent_manager,
       log_svc: log_receiver,
+      shutdown: Arc::new(Mutex::new(Some((shutdown_tx, shutdown_rx)))),
       handles: Arc::new(Mutex::new(Vec::new())),
     })
   }
@@ -104,7 +107,7 @@ impl ServerApplication {
     // 启用 Scheduler 服务，根据 Time/Cron 类型的调度生成 SchedTask/SchedTaskInstance
     let task_generation_runner =
       TaskGenerationRunner::new(self.setting.clone(), self.mm(), self.get_shutdown_recv().await);
-    handles.push(task_generation_runner.run());
+    handles.push(task_generation_runner.start());
 
     // 启动 Agent 管理器（事件订阅）
     handles.extend(self.agent_manager.start(self.get_shutdown_recv().await).await?);
@@ -128,6 +131,7 @@ impl ServerApplication {
           error!("HTTP server init error: {:?}", e);
         }
       }
+      Ok(TaskResult::empty())
     });
     handles.push(ServiceHandle::new("Web", handle));
 
@@ -155,7 +159,7 @@ impl ServerApplication {
     let mut handles_guard = self.handles.lock().await;
     let handles = std::mem::take(&mut *handles_guard);
     for handle in handles {
-      if let Err((name, e)) = handle.await_complete().await {
+      if let Err((name, e)) = handle.complete().await {
         error!("Failed to join task name: {}, error: {}", name, e);
       }
     }

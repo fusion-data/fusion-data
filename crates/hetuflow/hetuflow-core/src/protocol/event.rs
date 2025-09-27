@@ -4,7 +4,7 @@ use fusion_common::time::now_epoch_millis;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::{protocol::AgentHeartbeat, types::EventKind};
+use crate::{protocol::HeartbeatEvent, types::EventKind};
 
 use super::{AcquireTaskRequest, AgentLogMessage, RegisterAgentRequest, TaskInstanceChanged};
 
@@ -13,18 +13,21 @@ pub(crate) trait Event {}
 #[derive(Debug, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct EventHead {
+  /// Event id
   id: Uuid,
+  /// Epoch milliseconds
   timestamp: i64,
+  /// Event kind
   kind: EventKind,
 }
 
-/// WebSocket 事件统一包装器，Agent -> Server
+/// Event message wrapper, Agent -> Server
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct EventMessage {
   head: Arc<EventHead>,
 
-  /// 消息载荷
+  /// Event payload
   payload: Arc<serde_json::Value>,
 }
 
@@ -68,11 +71,11 @@ impl EventMessage {
     serde_json::from_value(self.payload.as_ref().clone())
   }
 
-  pub fn new_heartbeat(message: AgentHeartbeat) -> Self {
+  pub fn new_heartbeat(message: HeartbeatEvent) -> Self {
     Self::new(EventKind::Heartbeat, message)
   }
 
-  pub fn as_heartbeat(&self) -> Result<AgentHeartbeat, serde_json::Error> {
+  pub fn as_heartbeat(&self) -> Result<HeartbeatEvent, serde_json::Error> {
     serde_json::from_value(self.payload.as_ref().clone())
   }
 

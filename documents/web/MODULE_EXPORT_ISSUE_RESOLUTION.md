@@ -5,14 +5,14 @@
 ### 错误描述
 
 ```
-Uncaught SyntaxError: The requested module '/@fs/Users/yangjing/workspaces/fusion-data/packages/shared-utils/dist/index.js' does not provide an export named 'formatDate' (at App.tsx:4:10)
+Uncaught SyntaxError: The requested module '/@fs/Users/yangjing/workspaces/fusion-data/packages/fusion-core/dist/index.js' does not provide an export named 'formatDate' (at App.tsx:4:10)
 ```
 
 ### 问题根因
 
 1. **模块系统不匹配**：
 
-   - `@fusion-data/shared-utils` 包配置为 CommonJS 格式 (`"module": "commonjs"`)
+   - `@fusion-data/fusion-core` 包配置为 CommonJS 格式 (`"module": "commonjs"`)
    - React 应用使用 ESM 格式 (`"type": "module"`)
    - Vite 构建工具需要 ESM 格式的模块
 
@@ -22,11 +22,11 @@ Uncaught SyntaxError: The requested module '/@fs/Users/yangjing/workspaces/fusio
 
 ## ✅ 解决方案
 
-### 1. 更新 shared-utils 的 package.json
+### 1. 更新 fusion-core 的 package.json
 
 ```json
 {
-  "name": "@fusion-data/shared-utils",
+  "name": "@fusion-data/fusion-core",
   "type": "module", // 声明为 ESM 模块
   "main": "dist/index.js",
   "module": "dist/index.js", // ESM 入口
@@ -57,7 +57,7 @@ Uncaught SyntaxError: The requested module '/@fs/Users/yangjing/workspaces/fusio
 ### 3. 重新编译
 
 ```bash
-cd packages/shared-utils
+cd packages/fusion-core
 pnpm clean && pnpm build
 ```
 

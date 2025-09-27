@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use fusion_common::time::{now_epoch_millis, now_offset};
-use fusion_core::concurrent::handle::ServiceHandle;
+use fusion_core::{DataError, concurrent::ServiceTask};
 use hetuflow_core::{
   protocol::{EventMessage, ScheduledTask, TaskInstanceChanged},
   types::TaskInstanceStatus,
@@ -21,22 +21,9 @@ pub struct TaskExecuteRunner {
   scheduled_task_rx: mpsc::UnboundedReceiver<ScheduledTask>,
 }
 
-impl TaskExecuteRunner {
-  pub fn new(
-    setting: Arc<HetuflowAgentSetting>,
-    connection_manager: Arc<ConnectionManager>,
-    process_manager: Arc<ProcessManager>,
-    scheduled_task_rx: mpsc::UnboundedReceiver<ScheduledTask>,
-  ) -> Self {
-    Self { setting, connection_manager, process_manager, scheduled_task_rx }
-  }
-
-  pub fn run(mut self) -> ServiceHandle {
-    ServiceHandle::new("TaskExecuteRunner", tokio::spawn(async move { self.run_loop().await }))
-  }
-
+impl ServiceTask<()> for TaskExecuteRunner {
   /// 启动任务执行器
-  async fn run_loop(&mut self) {
+  async fn run_loop(&mut self) -> Result<(), DataError> {
     info!("Starting TaskExecutor for agent {}", self.setting.agent_id);
 
     loop {
@@ -48,6 +35,18 @@ impl TaskExecuteRunner {
         }
       }
     }
+    Ok(())
+  }
+}
+
+impl TaskExecuteRunner {
+  pub fn new(
+    setting: Arc<HetuflowAgentSetting>,
+    connection_manager: Arc<ConnectionManager>,
+    process_manager: Arc<ProcessManager>,
+    scheduled_task_rx: mpsc::UnboundedReceiver<ScheduledTask>,
+  ) -> Self {
+    Self { setting, connection_manager, process_manager, scheduled_task_rx }
   }
 
   /// 执行任务

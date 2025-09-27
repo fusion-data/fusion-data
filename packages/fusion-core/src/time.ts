@@ -11,10 +11,3 @@ export function formatDate(date: Date): string {
 export function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
-
-/**
- * 示例工具函数：生成随机 ID
- */
-export function generateId(): string {
-  return Math.random().toString(36).substr(2, 9);
-}

@@ -2,7 +2,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use fusion_common::time::now_offset;
-use fusion_core::{concurrent::handle::ServiceHandle, timer::TimerRef};
+use fusion_core::{DataError, concurrent::ServiceTask, timer::TimerRef};
 use log::{debug, error, info, warn};
 use mea::mpsc;
 use mea::shutdown::ShutdownRecv;
@@ -23,22 +23,8 @@ pub struct CommandProcessRunner {
   command_rx: broadcast::Receiver<CommandMessage>,
 }
 
-impl CommandProcessRunner {
-  pub fn new(
-    setting: Arc<HetuflowAgentSetting>,
-    scheduled_task_tx: mpsc::UnboundedSender<ScheduledTask>,
-    shutdown_rx: ShutdownRecv,
-    timer_ref: TimerRef,
-    command_rx: broadcast::Receiver<CommandMessage>,
-  ) -> Self {
-    Self { setting, scheduled_task_tx, shutdown_rx, timer_ref, command_rx }
-  }
-
-  pub fn run(mut self) -> ServiceHandle {
-    ServiceHandle::new("ScheduleTaskRunner", tokio::spawn(async move { self.run_loop().await }))
-  }
-
-  async fn run_loop(&mut self) {
+impl ServiceTask<()> for CommandProcessRunner {
+  async fn run_loop(&mut self) -> Result<(), DataError> {
     loop {
       tokio::select! {
         command = self.command_rx.recv() => {
@@ -61,6 +47,19 @@ impl CommandProcessRunner {
         }
       }
     }
+    Ok(())
+  }
+}
+
+impl CommandProcessRunner {
+  pub fn new(
+    setting: Arc<HetuflowAgentSetting>,
+    scheduled_task_tx: mpsc::UnboundedSender<ScheduledTask>,
+    shutdown_rx: ShutdownRecv,
+    timer_ref: TimerRef,
+    command_rx: broadcast::Receiver<CommandMessage>,
+  ) -> Self {
+    Self { setting, scheduled_task_tx, shutdown_rx, timer_ref, command_rx }
   }
 
   fn process_command(&mut self, cmd: CommandMessage) {

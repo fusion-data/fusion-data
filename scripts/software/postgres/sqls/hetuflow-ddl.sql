@@ -30,8 +30,11 @@ create table sched_agent (
   description text,
   address varchar(255) not null,
   status int not null default 100, -- 见 AgentStatus
-  capabilities jsonb not null, -- Agent 能力描述
-  last_heartbeat timestamptz not null default now()
+  statistics jsonb not null default '{}'::jsonb, -- Agent 统计信息
+  capabilities jsonb not null default '{}'::jsonb, -- Agent 能力描述
+  last_heartbeat timestamptz not null default now(),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz
 );
 
 -- indexes for sched_agent

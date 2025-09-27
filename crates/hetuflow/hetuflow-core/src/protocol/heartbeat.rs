@@ -9,7 +9,7 @@ use super::Event;
 
 /// 心跳请求
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct AgentHeartbeat {
+pub struct HeartbeatEvent {
   /// Agent ID
   pub agent_id: String,
   /// 心跳时间
@@ -23,7 +23,7 @@ pub struct AgentHeartbeat {
   /// 最后处理的任务ID
   pub last_task_id: Option<String>,
 }
-impl Event for AgentHeartbeat {}
+impl Event for HeartbeatEvent {}
 
 /// 心跳响应
 #[derive(Serialize, Deserialize, Debug, Clone)]

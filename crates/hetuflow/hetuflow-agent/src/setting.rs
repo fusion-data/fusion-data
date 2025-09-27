@@ -13,7 +13,7 @@ use uuid::Uuid;
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ConnectionSetting {
   /// Server URL
-  pub server_address: String,
+  pub server_base_url: String,
 
   /// 连接超时时间（秒）
   #[serde(deserialize_with = "deserialize_duration")]
@@ -233,6 +233,6 @@ impl HetuflowAgentSetting {
 
   /// 获取 Server Gateway WebSocket 地址
   pub fn server_gateway_ws(&self) -> String {
-    format!("ws://{}/api/v1/gateway/ws?agent_id={}", self.connection.server_address, self.agent_id)
+    format!("{}/api/v1/gateway/ws?agent_id={}", self.connection.server_base_url, self.agent_id)
   }
 }

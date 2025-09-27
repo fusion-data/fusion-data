@@ -14,7 +14,7 @@ use fusion_common::time::now_epoch_millis;
 use mea::{mpsc, rwlock::RwLock};
 use serde::{Deserialize, Serialize};
 
-use hetuflow_core::protocol::CommandMessage;
+use hetuflow_core::{models::AgentStatistics, protocol::CommandMessage};
 
 use crate::connection::GatewayError;
 
@@ -64,23 +64,6 @@ impl SystemStatus {
   }
 }
 
-/// Agent 可靠性统计信息
-#[derive(Debug, Default, Clone, Serialize)]
-pub struct AgentReliabilityStats {
-  /// 成功任务数
-  pub success_count: u64,
-  /// 失败任务数
-  pub failure_count: u64,
-  /// 总任务数
-  pub total_tasks: u64,
-  /// 平均响应时间（毫秒）
-  pub avg_response_ms: f64,
-  /// 最后失败时间（毫秒）
-  pub last_failure_ms: i64,
-  /// 连续失败次数
-  pub consecutive_failures: u32,
-}
-
 #[derive(Serialize)]
 pub struct AgentConnInfo {
   /// Agent ID
@@ -90,7 +73,7 @@ pub struct AgentConnInfo {
   /// 最后心跳时间（毫秒）
   last_heartbeat_ms: AtomicI64,
   /// 统计信息
-  stats: AgentReliabilityStats,
+  stats: AgentStatistics,
 }
 
 /// Agent 连接信息
@@ -102,7 +85,7 @@ pub struct AgentConnection {
   /// 最后心跳时间（毫秒）
   last_heartbeat_ms: AtomicI64,
   /// 统计信息
-  stats: Arc<RwLock<AgentReliabilityStats>>,
+  stats: Arc<RwLock<AgentStatistics>>,
   // 当离线时，sender 为 None
   pub sender: Option<mpsc::UnboundedSender<CommandMessage>>,
 }
@@ -113,7 +96,7 @@ impl AgentConnection {
       agent_id,
       address,
       last_heartbeat_ms: AtomicI64::new(0),
-      stats: Arc::new(RwLock::new(AgentReliabilityStats::default())),
+      stats: Arc::new(RwLock::new(AgentStatistics::default())),
       sender: Some(sender),
     }
   }
@@ -142,7 +125,7 @@ impl AgentConnection {
     self.last_heartbeat_ms.store(ms, Ordering::Relaxed);
   }
 
-  pub async fn stats(&self) -> AgentReliabilityStats {
+  pub async fn stats(&self) -> AgentStatistics {
     self.stats.read().await.clone()
   }
 

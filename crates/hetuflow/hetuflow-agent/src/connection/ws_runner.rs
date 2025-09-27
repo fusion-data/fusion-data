@@ -1,6 +1,9 @@
 use std::sync::Arc;
 
-use fusion_core::{DataError, concurrent::handle::ServiceHandle};
+use fusion_core::{
+  DataError,
+  concurrent::{RetryStrategy, ServiceHandle, ServiceTask},
+};
 use futures_util::{SinkExt, StreamExt, stream::SplitSink};
 use hetuflow_core::{
   models::AgentCapabilities,
@@ -9,7 +12,10 @@ use hetuflow_core::{
 use log::{error, info, warn};
 use mea::shutdown::ShutdownRecv;
 use tokio::{net::TcpStream, sync::mpsc};
-use tokio_tungstenite::{MaybeTlsStream, WebSocketStream, tungstenite::Message};
+use tokio_tungstenite::{
+  MaybeTlsStream, WebSocketStream,
+  tungstenite::{ClientRequestBuilder, Message},
+};
 
 use crate::{connection::ConnectionManager, setting::HetuflowAgentSetting};
 
@@ -18,6 +24,16 @@ pub struct WsRunner {
   connection_manager: Arc<ConnectionManager>,
   shutdown_rx: ShutdownRecv,
   event_rx: mpsc::UnboundedReceiver<EventMessage>,
+}
+
+impl ServiceTask<()> for WsRunner {
+  fn retry_strategy(&self) -> RetryStrategy {
+    RetryStrategy::new_enable().with_retry_limit(360).with_retry_limit(10).with_increase_rate(1.05)
+  }
+
+  async fn run_loop(&mut self) -> Result<(), DataError> {
+    self.run_websocket_loop().await
+  }
 }
 
 impl WsRunner {
@@ -104,6 +120,11 @@ impl WsRunner {
     &self,
   ) -> Result<(WebSocketStream<MaybeTlsStream<TcpStream>>, String), DataError> {
     let url = self.setting.server_gateway_ws();
+    let uri = url.as_str().try_into().map_err(|e| DataError::server_error(format!("Invalid url: {}", e)))?;
+    let mut crb = ClientRequestBuilder::new(uri);
+    if let Some(jwe_token) = self.setting.jwe_token.as_deref() {
+      crb = crb.with_header("Authorization", format!("Bearer {}", jwe_token));
+    }
     let timeout_duration = self.setting.connection.connect_timeout;
     info!("Connecting to Hetuflow Server: {}", url);
 
@@ -115,7 +136,7 @@ impl WsRunner {
           detail: None,
         });
       }
-      let connect_result = tokio::time::timeout(timeout_duration, tokio_tungstenite::connect_async(&url)).await;
+      let connect_result = tokio::time::timeout(timeout_duration, tokio_tungstenite::connect_async(crb.clone())).await;
       match connect_result {
         Ok(Ok((ws_stream, _response))) => {
           info!("Successfully connected to Hetuflow Server: {}, attempts: {}", url, attempts);

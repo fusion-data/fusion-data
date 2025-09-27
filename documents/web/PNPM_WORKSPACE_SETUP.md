@@ -13,7 +13,7 @@ fusion-data/
 ├── .gitignore                   # Git 忽略配置
 ├── packages/                    # 可复用包目录
 │   ├── README.md               # 包目录说明
-│   └── shared-utils/           # 示例共享工具包
+│   └── fusion-core/           # 示例共享工具包
 │       ├── package.json        # 包配置
 │       ├── tsconfig.json       # TypeScript 配置
 │       ├── src/
@@ -45,7 +45,7 @@ fusion-data/
 - **工作区管理**: pnpm workspaces
 - **构建工具**: TypeScript 5.9.2
 
-#### 示例包 (`@fusion-data/shared-utils`)
+#### 示例包 (`@fusion-data/fusion-core`)
 
 - **语言**: TypeScript
 - **模块系统**: CommonJS
@@ -89,20 +89,20 @@ pnpm clean
 
 ```bash
 # 运行特定包的命令
-pnpm --filter @fusion-data/shared-utils build
+pnpm --filter @fusion-data/fusion-core build
 pnpm --filter @fusion-data/demo-app dev
 
 # 或者直接在包目录中
-cd packages/shared-utils && pnpm build
+cd packages/fusion-core && pnpm build
 cd apps/demo-app && pnpm dev
 ```
 
 ### 📦 Workspace 依赖
 
-demo-app 已经配置为使用 shared-utils 包：
+demo-app 已经配置为使用 fusion-core 包：
 
-- 在 `apps/demo-app/package.json` 中使用 `"@fusion-data/shared-utils": "workspace:*"`
-- 在 `App.tsx` 中导入并使用工具函数：`import { formatDate, generateId } from '@fusion-data/shared-utils'`
+- 在 `apps/demo-app/package.json` 中使用 `"@fusion-data/fusion-core": "workspace:*"`
+- 在 `App.tsx` 中导入并使用工具函数：`import { formatDate, generateId } from '@fusion-data/fusion-core'`
 
 ### ✨ 特性亮点
 

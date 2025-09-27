@@ -1,7 +1,7 @@
 use std::{sync::Arc, time::Duration};
 
 use fusion_common::time::now_offset;
-use fusion_core::concurrent::handle::ServiceHandle;
+use fusion_core::{DataError, concurrent::ServiceTask};
 use hetuflow_core::protocol::{AcquireTaskRequest, EventMessage};
 use log::{debug, error, info};
 use mea::shutdown::ShutdownRecv;
@@ -15,22 +15,9 @@ pub struct PollTaskRunner {
   shutdown_rx: ShutdownRecv,
 }
 
-impl PollTaskRunner {
-  pub fn new(
-    setting: Arc<HetuflowAgentSetting>,
-    connection_manager: Arc<ConnectionManager>,
-    process_manager: Arc<ProcessManager>,
-    shutdown_rx: ShutdownRecv,
-  ) -> Self {
-    Self { setting, connection_manager, process_manager, shutdown_rx }
-  }
-
-  pub fn run(self) -> ServiceHandle {
-    ServiceHandle::new("PollTaskRunner", tokio::spawn(async move { self.run_loop().await }))
-  }
-
+impl ServiceTask<()> for PollTaskRunner {
   /// Scheduled polling request task
-  async fn run_loop(&self) {
+  async fn run_loop(&mut self) -> Result<(), DataError> {
     let mut poll_interval = tokio::time::interval(self.setting.polling.interval);
 
     loop {
@@ -42,6 +29,18 @@ impl PollTaskRunner {
         }
       };
     }
+    Ok(())
+  }
+}
+
+impl PollTaskRunner {
+  pub fn new(
+    setting: Arc<HetuflowAgentSetting>,
+    connection_manager: Arc<ConnectionManager>,
+    process_manager: Arc<ProcessManager>,
+    shutdown_rx: ShutdownRecv,
+  ) -> Self {
+    Self { setting, connection_manager, process_manager, shutdown_rx }
   }
 
   async fn attempt_poll(&self) {

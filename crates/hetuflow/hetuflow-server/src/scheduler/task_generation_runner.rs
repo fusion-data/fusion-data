@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use fusion_common::time::now_offset;
-use fusion_core::concurrent::handle::ServiceHandle;
+use fusion_core::{DataError, concurrent::ServiceTask};
 use log::{error, info};
 use mea::shutdown::ShutdownRecv;
 use modelsql::ModelManager;
@@ -22,17 +22,8 @@ pub struct TaskGenerationRunner {
   shutdown_rx: ShutdownRecv,
 }
 
-impl TaskGenerationRunner {
-  /// 创建新的调度器服务
-  pub fn new(setting: Arc<HetuflowSetting>, mm: ModelManager, shutdown_rx: ShutdownRecv) -> Self {
-    Self { setting, mm, shutdown_rx }
-  }
-
-  pub fn run(self) -> ServiceHandle {
-    ServiceHandle::new("TaskGenerationRunner", tokio::spawn(async move { self.run_loop().await }))
-  }
-
-  async fn run_loop(&self) {
+impl ServiceTask<()> for TaskGenerationRunner {
+  async fn run_loop(&mut self) -> Result<(), DataError> {
     let task_generation_svc = SchedulerSvc::new(self.mm.clone());
     let mut interval = interval(self.setting.server.job_check_interval);
     let duration = self.setting.server.job_check_duration;
@@ -59,5 +50,14 @@ impl TaskGenerationRunner {
         error!("Retry task generation failed: {}", e);
       }
     }
+
+    Ok(())
+  }
+}
+
+impl TaskGenerationRunner {
+  /// 创建新的调度器服务
+  pub fn new(setting: Arc<HetuflowSetting>, mm: ModelManager, shutdown_rx: ShutdownRecv) -> Self {
+    Self { setting, mm, shutdown_rx }
   }
 }

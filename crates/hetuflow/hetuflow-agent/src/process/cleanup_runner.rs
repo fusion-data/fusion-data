@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use fusion_common::process::is_zombie_process;
 use fusion_common::time::now_epoch_millis;
-use fusion_core::concurrent::handle::ServiceHandle;
+use fusion_core::{DataError, concurrent::ServiceTask};
 use hetuflow_core::protocol::{ProcessEvent, ProcessEventKind, ProcessStatus};
 use log::{info, warn};
 use mea::shutdown::ShutdownRecv;
@@ -20,22 +20,9 @@ pub struct ProcessCleanupRunner {
   shutdown_rx: ShutdownRecv,
 }
 
-impl ProcessCleanupRunner {
-  pub fn new(process_manager: Arc<ProcessManager>, shutdown_rx: ShutdownRecv) -> Self {
-    Self {
-      config: process_manager.config.clone(),
-      active_processes: process_manager.active_processes.clone(),
-      event_broadcaster: process_manager.event_broadcaster.clone(),
-      shutdown_rx,
-    }
-  }
-
-  pub fn run(self) -> ServiceHandle {
-    ServiceHandle::new("ProcessCleanupRunner", tokio::spawn(async move { self.run_loop().await }))
-  }
-
+impl ServiceTask<()> for ProcessCleanupRunner {
   /// 清理循环
-  async fn run_loop(&self) {
+  async fn run_loop(&mut self) -> Result<(), DataError> {
     info!("ProcessManager cleanup loop started");
 
     let mut cleanup_interval = tokio::time::interval(self.config.cleanup_interval);
@@ -54,6 +41,18 @@ impl ProcessCleanupRunner {
               Self::cleanup_timeout_processes(&self.config, self.active_processes.clone(), self.event_broadcaster.clone()).await;
           }
       }
+    }
+    Ok(())
+  }
+}
+
+impl ProcessCleanupRunner {
+  pub fn new(process_manager: Arc<ProcessManager>, shutdown_rx: ShutdownRecv) -> Self {
+    Self {
+      config: process_manager.config.clone(),
+      active_processes: process_manager.active_processes.clone(),
+      event_broadcaster: process_manager.event_broadcaster.clone(),
+      shutdown_rx,
     }
   }
 

@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use fusion_core::DataError;
 use fusion_core::application::Application;
-use fusion_core::concurrent::handle::ServiceHandle;
+use fusion_core::concurrent::{ServiceTask, TaskServiceHandle};
 use fusion_core::timer::{Timer, TimerPlugin};
 use log::info;
 use mea::mutex::Mutex;
@@ -21,7 +21,7 @@ pub struct AgentApplication {
   connection_manager: Arc<ConnectionManager>,
   process_manager: Arc<ProcessManager>,
   shutdown: Arc<Mutex<Option<(ShutdownSend, ShutdownRecv)>>>,
-  handles: Arc<Mutex<Vec<ServiceHandle<()>>>>,
+  handles: Arc<Mutex<Vec<TaskServiceHandle>>>,
 }
 
 impl AgentApplication {
@@ -75,7 +75,7 @@ impl AgentApplication {
       self.process_manager.clone(),
       shutdown_rx.clone(),
     );
-    handles.push(event_process_runner.run());
+    handles.push(event_process_runner.start());
 
     let (scheduled_task_tx, scheduled_task_rx) = mea::mpsc::unbounded();
 
@@ -85,7 +85,7 @@ impl AgentApplication {
       self.process_manager.clone(),
       scheduled_task_rx,
     );
-    handles.push(task_execute_runner.run());
+    handles.push(task_execute_runner.start());
 
     let schedule_task_runner = CommandProcessRunner::new(
       self.setting.clone(),
@@ -94,7 +94,7 @@ impl AgentApplication {
       Application::global().component::<Timer>().timer_ref(),
       self.connection_manager.subscribe_command(),
     );
-    handles.push(schedule_task_runner.run());
+    handles.push(schedule_task_runner.start());
 
     let poll_task_runner = PollTaskRunner::new(
       self.setting.clone(),
@@ -102,13 +102,13 @@ impl AgentApplication {
       self.process_manager.clone(),
       shutdown_rx.clone(),
     );
-    handles.push(poll_task_runner.run());
+    handles.push(poll_task_runner.start());
 
     let ws_runner = WsRunner::new(self.setting.clone(), self.connection_manager.clone(), shutdown_rx.clone()).await;
-    handles.push(ws_runner.run());
+    handles.push(ws_runner.start());
 
     let process_cleanup_runner = ProcessCleanupRunner::new(self.process_manager.clone(), shutdown_rx.clone());
-    handles.push(process_cleanup_runner.run());
+    handles.push(process_cleanup_runner.start());
 
     info!("AgentApplication started successfully");
     Ok(())
@@ -144,7 +144,7 @@ impl AgentApplication {
     let mut handles_guard = self.handles.lock().await;
     let handles = std::mem::take(&mut *handles_guard);
     for handle in handles {
-      if let Err((svc_name, e)) = handle.await_complete().await {
+      if let Err((svc_name, e)) = handle.complete().await {
         log::error!("Failed to join service name: {:?}, error: {:?}", svc_name, e);
       }
     }

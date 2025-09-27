@@ -24,15 +24,32 @@ pub struct AgentMetrics {
 }
 
 /// Agent 能力描述
-#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct AgentCapabilities {
   /// 最大并发任务数
   pub max_concurrent_tasks: u32,
   /// Agent 标签，用于筛选任务。比如某些需要特定资源的任务只能在匹配标签的 Agent 上运行
   pub labels: Labels,
-  /// 扩展元数据 (cpu, memory, etc.)
   pub metadata: HashMap<String, String>,
+}
+
+/// Agent 统计信息
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
+pub struct AgentStatistics {
+  /// 成功任务数
+  pub success_count: u64,
+  /// 失败任务数
+  pub failure_count: u64,
+  /// 总任务数
+  pub total_tasks: u64,
+  /// 平均响应时间（毫秒）
+  pub avg_response_ms: f64,
+  /// 最后失败时间（毫秒）
+  pub last_failure_ms: i64,
+  /// 连续失败次数
+  pub consecutive_failures: u32,
 }
 
 /// SchedAgent 数据模型
@@ -49,7 +66,10 @@ pub struct SchedAgent {
   pub address: String,
   pub status: AgentStatus,
   pub capabilities: AgentCapabilities,
+  pub statistics: AgentStatistics,
   pub last_heartbeat: DateTime<FixedOffset>,
+  pub created_at: DateTime<FixedOffset>,
+  pub updated_at: Option<DateTime<FixedOffset>>,
 }
 
 /// Agent 创建模型
@@ -105,46 +125,4 @@ pub struct AgentFilter {
 pub struct AgentForQuery {
   pub filter: AgentFilter,
   pub page: Page,
-}
-
-#[cfg(feature = "with-db")]
-mod with_db {
-  use sqlx::encode::IsNull;
-  use sqlx::error::BoxDynError;
-  use sqlx::postgres::{PgArgumentBuffer, PgHasArrayType, PgTypeInfo, PgValueRef};
-  use sqlx::types::Json;
-  use sqlx::{Decode, Encode, Postgres, Type};
-
-  use super::*;
-
-  impl From<AgentCapabilities> for sea_query::Value {
-    fn from(value: AgentCapabilities) -> Self {
-      sea_query::Value::Json(Some(Box::new(serde_json::to_value(value).unwrap())))
-    }
-  }
-  impl sea_query::Nullable for AgentCapabilities {
-    fn null() -> sea_query::Value {
-      sea_query::Value::Json(None)
-    }
-  }
-  impl Type<Postgres> for AgentCapabilities {
-    fn type_info() -> PgTypeInfo {
-      <Json<Self> as Type<Postgres>>::type_info()
-    }
-  }
-  impl PgHasArrayType for AgentCapabilities {
-    fn array_type_info() -> PgTypeInfo {
-      <Json<Self> as PgHasArrayType>::array_type_info()
-    }
-  }
-  impl Encode<'_, Postgres> for AgentCapabilities {
-    fn encode_by_ref(&self, buf: &mut PgArgumentBuffer) -> Result<IsNull, BoxDynError> {
-      Json(self).encode_by_ref(buf)
-    }
-  }
-  impl<'r> Decode<'r, Postgres> for AgentCapabilities {
-    fn decode(value: PgValueRef<'r>) -> Result<Self, BoxDynError> {
-      Ok(Json::<Self>::decode(value)?.0)
-    }
-  }
 }

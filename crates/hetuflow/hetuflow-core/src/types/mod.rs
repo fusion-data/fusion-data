@@ -180,28 +180,24 @@ pub enum TaskControlKind {
   Kill = 9,    // 强制终止任务
 }
 
-/// WebSocket 消息类型枚举
+/// Event message kind
 #[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy, PartialEq, Eq)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 #[repr(i32)]
 pub enum EventKind {
-  /// 确认消息
   Ack = 1,
-  /// 未确认消息
   Nack = 2,
 
-  /// Agent 注册
   RegisterAgent = 3,
-  /// Agent 心跳
+
+  /// Agent heartbeat
   Heartbeat = 4,
 
-  /// Agent 请求 AgentRequest <-> GatewayResponse
+  /// Acquire Agent from Server
   AcquireTask = 5,
 
-  /// Agent 事件 AgentEvent
   TaskInstanceChanged = 6,
 
-  /// 任务日志事件
   LogMessage = 7,
 }
 

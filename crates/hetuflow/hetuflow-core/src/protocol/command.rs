@@ -14,23 +14,23 @@ pub(crate) trait Command {}
 #[derive(Debug, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct CommandHead {
-  /// 指令ID，全局唯一。可选参数，默认使用 UUID v7
+  /// Command id, globally unique. Optional parameter, default using UUID v7
   id: Uuid,
 
-  /// 发送时间
+  /// Send epoch milliseconds
   timestamp: i64,
 
-  /// 指令类型
+  /// Command kind
   kind: CommandKind,
 }
 
-/// 服务器下发的指令。 Server -> Agent
+/// Command message wrapper, Server -> Agent
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct CommandMessage {
   head: Arc<CommandHead>,
 
-  /// 指令载荷
+  /// Command payload
   pub payload: Arc<serde_json::Value>,
 }
 

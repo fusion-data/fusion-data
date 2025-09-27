@@ -4,7 +4,10 @@ use fusion_common::{
   ahash::{HashMap, HashSet},
   time::datetime_from_millis,
 };
-use fusion_core::{DataError, concurrent::handle::ServiceHandle};
+use fusion_core::{
+  DataError,
+  concurrent::{ServiceHandle, ServiceTask, TaskResult},
+};
 use log::{error, info, warn};
 use mea::{mpsc, shutdown::ShutdownRecv};
 use modelsql::{ModelManager, filter::OpValsUuid};
@@ -33,7 +36,10 @@ impl AgentManager {
   }
 
   /// 运行 Agent 管理器（订阅事件流）
-  pub async fn start(&self, shutdown_rx: ShutdownRecv) -> Result<Vec<ServiceHandle>, DataError> {
+  pub async fn start(
+    &self,
+    shutdown_rx: ShutdownRecv,
+  ) -> Result<Vec<ServiceHandle<Result<TaskResult, DataError>>>, DataError> {
     info!("Starting AgentManager with event subscription");
     // 订阅 Agent 事件
     let (event_tx, event_rx) = mpsc::unbounded();
@@ -49,13 +55,13 @@ impl AgentManager {
       setting: self.setting.clone(),
       event_rx,
     };
-    handles.push(agent_event_runner.run());
+    handles.push(agent_event_runner.start());
 
     Ok(handles)
   }
 
   // Agent connection timeout cleanup
-  fn run_agent_cleanup(&self, shutdown_rx: ShutdownRecv) -> ServiceHandle {
+  fn run_agent_cleanup(&self, shutdown_rx: ShutdownRecv) -> ServiceHandle<Result<TaskResult, DataError>> {
     let connection_manager = self.connection_manager.clone();
     let agent_heartbeat_ttl = self.setting.server.agent_overdue_ttl;
     let handle = tokio::spawn(async move {
@@ -73,6 +79,7 @@ impl AgentManager {
           error!("Connection cleanup failed: {:?}", e);
         }
       }
+      Ok(TaskResult::new((), 0))
     });
 
     ServiceHandle::new("AgentCleanRunner", handle)
@@ -86,18 +93,14 @@ struct AgentEventRunner {
   event_rx: mpsc::UnboundedReceiver<AgentEvent>,
 }
 
-impl AgentEventRunner {
-  pub fn run(self) -> ServiceHandle {
-    ServiceHandle::new("AgentEventRunner", tokio::spawn(self.run_loop()))
-  }
-
+impl ServiceTask<()> for AgentEventRunner {
   /// 处理 Agent 事件
-  async fn run_loop(mut self) {
+  async fn run_loop(&mut self) -> Result<(), DataError> {
     let agent_svc = match AgentSvc::new_with_setting(self.mm.clone(), &self.setting) {
       Ok(svc) => svc,
       Err(e) => {
         error!("Failed to create AgentSvc with JWE config: {:?}", e);
-        return;
+        return Err(e);
       }
     };
     while let Some(event) = self.event_rx.recv().await {
@@ -141,8 +144,12 @@ impl AgentEventRunner {
         AgentEvent::TaskLog { .. } => { /* do nothing */ }
       }
     }
-  }
 
+    Ok(())
+  }
+}
+
+impl AgentEventRunner {
   /// Agent poll task 时不对 Server 绑定的 Namespace 进行过滤，直接拉取符合要求的最紧急的 SchedTaskInstance。按 request 条件进行过滤
   async fn process_task_poll(&self, agent_id: &str, request: Arc<AcquireTaskRequest>) -> Result<(), DataError> {
     info!("Agent {} task poll request: {:?}", agent_id, request);
