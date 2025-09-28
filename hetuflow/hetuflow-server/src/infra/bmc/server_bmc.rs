@@ -3,7 +3,6 @@ use modelsql::filter::OrderBys;
 use modelsql::{
   ModelManager, SqlError, base::DbBmc, filter::OpValsInt32, generate_pg_bmc_common, generate_pg_bmc_filter,
 };
-use uuid::Uuid;
 
 use hetuflow_core::models::{SchedServer, ServerFilter, ServerForRegister, ServerForUpdate};
 use hetuflow_core::types::ServerStatus;
@@ -86,7 +85,7 @@ impl ServerBmc {
   pub async fn update_server_namespace_bind(
     mm: &ModelManager,
     server_id: &str,
-    bind_namespaces: Vec<Uuid>,
+    bind_namespaces: Vec<String>,
   ) -> Result<(), SqlError> {
     let entity_u = ServerForUpdate { bind_namespaces: Some(bind_namespaces), ..Default::default() };
     Self::update_by_id(mm, server_id, entity_u).await

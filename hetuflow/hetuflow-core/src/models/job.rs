@@ -16,7 +16,7 @@ use super::TaskConfig;
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct SchedJob {
   pub id: Uuid,
-  pub namespace_id: Uuid,
+  pub namespace_id: String,
   pub name: String,
   pub description: Option<String>,
   pub environment: Option<serde_json::Value>,
@@ -32,7 +32,7 @@ pub struct SchedJob {
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct JobForCreate {
   pub id: Option<Uuid>,
-  pub namespace_id: Option<Uuid>,
+  pub namespace_id: Option<String>,
   pub name: String,
   pub description: Option<String>,
   pub environment: Option<serde_json::Value>,
@@ -45,7 +45,7 @@ pub struct JobForCreate {
 #[cfg_attr(feature = "with-db", derive(modelsql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct JobForUpdate {
-  pub namespace_id: Option<Uuid>,
+  pub namespace_id: Option<String>,
   pub name: Option<String>,
   pub description: Option<String>,
   pub command: Option<String>,
@@ -70,7 +70,7 @@ pub struct JobForQuery {
 pub struct JobFilter {
   pub id: Option<OpValsUuid>,
   pub name: Option<OpValsString>,
-  pub namespace_id: Option<OpValsUuid>,
+  pub namespace_id: Option<OpValsString>,
   pub status: Option<OpValsInt32>,
   pub created_at: Option<OpValsDateTime>,
   pub updated_at: Option<OpValsDateTime>,

@@ -1,7 +1,7 @@
 use modelsql::{
   ModelManager, SqlError,
   base::DbBmc,
-  filter::{OpValsInt32, OpValsUuid, OrderBys},
+  filter::{OpValsInt32, OpValsString, OpValsUuid, OrderBys},
   generate_pg_bmc_common, generate_pg_bmc_filter,
 };
 use uuid::Uuid;
@@ -59,8 +59,8 @@ impl JobBmc {
   }
 
   /// 根据命名空间查找作业
-  pub async fn find_jobs_by_namespace(mm: &ModelManager, namespace_id: Uuid) -> Result<Vec<SchedJob>, SqlError> {
-    let filter = vec![JobFilter { namespace_id: Some(OpValsUuid::eq(namespace_id)), ..Default::default() }];
+  pub async fn find_jobs_by_namespace(mm: &ModelManager, namespace_id: &str) -> Result<Vec<SchedJob>, SqlError> {
+    let filter = vec![JobFilter { namespace_id: Some(OpValsString::eq(namespace_id)), ..Default::default() }];
 
     Self::find_many(mm, filter, None).await
   }

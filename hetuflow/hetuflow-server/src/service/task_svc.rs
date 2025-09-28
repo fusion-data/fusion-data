@@ -22,7 +22,7 @@ impl TaskSvc {
   }
 
   /// 查找待处理任务
-  pub async fn find_pending_tasks(&self, namespace_id: &Uuid) -> Result<Vec<SchedTask>, DataError> {
+  pub async fn find_pending_tasks(&self, namespace_id: &str) -> Result<Vec<SchedTask>, DataError> {
     TaskBmc::find_pending_tasks(&self.mm, namespace_id).await.map_err(DataError::from)
   }
 

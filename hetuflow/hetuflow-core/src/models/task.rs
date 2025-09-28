@@ -1,5 +1,6 @@
 use chrono::{DateTime, FixedOffset};
 use fusion_common::ahash::HashMap;
+use modelsql::filter::OpValsString;
 use modelsql_core::{
   field::FieldMask,
   filter::{OpValsDateTime, OpValsInt32, OpValsUuid, OpValsValue, Page},
@@ -97,7 +98,7 @@ pub struct TaskMetrics {
 pub struct SchedTask {
   pub id: Uuid,
   pub job_id: Uuid,
-  pub namespace_id: Uuid,
+  pub namespace_id: String,
   /// 任务优先级，数值越大优先级越高
   pub priority: i32,
   pub status: TaskStatus,
@@ -162,7 +163,7 @@ impl SchedTask {
 pub struct TaskForCreate {
   pub id: Option<Uuid>,
   pub job_id: Uuid,
-  pub namespace_id: Option<Uuid>,
+  pub namespace_id: Option<String>,
   pub status: Option<TaskStatus>,
   #[serde(default = "Default::default")]
   pub priority: i32,
@@ -197,7 +198,7 @@ fn default_parameters() -> serde_json::Value {
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct TaskForUpdate {
   pub priority: Option<i32>,
-  pub namespace_id: Option<Uuid>,
+  pub namespace_id: Option<String>,
   pub status: Option<TaskStatus>,
   pub scheduled_at: Option<DateTime<FixedOffset>>,
   pub completed_at: Option<DateTime<FixedOffset>>,
@@ -229,7 +230,7 @@ pub struct TaskFilter {
   pub id: Option<OpValsUuid>,
   pub job_id: Option<OpValsUuid>,
   pub schedule_id: Option<OpValsUuid>,
-  pub namespace_id: Option<OpValsUuid>,
+  pub namespace_id: Option<OpValsString>,
   pub task_config: Option<OpValsValue>,
   pub status: Option<OpValsInt32>,
   pub scheduled_at: Option<OpValsDateTime>,

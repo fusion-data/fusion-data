@@ -261,7 +261,7 @@ impl SchedulerSvc {
     let task = TaskForCreate {
       id: Some(task_id),
       job_id: job.id,
-      namespace_id: Some(job.namespace_id),
+      namespace_id: Some(job.namespace_id.clone()),
       schedule_id: original_task.schedule_id,
       schedule_kind: Some(ScheduleKind::Event),
       priority: original_task.priority,
@@ -300,7 +300,7 @@ impl SchedulerSvc {
     let task = TaskForCreate {
       id: Some(task_id),
       job_id: job.id,
-      namespace_id: Some(job.namespace_id),
+      namespace_id: Some(job.namespace_id.clone()),
       schedule_id,
       schedule_kind: Some(ScheduleKind::Event),
       priority: priority.unwrap_or_default(),

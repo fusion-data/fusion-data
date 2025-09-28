@@ -3,6 +3,7 @@ use std::sync::Arc;
 use fusion_core::{application::Application, component::Component};
 
 #[derive(Component, Clone)]
+#[allow(unused)]
 pub struct AuthSvc {
   #[component]
   user_svc: UserSvc,
@@ -11,12 +12,14 @@ pub struct AuthSvc {
 }
 
 #[derive(Clone, Component)]
+#[allow(unused)]
 pub struct UserSvc {
   #[component]
   db: Db,
 }
 
 #[derive(Clone, Component)]
+#[allow(unused)]
 pub struct PwdSvc {
   pwd_generator: Arc<PwdGenerator>,
 }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Card, Button, Space, Tag, Typography, Input, Row, Col, Tooltip, Popconfirm } from 'antd';
-import { ReloadOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Table, Card, Button, Space, Tag, Typography, Input, Row, Col, Tooltip, Popconfirm, Form } from 'antd';
+import { ReloadOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { apiService, SchedServer, ServerForQuery, ServerStatus } from '../../services/api';
 import { useMessage } from '../../hooks/useMessage';
@@ -8,6 +8,130 @@ import dayjs from 'dayjs';
 
 const { Title } = Typography;
 const { Search } = Input;
+
+// 可编辑单元格组件
+interface EditableCellProps {
+  editing: boolean;
+  dataIndex: string;
+  title: string;
+  record: SchedServer;
+  index: number;
+  children: React.ReactNode;
+  onSave: (id: string, field: string, value: any) => void;
+}
+
+const EditableCell: React.FC<EditableCellProps> = ({
+  editing,
+  dataIndex,
+  title,
+  record,
+  index,
+  children,
+  onSave,
+  ...restProps
+}) => {
+  const [form] = Form.useForm();
+  const [isEditing, setIsEditing] = useState(false);
+  const [_originalValue, setOriginalValue] = useState<any>(null);
+
+  const save = async () => {
+    try {
+      const values = await form.validateFields();
+      const value = values[dataIndex];
+
+      let processedValue: any;
+      let currentValue: any;
+
+      // 处理绑定命名空间的特殊情况
+      if (dataIndex === 'bind_namespaces') {
+        processedValue = value
+          .split(',')
+          .map((ns: string) => ns.trim())
+          .filter((ns: string) => ns);
+        currentValue = (record.bind_namespaces as string[]) || [];
+      } else {
+        processedValue = value;
+        currentValue = dataIndex === 'description' ? record.description || '' : '';
+      }
+
+      // 检查值是否真的有变化
+      const hasChanged =
+        dataIndex === 'bind_namespaces'
+          ? JSON.stringify(processedValue.sort()) !== JSON.stringify(currentValue.sort())
+          : processedValue !== currentValue;
+
+      if (hasChanged) {
+        onSave(record.id, dataIndex, processedValue);
+      }
+
+      setIsEditing(false);
+      setOriginalValue(null);
+    } catch (errInfo) {
+      console.log('Save failed:', errInfo);
+    }
+  };
+
+  const handleDoubleClick = () => {
+    setIsEditing(true);
+    const currentValue =
+      dataIndex === 'bind_namespaces'
+        ? (record.bind_namespaces as string[])?.join(', ') || ''
+        : dataIndex === 'description'
+          ? record.description || ''
+          : '';
+
+    // 存储原始值用于比较
+    setOriginalValue(currentValue);
+
+    form.setFieldsValue({
+      [dataIndex]: currentValue,
+    });
+  };
+
+  const handleBlur = () => {
+    save();
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      save();
+    }
+    if (e.key === 'Escape') {
+      setIsEditing(false);
+    }
+  };
+
+  if (isEditing) {
+    return (
+      <td {...restProps}>
+        <Form form={form} component={false}>
+          <Form.Item
+            name={dataIndex}
+            style={{ margin: 0 }}
+            rules={[
+              {
+                required: false,
+              },
+            ]}
+          >
+            <Input
+              autoFocus
+              onBlur={handleBlur}
+              onKeyDown={handleKeyPress}
+              placeholder={dataIndex === 'bind_namespaces' ? '多个命名空间用逗号分隔' : '请输入描述'}
+            />
+          </Form.Item>
+        </Form>
+      </td>
+    );
+  }
+
+  return (
+    <td {...restProps} onDoubleClick={handleDoubleClick} style={{ cursor: 'pointer' }}>
+      {children}
+    </td>
+  );
+};
 
 interface ServersPageState {
   servers: SchedServer[];
@@ -114,11 +238,16 @@ const Servers: React.FC = () => {
       title: '绑定命名空间',
       dataIndex: 'bind_namespaces',
       key: 'bind_namespaces',
+      onCell: (record: SchedServer) => ({
+        record,
+        dataIndex: 'bind_namespaces',
+        title: '绑定命名空间',
+        editing: false,
+        onSave: handleCellUpdate,
+      }),
       render: (namespaces: string[]) => (
         <Space wrap>
-          {namespaces.map(ns => (
-            <Tag key={ns}>{ns}</Tag>
-          ))}
+          {namespaces?.map(ns => <Tag key={ns}>{ns}</Tag>) || <span style={{ color: '#999' }}>双击编辑</span>}
         </Space>
       ),
     },
@@ -127,6 +256,14 @@ const Servers: React.FC = () => {
       dataIndex: 'description',
       key: 'description',
       ellipsis: true,
+      onCell: (record: SchedServer) => ({
+        record,
+        dataIndex: 'description',
+        title: '描述',
+        editing: false,
+        onSave: handleCellUpdate,
+      }),
+      render: (text: string) => text || <span style={{ color: '#999' }}>双击编辑</span>,
     },
     {
       title: '创建时间',
@@ -140,9 +277,6 @@ const Servers: React.FC = () => {
       key: 'action',
       render: (_, record) => (
         <Space size="middle">
-          <Tooltip title="编辑">
-            <Button type="text" icon={<EditOutlined />} onClick={() => handleEdit(record.id)} />
-          </Tooltip>
           <Tooltip title="删除">
             <Popconfirm
               title="确认删除"
@@ -179,20 +313,6 @@ const Servers: React.FC = () => {
     message.info('添加服务器功能开发中');
   };
 
-  // 处理编辑
-  const handleEdit = async (id: string) => {
-    try {
-      const server = await apiService.servers.getServer(id);
-      if (server) {
-        // TODO: 打开编辑服务器对话框
-        message.info(`编辑服务器: ${server.name}`);
-      }
-    } catch (error) {
-      console.error('获取服务器详情失败:', error);
-      message.error('获取服务器详情失败');
-    }
-  };
-
   // 处理删除
   const handleDelete = async (id: string) => {
     try {
@@ -202,6 +322,26 @@ const Servers: React.FC = () => {
     } catch (error) {
       console.error('删除服务器失败:', error);
       message.error('删除服务器失败');
+    }
+  };
+
+  // 处理单元格更新
+  const handleCellUpdate = async (id: string, field: string, value: any) => {
+    try {
+      const updateData: any = {};
+      updateData[field] = value;
+
+      await apiService.servers.updateServer(id, updateData);
+      message.success('更新成功');
+
+      // 更新本地状态
+      setState(prev => ({
+        ...prev,
+        servers: prev.servers.map(server => (server.id === id ? { ...server, [field]: value } : server)),
+      }));
+    } catch (error) {
+      console.error('更新服务器失败:', error);
+      message.error('更新服务器失败');
     }
   };
 
@@ -258,6 +398,11 @@ const Servers: React.FC = () => {
           dataSource={state.servers}
           rowKey="id"
           loading={state.loading}
+          components={{
+            body: {
+              cell: EditableCell,
+            },
+          }}
           pagination={{
             current: state.current,
             pageSize: state.pageSize,

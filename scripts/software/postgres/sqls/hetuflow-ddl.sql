@@ -13,15 +13,12 @@ create table sched_server (
   id varchar(40) primary key,
   name varchar(255) not null,
   address varchar(255) not null,
-  bind_namespaces uuid[] not null default '{}',
+  bind_namespaces varchar(40)[] not null default '{}',
   status int not null default 100, -- 见 ServerStatus
   description text,
   last_heartbeat_at timestamptz not null default now(),
   created_by bigint not null,
-  created_at timestamptz not null default now(),
-  updated_by bigint,
-  updated_at timestamptz,
-  deleted_at timestamptz
+  created_at timestamptz not null default now()
 );
 
 -- Agent 管理表 (sched_agent)
@@ -33,8 +30,7 @@ create table sched_agent (
   statistics jsonb not null default '{}'::jsonb, -- Agent 统计信息
   capabilities jsonb not null default '{}'::jsonb, -- Agent 能力描述
   last_heartbeat_at timestamptz not null default now(),
-  created_at timestamptz not null default now(),
-  updated_at timestamptz
+  created_at timestamptz not null default now()
 );
 
 -- indexes for sched_agent
@@ -45,7 +41,7 @@ create index if not exists idx_sched_agent_last_heartbeat on sched_agent (last_h
 -- 作业定义表 (sched_job)
 create table sched_job (
   id uuid primary key,
-  namespace_id uuid not null default '00000000-0000-0000-0000-000000000000', -- namespace_id 由 fusion-iam 管理
+  namespace_id varchar(40) not null default '00000000-0000-0000-0000-000000000000', -- namespace_id 由 fusion-iam 管理
   name varchar(255) not null,
   description text,
   -- 运行作业时添加的自定义环境变量

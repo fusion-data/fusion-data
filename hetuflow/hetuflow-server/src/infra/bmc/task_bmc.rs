@@ -3,7 +3,7 @@ use modelsql::{
   ModelManager, SqlError,
   base::DbBmc,
   field::FieldMask,
-  filter::{OpValsDateTime, OpValsInt32, OpValsUuid, OrderBys},
+  filter::{OpValsDateTime, OpValsInt32, OpValsString, OpValsUuid, OrderBys},
   generate_pg_bmc_common, generate_pg_bmc_filter,
 };
 use uuid::Uuid;
@@ -38,11 +38,11 @@ generate_pg_bmc_filter!(
 
 impl TaskBmc {
   /// 查找待处理的任务
-  pub async fn find_pending_tasks(mm: &ModelManager, namespace_id: &Uuid) -> Result<Vec<SchedTask>, SqlError> {
+  pub async fn find_pending_tasks(mm: &ModelManager, namespace_id: &str) -> Result<Vec<SchedTask>, SqlError> {
     let filter = TaskFilter {
       status: Some(OpValsInt32::eq(TaskStatus::Pending as i32)),
       scheduled_at: Some(OpValsDateTime::lte(now_offset())),
-      namespace_id: Some(OpValsUuid::eq(*namespace_id)),
+      namespace_id: Some(OpValsString::eq(namespace_id.to_string())),
       ..Default::default()
     };
 

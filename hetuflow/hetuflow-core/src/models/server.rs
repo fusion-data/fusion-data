@@ -1,10 +1,9 @@
 use chrono::{DateTime, FixedOffset};
 use modelsql_core::{
   field::FieldMask,
-  filter::{OpValsDateTime, OpValsInt32, OpValsString, OpValsUuid, Page},
+  filter::{OpValsDateTime, OpValsInt32, OpValsString, Page},
 };
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 
 use crate::types::ServerStatus;
 
@@ -20,7 +19,7 @@ pub struct SchedServer {
   pub id: String,
   pub name: String,
   pub address: String,
-  pub bind_namespaces: Vec<Uuid>,
+  pub bind_namespaces: Vec<String>,
   pub status: ServerStatus,
   pub description: Option<String>,
   pub last_heartbeat_at: DateTime<FixedOffset>,
@@ -45,7 +44,7 @@ pub struct ServerForRegister {
 pub struct ServerForUpdate {
   pub name: Option<String>,
   pub address: Option<String>,
-  pub bind_namespaces: Option<Vec<Uuid>>,
+  pub bind_namespaces: Option<Vec<String>>,
   pub status: Option<ServerStatus>,
   pub description: Option<String>,
   pub last_heartbeat_at: Option<DateTime<FixedOffset>>,
@@ -67,7 +66,7 @@ pub struct ServerForQuery {
 pub struct ServerFilter {
   pub id: Option<OpValsString>,
   pub name: Option<OpValsString>,
-  pub bind_namespaces: Option<OpValsUuid>,
+  pub bind_namespaces: Option<OpValsString>,
   pub status: Option<OpValsInt32>,
   pub address: Option<OpValsString>,
   pub created_at: Option<OpValsDateTime>,

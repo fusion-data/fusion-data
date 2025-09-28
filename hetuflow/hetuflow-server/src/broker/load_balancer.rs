@@ -5,7 +5,6 @@ use fusion_common::time::{OffsetDateTime, now_offset};
 use fusion_core::DataError;
 use log::{debug, info, warn};
 use modelsql::ModelManager;
-use uuid::Uuid;
 
 use crate::{infra::bmc::*, setting::HetuflowSetting};
 use hetuflow_core::models::*;
@@ -227,14 +226,14 @@ impl LoadBalancer {
     let namespaces_per_server = all_namespaces.len().div_ceil(servers.len()); // 向上取整
 
     // 分配 namespaces 到服务器
-    let mut namespace_assignments: HashMap<String, Vec<Uuid>> = HashMap::default();
+    let mut namespace_assignments: HashMap<String, Vec<String>> = HashMap::default();
 
     for (i, namespace_id) in all_namespaces.iter().enumerate() {
       let server_index = i / namespaces_per_server;
       let server_index = server_index.min(servers.len() - 1); // 确保不越界
       let server_id = servers[server_index].server.id.clone();
 
-      namespace_assignments.entry(server_id).or_default().push(*namespace_id);
+      namespace_assignments.entry(server_id).or_default().push(namespace_id.clone());
     }
 
     // 更新数据库中的绑定关系
@@ -261,13 +260,13 @@ impl LoadBalancer {
   }
 
   /// 获取所有活跃的 namespaces
-  async fn get_all_active_namespaces(&self) -> Result<Vec<Uuid>, DataError> {
+  async fn get_all_active_namespaces(&self) -> Result<Vec<String>, DataError> {
     // 从任务表中获取所 namespace_id。只获取未取消及未完成的 < TaskStatus::Failed，对于错误完成的任务因可能被重试，所以任被考虑。
     let sql =
       "select distinct namespace_id from sched_task where status < 90 or (status = 90 and retry_count < max_retries)";
     let db = self.mm.dbx().db_postgres().map_err(|e| DataError::server_error(format!("Database error: {}", e)))?;
     let query = sqlx::query_as(sql);
-    let rows: Vec<(Uuid,)> = db.fetch_all(query).await?;
+    let rows: Vec<(String,)> = db.fetch_all(query).await?;
 
     Ok(rows.into_iter().map(|(id,)| id).collect())
   }
