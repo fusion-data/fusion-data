@@ -10,6 +10,7 @@ use sqlx::Row;
 use uuid::Uuid;
 
 use hetuflow_core::{
+  models::TaskMetrics,
   protocol::AcquireTaskRequest,
   types::{TaskInstanceStatus, TaskStatus},
 };
@@ -68,7 +69,7 @@ impl TaskInstanceBmc {
     output: Option<String>,
     error_message: Option<String>,
     exit_code: Option<i32>,
-    metrics: Option<serde_json::Value>,
+    metrics: Option<TaskMetrics>,
   ) -> Result<(), SqlError> {
     let update = TaskInstanceForUpdate {
       status: Some(status),

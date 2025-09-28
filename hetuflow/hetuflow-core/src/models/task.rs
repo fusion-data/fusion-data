@@ -77,23 +77,17 @@ impl TaskConfig {
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct TaskMetrics {
-  pub start_time: i64,       // 开始时间
-  pub end_time: Option<i64>, // 结束时间
-  pub cpu_time: f64,         // CPU 时间
-  pub memory_peak: u64,      // 内存峰值
-  pub disk_read: u64,        // 磁盘读取量
-  pub disk_write: u64,       // 磁盘写入量
-  pub network_in: u64,       // 网络接收量
-  pub network_out: u64,      // 网络发送量
+  pub cpu_time: f64,    // CPU 时间
+  pub memory_peak: u64, // 内存峰值
+  pub disk_read: u64,   // 磁盘读取量
+  pub disk_write: u64,  // 磁盘写入量
+  pub network_in: u64,  // 网络接收量
+  pub network_out: u64, // 网络发送量
 }
 
 /// SchedTask 数据模型
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(
-  feature = "with-db",
-  derive(modelsql::Fields, sqlx::FromRow),
-  sea_query::enum_def(table_name = "sched_task")
-)]
+#[cfg_attr(feature = "with-db", derive(modelsql::Fields, sqlx::FromRow))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct SchedTask {
   pub id: Uuid,
@@ -105,12 +99,10 @@ pub struct SchedTask {
 
   pub schedule_id: Option<Uuid>,
   /// 下一次调度时间。在生成任务时将根据此 调度时间 + schedule_id 判断任务是否已生成，若任务已生成则不会再次生成。
-  #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
   pub scheduled_at: DateTime<FixedOffset>,
   pub schedule_kind: ScheduleKind,
 
   /// 任务完成时间。当次任务完成或者所有 Schedule 的配置均已到期
-  #[cfg_attr(feature = "with-openapi", schema(value_type = Option<String>, format = DateTime, example = "2023-01-01T00:00:00Z"))]
   pub completed_at: Option<DateTime<FixedOffset>>,
 
   /// 任务环境变量，可能来自 SchedJob 或由事件/手动触发执行传入
@@ -126,14 +118,11 @@ pub struct SchedTask {
   pub retry_count: i32,
 
   pub dependencies: Option<serde_json::Value>,
-  #[cfg_attr(feature = "with-openapi", schema(value_type = Option<String>, format = DateTime, example = "2023-01-01T00:00:00Z"))]
   pub locked_at: Option<DateTime<FixedOffset>>,
   pub lock_version: i32,
   pub created_by: i64,
-  #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
   pub created_at: DateTime<FixedOffset>,
   pub updated_by: Option<i64>,
-  #[cfg_attr(feature = "with-openapi", schema(value_type = Option<String>, format = DateTime, example = "2023-01-01T00:00:00Z"))]
   pub updated_at: Option<DateTime<FixedOffset>>,
 }
 

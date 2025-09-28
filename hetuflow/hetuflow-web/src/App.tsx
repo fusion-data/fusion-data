@@ -10,7 +10,6 @@ import Agents from './pages/Agents';
 import Jobs from './pages/Jobs';
 import JobDetail from './pages/Jobs/Detail';
 import Tasks from './pages/Tasks';
-import TaskInstances from './pages/TaskInstances';
 import './App.css';
 
 /**
@@ -48,9 +47,6 @@ const AppContent: React.FC = () => {
 
               {/* 任务管理 */}
               <Route path="tasks" element={<Tasks />} />
-
-              {/* 任务实例管理 */}
-              <Route path="task-instances" element={<TaskInstances />} />
             </Route>
 
             {/* 未匹配路由重定向到登录页 */}

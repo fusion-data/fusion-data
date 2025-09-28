@@ -61,11 +61,7 @@ pub struct AgentStatistics {
 
 /// SchedAgent 数据模型
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(
-  feature = "with-db",
-  derive(sqlx::FromRow, modelsql::field::Fields),
-  sea_query::enum_def(table_name = "sched_agent")
-)]
+#[cfg_attr(feature = "with-db", derive(sqlx::FromRow, modelsql::field::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct SchedAgent {
   pub id: String,

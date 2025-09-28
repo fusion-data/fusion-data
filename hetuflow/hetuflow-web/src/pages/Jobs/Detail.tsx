@@ -1,24 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import {
-  Card,
-  Form,
-  Input,
-  Button,
-  Space,
-  Typography,
-  Row,
-  Col,
-  Table,
-  Switch,
-  Select,
-  DatePicker,
-  Popconfirm,
-  Modal,
-  Tooltip,
-  Tag,
-  message,
-} from 'antd';
+import { Form } from 'antd';
+import { Card, Button, Space, Typography, Row, Col, Table, Popconfirm, Modal, Tooltip, Tag, message } from 'antd';
 import {
   ArrowLeftOutlined,
   EditOutlined,
@@ -29,19 +12,28 @@ import {
   ExclamationCircleOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import {
+  ProForm,
+  ProFormDependency,
+  ProFormText,
+  ProFormTextArea,
+  ProFormRadio,
+  ProFormSelect,
+  ProFormDateTimePicker,
+  ProFormDigit,
+} from '@ant-design/pro-components';
 import dayjs from 'dayjs';
+import { v7 as uuidv7 } from 'uuid';
 import { apiService, SchedJob, SchedSchedule, ScheduleKind, ScheduleStatus } from '../../services/api';
 
 const { Title, Text } = Typography;
-const { Option } = Select;
-const { TextArea } = Input;
 
 interface JobDetailState {
   job: SchedJob | null;
   schedules: SchedSchedule[];
   loading: boolean;
-  editing: boolean;
   saving: boolean;
+  disabled: boolean;
   scheduleModalVisible: boolean;
   editingSchedule: SchedSchedule | null;
   scheduleFormSubmitting: boolean;
@@ -61,8 +53,8 @@ const JobDetail: React.FC = () => {
     job: null,
     schedules: [],
     loading: false,
-    editing: false,
     saving: false,
+    disabled: false,
     scheduleModalVisible: false,
     editingSchedule: null,
     scheduleFormSubmitting: false,
@@ -81,7 +73,6 @@ const JobDetail: React.FC = () => {
         ...prev,
         job,
         loading: false,
-        editing: false,
       }));
 
       if (job) {
@@ -143,28 +134,6 @@ const JobDetail: React.FC = () => {
       console.error('保存作业失败:', error);
       message.error('保存作业失败');
       setState(prev => ({ ...prev, saving: false }));
-    }
-  };
-
-  /**
-   * 切换作业状态
-   */
-  const handleToggleJobStatus = async (enabled: boolean) => {
-    try {
-      if (!id) {
-        throw new Error('作业ID不能为空');
-      }
-
-      if (enabled) {
-        await apiService.jobs.enableJob(id);
-      } else {
-        await apiService.jobs.disableJob(id);
-      }
-      message.success(enabled ? '启用成功' : '禁用成功');
-      fetchJobDetail();
-    } catch (error) {
-      console.error('切换状态失败:', error);
-      message.error('切换状态失败');
     }
   };
 
@@ -240,7 +209,7 @@ const JobDetail: React.FC = () => {
         }
         await apiService.schedules.createSchedule({
           ...scheduleData,
-          id: '',
+          id: uuidv7(),
           job_id: id,
         });
         message.success('创建成功');
@@ -314,14 +283,22 @@ const JobDetail: React.FC = () => {
       return <Text type="secondary">-</Text>;
     }
 
-    const start = record.start_time ? dayjs(record.start_time).format('YYYY-MM-DD HH:mm') : '永久';
-    const end = record.end_time ? dayjs(record.end_time).format('YYYY-MM-DD HH:mm') : '永久';
+    const title_start = record.start_time ? dayjs(record.start_time).format('YYYY-MM-DDTHH:mmZ') : '永久';
+    const title_end = record.end_time ? dayjs(record.end_time).format('YYYY-MM-DDTHH:mmZ') : '永久';
+    const start = record.start_time ? dayjs(record.start_time).format('MM-DDTHH:mm') : '永久';
+    const end = record.end_time ? dayjs(record.end_time).format('MM-DDTHH:mm') : '永久';
 
     return (
-      <Tooltip title={`${start} - ${end}`}>
-        <Text ellipsis style={{ maxWidth: 200 }}>
-          {start} - {end}
-        </Text>
+      <Tooltip
+        title={
+          <>
+            开始: {title_start}
+            <br />
+            结束: {title_end}
+          </>
+        }
+      >
+        {start} ~ {end}
       </Tooltip>
     );
   };
@@ -334,25 +311,20 @@ const JobDetail: React.FC = () => {
       title: '名称',
       dataIndex: 'name',
       key: 'name',
-      render: (text, record) => (
-        <Space direction="vertical" size="small">
-          <Text strong>{text || record.id}</Text>
-          <Text type="secondary" style={{ fontSize: 12 }}>
-            {record.id}
-          </Text>
-        </Space>
-      ),
+      render: (text, record) => <Tooltip title={record.id}>{text || record.id}</Tooltip>,
     },
     {
       title: '类型',
       dataIndex: 'schedule_kind',
       key: 'schedule_kind',
+      width: 80,
       render: getScheduleKindTag,
     },
     {
       title: '状态',
       dataIndex: 'status',
       key: 'status',
+      width: 80,
       render: getStatusTag,
     },
     {
@@ -364,6 +336,7 @@ const JobDetail: React.FC = () => {
       title: '下次执行时间',
       dataIndex: 'next_run_at',
       key: 'next_run_at',
+      width: 120,
       render: (time: string) => (time ? dayjs(time).format('YYYY-MM-DD HH:mm:ss') : '-'),
     },
     {
@@ -375,14 +348,15 @@ const JobDetail: React.FC = () => {
     {
       title: '有效时间',
       key: 'valid_time',
+      width: 220,
       render: renderValidTime,
     },
     {
       title: '操作',
       key: 'action',
-      width: 120,
+      width: 180,
       render: (_, record) => (
-        <Space>
+        <div>
           <Button type="link" size="small" icon={<EditOutlined />} onClick={() => handleEditSchedule(record)}>
             编辑
           </Button>
@@ -398,7 +372,7 @@ const JobDetail: React.FC = () => {
               删除
             </Button>
           </Popconfirm>
-        </Space>
+        </div>
       ),
     },
   ];
@@ -428,34 +402,56 @@ const JobDetail: React.FC = () => {
 
       {/* 作业信息卡片 */}
       <Card title="作业信息">
-        <Form form={form} layout="vertical" disabled={!state.editing}>
+        <ProForm
+          form={form}
+          layout="vertical"
+          submitter={{
+            render: () => (
+              <Row style={{ marginTop: 16 }}>
+                <Col>
+                  <Space>
+                    <Button onClick={() => setState(prev => ({ ...prev, editing: false }))}>取消</Button>
+                    <Button type="primary" icon={<SaveOutlined />} onClick={handleSaveJob} loading={state.saving}>
+                      保存
+                    </Button>
+                  </Space>
+                </Col>
+              </Row>
+            ),
+          }}
+        >
           <Row gutter={24}>
             <Col span={12}>
-              <Form.Item label="作业名称" name="name" rules={[{ required: true, message: '请输入作业名称' }]}>
-                <Input placeholder="请输入作业名称" />
-              </Form.Item>
+              <ProFormText
+                name="name"
+                label="作业名称"
+                placeholder="请输入作业名称"
+                rules={[{ required: true, message: '请输入作业名称' }]}
+              />
             </Col>
             <Col span={12}>
-              <Form.Item label="状态" name="status">
-                <Select disabled={!state.editing}>
-                  <Option value={1}>已创建</Option>
-                  <Option value={98}>已过期</Option>
-                  <Option value={99}>已禁用</Option>
-                  <Option value={100}>已启用</Option>
-                </Select>
-              </Form.Item>
+              <ProFormRadio.Group
+                name="status"
+                label="状态"
+                options={[
+                  { label: <Tag color="red">禁用</Tag>, value: 99 },
+                  { label: <Tag color="green">启用</Tag>, value: 100 },
+                ]}
+              />
             </Col>
           </Row>
           <Row>
             <Col span={24}>
-              <Form.Item label="描述" name="description">
-                <TextArea rows={3} placeholder="请输入作业描述" />
-              </Form.Item>
+              <ProFormTextArea name="description" label="描述" placeholder="请输入作业描述" fieldProps={{ rows: 3 }} />
             </Col>
           </Row>
 
-          {!state.editing && state.job && (
+          {state.job && (
             <Row gutter={24}>
+              <Col span={8}>
+                <Text type="secondary">作业ID：</Text>
+                <Text code>{state.job.id}</Text>
+              </Col>
               <Col span={8}>
                 <Text type="secondary">创建时间：</Text>
                 <Text>{dayjs(state.job.created_at).format('YYYY-MM-DD HH:mm:ss')}</Text>
@@ -464,46 +460,9 @@ const JobDetail: React.FC = () => {
                 <Text type="secondary">更新时间：</Text>
                 <Text>{dayjs(state.job.updated_at).format('YYYY-MM-DD HH:mm:ss')}</Text>
               </Col>
-              <Col span={8}>
-                <Text type="secondary">作业ID：</Text>
-                <Text code>{state.job.id}</Text>
-              </Col>
             </Row>
           )}
-
-          <Row style={{ marginTop: 16 }}>
-            <Col>
-              <Space>
-                {state.editing ? (
-                  <>
-                    <Button type="primary" icon={<SaveOutlined />} onClick={handleSaveJob} loading={state.saving}>
-                      保存
-                    </Button>
-                    <Button onClick={() => setState(prev => ({ ...prev, editing: false }))}>取消</Button>
-                  </>
-                ) : (
-                  <>
-                    <Button
-                      type="primary"
-                      icon={<EditOutlined />}
-                      onClick={() => setState(prev => ({ ...prev, editing: true }))}
-                    >
-                      编辑
-                    </Button>
-                    {state.job && (
-                      <Switch
-                        checked={state.job.status === 100}
-                        checkedChildren="启用"
-                        unCheckedChildren="禁用"
-                        onChange={handleToggleJobStatus}
-                      />
-                    )}
-                  </>
-                )}
-              </Space>
-            </Col>
-          </Row>
-        </Form>
+        </ProForm>
       </Card>
 
       {/* 调度计划卡片 */}
@@ -542,102 +501,95 @@ const JobDetail: React.FC = () => {
         ]}
         width={600}
       >
-        <Form form={scheduleForm} layout="vertical">
+        <ProForm form={scheduleForm} layout="vertical" submitter={false}>
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item label="名称" name="name">
-                <Input placeholder="请输入调度计划名称" />
-              </Form.Item>
+              <ProFormText name="name" label="名称" placeholder="请输入调度计划名称" />
             </Col>
             <Col span={12}>
-              <Form.Item label="调度类型" name="schedule_kind" rules={[{ required: true, message: '请选择调度类型' }]}>
-                <Select placeholder="请选择调度类型">
-                  <Option value={ScheduleKind.Cron}>Cron 定时作业</Option>
-                  <Option value={ScheduleKind.Interval}>间隔定时作业</Option>
-                  <Option value={ScheduleKind.Daemon}>守护进程作业</Option>
-                  <Option value={ScheduleKind.Event}>事件驱动作业</Option>
-                  <Option value={ScheduleKind.Flow}>流程任务</Option>
-                </Select>
-              </Form.Item>
+              <ProFormSelect
+                name="schedule_kind"
+                label="调度类型"
+                placeholder="请选择调度类型"
+                rules={[{ required: true, message: '请选择调度类型' }]}
+                options={[
+                  { label: 'Cron 定时作业', value: ScheduleKind.Cron },
+                  { label: '间隔定时作业', value: ScheduleKind.Interval },
+                  { label: '守护进程作业', value: ScheduleKind.Daemon },
+                  { label: '事件驱动作业', value: ScheduleKind.Event },
+                  { label: '流程任务', value: ScheduleKind.Flow },
+                ]}
+              />
             </Col>
           </Row>
 
           {/* 动态表单字段 */}
-          <Form.Item noStyle shouldUpdate>
-            {({ getFieldValue }) => {
-              const scheduleKind = getFieldValue('schedule_kind');
+          <ProFormDependency name={['schedule_kind']}>
+            {(values: any) => {
+              if (values.schedule_kind === ScheduleKind.Cron) {
+                return (
+                  <ProFormText
+                    name="cron_expression"
+                    label="Cron 表达式"
+                    placeholder="例如: 0 0 12 * * ?"
+                    rules={[{ required: true, message: '请输入 Cron 表达式' }]}
+                  />
+                );
+              }
 
-              return (
-                <>
-                  {scheduleKind === ScheduleKind.Cron && (
-                    <Form.Item
-                      label="Cron 表达式"
-                      name="cron_expression"
-                      rules={[{ required: true, message: '请输入 Cron 表达式' }]}
-                    >
-                      <Input placeholder="例如: 0 0 12 * * ?" />
-                    </Form.Item>
-                  )}
+              if (values.schedule_kind === ScheduleKind.Interval) {
+                return (
+                  <Row gutter={16}>
+                    <Col span={12}>
+                      <ProFormDigit
+                        name="interval_secs"
+                        label="间隔秒数"
+                        placeholder="请输入间隔秒数"
+                        rules={[{ required: true, message: '请输入间隔秒数' }]}
+                        fieldProps={{ min: 1 }}
+                      />
+                    </Col>
+                    <Col span={12}>
+                      <ProFormDigit
+                        name="max_count"
+                        label="最大执行次数"
+                        placeholder="请输入最大执行次数"
+                        rules={[{ required: true, message: '请输入最大执行次数' }]}
+                        fieldProps={{ min: 1 }}
+                      />
+                    </Col>
+                  </Row>
+                );
+              }
 
-                  {scheduleKind === ScheduleKind.Interval && (
-                    <>
-                      <Row gutter={16}>
-                        <Col span={12}>
-                          <Form.Item
-                            label="间隔秒数"
-                            name="interval_secs"
-                            rules={[{ required: true, message: '请输入间隔秒数' }]}
-                          >
-                            <Input type="number" placeholder="请输入间隔秒数" min={1} />
-                          </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                          <Form.Item
-                            label="最大执行次数"
-                            name="max_count"
-                            rules={[{ required: true, message: '请输入最大执行次数' }]}
-                          >
-                            <Input type="number" placeholder="请输入最大执行次数" min={1} />
-                          </Form.Item>
-                        </Col>
-                      </Row>
-                    </>
-                  )}
-                </>
-              );
+              return null;
             }}
-          </Form.Item>
-
+          </ProFormDependency>
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item label="开始时间" name="start_time">
-                <DatePicker showTime placeholder="选择开始时间" style={{ width: '100%' }} />
-              </Form.Item>
+              <ProFormDateTimePicker name="start_time" label="开始时间" placeholder="选择开始时间" />
             </Col>
             <Col span={12}>
-              <Form.Item label="结束时间" name="end_time">
-                <DatePicker showTime placeholder="选择结束时间" style={{ width: '100%' }} />
-              </Form.Item>
+              <ProFormDateTimePicker name="end_time" label="结束时间" placeholder="选择结束时间" />
             </Col>
           </Row>
-
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item label="状态" name="status" initialValue={ScheduleStatus.Enabled}>
-                <Select>
-                  <Option value={ScheduleStatus.Created}>已创建</Option>
-                  <Option value={ScheduleStatus.Expired}>已过期</Option>
-                  <Option value={ScheduleStatus.Disabled}>已禁用</Option>
-                  <Option value={ScheduleStatus.Enabled}>已启用</Option>
-                </Select>
-              </Form.Item>
+              <ProFormSelect
+                name="status"
+                label="状态"
+                initialValue={ScheduleStatus.Enabled}
+                options={[
+                  { label: '已创建', value: ScheduleStatus.Created },
+                  { label: '已过期', value: ScheduleStatus.Expired },
+                  { label: '已禁用', value: ScheduleStatus.Disabled },
+                  { label: '已启用', value: ScheduleStatus.Enabled },
+                ]}
+              />
             </Col>
           </Row>
-
-          <Form.Item label="描述" name="description">
-            <TextArea rows={3} placeholder="请输入调度计划描述" />
-          </Form.Item>
-        </Form>
+          <ProFormTextArea name="description" label="描述" placeholder="请输入调度计划描述" fieldProps={{ rows: 3 }} />
+        </ProForm>
       </Modal>
     </Space>
   );

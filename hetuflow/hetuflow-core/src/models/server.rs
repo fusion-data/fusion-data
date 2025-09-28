@@ -9,11 +9,7 @@ use crate::types::ServerStatus;
 
 /// SchedServer 数据模型
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(
-  feature = "with-db",
-  derive(modelsql::Fields, sqlx::FromRow),
-  sea_query::enum_def(table_name = "sched_server")
-)]
+#[cfg_attr(feature = "with-db", derive(modelsql::Fields, sqlx::FromRow))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct SchedServer {
   pub id: String,

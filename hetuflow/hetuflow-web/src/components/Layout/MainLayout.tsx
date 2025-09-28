@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { Avatar, Dropdown, Space } from 'antd';
 import {
@@ -7,9 +7,7 @@ import {
   RobotOutlined,
   ScheduleOutlined,
   UnorderedListOutlined,
-  HistoryOutlined,
   UserOutlined,
-  SettingOutlined,
   LogoutOutlined,
 } from '@ant-design/icons';
 import { ProLayout, MenuDataItem } from '@ant-design/pro-components';
@@ -21,7 +19,15 @@ import { useTheme } from '../../contexts/ThemeContext';
  * 使用 ProLayout 实现顶部导航栏、左侧可收起侧边栏和主内容区域
  */
 const MainLayout: React.FC = () => {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => {
+    const savedCollapsed = localStorage.getItem('mainLayoutCollapsed');
+    return savedCollapsed !== null ? JSON.parse(savedCollapsed) : false;
+  });
+  // 监听 collapsed 状态变化并保存到 localStorage
+  useEffect(() => {
+    localStorage.setItem('mainLayoutCollapsed', JSON.stringify(collapsed));
+  }, [collapsed]);
+
   const navigate = useNavigate();
   const location = useLocation();
   const { currentTheme } = useTheme();
@@ -52,16 +58,6 @@ const MainLayout: React.FC = () => {
       path: '/tasks',
       name: '任务管理',
       icon: <UnorderedListOutlined />,
-    },
-    {
-      path: '/task-instances',
-      name: '任务实例',
-      icon: <HistoryOutlined />,
-    },
-    {
-      path: '/settings',
-      name: '系统设置',
-      icon: <SettingOutlined />,
     },
   ];
 
@@ -94,6 +90,7 @@ const MainLayout: React.FC = () => {
     <ProLayout
       title="Hetuflow"
       logo={false}
+      breakpoint={false}
       collapsed={collapsed}
       onCollapse={setCollapsed}
       location={{

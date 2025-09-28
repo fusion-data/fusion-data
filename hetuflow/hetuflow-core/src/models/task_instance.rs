@@ -12,11 +12,7 @@ use super::TaskMetrics;
 
 /// SchedTaskInstance 数据模型
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(
-  feature = "with-db",
-  derive(modelsql::Fields, sqlx::FromRow),
-  sea_query::enum_def(table_name = "sched_task_instance")
-)]
+#[cfg_attr(feature = "with-db", derive(modelsql::Fields, sqlx::FromRow))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct SchedTaskInstance {
   pub id: Uuid,
@@ -59,7 +55,7 @@ pub struct TaskInstanceForUpdate {
   pub output: Option<String>,
   pub error_message: Option<String>,
   pub exit_code: Option<i32>,
-  pub metrics: Option<serde_json::Value>,
+  pub metrics: Option<TaskMetrics>,
   pub update_mask: Option<FieldMask>,
 }
 

@@ -40,15 +40,12 @@ pub struct SchedSchedule {
   pub max_count: Option<i32>,
 
   /// 计算出的下一次执行时间
-  #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
-  pub next_run_at: Option<OffsetDateTime>,
+  pub next_run_at: Option<DateTime<FixedOffset>>,
 
   pub created_by: i64,
-  #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
-  pub created_at: OffsetDateTime,
+  pub created_at: DateTime<FixedOffset>,
   pub updated_by: Option<i64>,
-  #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
-  pub updated_at: Option<OffsetDateTime>,
+  pub updated_at: Option<DateTime<FixedOffset>>,
 }
 
 impl SchedSchedule {
@@ -85,7 +82,7 @@ pub struct ScheduleForCreate {
 pub struct ScheduleForUpdate {
   pub name: Option<String>,
   pub description: Option<String>,
-  pub schedule_kind: Option<String>,
+  pub schedule_kind: Option<ScheduleKind>,
   pub cron_expression: Option<String>,
   #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
   pub start_time: Option<OffsetDateTime>,

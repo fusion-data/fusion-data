@@ -1,13 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Card, Button, Space, Tag, Typography, Input, Row, Col, Tooltip, Select, DatePicker, Modal } from 'antd';
-import { ReloadOutlined, EyeOutlined, PlayCircleOutlined, StopOutlined } from '@ant-design/icons';
+import { ReloadOutlined, EyeOutlined, PlayCircleOutlined, StopOutlined, ReconciliationFilled } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { RangePickerProps } from 'antd/es/date-picker';
-import { apiService, SchedTask, TaskForQuery, TaskStatus, TaskInstanceStatus } from '../../services/api';
+import {
+  apiService,
+  SchedTask,
+  TaskForQuery,
+  TaskStatus,
+  TaskInstanceStatus,
+  SchedTaskInstance,
+  TaskInstanceForQuery,
+  TaskStatusText,
+} from '../../services/api';
 import { useMessage } from '../../hooks/useMessage';
 import dayjs from 'dayjs';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 const { Search } = Input;
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -21,6 +30,9 @@ interface TasksPageState {
   searchText: string;
   statusFilter?: TaskStatus;
   dateRange?: RangePickerProps['value'];
+  expandedRowKeys: React.Key[];
+  taskInstancesMap: Record<string, SchedTaskInstance[]>;
+  taskInstancesLoading: Record<string, boolean>;
 }
 
 /**
@@ -36,7 +48,45 @@ const Tasks: React.FC = () => {
     current: 1,
     pageSize: 10,
     searchText: '',
+    expandedRowKeys: [],
+    taskInstancesMap: {},
+    taskInstancesLoading: {},
   });
+
+  /**
+   * 获取任务实例列表（按 started_at 降序排序）
+   */
+  const fetchTaskInstances = async (taskId: string) => {
+    try {
+      setState(prev => ({
+        ...prev,
+        taskInstancesLoading: { ...prev.taskInstancesLoading, [taskId]: true },
+      }));
+
+      const query: TaskInstanceForQuery = {
+        page: { page: 1, limit: 100 },
+        filter: { task_id: { $eq: taskId } },
+      };
+
+      const result = await apiService.taskInstances.queryTaskInstances(query);
+
+      setState(prev => ({
+        ...prev,
+        taskInstancesMap: {
+          ...prev.taskInstancesMap,
+          [taskId]: result.result || [],
+        },
+        taskInstancesLoading: { ...prev.taskInstancesLoading, [taskId]: false },
+      }));
+    } catch (error) {
+      console.error('获取任务实例列表失败:', error);
+      message.error('获取任务实例列表失败');
+      setState(prev => ({
+        ...prev,
+        taskInstancesLoading: { ...prev.taskInstancesLoading, [taskId]: false },
+      }));
+    }
+  };
 
   /**
    * 获取任务列表
@@ -70,41 +120,66 @@ const Tasks: React.FC = () => {
   };
 
   /**
-   * 渲染状态标签
+   * 渲染任务实例状态标签
    */
-  const renderStatus = (status: TaskStatus) => {
-    const statusConfig = {
-      [TaskStatus.Pending]: { color: 'default', text: '等待中' },
-      [TaskStatus.Doing]: { color: 'processing', text: '运行中' },
-      [TaskStatus.Succeeded]: { color: 'success', text: '成功' },
-      [TaskStatus.Failed]: { color: 'error', text: '失败' },
-      [TaskStatus.Cancelled]: { color: 'warning', text: '已取消' },
+  const renderTaskInstanceStatus = (status: TaskInstanceStatus) => {
+    const statusConfig: Partial<Record<TaskInstanceStatus, { color: string; text: string }>> = {
+      [TaskInstanceStatus.Pending]: { color: 'default', text: '等待中' },
+      [TaskInstanceStatus.Running]: { color: 'processing', text: '运行中' },
+      [TaskInstanceStatus.Succeeded]: { color: 'success', text: '成功' },
+      [TaskInstanceStatus.Failed]: { color: 'error', text: '失败' },
+      [TaskInstanceStatus.Cancelled]: { color: 'warning', text: '已取消' },
+      [TaskInstanceStatus.Timeout]: { color: 'orange', text: '超时' },
     };
     const config = statusConfig[status] || { color: 'default', text: status };
     return <Tag color={config.color}>{config.text}</Tag>;
   };
 
   /**
-   * 渲染优先级（使用模拟数据）
+   * 渲染任务实例执行时长
    */
-  const renderPriority = () => {
-    const priorities = ['high', 'medium', 'low'];
-    const priority = priorities[Math.floor(Math.random() * priorities.length)];
-    const priorityConfig = {
-      high: { color: 'red', text: '高' },
-      medium: { color: 'orange', text: '中' },
-      low: { color: 'green', text: '低' },
-    };
-    const config = priorityConfig[priority as keyof typeof priorityConfig];
-    return <Tag color={config.color}>{config.text}</Tag>;
+  const renderTaskInstanceDuration = (instance: SchedTaskInstance) => {
+    if (!instance.started_at || !instance.completed_at) return '-';
+
+    const startTime = dayjs(instance.started_at);
+    const endTime = dayjs(instance.completed_at);
+    const duration = endTime.diff(startTime, 'second');
+
+    const hours = Math.floor(duration / 3600);
+    const minutes = Math.floor((duration % 3600) / 60);
+    const seconds = duration % 60;
+
+    if (hours > 0) {
+      return `${hours}h ${minutes}m ${seconds}s`;
+    } else if (minutes > 0) {
+      return `${minutes}m ${seconds}s`;
+    } else {
+      return `${seconds}s`;
+    }
   };
 
   /**
-   * 渲染重试信息（使用模拟数据）
+   * 渲染状态标签
    */
-  const renderRetryInfo = () => {
-    const retryCount = Math.floor(Math.random() * 3);
-    const maxRetries = 3;
+  const renderStatus = (status: TaskStatus) => {
+    const colorMap = {
+      [TaskStatus.Pending]: 'default',
+      [TaskStatus.Doing]: 'processing',
+      [TaskStatus.Succeeded]: 'success',
+      [TaskStatus.Failed]: 'error',
+      [TaskStatus.Cancelled]: 'warning',
+    };
+    const color = colorMap[status] || 'default';
+    return <Tag color={color}>{TaskStatusText[status]}</Tag>;
+  };
+
+  /**
+   * 渲染重试信息（使用真实数据）
+   */
+  const renderRetryInfo = (task: SchedTask) => {
+    // 从配置中获取重试信息
+    const maxRetries = task.config?.max_retries || 3;
+    const retryCount = task.config?.retry_count || 0;
     const color = retryCount > 0 ? 'orange' : 'default';
     return (
       <Tag color={color}>
@@ -114,11 +189,30 @@ const Tasks: React.FC = () => {
   };
 
   /**
-   * 渲染执行时长（使用模拟数据）
+   * 渲染执行时长
    */
-  const renderDuration = (_task: SchedTask) => {
-    // 模拟执行时长
-    const duration = Math.floor(Math.random() * 3600) + 60; // 1分钟到1小时
+  const renderDuration = (task: SchedTask) => {
+    let startTime: dayjs.Dayjs;
+    let endTime: dayjs.Dayjs;
+
+    // 检查是否有任务实例数据
+    const taskInstances = state.taskInstancesMap[task.id] || [];
+
+    if (taskInstances.length > 0) {
+      // 使用最新的任务实例来计算执行时长
+      const latestInstance = taskInstances[0]; // 假设已按 started_at 降序排序
+      startTime = dayjs(latestInstance.started_at || task.created_at);
+      endTime = latestInstance.completed_at ? dayjs(latestInstance.completed_at) : dayjs();
+    } else {
+      // 等待中的任务，显示 '-'
+      return '-';
+    }
+
+    const duration = endTime.diff(startTime, 'second');
+
+    if (duration < 0) {
+      return '-';
+    }
 
     const hours = Math.floor(duration / 3600);
     const minutes = Math.floor((duration % 3600) / 60);
@@ -138,51 +232,116 @@ const Tasks: React.FC = () => {
   }, []);
 
   /**
+   * 处理展开/折叠行
+   */
+  const handleExpand = async (expanded: boolean, record: SchedTask) => {
+    if (expanded) {
+      // 如果是展开且没有缓存数据，则获取任务实例
+      if (!state.taskInstancesMap[record.id]) {
+        await fetchTaskInstances(record.id);
+      }
+      setState(prev => ({
+        ...prev,
+        expandedRowKeys: expanded
+          ? [...prev.expandedRowKeys, record.id]
+          : prev.expandedRowKeys.filter(key => key !== record.id),
+      }));
+    } else {
+      setState(prev => ({
+        ...prev,
+        expandedRowKeys: prev.expandedRowKeys.filter(key => key !== record.id),
+      }));
+    }
+  };
+
+  /**
+   * 任务实例表格列定义
+   */
+  const taskInstanceColumns: ColumnsType<SchedTaskInstance> = [
+    {
+      title: '实例ID',
+      dataIndex: 'id',
+      key: 'id',
+      width: 220,
+      render: (text: string) => text,
+    },
+    {
+      title: '状态',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status: TaskInstanceStatus) => renderTaskInstanceStatus(status),
+      width: 100,
+    },
+    {
+      title: '执行代理',
+      dataIndex: 'agent_id',
+      key: 'agent_id',
+      width: 120,
+    },
+    {
+      title: '开始时间',
+      dataIndex: 'started_at',
+      key: 'started_at',
+      render: (time: string) => (time ? dayjs(time).format('MM-DD HH:mm:ss') : '-'),
+      width: 150,
+    },
+    {
+      title: '结束时间',
+      dataIndex: 'completed_at',
+      key: 'completed_at',
+      render: (time: string) => (time ? dayjs(time).format('MM-DD HH:mm:ss') : '-'),
+      width: 150,
+    },
+    {
+      title: '执行时长',
+      key: 'duration',
+      render: (_, record) => renderTaskInstanceDuration(record),
+      width: 100,
+    },
+    {
+      title: '错误信息',
+      dataIndex: 'error_message',
+      key: 'error_message',
+      ellipsis: true,
+      render: (error: string) => (error ? <Text type="danger">{error}</Text> : '-'),
+    },
+    {
+      title: '创建时间',
+      dataIndex: 'created_at',
+      key: 'created_at',
+      render: (time: string) => dayjs(time).format('MM-DD HH:mm:ss'),
+      width: 150,
+    },
+  ];
+
+  /**
    * 表格列定义
    */
   const columns: ColumnsType<SchedTask> = [
     {
-      title: '任务名称',
-      dataIndex: 'name',
-      key: 'name',
-      ellipsis: true,
-      render: (text: string, record: SchedTask) => (
-        <Tooltip title={record.description}>
-          <Button type="link" onClick={() => handleViewDetails(record)}>
-            {text}
-          </Button>
-        </Tooltip>
-      ),
+      title: '任务',
+      dataIndex: 'id',
+      key: 'id',
+      width: 210,
+      render: (id, record) => <Tooltip title={`作业ID: ${record.job_id}`}>{id}</Tooltip>,
     },
     {
       title: '状态',
       dataIndex: 'status',
       key: 'status',
       render: (status: TaskStatus) => renderStatus(status),
-      width: 100,
+      width: 60,
     },
     {
       title: '优先级',
+      dataIndex: 'priority',
       key: 'priority',
-      render: renderPriority,
-      width: 80,
-    },
-    {
-      title: '所属作业',
-      dataIndex: 'job_id',
-      key: 'job_id',
-      width: 120,
-    },
-    {
-      title: '执行代理管理',
-      dataIndex: 'agent_id',
-      key: 'agent_id',
-      width: 120,
+      width: 50,
     },
     {
       title: '重试次数',
       key: 'retry',
-      render: renderRetryInfo,
+      render: (_, record) => renderRetryInfo(record),
       width: 80,
     },
     {
@@ -205,28 +364,6 @@ const Tasks: React.FC = () => {
       render: (time: string) => dayjs(time).format('MM-DD HH:mm'),
       width: 120,
     },
-    {
-      title: '操作',
-      key: 'action',
-      render: (_, record) => (
-        <Space size="small">
-          <Tooltip title="查看详情">
-            <Button type="text" icon={<EyeOutlined />} onClick={() => handleViewDetails(record)} />
-          </Tooltip>
-          {record.status === TaskStatus.Pending && (
-            <Tooltip title="立即执行">
-              <Button type="text" icon={<PlayCircleOutlined />} onClick={() => handleExecute(record)} />
-            </Tooltip>
-          )}
-          {record.status === TaskStatus.Doing && (
-            <Tooltip title="取消执行">
-              <Button type="text" danger icon={<StopOutlined />} onClick={() => handleCancel(record)} />
-            </Tooltip>
-          )}
-        </Space>
-      ),
-      width: 100,
-    },
   ];
 
   /**
@@ -242,14 +379,6 @@ const Tasks: React.FC = () => {
    */
   const handleRefresh = () => {
     fetchTasks();
-  };
-
-  /**
-   * 查看详情
-   */
-  const handleViewDetails = (record: SchedTask) => {
-    // TODO: 打开任务详情对话框
-    message.info(`查看任务 "${record.name}" 详情功能开发中`);
   };
 
   /**
@@ -345,6 +474,25 @@ const Tasks: React.FC = () => {
           rowKey="id"
           loading={state.loading}
           scroll={{ x: 1200 }}
+          expandable={{
+            expandedRowKeys: state.expandedRowKeys,
+            onExpand: handleExpand,
+            expandedRowRender: record => (
+              <div style={{ padding: '16px' }}>
+                <Table
+                  columns={taskInstanceColumns}
+                  dataSource={state.taskInstancesMap[record.id] || []}
+                  rowKey="id"
+                  loading={state.taskInstancesLoading[record.id]}
+                  pagination={false}
+                  size="small"
+                  bordered
+                  locale={{ emptyText: '暂无任务实例数据' }}
+                />
+              </div>
+            ),
+            rowExpandable: () => true,
+          }}
           pagination={{
             current: state.current,
             pageSize: state.pageSize,
