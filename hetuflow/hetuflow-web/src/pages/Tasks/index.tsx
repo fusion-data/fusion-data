@@ -1,30 +1,11 @@
-import React, { useState, useEffect } from "react";
-import {
-  Table,
-  Card,
-  Button,
-  Space,
-  Tag,
-  Typography,
-  Input,
-  Row,
-  Col,
-  Tooltip,
-  Select,
-  DatePicker,
-  message,
-  Modal,
-} from "antd";
-import {
-  ReloadOutlined,
-  EyeOutlined,
-  PlayCircleOutlined,
-  StopOutlined,
-} from "@ant-design/icons";
-import type { ColumnsType } from "antd/es/table";
-import type { RangePickerProps } from "antd/es/date-picker";
-import { apiService, SchedTask, TaskForQuery, TaskStatus, TaskInstanceStatus } from "../../services/api";
-import dayjs from "dayjs";
+import React, { useState, useEffect } from 'react';
+import { Table, Card, Button, Space, Tag, Typography, Input, Row, Col, Tooltip, Select, DatePicker, Modal } from 'antd';
+import { ReloadOutlined, EyeOutlined, PlayCircleOutlined, StopOutlined } from '@ant-design/icons';
+import type { ColumnsType } from 'antd/es/table';
+import type { RangePickerProps } from 'antd/es/date-picker';
+import { apiService, SchedTask, TaskForQuery, TaskStatus, TaskInstanceStatus } from '../../services/api';
+import { useMessage } from '../../hooks/useMessage';
+import dayjs from 'dayjs';
 
 const { Title } = Typography;
 const { Search } = Input;
@@ -47,13 +28,14 @@ interface TasksPageState {
  * 显示 SchedTask 查询和管理
  */
 const Tasks: React.FC = () => {
+  const message = useMessage();
   const [state, setState] = useState<TasksPageState>({
     tasks: [],
     loading: false,
     total: 0,
     current: 1,
     pageSize: 10,
-    searchText: "",
+    searchText: '',
   });
 
   /**
@@ -61,7 +43,7 @@ const Tasks: React.FC = () => {
    */
   const fetchTasks = async (params?: Partial<TaskForQuery>) => {
     try {
-      setState((prev) => ({ ...prev, loading: true }));
+      setState(prev => ({ ...prev, loading: true }));
 
       const query: TaskForQuery = {
         page: {
@@ -73,7 +55,7 @@ const Tasks: React.FC = () => {
 
       const result = await apiService.tasks.queryTasks(query);
 
-      setState((prev) => ({
+      setState(prev => ({
         ...prev,
         tasks: result.result,
         total: result.page.total,
@@ -81,9 +63,9 @@ const Tasks: React.FC = () => {
         loading: false,
       }));
     } catch (error) {
-      console.error("获取任务列表失败:", error);
-      message.error("获取任务列表失败");
-      setState((prev) => ({ ...prev, loading: false }));
+      console.error('获取任务列表失败:', error);
+      message.error('获取任务列表失败');
+      setState(prev => ({ ...prev, loading: false }));
     }
   };
 
@@ -92,13 +74,13 @@ const Tasks: React.FC = () => {
    */
   const renderStatus = (status: TaskStatus) => {
     const statusConfig = {
-      [TaskStatus.Pending]: { color: "default", text: "等待中" },
-      [TaskStatus.Doing]: { color: "processing", text: "运行中" },
-      [TaskStatus.Succeeded]: { color: "success", text: "成功" },
-      [TaskStatus.Failed]: { color: "error", text: "失败" },
-      [TaskStatus.Cancelled]: { color: "warning", text: "已取消" },
+      [TaskStatus.Pending]: { color: 'default', text: '等待中' },
+      [TaskStatus.Doing]: { color: 'processing', text: '运行中' },
+      [TaskStatus.Succeeded]: { color: 'success', text: '成功' },
+      [TaskStatus.Failed]: { color: 'error', text: '失败' },
+      [TaskStatus.Cancelled]: { color: 'warning', text: '已取消' },
     };
-    const config = statusConfig[status] || { color: "default", text: status };
+    const config = statusConfig[status] || { color: 'default', text: status };
     return <Tag color={config.color}>{config.text}</Tag>;
   };
 
@@ -106,12 +88,12 @@ const Tasks: React.FC = () => {
    * 渲染优先级（使用模拟数据）
    */
   const renderPriority = () => {
-    const priorities = ["high", "medium", "low"];
+    const priorities = ['high', 'medium', 'low'];
     const priority = priorities[Math.floor(Math.random() * priorities.length)];
     const priorityConfig = {
-      high: { color: "red", text: "高" },
-      medium: { color: "orange", text: "中" },
-      low: { color: "green", text: "低" },
+      high: { color: 'red', text: '高' },
+      medium: { color: 'orange', text: '中' },
+      low: { color: 'green', text: '低' },
     };
     const config = priorityConfig[priority as keyof typeof priorityConfig];
     return <Tag color={config.color}>{config.text}</Tag>;
@@ -123,7 +105,7 @@ const Tasks: React.FC = () => {
   const renderRetryInfo = () => {
     const retryCount = Math.floor(Math.random() * 3);
     const maxRetries = 3;
-    const color = retryCount > 0 ? "orange" : "default";
+    const color = retryCount > 0 ? 'orange' : 'default';
     return (
       <Tag color={color}>
         {retryCount}/{maxRetries}
@@ -160,9 +142,9 @@ const Tasks: React.FC = () => {
    */
   const columns: ColumnsType<SchedTask> = [
     {
-      title: "任务名称",
-      dataIndex: "name",
-      key: "name",
+      title: '任务名称',
+      dataIndex: 'name',
+      key: 'name',
       ellipsis: true,
       render: (text: string, record: SchedTask) => (
         <Tooltip title={record.description}>
@@ -173,59 +155,59 @@ const Tasks: React.FC = () => {
       ),
     },
     {
-      title: "状态",
-      dataIndex: "status",
-      key: "status",
+      title: '状态',
+      dataIndex: 'status',
+      key: 'status',
       render: (status: TaskStatus) => renderStatus(status),
       width: 100,
     },
     {
-      title: "优先级",
-      key: "priority",
+      title: '优先级',
+      key: 'priority',
       render: renderPriority,
       width: 80,
     },
     {
-      title: "所属作业",
-      dataIndex: "job_id",
-      key: "job_id",
+      title: '所属作业',
+      dataIndex: 'job_id',
+      key: 'job_id',
       width: 120,
     },
     {
-      title: "执行代理",
-      dataIndex: "agent_id",
-      key: "agent_id",
+      title: '执行代理管理',
+      dataIndex: 'agent_id',
+      key: 'agent_id',
       width: 120,
     },
     {
-      title: "重试次数",
-      key: "retry",
+      title: '重试次数',
+      key: 'retry',
       render: renderRetryInfo,
       width: 80,
     },
     {
-      title: "执行时长",
-      key: "duration",
+      title: '执行时长',
+      key: 'duration',
       render: (_, record) => renderDuration(record),
       width: 100,
     },
     {
-      title: "创建时间",
-      dataIndex: "created_at",
-      key: "created_at",
-      render: (time: string) => dayjs(time).format("MM-DD HH:mm"),
+      title: '创建时间',
+      dataIndex: 'created_at',
+      key: 'created_at',
+      render: (time: string) => dayjs(time).format('MM-DD HH:mm'),
       width: 120,
     },
     {
-      title: "更新时间",
-      dataIndex: "updated_at",
-      key: "updated_at",
-      render: (time: string) => dayjs(time).format("MM-DD HH:mm"),
+      title: '更新时间',
+      dataIndex: 'updated_at',
+      key: 'updated_at',
+      render: (time: string) => dayjs(time).format('MM-DD HH:mm'),
       width: 120,
     },
     {
-      title: "操作",
-      key: "action",
+      title: '操作',
+      key: 'action',
       render: (_, record) => (
         <Space size="small">
           <Tooltip title="查看详情">
@@ -251,7 +233,7 @@ const Tasks: React.FC = () => {
    * 处理搜索
    */
   const handleSearch = (value: string) => {
-    setState((prev) => ({ ...prev, searchText: value, current: 1 }));
+    setState(prev => ({ ...prev, searchText: value, current: 1 }));
     fetchTasks({ page: { page: 1, limit: state.pageSize } });
   };
 
@@ -275,16 +257,16 @@ const Tasks: React.FC = () => {
    */
   const handleExecute = (record: SchedTask) => {
     Modal.confirm({
-      title: "确认执行",
+      title: '确认执行',
       content: `确定要立即执行任务 "${record.name}" 吗？`,
       onOk: async () => {
         try {
           // TODO: 调用立即执行 API
-          message.success("任务执行请求已提交");
+          message.success('任务执行请求已提交');
           fetchTasks();
         } catch (error) {
-          console.error("执行任务失败:", error);
-          message.error("执行任务失败");
+          console.error('执行任务失败:', error);
+          message.error('执行任务失败');
         }
       },
     });
@@ -295,23 +277,23 @@ const Tasks: React.FC = () => {
    */
   const handleCancel = (record: SchedTask) => {
     Modal.confirm({
-      title: "确认取消",
+      title: '确认取消',
       content: `确定要取消任务 "${record.name}" 的执行吗？`,
       onOk: async () => {
         try {
           // TODO: 调用取消执行 API
-          message.success("任务取消请求已提交");
+          message.success('任务取消请求已提交');
           fetchTasks();
         } catch (error) {
-          console.error("取消任务失败:", error);
-          message.error("取消任务失败");
+          console.error('取消任务失败:', error);
+          message.error('取消任务失败');
         }
       },
     });
   };
 
   return (
-    <Space direction="vertical" size="large" style={{ width: "100%" }}>
+    <Space direction="vertical" size="large" style={{ width: '100%' }}>
       <Row justify="space-between" align="middle">
         <Col>
           <Title level={2}>任务管理</Title>
@@ -325,15 +307,15 @@ const Tasks: React.FC = () => {
               placeholder="搜索任务 ID 或作业名称"
               allowClear
               onSearch={handleSearch}
-              onChange={(e) => setState((prev) => ({ ...prev, searchText: e.target.value }))}
+              onChange={e => setState(prev => ({ ...prev, searchText: e.target.value }))}
             />
           </Col>
           <Col xs={24} sm={12} md={6}>
             <Select
               placeholder="选择状态"
               allowClear
-              style={{ width: "100%" }}
-              onChange={(value) => setState((prev) => ({ ...prev, statusFilter: value }))}
+              style={{ width: '100%' }}
+              onChange={value => setState(prev => ({ ...prev, statusFilter: value }))}
             >
               <Option value={TaskStatus.Pending}>等待中</Option>
               <Option value={TaskStatus.Doing}>运行中</Option>
@@ -345,13 +327,13 @@ const Tasks: React.FC = () => {
           </Col>
           <Col xs={24} sm={12} md={6}>
             <RangePicker
-              style={{ width: "100%" }}
-              placeholder={["开始时间", "结束时间"]}
-              onChange={(dates) => setState((prev) => ({ ...prev, dateRange: dates }))}
+              style={{ width: '100%' }}
+              placeholder={['开始时间', '结束时间']}
+              onChange={dates => setState(prev => ({ ...prev, dateRange: dates }))}
             />
           </Col>
           <Col xs={24} sm={12} md={4}>
-            <Button icon={<ReloadOutlined />} onClick={handleRefresh} loading={state.loading} style={{ width: "100%" }}>
+            <Button icon={<ReloadOutlined />} onClick={handleRefresh} loading={state.loading} style={{ width: '100%' }}>
               刷新
             </Button>
           </Col>
@@ -371,7 +353,7 @@ const Tasks: React.FC = () => {
             showQuickJumper: true,
             showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
             onChange: (page, pageSize) => {
-              setState((prev) => ({ ...prev, current: page, pageSize: pageSize || 10 }));
+              setState(prev => ({ ...prev, current: page, pageSize: pageSize || 10 }));
               fetchTasks({ page: { page, limit: pageSize } });
             },
           }}

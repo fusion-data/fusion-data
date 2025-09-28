@@ -5,7 +5,6 @@ use serde_json::Value;
 
 use hetuflow_core::models::{SchedServer, ServerForQuery, ServerForUpdate};
 use utoipa_axum::router::OpenApiRouter;
-use uuid::Uuid;
 
 use crate::{application::ServerApplication, service::ServerSvc};
 
@@ -35,14 +34,14 @@ async fn query_servers(server_svc: ServerSvc, Json(input): Json<ServerForQuery>)
   get,
   path = "/{id}",
   params(
-    ("id" = Uuid, Path, description = "Server ID")
+    ("id" = String, Path, description = "Server ID")
   ),
   responses(
     (status = 200, description = "Success", body = Option<SchedServer>)
   ),
   tag = "Servers"
 )]
-async fn get_server(server_svc: ServerSvc, Path(id): Path<Uuid>) -> WebResult<Option<SchedServer>> {
+async fn get_server(server_svc: ServerSvc, Path(id): Path<String>) -> WebResult<Option<SchedServer>> {
   let result = server_svc.get_by_id(&id).await?;
   ok_json!(result)
 }
@@ -51,7 +50,7 @@ async fn get_server(server_svc: ServerSvc, Path(id): Path<Uuid>) -> WebResult<Op
   post,
   path = "/{id}/update",
   params(
-    ("id" = Uuid, Path, description = "Server ID")
+    ("id" = String, Path, description = "Server ID")
   ),
   request_body = ServerForUpdate,
   responses(
@@ -61,7 +60,7 @@ async fn get_server(server_svc: ServerSvc, Path(id): Path<Uuid>) -> WebResult<Op
 )]
 async fn update_server(
   server_svc: ServerSvc,
-  Path(id): Path<Uuid>,
+  Path(id): Path<String>,
   Json(input): Json<ServerForUpdate>,
 ) -> WebResult<Value> {
   server_svc.update_by_id(&id, input).await?;
@@ -72,14 +71,14 @@ async fn update_server(
   delete,
   path = "/{id}",
   params(
-    ("id" = Uuid, Path, description = "Server ID")
+    ("id" = String, Path, description = "Server ID")
   ),
   responses(
     (status = 200, description = "Success", body = Value)
   ),
   tag = "Servers"
 )]
-async fn delete_server(server_svc: ServerSvc, Path(id): Path<Uuid>) -> WebResult<Value> {
+async fn delete_server(server_svc: ServerSvc, Path(id): Path<String>) -> WebResult<Value> {
   server_svc.delete_by_id(&id).await?;
   ok_json!()
 }

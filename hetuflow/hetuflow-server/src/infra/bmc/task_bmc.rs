@@ -3,7 +3,7 @@ use modelsql::{
   ModelManager, SqlError,
   base::DbBmc,
   field::FieldMask,
-  filter::{OpValsDateTime, OpValsInt32, OpValsUuid},
+  filter::{OpValsDateTime, OpValsInt32, OpValsUuid, OrderBys},
   generate_pg_bmc_common, generate_pg_bmc_filter,
 };
 use uuid::Uuid;
@@ -18,6 +18,9 @@ pub struct TaskBmc;
 impl DbBmc for TaskBmc {
   const TABLE: &str = "sched_task";
   const ID_GENERATED_BY_DB: bool = false;
+  fn _default_order_bys() -> Option<OrderBys> {
+    Some("!id".into())
+  }
 }
 
 generate_pg_bmc_common!(

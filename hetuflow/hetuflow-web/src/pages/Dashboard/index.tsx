@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { Row, Col, Card, Statistic, Typography, Space, message } from "antd";
+import React, { useEffect, useState } from 'react';
+import { Row, Col, Card, Statistic, Typography, Space } from 'antd';
 import {
   CloudServerOutlined,
   RobotOutlined,
@@ -7,8 +7,9 @@ import {
   PlayCircleOutlined,
   CheckCircleOutlined,
   CloseCircleOutlined,
-} from "@ant-design/icons";
-import { apiService, TaskInstanceStatus } from "../../services/api";
+} from '@ant-design/icons';
+import { apiService, TaskInstanceStatus } from '../../services/api';
+import { useMessage } from '../../hooks/useMessage';
 
 const { Title } = Typography;
 
@@ -26,6 +27,7 @@ interface DashboardStats {
 }
 
 const Dashboard: React.FC = () => {
+  const message = useMessage();
   const [stats, setStats] = useState<DashboardStats>({
     servers: 0,
     agents: 0,
@@ -94,8 +96,8 @@ const Dashboard: React.FC = () => {
         failedTasks: failedTaskInstancesResult.page.total || 0,
       });
     } catch (error) {
-      console.error("获取仪表板数据失败:", error);
-      message.error("获取仪表板数据失败");
+      console.error('获取仪表板数据失败:', error);
+      message.error('获取仪表板数据失败');
     } finally {
       setLoading(false);
     }
@@ -106,7 +108,7 @@ const Dashboard: React.FC = () => {
   }, []);
 
   return (
-    <Space direction="vertical" size="large" style={{ width: "100%" }}>
+    <Space direction="vertical" size="large" style={{ width: '100%' }}>
       <Title level={2}>系统概览</Title>
 
       {/* 统计卡片 */}
@@ -116,7 +118,7 @@ const Dashboard: React.FC = () => {
             <Statistic
               title="服务器数量"
               value={stats.servers}
-              prefix={<CloudServerOutlined style={{ color: "#1890ff" }} />}
+              prefix={<CloudServerOutlined style={{ color: '#1890ff' }} />}
               loading={loading}
             />
           </Card>
@@ -125,9 +127,9 @@ const Dashboard: React.FC = () => {
         <Col xs={24} sm={12} md={8} lg={6}>
           <Card>
             <Statistic
-              title="执行代理"
+              title="执行代理管理"
               value={stats.agents}
-              prefix={<RobotOutlined style={{ color: "#52c41a" }} />}
+              prefix={<RobotOutlined style={{ color: '#52c41a' }} />}
               loading={loading}
             />
           </Card>
@@ -138,7 +140,7 @@ const Dashboard: React.FC = () => {
             <Statistic
               title="作业总数"
               value={stats.totalJobs}
-              prefix={<ProjectOutlined style={{ color: "#722ed1" }} />}
+              prefix={<ProjectOutlined style={{ color: '#722ed1' }} />}
               loading={loading}
             />
           </Card>
@@ -149,7 +151,7 @@ const Dashboard: React.FC = () => {
             <Statistic
               title="运行中任务"
               value={stats.runningTasks}
-              prefix={<PlayCircleOutlined style={{ color: "#fa8c16" }} />}
+              prefix={<PlayCircleOutlined style={{ color: '#fa8c16' }} />}
               loading={loading}
             />
           </Card>
@@ -163,7 +165,7 @@ const Dashboard: React.FC = () => {
             <Statistic
               title="已完成任务"
               value={stats.completedTasks}
-              prefix={<CheckCircleOutlined style={{ color: "#52c41a" }} />}
+              prefix={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
               loading={loading}
             />
           </Card>
@@ -174,7 +176,7 @@ const Dashboard: React.FC = () => {
             <Statistic
               title="失败任务"
               value={stats.failedTasks}
-              prefix={<CloseCircleOutlined style={{ color: "#f5222d" }} />}
+              prefix={<CloseCircleOutlined style={{ color: '#f5222d' }} />}
               loading={loading}
             />
           </Card>
@@ -186,7 +188,7 @@ const Dashboard: React.FC = () => {
               title="成功率"
               value={((stats.completedTasks / (stats.completedTasks + stats.failedTasks)) * 100).toFixed(1)}
               suffix="%"
-              valueStyle={{ color: "#52c41a" }}
+              valueStyle={{ color: '#52c41a' }}
             />
           </Card>
         </Col>
@@ -198,11 +200,11 @@ const Dashboard: React.FC = () => {
           <Card title="任务执行趋势" style={{ minHeight: 300 }}>
             <div
               style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
                 height: 200,
-                color: "#999",
+                color: '#999',
               }}
             >
               图表组件待实现

@@ -1,4 +1,4 @@
-import { HetuflowClient } from "../utils/client.js";
+import { HetuflowClient } from '../utils/client.js';
 import {
   TaskForCreate,
   TaskForUpdate,
@@ -6,7 +6,7 @@ import {
   SchedTask,
   PageResult_SchedTask,
   IdUuidResult,
-} from "../types/index.js";
+} from '../types/index.js';
 
 export class TaskAPI {
   constructor(private client: HetuflowClient) {}
@@ -15,14 +15,14 @@ export class TaskAPI {
    * 创建 Task
    */
   async createTask(data: TaskForCreate): Promise<IdUuidResult> {
-    return this.client.post<IdUuidResult>("/api/v1/tasks/create", data);
+    return this.client.post<IdUuidResult>('/api/v1/tasks/create', data);
   }
 
   /**
    * 查询 Task 列表
    */
   async queryTasks(query: TaskForQuery): Promise<PageResult_SchedTask> {
-    return this.client.post<PageResult_SchedTask>("/api/v1/tasks/query", query);
+    return this.client.post<PageResult_SchedTask>('/api/v1/tasks/query', query);
   }
 
   /**

@@ -3,7 +3,7 @@ use modelsql::{
   ModelManager, SqlError,
   base::DbBmc,
   field::FieldMask,
-  filter::{OpValsDateTime, OpValsInt32},
+  filter::{OpValsDateTime, OpValsInt32, OrderBys},
   generate_pg_bmc_common, generate_pg_bmc_filter,
 };
 use sqlx::Row;
@@ -22,6 +22,15 @@ pub struct TaskInstanceBmc;
 impl DbBmc for TaskInstanceBmc {
   const TABLE: &str = "sched_task_instance";
   const ID_GENERATED_BY_DB: bool = false;
+  fn _has_created_by() -> bool {
+    false
+  }
+  fn _has_updated_by() -> bool {
+    false
+  }
+  fn _default_order_bys() -> Option<OrderBys> {
+    Some("!id".into())
+  }
 }
 
 generate_pg_bmc_common!(

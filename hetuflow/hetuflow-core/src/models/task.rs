@@ -74,6 +74,7 @@ impl TaskConfig {
 
 /// 任务执行指标
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct TaskMetrics {
   pub start_time: i64,       // 开始时间
   pub end_time: Option<i64>, // 结束时间

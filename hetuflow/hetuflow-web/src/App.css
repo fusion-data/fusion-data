@@ -4,7 +4,9 @@
   box-sizing: border-box;
 }
 
-html, body, #root {
+html,
+body,
+#root {
   margin: 0;
   padding: 0;
   height: 100%;
@@ -81,7 +83,7 @@ html, body, #root {
   .ant-layout-header {
     padding: 0 16px;
   }
-  
+
   .ant-layout-content {
     margin: 16px 8px !important;
     padding: 16px !important;

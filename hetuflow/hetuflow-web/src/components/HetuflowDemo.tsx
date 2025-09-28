@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from "react";
-import { Card, Button, Table, Space, message, Spin, Tag } from "antd";
-import { HetuflowSDK, type SchedAgent, type HealthStatus } from "@fusion-data/hetuflow-sdk";
+import React, { useState, useEffect } from 'react';
+import { Card, Button, Table, Space, Spin, Tag } from 'antd';
+import { HetuflowSDK, type SchedAgent, type HealthStatus } from '@fusion-data/hetuflow-sdk';
+import { useMessage } from '../hooks/useMessage';
 
 // 创建 SDK 实例
 const sdk = new HetuflowSDK({
-  baseURL: "", // 使用空字符串，这样会使用当前域名，通过 Vite 代理转发到后端
+  baseURL: '', // 使用空字符串，这样会使用当前域名，通过 Vite 代理转发到后端
   timeout: 30000,
 });
 
 const HetuflowDemo: React.FC = () => {
+  const message = useMessage();
   const [loading, setLoading] = useState(false);
   const [agents, setAgents] = useState<SchedAgent[]>([]);
   const [health, setHealth] = useState<HealthStatus | null>(null);
@@ -19,8 +21,8 @@ const HetuflowDemo: React.FC = () => {
       const healthStatus = await sdk.system.getHealth();
       setHealth(healthStatus);
     } catch (error) {
-      console.error("Failed to fetch health:", error);
-      message.error("获取系统状态失败");
+      console.error('Failed to fetch health:', error);
+      message.error('获取系统状态失败');
     }
   };
 
@@ -38,8 +40,8 @@ const HetuflowDemo: React.FC = () => {
       setAgents(result.result);
       message.success(`成功获取 ${result.result.length} 个 Agent`);
     } catch (error) {
-      console.error("Failed to fetch agents:", error);
-      message.error("获取 Agent 列表失败");
+      console.error('Failed to fetch agents:', error);
+      message.error('获取 Agent 列表失败');
     } finally {
       setLoading(false);
     }
@@ -51,18 +53,18 @@ const HetuflowDemo: React.FC = () => {
     try {
       const result = await sdk.agents.createAgent({
         name: `Demo Agent ${Date.now()}`,
-        description: "这是一个通过 SDK 创建的示例 Agent",
+        description: '这是一个通过 SDK 创建的示例 Agent',
         config: {
-          type: "demo",
-          created_by: "hetuflow-sdk-demo",
+          type: 'demo',
+          created_by: 'hetuflow-sdk-demo',
         },
       });
       message.success(`Agent 创建成功: ${result.id}`);
       // 重新获取 Agent 列表
       await fetchAgents();
     } catch (error) {
-      console.error("Failed to create agent:", error);
-      message.error("创建 Agent 失败");
+      console.error('Failed to create agent:', error);
+      message.error('创建 Agent 失败');
     } finally {
       setLoading(false);
     }
@@ -72,12 +74,12 @@ const HetuflowDemo: React.FC = () => {
   const deleteAgent = async (id: string) => {
     try {
       await sdk.agents.deleteAgent(id);
-      message.success("Agent 删除成功");
+      message.success('Agent 删除成功');
       // 重新获取 Agent 列表
       await fetchAgents();
     } catch (error) {
-      console.error("Failed to delete agent:", error);
-      message.error("删除 Agent 失败");
+      console.error('Failed to delete agent:', error);
+      message.error('删除 Agent 失败');
     }
   };
 
@@ -88,36 +90,36 @@ const HetuflowDemo: React.FC = () => {
 
   const columns = [
     {
-      title: "ID",
-      dataIndex: "id",
-      key: "id",
+      title: 'ID',
+      dataIndex: 'id',
+      key: 'id',
       width: 200,
-      render: (text: string) => <code style={{ fontSize: "12px" }}>{text.slice(0, 8)}...</code>,
+      render: (text: string) => <code style={{ fontSize: '12px' }}>{text.slice(0, 8)}...</code>,
     },
     {
-      title: "远程地址",
-      dataIndex: "address",
-      key: "address",
+      title: '远程地址',
+      dataIndex: 'address',
+      key: 'address',
     },
     {
-      title: "状态",
-      dataIndex: "status",
-      key: "status",
+      title: '状态',
+      dataIndex: 'status',
+      key: 'status',
     },
     {
-      title: "最后心跳时间",
-      dataIndex: "last_heartbeat_at",
-      key: "last_heartbeat_at",
-      render: (text: string) => new Date(text).toLocaleString("zh-CN"),
+      title: '最后心跳时间',
+      dataIndex: 'last_heartbeat_at',
+      key: 'last_heartbeat_at',
+      render: (text: string) => new Date(text).toLocaleString('zh-CN'),
     },
     {
-      title: "描述",
-      dataIndex: "description",
-      key: "description",
+      title: '描述',
+      dataIndex: 'description',
+      key: 'description',
     },
     {
-      title: "操作",
-      key: "actions",
+      title: '操作',
+      key: 'actions',
       render: (_: any, record: SchedAgent) => (
         <Space>
           <Button type="link" danger size="small" onClick={() => deleteAgent(record.id)}>
@@ -129,16 +131,16 @@ const HetuflowDemo: React.FC = () => {
   ];
 
   return (
-    <div style={{ padding: "24px" }}>
+    <div style={{ padding: '24px' }}>
       <Card
         title="Hetuflow SDK 演示"
         extra={
           <Space>
-            {health && <Tag color={health.status === "healthy" ? "green" : "red"}>系统状态: {health.status}</Tag>}
+            {health && <Tag color={health.status === 'healthy' ? 'green' : 'red'}>系统状态: {health.status}</Tag>}
           </Space>
         }
       >
-        <Space direction="vertical" style={{ width: "100%" }} size="large">
+        <Space direction="vertical" style={{ width: '100%' }} size="large">
           <Card size="small" title="操作">
             <Space>
               <Button type="primary" onClick={fetchAgents} loading={loading}>
@@ -160,7 +162,7 @@ const HetuflowDemo: React.FC = () => {
                 size="small"
                 pagination={false}
                 locale={{
-                  emptyText: "暂无数据，请先创建 Agent 或检查 Hetuflow 服务是否运行",
+                  emptyText: '暂无数据，请先创建 Agent 或检查 Hetuflow 服务是否运行',
                 }}
               />
             </Spin>

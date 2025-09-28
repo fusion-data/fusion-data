@@ -1,4 +1,4 @@
-use modelsql_core::sea_utils::SIden;
+use modelsql_core::{filter::OrderBys, sea_utils::SIden};
 use sea_query::{IntoIden, TableRef};
 
 /// The DbBmc trait must be implemented for the Bmc struct of an entity.
@@ -57,8 +57,6 @@ pub trait DbBmc {
     true
   }
 
-  /// 是否使用逻辑删除
-  ///
   /// default: false
   fn _use_logical_deletion() -> bool {
     false
@@ -72,9 +70,12 @@ pub trait DbBmc {
     false
   }
 
-  /// 乐观锁
   /// default: false
   fn _has_optimistic_lock() -> bool {
     false
+  }
+
+  fn _default_order_bys() -> Option<OrderBys> {
+    None
   }
 }

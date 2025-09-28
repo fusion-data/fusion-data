@@ -126,7 +126,6 @@ create table sched_task_instance (
   exit_code int,
   metrics jsonb, -- TaskMetrics
   created_at timestamptz default now(),
-  updated_by bigint,
   updated_at timestamptz
 );
 

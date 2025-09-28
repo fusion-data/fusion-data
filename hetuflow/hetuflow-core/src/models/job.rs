@@ -23,7 +23,7 @@ pub struct SchedJob {
   pub config: TaskConfig,
   pub status: JobStatus,
   pub created_at: DateTime<FixedOffset>,
-  pub last_heartbeat_at: Option<DateTime<FixedOffset>>,
+  pub updated_at: Option<DateTime<FixedOffset>>,
 }
 
 /// Job 创建模型
@@ -73,5 +73,5 @@ pub struct JobFilter {
   pub namespace_id: Option<OpValsUuid>,
   pub status: Option<OpValsInt32>,
   pub created_at: Option<OpValsDateTime>,
-  pub last_heartbeat_at: Option<OpValsDateTime>,
+  pub updated_at: Option<OpValsDateTime>,
 }

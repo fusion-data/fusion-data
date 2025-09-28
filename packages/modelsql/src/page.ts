@@ -1,7 +1,7 @@
 /**
  * 排序方向枚举
  */
-export type OrderDirection = "asc" | "desc";
+export type OrderDirection = 'asc' | 'desc';
 
 // region: --- Page 接口定义
 

@@ -9,7 +9,11 @@
     "test": "pnpm run --recursive test",
     "lint": "pnpm run --recursive lint",
     "clean": "pnpm run --recursive clean",
-    "dev:hetuflow-web": "pnpm run --filter hetuflow-web dev"
+    "format": "pnpm run --recursive format",
+    "format:check": "pnpm run --recursive format:check",
+    "dev:hetuflow-web": "pnpm run --filter hetuflow-web dev",
+    "dev:hetumind-web": "pnpm run --filter hetumind-web dev",
+    "dev:jieyuan-web": "pnpm run --filter jieyuan-web dev"
   },
   "devDependencies": {
     "@types/node": "^24.5.1",

@@ -1,4 +1,4 @@
-import { Page, Paged, PageResult } from "@fusion-data/modelsql/page";
+import { Page, Paged, PageResult } from '@fusion-data/modelsql/page';
 
 export interface AgentForCreate {
   name: string;
@@ -65,6 +65,15 @@ export interface JobForQuery {
   filter: JobFilter;
 }
 
+export const JobStatus = {
+  CREATED: 1,
+  EXPIRED: 98,
+  DISABLED: 99,
+  ENABLED: 100,
+} as const;
+
+export type JobStatus = (typeof JobStatus)[keyof typeof JobStatus];
+
 export interface SchedJob {
   id: string;
   name: string;
@@ -72,7 +81,7 @@ export interface SchedJob {
   cron_expr?: string;
   agent_id: string;
   config?: Record<string, any>;
-  enabled: boolean;
+  status: JobStatus;
   created_at: string;
   updated_at: string;
 }
@@ -209,7 +218,7 @@ export interface GatewayCommandRequest {
 }
 
 export interface HealthStatus {
-  status: "healthy" | "unhealthy";
+  status: 'healthy' | 'unhealthy';
   checks: Record<string, any>;
 }
 

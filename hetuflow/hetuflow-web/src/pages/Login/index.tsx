@@ -23,7 +23,7 @@ const Login: React.FC = () => {
     try {
       // TODO: 集成实际的登录 API
       console.log('登录信息:', values);
-      
+
       // 模拟登录成功，跳转到仪表板
       navigate('/dashboard');
     } catch (error) {
@@ -55,13 +55,7 @@ const Login: React.FC = () => {
             <Text type="secondary">分布式作业调度系统</Text>
           </div>
 
-          <Form
-            form={form}
-            name="login"
-            onFinish={handleLogin}
-            autoComplete="off"
-            size="large"
-          >
+          <Form form={form} name="login" onFinish={handleLogin} autoComplete="off" size="large">
             <Form.Item
               name="username"
               rules={[
@@ -71,10 +65,7 @@ const Login: React.FC = () => {
                 },
               ]}
             >
-              <Input
-                prefix={<UserOutlined />}
-                placeholder="用户名"
-              />
+              <Input prefix={<UserOutlined />} placeholder="用户名" />
             </Form.Item>
 
             <Form.Item
@@ -86,18 +77,11 @@ const Login: React.FC = () => {
                 },
               ]}
             >
-              <Input.Password
-                prefix={<LockOutlined />}
-                placeholder="密码"
-              />
+              <Input.Password prefix={<LockOutlined />} placeholder="密码" />
             </Form.Item>
 
             <Form.Item>
-              <Button
-                type="primary"
-                htmlType="submit"
-                style={{ width: '100%' }}
-              >
+              <Button type="primary" htmlType="submit" style={{ width: '100%' }}>
                 登录
               </Button>
             </Form.Item>

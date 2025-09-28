@@ -1,19 +1,5 @@
-import React, { useState, useEffect } from "react";
-import {
-  Table,
-  Card,
-  Button,
-  Space,
-  Tag,
-  Typography,
-  Input,
-  Row,
-  Col,
-  Switch,
-  Dropdown,
-  Modal,
-  message,
-} from "antd";
+import React, { useState, useEffect } from 'react';
+import { Table, Card, Button, Space, Tag, Typography, Input, Row, Col, Switch, Dropdown, Popconfirm } from 'antd';
 import {
   ReloadOutlined,
   PlusOutlined,
@@ -21,10 +7,11 @@ import {
   DeleteOutlined,
   PlayCircleOutlined,
   MoreOutlined,
-} from "@ant-design/icons";
-import type { ColumnsType } from "antd/es/table";
-import { apiService, SchedJob, JobForQuery } from "../../services/api";
-import dayjs from "dayjs";
+} from '@ant-design/icons';
+import type { ColumnsType } from 'antd/es/table';
+import { apiService, SchedJob, JobForQuery, JobStatus } from '../../services/api';
+import { useMessage } from '../../hooks/useMessage';
+import dayjs from 'dayjs';
 
 const { Title } = Typography;
 const { Search } = Input;
@@ -43,13 +30,14 @@ interface JobsPageState {
  * 提供作业的 CRUD 操作和状态管理
  */
 const Jobs: React.FC = () => {
+  const message = useMessage();
   const [state, setState] = useState<JobsPageState>({
     jobs: [],
     loading: false,
     total: 0,
     current: 1,
     pageSize: 10,
-    searchText: "",
+    searchText: '',
   });
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 
@@ -58,8 +46,7 @@ const Jobs: React.FC = () => {
    */
   const fetchJobs = async (params?: Partial<JobForQuery>) => {
     try {
-      setState((prev) => ({ ...prev, loading: true }));
-
+      setState(prev => ({ ...prev, loading: true }));
       const query: JobForQuery = {
         page: params?.page || { page: state.current, limit: state.pageSize },
         filter: params?.filter || {
@@ -69,7 +56,7 @@ const Jobs: React.FC = () => {
 
       const result = await apiService.jobs.queryJobs(query);
 
-      setState((prev) => ({
+      setState(prev => ({
         ...prev,
         jobs: result.result || [],
         total: result.page.total || 0,
@@ -77,17 +64,10 @@ const Jobs: React.FC = () => {
         loading: false,
       }));
     } catch (error) {
-      console.error("获取作业列表失败:", error);
-      message.error("获取作业列表失败");
-      setState((prev) => ({ ...prev, loading: false }));
+      console.error('获取作业列表失败:', error);
+      message.error('获取作业列表失败');
+      setState(prev => ({ ...prev, loading: false }));
     }
-  };
-
-  /**
-   * 渲染状态标签
-   */
-  const renderStatus = (enabled: boolean) => {
-    return <Tag color={enabled ? "green" : "red"}>{enabled ? "启用" : "禁用"}</Tag>;
   };
 
   /**
@@ -103,9 +83,9 @@ const Jobs: React.FC = () => {
    */
   const renderSuccessRate = () => {
     const rate = Math.floor(Math.random() * 20) + 80; // 80-100 的随机数
-    let color = "green";
-    if (rate < 90) color = "red";
-    else if (rate < 95) color = "orange";
+    let color = 'green';
+    if (rate < 90) color = 'red';
+    else if (rate < 95) color = 'orange';
     return <Tag color={color}>{rate}%</Tag>;
   };
 
@@ -118,92 +98,104 @@ const Jobs: React.FC = () => {
    */
   const columns: ColumnsType<SchedJob> = [
     {
-      title: "作业名称",
-      dataIndex: "name",
-      key: "name",
+      title: '作业名称',
+      dataIndex: 'name',
+      key: 'name',
       sorter: (a, b) => a.name.localeCompare(b.name),
       render: (text, record) => (
-        <Button type="link" onClick={() => handleEdit(record)} style={{ padding: 0, height: "auto" }}>
+        <Button type="link" onClick={() => handleEdit(record)} style={{ padding: 0, height: 'auto' }}>
           {text}
         </Button>
       ),
     },
     {
-      title: "描述",
-      dataIndex: "description",
-      key: "description",
+      title: '描述',
+      dataIndex: 'description',
+      key: 'description',
       ellipsis: true,
     },
     {
-      title: "调度类型",
-      dataIndex: "cron_expr",
-      key: "scheduleType",
+      title: '调度类型',
+      dataIndex: 'cron_expr',
+      key: 'scheduleType',
       render: renderScheduleType,
     },
     {
-      title: "执行代理",
-      dataIndex: "agent_id",
-      key: "agent_id",
+      title: '执行代理管理',
+      dataIndex: 'agent_id',
+      key: 'agent_id',
     },
     {
-      title: "状态",
-      dataIndex: "enabled",
-      key: "enabled",
-      render: (enabled, record) => (
+      title: '状态',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status, record) => (
         <Space>
-          {renderStatus(enabled)}
-          <Switch size="small" checked={enabled} onChange={(checked) => handleStatusChange(checked, record)} />
+          <Switch
+            size="small"
+            checked={status === JobStatus.ENABLED}
+            onChange={checked => handleStatusChange(checked, record)}
+          />
         </Space>
       ),
     },
     {
-      title: "成功率",
-      key: "successRate",
+      title: '成功率',
+      key: 'successRate',
       render: renderSuccessRate,
     },
     {
-      title: "创建时间",
-      dataIndex: "created_at",
-      key: "created_at",
-      render: (time: string) => dayjs(time).format("YYYY-MM-DD HH:mm:ss"),
+      title: '创建时间',
+      dataIndex: 'created_at',
+      key: 'created_at',
+      render: (time: string) => dayjs(time).format('YYYY-MM-DD HH:mm:ss'),
     },
     {
-      title: "更新时间",
-      dataIndex: "updated_at",
-      key: "updated_at",
-      render: (time: string) => dayjs(time).format("YYYY-MM-DD HH:mm:ss"),
+      title: '更新时间',
+      dataIndex: 'updated_at',
+      key: 'updated_at',
+      render: (time: string) => dayjs(time).format('YYYY-MM-DD HH:mm:ss'),
     },
     {
-      title: "操作",
-      key: "action",
+      title: '操作',
+      key: 'action',
       render: (_, record) => {
         const menuItems = [
           {
-            key: "edit",
+            key: 'edit',
             icon: <EditOutlined />,
-            label: "编辑",
+            label: '编辑',
             onClick: () => handleEdit(record),
           },
           {
-            key: "run",
+            key: 'run',
             icon: <PlayCircleOutlined />,
-            label: "立即执行",
+            label: '立即执行',
             onClick: () => handleExecute(record),
           },
           {
-            type: "divider" as const,
+            type: 'divider' as const,
           },
           {
-            key: "delete",
-            icon: <DeleteOutlined />,
-            label: "删除",
+            key: 'delete',
+            icon: (
+              <Popconfirm
+                title="确认删除"
+                description={`确定要删除作业 "${record.name}" 吗？`}
+                okText="确定"
+                cancelText="取消"
+                onConfirm={() => handleDelete(record)}
+              >
+                <DeleteOutlined />
+              </Popconfirm>
+            ),
+            label: '删除',
             danger: true,
-            onClick: () => handleDelete(record),
           },
         ];
 
         return (
-          <Dropdown menu={{ items: menuItems }} trigger={["click"]}>
+          <Dropdown menu={{ items: menuItems }} trigger={['click']}>
             <Button type="text" icon={<MoreOutlined />} />
           </Dropdown>
         );
@@ -215,7 +207,7 @@ const Jobs: React.FC = () => {
    * 处理搜索
    */
   const handleSearch = (value: string) => {
-    setState((prev) => ({ ...prev, searchText: value, current: 1 }));
+    setState(prev => ({ ...prev, searchText: value, current: 1 }));
     fetchJobs({
       page: { page: 1, limit: state.pageSize },
       filter: { name: value ? { $like: value } : undefined },
@@ -234,7 +226,7 @@ const Jobs: React.FC = () => {
    */
   const handleAdd = () => {
     // TODO: 打开添加作业对话框
-    message.info("添加作业功能开发中");
+    message.info('添加作业功能开发中');
   };
 
   /**
@@ -248,21 +240,15 @@ const Jobs: React.FC = () => {
   /**
    * 删除作业
    */
-  const handleDelete = (record: SchedJob) => {
-    Modal.confirm({
-      title: "确认删除",
-      content: `确定要删除作业 "${record.name}" 吗？`,
-      onOk: async () => {
-        try {
-          await apiService.jobs.deleteJob(record.id);
-          message.success("删除成功");
-          fetchJobs();
-        } catch (error) {
-          console.error("删除作业失败:", error);
-          message.error("删除作业失败");
-        }
-      },
-    });
+  const handleDelete = async (record: SchedJob) => {
+    try {
+      await apiService.jobs.deleteJob(record.id);
+      message.success('删除成功');
+      fetchJobs();
+    } catch (error) {
+      console.error('删除作业失败:', error);
+      message.error('删除作业失败');
+    }
   };
 
   /**
@@ -280,20 +266,20 @@ const Jobs: React.FC = () => {
     try {
       if (checked) {
         await apiService.jobs.enableJob(record.id);
-        message.success("启用成功");
+        message.success('启用成功');
       } else {
         await apiService.jobs.disableJob(record.id);
-        message.success("禁用成功");
+        message.success('禁用成功');
       }
       fetchJobs();
     } catch (error) {
-      console.error("切换状态失败:", error);
-      message.error("切换状态失败");
+      console.error('切换状态失败:', error);
+      message.error('切换状态失败');
     }
   };
 
   return (
-    <Space direction="vertical" size="large" style={{ width: "100%" }}>
+    <Space direction="vertical" size="large" style={{ width: '100%' }}>
       <Row justify="space-between" align="middle">
         <Col>
           <Title level={2}>作业管理</Title>
@@ -309,7 +295,7 @@ const Jobs: React.FC = () => {
                 allowClear
                 style={{ width: 300 }}
                 onSearch={handleSearch}
-                onChange={(e) => setState((prev) => ({ ...prev, searchText: e.target.value }))}
+                onChange={e => setState(prev => ({ ...prev, searchText: e.target.value }))}
               />
             </Space>
           </Col>
@@ -342,7 +328,11 @@ const Jobs: React.FC = () => {
             showQuickJumper: true,
             showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
             onChange: (page, pageSize) => {
-              setState((prev) => ({ ...prev, current: page, pageSize: pageSize || 10 }));
+              setState(prev => ({
+                ...prev,
+                current: page,
+                pageSize: pageSize || 10,
+              }));
               fetchJobs({ page: { page, limit: pageSize || 10 } });
             },
           }}

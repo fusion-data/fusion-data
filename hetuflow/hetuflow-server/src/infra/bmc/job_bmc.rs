@@ -1,7 +1,7 @@
 use modelsql::{
   ModelManager, SqlError,
   base::DbBmc,
-  filter::{OpValsInt32, OpValsUuid},
+  filter::{OpValsInt32, OpValsUuid, OrderBys},
   generate_pg_bmc_common, generate_pg_bmc_filter,
 };
 use uuid::Uuid;
@@ -16,6 +16,15 @@ pub struct JobBmc;
 impl DbBmc for JobBmc {
   const TABLE: &str = "sched_job";
   const ID_GENERATED_BY_DB: bool = false;
+  fn _has_created_by() -> bool {
+    false
+  }
+  fn _has_updated_by() -> bool {
+    false
+  }
+  fn _default_order_bys() -> Option<OrderBys> {
+    Some("!id".into())
+  }
 }
 
 generate_pg_bmc_common!(

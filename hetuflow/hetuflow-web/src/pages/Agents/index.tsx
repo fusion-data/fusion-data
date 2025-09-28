@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { Table, Card, Button, Space, Tag, Typography, Input, Row, Col, Tooltip, Badge, message, Modal } from "antd";
+import React, { useState, useEffect } from 'react';
+import { Table, Card, Button, Space, Tag, Typography, Input, Row, Col, Tooltip, Badge, Popconfirm } from 'antd';
 import {
   ReloadOutlined,
   PlusOutlined,
@@ -7,10 +7,11 @@ import {
   DeleteOutlined,
   PlayCircleOutlined,
   PauseCircleOutlined,
-} from "@ant-design/icons";
-import type { ColumnsType } from "antd/es/table";
-import { apiService, SchedAgent, AgentForQuery } from "../../services/api";
-import dayjs from "dayjs";
+} from '@ant-design/icons';
+import type { ColumnsType } from 'antd/es/table';
+import { apiService, SchedAgent, AgentForQuery } from '../../services/api';
+import { useMessage } from '../../hooks/useMessage';
+import dayjs from 'dayjs';
 
 const { Title } = Typography;
 const { Search } = Input;
@@ -25,17 +26,18 @@ interface AgentsPageState {
 }
 
 /**
- * 执行代理管理页面组件
+ * 执行代理管理管理页面组件
  * 显示 Agent 列表和配置管理
  */
 const Agents: React.FC = () => {
+  const message = useMessage();
   const [state, setState] = useState<AgentsPageState>({
     agents: [],
     loading: false,
     total: 0,
     current: 1,
     pageSize: 10,
-    searchText: "",
+    searchText: '',
   });
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 
@@ -44,7 +46,7 @@ const Agents: React.FC = () => {
    */
   const fetchAgents = async (params?: Partial<AgentForQuery>) => {
     try {
-      setState((prev) => ({ ...prev, loading: true }));
+      setState(prev => ({ ...prev, loading: true }));
 
       const query: AgentForQuery = {
         page: {
@@ -56,7 +58,7 @@ const Agents: React.FC = () => {
 
       const result = await apiService.agents.queryAgents(query);
 
-      setState((prev) => ({
+      setState(prev => ({
         ...prev,
         agents: result.result || [],
         total: result.page.total || 0,
@@ -64,9 +66,9 @@ const Agents: React.FC = () => {
         loading: false,
       }));
     } catch (error) {
-      console.error("获取代理列表失败:", error);
-      message.error("获取代理列表失败");
-      setState((prev) => ({ ...prev, loading: false }));
+      console.error('获取代理列表失败:', error);
+      message.error('获取代理列表失败');
+      setState(prev => ({ ...prev, loading: false }));
     }
   };
 
@@ -74,12 +76,12 @@ const Agents: React.FC = () => {
    * 渲染状态标签（使用模拟状态）
    */
   const renderStatus = () => {
-    const statuses = ["online", "offline", "busy"];
+    const statuses = ['online', 'offline', 'busy'];
     const status = statuses[Math.floor(Math.random() * statuses.length)];
     const statusConfig = {
-      online: { color: "green", text: "在线" },
-      offline: { color: "red", text: "离线" },
-      busy: { color: "orange", text: "忙碌" },
+      online: { color: 'green', text: '在线' },
+      offline: { color: 'red', text: '离线' },
+      busy: { color: 'orange', text: '忙碌' },
     };
     const config = statusConfig[status as keyof typeof statusConfig];
     return <Tag color={config.color}>{config.text}</Tag>;
@@ -89,12 +91,12 @@ const Agents: React.FC = () => {
    * 渲染能力标签（使用模拟数据）
    */
   const renderCapabilities = () => {
-    const allCapabilities = ["python", "shell", "docker", "java", "spark", "hadoop"];
+    const allCapabilities = ['python', 'shell', 'docker', 'java', 'spark', 'hadoop'];
     const count = Math.floor(Math.random() * 3) + 1; // 1-3个能力
     const capabilities = allCapabilities.slice(0, count);
     return (
       <Space wrap>
-        {capabilities.map((cap) => (
+        {capabilities.map(cap => (
           <Tag key={cap} color="blue">
             {cap}
           </Tag>
@@ -131,68 +133,74 @@ const Agents: React.FC = () => {
    */
   const columns: ColumnsType<SchedAgent> = [
     {
-      title: "代理 ID",
-      dataIndex: "id",
-      key: "id",
+      title: '代理 ID',
+      dataIndex: 'id',
+      key: 'id',
       width: 120,
     },
     {
-      title: "名称",
-      dataIndex: "name",
-      key: "name",
+      title: '名称',
+      dataIndex: 'name',
+      key: 'name',
       ellipsis: true,
     },
     {
-      title: "描述",
-      dataIndex: "description",
-      key: "description",
+      title: '描述',
+      dataIndex: 'description',
+      key: 'description',
       ellipsis: true,
     },
     {
-      title: "状态",
-      key: "status",
+      title: '状态',
+      key: 'status',
       render: renderStatus,
       width: 100,
     },
     {
-      title: "配置",
-      dataIndex: "config",
-      key: "config",
+      title: '配置',
+      dataIndex: 'config',
+      key: 'config',
       render: (config: Record<string, any>) => (
-        <code style={{ background: "#f5f5f5", padding: "2px 4px", borderRadius: "3px" }}>
-          {config ? JSON.stringify(config).substring(0, 50) + "..." : "无配置"}
+        <code
+          style={{
+            background: '#f5f5f5',
+            padding: '2px 4px',
+            borderRadius: '3px',
+          }}
+        >
+          {config ? JSON.stringify(config).substring(0, 50) + '...' : '无配置'}
         </code>
       ),
     },
     {
-      title: "能力",
-      key: "capabilities",
+      title: '能力',
+      key: 'capabilities',
       render: renderCapabilities,
       width: 200,
     },
     {
-      title: "任务统计",
-      key: "taskStats",
+      title: '任务统计',
+      key: 'taskStats',
       render: renderTaskStats,
       width: 120,
     },
     {
-      title: "创建时间",
-      dataIndex: "created_at",
-      key: "created_at",
-      render: (time: string) => dayjs(time).format("YYYY-MM-DD HH:mm:ss"),
+      title: '创建时间',
+      dataIndex: 'created_at',
+      key: 'created_at',
+      render: (time: string) => dayjs(time).format('YYYY-MM-DD HH:mm:ss'),
       width: 150,
     },
     {
-      title: "更新时间",
-      dataIndex: "updated_at",
-      key: "updated_at",
-      render: (time: string) => dayjs(time).format("YYYY-MM-DD HH:mm:ss"),
+      title: '更新时间',
+      dataIndex: 'updated_at',
+      key: 'updated_at',
+      render: (time: string) => dayjs(time).format('YYYY-MM-DD HH:mm:ss'),
       width: 150,
     },
     {
-      title: "操作",
-      key: "action",
+      title: '操作',
+      key: 'action',
       render: (_, record) => (
         <Space size="small">
           <Tooltip title="启动">
@@ -205,7 +213,15 @@ const Agents: React.FC = () => {
             <Button type="text" icon={<EditOutlined />} onClick={() => handleEdit(record)} />
           </Tooltip>
           <Tooltip title="删除">
-            <Button type="text" danger icon={<DeleteOutlined />} onClick={() => handleDelete(record)} />
+            <Popconfirm
+              title="确认删除"
+              description={`确定要删除代理 "${record.name}" 吗？`}
+              okText="确定"
+              cancelText="取消"
+              onConfirm={() => handleDelete(record)}
+            >
+              <Button type="text" danger icon={<DeleteOutlined />} />
+            </Popconfirm>
           </Tooltip>
         </Space>
       ),
@@ -217,7 +233,7 @@ const Agents: React.FC = () => {
    * 处理搜索
    */
   const handleSearch = (value: string) => {
-    setState((prev) => ({ ...prev, searchText: value, current: 1 }));
+    setState(prev => ({ ...prev, searchText: value, current: 1 }));
     fetchAgents({ page: { page: 1, limit: state.pageSize } });
   };
 
@@ -233,7 +249,7 @@ const Agents: React.FC = () => {
    */
   const handleAdd = () => {
     // TODO: 打开添加代理对话框
-    message.info("添加代理功能开发中");
+    message.info('添加代理功能开发中');
   };
 
   /**
@@ -247,21 +263,15 @@ const Agents: React.FC = () => {
   /**
    * 删除代理
    */
-  const handleDelete = (record: SchedAgent) => {
-    Modal.confirm({
-      title: "确认删除",
-      content: `确定要删除代理 "${record.name}" 吗？`,
-      onOk: async () => {
-        try {
-          await apiService.agents.deleteAgent(record.id);
-          message.success("删除成功");
-          fetchAgents();
-        } catch (error) {
-          console.error("删除代理失败:", error);
-          message.error("删除代理失败");
-        }
-      },
-    });
+  const handleDelete = async (record: SchedAgent) => {
+    try {
+      await apiService.agents.deleteAgent(record.id);
+      message.success('删除成功');
+      fetchAgents();
+    } catch (error) {
+      console.error('删除代理失败:', error);
+      message.error('删除代理失败');
+    }
   };
 
   /**
@@ -281,10 +291,10 @@ const Agents: React.FC = () => {
   };
 
   return (
-    <Space direction="vertical" size="large" style={{ width: "100%" }}>
+    <Space direction="vertical" size="large" style={{ width: '100%' }}>
       <Row justify="space-between" align="middle">
         <Col>
-          <Title level={2}>执行代理管理</Title>
+          <Title level={2}>执行代理管理管理</Title>
         </Col>
       </Row>
 
@@ -297,7 +307,7 @@ const Agents: React.FC = () => {
                 allowClear
                 style={{ width: 300 }}
                 onSearch={handleSearch}
-                onChange={(e) => setState((prev) => ({ ...prev, searchText: e.target.value }))}
+                onChange={e => setState(prev => ({ ...prev, searchText: e.target.value }))}
               />
             </Space>
           </Col>
@@ -330,7 +340,11 @@ const Agents: React.FC = () => {
             showQuickJumper: true,
             showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
             onChange: (page, pageSize) => {
-              setState((prev) => ({ ...prev, current: page, pageSize: pageSize || 10 }));
+              setState(prev => ({
+                ...prev,
+                current: page,
+                pageSize: pageSize || 10,
+              }));
               fetchAgents({ page: { page, limit: pageSize } });
             },
           }}

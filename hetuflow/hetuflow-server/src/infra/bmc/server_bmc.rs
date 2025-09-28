@@ -1,4 +1,5 @@
 use fusion_common::time::now_offset;
+use modelsql::filter::OrderBys;
 use modelsql::{
   ModelManager, SqlError, base::DbBmc, filter::OpValsInt32, generate_pg_bmc_common, generate_pg_bmc_filter,
 };
@@ -21,6 +22,9 @@ impl DbBmc for ServerBmc {
   }
   fn _has_updated_by() -> bool {
     false
+  }
+  fn _default_order_bys() -> Option<OrderBys> {
+    Some("!id".into())
   }
 }
 

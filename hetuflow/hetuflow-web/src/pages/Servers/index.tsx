@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
-import { Table, Card, Button, Space, Tag, Typography, Input, Row, Col, Tooltip, message, Modal } from "antd";
-import { PlusOutlined, ReloadOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
-import type { ColumnsType } from "antd/es/table";
-import { apiService, SchedServer, ServerForQuery, ServerStatus } from "../../services/api";
-import dayjs from "dayjs";
+import React, { useState, useEffect } from 'react';
+import { Table, Card, Button, Space, Tag, Typography, Input, Row, Col, Tooltip, Popconfirm } from 'antd';
+import { ReloadOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import type { ColumnsType } from 'antd/es/table';
+import { apiService, SchedServer, ServerForQuery, ServerStatus } from '../../services/api';
+import { useMessage } from '../../hooks/useMessage';
+import dayjs from 'dayjs';
 
 const { Title } = Typography;
 const { Search } = Input;
@@ -22,13 +23,14 @@ interface ServersPageState {
  * 显示 SchedServer 列表和操作
  */
 const Servers: React.FC = () => {
+  const message = useMessage();
   const [state, setState] = useState<ServersPageState>({
     servers: [],
     loading: false,
     total: 0,
     current: 1,
     pageSize: 10,
-    searchText: "",
+    searchText: '',
   });
 
   /**
@@ -36,7 +38,7 @@ const Servers: React.FC = () => {
    */
   const fetchServers = async (params?: Partial<ServerForQuery>) => {
     try {
-      setState((prev) => ({ ...prev, loading: true }));
+      setState(prev => ({ ...prev, loading: true }));
 
       const query: ServerForQuery = {
         page: {
@@ -48,7 +50,7 @@ const Servers: React.FC = () => {
 
       const result = await apiService.servers.queryServers(query);
 
-      setState((prev) => ({
+      setState(prev => ({
         ...prev,
         servers: result.result || [],
         total: result.page.total || 0,
@@ -56,9 +58,9 @@ const Servers: React.FC = () => {
         loading: false,
       }));
     } catch (error) {
-      console.error("获取服务器列表失败:", error);
-      message.error("获取服务器列表失败");
-      setState((prev) => ({ ...prev, loading: false }));
+      console.error('获取服务器列表失败:', error);
+      message.error('获取服务器列表失败');
+      setState(prev => ({ ...prev, loading: false }));
     }
   };
 
@@ -70,8 +72,8 @@ const Servers: React.FC = () => {
   // 状态标签渲染
   const renderStatus = (status: ServerStatus) => {
     const statusConfig = {
-      [ServerStatus.Active]: { color: "green", text: "活跃" },
-      [ServerStatus.Inactive]: { color: "red", text: "非活跃" },
+      [ServerStatus.Active]: { color: 'green', text: '活跃' },
+      [ServerStatus.Inactive]: { color: 'red', text: '非活跃' },
     };
     const config = statusConfig[status];
     return <Tag color={config.color}>{config.text}</Tag>;
@@ -80,69 +82,77 @@ const Servers: React.FC = () => {
   // 表格列定义
   const columns: ColumnsType<SchedServer> = [
     {
-      title: "服务器名称",
-      dataIndex: "name",
-      key: "name",
+      title: '服务器名称',
+      dataIndex: 'name',
+      key: 'name',
       sorter: (a, b) => a.name.localeCompare(b.name),
     },
     {
-      title: "地址",
-      dataIndex: "address",
-      key: "address",
+      title: '地址',
+      dataIndex: 'address',
+      key: 'address',
     },
     {
-      title: "状态",
-      dataIndex: "status",
-      key: "status",
+      title: '状态',
+      dataIndex: 'status',
+      key: 'status',
       render: renderStatus,
       filters: [
-        { text: "活跃", value: ServerStatus.Active },
-        { text: "非活跃", value: ServerStatus.Inactive },
+        { text: '活跃', value: ServerStatus.Active },
+        { text: '非活跃', value: ServerStatus.Inactive },
       ],
       onFilter: (value, record) => record.status === value,
     },
     {
-      title: "最后心跳",
-      dataIndex: "last_heartbeat_at",
-      key: "last_heartbeat_at",
-      render: (time: string) => dayjs(time).format("YYYY-MM-DD HH:mm:ss"),
+      title: '最后心跳',
+      dataIndex: 'last_heartbeat_at',
+      key: 'last_heartbeat_at',
+      render: (time: string) => dayjs(time).format('YYYY-MM-DD HH:mm:ss'),
       sorter: (a, b) => new Date(a.last_heartbeat_at).getTime() - new Date(b.last_heartbeat_at).getTime(),
     },
     {
-      title: "绑定命名空间",
-      dataIndex: "bind_namespaces",
-      key: "bind_namespaces",
+      title: '绑定命名空间',
+      dataIndex: 'bind_namespaces',
+      key: 'bind_namespaces',
       render: (namespaces: string[]) => (
         <Space wrap>
-          {namespaces.map((ns) => (
+          {namespaces.map(ns => (
             <Tag key={ns}>{ns}</Tag>
           ))}
         </Space>
       ),
     },
     {
-      title: "描述",
-      dataIndex: "description",
-      key: "description",
+      title: '描述',
+      dataIndex: 'description',
+      key: 'description',
       ellipsis: true,
     },
     {
-      title: "创建时间",
-      dataIndex: "created_at",
-      key: "created_at",
-      render: (time: string) => dayjs(time).format("YYYY-MM-DD HH:mm:ss"),
+      title: '创建时间',
+      dataIndex: 'created_at',
+      key: 'created_at',
+      render: (time: string) => dayjs(time).format('YYYY-MM-DD HH:mm:ss'),
       sorter: (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
     },
     {
-      title: "操作",
-      key: "action",
+      title: '操作',
+      key: 'action',
       render: (_, record) => (
         <Space size="middle">
           <Tooltip title="编辑">
             <Button type="text" icon={<EditOutlined />} onClick={() => handleEdit(record.id)} />
           </Tooltip>
           <Tooltip title="删除">
-            <Button type="text" danger icon={<DeleteOutlined />} onClick={() => handleDelete(record.id)} />
+            <Popconfirm
+              title="确认删除"
+              description="确定要删除这个服务器吗？此操作不可撤销。"
+              okText="确定"
+              cancelText="取消"
+              onConfirm={() => handleDelete(record.id)}
+            >
+              <Button type="text" danger icon={<DeleteOutlined />} />
+            </Popconfirm>
           </Tooltip>
         </Space>
       ),
@@ -151,7 +161,7 @@ const Servers: React.FC = () => {
 
   // 处理搜索
   const handleSearch = (value: string) => {
-    setState((prev) => ({ ...prev, searchText: value, current: 1 }));
+    setState(prev => ({ ...prev, searchText: value, current: 1 }));
     fetchServers({
       page: { page: 1, limit: state.pageSize },
       filter: value ? { name: { like: `%${value}%` } } : {},
@@ -166,7 +176,7 @@ const Servers: React.FC = () => {
   // 处理添加
   const handleAdd = () => {
     // TODO: 打开添加服务器对话框
-    message.info("添加服务器功能开发中");
+    message.info('添加服务器功能开发中');
   };
 
   // 处理编辑
@@ -178,35 +188,27 @@ const Servers: React.FC = () => {
         message.info(`编辑服务器: ${server.name}`);
       }
     } catch (error) {
-      console.error("获取服务器详情失败:", error);
-      message.error("获取服务器详情失败");
+      console.error('获取服务器详情失败:', error);
+      message.error('获取服务器详情失败');
     }
   };
 
   // 处理删除
-  const handleDelete = (id: string) => {
-    Modal.confirm({
-      title: "确认删除",
-      content: "确定要删除这个服务器吗？此操作不可撤销。",
-      okText: "确定",
-      cancelText: "取消",
-      onOk: async () => {
-        try {
-          await apiService.servers.deleteServer(id);
-          message.success("删除成功");
-          fetchServers();
-        } catch (error) {
-          console.error("删除服务器失败:", error);
-          message.error("删除服务器失败");
-        }
-      },
-    });
+  const handleDelete = async (id: string) => {
+    try {
+      await apiService.servers.deleteServer(id);
+      message.success('删除成功');
+      fetchServers();
+    } catch (error) {
+      console.error('删除服务器失败:', error);
+      message.error('删除服务器失败');
+    }
   };
 
   // 处理分页变化
   const handleTableChange = (pagination: any) => {
     const { current, pageSize } = pagination;
-    setState((prev) => ({ ...prev, current, pageSize }));
+    setState(prev => ({ ...prev, current, pageSize }));
     fetchServers({
       page: { page: current, limit: pageSize },
       filter: state.searchText ? { name: { like: `%${state.searchText}%` } } : {},
@@ -214,7 +216,7 @@ const Servers: React.FC = () => {
   };
 
   return (
-    <Space direction="vertical" size="large" style={{ width: "100%" }}>
+    <Space direction="vertical" size="large" style={{ width: '100%' }}>
       <Row justify="space-between" align="middle">
         <Col>
           <Title level={2}>服务器管理</Title>
@@ -230,9 +232,9 @@ const Servers: React.FC = () => {
                 allowClear
                 style={{ width: 300 }}
                 onSearch={handleSearch}
-                onChange={(e) => {
+                onChange={e => {
                   if (!e.target.value) {
-                    setState((prev) => ({ ...prev, searchText: "" }));
+                    setState(prev => ({ ...prev, searchText: '' }));
                     fetchServers();
                   }
                 }}

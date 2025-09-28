@@ -8,6 +8,8 @@ use uuid::Uuid;
 
 use crate::types::TaskInstanceStatus;
 
+use super::TaskMetrics;
+
 /// SchedTaskInstance 数据模型
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(
@@ -27,9 +29,8 @@ pub struct SchedTaskInstance {
   pub output: Option<String>,
   pub error_message: Option<String>,
   pub exit_code: Option<i32>,
-  pub metrics: Option<serde_json::Value>,
+  pub metrics: Option<TaskMetrics>,
   pub created_at: DateTime<FixedOffset>,
-  pub updated_by: Option<i64>,
   pub updated_at: Option<DateTime<FixedOffset>>,
 }
 

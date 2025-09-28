@@ -6,7 +6,6 @@ use modelsql::{
   filter::{OpValsDateTime, OpValsInt32, OpValsString, Page},
   page::PageResult,
 };
-use uuid::Uuid;
 
 use hetuflow_core::{
   models::{
@@ -47,17 +46,17 @@ impl AgentSvc {
   }
 
   /// 根据 ID 获取 Agent
-  pub async fn get_by_id(&self, id: &Uuid) -> Result<Option<SchedAgent>, DataError> {
+  pub async fn get_by_id(&self, id: &str) -> Result<Option<SchedAgent>, DataError> {
     AgentBmc::get_by_id(&self.mm, id).await.map_err(DataError::from)
   }
 
   /// 根据 ID 更新 Agent
-  pub async fn update_by_id(&self, id: &Uuid, agent_data: AgentForUpdate) -> Result<(), DataError> {
+  pub async fn update_by_id(&self, id: &str, agent_data: AgentForUpdate) -> Result<(), DataError> {
     AgentBmc::update_by_id(&self.mm, id, agent_data).await.map_err(DataError::from)
   }
 
   /// 根据 ID 删除 Agent
-  pub async fn delete_by_id(&self, id: &Uuid) -> Result<(), DataError> {
+  pub async fn delete_by_id(&self, id: &str) -> Result<(), DataError> {
     AgentBmc::delete_by_id(&self.mm, id).await.map(|_| ()).map_err(DataError::from)
   }
 

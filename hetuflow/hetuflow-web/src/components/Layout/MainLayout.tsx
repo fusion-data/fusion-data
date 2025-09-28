@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import { useNavigate, useLocation, Outlet } from "react-router-dom";
-import { Avatar, Dropdown, Space } from "antd";
+import React, { useState } from 'react';
+import { useNavigate, useLocation, Outlet } from 'react-router-dom';
+import { Avatar, Dropdown, Space } from 'antd';
 import {
   DashboardOutlined,
   CloudServerOutlined,
@@ -11,10 +11,10 @@ import {
   UserOutlined,
   SettingOutlined,
   LogoutOutlined,
-} from "@ant-design/icons";
-import { ProLayout, MenuDataItem } from "@ant-design/pro-components";
-import ThemeSwitcher from "../ThemeSwitcher";
-import { useTheme } from "../../contexts/ThemeContext";
+} from '@ant-design/icons';
+import { ProLayout, MenuDataItem } from '@ant-design/pro-components';
+import ThemeSwitcher from '../ThemeSwitcher';
+import { useTheme } from '../../contexts/ThemeContext';
 
 /**
  * 主布局组件
@@ -29,38 +29,38 @@ const MainLayout: React.FC = () => {
   // 菜单项配置
   const menuItems: MenuDataItem[] = [
     {
-      path: "/dashboard",
-      name: "仪表板",
+      path: '/dashboard',
+      name: '仪表板',
       icon: <DashboardOutlined />,
     },
     {
-      path: "/servers",
-      name: "服务器管理",
+      path: '/servers',
+      name: '服务器管理',
       icon: <CloudServerOutlined />,
     },
     {
-      path: "/agents",
-      name: "执行代理",
+      path: '/agents',
+      name: '执行代理管理',
       icon: <RobotOutlined />,
     },
     {
-      path: "/jobs",
-      name: "作业管理",
+      path: '/jobs',
+      name: '作业管理',
       icon: <ScheduleOutlined />,
     },
     {
-      path: "/tasks",
-      name: "任务管理",
+      path: '/tasks',
+      name: '任务管理',
       icon: <UnorderedListOutlined />,
     },
     {
-      path: "/task-instances",
-      name: "任务实例",
+      path: '/task-instances',
+      name: '任务实例',
       icon: <HistoryOutlined />,
     },
     {
-      path: "/settings",
-      name: "系统设置",
+      path: '/settings',
+      name: '系统设置',
       icon: <SettingOutlined />,
     },
   ];
@@ -68,25 +68,25 @@ const MainLayout: React.FC = () => {
   // 用户下拉菜单
   const userMenuItems = [
     {
-      key: "profile",
+      key: 'profile',
       icon: <UserOutlined />,
-      label: "个人资料",
+      label: '个人资料',
     },
     {
-      key: "logout",
+      key: 'logout',
       icon: <LogoutOutlined />,
-      label: "退出登录",
+      label: '退出登录',
     },
   ];
 
   // 处理用户菜单点击
   const handleUserMenuClick = ({ key }: { key: string }) => {
-    if (key === "logout") {
+    if (key === 'logout') {
       // TODO: 实现退出登录逻辑
-      console.log("退出登录");
-    } else if (key === "profile") {
+      console.log('退出登录');
+    } else if (key === 'profile') {
       // TODO: 跳转到个人资料页面
-      console.log("个人资料");
+      console.log('个人资料');
     }
   };
 
@@ -116,11 +116,11 @@ const MainLayout: React.FC = () => {
       headerRender={() => (
         <div
           style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            width: "100%",
-            padding: "0 24px",
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            width: '100%',
+            padding: '0 24px',
           }}
         >
           <div />
@@ -133,7 +133,7 @@ const MainLayout: React.FC = () => {
               }}
               placement="bottomRight"
             >
-              <Space style={{ cursor: "pointer" }}>
+              <Space style={{ cursor: 'pointer' }}>
                 <Avatar icon={<UserOutlined />} />
                 <span>管理员</span>
               </Space>
@@ -142,18 +142,18 @@ const MainLayout: React.FC = () => {
         </div>
       )}
       layout="mix"
-      navTheme={currentTheme === "dark" ? "realDark" : "light"}
+      navTheme={currentTheme === 'dark' ? 'realDark' : 'light'}
       colorPrimary="#1890ff"
       siderWidth={240}
       style={{
-        minHeight: "100vh",
-        height: "100vh",
-        width: "100vw",
-        overflow: "hidden",
+        minHeight: '100vh',
+        height: '100vh',
+        width: '100vw',
+        overflow: 'hidden',
       }}
       contentStyle={{
         padding: 24,
-        overflow: "auto",
+        overflow: 'auto',
       }}
     >
       <Outlet />

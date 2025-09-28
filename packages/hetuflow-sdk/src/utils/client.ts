@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 
 export interface HetuflowClientConfig {
   baseURL: string;
@@ -15,35 +15,35 @@ export class HetuflowClient {
       baseURL: config.baseURL,
       timeout: config.timeout || 30000,
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
         ...config.headers,
       },
     });
 
     // 添加请求拦截器
     this.client.interceptors.request.use(
-      (config) => {
+      config => {
         // 添加认证 token
         if (this.token) {
           config.headers.Authorization = `Bearer ${this.token}`;
         }
         return config;
       },
-      (error) => {
+      error => {
         return Promise.reject(error);
       }
     );
 
     // 添加响应拦截器
     this.client.interceptors.response.use(
-      (response) => {
+      response => {
         return response;
       },
-      (error) => {
+      error => {
         // 统一错误处理
         if (error.response?.data) {
           throw new HetuflowError(
-            error.response.data.message || "API Error",
+            error.response.data.message || 'API Error',
             error.response.status,
             error.response.data.code,
             error.response.data.details
@@ -75,26 +75,31 @@ export class HetuflowClient {
   }
 
   async get<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
-    return this.request<T>({ ...config, method: "GET", url });
+    return this.request<T>({ ...config, method: 'GET', url });
   }
 
   async post<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
-    return this.request<T>({ ...config, method: "POST", url, data });
+    return this.request<T>({ ...config, method: 'POST', url, data });
   }
 
   async put<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
-    return this.request<T>({ ...config, method: "PUT", url, data });
+    return this.request<T>({ ...config, method: 'PUT', url, data });
   }
 
   async delete<T = any>(url: string, config?: AxiosRequestConfig): Promise<T> {
-    return this.request<T>({ ...config, method: "DELETE", url });
+    return this.request<T>({ ...config, method: 'DELETE', url });
   }
 }
 
 export class HetuflowError extends Error {
-  constructor(message: string, public status?: number, public code?: string, public details?: Record<string, any>) {
+  constructor(
+    message: string,
+    public status?: number,
+    public code?: string,
+    public details?: Record<string, any>
+  ) {
     super(message);
-    this.name = "HetuflowError";
+    this.name = 'HetuflowError';
   }
 }
 

@@ -81,12 +81,23 @@ impl core::fmt::Display for OrderBy {
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct OrderBys(Vec<OrderBy>);
 
+impl Default for OrderBys {
+  fn default() -> Self {
+    OrderBys::new(vec![])
+  }
+}
+
 impl OrderBys {
   pub fn new(v: Vec<OrderBy>) -> Self {
     OrderBys(v)
   }
-  pub fn order_bys(self) -> Vec<OrderBy> {
+
+  pub fn into_inner(self) -> Vec<OrderBy> {
     self.0
+  }
+
+  pub fn is_empty(&self) -> bool {
+    self.0.is_empty()
   }
 }
 

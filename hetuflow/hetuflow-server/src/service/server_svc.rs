@@ -1,7 +1,6 @@
 use fusion_core::DataError;
 use hetuflow_core::models::{SchedServer, ServerForQuery, ServerForUpdate};
 use modelsql::{ModelManager, page::PageResult};
-use uuid::Uuid;
 
 use crate::infra::bmc::ServerBmc;
 
@@ -14,15 +13,15 @@ impl ServerSvc {
     Self { mm }
   }
 
-  pub async fn get_by_id(&self, id: &Uuid) -> Result<Option<SchedServer>, DataError> {
+  pub async fn get_by_id(&self, id: &str) -> Result<Option<SchedServer>, DataError> {
     ServerBmc::get_by_id(&self.mm, id).await.map_err(DataError::from)
   }
 
-  pub async fn update_by_id(&self, id: &Uuid, data: ServerForUpdate) -> Result<(), DataError> {
+  pub async fn update_by_id(&self, id: &str, data: ServerForUpdate) -> Result<(), DataError> {
     ServerBmc::update_by_id(&self.mm, id, data).await.map_err(DataError::from)
   }
 
-  pub async fn delete_by_id(&self, id: &Uuid) -> Result<(), DataError> {
+  pub async fn delete_by_id(&self, id: &str) -> Result<(), DataError> {
     ServerBmc::delete_by_id(&self.mm, id).await.map_err(DataError::from)
   }
 

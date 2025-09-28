@@ -6,7 +6,6 @@ use serde_json::Value;
 
 use hetuflow_core::models::{AgentForCreate, AgentForQuery, AgentForUpdate, SchedAgent};
 use utoipa_axum::router::OpenApiRouter;
-use uuid::Uuid;
 
 use crate::{application::ServerApplication, service::AgentSvc};
 
@@ -51,14 +50,14 @@ async fn create_agent(agent_svc: AgentSvc, Json(input): Json<AgentForCreate>) ->
   get,
   path = "/{id}",
   params(
-    ("id" = Uuid, Path, description = "Agent ID")
+    ("id" = String, Path, description = "Agent ID")
   ),
   responses(
     (status = 200, description = "Success", body = Option<SchedAgent>)
   ),
   tag = "Agents"
 )]
-async fn get_agent(agent_svc: AgentSvc, Path(id): Path<Uuid>) -> WebResult<Option<SchedAgent>> {
+async fn get_agent(agent_svc: AgentSvc, Path(id): Path<String>) -> WebResult<Option<SchedAgent>> {
   let result = agent_svc.get_by_id(&id).await?;
   ok_json!(result)
 }
@@ -67,7 +66,7 @@ async fn get_agent(agent_svc: AgentSvc, Path(id): Path<Uuid>) -> WebResult<Optio
   post,
   path = "/{id}/update",
   params(
-    ("id" = Uuid, Path, description = "Agent ID")
+    ("id" = String, Path, description = "Agent ID")
   ),
   request_body = AgentForUpdate,
   responses(
@@ -77,7 +76,7 @@ async fn get_agent(agent_svc: AgentSvc, Path(id): Path<Uuid>) -> WebResult<Optio
 )]
 async fn update_agent(
   agent_svc: AgentSvc,
-  Path(id): Path<Uuid>,
+  Path(id): Path<String>,
   Json(input): Json<AgentForUpdate>,
 ) -> WebResult<Value> {
   agent_svc.update_by_id(&id, input).await?;
@@ -88,14 +87,14 @@ async fn update_agent(
   delete,
   path = "/{id}",
   params(
-    ("id" = Uuid, Path, description = "Agent ID")
+    ("id" = String, Path, description = "Agent ID")
   ),
   responses(
     (status = 200, description = "Success", body = Value)
   ),
   tag = "Agents"
 )]
-async fn delete_agent(agent_svc: AgentSvc, Path(id): Path<Uuid>) -> WebResult<Value> {
+async fn delete_agent(agent_svc: AgentSvc, Path(id): Path<String>) -> WebResult<Value> {
   agent_svc.delete_by_id(&id).await?;
   ok_json!()
 }

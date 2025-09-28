@@ -1,4 +1,4 @@
-import { HetuflowSDK } from "@fusion-data/hetuflow-sdk";
+import { HetuflowSDK } from '@fusion-data/hetuflow-sdk';
 
 /**
  * HetuFlow API 服务配置
@@ -9,7 +9,7 @@ class APIService {
   constructor() {
     // 初始化 SDK，从环境变量或配置中获取 baseURL
     this.sdk = new HetuflowSDK({
-      baseURL: import.meta.env.VITE_API_BASE_URL || "",
+      baseURL: import.meta.env.VITE_API_BASE_URL || '',
       timeout: 30000,
     });
   }
@@ -80,4 +80,4 @@ class APIService {
 export const apiService = new APIService();
 
 // 导出类型定义
-export * from "@fusion-data/hetuflow-sdk";
+export * from '@fusion-data/hetuflow-sdk';

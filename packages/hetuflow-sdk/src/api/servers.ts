@@ -1,11 +1,11 @@
-import { HetuflowClient } from "../utils/client.js";
+import { HetuflowClient } from '../utils/client.js';
 import {
   ServerForUpdate,
   ServerForQuery,
   SchedServer,
   PageResult_SchedServer,
   IdStringResult,
-} from "../types/index.js";
+} from '../types/index.js';
 
 export class ServerAPI {
   constructor(private client: HetuflowClient) {}
@@ -14,7 +14,7 @@ export class ServerAPI {
    * 查询 Server 列表
    */
   async queryServers(query: ServerForQuery): Promise<PageResult_SchedServer> {
-    return this.client.post<PageResult_SchedServer>("/api/v1/servers/query", query);
+    return this.client.post<PageResult_SchedServer>('/api/v1/servers/query', query);
   }
 
   /**

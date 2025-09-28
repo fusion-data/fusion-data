@@ -1,4 +1,4 @@
-import { HetuflowClient } from "../utils/client.js";
+import { HetuflowClient } from '../utils/client.js';
 import {
   JobForCreate,
   JobForUpdate,
@@ -6,7 +6,7 @@ import {
   SchedJob,
   PageResult_SchedJob,
   IdUuidResult,
-} from "../types/index.js";
+} from '../types/index.js';
 
 export class JobAPI {
   constructor(private client: HetuflowClient) {}
@@ -15,14 +15,14 @@ export class JobAPI {
    * 创建 Job
    */
   async createJob(data: JobForCreate): Promise<IdUuidResult> {
-    return this.client.post<IdUuidResult>("/api/v1/jobs/item", data);
+    return this.client.post<IdUuidResult>('/api/v1/jobs/item', data);
   }
 
   /**
    * 查询 Job 列表
    */
   async queryJobs(query: JobForQuery): Promise<PageResult_SchedJob> {
-    return this.client.post<PageResult_SchedJob>("/api/v1/jobs/page", query);
+    return this.client.post<PageResult_SchedJob>('/api/v1/jobs/page', query);
   }
 
   /**

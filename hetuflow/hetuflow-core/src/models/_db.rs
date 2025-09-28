@@ -133,6 +133,37 @@ impl<'r> Decode<'r, Postgres> for AgentStatistics {
   }
 }
 
+impl From<TaskMetrics> for sea_query::Value {
+  fn from(value: TaskMetrics) -> Self {
+    Self::Json(Some(Box::new(serde_json::to_value(value).unwrap())))
+  }
+}
+impl sea_query::Nullable for TaskMetrics {
+  fn null() -> sea_query::Value {
+    sea_query::Value::Json(None)
+  }
+}
+impl Type<Postgres> for TaskMetrics {
+  fn type_info() -> PgTypeInfo {
+    <Json<Self> as Type<Postgres>>::type_info()
+  }
+}
+impl PgHasArrayType for TaskMetrics {
+  fn array_type_info() -> PgTypeInfo {
+    <Json<Self> as PgHasArrayType>::array_type_info()
+  }
+}
+impl Encode<'_, Postgres> for TaskMetrics {
+  fn encode_by_ref(&self, buf: &mut PgArgumentBuffer) -> Result<IsNull, BoxDynError> {
+    Json(self).encode_by_ref(buf)
+  }
+}
+impl<'r> Decode<'r, Postgres> for TaskMetrics {
+  fn decode(value: PgValueRef<'r>) -> Result<Self, BoxDynError> {
+    Ok(Json::<Self>::decode(value)?.0)
+  }
+}
+
 impl PgRowType for SchedServer {}
 impl PgRowType for SchedAgent {}
 impl PgRowType for SchedJob {}

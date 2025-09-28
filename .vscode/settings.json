@@ -92,6 +92,7 @@
     "pgport",
     "pgvector",
     "plpgsql",
+    "Popconfirm",
     "prost",
     "qrcode",
     "repr",
