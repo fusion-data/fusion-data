@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard';
 import Servers from './pages/Servers';
 import Agents from './pages/Agents';
 import Jobs from './pages/Jobs';
+import JobDetail from './pages/Jobs/Detail';
 import Tasks from './pages/Tasks';
 import TaskInstances from './pages/TaskInstances';
 import './App.css';
@@ -43,6 +44,7 @@ const AppContent: React.FC = () => {
 
               {/* 作业管理 */}
               <Route path="jobs" element={<Jobs />} />
+              <Route path="jobs/:id" element={<JobDetail />} />
 
               {/* 任务管理 */}
               <Route path="tasks" element={<Tasks />} />

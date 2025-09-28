@@ -50,6 +50,11 @@ class APIService {
     return this.sdk.jobs;
   }
 
+  // 调度计划相关 API
+  get schedules() {
+    return this.sdk.schedules;
+  }
+
   // 任务相关 API
   get tasks() {
     return this.sdk.tasks;

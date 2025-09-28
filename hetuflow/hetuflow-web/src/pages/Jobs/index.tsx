@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Card, Button, Space, Typography, Input, Row, Col, Switch, Dropdown, Popconfirm } from 'antd';
+import { Table, Card, Button, Space, Typography, Input, Row, Col, Switch, Dropdown, Popconfirm, Tooltip } from 'antd';
 import {
   ReloadOutlined,
   PlusOutlined,
@@ -9,6 +9,7 @@ import {
   MoreOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import { useNavigate } from 'react-router-dom';
 import { apiService, SchedJob, JobForQuery, JobStatus } from '../../services/api';
 import { useMessage } from '../../hooks/useMessage';
 import dayjs from 'dayjs';
@@ -31,6 +32,7 @@ interface JobsPageState {
  */
 const Jobs: React.FC = () => {
   const message = useMessage();
+  const navigate = useNavigate();
   const [state, setState] = useState<JobsPageState>({
     jobs: [],
     loading: false,
@@ -84,9 +86,11 @@ const Jobs: React.FC = () => {
       key: 'name',
       sorter: (a, b) => a.name.localeCompare(b.name),
       render: (text, record) => (
-        <Button type="link" onClick={() => handleEdit(record)} style={{ padding: 0, height: 'auto' }}>
-          {text}
-        </Button>
+        <Tooltip title={`ID: ${record.id}`}>
+          <Button type="link" onClick={() => navigate(`/jobs/${record.id}`)} style={{ padding: 0, height: 'auto' }}>
+            {text}
+          </Button>
+        </Tooltip>
       ),
     },
     {
@@ -130,7 +134,7 @@ const Jobs: React.FC = () => {
             key: 'edit',
             icon: <EditOutlined />,
             label: '编辑',
-            onClick: () => handleEdit(record),
+            onClick: () => navigate(`/jobs/${record.id}`),
           },
           {
             key: 'run',
@@ -192,14 +196,6 @@ const Jobs: React.FC = () => {
   const handleAdd = () => {
     // TODO: 打开添加作业对话框
     message.info('添加作业功能开发中');
-  };
-
-  /**
-   * 编辑作业
-   */
-  const handleEdit = (record: SchedJob) => {
-    // TODO: 打开编辑作业对话框
-    message.info(`编辑作业 "${record.name}" 功能开发中`);
   };
 
   /**

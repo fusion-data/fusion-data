@@ -235,7 +235,7 @@ export const getAntdTheme = (currentTheme: 'light' | 'dark') => {
         },
         Menu: {
           colorBgContainer: '#141414',
-          colorSubItemBg: '#000000',
+          subMenuItemBg: '#000000',
           itemHoverBg: '#1f1f1f',
           itemSelectedBg: '#111b26',
         },
@@ -280,7 +280,7 @@ export const getAntdTheme = (currentTheme: 'light' | 'dark') => {
       },
       Menu: {
         colorBgContainer: '#ffffff',
-        colorSubItemBg: '#fafafa',
+        subMenuItemBg: '#fafafa',
         itemHoverBg: '#f5f5f5',
         itemSelectedBg: '#e6f7ff',
       },
