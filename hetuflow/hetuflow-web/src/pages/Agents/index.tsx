@@ -9,7 +9,16 @@ import {
   PauseCircleOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import { apiService, SchedAgent, AgentForQuery } from '../../services/api';
+import {
+  apiService,
+  SchedAgent,
+  AgentForQuery,
+  AgentStatistics,
+  AgentCapabilities,
+  AgentStatus,
+  AgentStatusColor,
+  AgentStatusText,
+} from '../../services/api';
 import { useMessage } from '../../hooks/useMessage';
 import dayjs from 'dayjs';
 
@@ -75,51 +84,29 @@ const Agents: React.FC = () => {
   /**
    * 渲染状态标签（使用模拟状态）
    */
-  const renderStatus = () => {
-    const statuses = ['online', 'offline', 'busy'];
-    const status = statuses[Math.floor(Math.random() * statuses.length)];
-    const statusConfig = {
-      online: { color: 'green', text: '在线' },
-      offline: { color: 'red', text: '离线' },
-      busy: { color: 'orange', text: '忙碌' },
-    };
-    const config = statusConfig[status as keyof typeof statusConfig];
-    return <Tag color={config.color}>{config.text}</Tag>;
+  const renderStatus = (status: AgentStatus) => {
+    const color = AgentStatusColor[status];
+    return <Tag color={color}>{AgentStatusText[status]}</Tag>;
   };
 
   /**
-   * 渲染能力标签（使用模拟数据）
+   * 渲染任务统计
    */
-  const renderCapabilities = () => {
-    const allCapabilities = ['python', 'shell', 'docker', 'java', 'spark', 'hadoop'];
-    const count = Math.floor(Math.random() * 3) + 1; // 1-3个能力
-    const capabilities = allCapabilities.slice(0, count);
-    return (
-      <Space wrap>
-        {capabilities.map(cap => (
-          <Tag key={cap} color="blue">
-            {cap}
-          </Tag>
-        ))}
-      </Space>
-    );
-  };
-
-  /**
-   * 渲染任务统计（使用模拟数据）
-   */
-  const renderTaskStats = () => {
-    const running = Math.floor(Math.random() * 10);
-    const completed = Math.floor(Math.random() * 200) + 50;
-    const failed = Math.floor(Math.random() * 10);
+  const renderTaskStats = (stats: AgentStatistics) => {
+    const successed = stats.success_tasks || 0;
+    const failed = stats.failure_tasks || 0;
+    const running = (stats.total_tasks || 0) - successed - failed;
     return (
       <Space>
-        <Badge count={running} color="orange" />
-        <span>运行中</span>
-        <Badge count={completed} color="green" />
-        <span>已完成</span>
-        <Badge count={failed} color="red" />
-        <span>失败</span>
+        <Tooltip title="失败任务">
+          <Badge count={failed} color="red" />
+        </Tooltip>
+        <Tooltip title="运行中任务">
+          <Badge count={running} color="blue" />
+        </Tooltip>
+        <Tooltip title="成功任务">
+          <Badge count={successed} color="green" />
+        </Tooltip>
       </Space>
     );
   };
@@ -136,51 +123,39 @@ const Agents: React.FC = () => {
       title: '代理 ID',
       dataIndex: 'id',
       key: 'id',
-      width: 120,
-    },
-    {
-      title: '名称',
-      dataIndex: 'name',
-      key: 'name',
-      ellipsis: true,
-    },
-    {
-      title: '描述',
-      dataIndex: 'description',
-      key: 'description',
-      ellipsis: true,
+      render: (id: string, item) => <Tooltip title={item.name || id}>{id}</Tooltip>,
     },
     {
       title: '状态',
+      dataIndex: 'status',
       key: 'status',
       render: renderStatus,
       width: 100,
     },
     {
-      title: '配置',
-      dataIndex: 'config',
-      key: 'config',
-      render: (config: Record<string, any>) => (
-        <code
-          style={{
-            background: '#f5f5f5',
-            padding: '2px 4px',
-            borderRadius: '3px',
-          }}
-        >
-          {config ? JSON.stringify(config).substring(0, 50) + '...' : '无配置'}
-        </code>
+      title: '能力',
+      dataIndex: 'capabilities',
+      key: 'capabilities',
+      render: (capabilities: AgentCapabilities) => (
+        <Tooltip title={JSON.stringify(capabilities)}>
+          <Space wrap>
+            {capabilities.labels ? (
+              Object.entries(capabilities.labels).map(([key, value]) => (
+                <Tag key={key}>
+                  {key}={value}
+                </Tag>
+              ))
+            ) : (
+              <span>无标签</span>
+            )}
+          </Space>
+        </Tooltip>
       ),
     },
     {
-      title: '能力',
-      key: 'capabilities',
-      render: renderCapabilities,
-      width: 200,
-    },
-    {
       title: '任务统计',
-      key: 'taskStats',
+      dataIndex: 'statistics',
+      key: 'statistics',
       render: renderTaskStats,
       width: 120,
     },

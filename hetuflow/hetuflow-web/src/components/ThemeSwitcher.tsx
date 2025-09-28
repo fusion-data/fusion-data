@@ -1,33 +1,40 @@
 import React from 'react';
-import { Button, Dropdown, Space } from 'antd';
+import { Button, Dropdown, Space, Spin } from 'antd';
 import { SunOutlined, MoonOutlined, MonitorOutlined, DownOutlined } from '@ant-design/icons';
 import { useTheme, ThemeMode } from '../contexts/ThemeContext';
 
 const ThemeSwitcher: React.FC = () => {
-  const { themeMode, setThemeMode, currentTheme } = useTheme();
+  const { themeMode, setThemeMode, currentTheme, isInitialized } = useTheme();
+
+  const handleThemeChange = (mode: ThemeMode) => {
+    setThemeMode(mode);
+  };
 
   const themeMenuItems = [
     {
       key: 'light',
       label: '浅色模式',
       icon: <SunOutlined />,
-      onClick: () => setThemeMode('light' as ThemeMode),
+      onClick: () => handleThemeChange('light'),
     },
     {
       key: 'dark',
       label: '深色模式',
       icon: <MoonOutlined />,
-      onClick: () => setThemeMode('dark' as ThemeMode),
+      onClick: () => handleThemeChange('dark'),
     },
     {
       key: 'system',
       label: '跟随系统',
       icon: <MonitorOutlined />,
-      onClick: () => setThemeMode('system' as ThemeMode),
+      onClick: () => handleThemeChange('system'),
     },
   ];
 
   const getCurrentThemeIcon = () => {
+    if (!isInitialized) {
+      return <Spin size="small" />;
+    }
     if (themeMode === 'system') {
       return <MonitorOutlined />;
     }
@@ -35,6 +42,9 @@ const ThemeSwitcher: React.FC = () => {
   };
 
   const getCurrentThemeLabel = () => {
+    if (!isInitialized) {
+      return '加载中...';
+    }
     if (themeMode === 'system') {
       return '跟随系统';
     }
@@ -47,8 +57,17 @@ const ThemeSwitcher: React.FC = () => {
         items: themeMenuItems,
       }}
       placement="bottomRight"
+      disabled={!isInitialized}
     >
-      <Button type="text" style={{ display: 'flex', alignItems: 'center' }}>
+      <Button
+        type="text"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          opacity: isInitialized ? 1 : 0.6,
+        }}
+        title={!isInitialized ? '正在初始化主题...' : '切换主题'}
+      >
         <Space>
           {getCurrentThemeIcon()}
           <span>{getCurrentThemeLabel()}</span>

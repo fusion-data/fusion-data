@@ -92,7 +92,7 @@ const MainLayout: React.FC = () => {
 
   return (
     <ProLayout
-      title="HetuFlow"
+      title="Hetuflow"
       logo={false}
       collapsed={collapsed}
       onCollapse={setCollapsed}

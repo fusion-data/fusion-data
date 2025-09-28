@@ -41,10 +41,10 @@ pub struct AgentCapabilities {
 pub struct AgentStatistics {
   /// 成功任务数
   #[serde(default = "defaults::default_u64")]
-  pub success_count: u64,
+  pub success_tasks: u64,
   /// 失败任务数
   #[serde(default = "defaults::default_u64")]
-  pub failure_count: u64,
+  pub failure_tasks: u64,
   /// 总任务数
   #[serde(default = "defaults::default_u64")]
   pub total_tasks: u64,

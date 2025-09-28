@@ -144,10 +144,10 @@ impl AgentConnection {
     let mut stats = self.stats.write().await;
     stats.total_tasks += 1;
     if success {
-      stats.success_count += 1;
+      stats.success_tasks += 1;
       stats.consecutive_failures = 0;
     } else {
-      stats.failure_count += 1;
+      stats.failure_tasks += 1;
       stats.consecutive_failures += 1;
       stats.last_failure_ms = now_epoch_millis();
     }

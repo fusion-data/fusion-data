@@ -19,6 +19,7 @@ pub struct SchedJob {
   pub namespace_id: String,
   pub name: String,
   pub description: Option<String>,
+  /// <String, String | Number>
   pub environment: Option<serde_json::Value>,
   pub config: TaskConfig,
   pub status: JobStatus,

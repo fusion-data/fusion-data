@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Card, Button, Space, Tag, Typography, Input, Row, Col, Switch, Dropdown, Popconfirm } from 'antd';
+import { Table, Card, Button, Space, Typography, Input, Row, Col, Switch, Dropdown, Popconfirm } from 'antd';
 import {
   ReloadOutlined,
   PlusOutlined,
@@ -70,25 +70,6 @@ const Jobs: React.FC = () => {
     }
   };
 
-  /**
-   * 渲染调度类型
-   */
-  const renderScheduleType = (cron?: string) => {
-    if (!cron) return <Tag>手动</Tag>;
-    return <Tag color="blue">定时</Tag>;
-  };
-
-  /**
-   * 渲染成功率（暂时使用模拟数据）
-   */
-  const renderSuccessRate = () => {
-    const rate = Math.floor(Math.random() * 20) + 80; // 80-100 的随机数
-    let color = 'green';
-    if (rate < 90) color = 'red';
-    else if (rate < 95) color = 'orange';
-    return <Tag color={color}>{rate}%</Tag>;
-  };
-
   useEffect(() => {
     fetchJobs();
   }, []);
@@ -115,17 +96,6 @@ const Jobs: React.FC = () => {
       ellipsis: true,
     },
     {
-      title: '调度类型',
-      dataIndex: 'cron_expr',
-      key: 'scheduleType',
-      render: renderScheduleType,
-    },
-    {
-      title: '执行代理管理',
-      dataIndex: 'agent_id',
-      key: 'agent_id',
-    },
-    {
       title: '状态',
       dataIndex: 'status',
       key: 'status',
@@ -138,11 +108,6 @@ const Jobs: React.FC = () => {
           />
         </Space>
       ),
-    },
-    {
-      title: '成功率',
-      key: 'successRate',
-      render: renderSuccessRate,
     },
     {
       title: '创建时间',

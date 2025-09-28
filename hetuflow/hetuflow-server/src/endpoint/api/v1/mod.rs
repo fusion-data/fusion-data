@@ -2,6 +2,7 @@ mod agents;
 mod auth;
 mod gateway;
 mod jobs;
+mod schedules;
 mod servers;
 mod system;
 mod task_instances;

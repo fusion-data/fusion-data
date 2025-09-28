@@ -36,7 +36,7 @@ impl LeaderOrFollowerRunner {
     shutdown_rx: ShutdownRecv,
     is_leader: IsLeader,
   ) -> Self {
-    let load_balancer = LoadBalancer::new(setting.clone(), mm.clone());
+    let load_balancer = LoadBalancer::new(mm.clone());
     Self { setting, mm, shutdown_rx, is_leader, load_balancer }
   }
 

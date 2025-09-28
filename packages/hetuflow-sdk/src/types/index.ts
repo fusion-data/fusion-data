@@ -1,4 +1,4 @@
-import { Page, Paged, PageResult } from '@fusion-data/modelsql/page';
+import { Page, PageResult } from '@fusion-data/modelsql/page';
 
 export interface AgentForCreate {
   name: string;
@@ -26,13 +26,101 @@ export interface AgentForQuery {
   filter: AgentFilter;
 }
 
+export interface AgentCapabilities {
+  max_concurrent_tasks: number;
+  labels: Record<string, string>;
+  metadata: Record<string, string>;
+}
+
+export interface AgentStatistics {
+  success_tasks: number;
+  failure_tasks: number;
+  total_tasks: number;
+  avg_response_ms: number;
+  last_failure_ms: number;
+  consecutive_failures: number;
+}
+
+export const AgentStatus = {
+  // 空闲
+  Idle: 10,
+  // 忙碌
+  Busy: 20,
+  // 连接中
+  Connecting: 30,
+  // 断开连接中
+  Disconnecting: 31,
+  // 离线
+  Offline: 90,
+  // 错误状态
+  Error: 99,
+  // 在线
+  Online: 100,
+} as const;
+export type AgentStatus = (typeof AgentStatus)[keyof typeof AgentStatus];
+export const AgentStatusColor = {
+  [AgentStatus.Idle]: 'green',
+  [AgentStatus.Busy]: 'orange',
+  [AgentStatus.Connecting]: 'blue',
+  [AgentStatus.Disconnecting]: 'blue',
+  [AgentStatus.Offline]: 'red',
+  [AgentStatus.Error]: 'red',
+  [AgentStatus.Online]: 'green',
+} as const;
+export const AgentStatusText = {
+  [AgentStatus.Idle]: '空闲',
+  [AgentStatus.Busy]: '忙碌',
+  [AgentStatus.Connecting]: '连接中',
+  [AgentStatus.Disconnecting]: '断开连接中',
+  [AgentStatus.Offline]: '离线',
+  [AgentStatus.Error]: '错误状态',
+  [AgentStatus.Online]: '在线',
+} as const;
+
 export interface SchedAgent {
   id: string;
   name: string;
   description?: string;
-  config?: Record<string, any>;
+  capabilities: AgentCapabilities;
+  statistics: AgentStatistics;
+  status: AgentStatus;
   created_at: string;
-  updated_at: string;
+  last_heartbeat_at: string;
+}
+
+export const ExecuteCommand = {
+  Bash: 'bash',
+  Uv: 'uv',
+  Python: 'python',
+  Node: 'node',
+  Npx: 'npx',
+  Cargo: 'cargo',
+  Java: 'java',
+} as const;
+
+export type ExecuteCommand = (typeof ExecuteCommand)[keyof typeof ExecuteCommand];
+
+export interface ResourceLimits {
+  /// 最大内存使用量 (MB)
+  max_memory_mb?: number;
+  /// 最大CPU使用率 (0.0-1.0)
+  max_cpu_percent?: number;
+  /// 最大执行时间 (秒)
+  max_execution_time_secs?: number;
+  /// 最大输出大小 (字节)
+  max_output_size_bytes?: number;
+}
+
+export interface TaskConfig {
+  timeout: number;
+  max_retries: number;
+  retry_interval: number;
+  cmd: ExecuteCommand;
+  args: string[];
+  capture_output: boolean;
+  max_output_size: number;
+  labels?: Record<string, string>;
+  resource_limits?: ResourceLimits;
 }
 
 export interface JobForCreate {
@@ -76,14 +164,76 @@ export type JobStatus = (typeof JobStatus)[keyof typeof JobStatus];
 
 export interface SchedJob {
   id: string;
+  namespace_id: string;
   name: string;
   description?: string;
-  cron_expr?: string;
-  agent_id: string;
-  config?: Record<string, any>;
+  environment?: Record<string, string | number>;
+  config?: TaskConfig;
   status: JobStatus;
   created_at: string;
   updated_at: string;
+}
+
+export const ScheduleKind = {
+  /// Cron 定时作业
+  Cron: 1,
+  /// 间隔定时作业。可以通过设置最大执行次数为 1 次来表达 Once 执行，可以通过设置 start_time 来设置定时执行时间
+  Interval: 2,
+  /// 守护进程作业
+  Daemon: 3,
+  /// 事件驱动作业
+  Event: 4,
+  /// 流程任务
+  Flow: 5,
+} as const;
+
+export type ScheduleKind = (typeof ScheduleKind)[keyof typeof ScheduleKind];
+
+export const ScheduleKindText = {
+  [ScheduleKind.Cron]: 'Cron 定时作业',
+  [ScheduleKind.Interval]: '间隔定时作业',
+  [ScheduleKind.Daemon]: '守护进程作业',
+  [ScheduleKind.Event]: '事件驱动作业',
+  [ScheduleKind.Flow]: '流程任务',
+} as const;
+
+export const ScheduleStatus = {
+  /// 已创建
+  Created: 1,
+  /// 调度已过期，不再生成有效
+  Expired: 98,
+  /// 已禁用
+  Disabled: 99,
+  /// 已启用
+  Enabled: 100,
+} as const;
+
+export type ScheduleStatus = (typeof ScheduleStatus)[keyof typeof ScheduleStatus];
+
+export const ScheduleStatusText = {
+  [ScheduleStatus.Created]: '已创建',
+  [ScheduleStatus.Expired]: '调度已过期',
+  [ScheduleStatus.Disabled]: '已禁用',
+  [ScheduleStatus.Enabled]: '已启用',
+} as const;
+
+export interface SchedSchedule {
+  id: string;
+  job_id: string;
+  name?: string;
+  description?: string;
+  schedule_kind: ScheduleKind;
+  start_time?: string;
+  end_time?: string;
+  status: ScheduleStatus;
+  cron_expression?: string;
+  interval_secs?: number;
+  max_count?: number;
+  next_run_at?: string;
+  created_by: number;
+  created_at: string;
+  updated_by?: number;
+  updated_at?: string;
 }
 
 export interface TaskForCreate {
@@ -224,6 +374,7 @@ export interface HealthStatus {
 
 export type PageResult_SchedAgent = PageResult<SchedAgent>;
 export type PageResult_SchedJob = PageResult<SchedJob>;
+export type PageResult_SchedSchedule = PageResult<SchedSchedule>;
 export type PageResult_SchedTask = PageResult<SchedTask>;
 export type PageResult_SchedTaskInstance = PageResult<SchedTaskInstance>;
 export type PageResult_SchedServer = PageResult<SchedServer>;

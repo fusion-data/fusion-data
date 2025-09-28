@@ -7,6 +7,20 @@ pub use label::*;
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use strum::AsRefStr;
 
+/// 作业状态
+#[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "with-db", derive(sqlx::Type))]
+#[repr(i32)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
+pub enum JobStatus {
+  /// 已创建
+  Created = 1,
+  /// 已禁用
+  Disabled = 99,
+  /// 已启用
+  Enabled = 100,
+}
+
 /// 作业类型 (ScheduleKind) - 定义了 Job 的核心调度和行为模式
 #[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy, PartialEq, Eq, AsRefStr)]
 #[cfg_attr(feature = "with-db", derive(sqlx::Type))]
@@ -24,20 +38,6 @@ pub enum ScheduleKind {
   Event = 4,
   /// 流程任务
   Flow = 5,
-}
-
-/// 作业状态
-#[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy, PartialEq, Eq)]
-#[cfg_attr(feature = "with-db", derive(sqlx::Type))]
-#[repr(i32)]
-#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
-pub enum JobStatus {
-  /// 已创建
-  Created = 1,
-  /// 已禁用
-  Disabled = 99,
-  /// 已启用
-  Enabled = 100,
 }
 
 /// 调度状态

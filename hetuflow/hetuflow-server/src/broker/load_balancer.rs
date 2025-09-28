@@ -6,20 +6,22 @@ use fusion_core::DataError;
 use log::{debug, info, warn};
 use modelsql::ModelManager;
 
-use crate::{infra::bmc::*, setting::HetuflowSetting};
 use hetuflow_core::models::*;
 
+use crate::infra::bmc::*;
+
 /// 负载均衡缓存
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 struct LoadBalanceCache {
   servers: HashMap<String, ServerLoadInfo>,
   last_updated: OffsetDateTime,
 }
 
 /// 服务器负载信息
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 struct ServerLoadInfo {
   server: SchedServer,
+  #[allow(unused)]
   namespace_count: u32,
   load_score: f64,
 }
@@ -43,8 +45,7 @@ impl Default for RebalanceThreshold {
 }
 
 /// 负载均衡器 - 负责服务器间的负载均衡和命名空间分配。只有 Leader 节点可以执行负载均衡操作。
-pub struct LoadBalancer {
-  setting: Arc<HetuflowSetting>,
+pub(super) struct LoadBalancer {
   mm: ModelManager,
   // 负载均衡策略缓存
   balance_cache: Arc<tokio::sync::RwLock<LoadBalanceCache>>,
@@ -52,9 +53,8 @@ pub struct LoadBalancer {
 
 impl LoadBalancer {
   /// 创建新的负载均衡器
-  pub fn new(setting: Arc<HetuflowSetting>, mm: ModelManager) -> Self {
+  pub fn new(mm: ModelManager) -> Self {
     Self {
-      setting,
       mm,
       balance_cache: Arc::new(tokio::sync::RwLock::new(LoadBalanceCache {
         servers: HashMap::default(),
@@ -83,14 +83,16 @@ impl LoadBalancer {
 
   /// 更新服务器负载缓存
   async fn update_server_load_cache(&self) -> Result<(), DataError> {
-    let servers = ServerBmc::find_active_servers(&self.mm).await?;
-    let mut new_cache = LoadBalanceCache { servers: HashMap::default(), last_updated: now_offset() };
+    let servers = ServerBmc::find_active_servers(&self.mm)
+      .await?
+      .into_iter()
+      .map(|server| {
+        let load_info = self.calculate_server_load(&server);
+        (server.id, load_info)
+      })
+      .collect::<HashMap<_, _>>();
 
-    for server in servers {
-      let load_info = self.calculate_server_load(&server).await?;
-      new_cache.servers.insert(server.id, load_info);
-    }
-
+    let new_cache = LoadBalanceCache { servers, last_updated: now_offset() };
     *self.balance_cache.write().await = new_cache;
 
     log::trace!("Updated load balance cache with {} servers", self.balance_cache.read().await.servers.len());
@@ -98,11 +100,11 @@ impl LoadBalancer {
   }
 
   /// 计算服务器负载
-  async fn calculate_server_load(&self, server: &SchedServer) -> Result<ServerLoadInfo, DataError> {
-    let namespace_count = ServerBmc::count_namespace_by_server(&self.mm, &server.id).await? as u32;
+  fn calculate_server_load(&self, server: &SchedServer) -> ServerLoadInfo {
+    let namespace_count = server.bind_namespaces.len() as u32;
     let load_score = self.calculate_load_score(namespace_count);
 
-    Ok(ServerLoadInfo { server: server.clone(), namespace_count, load_score })
+    ServerLoadInfo { server: server.clone(), namespace_count, load_score }
   }
 
   /// 计算负载评分
@@ -154,48 +156,6 @@ impl LoadBalancer {
     self.update_server_namespace_bind().await?;
 
     Ok(())
-  }
-
-  /// 获取负载均衡状态
-  pub async fn get_balance_status(&self) -> Result<serde_json::Value, DataError> {
-    self.update_server_load_cache().await?;
-
-    let cache = self.balance_cache.read().await;
-
-    let servers: Vec<serde_json::Value> = cache
-      .servers
-      .values()
-      .map(|info| {
-        serde_json::json!({
-          "server_id": info.server.id,
-          "server_name": info.server.name,
-          "namespace_count": info.namespace_count,
-          "load_score": info.load_score,
-        })
-      })
-      .collect();
-
-    Ok(serde_json::json!({
-      "servers": servers,
-      "last_updated": cache.last_updated,
-      "total_servers": cache.servers.len(),
-    }))
-  }
-
-  /// 获取统计信息
-  pub async fn get_stats(&self) -> serde_json::Value {
-    let cache = self.balance_cache.read().await;
-
-    let load_scores: Vec<f64> = cache.servers.values().map(|info| info.load_score).collect();
-    let avg_load =
-      if !load_scores.is_empty() { load_scores.iter().sum::<f64>() / load_scores.len() as f64 } else { 0.0 };
-
-    serde_json::json!({
-      "server_id": self.setting.server.server_id.clone(),
-      "total_servers": cache.servers.len(),
-      "average_load": avg_load,
-      "last_updated": cache.last_updated,
-    })
   }
 
   /// 更新服务器 namespace_id 绑定

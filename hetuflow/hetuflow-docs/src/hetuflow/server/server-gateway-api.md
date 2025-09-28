@@ -1470,7 +1470,7 @@ pub struct BroadcastResult {
   /// 目标 Agent 数量
   pub target_count: u32,
   /// 成功发送数量
-  pub success_count: u32,
+  pub success_tasks: u32,
   /// 失败发送数量
   pub failed_count: u32,
   /// 失败的 Agent ID 列表
