@@ -1,5 +1,6 @@
 use chrono::{DateTime, FixedOffset};
 use fusion_common::time::{OffsetDateTime, now_offset};
+use modelsql::filter::Page;
 use modelsql_core::{
   field::FieldMask,
   filter::{OpValsDateTime, OpValsInt32, OpValsUuid},
@@ -68,7 +69,7 @@ pub struct ScheduleForCreate {
   pub job_id: Uuid,
   pub name: Option<String>,
   pub description: Option<String>,
-  pub schedule_kind: String,
+  pub schedule_kind: ScheduleKind,
   pub cron_expression: Option<String>,
   #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
   pub start_time: Option<OffsetDateTime>,
@@ -105,4 +106,11 @@ pub struct ScheduleFilter {
   pub status: Option<OpValsInt32>,
   pub created_at: Option<OpValsDateTime>,
   pub updated_at: Option<OpValsDateTime>,
+}
+
+#[derive(Default, Deserialize)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
+pub struct ScheduleForQuery {
+  pub page: Page,
+  pub filter: ScheduleFilter,
 }

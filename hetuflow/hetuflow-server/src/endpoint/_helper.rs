@@ -2,7 +2,7 @@ use axum::{extract::FromRequestParts, http::request::Parts};
 use fusion_web::WebError;
 
 use crate::application::ServerApplication;
-use crate::service::{AgentSvc, JobSvc, LogSvc, ServerSvc, TaskSvc};
+use crate::service::{AgentSvc, JobSvc, LogSvc, ScheduleSvc, ServerSvc, TaskSvc};
 
 impl FromRequestParts<ServerApplication> for TaskSvc {
   type Rejection = WebError;
@@ -29,6 +29,14 @@ impl FromRequestParts<ServerApplication> for ServerSvc {
 }
 
 impl FromRequestParts<ServerApplication> for JobSvc {
+  type Rejection = WebError;
+
+  async fn from_request_parts(_req: &mut Parts, state: &ServerApplication) -> Result<Self, Self::Rejection> {
+    Ok(Self { mm: state.mm() })
+  }
+}
+
+impl FromRequestParts<ServerApplication> for ScheduleSvc {
   type Rejection = WebError;
 
   async fn from_request_parts(_req: &mut Parts, state: &ServerApplication) -> Result<Self, Self::Rejection> {

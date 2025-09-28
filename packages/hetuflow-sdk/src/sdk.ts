@@ -2,6 +2,7 @@ import { HetuflowClient, HetuflowClientConfig } from './utils/client.js';
 import { AgentAPI } from './api/agents.js';
 import { ServerAPI } from './api/servers.js';
 import { JobAPI } from './api/jobs.js';
+import { ScheduleAPI } from './api/schedule.js';
 import { TaskAPI } from './api/tasks.js';
 import { TaskInstanceAPI } from './api/task-instances.js';
 import { AuthAPI } from './api/auth.js';
@@ -14,6 +15,7 @@ export class HetuflowSDK {
   public readonly agents: AgentAPI;
   public readonly servers: ServerAPI;
   public readonly jobs: JobAPI;
+  public readonly schedules: ScheduleAPI;
   public readonly tasks: TaskAPI;
   public readonly taskInstances: TaskInstanceAPI;
   public readonly auth: AuthAPI;
@@ -27,6 +29,7 @@ export class HetuflowSDK {
     this.agents = new AgentAPI(this.client);
     this.servers = new ServerAPI(this.client);
     this.jobs = new JobAPI(this.client);
+    this.schedules = new ScheduleAPI(this.client);
     this.tasks = new TaskAPI(this.client);
     this.taskInstances = new TaskInstanceAPI(this.client);
     this.auth = new AuthAPI(this.client);

@@ -217,6 +217,43 @@ export const ScheduleStatusText = {
   [ScheduleStatus.Enabled]: '已启用',
 } as const;
 
+export interface ScheduleFilter {
+  id?: Record<string, string | undefined>;
+  job_id?: Record<string, string | undefined>;
+  schedule_kind?: Record<string, number | undefined>;
+  status?: Record<string, number | undefined>;
+  created_at?: Record<string, string | undefined>;
+  updated_at?: Record<string, string | undefined>;
+}
+
+export interface ScheduleForQuery {
+  page: Page;
+  filter: ScheduleFilter;
+}
+
+export interface ScheduleForCreate {
+  id: string;
+  job_id: string;
+  name?: string;
+  description?: string;
+  schedule_kind: ScheduleKind;
+  cron_expression?: string;
+  start_time?: string;
+  end_time?: string;
+  status?: ScheduleStatus;
+}
+
+export interface ScheduleForUpdate {
+  name?: string;
+  description?: string;
+  schedule_kind?: string;
+  cron_expression?: string;
+  start_time?: string;
+  end_time?: string;
+  status?: ScheduleStatus;
+  update_mask?: Record<string, any>;
+}
+
 export interface SchedSchedule {
   id: string;
   job_id: string;

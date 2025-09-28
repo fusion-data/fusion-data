@@ -8,6 +8,7 @@ export { HetuflowClient, HetuflowError, type HetuflowClientConfig } from './util
 export { AgentAPI } from './api/agents.js';
 export { ServerAPI } from './api/servers.js';
 export { JobAPI } from './api/jobs.js';
+export { ScheduleAPI } from './api/schedule.js';
 export { TaskAPI } from './api/tasks.js';
 export { TaskInstanceAPI } from './api/task-instances.js';
 export { AuthAPI } from './api/auth.js';

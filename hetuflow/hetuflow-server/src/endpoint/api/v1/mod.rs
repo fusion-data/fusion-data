@@ -17,6 +17,7 @@ pub fn routes() -> OpenApiRouter<ServerApplication> {
     .nest("/agents", agents::routes())
     .nest("/servers", servers::routes())
     .nest("/jobs", jobs::routes())
+    .nest("/schedules", schedules::routes())
     .nest("/tasks", tasks::routes())
     .nest("/task-instances", task_instances::routes())
     .nest("/system", system::routes())
