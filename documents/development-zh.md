@@ -61,9 +61,9 @@ cargo test -p hetumind-studio --lib --bins
 #### hetuflow
 
 ```shell
-FUSION_CONFIG_FILE=crates/hetuflow/hetuflow-bins/resources/hetuflow.toml cargo run --bin hetuflow-server
+FUSION_CONFIG_FILE=hetuflow/hetuflow-bins/resources/hetuflow.toml cargo run --bin hetuflow-server
 
-FUSION_CONFIG_FILE=crates/hetuflow/hetuflow-bins/resources/hetuflow-agent.toml cargo run --bin hetuflow-agent
+FUSION_CONFIG_FILE=hetuflow/hetuflow-bins/resources/hetuflow-agent.toml cargo run --bin hetuflow-agent
 ```
 
 ```shell

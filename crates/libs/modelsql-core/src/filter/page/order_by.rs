@@ -8,25 +8,6 @@ pub enum OrderBy {
   Desc(String),
 }
 
-impl core::fmt::Display for OrderBy {
-  fn fmt(&self, fmt: &mut core::fmt::Formatter) -> core::fmt::Result {
-    match self {
-      OrderBy::Asc(val) => {
-        fmt.write_str(val)?;
-        fmt.write_str(" ")?;
-        fmt.write_str("asc")?;
-      }
-      OrderBy::Desc(val) => {
-        fmt.write_str(val)?;
-        fmt.write_str(" ")?;
-        fmt.write_str("desc")?;
-      }
-    };
-
-    Ok(())
-  }
-}
-
 impl From<&str> for OrderBy {
   fn from(value: &str) -> Self {
     if let Some(stripped) = value.strip_prefix('!') {
@@ -75,6 +56,24 @@ impl<'de> Deserialize<'de> for OrderBy {
   }
 }
 
+impl core::fmt::Display for OrderBy {
+  fn fmt(&self, fmt: &mut core::fmt::Formatter) -> core::fmt::Result {
+    match self {
+      OrderBy::Asc(val) => {
+        fmt.write_str(val)?;
+        fmt.write_str(" ")?;
+        fmt.write_str("asc")?;
+      }
+      OrderBy::Desc(val) => {
+        fmt.write_str(val)?;
+        fmt.write_str(" ")?;
+        fmt.write_str("desc")?;
+      }
+    };
+
+    Ok(())
+  }
+}
 // endregion: --- OrderBy
 
 // region:    --- OrderBys
@@ -82,12 +81,23 @@ impl<'de> Deserialize<'de> for OrderBy {
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct OrderBys(Vec<OrderBy>);
 
+impl Default for OrderBys {
+  fn default() -> Self {
+    OrderBys::new(vec![])
+  }
+}
+
 impl OrderBys {
   pub fn new(v: Vec<OrderBy>) -> Self {
     OrderBys(v)
   }
-  pub fn order_bys(self) -> Vec<OrderBy> {
+
+  pub fn into_inner(self) -> Vec<OrderBy> {
     self.0
+  }
+
+  pub fn is_empty(&self) -> bool {
+    self.0.is_empty()
   }
 }
 

@@ -79,7 +79,12 @@ impl From<DataError> for WebError {
         let error = Self::new_with_msg(msg).with_err_code(code);
         if let Some(v) = detail { error.with_details(v) } else { error }
       }
-      DataError::InternalError { code, msg, .. } => Self::new_with_msg(msg).with_err_code(code),
+      DataError::InternalError { code, msg, cause } => {
+        if let Some(cause) = cause {
+          log::error!("InternalError({}, {}) with cause: {:?}", code, msg, cause);
+        }
+        Self::new_with_msg(msg).with_err_code(code)
+      }
       DataError::SystemTimeError(e) => Self::new_with_msg(e.to_string()),
       DataError::ParseIntError(e) => Self::new_with_msg(e.to_string()).with_err_code(400),
       DataError::IoError(e) => Self::new_with_msg(e.to_string()),

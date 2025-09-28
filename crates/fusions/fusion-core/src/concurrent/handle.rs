@@ -22,7 +22,7 @@ impl<T> ServiceHandle<T> {
   ///
   /// * `Ok((name, res))` - The service name and result.
   /// * `Err((name, e))` - The service panicked or was cancelled.
-  pub async fn await_complete(self) -> Result<(String, T), (String, DataError)> {
+  pub async fn complete(self) -> Result<(String, T), (String, DataError)> {
     let name = self.name;
     match self.handle.await {
       Ok(r) => Ok((name, r)),

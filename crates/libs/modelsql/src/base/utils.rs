@@ -171,10 +171,13 @@ where
     {
       return Err(SqlError::ListPageUnderMin { min: 1, actual: page });
     }
+    if page.order_bys.is_none() || page.order_bys.iter().any(|o| o.is_empty()) {
+      page.order_bys = MC::_default_order_bys();
+    }
     Ok(page)
   } else {
     // When None, return default
-    Ok(Page { limit: Some(MC::LIST_LIMIT_DEFAULT), ..Default::default() })
+    Ok(Page { limit: Some(MC::LIST_LIMIT_DEFAULT), order_bys: MC::_default_order_bys(), ..Default::default() })
   }
 }
 

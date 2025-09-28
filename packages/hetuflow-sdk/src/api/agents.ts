@@ -1,4 +1,4 @@
-import { HetuflowClient } from "../utils/client.js";
+import { HetuflowClient } from '../utils/client.js';
 import {
   AgentForCreate,
   AgentForUpdate,
@@ -6,7 +6,7 @@ import {
   SchedAgent,
   PageResult_SchedAgent,
   IdStringResult,
-} from "../types/index.js";
+} from '../types/index.js';
 
 export class AgentAPI {
   constructor(private client: HetuflowClient) {}
@@ -15,14 +15,14 @@ export class AgentAPI {
    * 创建 Agent
    */
   async createAgent(data: AgentForCreate): Promise<IdStringResult> {
-    return this.client.post<IdStringResult>("/api/v1/agents/create", data);
+    return this.client.post<IdStringResult>('/api/v1/agents/create', data);
   }
 
   /**
    * 查询 Agent 列表
    */
   async queryAgents(query: AgentForQuery): Promise<PageResult_SchedAgent> {
-    return this.client.post<PageResult_SchedAgent>("/api/v1/agents/query", query);
+    return this.client.post<PageResult_SchedAgent>('/api/v1/agents/query', query);
   }
 
   /**

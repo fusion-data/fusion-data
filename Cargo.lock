@@ -2316,34 +2316,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "hetuflow-bins"
-version = "0.1.1"
-dependencies = [
- "anyhow",
- "axum-test",
- "config",
- "fusion-common",
- "fusion-core",
- "fusion-corelib",
- "fusion-db",
- "futures-util",
- "hetuflow-agent",
- "hetuflow-core",
- "hetuflow-server",
- "log",
- "modelsql",
- "reqwest",
- "serde",
- "serde_json",
- "sqlx",
- "thiserror 2.0.16",
- "tokio",
- "tokio-test",
- "tokio-tungstenite 0.28.0",
- "uuid",
-]
-
-[[package]]
 name = "hetuflow-core"
 version = "0.1.1"
 dependencies = [
@@ -2418,6 +2390,34 @@ dependencies = [
  "utoipa",
  "utoipa-axum",
  "utoipa-swagger-ui",
+ "uuid",
+]
+
+[[package]]
+name = "hetuflow-test"
+version = "0.1.1"
+dependencies = [
+ "anyhow",
+ "axum-test",
+ "config",
+ "fusion-common",
+ "fusion-core",
+ "fusion-corelib",
+ "fusion-db",
+ "futures-util",
+ "hetuflow-agent",
+ "hetuflow-core",
+ "hetuflow-server",
+ "log",
+ "modelsql",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "thiserror 2.0.16",
+ "tokio",
+ "tokio-test",
+ "tokio-tungstenite 0.28.0",
  "uuid",
 ]
 

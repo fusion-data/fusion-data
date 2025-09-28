@@ -1,0 +1,34 @@
+[hetuflow.agent]
+name = "default-agent"
+labels = { type = "default" }
+metadata = { os = "linux", arch = "x86_64" }
+# JWE Token for authentication (optional)
+# jwe_token = "your-jwe-token-here"
+
+[hetuflow.agent.polling]
+max_concurrent_tasks = 20
+enable_adaptive_polling = true
+interval_seconds = 60
+capacity_weight = 50
+load_factor_threshold = 1
+
+[hetuflow.agent.process]
+enable_resource_monitoring = true
+resource_monitor_interval = "30s"
+cleanup_interval = "1h"
+# 最大并发进程数，同时运行任务数
+max_concurrent_processes = 8
+process_timeout = "2h"
+zombie_check_interval = "1h"
+
+[hetuflow.agent.process.limits]
+max_cpu_percent = 0.7
+max_memory_bytes = 4194304
+
+[hetuflow.agent.connection]
+connect_timeout = "30s"
+heartbeat_interval = "30s"
+max_reconnect_attempts = 10
+reconnect_interval = "10s"
+# ip:port or domain:port
+server_base_url = "ws://127.0.0.1:9500"

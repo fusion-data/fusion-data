@@ -3,6 +3,7 @@ use std::{net::AddrParseError, num::ParseIntError};
 use config::ConfigError;
 use fusion_corelib::ctx::CtxError;
 use serde::{Serialize, ser::SerializeMap};
+use serde_json::json;
 use thiserror::Error;
 
 use crate::{configuration::ConfigureError, security::Error as SecurityError};
@@ -55,6 +56,11 @@ impl DataError {
 
   pub fn internal(code: i32, msg: impl Into<String>, cause: Option<Box<dyn std::error::Error + Send + Sync>>) -> Self {
     DataError::InternalError { code, msg: msg.into(), cause }
+  }
+
+  pub fn retry_limit(msg: impl Into<String>, retry_limit: u32) -> Self {
+    let detail = json!({ "retry_limit": retry_limit });
+    DataError::BizError { code: 1429, msg: msg.into(), detail: Some(Box::new(detail)) }
   }
 }
 
@@ -259,7 +265,26 @@ impl From<modelsql::SqlError> for DataError {
       modelsql::SqlError::UniqueViolation { table, constraint } => {
         DataError::conflicted(format!("UniqueViolation, {table}:{constraint}"))
       }
-      _ => DataError::server_error(value.to_string()),
+      modelsql::SqlError::ExecuteError { table, message } => {
+        DataError::server_error(format!("ExecuteError, {}:{}", table, message))
+      }
+      modelsql::SqlError::ExecuteFail { schema, table } => {
+        DataError::server_error(format!("ExecuteFail, {:?}:{}", schema, table))
+      }
+      modelsql::SqlError::CountFail { schema, table } => {
+        DataError::server_error(format!("CountFail, {:?}:{}", schema, table))
+      }
+      e @ modelsql::SqlError::InvalidDatabase(_) => DataError::server_error(e.to_string()),
+      e @ modelsql::SqlError::CantCreateModelManagerProvider(_) => DataError::server_error(e.to_string()),
+      e @ modelsql::SqlError::IntoSeaError(_) => DataError::server_error(e.to_string()),
+      e @ modelsql::SqlError::SeaQueryError(_) => DataError::server_error(e.to_string()),
+      e @ modelsql::SqlError::JsonError(_) => DataError::server_error(e.to_string()),
+      modelsql::SqlError::DbxError(e) => {
+        DataError::InternalError { code: 500, msg: "Dbx Error".to_string(), cause: Some(Box::new(e)) }
+      }
+      modelsql::SqlError::Sqlx(e) => {
+        DataError::InternalError { code: 500, msg: "Sqlx Error".to_string(), cause: Some(Box::new(e)) }
+      }
     }
   }
 }

@@ -1,17 +1,21 @@
-import { HetuflowClient, HetuflowClientConfig } from "./utils/client.js";
-import { AgentAPI } from "./api/agents.js";
-import { JobAPI } from "./api/jobs.js";
-import { TaskAPI } from "./api/tasks.js";
-import { TaskInstanceAPI } from "./api/task-instances.js";
-import { AuthAPI } from "./api/auth.js";
-import { GatewayAPI } from "./api/gateway.js";
-import { SystemAPI } from "./api/system.js";
+import { HetuflowClient, HetuflowClientConfig } from './utils/client.js';
+import { AgentAPI } from './api/agents.js';
+import { ServerAPI } from './api/servers.js';
+import { JobAPI } from './api/jobs.js';
+import { ScheduleAPI } from './api/schedule.js';
+import { TaskAPI } from './api/tasks.js';
+import { TaskInstanceAPI } from './api/task-instances.js';
+import { AuthAPI } from './api/auth.js';
+import { GatewayAPI } from './api/gateway.js';
+import { SystemAPI } from './api/system.js';
 
 export class HetuflowSDK {
   private client: HetuflowClient;
 
   public readonly agents: AgentAPI;
+  public readonly servers: ServerAPI;
   public readonly jobs: JobAPI;
+  public readonly schedules: ScheduleAPI;
   public readonly tasks: TaskAPI;
   public readonly taskInstances: TaskInstanceAPI;
   public readonly auth: AuthAPI;
@@ -23,7 +27,9 @@ export class HetuflowSDK {
 
     // 初始化各个 API 模块
     this.agents = new AgentAPI(this.client);
+    this.servers = new ServerAPI(this.client);
     this.jobs = new JobAPI(this.client);
+    this.schedules = new ScheduleAPI(this.client);
     this.tasks = new TaskAPI(this.client);
     this.taskInstances = new TaskInstanceAPI(this.client);
     this.auth = new AuthAPI(this.client);

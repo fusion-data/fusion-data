@@ -2,19 +2,19 @@
 members = [
   "crates/fusions/*",
   "crates/libs/*",
-  "crates/jieyuan/jieyuan-core",
-  "crates/jieyuan/jieyuan",
-  "crates/hetuflow/hetuflow-core",
-  "crates/hetuflow/hetuflow-server",
-  "crates/hetuflow/hetuflow-agent",
-  "crates/hetuflow/hetuflow-bins",
-  "crates/hetuflow/hetuflow-docs",
-  "crates/hetumind/hetumind-core",
-  "crates/hetumind/hetumind-nodes",
-  "crates/hetumind/hetumind-context",
-  "crates/hetumind/hetumind-cli",
-  "crates/hetumind/hetumind-studio",
-  "crates/hetumind/hetumind-docs",
+  "jieyuan/jieyuan-core",
+  "jieyuan/jieyuan",
+  "hetuflow/hetuflow-core",
+  "hetuflow/hetuflow-server",
+  "hetuflow/hetuflow-agent",
+  "hetuflow/hetuflow-test",
+  "hetuflow/hetuflow-docs",
+  "hetumind/hetumind-core",
+  "hetumind/hetumind-nodes",
+  "hetumind/hetumind-context",
+  "hetumind/hetumind-cli",
+  "hetumind/hetumind-studio",
+  "hetumind/hetumind-docs",
 ]
 resolver = "2"
 
@@ -73,11 +73,11 @@ fusion-db = { version = "0.1.1", path = "crates/fusions/fusion-db" }
 fusion-web = { version = "0.1.1", path = "crates/fusions/fusion-web" }
 fusion-grpc = { version = "0.1.1", path = "crates/fusions/fusion-grpc" }
 fusions = { version = "0.1.1", path = "crates/fusions/fusions" }
-jieyuan-core = { version = "0.1.1", path = "crates/jieyuan/jieyuan-core" }
-hetuflow-core = { version = "0.1.1", path = "crates/hetuflow/hetuflow-core" }
-hetumind-core = { version = "0.1.1", path = "crates/hetumind/hetumind-core" }
-hetumind-context = { version = "0.1.1", path = "crates/hetumind/hetumind-context" }
-hetumind-nodes = { version = "0.1.1", path = "crates/hetumind/hetumind-nodes" }
+jieyuan-core = { version = "0.1.1", path = "jieyuan/jieyuan-core" }
+hetuflow-core = { version = "0.1.1", path = "hetuflow/hetuflow-core" }
+hetumind-core = { version = "0.1.1", path = "hetumind/hetumind-core" }
+hetumind-context = { version = "0.1.1", path = "hetumind/hetumind-context" }
+hetumind-nodes = { version = "0.1.1", path = "hetumind/hetumind-nodes" }
 # -- projects end
 mdbook = "0.4"
 mdbook-mermaid = "0.16"

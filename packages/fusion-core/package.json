@@ -1,0 +1,42 @@
+{
+  "name": "@fusion-data/fusion-core",
+  "version": "1.0.0",
+  "description": "Shared utilities for Fusion Data project",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./time": {
+      "import": "./dist/time.js",
+      "types": "./dist/time.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "jest",
+    "lint": "eslint src/**/*.ts",
+    "clean": "rm -rf dist",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "keywords": [
+    "fusion-data",
+    "utils"
+  ],
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "jest": "^30.1.3",
+    "typescript": "^5.9.2",
+    "prettier": "^3.3.3"
+  },
+  "files": [
+    "dist"
+  ]
+}

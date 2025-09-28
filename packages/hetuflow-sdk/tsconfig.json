@@ -2,11 +2,8 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "ES2020",
-    "moduleResolution": "node",
-    "lib": [
-      "ES2020",
-      "DOM"
-    ],
+    "moduleResolution": "bundler",
+    "lib": ["ES2020", "DOM"],
     "outDir": "dist",
     "rootDir": "src",
     "declaration": true,
@@ -19,11 +16,6 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
 }
