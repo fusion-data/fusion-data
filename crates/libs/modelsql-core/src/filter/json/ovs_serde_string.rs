@@ -28,8 +28,11 @@ impl Serialize for OpValsString {
         OpValString::Gt(s) => map.serialize_entry("$gt", s)?,
         OpValString::Gte(s) => map.serialize_entry("$gte", s)?,
         OpValString::Contains(s) => map.serialize_entry("$contains", s)?,
+        OpValString::NotContains(s) => map.serialize_entry("$notContains", s)?,
         OpValString::ContainsAny(s) => map.serialize_entry("$containsAny", s)?,
+        OpValString::NotContainsAny(s) => map.serialize_entry("$notContainsAny", s)?,
         OpValString::ContainsAll(s) => map.serialize_entry("$containsAll", s)?,
+        OpValString::NotContainsAll(s) => map.serialize_entry("$notContainsAll", s)?,
         OpValString::StartsWith(s) => map.serialize_entry("$startsWith", s)?,
         OpValString::StartsWithAny(s) => map.serialize_entry("$startsWithAny", s)?,
         OpValString::NotStartsWith(s) => map.serialize_entry("$notStartsWith", s)?,
@@ -47,8 +50,6 @@ impl Serialize for OpValsString {
         OpValString::EndsWithCi(s) => map.serialize_entry("$endsWithCi", s)?,
         OpValString::NotEndsWithCi(s) => map.serialize_entry("$notEndsWithCi", s)?,
         OpValString::Ilike(s) => map.serialize_entry("$ilike", s)?,
-        OpValString::NotContains(s) => map.serialize_entry("$notContains", s)?,
-        OpValString::NotContainsAny(s) => map.serialize_entry("$notContainsAny", s)?,
       }
     }
     map.end()

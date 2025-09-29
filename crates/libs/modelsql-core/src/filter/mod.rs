@@ -17,6 +17,7 @@ pub use into_sea::*;
 pub use modelsql_macros::FilterNodes;
 pub use nodes::group::*;
 pub use nodes::node::*;
+pub use ops::op_val_array::*;
 pub use ops::op_val_bool::*;
 pub use ops::op_val_datetime::*;
 pub use ops::op_val_nums::*;

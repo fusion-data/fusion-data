@@ -1,5 +1,6 @@
 use super::*;
 
+pub mod op_val_array;
 pub mod op_val_bool;
 pub mod op_val_datetime;
 pub mod op_val_nums;
@@ -14,10 +15,16 @@ pub enum OpVal {
   Bool(OpValBool),
 
   Int64(OpValInt64),
+  ArrayInt64(OpValArrayInt64),
+
   Int32(OpValInt32),
+  ArrayInt32(OpValArrayInt32),
+
   Float64(OpValFloat64),
+  ArrayFloat64(OpValArrayFloat64),
 
   String(OpValString),
+  ArrayString(OpValArrayString),
 
   Datetime(OpValDateTime),
 

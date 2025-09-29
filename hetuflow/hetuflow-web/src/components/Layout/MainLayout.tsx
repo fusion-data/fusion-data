@@ -11,8 +11,8 @@ import {
   LogoutOutlined,
 } from '@ant-design/icons';
 import { ProLayout, MenuDataItem } from '@ant-design/pro-components';
-import ThemeSwitcher from '../ThemeSwitcher';
-import { useTheme } from '../../contexts/ThemeContext';
+import ThemeSwitcher from '@/components/ThemeSwitcher';
+import { useTheme } from '@/contexts/ThemeContext';
 
 /**
  * 主布局组件

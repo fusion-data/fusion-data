@@ -49,10 +49,6 @@ impl OpValsUuid {
   pub fn null(null: bool) -> Self {
     Self(vec![OpValUuid::Null(null)])
   }
-
-  pub fn array_contains(uuid: Vec<Uuid>) -> Self {
-    Self(vec![OpValUuid::ArrayContains(uuid)])
-  }
 }
 
 #[derive(Debug, Clone)]
@@ -71,9 +67,6 @@ pub enum OpValUuid {
   Gte(Uuid),
 
   Null(bool),
-
-  // TODO: 为左操作数是 ARRAY 类型单独定义 OpVal 操作符？
-  ArrayContains(Vec<Uuid>),
 }
 
 impl From<Uuid> for OpValUuid {
@@ -96,7 +89,6 @@ impl From<Uuid> for OpVal {
 
 #[cfg(feature = "with-sea-query")]
 mod with_sea_query {
-  use sea_query::extension::postgres::PgBinOper;
   use sea_query::{BinOper, ColumnRef, ConditionExpression, SimpleExpr};
 
   use crate::filter::{FilterNodeOptions, SeaResult, sea_is_col_value_null};
@@ -131,11 +123,6 @@ mod with_sea_query {
         OpValUuid::Gt(v) => binary_fn(BinOper::GreaterThan, v),
         OpValUuid::Gte(v) => binary_fn(BinOper::GreaterThanOrEqual, v),
         OpValUuid::Null(null) => sea_is_col_value_null(col.clone(), null),
-        OpValUuid::ArrayContains(uuids) => ConditionExpression::SimpleExpr(SimpleExpr::binary(
-          col.clone().into(),
-          BinOper::PgOperator(PgBinOper::Contains),
-          uuids,
-        )),
       };
 
       Ok(cond)

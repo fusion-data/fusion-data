@@ -1,15 +1,15 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ConfigProvider, App as AntdApp } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
-import { ThemeProvider, useTheme, getAntdTheme } from './contexts/ThemeContext';
-import MainLayout from './components/Layout/MainLayout';
-import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import Servers from './pages/Servers';
-import Agents from './pages/Agents';
-import Jobs from './pages/Jobs';
-import JobDetail from './pages/Jobs/Detail';
-import Tasks from './pages/Tasks';
+import { ThemeProvider, useTheme, getAntdTheme } from '@/contexts/ThemeContext';
+import MainLayout from '@/components/Layout/MainLayout';
+import Login from '@/pages/Login';
+import Dashboard from '@/pages/Dashboard';
+import Servers from '@/pages/Servers';
+import Agents from '@/pages/Agents';
+import Jobs from '@/pages/Jobs';
+import JobDetail from '@/pages/Jobs/Detail';
+import Tasks from '@/pages/Tasks';
 import './App.css';
 
 /**

@@ -5,11 +5,11 @@ use serde::{
   de::{MapAccess, Visitor},
   ser::SerializeMap,
 };
-use serde_json::{Number, Value};
+use serde_json::Value;
 
 use crate::filter::{Error, OpValFloat64, OpValInt32, OpValInt64, OpValsFloat64, OpValsInt32, OpValsInt64};
 
-use super::ovs_json::OpValueToOpValType;
+use super::{as_f64, as_i32, as_i64, into_numbers, ovs_json::OpValueToOpValType};
 
 // region:    --- OpValsInt64
 
@@ -164,7 +164,7 @@ impl<'de> Visitor<'de> for Int32OpValsVisitor {
 
     while let Some(k) = map.next_key::<String>()? {
       // Note: Important to always
-      let value = map.next_value::<Value>()?;
+      let value = map.next_value::<serde_json::Value>()?;
       let opval = OpValInt32::op_value_to_op_val_type(&k, value).map_err(serde::de::Error::custom)?;
       opvals.push(opval)
     }
@@ -277,33 +277,3 @@ macro_rules! from_json_to_opval_num {
 }
 
 from_json_to_opval_num!((OpValInt64, as_i64), (OpValInt32, as_i32), (OpValFloat64, as_f64));
-
-fn as_i64(num: Number) -> Result<i64, Error> {
-  num.as_i64().ok_or(Error::JsonValNotOfType("i64"))
-}
-
-fn as_i32(num: Number) -> Result<i32, Error> {
-  num.as_i64().map(|n| n as i32).ok_or(Error::JsonValNotOfType("i32"))
-}
-
-fn as_f64(num: Number) -> Result<f64, Error> {
-  num.as_f64().ok_or(Error::JsonValNotOfType("f64"))
-}
-
-fn into_numbers(value: Value) -> Result<Vec<Number>, Error> {
-  let mut values = Vec::new();
-
-  let Value::Array(array) = value else {
-    return Err(Error::JsonValArrayWrongType { actual_value: value });
-  };
-
-  for item in array.into_iter() {
-    if let Value::Number(item) = item {
-      values.push(item);
-    } else {
-      return Err(Error::JsonValArrayItemNotOfType { expected_type: "Number", actual_value: item });
-    }
-  }
-
-  Ok(values)
-}

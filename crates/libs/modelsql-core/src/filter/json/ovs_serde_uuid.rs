@@ -30,7 +30,6 @@ impl Serialize for OpValsUuid {
         OpValUuid::Gt(uuid) => map.serialize_entry("$gt", uuid)?,
         OpValUuid::Gte(uuid) => map.serialize_entry("$gte", uuid)?,
         OpValUuid::Null(b) => map.serialize_entry("$null", b)?,
-        OpValUuid::ArrayContains(uuids) => map.serialize_entry("$@>", uuids)?,
       }
     }
     map.end()

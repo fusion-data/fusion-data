@@ -3,8 +3,8 @@ import { Table, Card, Button, Space, Typography, Input, Row, Col, Switch, Popcon
 import { ReloadOutlined, PlusOutlined, EditOutlined, DeleteOutlined, PlayCircleOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useNavigate } from 'react-router-dom';
-import { apiService, SchedJob, JobForQuery, JobStatus } from '../../services/api';
-import { useMessage } from '../../hooks/useMessage';
+import { apiService, SchedJob, JobForQuery, JobStatus } from '@/services/api';
+import { useMessage } from '@/hooks/useMessage';
 import dayjs from 'dayjs';
 
 const { Title } = Typography;

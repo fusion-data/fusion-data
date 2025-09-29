@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Table, Card, Button, Space, Tag, Typography, Input, Row, Col, Tooltip, Popconfirm, Form } from 'antd';
 import { ReloadOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import { apiService, SchedServer, ServerForQuery, ServerStatus } from '../../services/api';
-import { useMessage } from '../../hooks/useMessage';
+import { apiService, SchedServer, ServerForQuery, ServerStatus } from '@/services/api';
+import { useMessage } from '@/hooks/useMessage';
 import dayjs from 'dayjs';
 
 const { Title } = Typography;

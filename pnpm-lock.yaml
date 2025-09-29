@@ -153,6 +153,10 @@ importers:
         version: 5.9.2
 
   packages/modelsql:
+    dependencies:
+      dayjs:
+        specifier: ^1.11.18
+        version: 1.11.18
     devDependencies:
       '@types/jest':
         specifier: ^30.0.0

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Table, Space, Spin, Tag } from 'antd';
 import { HetuflowSDK, type SchedAgent, type HealthStatus } from '@fusion-data/hetuflow-sdk';
-import { useMessage } from '../hooks/useMessage';
+import { useMessage } from '@/hooks/useMessage';
 
 // 创建 SDK 实例
 const sdk = new HetuflowSDK({

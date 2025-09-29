@@ -8,8 +8,8 @@ import {
   CheckCircleOutlined,
   CloseCircleOutlined,
 } from '@ant-design/icons';
-import { apiService, TaskInstanceStatus } from '../../services/api';
-import { useMessage } from '../../hooks/useMessage';
+import { apiService, TaskInstanceStatus } from '@/services/api';
+import { useMessage } from '@/hooks/useMessage';
 
 const { Title } = Typography;
 

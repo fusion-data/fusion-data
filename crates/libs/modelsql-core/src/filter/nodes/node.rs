@@ -218,12 +218,16 @@ mod with_sea_query {
       for op_val in self.opvals.into_iter() {
         let cond_expr = match op_val {
           OpVal::String(ov) => ov.into_sea_cond_expr(&col, node_options)?,
+          OpVal::ArrayString(ov) => ov.into_sea_cond_expr(&col, node_options)?,
           #[cfg(feature = "with-uuid")]
           OpVal::Uuid(ov) => ov.into_sea_cond_expr(&col, node_options)?,
           OpVal::Int64(ov) => ov.into_sea_cond_expr(&col, node_options)?,
+          OpVal::ArrayInt64(ov) => ov.into_sea_cond_expr(&col, node_options)?,
           OpVal::Int32(ov) => ov.into_sea_cond_expr(&col, node_options)?,
-          OpVal::Datetime(ov) => ov.into_sea_cond_expr(&col, node_options)?,
+          OpVal::ArrayInt32(ov) => ov.into_sea_cond_expr(&col, node_options)?,
           OpVal::Float64(ov) => ov.into_sea_cond_expr(&col, node_options)?,
+          OpVal::ArrayFloat64(ov) => ov.into_sea_cond_expr(&col, node_options)?,
+          OpVal::Datetime(ov) => ov.into_sea_cond_expr(&col, node_options)?,
           OpVal::Bool(ov) => ov.into_sea_cond_expr(&col, node_options)?,
           OpVal::Value(ov) => {
             let Some(for_sea_cond) = for_sea_cond.as_ref() else {

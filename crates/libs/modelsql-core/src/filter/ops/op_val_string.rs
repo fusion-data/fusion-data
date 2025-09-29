@@ -184,6 +184,7 @@ pub enum OpValString {
   NotContainsAny(Vec<String>),
 
   ContainsAll(Vec<String>),
+  NotContainsAll(Vec<String>),
 
   StartsWith(String),
   NotStartsWith(String),
@@ -329,13 +330,19 @@ mod with_sea_query {
 
         OpValString::ContainsAll(values) => {
           let mut cond = Condition::all();
-
           for value in values {
             let expr = binary_fn(BinOper::Like, format!("%{value}%"));
             cond = cond.add(expr);
           }
-
           ConditionExpression::Condition(cond)
+        }
+        OpValString::NotContainsAll(values) => {
+          let mut cond = Condition::any();
+          for value in values {
+            let expr = binary_fn(BinOper::Like, format!("%{value}%"));
+            cond = cond.add(expr);
+          }
+          ConditionExpression::Condition(cond.not())
         }
 
         OpValString::ContainsAny(values) => cond_any_of_fn(BinOper::Like, values, "%", "%"),
