@@ -2,14 +2,14 @@
 
 ## 1. 节点系统概述
 
-Hetumind 节点系统提供了可扩展的节点架构，支持标准节点、AI Agent 和 WASM 执行环境。每个节点都实现统一的 `NodeExecutor`
+Hetumind 节点系统提供了可扩展的节点架构，支持标准节点、AI Agent 和 WASM 执行环境。每个节点都实现统一的 `NodeExecutable`
 trait，确保类型安全和高性能执行。
 
 ### 1.1 节点架构
 
 ```mermaid
 classDiagram
-    class NodeExecutor {
+    class NodeExecutable {
         <<trait>>
         +execute(context, node) Result~ExecutionData~
         +validate_parameters(params) Result
@@ -42,10 +42,10 @@ classDiagram
         +ManualTriggerNode
     }
 
-    NodeExecutor <|.. StandardNode
-    NodeExecutor <|.. AINode
-    NodeExecutor <|.. WasmNode
-    NodeExecutor <|.. TriggerNode
+    NodeExecutable <|.. StandardNode
+    NodeExecutable <|.. AINode
+    NodeExecutable <|.. WasmNode
+    NodeExecutable <|.. TriggerNode
 ```
 
 ### 1.2 节点数据类型
@@ -137,7 +137,7 @@ pub struct AIAgentNode {
 }
 
 #[async_trait::async_trait]
-impl NodeExecutor for AIAgentNode {
+impl NodeExecutable for AIAgentNode {
     async fn execute(
         &self,
         context: &ExecutionContext,
@@ -314,7 +314,7 @@ impl WasmNode {
 }
 
 #[async_trait::async_trait]
-impl NodeExecutor for WasmNode {
+impl NodeExecutable for WasmNode {
     async fn execute(
         &self,
         context: &ExecutionContext,

@@ -1,26 +1,25 @@
+use derive_builder::Builder;
 use fusion_common::helper::default_bool_false;
+use semver::Version;
 use serde::{Deserialize, Serialize};
-use typed_builder::TypedBuilder;
 
 use crate::types::IconColor;
 
 use super::{InputPortConfig, NodeGroupKind, NodeKind, NodeProperties, OutputPortConfig};
 
 /// Node 定义
-#[derive(Debug, Clone, Serialize, Deserialize, TypedBuilder)]
+#[derive(Debug, Clone, Serialize, Deserialize, Builder)]
 pub struct NodeDefinition {
-  /// 节点类型, PK
+  /// 唯一标识一种类型的节点，可以存在多个不同的版本。PK
+  #[builder(setter(into))]
   pub kind: NodeKind,
 
-  /// 默认版本号。不设置则使用最新版本（versions 中的最大值）。
-  #[builder(default, setter(strip_option))]
-  pub default_version: Option<u16>,
-
-  /// 节点支持的版本号列表
+  /// 版本号
   #[builder(setter(into))]
-  pub versions: Vec<u16>,
+  pub version: Version,
 
   /// 节点分组
+  #[builder(setter(into))]
   pub groups: Vec<NodeGroupKind>,
 
   /// 显示名称
@@ -32,15 +31,15 @@ pub struct NodeDefinition {
   pub description: Option<String>,
 
   /// 输入端口定义。与 node 的 outputs 对应。
-  #[builder(default)]
+  #[builder(default, setter(into))]
   pub inputs: Vec<InputPortConfig>,
 
   /// 输出端口定义。
-  #[builder(default)]
+  #[builder(default, setter(into))]
   pub outputs: Vec<OutputPortConfig>,
 
   /// 属性定义
-  #[builder(default)]
+  #[builder(default, setter(into))]
   pub properties: Vec<NodeProperties>,
 
   /// 官方文档URL

@@ -19,7 +19,7 @@ flowchart TB
     subgraph "执行引擎核心"
         Engine[WorkflowEngine]
         Scheduler[TaskScheduler]
-        Executor[NodeExecutor]
+        Executor[NodeExecutable]
         Monitor[ExecutionMonitor]
     end
 
@@ -75,7 +75,7 @@ flowchart TB
 
 ### 2.3 节点执行器
 
-- [NodeExecutorImpl](../../../crates/hetumind/hetumind-studio/src/runtime/node/node_executor.rs)
+- [NodeExecutableImpl](../../../crates/hetumind/hetumind-studio/src/runtime/node/node_executor.rs)
 
 ## 3. 执行流程设计
 
@@ -122,7 +122,7 @@ stateDiagram-v2
 sequenceDiagram
     participant Engine as WorkflowEngine
     participant Scheduler as TaskScheduler
-    participant Executor as NodeExecutor
+    participant Executor as NodeExecutable
     participant Node as NodeImplementation
     participant Store as ExecutionStore
 

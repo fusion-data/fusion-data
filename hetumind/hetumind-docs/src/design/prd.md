@@ -379,10 +379,10 @@ graph TD
         CredentialService --> DB
         NodeService --> DB
 
-        WorkflowEngine --> NodeExecutor[节点执行器]
-        NodeExecutor --> ExternalServices[外部服务/APIs]
-        NodeExecutor --> VectorDBs[向量数据库]
-        NodeExecutor --> LLMs[LLM API]
+        WorkflowEngine --> NodeExecutable[节点执行器]
+        NodeExecutable --> ExternalServices[外部服务/APIs]
+        NodeExecutable --> VectorDBs[向量数据库]
+        NodeExecutable --> LLMs[LLM API]
 
         Scheduler --> WorkflowEngine
     end

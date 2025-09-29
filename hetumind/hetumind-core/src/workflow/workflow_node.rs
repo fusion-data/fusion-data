@@ -30,9 +30,11 @@ pub enum NodeExecutionStatus {
   Success = 100,
 }
 
-/// 节点分组
+/// 节点分组。由平台预定义，用户自定义的节点必需属于某一个分组。
 ///
-/// TODO 节点分组与 NodeKind 的使用关系？
+/// 使用场景：
+/// 1. 在界面上查找节点时，可根据节点分组进行筛选。
+/// 2. 某些业务要求只能在特定分组的节点之间进行连接。
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize_repr, Deserialize_repr)]
 #[repr(i32)]
 pub enum NodeGroupKind {

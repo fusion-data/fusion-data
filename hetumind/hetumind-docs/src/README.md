@@ -295,12 +295,12 @@ cargo lambda deploy --iam-role arn:aws:iam::123456789012:role/lambda-execution-r
 ### 自定义节点
 
 ```rust
-use hetumind_core::{Node, NodeExecutor, ExecutionContext, ExecutionData};
+use hetumind_core::{Node, NodeExecutable, ExecutionContext, ExecutionData};
 
 pub struct CustomNode;
 
 #[async_trait::async_trait]
-impl NodeExecutor for CustomNode {
+impl NodeExecutable for CustomNode {
     async fn execute(
         &self,
         context: &ExecutionContext,

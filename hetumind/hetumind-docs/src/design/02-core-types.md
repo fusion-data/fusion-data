@@ -52,8 +52,8 @@ pub type ParameterMap = HashMap<String, JsonValue>;
 
 ### 1.3 节点类型枚举
 
-- [NodeKind](../../../crates/hetumind/hetumind-core/src/node/model.rs)
-- [TriggerKind](../../../crates/hetumind/hetumind-core/src/node/model.rs)
+- [NodeKind](../../../hetumind-core/src/workflow/node.rs)。某种程度上是节点的唯一名字，多个不同版本的节点都使用同一个 NodeKind，所有 NodeKind 为 String newtype
+- [TriggerKind](../../../hetumind-core/src/node/model.rs)
 
 ## 2. 核心数据结构
 
@@ -128,7 +128,7 @@ IExecuteFunctions 接口的对象。节点通过调用 this 上的方法来获�
 
 ### 4.1 节点执行 Trait
 
-- [NodeExecutor](../../../crates/hetumind/hetumind-core/src/node/executor.rs)
+- [NodeExecutable](../../../crates/hetumind/hetumind-core/src/node/executor.rs)
 - [TriggerExecutor](../../../crates/hetumind/hetumind-core/src/node/trigger.rs)
 
 ### 4.2 工作流引擎 Trait
@@ -139,7 +139,7 @@ IExecuteFunctions 接口的对象。节点通过调用 this 上的方法来获�
   1. 接收触发: 从一个 TriggerController 那里接收到 ExecutionData，或者通过 API 调用手动触发。
   2. 启动执行: 创建一个 ExecutionContext，开始执行工作流。
   3. 遍历图: 按照工作流的图结构，一个接一个地处理节点。
-  4. 委托任务: 对于每一个要执行的节点，它向 NodeRegistry 请求对应的 NodeExecutor。
+  4. 委托任务: 对于每一个要执行的节点，它向 NodeRegistry 请求对应的 NodeExecutable。
   5. 调用执行: 调用该 executor 的 execute 方法，并将当前的 ExecutionContext 传递给它。
   6. 收集结果: 收集 executor 的返回结果（Vec<ExecutionData>），并将其准备好作为下一个节点的输入。
   7. 管理状态: 更新整个工作流的执行状态 (ExecutionStatus) 和各个节点的执行日志。
@@ -213,7 +213,7 @@ classDiagram
 
 ```mermaid
 classDiagram
-    class NodeExecutor {
+    class NodeExecutable {
         <<trait>>
         +execute(context, node) ExecutionData
         +node_type() NodeTypeInfo
@@ -263,8 +263,8 @@ classDiagram
         +AnthropicNode
     }
 
-    NodeExecutor <|.. StandardNode : implements
-    NodeExecutor <|.. AINode : implements
+    NodeExecutable <|.. StandardNode : implements
+    NodeExecutable <|.. AINode : implements
     TriggerExecutor <|.. TriggerNode : implements
     WorkflowEngine <|.. DefaultWorkflowEngine : implements
 ```

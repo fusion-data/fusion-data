@@ -2522,6 +2522,7 @@ dependencies = [
  "config",
  "croner",
  "dashmap",
+ "derive_builder",
  "derive_more",
  "dotenvy",
  "duration-str",
@@ -2535,6 +2536,7 @@ dependencies = [
  "rand 0.9.2",
  "regex",
  "sea-query",
+ "semver",
  "serde",
  "serde_json",
  "serde_repr",
@@ -5504,6 +5506,16 @@ checksum = "cc1f0cbffaac4852523ce30d8bd3c5cdc873501d96ff467ca09b6767bb8cd5c0"
 dependencies = [
  "core-foundation-sys",
  "libc",
+]
+
+[[package]]
+name = "semver"
+version = "1.0.27"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d767eb0aabc880b29956c35734170f26ed551a859dbd361d140cdbeca61ab1e2"
+dependencies = [
+ "serde",
+ "serde_core",
 ]
 
 [[package]]

@@ -1576,7 +1576,7 @@ stateDiagram-v2
 
 ### 11.1 TaskSvc 完整实现
 
-TaskSvc 的代码实现见: [task_svc.rs](../../../fusion/hetuflow-server/src/service/task_svc.rs)
+TaskSvc 的代码实现见: [task_svc.rs](../../../hetuflow-server/src/service/task_svc.rs)
 
 ### 11.2 AgentSvc 完整实现
 

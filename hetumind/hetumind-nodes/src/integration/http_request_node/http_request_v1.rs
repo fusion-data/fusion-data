@@ -3,10 +3,11 @@
 use std::{sync::Arc, time::Duration};
 
 use async_trait::async_trait;
+use hetumind_core::version::Version;
 use hetumind_core::workflow::{
   ConnectionKind, DataSource, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition,
-  NodeExecutionContext, NodeExecutionError, NodeExecutor, NodeGroupKind, NodeKind, NodeProperties, NodePropertyKind,
-  OutputPortConfig, make_execution_data_map,
+  NodeDefinitionBuilder, NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeGroupKind, NodeKind,
+  NodeProperties, NodePropertyKind, OutputPortConfig, RegistrationError, make_execution_data_map,
 };
 use log::{debug, error, info, warn};
 use reqwest::Client;
@@ -27,18 +28,20 @@ use super::HttpMethod;
 /// - `follow_redirects`: 是否跟随重定向 (可选，默认 true)
 /// - `max_redirects`: 最大重定向次数 (可选，默认 10)
 #[derive(Debug, Clone)]
-pub struct HttpRequestNode {
+pub struct HttpRequestV1 {
   definition: Arc<NodeDefinition>,
 }
 
-impl Default for HttpRequestNode {
-  fn default() -> Self {
-    Self { definition: Arc::new(create_definition()) }
+impl TryFrom<NodeDefinition> for HttpRequestV1 {
+  type Error = RegistrationError;
+
+  fn try_from(definition: NodeDefinition) -> Result<Self, Self::Error> {
+    Ok(Self { definition: Arc::new(definition) })
   }
 }
 
 #[async_trait]
-impl NodeExecutor for HttpRequestNode {
+impl NodeExecutable for HttpRequestV1 {
   fn definition(&self) -> Arc<NodeDefinition> {
     self.definition.clone()
   }
@@ -182,16 +185,16 @@ impl NodeExecutor for HttpRequestNode {
   }
 }
 
-impl HttpRequestNode {
+impl HttpRequestV1 {
   pub const NODE_KIND: &str = "HttpRequest";
 }
 
-/// 获取节点元数据
-fn create_definition() -> NodeDefinition {
-  NodeDefinition::builder()
-    .kind(NodeKind::from(HttpRequestNode::NODE_KIND))
-    .versions(vec![1])
-    .groups(vec![NodeGroupKind::Input, NodeGroupKind::Output])
+/// 创建节点定义
+pub(super) fn create_definition() -> Result<NodeDefinition, RegistrationError> {
+  NodeDefinitionBuilder::default()
+    .kind(NodeKind::from(HttpRequestV1::NODE_KIND))
+    .version(Version::new(1, 0, 0))
+    .groups([NodeGroupKind::Input, NodeGroupKind::Output])
     .display_name("HTTP Request")
     .description("发送HTTP请求并获取响应数据。支持GET、POST、PUT、DELETE等方法。")
     .icon("globe")
@@ -247,6 +250,7 @@ fn create_definition() -> NodeDefinition {
         .build(),
     ])
     .build()
+    .map_err(RegistrationError::NodeDefinitionBuilderError)
 }
 
 #[cfg(test)]
@@ -254,19 +258,18 @@ mod tests {
   use super::*;
 
   #[test]
-  fn test_node_metadata() {
-    let metadata = create_definition();
-    assert_eq!(metadata.kind.as_ref(), "HttpRequest");
-    assert_eq!(metadata.default_version, None);
-    assert_eq!(metadata.versions, vec![1]);
-    assert_eq!(&metadata.groups, &[NodeGroupKind::Input, NodeGroupKind::Output]);
-    assert_eq!(&metadata.display_name, "HTTP Request");
-    assert!(!metadata.properties.is_empty());
+  fn test_node_definition() {
+    let definition = create_definition().unwrap();
+    assert_eq!(definition.kind.as_ref(), "HttpRequest");
+    assert_eq!(definition.version, Version::new(1, 0, 0));
+    assert_eq!(definition.groups, [NodeGroupKind::Input, NodeGroupKind::Output]);
+    assert_eq!(definition.display_name, "HTTP Request");
+    assert!(!definition.properties.is_empty());
   }
 
   #[test]
   fn test_node_ports() {
-    let node = HttpRequestNode::default();
+    let node = HttpRequestV1::try_from(create_definition().unwrap()).unwrap();
 
     let input_ports = &node.definition().inputs[..];
     assert_eq!(input_ports.len(), 1);

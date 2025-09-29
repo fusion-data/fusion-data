@@ -8,7 +8,7 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use hetumind_core::workflow::{
   ConnectionKind, DataSource, ExecutionData, InputPortConfig, NodeDefinition, NodeExecutionContext, NodeExecutionError,
-  NodeExecutor, NodeGroupKind, NodeKind, NodeProperties, NodePropertyKind, OutputPortConfig, WorkflowNode,
+  NodeExecutable, NodeGroupKind, NodeKind, NodeProperties, NodePropertyKind, OutputPortConfig, WorkflowNode,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
@@ -92,7 +92,7 @@ impl Default for SetNode {
 }
 
 #[async_trait]
-impl NodeExecutor for SetNode {
+impl NodeExecutable for SetNode {
   fn definition(&self) -> Arc<NodeDefinition> {
     self.definition.clone()
   }

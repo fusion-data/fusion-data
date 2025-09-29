@@ -1,13 +1,13 @@
 use std::{sync::Arc, time::Duration};
 
 use hetumind_core::workflow::{
-  ExecutionContext, ExecutionDataCollection, ExecutionId, NodeExecutionContext, NodeExecutionError, NodeExecutor,
+  ExecutionContext, ExecutionDataCollection, ExecutionId, NodeExecutable, NodeExecutionContext, NodeExecutionError,
   NodeRegistry, WorkflowNode,
 };
 
 use crate::runtime::monitor::ExecutionMonitor;
 
-pub struct NodeExecutorImpl {
+pub struct NodeExecutableImpl {
   /// 节点类型注册表
   node_kinds: NodeRegistry,
   /// 执行器线程池
@@ -16,7 +16,7 @@ pub struct NodeExecutorImpl {
   monitor: Arc<ExecutionMonitor>,
 }
 
-impl NodeExecutorImpl {
+impl NodeExecutableImpl {
   pub async fn execute_node(
     &self,
     node: &WorkflowNode,
@@ -64,7 +64,7 @@ impl NodeExecutorImpl {
 
   async fn execute_with_timeout(
     &self,
-    executor: Arc<dyn NodeExecutor>,
+    executor: NodeExecutor,
     context: &NodeExecutionContext,
   ) -> Result<Vec<ExecutionDataCollection>, NodeExecutionError> {
     let node = context.current_node()?;

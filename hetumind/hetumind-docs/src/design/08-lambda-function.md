@@ -946,7 +946,7 @@ pub async fn handle_workflow_execution(
 
 #[instrument(skip(executor, node, context))]
 async fn execute_node_with_tracing(
-    executor: Arc<dyn NodeExecutor + Send + Sync>,
+    executor: Arc<dyn NodeExecutable + Send + Sync>,
     node: Node,
     context: ExecutionContext,
 ) -> Result<Vec<ExecutionData>, NodeExecutionError> {

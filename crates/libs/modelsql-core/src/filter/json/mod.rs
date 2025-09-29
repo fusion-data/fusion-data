@@ -1,4 +1,5 @@
 // -- Sub-Modules
+mod helpers;
 mod order_bys_serde;
 mod ovs_json;
 mod ovs_serde_array;
@@ -9,7 +10,6 @@ mod ovs_serde_string;
 #[cfg(feature = "with-uuid")]
 mod ovs_serde_uuid;
 mod ovs_serde_value;
-mod helpers;
 
 use helpers::*;
 pub use ovs_json::OpValueToOpValType;

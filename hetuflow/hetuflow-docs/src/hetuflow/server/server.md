@@ -55,7 +55,7 @@ src/
 
 ## 配置参数
 
-基于 `ultimate-core` crate 的 `UltimateConfigRegistry` 配置注册器加载配置文件，配置文件路径默认是项目根目录 `resources/app.toml`，可以通过 `ULTIMATE_CONFIG_PATH` 环境变量指定配置文件路径。实现配置文件见: [app.toml](../../../fusion/hetuflow-server/resources/app.toml)
+基于 `ultimate-core` crate 的 `UltimateConfigRegistry` 配置注册器加载配置文件，配置文件路径默认是项目根目录 `resources/app.toml`，可以通过 `ULTIMATE_CONFIG_PATH` 环境变量指定配置文件路径。实现配置文件见: [app.toml](../../../hetuflow-server/resources/app.toml)
 
 ## Application 与服务层实现
 
@@ -90,7 +90,7 @@ pub struct ServerApplication {
 }
 ```
 
-`ServerApplication` 完整的代码实现见： [application.rs](../../../fusion/hetuflow-server/src/application.rs)
+`ServerApplication` 完整的代码实现见： [application.rs](../../../hetuflow-server/src/application.rs)
 
 ### 核心组件架构
 

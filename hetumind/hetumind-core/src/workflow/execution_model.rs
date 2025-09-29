@@ -13,7 +13,6 @@ use crate::user::UserId;
 use super::{ExecutionId, NodeExecutionResult, NodeName, ParameterMap, WorkflowId};
 
 /// 执行模式
-/// TODO 起什么作用？
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize_repr, Deserialize_repr)]
 #[cfg_attr(feature = "with-db", derive(sqlx::Type))]
 #[repr(i32)]
