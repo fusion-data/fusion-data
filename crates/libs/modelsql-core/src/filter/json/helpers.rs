@@ -1,5 +1,4 @@
 use chrono::{DateTime, FixedOffset};
-use serde::{Deserialize, Serialize};
 use serde_json::{Number, Value, json};
 use uuid::Uuid;
 
@@ -17,10 +16,12 @@ pub fn as_f64(num: Number) -> Result<f64, Error> {
   num.as_f64().ok_or(Error::JsonValNotOfType("f64"))
 }
 
+#[allow(dead_code)]
 pub fn as_string(value: Value) -> Result<String, Error> {
   if let Value::String(item) = value { Ok(item) } else { Err(Error::JsonValNotOfType("String")) }
 }
 
+#[allow(dead_code)]
 pub fn as_uuid(value: Value) -> Result<Uuid, Error> {
   if let Value::String(item) = value {
     Ok(Uuid::parse_str(item.as_str()).map_err(|_e| Error::JsonValNotOfType("Uuid"))?)
@@ -29,6 +30,7 @@ pub fn as_uuid(value: Value) -> Result<Uuid, Error> {
   }
 }
 
+#[allow(dead_code)]
 pub fn as_datetime(value: Value) -> Result<DateTime<FixedOffset>, Error> {
   serde_json::from_value(value).map_err(|_e| Error::JsonValNotOfType("DateTime<FixedOffset>"))
 }
@@ -69,6 +71,7 @@ pub fn into_strings(value: Value) -> Result<Vec<String>, Error> {
   Ok(values)
 }
 
+#[allow(dead_code)]
 pub fn into_uuids(value: Value) -> Result<Vec<Uuid>, Error> {
   let mut values = Vec::new();
 
@@ -90,6 +93,7 @@ pub fn into_uuids(value: Value) -> Result<Vec<Uuid>, Error> {
   Ok(values)
 }
 
+#[allow(dead_code)]
 pub fn into_datetimes(original: Value) -> Result<Vec<DateTime<FixedOffset>>, Error> {
   let mut values = Vec::new();
 

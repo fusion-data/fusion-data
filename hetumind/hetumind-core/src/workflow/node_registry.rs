@@ -8,29 +8,6 @@ use dashmap::DashMap;
 use crate::version::Version;
 use crate::workflow::{Node, NodeDefinition, NodeExecutor, NodeKind, RegistrationError};
 
-/// Node registry for managing node executors and related metadata
-#[derive(Clone, Default)]
-pub struct NodeRegistry(Arc<InnerNodeRegistry>);
-
-impl Deref for NodeRegistry {
-  type Target = Arc<InnerNodeRegistry>;
-  fn deref(&self) -> &Self::Target {
-    &self.0
-  }
-}
-
-impl DerefMut for NodeRegistry {
-  fn deref_mut(&mut self) -> &mut Self::Target {
-    &mut self.0
-  }
-}
-
-impl NodeRegistry {
-  pub fn new() -> Self {
-    Self::default()
-  }
-}
-
 pub type NodeRef = Arc<dyn Node + Send + Sync>;
 
 #[derive(Default)]
@@ -110,25 +87,6 @@ impl InnerNodeRegistry {
     self.nodes.iter().map(|x| x.key().clone()).collect()
   }
 
-  // /// Get all registered default version of node definitions
-  // pub fn all_definitions(&self) -> Vec<Arc<NodeDefinition>> {
-  //   self
-  //     .nodes
-  //     .iter()
-  //     .filter_map(|x| x.value().default_node_executor().map(|node| node.definition().clone()))
-  //     .collect()
-  // }
-
-  // /// Get all registered default version of node definitions for the given node group kind
-  // pub fn definitions_by_group(&self, group: &NodeGroupKind) -> Vec<Arc<NodeDefinition>> {
-  //   self
-  //     .nodes
-  //     .iter()
-  //     .filter_map(|x| x.value().default_node_executor().map(|node| node.definition()))
-  //     .filter(|x| x.groups.contains(group))
-  //     .collect()
-  // }
-
   /// Unregister a node executor
   ///
   /// Args:
@@ -156,5 +114,28 @@ impl InnerNodeRegistry {
   /// - `bool` - True if the registry is empty, otherwise false
   pub fn is_empty(&self) -> bool {
     self.nodes.is_empty()
+  }
+}
+
+/// Node registry for managing node executors and related metadata
+#[derive(Clone, Default)]
+pub struct NodeRegistry(Arc<InnerNodeRegistry>);
+
+impl Deref for NodeRegistry {
+  type Target = Arc<InnerNodeRegistry>;
+  fn deref(&self) -> &Self::Target {
+    &self.0
+  }
+}
+
+impl DerefMut for NodeRegistry {
+  fn deref_mut(&mut self) -> &mut Self::Target {
+    &mut self.0
+  }
+}
+
+impl NodeRegistry {
+  pub fn new() -> Self {
+    Self::default()
   }
 }

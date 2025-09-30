@@ -1,6 +1,6 @@
 // src/value.rs
-use ahash::HashMap;
 use chrono::Duration;
+use fusion_common::ahash::HashMap;
 use fusion_common::time::OffsetDateTime;
 use serde::{Deserialize, Serialize};
 

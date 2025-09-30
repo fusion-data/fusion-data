@@ -1,7 +1,7 @@
 //! 节点执行
 use std::sync::Arc;
 
-use ahash::HashMap;
+use fusion_common::ahash::HashMap;
 use fusion_common::time::OffsetDateTime;
 use serde::{Deserialize, Serialize};
 use typed_builder::TypedBuilder;

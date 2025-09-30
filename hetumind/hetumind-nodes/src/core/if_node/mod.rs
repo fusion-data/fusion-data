@@ -5,7 +5,6 @@
 
 use std::sync::Arc;
 
-use fusion_core::DataError;
 use hetumind_core::{
   types::DataType,
   version::Version,

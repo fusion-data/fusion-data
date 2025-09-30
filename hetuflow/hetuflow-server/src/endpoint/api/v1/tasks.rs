@@ -1,5 +1,5 @@
 use axum::{Json, extract::Path};
-use fusion_core::IdUuidResult;
+use fusion_common::model::IdUuidResult;
 use fusion_web::{WebResult, ok_json};
 use hetuflow_core::models::{SchedTask, TaskForCreate, TaskForQuery, TaskForUpdate};
 use modelsql::page::PageResult;

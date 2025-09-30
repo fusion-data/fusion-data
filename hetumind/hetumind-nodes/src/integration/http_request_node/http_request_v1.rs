@@ -6,27 +6,29 @@ use async_trait::async_trait;
 use hetumind_core::version::Version;
 use hetumind_core::workflow::{
   ConnectionKind, DataSource, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition,
-  NodeDefinitionBuilder, NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeGroupKind, NodeKind,
-  NodeProperties, NodePropertyKind, OutputPortConfig, RegistrationError, make_execution_data_map,
+  NodeDefinitionBuilder, NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeGroupKind, NodeProperties,
+  NodePropertyKind, OutputPortConfig, RegistrationError, make_execution_data_map,
 };
 use log::{debug, error, info, warn};
 use reqwest::Client;
 use serde_json::{Value, json};
 
+use crate::constants::HTTP_REQUEST_NODE_KIND;
+
 use super::HttpMethod;
 
-/// HTTP 请求节点
+/// HTTP Request Node
 ///
-/// 用于发送 HTTP 请求并获取响应数据。支持 GET、POST、PUT、DELETE 等常见方法。
+/// Used to send HTTP requests and retrieve response data. Supports common methods such as GET, POST, PUT, DELETE, etc.
 ///
-/// # 参数
-/// - `url`: 请求的目标 URL
-/// - `method`: HTTP 方法 (GET, POST, PUT, DELETE, PATCH)
-/// - `headers`: 请求头 (可选)
-/// - `body`: 请求体 (可选，适用于 POST/PUT/PATCH)
-/// - `timeout`: 超时时间，秒 (可选，默认 30 秒)
-/// - `follow_redirects`: 是否跟随重定向 (可选，默认 true)
-/// - `max_redirects`: 最大重定向次数 (可选，默认 10)
+/// # Parameters
+/// - `url`: Target URL for the request
+/// - `method`: [HttpMethod] (GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS)
+/// - `headers`: Request headers (optional)
+/// - `body`: Request body (optional, applicable to POST/PUT/PATCH)
+/// - `timeout`: Timeout in seconds (optional, default 30 seconds)
+/// - `follow_redirects`: Whether to follow redirects (optional, default true)
+/// - `max_redirects`: Maximum number of redirects (optional, default 10)
 #[derive(Debug, Clone)]
 pub struct HttpRequestV1 {
   definition: Arc<NodeDefinition>,
@@ -49,15 +51,15 @@ impl NodeExecutable for HttpRequestV1 {
   async fn execute(&self, context: &NodeExecutionContext) -> Result<ExecutionDataMap, NodeExecutionError> {
     let node = context.current_node()?;
     info!(
-      "开始执行 HTTP 请求节点 workflow_id:{}, node_name:{}, node_kind:{}",
+      "Starting HTTP request node workflow_id:{}, node_name:{}, node_kind:{}",
       context.workflow.id, node.name, node.kind
     );
 
-    // 获取必需参数
+    // Get required parameters
     let url = node.parameters.get_parameter::<String>("url")?;
     let method = node.parameters.get_parameter::<HttpMethod>("method").unwrap_or(HttpMethod::Get);
 
-    // 获取可选参数
+    // Get optional parameters
     let headers = node
       .parameters
       .get_optional_parameter::<serde_json::Map<String, Value>>("headers")
@@ -83,26 +85,25 @@ impl NodeExecutable for HttpRequestV1 {
       .build()
       .map_err(|e| NodeExecutionError::InitFailed { message: "HTTP Client".to_string(), cause: Some(Box::new(e)) })?;
 
-    // 构建请求
     let mut request_builder = method.create_request_builder(&client, &url);
 
-    // 添加请求头
+    // Add http request headers
     for (key, value) in headers {
       if let Some(header_value) = value.as_str() {
         request_builder = request_builder.header(&key, header_value);
       }
     }
 
-    // 添加请求体（如果存在且方法支持）
+    // Add http request body (if exists and method supports)
     if let Some(body_data) = body {
       if matches!(method, HttpMethod::Post | HttpMethod::Put | HttpMethod::Patch) {
         request_builder = request_builder.json(&body_data);
       } else {
-        warn!("HTTP 方法 {:?} 不支持请求体，忽略 body 参数", method);
+        warn!("HTTP method {:?} does not support request body, ignore body parameter", method);
       }
     }
 
-    // 发送请求
+    // Send http request
     let start_time = std::time::Instant::now();
     let response = request_builder.send().await.map_err(|e| {
       error!("HTTP 请求失败: {}", e);
@@ -115,26 +116,26 @@ impl NodeExecutable for HttpRequestV1 {
 
     debug!("HTTP 响应: status={}, duration={:?}", status, duration);
 
-    // 获取响应内容类型
+    // Get http response content type
     let content_type = response_headers
       .get("content-type")
       .and_then(|ct| ct.to_str().ok())
       .unwrap_or("application/octet-stream");
 
-    // 处理响应
+    // Process http response
     let response_data = if content_type.contains("application/json") || content_type.contains("text/") {
       // JSON 或文本内容
       let text = response.text().await.map_err(|e| {
-        error!("读取响应内容失败: {}", e);
+        error!("Read response text failed: {}", e);
         NodeExecutionError::DataProcessingError { message: format!("Failed to read response text: {}", e) }
       })?;
 
       if content_type.contains("application/json") {
-        // 尝试解析为 JSON
+        // Try to parse as JSON
         match serde_json::from_str::<Value>(&text) {
           Ok(json) => json,
           Err(_) => {
-            // JSON 解析失败，作为文本处理
+            // JSON parsing failed, treat as plain text
             Value::String(text)
           }
         }
@@ -142,9 +143,9 @@ impl NodeExecutable for HttpRequestV1 {
         Value::String(text)
       }
     } else {
-      // 二进制内容，返回基本信息
+      // Binary content, return basic info
       let bytes = response.bytes().await.map_err(|e| {
-        error!("读取响应字节失败: {}", e);
+        error!("Read response bytes failed: {}", e);
         NodeExecutionError::DataProcessingError { message: format!("Failed to read response bytes: {}", e) }
       })?;
 
@@ -155,7 +156,7 @@ impl NodeExecutable for HttpRequestV1 {
       })
     };
 
-    // 构建完整的响应数据
+    // Build complete response data
     let result_data = serde_json::json!({
       "status": status.as_u16(),
       "status_text": status.canonical_reason().unwrap_or("Unknown"),
@@ -170,7 +171,7 @@ impl NodeExecutable for HttpRequestV1 {
       "content_type": content_type,
     });
 
-    info!("HTTP 请求完成: status={}, duration={:?}", status, duration);
+    info!("HTTP request completed: status={}, duration={:?}", status, duration);
 
     let result = vec![ExecutionData::new_json(
       result_data,
@@ -185,14 +186,10 @@ impl NodeExecutable for HttpRequestV1 {
   }
 }
 
-impl HttpRequestV1 {
-  pub const NODE_KIND: &str = "HttpRequest";
-}
-
-/// 创建节点定义
+/// Create node definition
 pub(super) fn create_definition() -> Result<NodeDefinition, RegistrationError> {
   NodeDefinitionBuilder::default()
-    .kind(NodeKind::from(HttpRequestV1::NODE_KIND))
+    .kind(HTTP_REQUEST_NODE_KIND)
     .version(Version::new(1, 0, 0))
     .groups([NodeGroupKind::Input, NodeGroupKind::Output])
     .display_name("HTTP Request")

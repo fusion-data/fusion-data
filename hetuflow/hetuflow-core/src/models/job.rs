@@ -28,7 +28,7 @@ pub struct SchedJob {
 }
 
 /// Job 创建模型
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-db", derive(modelsql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct JobForCreate {
@@ -42,7 +42,7 @@ pub struct JobForCreate {
 }
 
 /// Job 更新模型
-#[derive(Debug, Clone, Default, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-db", derive(modelsql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct JobForUpdate {
@@ -57,7 +57,7 @@ pub struct JobForUpdate {
 }
 
 /// Job 查询请求
-#[derive(Default, Deserialize)]
+#[derive(Default, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct JobForQuery {
   pub filter: JobFilter,
@@ -65,7 +65,7 @@ pub struct JobForQuery {
 }
 
 /// Job 过滤器
-#[derive(Default, Deserialize)]
+#[derive(Default, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-db", derive(modelsql::FilterNodes))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct JobFilter {

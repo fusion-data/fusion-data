@@ -23,7 +23,7 @@ pub struct SchedServer {
 }
 
 /// Server 创建模型
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-db", derive(modelsql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct ServerForRegister {
@@ -34,7 +34,7 @@ pub struct ServerForRegister {
 }
 
 /// Server 更新模型
-#[derive(Debug, Clone, Default, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-db", derive(modelsql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct ServerForUpdate {
@@ -48,7 +48,7 @@ pub struct ServerForUpdate {
 }
 
 /// Server 查询请求
-#[derive(Default, Deserialize)]
+#[derive(Default, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct ServerForQuery {
   pub filter: ServerFilter,
@@ -56,7 +56,7 @@ pub struct ServerForQuery {
 }
 
 /// Server 过滤器
-#[derive(Default, Deserialize)]
+#[derive(Default, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-db", derive(modelsql::FilterNodes))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct ServerFilter {

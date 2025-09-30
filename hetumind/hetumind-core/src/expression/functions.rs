@@ -1,5 +1,5 @@
 // src/functions.rs
-use ahash::HashMap;
+use fusion_common::ahash::HashMap;
 use chrono::{Duration, NaiveTime};
 use fusion_common::time::now;
 use jsonpath_rust::JsonPath;
@@ -310,7 +310,7 @@ impl FunctionRegistry {
     });
 
     // 数组操作函数
-    self.register("filter", |args, proxy, ctx| {
+    self.register("filter", |args, _proxy, _ctx| {
       if args.len() != 2 {
         return Err(FunctionError::ArgumentError {
           message: "filter() 需要2个参数: (array, condition)".to_string()

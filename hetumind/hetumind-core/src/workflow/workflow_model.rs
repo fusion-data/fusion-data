@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use ahash::HashMap;
+use fusion_common::ahash::HashMap;
 use modelsql_core::field::FieldMask;
 use modelsql_core::filter::{OpValsBool, OpValsInt32, OpValsInt64, OpValsString, OpValsUuid, Page};
 use serde::{Deserialize, Serialize};

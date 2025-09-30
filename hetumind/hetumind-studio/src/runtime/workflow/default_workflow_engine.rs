@@ -113,11 +113,11 @@ fn collect_parents_results(
   parents_results
 }
 
+// TODO: 若存在有多个开始节点的情况，需要考虑如何处理？
 #[async_trait]
 impl WorkflowEngine for DefaultWorkflowEngine {
   async fn execute_workflow(
     &self,
-    // TODO: 若存在有多个开始节点的情况，需要考虑如何处理？
     trigger_data: (NodeName, ExecutionDataMap),
     context: &ExecutionContext,
   ) -> Result<ExecutionResult, WorkflowExecutionError> {
@@ -129,6 +129,7 @@ impl WorkflowEngine for DefaultWorkflowEngine {
 
     let mut all_results: NodesExecutionMap = HashMap::default();
     all_results.insert(trigger_data.0, trigger_data.1);
+
     let mut nodes_result: HashMap<NodeName, NodeExecutionResult> = HashMap::default();
 
     let mut pending_nodes = graph.get_start_nodes();

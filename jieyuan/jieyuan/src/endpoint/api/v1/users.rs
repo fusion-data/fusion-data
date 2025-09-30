@@ -3,7 +3,8 @@ use axum::{
   extract::{Path, State},
   http::StatusCode,
 };
-use fusion_core::{IdI64Result, application::Application};
+use fusion_common::model::IdI64Result;
+use fusion_core::application::Application;
 use fusion_web::{WebError, WebResult, ok_json};
 use modelsql::ModelManager;
 use utoipa_axum::router::OpenApiRouter;

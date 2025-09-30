@@ -1,6 +1,6 @@
 use chrono::{DateTime, FixedOffset};
 use fusion_common::time::{OffsetDateTime, now_offset};
-use modelsql::filter::Page;
+use modelsql_core::filter::Page;
 use modelsql_core::{
   field::FieldMask,
   filter::{OpValsDateTime, OpValsInt32, OpValsUuid},
@@ -58,7 +58,7 @@ impl SchedSchedule {
 }
 
 /// Schedule 创建模型
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-db", derive(modelsql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct ScheduleForCreate {
@@ -76,7 +76,7 @@ pub struct ScheduleForCreate {
 }
 
 /// Schedule 更新模型
-#[derive(Debug, Clone, Default, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-db", derive(modelsql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct ScheduleForUpdate {
@@ -93,7 +93,7 @@ pub struct ScheduleForUpdate {
 }
 
 /// Schedule 过滤器
-#[derive(Default, Deserialize)]
+#[derive(Default, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-db", derive(modelsql::FilterNodes))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct ScheduleFilter {
@@ -105,7 +105,7 @@ pub struct ScheduleFilter {
   pub updated_at: Option<OpValsDateTime>,
 }
 
-#[derive(Default, Deserialize)]
+#[derive(Default, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct ScheduleForQuery {
   pub page: Page,

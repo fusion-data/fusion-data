@@ -1,4 +1,4 @@
-use hetumind::start::start;
+use hetumind_studio::start::start;
 
 #[tokio::main]
 async fn main() {

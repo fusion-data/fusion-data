@@ -13,7 +13,6 @@ pub use http_request_v1::*;
 
 pub struct HttpRequest {
   default_version: Version,
-  versions: Vec<Version>,
   executors: Vec<NodeExecutor>,
 }
 
@@ -21,9 +20,8 @@ impl HttpRequest {
   pub fn new() -> Result<Self, RegistrationError> {
     let base = create_definition()?;
     let executors: Vec<NodeExecutor> = vec![Arc::new(HttpRequestV1::try_from(base)?)];
-    let versions: Vec<Version> = executors.iter().map(|node| node.definition().version.clone()).collect();
-    let default_version = versions.iter().max().unwrap().clone();
-    Ok(Self { default_version, versions, executors })
+    let default_version = executors.iter().map(|node| node.definition().version.clone()).max().unwrap();
+    Ok(Self { default_version, executors })
   }
 }
 

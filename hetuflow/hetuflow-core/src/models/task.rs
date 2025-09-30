@@ -1,9 +1,8 @@
 use chrono::{DateTime, FixedOffset};
 use fusion_common::ahash::HashMap;
-use modelsql::filter::OpValsString;
 use modelsql_core::{
   field::FieldMask,
-  filter::{OpValsDateTime, OpValsInt32, OpValsUuid, OpValsValue, Page},
+  filter::{OpValsDateTime, OpValsInt32, OpValsString, OpValsUuid, OpValsValue, Page},
 };
 use serde::{Deserialize, Serialize};
 use strum::AsRefStr;
@@ -146,7 +145,7 @@ impl SchedTask {
 }
 
 /// SchedTask 创建模型
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-db", derive(modelsql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct TaskForCreate {
@@ -182,7 +181,7 @@ fn default_parameters() -> serde_json::Value {
 }
 
 /// SchedTask 更新模型
-#[derive(Debug, Clone, Default, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-db", derive(modelsql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct TaskForUpdate {
@@ -204,7 +203,7 @@ pub struct TaskForUpdate {
 }
 
 /// SchedTask 查询请求
-#[derive(Default, Deserialize)]
+#[derive(Default, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct TaskForQuery {
   pub filter: TaskFilter,
@@ -212,7 +211,7 @@ pub struct TaskForQuery {
 }
 
 /// SchedTask 过滤器
-#[derive(Default, Deserialize)]
+#[derive(Default, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-db", derive(modelsql::FilterNodes))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct TaskFilter {

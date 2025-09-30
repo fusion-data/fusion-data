@@ -9,7 +9,10 @@ pub mod filter {
 pub mod includes;
 mod macro_helpers;
 mod model_manager;
-pub mod page;
+// Re-export page from modelsql-core
+pub mod page {
+  pub use modelsql_core::page::*;
+}
 #[cfg(feature = "with-postgres")]
 pub mod postgres;
 #[cfg(feature = "with-sqlite")]

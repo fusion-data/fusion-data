@@ -75,7 +75,7 @@ pub struct SchedAgent {
 }
 
 /// Agent 创建模型
-#[derive(Debug, Deserialize, Validate)]
+#[derive(Debug, Serialize, Deserialize, Validate)]
 #[cfg_attr(feature = "with-db", derive(modelsql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct AgentForCreate {
@@ -94,7 +94,7 @@ pub struct AgentForCreate {
 }
 
 /// Agent 更新模型
-#[derive(Debug, Clone, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "with-db", derive(modelsql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct AgentForUpdate {
@@ -109,7 +109,7 @@ pub struct AgentForUpdate {
 }
 
 /// Agent 过滤器
-#[derive(Default, Deserialize)]
+#[derive(Default, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-db", derive(modelsql::FilterNodes))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct AgentFilter {
@@ -121,7 +121,7 @@ pub struct AgentFilter {
 }
 
 /// Agent 查询请求
-#[derive(Default, Deserialize)]
+#[derive(Default, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct AgentForQuery {
   pub filter: AgentFilter,

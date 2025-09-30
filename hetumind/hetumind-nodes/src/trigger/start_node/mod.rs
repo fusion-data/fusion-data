@@ -12,6 +12,8 @@ use hetumind_core::workflow::{
   make_execution_data_map,
 };
 
+use crate::constants::START_NODE_KIND;
+
 pub struct StartNodeV1 {
   definition: Arc<NodeDefinition>,
 }
@@ -56,8 +58,6 @@ impl Node for StartNode {
 }
 
 impl StartNode {
-  pub const NODE_KIND: &str = "hetumind_nodes::trigger::Start";
-
   pub fn new() -> Result<Self, RegistrationError> {
     let base = create_base();
     let executors: Vec<NodeExecutor> = vec![Arc::new(StartNodeV1::try_from(base)?)];
@@ -69,7 +69,7 @@ impl StartNode {
 fn create_base() -> NodeDefinitionBuilder {
   let mut base = NodeDefinitionBuilder::default();
   base
-    .kind(StartNode::NODE_KIND)
+    .kind(START_NODE_KIND)
     .version(Version::new(1, 0, 0))
     .groups([NodeGroupKind::Trigger])
     .display_name("Start")

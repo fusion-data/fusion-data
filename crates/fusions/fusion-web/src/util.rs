@@ -4,12 +4,11 @@ use axum::Json;
 use axum::extract::Query;
 use axum::http::StatusCode;
 use axum::http::request::Parts;
-#[cfg(feature = "with-ulid")]
-use fusion_core::IdUlidResult;
+use fusion_common::model::IdI64Result;
+use fusion_core::DataError;
 use fusion_core::configuration::SecuritySetting;
 use fusion_core::log::get_trace_id;
 use fusion_core::security::{AccessToken, SecurityUtils};
-use fusion_core::{DataError, IdI64Result};
 use fusion_corelib::ctx::Ctx;
 use headers::authorization::Bearer;
 use headers::{Authorization, HeaderMapExt};
@@ -38,14 +37,14 @@ pub fn ok_id(id: i64) -> WebResult<IdI64Result> {
 
 #[cfg(feature = "with-ulid")]
 #[inline]
-pub fn ok_ulid(id: Ulid) -> WebResult<IdUlidResult> {
-  Ok(IdUlidResult::new(id).into())
+pub fn ok_ulid(id: Ulid) -> WebResult<fusion_common::model::IdUlidResult> {
+  Ok(fusion_common::model::IdUlidResult::new(id).into())
 }
 
 #[cfg(feature = "with-uuid")]
 #[inline]
-pub fn ok_uuid(id: uuid::Uuid) -> WebResult<fusion_core::IdUuidResult> {
-  Ok(fusion_core::IdUuidResult::new(id).into())
+pub fn ok_uuid(id: uuid::Uuid) -> WebResult<fusion_common::model::IdUuidResult> {
+  Ok(fusion_common::model::IdUuidResult::new(id).into())
 }
 
 pub fn unauthorized_app_error(msg: impl Into<String>) -> (StatusCode, Json<WebError>) {

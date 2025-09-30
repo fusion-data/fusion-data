@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use ahash::HashMap;
+use fusion_common::ahash::HashMap;
 use serde::{Deserialize, Serialize};
 use typed_builder::TypedBuilder;
 

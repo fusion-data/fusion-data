@@ -11,61 +11,6 @@ use crate::filter::{
 };
 
 use super::{as_f64, as_i32, as_i64, into_numbers, into_strings, ovs_json::OpValueToOpValType};
-
-impl Serialize for OpValsArrayInt32 {
-  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-  where
-    S: serde::Serializer,
-  {
-    let mut map = serializer.serialize_map(Some(self.0.len()))?;
-    for opval in &self.0 {
-      match opval {
-        OpValArrayInt32::Eq(items) => map.serialize_entry("$eq", items)?,
-        OpValArrayInt32::Not(items) => map.serialize_entry("$not", items)?,
-        OpValArrayInt32::Contains(items) => map.serialize_entry("$contains", items)?,
-        OpValArrayInt32::Contained(items) => map.serialize_entry("$contained", items)?,
-      }
-    }
-    map.end()
-  }
-}
-
-impl Serialize for OpValsArrayInt64 {
-  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-  where
-    S: serde::Serializer,
-  {
-    let mut map = serializer.serialize_map(Some(self.0.len()))?;
-    for opval in &self.0 {
-      match opval {
-        OpValArrayInt64::Eq(items) => map.serialize_entry("$eq", items)?,
-        OpValArrayInt64::Not(items) => map.serialize_entry("$not", items)?,
-        OpValArrayInt64::Contains(items) => map.serialize_entry("$contains", items)?,
-        OpValArrayInt64::Contained(items) => map.serialize_entry("$contained", items)?,
-      }
-    }
-    map.end()
-  }
-}
-
-impl Serialize for OpValsArrayFloat64 {
-  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-  where
-    S: serde::Serializer,
-  {
-    let mut map = serializer.serialize_map(Some(self.0.len()))?;
-    for opval in &self.0 {
-      match opval {
-        OpValArrayFloat64::Eq(items) => map.serialize_entry("$eq", items)?,
-        OpValArrayFloat64::Not(items) => map.serialize_entry("$not", items)?,
-        OpValArrayFloat64::Contains(items) => map.serialize_entry("$contains", items)?,
-        OpValArrayFloat64::Contained(items) => map.serialize_entry("$contained", items)?,
-      }
-    }
-    map.end()
-  }
-}
-
 impl Serialize for OpValsArrayString {
   fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
   where
@@ -137,6 +82,60 @@ impl OpValueToOpValType for OpValArrayString {
       "$contained" => Ok(OpValArrayString::Contained(items)),
       _ => Err(Error::JsonValNotOfType("OpValArrayString")),
     }
+  }
+}
+
+impl Serialize for OpValsArrayInt32 {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+    S: serde::Serializer,
+  {
+    let mut map = serializer.serialize_map(Some(self.0.len()))?;
+    for opval in &self.0 {
+      match opval {
+        OpValArrayInt32::Eq(items) => map.serialize_entry("$eq", items)?,
+        OpValArrayInt32::Not(items) => map.serialize_entry("$not", items)?,
+        OpValArrayInt32::Contains(items) => map.serialize_entry("$contains", items)?,
+        OpValArrayInt32::Contained(items) => map.serialize_entry("$contained", items)?,
+      }
+    }
+    map.end()
+  }
+}
+
+impl Serialize for OpValsArrayInt64 {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+    S: serde::Serializer,
+  {
+    let mut map = serializer.serialize_map(Some(self.0.len()))?;
+    for opval in &self.0 {
+      match opval {
+        OpValArrayInt64::Eq(items) => map.serialize_entry("$eq", items)?,
+        OpValArrayInt64::Not(items) => map.serialize_entry("$not", items)?,
+        OpValArrayInt64::Contains(items) => map.serialize_entry("$contains", items)?,
+        OpValArrayInt64::Contained(items) => map.serialize_entry("$contained", items)?,
+      }
+    }
+    map.end()
+  }
+}
+
+impl Serialize for OpValsArrayFloat64 {
+  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+  where
+    S: serde::Serializer,
+  {
+    let mut map = serializer.serialize_map(Some(self.0.len()))?;
+    for opval in &self.0 {
+      match opval {
+        OpValArrayFloat64::Eq(items) => map.serialize_entry("$eq", items)?,
+        OpValArrayFloat64::Not(items) => map.serialize_entry("$not", items)?,
+        OpValArrayFloat64::Contains(items) => map.serialize_entry("$contains", items)?,
+        OpValArrayFloat64::Contained(items) => map.serialize_entry("$contained", items)?,
+      }
+    }
+    map.end()
   }
 }
 

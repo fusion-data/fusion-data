@@ -41,7 +41,7 @@ impl<'de> Deserialize<'de> for HttpMethod {
       "PATCH" => Ok(HttpMethod::Patch),
       "HEAD" => Ok(HttpMethod::Head),
       "OPTIONS" => Ok(HttpMethod::Options),
-      _ => Err(serde::de::Error::custom(format!("不支持的 HTTP 方法: {}", s))),
+      _ => Err(serde::de::Error::custom(format!("Unsupported HTTP method: {}", s))),
     }
   }
 }

@@ -1,0 +1,62 @@
+[package]
+name = "hetuflow-sdk"
+description = "Rust SDK for Hetuflow distributed task scheduling and workflow orchestration system"
+license = "Apache-2.0"
+keywords = ["workflow", "scheduling", "distributed", "sdk", "hetuflow"]
+categories = ["api-bindings", "development-tools", "asynchronous"]
+publish = true
+authors.workspace = true
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = []
+wasm = ["uuid/js"]
+# WASM optimization features
+wee_alloc = ["dep:wee_alloc"]
+
+
+[dependencies]
+fusion-common = { workspace = true, features = ["with-uuid"] }
+modelsql-core = { workspace = true, features = ["with-uuid"] }
+hetuflow-core = { workspace = true }
+
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+thiserror = { workspace = true }
+
+# Native-only dependencies
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+reqwest = { workspace = true }
+tokio = { workspace = true }
+
+# WASM-only dependencies
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = { version = "0.2", features = ["serde-serialize"] }
+wasm-bindgen-futures = "0.4"
+web-sys = { version = "0.3", features = [
+  "Headers",
+  "Request",
+  "RequestInit",
+  "Response",
+  "Window",
+  "console",
+  "AbortController",
+  "AbortSignal",
+] }
+js-sys = "0.3"
+getrandom = { version = "0.3", features = ["wasm_js"] }
+gloo-net = { version = "0.6", features = ["http", "json"] }
+gloo-timers = { version = "0.3", features = ["futures"] }
+console_error_panic_hook = "0.1"
+serde-wasm-bindgen = "0.6"
+wee_alloc = { version = "0.4", optional = true }
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3"

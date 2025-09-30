@@ -1,4 +1,4 @@
-use ahash::HashMap;
+use fusion_common::ahash::HashMap;
 use fusion_common::time::OffsetDateTime;
 use modelsql_core::{
   field::FieldMask,

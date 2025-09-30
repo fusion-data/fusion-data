@@ -1,3 +1,7 @@
+use chrono::NaiveTime;
+use fusion_common::ahash::HashMap;
+use fusion_common::time::{OffsetDateTime, now};
+
 use super::{
   context::ExpressionExecutionContext,
   data_proxy::DataProxy,
@@ -5,9 +9,6 @@ use super::{
   parse::{BinaryOperator, Expression, ExpressionParser, ParseError},
   value::Value,
 };
-use ahash::HashMap;
-use chrono::NaiveTime;
-use fusion_common::time::{OffsetDateTime, now};
 
 #[derive(Debug, thiserror::Error)]
 pub enum EvaluationError {

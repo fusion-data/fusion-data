@@ -34,3 +34,9 @@ rustflags = ["-C", "linker=clang", "-C", "link-arg=-fuse-ld=lld"]
 rustflags = ["-C", "linker=clang", "-C", "link-arg=-fuse-ld=lld"]
 [target.aarch64-apple-darwin]
 rustflags = ["-C", "linker=clang", "-C", "link-arg=-fuse-ld=lld"]
+
+# WASM 目标配置
+[target.wasm32-unknown-unknown]
+rustflags = [
+  "--cfg", "getrandom_backend=\"wasm_js\""
+]
