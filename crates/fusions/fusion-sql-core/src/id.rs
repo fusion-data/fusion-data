@@ -31,7 +31,7 @@ impl Id {
     match self {
       Id::I32(id) => (col, *id).into(),
       Id::I64(id) => (col, *id).into(),
-      Id::String(id) => (col, id).into(),
+      Id::String(id) => (col, id.to_string()).into(),
       #[cfg(feature = "with-uuid")]
       Id::Uuid(id) => (col, id).into(),
     }

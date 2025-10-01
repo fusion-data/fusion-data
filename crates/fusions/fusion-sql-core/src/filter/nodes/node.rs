@@ -1,7 +1,9 @@
 use chrono::{DateTime, FixedOffset};
 
-use crate::filter::{OpValsBool, OpValsDateTime, OpValsValue, ops::OpVal};
-// use crate::filter::{OpValDateTime, OpValFloat64, OpValInt32, OpValInt64, OpValString, OpValTrait, OpVals};
+use crate::filter::{
+  OpValsBool, OpValsDateTime, OpValsFloat32, OpValsFloat64, OpValsInt32, OpValsInt64, OpValsString, OpValsValue,
+  ops::OpVal,
+};
 
 pub trait IntoFilterNodes {
   fn filter_nodes(self, rel: Option<String>) -> Vec<FilterNode>;
@@ -67,47 +69,34 @@ macro_rules! from_tuples_opval {
 					FilterNode::new(name, ov)
 				}
 			}
-
-			// /// From `trait from (prop_name, Vec<OpValType>)`  for FilterNode
-			// /// (e.g., `let node: FilterNode = (prop_name, Vec<OpValType>).into()`)
-			// impl From<(&str, Vec<$OV>)> for FilterNode {
-			// 	fn from((name, ovs): (&str, Vec<$OV>)) -> Self {
-			// 		let opvals: Vec<OpVal> = ovs.into_iter().map(|v| OpVal::from(v)).collect();
-			// 		FilterNode::new(name, opvals)
-			// 	}
-			// }
 		)+
 	};
 }
 from_tuples_opval!(
-  // String
-  // OpValString,
-  // Datetime
+  OpValsString,
   OpValsDateTime,
-  // Nums
-  // OpValUint64,
-  // OpValUint32,
-  // OpValInt64,
-  // OpValInt32,
-  // OpValFloat64 ,
-  // OpValFloat32,
+  // OpValsUint64,
+  // OpValsUint32,
+  OpValsInt64,
+  OpValsInt32,
+  OpValsFloat64,
+  OpValsFloat32,
   OpValsValue,
   OpValsBool
 );
 
 #[cfg(feature = "with-uuid")]
-use super::super::OpValUuid;
+use crate::filter::OpValsUuid;
 
 #[cfg(feature = "with-uuid")]
-from_tuples_opval!(OpValUuid);
+from_tuples_opval!(OpValsUuid);
 // endregion: --- From Tuples (OpValType)
 
-// region:    --- Froms Tuples (Uuid val)
-
+// region:    --- From Tuples (Uuid val)
 #[cfg(feature = "with-uuid")]
 impl From<(&str, &uuid::Uuid)> for FilterNode {
   fn from((name, ov): (&str, &uuid::Uuid)) -> Self {
-    let opvals = vec![OpValUuid::Eq(*ov).into()];
+    let opvals = OpValsUuid::eq(*ov);
     FilterNode::new(name.to_string(), opvals)
   }
 }
@@ -115,38 +104,29 @@ impl From<(&str, &uuid::Uuid)> for FilterNode {
 #[cfg(feature = "with-uuid")]
 impl From<(&str, uuid::Uuid)> for FilterNode {
   fn from((name, ov): (&str, uuid::Uuid)) -> Self {
-    let opvals = vec![OpValUuid::Eq(ov).into()];
+    let opvals = OpValsUuid::eq(ov);
     FilterNode::new(name.to_string(), opvals)
   }
 }
+// endregion: --- From Tuples (Uuid val)
 
-// endregion: --- Froms Tuples (Uuid val)
+// region:    --- From Tuples (String val)
+impl From<(&str, &str)> for FilterNode {
+  fn from((name, ov): (&str, &str)) -> Self {
+    let opvals = OpValsString::eq(ov.to_string());
+    FilterNode::new(name, opvals)
+  }
+}
 
-// // region:    --- Froms Tuples (String val)
-// impl From<(&str, &str)> for FilterNode {
-//   fn from((name, ov): (&str, &str)) -> Self {
-//     let opvals = vec![OpValString::Eq(ov.to_string()).into()];
-//     FilterNode::new(name.to_string(), opvals)
-//   }
-// }
+impl From<(&str, String)> for FilterNode {
+  fn from((name, ov): (&str, String)) -> Self {
+    let opvals = OpValsString::eq(ov);
+    FilterNode::new(name.to_string(), opvals)
+  }
+}
+// endregion: --- From Tuples (String val)
 
-// impl From<(&str, &String)> for FilterNode {
-//   fn from((name, ov): (&str, &String)) -> Self {
-//     let opvals = vec![OpValString::Eq(ov.to_string()).into()];
-//     FilterNode::new(name.to_string(), opvals)
-//   }
-// }
-
-// impl From<(&str, String)> for FilterNode {
-//   fn from((name, ov): (&str, String)) -> Self {
-//     let opvals = vec![OpValString::Eq(ov).into()];
-//     FilterNode::new(name.to_string(), opvals)
-//   }
-// }
-// // endregion: --- Froms Tuples (String val)
-
-// region:    --- Froms Tuples (Datetime val)
-
+// region:    --- From Tuples (DateTime val)
 impl From<(&str, &DateTime<FixedOffset>)> for FilterNode {
   fn from((name, ov): (&str, &DateTime<FixedOffset>)) -> Self {
     let opvals = OpValsDateTime::eq(*ov);
@@ -160,8 +140,7 @@ impl From<(&str, DateTime<FixedOffset>)> for FilterNode {
     FilterNode::new(name.to_string(), opvals)
   }
 }
-
-// endregion: --- Froms Tuples (Datetime val)
+// endregion: --- From Tuples (DateTime val)
 
 // region:    --- From Tuples (num val)
 // - `nt` e.g., `u64`
@@ -179,25 +158,24 @@ impl From<(&str, $nt)> for FilterNode {
 	};
 }
 
-// from_tuples_num!(
-// (u64, OpValsUint64),
-// (u32, OpValsUint32),
-// (i64, OpValsInt64),
-// (i32, OpValsInt32),
-// (f32, OpValsFloat32),
-// (f64, OpValsFloat64)
-// );
-
+from_tuples_num!(
+  // (u64, OpValsUint64),
+  // (u32, OpValsUint32),
+  (i64, OpValsInt64),
+  (i32, OpValsInt32),
+  (f32, OpValsFloat32),
+  (f64, OpValsFloat64)
+);
 // endregion: --- From Tuples (num val)
 
-// // region:    --- From Tuples (bool val)
-// impl From<(&str, bool)> for FilterNode {
-//   fn from((name, ov): (&str, bool)) -> Self {
-//     let opvals = vec![OpValBool::Eq(ov).into()];
-//     FilterNode::new(name.to_string(), opvals)
-//   }
-// }
-// // endregion: --- From Tuples (bool val)
+// region:    --- From Tuples (bool val)
+impl From<(&str, bool)> for FilterNode {
+  fn from((name, ov): (&str, bool)) -> Self {
+    let opvals = OpValsBool::eq(ov);
+    FilterNode::new(name.to_string(), opvals)
+  }
+}
+// endregion: --- From Tuples (bool val)
 
 #[cfg(feature = "with-sea-query")]
 mod with_sea_query {

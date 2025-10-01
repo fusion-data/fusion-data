@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 #[cfg(feature = "with-sea-query")]
 use crate::filter::FilterNodeOptions;
-use crate::filter::{OpVal, OpValTrait};
+use crate::filter::OpVal;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
@@ -57,8 +57,7 @@ impl From<OpValsBool> for OpVal {
 mod with_sea_query {
   use sea_query::{BinOper, ColumnRef, ConditionExpression, SimpleExpr};
 
-  use crate::filter::sea_is_col_value_null;
-  use crate::filter::{ForSeaCondition, SeaResult};
+  use crate::filter::{ForSeaCondition, OpValTrait, SeaResult, sea_is_col_value_null};
   use crate::sea_utils::into_node_value_expr;
 
   use super::*;
@@ -90,31 +89,3 @@ mod with_sea_query {
     }
   }
 }
-// #[cfg(feature = "with-sea-query")]
-// mod with_sea_query {
-//   use super::*;
-//   use crate::filter::{FilterNodeOptions, SeaResult, sea_is_col_value_null};
-//   use crate::sea_utils::into_node_value_expr;
-//   use sea_query::{BinOper, ColumnRef, ConditionExpression, SimpleExpr};
-
-//   impl OpValBool {
-//     pub fn into_sea_cond_expr(
-//       self,
-//       col: &ColumnRef,
-//       node_options: &FilterNodeOptions,
-//     ) -> SeaResult<ConditionExpression> {
-//       let binary_fn = |op: BinOper, val: bool| {
-//         let expr = into_node_value_expr(val, node_options);
-//         ConditionExpression::SimpleExpr(SimpleExpr::binary(col.clone().into(), op, expr))
-//       };
-
-//       let cond = match self {
-//         OpValBool::Eq(b) => binary_fn(BinOper::Equal, b),
-//         OpValBool::Not(b) => binary_fn(BinOper::NotEqual, b),
-//         OpValBool::Null(null) => sea_is_col_value_null(col.clone(), null),
-//       };
-
-//       Ok(cond)
-//     }
-//   }
-// }

@@ -1,7 +1,7 @@
 #![allow(unused)] // For early development.
 
 use fusion_sql::filter::{
-  FilterNode, FilterNodeOptions, IntoSeaError, OpValInt32, OpValValue, SeaResult, ToSeaConditionFnHolder,
+  FilterNode, FilterNodeOptions, IntoSeaError, OpValsInt32, OpValsValue, SeaResult, ToSeaConditionFnHolder,
 };
 use sea_query::{ColumnRef, ConditionExpression};
 use std::sync::Arc;
@@ -13,13 +13,12 @@ fn test_filter_node_with_sea_condition() {
   let node = FilterNode {
     rel: None,
     name: "some_name".to_string(),
-    opvals: vec![123.into()],
+    opvals: OpValsInt32::eq(123).into(),
     options: FilterNodeOptions::default(),
-    opvals2: None,
     for_sea_condition: Some(special_to_sea_cond.into()),
   };
 }
 
-pub fn special_to_sea_condition(col: &ColumnRef, op_val: OpValValue) -> SeaResult<ConditionExpression> {
+pub fn special_to_sea_condition(col: &ColumnRef, op_val: OpValsValue) -> SeaResult<Vec<ConditionExpression>> {
   todo!()
 }

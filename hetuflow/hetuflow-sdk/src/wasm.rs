@@ -427,8 +427,7 @@ impl WasmAgentsApi {
     future_to_promise(async move {
       let query = serialization::from_js_value(&params)
         .map_err(|e| JsValue::from_str(&format!("Failed to parse query parameters: {:?}", e)))?;
-      let result = client.agents().query(query).await
-        .map_err(|e| JsValue::from_str(&e.to_string()))?;
+      let result = client.agents().query(query).await.map_err(|e| JsValue::from_str(&e.to_string()))?;
       serialization::to_js_value(&result)
         .map_err(|e| JsValue::from_str(&format!("Failed to serialize result: {:?}", e)))
     })
@@ -445,8 +444,7 @@ impl WasmAgentsApi {
   pub fn get(&self, id: String) -> Promise {
     let client = self.client.clone();
     future_to_promise(async move {
-      let result = client.agents().get(&id).await
-        .map_err(|e| JsValue::from_str(&e.to_string()))?;
+      let result = client.agents().get(&id).await.map_err(|e| JsValue::from_str(&e.to_string()))?;
       serialization::to_js_value(&result)
         .map_err(|e| JsValue::from_str(&format!("Failed to serialize result: {:?}", e)))
     })
@@ -465,8 +463,7 @@ impl WasmAgentsApi {
     future_to_promise(async move {
       let agent = serialization::from_js_value(&data)
         .map_err(|e| JsValue::from_str(&format!("Failed to parse agent data: {:?}", e)))?;
-      let result = client.agents().create(agent).await
-        .map_err(|e| JsValue::from_str(&e.to_string()))?;
+      let result = client.agents().create(agent).await.map_err(|e| JsValue::from_str(&e.to_string()))?;
       serialization::to_js_value(&result)
         .map_err(|e| JsValue::from_str(&format!("Failed to serialize result: {:?}", e)))
     })
@@ -486,8 +483,7 @@ impl WasmAgentsApi {
     future_to_promise(async move {
       let update = serialization::from_js_value(&data)
         .map_err(|e| JsValue::from_str(&format!("Failed to parse update data: {:?}", e)))?;
-      let result = client.agents().update(&id, update).await
-        .map_err(|e| JsValue::from_str(&e.to_string()))?;
+      let result = client.agents().update(&id, update).await.map_err(|e| JsValue::from_str(&e.to_string()))?;
       serialization::to_js_value(&result)
         .map_err(|e| JsValue::from_str(&format!("Failed to serialize result: {:?}", e)))
     })

@@ -29,7 +29,7 @@ fn test_expand_filter_nodes_filter_rel() -> Result<()> {
   let filter = TaskFilter { id: Some(123.into()), title: Some("some title".into()), label: Some("Test".into()) };
 
   // -- Exec
-  let cond: Result<sea_query::Condition, modelsql::filter::IntoSeaError> = filter.try_into();
+  let cond: Result<sea_query::Condition, fusion_sql_core::filter::IntoSeaError> = filter.try_into();
   let cond = cond?;
 
   let mut query = Query::select();
@@ -52,7 +52,7 @@ fn test_expand_filter_nodes_simple() -> Result<()> {
   let filter = ProjectFilter { id: Some(123.into()), label: Some("Test".into()), ..Default::default() };
 
   // -- Exec
-  let cond: Result<sea_query::Condition, modelsql::filter::IntoSeaError> = filter.try_into();
+  let cond: Result<sea_query::Condition, fusion_sql_core::filter::IntoSeaError> = filter.try_into();
   let cond = cond?;
 
   let mut query = Query::select();

@@ -20,10 +20,10 @@ pub use nodes::node::*;
 // pub use ops::op_val_array::*;
 pub use ops::op_val_bool::*;
 pub use ops::op_val_datetime::*;
-// pub use ops::op_val_nums::*;
+pub use ops::op_val_nums::*;
 pub use ops::op_val_string::*;
-// #[cfg(feature = "with-uuid")]
-// pub use ops::op_val_uuid::*;
+#[cfg(feature = "with-uuid")]
+pub use ops::op_val_uuid::*;
 pub use ops::op_val_value::*;
 pub use ops::*;
 pub use page::*;

@@ -1,10 +1,10 @@
 //! Should compile. No test functions yet.
 
-use fusion_sql::filter::{FilterNode, IntoFilterNodes, OpVal, OpValInt64, OpValString, OpValsString};
+use fusion_sql::filter::{FilterNode, IntoFilterNodes, OpVal, OpValsInt64, OpValsString};
 
 pub struct ProjectFilter {
-  id: Option<Vec<OpValInt64>>,
-  name: Option<Vec<OpValString>>,
+  id: Option<OpValsInt64>,
+  name: Option<OpValsString>,
 }
 
 impl IntoFilterNodes for ProjectFilter {
@@ -12,17 +12,12 @@ impl IntoFilterNodes for ProjectFilter {
     let mut nodes = Vec::new();
 
     if let Some(id) = self.id {
-      let node = FilterNode::new_with_rel(
-        rel.clone(),
-        "id".to_string(),
-        id.into_iter().map(|n| n.into()).collect::<Vec<OpVal>>(),
-      );
+      let node = FilterNode::new_with_rel(rel.clone(), "id", id);
       nodes.push(node)
     }
 
     if let Some(name) = self.name {
-      let node =
-        FilterNode::new_with_rel(rel, "name".to_string(), name.into_iter().map(|n| n.into()).collect::<Vec<OpVal>>());
+      let node = FilterNode::new_with_rel(rel, "name", name);
       nodes.push(node)
     }
 
@@ -42,11 +37,7 @@ impl IntoFilterNodes for TaskFilter {
     let mut nodes = Vec::new();
 
     if let Some(title) = self.title {
-      let node = FilterNode::new_with_rel(
-        rel,
-        "title".to_string(),
-        title.0.into_iter().map(|n| n.into()).collect::<Vec<OpVal>>(),
-      );
+      let node = FilterNode::new_with_rel(rel, "title", title);
       nodes.push(node)
     }
 

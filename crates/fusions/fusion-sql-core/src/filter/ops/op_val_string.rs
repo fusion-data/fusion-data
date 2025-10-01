@@ -228,72 +228,7 @@ impl OpValsString {
   }
 }
 
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
-pub enum OpValString {
-  Eq(String),
-  Not(String),
-
-  In(Vec<String>),
-  NotIn(Vec<String>),
-
-  Lt(String),
-  Lte(String),
-
-  Gt(String),
-  Gte(String),
-
-  Contains(String),
-  NotContains(String),
-
-  ContainsAny(Vec<String>),
-  NotContainsAny(Vec<String>),
-
-  ContainsAll(Vec<String>),
-  NotContainsAll(Vec<String>),
-
-  StartsWith(String),
-  NotStartsWith(String),
-
-  StartsWithAny(Vec<String>),
-  NotStartsWithAny(Vec<String>),
-
-  EndsWith(String),
-  NotEndsWith(String),
-
-  EndsWithAny(Vec<String>),
-  NotEndsWithAny(Vec<String>),
-
-  Empty(bool),
-  Null(bool),
-
-  ContainsCi(String),
-  NotContainsCi(String),
-
-  StartsWithCi(String),
-  NotStartsWithCi(String),
-
-  EndsWithCi(String),
-  NotEndsWithCi(String),
-
-  Ilike(String),
-}
-
-// region:    --- Simple value to Eq OpValString
-impl From<String> for OpValString {
-  fn from(val: String) -> Self {
-    OpValString::Eq(val)
-  }
-}
-
-impl From<&str> for OpValString {
-  fn from(val: &str) -> Self {
-    OpValString::Eq(val.to_string())
-  }
-}
-// endregion: --- Simple value to Eq OpValString
-
-// region:    --- Simple value to Eq OpValStrings
+// region:    --- Simple value to Eq OpValsString
 impl From<String> for OpValsString {
   fn from(val: String) -> Self {
     OpValsString::eq(val)
@@ -305,12 +240,12 @@ impl From<&str> for OpValsString {
     OpValsString::eq(val.to_string())
   }
 }
-// endregion: --- Simple value to Eq OpValStrings
+// endregion: --- Simple value to Eq OpValsString
 
 // region:    --- StringOpVal to OpVal
 impl From<OpValsString> for OpVal {
   fn from(val: OpValsString) -> Self {
-    OpVal::String(val)
+    OpVal::String(Box::new(val))
   }
 }
 // endregion: --- StringOpVal to OpVal
@@ -318,13 +253,13 @@ impl From<OpValsString> for OpVal {
 // region:    --- Primitive to OpVal::String(StringOpVal::Eq)
 impl From<String> for OpVal {
   fn from(val: String) -> Self {
-    OpVal::String(OpValsString::eq(val))
+    OpVal::String(Box::new(OpValsString::eq(val)))
   }
 }
 
 impl From<&str> for OpVal {
   fn from(val: &str) -> Self {
-    OpVal::String(OpValsString::eq(val.to_string()))
+    OpVal::String(Box::new(OpValsString::eq(val.to_string())))
   }
 }
 // endregion: --- Primitive to OpVal::String(StringOpVal::Eq)
@@ -332,19 +267,20 @@ impl From<&str> for OpVal {
 #[cfg(feature = "with-sea-query")]
 mod with_sea_query {
   use super::*;
-  use crate::filter::{FilterNodeOptions, SeaResult, sea_is_col_value_null};
+  use crate::filter::{FilterNodeOptions, ForSeaCondition, OpValTrait, SeaResult, sea_is_col_value_null};
   use crate::sea_utils::into_node_value_expr;
   use sea_query::{BinOper, ColumnRef, Condition, ConditionExpression, Expr, Func, SimpleExpr};
 
   #[cfg(feature = "with-ilike")]
   use sea_query::extension::postgres::PgBinOper;
 
-  impl OpValString {
-    pub fn into_sea_cond_expr(
+  impl OpValTrait for OpValsString {
+    fn to_condition_expressions(
       self,
       col: &ColumnRef,
       node_options: &FilterNodeOptions,
-    ) -> SeaResult<ConditionExpression> {
+      _for_sea_condition: Option<&ForSeaCondition>,
+    ) -> SeaResult<Vec<ConditionExpression>> {
       let binary_fn = |op: BinOper, v: String| {
         let expr = into_node_value_expr(v, node_options);
         ConditionExpression::SimpleExpr(SimpleExpr::binary(col.clone().into(), op, expr))
@@ -380,83 +316,124 @@ mod with_sea_query {
         ConditionExpression::SimpleExpr(SimpleExpr::binary(col_expr, op, value_expr))
       };
 
-      let cond = match self {
-        OpValString::Eq(s) => binary_fn(BinOper::Equal, s),
-        OpValString::Not(s) => binary_fn(BinOper::NotEqual, s),
-        OpValString::In(s) => binaries_fn(BinOper::In, s),
-        OpValString::NotIn(s) => binaries_fn(BinOper::NotIn, s),
-        OpValString::Lt(s) => binary_fn(BinOper::SmallerThan, s),
-        OpValString::Lte(s) => binary_fn(BinOper::SmallerThanOrEqual, s),
-        OpValString::Gt(s) => binary_fn(BinOper::GreaterThan, s),
-        OpValString::Gte(s) => binary_fn(BinOper::GreaterThanOrEqual, s),
+      let mut cond_exprs = Vec::new();
 
-        OpValString::Contains(s) => binary_fn(BinOper::Like, format!("%{s}%")),
-
-        OpValString::NotContains(s) => binary_fn(BinOper::NotLike, format!("%{s}%")),
-
-        OpValString::ContainsAll(values) => {
-          let mut cond = Condition::all();
-          for value in values {
-            let expr = binary_fn(BinOper::Like, format!("%{value}%"));
-            cond = cond.add(expr);
-          }
-          ConditionExpression::Condition(cond)
+      if let Some(v) = self.eq {
+        cond_exprs.push(binary_fn(BinOper::Equal, v));
+      }
+      if let Some(v) = self.not {
+        cond_exprs.push(binary_fn(BinOper::NotEqual, v));
+      }
+      if let Some(v) = self.in_ {
+        cond_exprs.push(binaries_fn(BinOper::In, v));
+      }
+      if let Some(v) = self.not_in {
+        cond_exprs.push(binaries_fn(BinOper::NotIn, v));
+      }
+      if let Some(v) = self.lt {
+        cond_exprs.push(binary_fn(BinOper::SmallerThan, v));
+      }
+      if let Some(v) = self.lte {
+        cond_exprs.push(binary_fn(BinOper::SmallerThanOrEqual, v));
+      }
+      if let Some(v) = self.gt {
+        cond_exprs.push(binary_fn(BinOper::GreaterThan, v));
+      }
+      if let Some(v) = self.gte {
+        cond_exprs.push(binary_fn(BinOper::GreaterThanOrEqual, v));
+      }
+      if let Some(v) = self.contains {
+        cond_exprs.push(binary_fn(BinOper::Like, format!("%{}%", v)));
+      }
+      if let Some(v) = self.not_contains {
+        cond_exprs.push(binary_fn(BinOper::NotLike, format!("%{}%", v)));
+      }
+      if let Some(v) = self.not_contains_any {
+        cond_exprs.push(cond_any_of_fn(BinOper::NotLike, v, "%", "%"));
+      }
+      if let Some(v) = self.contains_any {
+        cond_exprs.push(cond_any_of_fn(BinOper::Like, v, "%", "%"));
+      }
+      if let Some(values) = self.contains_all {
+        let mut cond = Condition::all();
+        for value in values {
+          let expr = binary_fn(BinOper::Like, format!("%{value}%"));
+          cond = cond.add(expr);
         }
-        OpValString::NotContainsAll(values) => {
-          let mut cond = Condition::any();
-          for value in values {
-            let expr = binary_fn(BinOper::Like, format!("%{value}%"));
-            cond = cond.add(expr);
-          }
-          ConditionExpression::Condition(cond.not())
+        cond_exprs.push(ConditionExpression::Condition(cond));
+      }
+      if let Some(values) = self.not_contains_all {
+        let mut cond = Condition::any();
+        for value in values {
+          let expr = binary_fn(BinOper::Like, format!("%{value}%"));
+          cond = cond.add(expr);
         }
+        cond_exprs.push(ConditionExpression::Condition(cond.not()));
+      }
+      if let Some(s) = self.starts_with {
+        cond_exprs.push(binary_fn(BinOper::Like, format!("{s}%")));
+      }
+      if let Some(values) = self.starts_with_any {
+        cond_exprs.push(cond_any_of_fn(BinOper::Like, values, "", "%"));
+      }
+      if let Some(s) = self.not_starts_with {
+        cond_exprs.push(binary_fn(BinOper::NotLike, format!("{s}%")));
+      }
+      if let Some(values) = self.not_starts_with_any {
+        cond_exprs.push(cond_any_of_fn(BinOper::NotLike, values, "", "%"));
+      }
+      if let Some(s) = self.ends_with {
+        cond_exprs.push(binary_fn(BinOper::Like, format!("%{s}")));
+      }
+      if let Some(values) = self.ends_with_any {
+        cond_exprs.push(cond_any_of_fn(BinOper::Like, values, "%", ""));
+      }
+      if let Some(s) = self.not_ends_with {
+        cond_exprs.push(binary_fn(BinOper::NotLike, format!("%{s}")));
+      }
+      if let Some(values) = self.not_ends_with_any {
+        cond_exprs.push(cond_any_of_fn(BinOper::NotLike, values, "%", ""));
+      }
+      if let Some(null) = self.null {
+        cond_exprs.push(sea_is_col_value_null(col.clone(), null));
+      }
+      if let Some(empty) = self.empty {
+        let op = if empty { BinOper::Equal } else { BinOper::NotEqual };
+        let expression = Condition::any()
+          .add(sea_is_col_value_null(col.clone(), empty))
+          .add(binary_fn(op, "".to_string()))
+          .into();
+        cond_exprs.push(expression);
+      }
+      if let Some(s) = self.contains_ci {
+        cond_exprs.push(case_insensitive_fn(BinOper::Like, format!("%{s}%")));
+      }
+      if let Some(s) = self.not_contains_ci {
+        cond_exprs.push(case_insensitive_fn(BinOper::NotLike, format!("%{s}%")));
+      }
+      if let Some(s) = self.starts_with_ci {
+        cond_exprs.push(case_insensitive_fn(BinOper::Like, format!("{s}%")));
+      }
+      if let Some(s) = self.not_starts_with_ci {
+        cond_exprs.push(case_insensitive_fn(BinOper::NotLike, format!("{s}%")));
+      }
+      if let Some(s) = self.ends_with_ci {
+        cond_exprs.push(case_insensitive_fn(BinOper::Like, format!("%{s}")));
+      }
+      if let Some(s) = self.not_ends_with_ci {
+        cond_exprs.push(case_insensitive_fn(BinOper::NotLike, format!("%{s}")));
+      }
+      if let Some(s) = self.ilike {
+        #[cfg(feature = "with-ilike")]
+        let expression = pg_binary_fn(PgBinOper::ILike, format!("%{s}%"));
 
-        OpValString::ContainsAny(values) => cond_any_of_fn(BinOper::Like, values, "%", "%"),
-        OpValString::NotContainsAny(values) => cond_any_of_fn(BinOper::NotLike, values, "%", "%"),
+        #[cfg(not(feature = "with-ilike"))]
+        let expression = case_insensitive_fn(BinOper::Like, format!("%{s}%"));
 
-        OpValString::StartsWith(s) => binary_fn(BinOper::Like, format!("{s}%")),
-        OpValString::StartsWithAny(values) => cond_any_of_fn(BinOper::Like, values, "", "%"),
+        cond_exprs.push(expression);
+      }
 
-        OpValString::NotStartsWith(s) => binary_fn(BinOper::NotLike, format!("{s}%")),
-        OpValString::NotStartsWithAny(values) => cond_any_of_fn(BinOper::NotLike, values, "", "%"),
-
-        OpValString::EndsWith(s) => binary_fn(BinOper::Like, format!("%{s}")),
-        OpValString::EndsWithAny(values) => cond_any_of_fn(BinOper::Like, values, "%", ""),
-
-        OpValString::NotEndsWith(s) => binary_fn(BinOper::Like, format!("%{s}")),
-        OpValString::NotEndsWithAny(values) => cond_any_of_fn(BinOper::NotLike, values, "%", ""),
-
-        OpValString::Null(null) => sea_is_col_value_null(col.clone(), null),
-        OpValString::Empty(empty) => {
-          let op = if empty { BinOper::Equal } else { BinOper::NotEqual };
-          Condition::any()
-            .add(sea_is_col_value_null(col.clone(), empty))
-            .add(binary_fn(op, "".to_string()))
-            .into()
-        }
-
-        OpValString::ContainsCi(s) => case_insensitive_fn(BinOper::Like, format!("%{s}%")),
-        OpValString::NotContainsCi(s) => case_insensitive_fn(BinOper::NotLike, format!("%{s}%")),
-
-        OpValString::StartsWithCi(s) => case_insensitive_fn(BinOper::Like, format!("{s}%")),
-        OpValString::NotStartsWithCi(s) => case_insensitive_fn(BinOper::NotLike, format!("{s}%")),
-
-        OpValString::EndsWithCi(s) => case_insensitive_fn(BinOper::Like, format!("%{s}")),
-        OpValString::NotEndsWithCi(s) => case_insensitive_fn(BinOper::NotLike, format!("%{s}")),
-
-        OpValString::Ilike(s) => {
-          #[cfg(feature = "with-ilike")]
-          {
-            pg_binary_fn(PgBinOper::ILike, format!("%{s}%"))
-          }
-          #[cfg(not(feature = "with-ilike"))]
-          {
-            case_insensitive_fn(BinOper::Like, format!("%{s}%"))
-          }
-        }
-      };
-
-      Ok(cond)
+      Ok(cond_exprs)
     }
   }
 }

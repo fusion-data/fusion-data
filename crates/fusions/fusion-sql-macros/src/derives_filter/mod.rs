@@ -92,13 +92,13 @@ pub fn derive_filter_nodes_inner(input: TokenStream) -> TokenStream {
 
   let ff_opt_node_pushes = quote! {
     #(
-      if let Some(val) = self.#props_opval_idents {
-        let op_vals: Vec<fusion_sql::filter::OpVal> = val.0.into_iter().map(|n| n.into()).collect();
+      if let Some(op_vals) = self.#props_opval_idents {
+        // let op_vals: Vec<fusion_sql::filter::OpVal> = val.0.into_iter().map(|n| n.into()).collect();
         #props_opval_to_sea_holder_fn_build
-        let node = fusion_sql::filter::FilterNode{
+        let node = fusion_sql::filter::FilterNode {
           rel: #props_opval_rels,
           name: stringify!(#props_opval_idents).to_string(),
-          opvals: op_vals,
+          opvals: op_vals.into(),
           options: #props_filter_node_options,
           for_sea_condition: fn_holder,
         };

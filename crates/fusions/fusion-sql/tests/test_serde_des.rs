@@ -1,6 +1,6 @@
 pub type Result<T> = core::result::Result<T, Error>;
 pub type Error = Box<dyn std::error::Error>; // For early dev.
-use fusion_sql::filter::{FilterNodes, IntoFilterNodes, OpValsInt64, OpValsString};
+use fusion_sql::filter::{FilterNodes, IntoFilterNodes, OpVal, OpValsInt64, OpValsString};
 use serde::Deserialize;
 use serde_json::Value;
 
@@ -42,9 +42,11 @@ fn test_des_string_map() -> Result<()> {
 
   assert_eq!(nodes.len(), 1, "number of filter node should be 1");
   let node = nodes.pop().unwrap();
-  assert_eq!(format!("{:?}", node.opvals[0]), "String(Contains(\"World\"))");
-  assert_eq!(format!("{:?}", node.opvals[1]), "String(StartsWith(\"Hello\"))");
-  // assert_eq!(node.opvals[0])
+  let OpVal::String(opvals) = node.opvals else {
+    panic!("expect opvals to be string");
+  };
+  assert_eq!(opvals.contains, Some(String::from("World")));
+  assert_eq!(opvals.starts_with, Some(String::from("Hello")));
 
   Ok(())
 }

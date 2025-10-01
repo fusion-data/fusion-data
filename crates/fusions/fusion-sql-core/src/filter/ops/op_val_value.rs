@@ -145,7 +145,7 @@ impl OpValsValue {
 // region:    --- OpValValue to OpVal::Value
 impl From<OpValsValue> for OpVal {
   fn from(value: OpValsValue) -> Self {
-    OpVal::Value(value)
+    OpVal::Value(Box::new(value))
   }
 }
 // endregion: --- OpValValue to OpVal::Value
@@ -176,8 +176,8 @@ mod with_sea_query {
       };
 
       match for_sea_cond {
-        ForSeaCondition::ToSeaCondition(to_sea_condition) => to_sea_condition.call(&col, self),
-        ForSeaCondition::ToSeaValue(to_sea_value) => self._to_condition_expressions(&col, node_options, to_sea_value),
+        ForSeaCondition::ToSeaCondition(to_sea_condition) => to_sea_condition.call(col, self),
+        ForSeaCondition::ToSeaValue(to_sea_value) => self._to_condition_expressions(col, node_options, to_sea_value),
       }
     }
   }

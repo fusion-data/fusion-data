@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 use crate::filter::OpVal;
 
 /// - `ovs` OpValsType, e.g., `OpValsUint64`
@@ -5,117 +7,123 @@ use crate::filter::OpVal;
 /// - `nt` Number type, e.g., `u64`
 /// - `vr` Opval Variant e.g., `OpVal::Uint64`
 macro_rules! impl_op_val {
-	($(($ovs:ident, $ov:ident, $nt:ty, $vr:expr)),+) => {
+	($(($ovs:ident, $nt:ty, $vr:expr)),+) => {
 		$(
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
-pub struct $ovs(pub Vec<$ov>);
+#[cfg_attr(feature = "with-wasm", derive(tsify::Tsify), tsify(into_wasm_abi, from_wasm_abi))]
+pub struct $ovs {
+	#[serde(rename = "$eq")]
+	pub eq: Option<$nt>,
+	#[serde(rename = "$not")]
+	pub not: Option<$nt>,
+	#[serde(rename = "$in")]
+	pub in_: Option<Vec<$nt>>,
+	#[serde(rename = "$not_in")]
+	pub not_in: Option<Vec<$nt>>,
+	#[serde(rename = "$lt")]
+	pub lt: Option<$nt>,
+	#[serde(rename = "$lte")]
+	pub lte: Option<$nt>,
+	#[serde(rename = "$gt")]
+	pub gt: Option<$nt>,
+	#[serde(rename = "$gte")]
+	pub gte: Option<$nt>,
+	#[serde(rename = "$null")]
+	pub null: Option<bool>,
+}
 
 impl $ovs {
 	pub fn eq(v: $nt) -> Self {
-		Self(vec![$ov::Eq(v)])
+		Self { eq: Some(v), ..Default::default() }
 	}
 
 	pub fn not(v: $nt) -> Self {
-		Self(vec![$ov::Not(v)])
+		Self { not: Some(v), ..Default::default() }
 	}
 
 	pub fn in_<I>(v: I) -> Self
 	where
 		I: IntoIterator<Item = $nt>,
 	{
-		Self(vec![$ov::In(v.into_iter().collect())])
+		let vs = v.into_iter().collect::<Vec<_>>();
+		Self { in_: if vs.is_empty() { None } else { Some(vs) }, ..Default::default() }
 	}
 
 	pub fn not_in<I>(v: I) -> Self
 	where
 		I: IntoIterator<Item = $nt>,
 	{
-		Self(vec![$ov::NotIn(v.into_iter().collect())])
+		let vs = v.into_iter().collect::<Vec<_>>();
+		Self { not_in: if vs.is_empty() { None } else { Some(vs) }, ..Default::default() }
 	}
 
 	pub fn lt(v: $nt) -> Self {
-		Self(vec![$ov::Lt(v)])
+		Self { lt: Some(v), ..Default::default() }
 	}
 
 	pub fn lte(v: $nt) -> Self {
-		Self(vec![$ov::Lte(v)])
+		Self { lte: Some(v), ..Default::default() }
 	}
 
 	pub fn gt(v: $nt) -> Self {
-		Self(vec![$ov::Gt(v)])
+		Self { gt: Some(v), ..Default::default() }
 	}
 
 	pub fn gte(v: $nt) -> Self {
-		Self(vec![$ov::Gte(v)])
+		Self { gte: Some(v), ..Default::default() }
 	}
 
 	pub fn null(null: bool) -> Self {
-		Self(vec![$ov::Null(null)])
+		Self { null: Some(null), ..Default::default() }
 	}
 }
 
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
-pub enum $ov {
-	Eq($nt),
-	Not($nt),
-	In(Vec<$nt>),
-	NotIn(Vec<$nt>),
-	Lt($nt),
-	Lte($nt),
-	Gt($nt),
-	Gte($nt),
-	Null(bool),
-}
+// // region:    --- Simple value to Eq e.g., OpValUint64
+// impl From<$nt> for $ov {
+// 	fn from(val: $nt) -> Self {
+// 		$ov::Eq(val)
+// 	}
+// }
 
-// region:    --- Simple value to Eq e.g., OpValUint64
-impl From<$nt> for $ov {
-	fn from(val: $nt) -> Self {
-		$ov::Eq(val)
-	}
-}
-
-impl From<&$nt> for $ov {
-	fn from(val: &$nt) -> Self {
-		$ov::Eq(*val)
-	}
-}
-// endregion: --- Simple value to Eq e.g., OpValUint64
+// impl From<&$nt> for $ov {
+// 	fn from(val: &$nt) -> Self {
+// 		$ovs::eq(*val)
+// 	}
+// }
+// // endregion: --- Simple value to Eq e.g., OpValUint64
 
 // region:    --- Simple value to Eq e.g., OpValsUint64
 impl From<$nt> for $ovs {
 	fn from(val: $nt) -> Self {
-		$ov::from(val).into()
+		$ovs::eq(val)
 	}
 }
 
 impl From<&$nt> for $ovs {
 	fn from(val: &$nt) -> Self {
-		$ov::from(*val).into()
+		$ovs::eq(*val)
 	}
 }
 // endregion: --- Simple value to Eq e.g., OpValsUint64
 
-// region:    --- e.g., OpValUint64 to OpVal
-impl From<$ov> for OpVal {
-	fn from(val: $ov) -> Self {
+impl From<$ovs> for OpVal {
+	fn from(val: $ovs) -> Self {
 		$vr(val)
 	}
 }
-// endregion: --- e.g., OpValUint64 to OpVal
 
 // region:    --- Primitive to OpVal::Int(IntOpVal::Eq)
 impl From<$nt> for OpVal {
 	fn from(val: $nt) -> Self {
-		$ov::Eq(val).into()
+		$vr($ovs::eq(val))
 	}
 }
 
 impl From<&$nt> for OpVal {
 	fn from(val: &$nt) -> Self {
-		$ov::Eq(*val).into()
+		$vr($ovs::eq(*val))
 	}
 }
 // endregion: --- Primitive to OpVal::Int(IntOpVal::Eq)
@@ -124,51 +132,101 @@ impl From<&$nt> for OpVal {
 }
 
 impl_op_val!(
-  (OpValsInt64, OpValInt64, i64, OpVal::Int64),
-  (OpValsInt32, OpValInt32, i32, OpVal::Int32),
-  (OpValsFloat64, OpValFloat64, f64, OpVal::Float64)
+  // (OpValsUInt64, u64, OpVal::UInt64),
+  // (OpValsUInt32, u32, OpVal::UInt32),
+  (OpValsInt64, i64, OpVal::Int64),
+  (OpValsInt32, i32, OpVal::Int32),
+  (OpValsFloat64, f64, OpVal::Float64),
+  (OpValsFloat32, f32, OpVal::Float32)
 );
 
 #[cfg(feature = "with-sea-query")]
 mod with_sea_query {
-  use super::*;
-  use crate::filter::{FilterNodeOptions, SeaResult, sea_is_col_value_null};
-  use crate::sea_utils::into_node_value_expr;
   use sea_query::{BinOper, ColumnRef, ConditionExpression, SimpleExpr};
+
+  use crate::filter::{FilterNodeOptions, ForSeaCondition, OpValTrait, SeaResult, sea_is_col_value_null};
+  use crate::sea_utils::into_node_value_expr;
+
+  use super::*;
 
   macro_rules! impl_into_sea_op_val {
 		($($ov:ident),+) => {
 			$(
-	impl $ov {
-		pub fn into_sea_cond_expr(self, col: &ColumnRef, node_options: &FilterNodeOptions) -> SeaResult<ConditionExpression>  {
+	impl OpValTrait for $ov {
+    fn to_condition_expressions(
+      self,
+      col: &ColumnRef,
+      node_options: &FilterNodeOptions,
+      _for_sea_condition: Option<&ForSeaCondition>,
+    ) -> SeaResult<Vec<ConditionExpression>> {
 			let binary_fn = |op: BinOper, expr: SimpleExpr| {
 				ConditionExpression::SimpleExpr(SimpleExpr::binary(col.clone().into(), op, expr))
 			};
-			let cond = match self {
-				$ov::Eq(s) => binary_fn(BinOper::Equal, into_node_value_expr(s, node_options)),
-				$ov::Not(s) => binary_fn(BinOper::NotEqual, into_node_value_expr(s, node_options)),
-				$ov::In(s) => binary_fn(
-					BinOper::In,
-					SimpleExpr::Tuple(s.into_iter().map(|v| into_node_value_expr(v, node_options)).collect()),
-				),
-				$ov::NotIn(s) => binary_fn(
-					BinOper::NotIn,
-					SimpleExpr::Tuple(s.into_iter().map(|v| into_node_value_expr(v, node_options)).collect()),
-				),
-				$ov::Lt(s) => binary_fn(BinOper::SmallerThan, into_node_value_expr(s, node_options)),
-				$ov::Lte(s) => binary_fn(BinOper::SmallerThanOrEqual, into_node_value_expr(s, node_options)),
-				$ov::Gt(s) => binary_fn(BinOper::GreaterThan, into_node_value_expr(s, node_options)),
-				$ov::Gte(s) => binary_fn(BinOper::GreaterThanOrEqual, into_node_value_expr(s, node_options)),
 
-				$ov::Null(null) => sea_is_col_value_null(col.clone(), null),
-			};
+      let mut expressions = Vec::new();
+      if let Some(val) = self.eq {
+        expressions.push(binary_fn(BinOper::Equal, into_node_value_expr(val, node_options)));
+      }
+      if let Some(val) = self.not {
+        expressions.push(binary_fn(BinOper::NotEqual, into_node_value_expr(val, node_options)));
+      }
+      if let Some(val) = self.in_ {
+				if !val.is_empty() {
+					expressions.push(binary_fn(
+						BinOper::In,
+						SimpleExpr::Tuple(val.into_iter().map(|v| into_node_value_expr(v, node_options)).collect()),
+					));
+				}
+      }
+      if let Some(val) = self.not_in {
+				if !val.is_empty() {
+					expressions.push(binary_fn(
+						BinOper::NotIn,
+						SimpleExpr::Tuple(val.into_iter().map(|v| into_node_value_expr(v, node_options)).collect()),
+					));
+				}
+      }
+			if let Some(val) = self.lt {
+				expressions.push(binary_fn(
+					BinOper::SmallerThan,
+					into_node_value_expr(val, node_options),
+				));
+			}
+			if let Some(val) = self.lte {
+				expressions.push(binary_fn(
+					BinOper::SmallerThanOrEqual,
+					into_node_value_expr(val, node_options),
+				));
+			}
+			if let Some(val) = self.gt {
+				expressions.push(binary_fn(
+					BinOper::GreaterThan,
+					into_node_value_expr(val, node_options),
+				));
+			}
+			if let Some(val) = self.gte {
+				expressions.push(binary_fn(
+					BinOper::GreaterThanOrEqual,
+					into_node_value_expr(val, node_options),
+				));
+			}
+			if let Some(val) = self.null {
+				expressions.push(sea_is_col_value_null(col.clone(), val));
+			}
 
-			Ok(cond)
-		}
+      Ok(expressions)
+    }
 	}
 			)+
 		};
 	}
 
-  impl_into_sea_op_val!(OpValInt64, OpValInt32, OpValFloat64);
+  impl_into_sea_op_val!(
+    // OpValsUInt64,
+    // OpValsUInt32,
+    OpValsInt64,
+    OpValsInt32,
+    OpValsFloat64,
+    OpValsFloat32
+  );
 }

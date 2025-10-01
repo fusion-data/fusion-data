@@ -130,13 +130,13 @@ impl From<DateTime<FixedOffset>> for OpValsDateTime {
 
 impl From<OpValsDateTime> for OpVal {
   fn from(value: OpValsDateTime) -> Self {
-    OpVal::Datetime(value)
+    OpVal::DateTime(value)
   }
 }
 
 impl From<DateTime<FixedOffset>> for OpVal {
   fn from(value: DateTime<FixedOffset>) -> Self {
-    Self::Datetime(OpValsDateTime::eq(value))
+    Self::DateTime(OpValsDateTime::eq(value))
   }
 }
 
