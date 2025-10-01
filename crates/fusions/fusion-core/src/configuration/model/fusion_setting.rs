@@ -37,7 +37,7 @@ impl FusionSetting {
 impl TryFrom<&Config> for FusionSetting {
   type Error = ConfigError;
 
-  fn try_from(value: &Config) -> std::result::Result<Self, Self::Error> {
+  fn try_from(value: &Config) -> core::result::Result<Self, Self::Error> {
     value.get(FusionSetting::config_prefix())
   }
 }

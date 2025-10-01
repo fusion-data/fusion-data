@@ -2,7 +2,7 @@ use thiserror::Error;
 
 use crate::DataError;
 
-pub type ComponentResult<T> = std::result::Result<T, ComponentError>;
+pub type ComponentResult<T> = core::result::Result<T, ComponentError>;
 
 #[derive(Debug, Error)]
 pub enum ComponentError {

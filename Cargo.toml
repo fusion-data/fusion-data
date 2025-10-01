@@ -70,6 +70,9 @@ fusion-common = { version = "0.1.1", path = "crates/fusions/fusion-common" }
 fusion-core-macros = { version = "0.1.1", path = "crates/fusions/fusion-core-macros" }
 fusion-core = { version = "0.1.1", path = "crates/fusions/fusion-core" }
 fusion-security = { version = "0.1.1", path = "crates/fusions/fusion-security" }
+fusion-sql = { version = "0.1.1", path = "crates/fusions/fusion-sql" }
+fusion-sql-core = { version = "0.1.1", path = "crates/fusions/fusion-sql-core" }
+fusion-sql-macros = { version = "0.1.1", path = "crates/fusions/fusion-sql-macros" }
 fusion-db = { version = "0.1.1", path = "crates/fusions/fusion-db" }
 fusion-web = { version = "0.1.1", path = "crates/fusions/fusion-web" }
 fusion-grpc = { version = "0.1.1", path = "crates/fusions/fusion-grpc" }

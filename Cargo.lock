@@ -1913,6 +1913,64 @@ dependencies = [
 ]
 
 [[package]]
+name = "fusion-sql"
+version = "0.1.1"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "chrono",
+ "config",
+ "derive_more",
+ "duration-str",
+ "fusion-corelib",
+ "fusion-sql-core",
+ "fusion-sql-macros",
+ "log",
+ "logforth",
+ "pgvector",
+ "regex",
+ "rust_decimal",
+ "sea-query",
+ "sea-query-binder",
+ "serde",
+ "serde_json",
+ "serde_with",
+ "sqlx",
+ "thiserror 2.0.16",
+ "tokio",
+ "tonic 0.14.2",
+ "utoipa",
+ "uuid",
+]
+
+[[package]]
+name = "fusion-sql-core"
+version = "0.1.1"
+dependencies = [
+ "chrono",
+ "fusion-sql-macros",
+ "sea-query",
+ "sea-query-binder",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.16",
+ "tsify",
+ "utoipa",
+ "uuid",
+]
+
+[[package]]
+name = "fusion-sql-macros"
+version = "0.1.1"
+dependencies = [
+ "chrono",
+ "proc-macro2",
+ "quote",
+ "sea-query",
+ "syn 2.0.106",
+]
+
+[[package]]
 name = "fusion-web"
 version = "0.1.1"
 dependencies = [
