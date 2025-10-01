@@ -13,7 +13,7 @@ use hetumind_studio::{
   runtime::workflow::WorkflowEnginePlugin,
   utils::NodeRegistryPlugin,
 };
-use modelsql::{ModelManager, store::DbxPostgres};
+use fusionsql::{ModelManager, store::DbxPostgres};
 use once_cell::sync::Lazy;
 use serde_json::json;
 use sqlx::{Connection, Executor, PgConnection};

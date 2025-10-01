@@ -5,16 +5,19 @@ This guide explains how to generate and use WebAssembly (WASM) bindings for the 
 ## Prerequisites
 
 1. **Install Rust WASM target:**
+
    ```bash
    rustup target add wasm32-unknown-unknown
    ```
 
 2. **Install wasm-pack:**
+
    ```bash
    cargo install wasm-pack
    ```
 
 3. **Install a local HTTP server (for testing):**
+
    ```bash
    # Python 3
    python3 -m http.server 8080
@@ -36,10 +39,11 @@ cd hetuflow/hetuflow-sdk
 
 ```bash
 cd hetuflow/hetuflow-sdk
-wasm-pack build --target web --out-dir examples/wasm/pkg --features wasm
+wasm-pack build --target web --out-dir examples/wasm/pkg --features with-wasm
 ```
 
 This will create a `pkg/` directory containing:
+
 - `hetuflow_sdk.js` - JavaScript bindings
 - `hetuflow_sdk_bg.wasm` - WebAssembly binary
 - `hetuflow_sdk.d.ts` - TypeScript definitions
@@ -50,6 +54,7 @@ This will create a `pkg/` directory containing:
 1. **Build the WASM package** (see above)
 
 2. **Start a local server:**
+
    ```bash
    cd examples/wasm
    python3 -m http.server 8080
@@ -66,63 +71,58 @@ This will create a `pkg/` directory containing:
 
 ```javascript
 import init, {
-    WasmHetuflowClient,
-    WasmAgentQuery,
-    WasmAgentCreate,
-    WasmJobQuery,
-    WasmJobCreate
-} from "./pkg/hetuflow_sdk.js";
+  WasmHetuflowClient,
+  WasmAgentQuery,
+  WasmAgentCreate,
+  WasmJobQuery,
+  WasmJobCreate,
+} from './pkg/hetuflow_sdk.js';
 
 // Initialize WASM module
 await init();
 
 // Create client
-const client = new WasmHetuflowClient("http://localhost:9500");
+const client = new WasmHetuflowClient('http://localhost:9500');
 
 // Add authentication (optional)
-const authenticatedClient = client.with_auth_token("your-token-here");
+const authenticatedClient = client.with_auth_token('your-token-here');
 ```
 
 ### Querying Data
 
 ```javascript
 // Query agents
-const agentQuery = new WasmAgentQuery()
-    .with_page(1)
-    .with_limit(10)
-    .with_status("online");
+const agentQuery = new WasmAgentQuery().with_page(1).with_limit(10).with_status('online');
 
 const agents = await client.query_agents(agentQuery);
-console.log("Agents:", agents);
+console.log('Agents:', agents);
 
 // Query jobs
-const jobQuery = new WasmJobQuery()
-    .with_page(1)
-    .with_limit(20)
-    .with_name("example-job");
+const jobQuery = new WasmJobQuery().with_page(1).with_limit(20).with_name('example-job');
 
 const jobs = await client.query_jobs(jobQuery);
-console.log("Jobs:", jobs);
+console.log('Jobs:', jobs);
 ```
 
 ### Creating Resources
 
 ```javascript
 // Create an agent
-const agent = new WasmAgentCreate("agent-1", "Test Agent", "localhost", 8081)
-    .with_description("A test agent for demonstration");
+const agent = new WasmAgentCreate('agent-1', 'Test Agent', 'localhost', 8081).with_description(
+  'A test agent for demonstration'
+);
 
 const agentResult = await client.create_agent(agent);
-console.log("Created agent:", agentResult);
+console.log('Created agent:', agentResult);
 
 // Create a job
-const job = new WasmJobCreate("example-job", "echo")
-    .with_namespace("default")
-    .with_args(["Hello", "Hetuflow!"])
-    .with_timeout(300);
+const job = new WasmJobCreate('example-job', 'echo')
+  .with_namespace('default')
+  .with_args(['Hello', 'Hetuflow!'])
+  .with_timeout(300);
 
 const jobResult = await client.create_job(job);
-console.log("Created job:", jobResult);
+console.log('Created job:', jobResult);
 ```
 
 ### System Operations
@@ -130,7 +130,7 @@ console.log("Created job:", jobResult);
 ```javascript
 // Check system health
 const health = await client.health();
-console.log("System health:", health);
+console.log('System health:', health);
 ```
 
 ## API Reference
@@ -140,9 +140,11 @@ console.log("System health:", health);
 The main client for interacting with the Hetuflow API.
 
 #### Constructor
+
 - `new(base_url: string)` - Create a new client
 
 #### Methods
+
 - `with_auth_token(token: string)` - Add authentication token
 - `health()` - Get system health status
 - `query_agents(query: WasmAgentQuery)` - Query agents
@@ -153,12 +155,14 @@ The main client for interacting with the Hetuflow API.
 ### Query Types
 
 #### WasmAgentQuery
+
 - `new()` - Create new query
 - `with_page(page: number)` - Set page number
 - `with_limit(limit: number)` - Set page limit
 - `with_status(status: string)` - Filter by status
 
 #### WasmJobQuery
+
 - `new()` - Create new query
 - `with_page(page: number)` - Set page number
 - `with_limit(limit: number)` - Set page limit
@@ -167,10 +171,12 @@ The main client for interacting with the Hetuflow API.
 ### Create Types
 
 #### WasmAgentCreate
+
 - `new(id: string, name: string, host: string, port: number)` - Create new agent
 - `with_description(description: string)` - Set description
 
 #### WasmJobCreate
+
 - `new(name: string, command: string)` - Create new job
 - `with_namespace(namespace: string)` - Set namespace
 - `with_description(description: string)` - Set description
@@ -183,10 +189,10 @@ All WASM functions return promises that resolve to the result or reject with an 
 
 ```javascript
 try {
-    const agents = await client.query_agents(query);
-    console.log("Success:", agents);
+  const agents = await client.query_agents(query);
+  console.log('Success:', agents);
 } catch (error) {
-    console.error("Error:", error);
+  console.error('Error:', error);
 }
 ```
 
@@ -199,38 +205,38 @@ import React, { useState, useEffect } from 'react';
 import init, { WasmHetuflowClient } from './pkg/hetuflow_sdk.js';
 
 function HetuflowComponent() {
-    const [client, setClient] = useState(null);
-    const [agents, setAgents] = useState([]);
+  const [client, setClient] = useState(null);
+  const [agents, setAgents] = useState([]);
 
-    useEffect(() => {
-        async function initialize() {
-            await init();
-            const wasmClient = new WasmHetuflowClient("http://localhost:9500");
-            setClient(wasmClient);
-        }
-        initialize();
-    }, []);
+  useEffect(() => {
+    async function initialize() {
+      await init();
+      const wasmClient = new WasmHetuflowClient('http://localhost:9500');
+      setClient(wasmClient);
+    }
+    initialize();
+  }, []);
 
-    const loadAgents = async () => {
-        if (!client) return;
+  const loadAgents = async () => {
+    if (!client) return;
 
-        const query = new WasmAgentQuery().with_page(1).with_limit(10);
-        const result = await client.query_agents(query);
-        setAgents(result.result || []);
-    };
+    const query = new WasmAgentQuery().with_page(1).with_limit(10);
+    const result = await client.query_agents(query);
+    setAgents(result.result || []);
+  };
 
-    return (
-        <div>
-            <button onClick={loadAgents} disabled={!client}>
-                Load Agents
-            </button>
-            <ul>
-                {agents.map(agent => (
-                    <li key={agent.id}>{agent.name}</li>
-                ))}
-            </ul>
-        </div>
-    );
+  return (
+    <div>
+      <button onClick={loadAgents} disabled={!client}>
+        Load Agents
+      </button>
+      <ul>
+        {agents.map(agent => (
+          <li key={agent.id}>{agent.name}</li>
+        ))}
+      </ul>
+    </div>
+  );
 }
 ```
 
@@ -241,25 +247,25 @@ import { ref, onMounted } from 'vue';
 import init, { WasmHetuflowClient } from './pkg/hetuflow_sdk.js';
 
 export default {
-    setup() {
-        const client = ref(null);
-        const agents = ref([]);
+  setup() {
+    const client = ref(null);
+    const agents = ref([]);
 
-        onMounted(async () => {
-            await init();
-            client.value = new WasmHetuflowClient("http://localhost:9500");
-        });
+    onMounted(async () => {
+      await init();
+      client.value = new WasmHetuflowClient('http://localhost:9500');
+    });
 
-        const loadAgents = async () => {
-            if (!client.value) return;
+    const loadAgents = async () => {
+      if (!client.value) return;
 
-            const query = new WasmAgentQuery().with_page(1).with_limit(10);
-            const result = await client.value.query_agents(query);
-            agents.value = result.result || [];
-        };
+      const query = new WasmAgentQuery().with_page(1).with_limit(10);
+      const result = await client.value.query_agents(query);
+      agents.value = result.result || [];
+    };
 
-        return { client, agents, loadAgents };
-    }
+    return { client, agents, loadAgents };
+  },
 };
 ```
 
@@ -312,7 +318,7 @@ let app = Router::new()
 wasm-pack test --headless --firefox
 
 # Or build and test manually
-wasm-pack build --target web --out-dir examples/wasm/pkg --features wasm
+wasm-pack build --target web --out-dir examples/wasm/pkg --features with-wasm
 cd examples/wasm
 python3 -m http.server 8080
 ```
@@ -320,6 +326,7 @@ python3 -m http.server 8080
 ## Support
 
 For issues and questions:
+
 - Check the [GitHub Issues](https://github.com/your-org/hetuflow/issues)
 - Review the [API Documentation](https://docs.rs/hetuflow-sdk)
 - Join our [Discord Community](https://discord.gg/hetuflow)

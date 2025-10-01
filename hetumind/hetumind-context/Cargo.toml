@@ -15,12 +15,12 @@ workspace = true
 fusion-corelib = { workspace = true }
 hetumind-core = { workspace = true, features = ["with-db"] }
 fusion-common = { workspace = true, features = ["with-uuid"] }
-fusion-core = { workspace = true, features = ["with-uuid", "modelsql"] }
+fusion-core = { workspace = true, features = ["with-uuid", "fusionsql"] }
 fusion-web = { workspace = true }
 
 log = { workspace = true }
 thiserror = { workspace = true }
-modelsql = { workspace = true }
+fusionsql = { workspace = true }
 http = { workspace = true }
 axum = { workspace = true }
 sqlx = { workspace = true }

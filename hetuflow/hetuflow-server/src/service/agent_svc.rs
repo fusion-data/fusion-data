@@ -1,9 +1,9 @@
 use fusion_common::time::{now_epoch_millis, now_offset};
 use fusion_core::DataError;
 use log::{info, warn};
-use modelsql::{
+use fusionsql::{
   ModelManager,
-  filter::{OpValsDateTime, OpValsInt32, OpValsString, Page},
+  filter::{OpValDateTime, OpValInt32, OpValString, Page},
   page::PageResult,
 };
 
@@ -94,8 +94,8 @@ impl AgentSvc {
     let timeout_time = now_offset() - chrono::Duration::seconds(timeout_seconds);
 
     let filter = AgentFilter {
-      status: Some(OpValsInt32::eq(AgentStatus::Online as i32)),
-      last_heartbeat_at: Some(OpValsDateTime::lt(timeout_time)),
+      status: Some(OpValInt32::eq(AgentStatus::Online as i32)),
+      last_heartbeat_at: Some(OpValDateTime::lt(timeout_time)),
       ..Default::default()
     };
 
@@ -123,8 +123,8 @@ impl AgentSvc {
     let running_instances = TaskInstanceBmc::find_many(
       &mm,
       vec![TaskInstanceFilter {
-        agent_id: Some(OpValsString::eq(agent_id)),
-        status: Some(OpValsInt32::eq(TaskInstanceStatus::Running as i32)),
+        agent_id: Some(OpValString::eq(agent_id)),
+        status: Some(OpValInt32::eq(TaskInstanceStatus::Running as i32)),
         ..Default::default()
       }],
       None,

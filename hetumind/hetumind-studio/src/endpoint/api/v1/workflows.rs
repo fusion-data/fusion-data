@@ -11,7 +11,7 @@ use hetumind_core::workflow::{
   ExecuteWorkflowRequest, ExecutionIdResponse, ValidateWorkflowRequest, ValidateWorkflowResponse, Workflow,
   WorkflowForCreate, WorkflowForQuery, WorkflowForUpdate, WorkflowId, WorkflowStatus,
 };
-use modelsql::page::PageResult;
+use fusionsql::page::PageResult;
 
 use crate::domain::workflow::WorkflowSvc;
 

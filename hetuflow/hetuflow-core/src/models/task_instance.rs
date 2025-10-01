@@ -1,7 +1,7 @@
 use chrono::{DateTime, FixedOffset};
-use modelsql_core::{
+use fusionsql_core::{
   field::FieldMask,
-  filter::{OpValsDateTime, OpValsInt32, OpValsString, OpValsUuid, Page},
+  filter::{OpValDateTime, OpValInt32, OpValString, OpValUuid, Page},
 };
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -12,7 +12,7 @@ use super::TaskMetrics;
 
 /// SchedTaskInstance 数据模型
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(modelsql::Fields, sqlx::FromRow))]
+#[cfg_attr(feature = "with-db", derive(fusionsql::Fields, sqlx::FromRow))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct SchedTaskInstance {
   pub id: Uuid,
@@ -32,7 +32,7 @@ pub struct SchedTaskInstance {
 
 /// TaskInstance 创建模型
 #[derive(Debug, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(modelsql::Fields))]
+#[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct TaskInstanceForCreate {
   pub id: Option<Uuid>,
@@ -45,7 +45,7 @@ pub struct TaskInstanceForCreate {
 
 /// TaskInstance 更新模型
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(modelsql::Fields))]
+#[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct TaskInstanceForUpdate {
   pub agent_id: Option<String>,
@@ -69,17 +69,17 @@ pub struct TaskInstanceForQuery {
 
 /// TaskInstance 过滤器
 #[derive(Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(modelsql::FilterNodes))]
+#[cfg_attr(feature = "with-db", derive(fusionsql::FilterNodes))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct TaskInstanceFilter {
-  pub id: Option<OpValsUuid>,
-  pub task_id: Option<OpValsUuid>,
-  pub agent_id: Option<OpValsString>,
-  pub status: Option<OpValsInt32>,
-  pub started_at: Option<OpValsDateTime>,
-  pub completed_at: Option<OpValsDateTime>,
-  pub created_at: Option<OpValsDateTime>,
-  pub updated_at: Option<OpValsDateTime>,
+  pub id: Option<OpValUuid>,
+  pub task_id: Option<OpValUuid>,
+  pub agent_id: Option<OpValString>,
+  pub status: Option<OpValInt32>,
+  pub started_at: Option<OpValDateTime>,
+  pub completed_at: Option<OpValDateTime>,
+  pub created_at: Option<OpValDateTime>,
+  pub updated_at: Option<OpValDateTime>,
 }
 
 /// 任务状态信息

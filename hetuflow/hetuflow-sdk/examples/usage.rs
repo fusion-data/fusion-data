@@ -1,9 +1,9 @@
 //! Usage example for the Hetuflow SDK using full APIs
 
+use fusionsql_core::filter::Page;
 use hetuflow_core::models::{AgentForQuery, JobForCreate, JobForQuery, TaskForQuery};
 use hetuflow_core::types::JobStatus;
 use hetuflow_sdk::HetuflowClient;
-use modelsql_core::filter::Page;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

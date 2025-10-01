@@ -6,7 +6,7 @@ use crate::{
   platform::Response,
 };
 use hetuflow_core::models::{SchedTaskInstance, TaskInstanceForCreate, TaskInstanceForQuery, TaskInstanceForUpdate};
-use modelsql_core::page::PageResult;
+use fusionsql_core::page::PageResult;
 use serde::de::DeserializeOwned;
 use uuid::Uuid;
 

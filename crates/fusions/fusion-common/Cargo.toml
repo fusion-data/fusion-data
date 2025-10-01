@@ -16,9 +16,9 @@ unsafe_code = "allow"
 with-uuid = ["uuid"]
 with-ulid = ["ulid"]
 with-openapi = ["utoipa"]
-with-db = ["sqlx", "modelsql-core", "sea-query"]
+with-db = ["sqlx", "fusionsql-core", "sea-query"]
 # WASM compatibility features
-wasm = ["getrandom", "getrandom/wasm_js", "js-sys", "wasm-bindgen"]
+with-wasm = ["getrandom", "getrandom/wasm_js", "js-sys", "wasm-bindgen"]
 
 [dependencies]
 fusion-corelib = { workspace = true }
@@ -39,7 +39,7 @@ uuid = { workspace = true, optional = true }
 ulid = { workspace = true, optional = true }
 utoipa = { workspace = true, optional = true }
 sqlx = { workspace = true, optional = true }
-modelsql-core = { workspace = true, optional = true }
+fusionsql-core = { workspace = true, optional = true }
 sea-query = { workspace = true, optional = true }
 libc = { workspace = true }
 windows-sys = { workspace = true }

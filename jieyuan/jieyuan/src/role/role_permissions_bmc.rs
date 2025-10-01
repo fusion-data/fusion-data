@@ -1,4 +1,4 @@
-use modelsql::{
+use fusionsql::{
   ModelManager, SqlError,
   base::{self, DbBmc},
 };

@@ -8,8 +8,8 @@ use crate::{
 use fusion_common::model::IdUuidResult;
 use hetuflow_core::models::{SchedTask, TaskForCreate, TaskForQuery, TaskForUpdate};
 use hetuflow_core::types::TaskStatus;
-use modelsql_core::filter::{OpValsInt32, OpValsUuid};
-use modelsql_core::page::PageResult;
+use fusionsql_core::filter::{OpValInt32, OpValUuid};
+use fusionsql_core::page::PageResult;
 use serde::de::DeserializeOwned;
 use uuid::Uuid;
 
@@ -86,7 +86,7 @@ impl<'a> TasksApi<'a> {
   /// Find tasks by job ID
   pub async fn find_by_job(&self, job_id: &Uuid) -> SdkResult<Vec<SchedTask>> {
     let mut query = TaskForQuery::default();
-    query.filter.job_id = Some(OpValsUuid::eq(*job_id));
+    query.filter.job_id = Some(OpValUuid::eq(*job_id));
 
     let result = self.query(query).await?;
     Ok(result.result)
@@ -95,7 +95,7 @@ impl<'a> TasksApi<'a> {
   /// Find tasks by status
   pub async fn find_by_status(&self, status: TaskStatus) -> SdkResult<Vec<SchedTask>> {
     let mut query = TaskForQuery::default();
-    query.filter.status = Some(OpValsInt32::eq(status as i32));
+    query.filter.status = Some(OpValInt32::eq(status as i32));
 
     let result = self.query(query).await?;
     Ok(result.result)
@@ -104,7 +104,7 @@ impl<'a> TasksApi<'a> {
   /// Find tasks by schedule ID
   pub async fn find_by_schedule(&self, schedule_id: &Uuid) -> SdkResult<Vec<SchedTask>> {
     let mut query = TaskForQuery::default();
-    query.filter.schedule_id = Some(OpValsUuid::eq(*schedule_id));
+    query.filter.schedule_id = Some(OpValUuid::eq(*schedule_id));
 
     let result = self.query(query).await?;
     Ok(result.result)

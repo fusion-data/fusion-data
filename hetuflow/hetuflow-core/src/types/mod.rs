@@ -202,7 +202,7 @@ pub enum EventKind {
 }
 
 #[cfg(feature = "with-db")]
-modelsql::generate_enum_i32_to_sea_query_value!(
+fusionsql::generate_enum_i32_to_sea_query_value!(
   Enum: ScheduleKind,
   Enum: JobStatus,
   Enum: ScheduleStatus,

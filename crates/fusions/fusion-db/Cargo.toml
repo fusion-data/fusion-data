@@ -12,15 +12,15 @@ publish = true
 workspace = true
 
 [features]
-with-postgres = ["modelsql/with-postgres"]
-with-sqlite = ["modelsql/with-sqlite"]
-with-uuid = ["dep:uuid", "modelsql/with-uuid"]
+with-postgres = ["fusionsql/with-postgres"]
+with-sqlite = ["fusionsql/with-sqlite"]
+with-uuid = ["dep:uuid", "fusionsql/with-uuid"]
 
 [dependencies]
 fusion-corelib.workspace = true
 fusion-common.workspace = true
-fusion-core = { workspace = true, features = ["modelsql"] }
-modelsql = { workspace = true }
+fusion-core = { workspace = true, features = ["fusionsql"] }
+fusionsql = { workspace = true }
 serde.workspace = true
 serde_json.workspace = true
 log.workspace = true

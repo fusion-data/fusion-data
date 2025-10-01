@@ -1,7 +1,7 @@
-use modelsql::{
+use fusionsql::{
   ModelManager, SqlError,
   base::DbBmc,
-  filter::{OpValsInt32, OpValsString, OpValsUuid, OrderBys},
+  filter::{OpValInt32, OpValString, OpValUuid, OrderBys},
   generate_pg_bmc_common, generate_pg_bmc_filter,
 };
 use uuid::Uuid;
@@ -43,15 +43,15 @@ generate_pg_bmc_filter!(
 impl JobBmc {
   /// 查找启用的作业
   pub async fn find_enabled_jobs(mm: &ModelManager) -> Result<Vec<SchedJob>, SqlError> {
-    let filter = vec![JobFilter { status: Some(OpValsInt32::eq(JobStatus::Enabled as i32)), ..Default::default() }];
+    let filter = vec![JobFilter { status: Some(OpValInt32::eq(JobStatus::Enabled as i32)), ..Default::default() }];
 
     Self::find_many(mm, filter, None).await
   }
 
   pub async fn find_enabled_by_id(mm: &ModelManager, id: Uuid) -> Result<Option<SchedJob>, SqlError> {
     let filter = vec![JobFilter {
-      id: Some(OpValsUuid::eq(id)),
-      status: Some(OpValsInt32::eq(JobStatus::Enabled as i32)),
+      id: Some(OpValUuid::eq(id)),
+      status: Some(OpValInt32::eq(JobStatus::Enabled as i32)),
       ..Default::default()
     }];
 
@@ -60,7 +60,7 @@ impl JobBmc {
 
   /// 根据命名空间查找作业
   pub async fn find_jobs_by_namespace(mm: &ModelManager, namespace_id: &str) -> Result<Vec<SchedJob>, SqlError> {
-    let filter = vec![JobFilter { namespace_id: Some(OpValsString::eq(namespace_id)), ..Default::default() }];
+    let filter = vec![JobFilter { namespace_id: Some(OpValString::eq(namespace_id)), ..Default::default() }];
 
     Self::find_many(mm, filter, None).await
   }

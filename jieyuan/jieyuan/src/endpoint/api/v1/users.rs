@@ -6,7 +6,7 @@ use axum::{
 use fusion_common::model::IdI64Result;
 use fusion_core::application::Application;
 use fusion_web::{WebError, WebResult, ok_json};
-use modelsql::ModelManager;
+use fusionsql::ModelManager;
 use utoipa_axum::router::OpenApiRouter;
 
 use jieyuan_core::model::{User, UserForCreate, UserForPage, UserForUpdate};
@@ -114,7 +114,7 @@ async fn user_delete(State(app): State<Application>, Path(id): Path<i64>) -> Web
   path = "/query",
   request_body = UserForPage,
   responses(
-    (status = 200, description = "查询成功", body = modelsql::page::PageResult<User>),
+    (status = 200, description = "查询成功", body = fusionsql::page::PageResult<User>),
     (status = 400, description = "请求参数错误")
   ),
   tag = "用户管理"
@@ -122,7 +122,7 @@ async fn user_delete(State(app): State<Application>, Path(id): Path<i64>) -> Web
 async fn user_page(
   State(app): State<Application>,
   Json(req): Json<UserForPage>,
-) -> WebResult<modelsql::page::PageResult<User>> {
+) -> WebResult<fusionsql::page::PageResult<User>> {
   let mm = app.get_component::<ModelManager>().unwrap();
   let user_svc = UserSvc::new(mm);
   let result = user_svc.page(req).await?;

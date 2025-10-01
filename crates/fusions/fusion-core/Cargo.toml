@@ -52,7 +52,7 @@ serde_repr.workspace = true
 utoipa = { workspace = true, optional = true }
 tonic = { workspace = true, optional = true }
 protobuf = { workspace = true, optional = true }
-modelsql = { workspace = true, optional = true }
+fusionsql = { workspace = true, optional = true }
 jiff = "0.2"
 
 

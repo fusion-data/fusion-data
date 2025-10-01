@@ -163,7 +163,7 @@ pub struct WorkflowId(Uuid);
 generate_uuid_newtype!(Struct: ExecutionId, Struct: WorkflowId);
 
 #[cfg(feature = "with-db")]
-modelsql::generate_uuid_newtype_to_sea_query_value!(Struct: ExecutionId, Struct: WorkflowId);
+fusionsql::generate_uuid_newtype_to_sea_query_value!(Struct: ExecutionId, Struct: WorkflowId);
 
 /// 代码自动完成类型
 #[derive(Debug, Clone, Copy, Serialize_repr, Deserialize_repr)]

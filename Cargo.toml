@@ -1,7 +1,7 @@
 [workspace]
 members = [
   "crates/fusions/*",
-  "crates/libs/*",
+  # "crates/libs/*",
   "jieyuan/jieyuan-core",
   "jieyuan/jieyuan",
   "hetuflow/hetuflow-core",
@@ -63,16 +63,13 @@ opt-level = 3
 [workspace.dependencies]
 # -- projects begin
 fusion-corelib = { version = "0.1.1", path = "crates/fusions/fusion-corelib" }
-modelsql = { version = "0.1.1", path = "crates/libs/modelsql" }
-modelsql-core = { version = "0.1.1", path = "crates/libs/modelsql-core" }
-modelsql-macros = { version = "0.1.1", path = "crates/libs/modelsql-macros" }
+fusionsql = { version = "0.1.1", path = "crates/fusions/fusionsql" }
+fusionsql-core = { version = "0.1.1", path = "crates/fusions/fusionsql-core" }
+fusionsql-macros = { version = "0.1.1", path = "crates/fusions/fusionsql-macros" }
 fusion-common = { version = "0.1.1", path = "crates/fusions/fusion-common" }
 fusion-core-macros = { version = "0.1.1", path = "crates/fusions/fusion-core-macros" }
 fusion-core = { version = "0.1.1", path = "crates/fusions/fusion-core" }
 fusion-security = { version = "0.1.1", path = "crates/fusions/fusion-security" }
-fusion-sql = { version = "0.1.1", path = "crates/fusions/fusion-sql" }
-fusion-sql-core = { version = "0.1.1", path = "crates/fusions/fusion-sql-core" }
-fusion-sql-macros = { version = "0.1.1", path = "crates/fusions/fusion-sql-macros" }
 fusion-db = { version = "0.1.1", path = "crates/fusions/fusion-db" }
 fusion-web = { version = "0.1.1", path = "crates/fusions/fusion-web" }
 fusion-grpc = { version = "0.1.1", path = "crates/fusions/fusion-grpc" }
@@ -221,7 +218,7 @@ pgvector = { version = "0.4", features = ["sqlx"] }
 serde = { version = "1.0", features = ["derive", "rc"] }
 serde_with = { version = "3.14", features = ["chrono_0_4"] }
 serde_json = { version = "1.0" }
-tsify = { version = "0.5" }
+tsify = { version = "0.5", features = ["js"] }
 sonic-rs = { version = "0.5" }
 
 json-five = { version = "0.3" }
@@ -279,10 +276,7 @@ utoipa = { version = "5.4", features = [
   "rc_schema",
 ] }
 utoipa-axum = "0.2"
-utoipa-swagger-ui = { version = "9.0", features = [
-  # "vendored",
-  "axum",
-] }
+utoipa-swagger-ui = { version = "9.0", features = ["vendored", "axum"] }
 # -- validator
 garde = { version = "0.22", features = ["derive"] }
 axum-valid = { version = "0.24", default-features = false, features = [

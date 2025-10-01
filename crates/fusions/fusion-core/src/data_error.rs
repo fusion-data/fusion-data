@@ -237,61 +237,61 @@ fn make_tonic_status(code: i32, msg: String) -> tonic::Status {
   tonic::Status::internal(msg)
 }
 
-#[cfg(feature = "modelsql")]
-impl From<modelsql::SqlError> for DataError {
-  fn from(value: modelsql::SqlError) -> Self {
+#[cfg(feature = "fusionsql")]
+impl From<fusionsql::SqlError> for DataError {
+  fn from(value: fusionsql::SqlError) -> Self {
     match value {
-      modelsql::SqlError::Unauthorized(e) => DataError::unauthorized(e),
-      modelsql::SqlError::InvalidArgument { message } => DataError::bad_request(format!("InvalidArgument, {message}")),
-      modelsql::SqlError::EntityNotFound { schema, entity, id } => {
+      fusionsql::SqlError::Unauthorized(e) => DataError::unauthorized(e),
+      fusionsql::SqlError::InvalidArgument { message } => DataError::bad_request(format!("InvalidArgument, {message}")),
+      fusionsql::SqlError::EntityNotFound { schema, entity, id } => {
         DataError::not_found(format!("EntityNotFound, {}:{}:{}", schema.unwrap_or_default(), entity, id))
       }
-      modelsql::SqlError::NotFound { schema, table, sql } => {
+      fusionsql::SqlError::NotFound { schema, table, sql } => {
         log::debug!("NotFound, schema: {}, table: {}, sql: {}", schema.unwrap_or_default(), table, sql);
         DataError::not_found(format!("NotFound, {}:{}", schema.unwrap_or_default(), table))
       }
-      modelsql::SqlError::ListLimitOverMax { max, actual } => {
+      fusionsql::SqlError::ListLimitOverMax { max, actual } => {
         DataError::bad_request(format!("ListLimitOverMax, max: {max}, actual: {actual}"))
       }
-      modelsql::SqlError::ListLimitUnderMin { min, actual } => {
+      fusionsql::SqlError::ListLimitUnderMin { min, actual } => {
         DataError::bad_request(format!("ListLimitUnderMin, min: {min}, actual: {actual}"))
       }
-      modelsql::SqlError::ListPageUnderMin { min, actual } => {
+      fusionsql::SqlError::ListPageUnderMin { min, actual } => {
         DataError::bad_request(format!("ListPageUnderMin, min: {min}, actual: {actual}"))
       }
-      modelsql::SqlError::UserAlreadyExists { key, value } => {
+      fusionsql::SqlError::UserAlreadyExists { key, value } => {
         DataError::conflicted(format!("UserAlreadyExists, {key}:{value}"))
       }
-      modelsql::SqlError::UniqueViolation { table, constraint } => {
+      fusionsql::SqlError::UniqueViolation { table, constraint } => {
         DataError::conflicted(format!("UniqueViolation, {table}:{constraint}"))
       }
-      modelsql::SqlError::ExecuteError { table, message } => {
+      fusionsql::SqlError::ExecuteError { table, message } => {
         DataError::server_error(format!("ExecuteError, {}:{}", table, message))
       }
-      modelsql::SqlError::ExecuteFail { schema, table } => {
+      fusionsql::SqlError::ExecuteFail { schema, table } => {
         DataError::server_error(format!("ExecuteFail, {:?}:{}", schema, table))
       }
-      modelsql::SqlError::CountFail { schema, table } => {
+      fusionsql::SqlError::CountFail { schema, table } => {
         DataError::server_error(format!("CountFail, {:?}:{}", schema, table))
       }
-      e @ modelsql::SqlError::InvalidDatabase(_) => DataError::server_error(e.to_string()),
-      e @ modelsql::SqlError::CantCreateModelManagerProvider(_) => DataError::server_error(e.to_string()),
-      e @ modelsql::SqlError::IntoSeaError(_) => DataError::server_error(e.to_string()),
-      e @ modelsql::SqlError::SeaQueryError(_) => DataError::server_error(e.to_string()),
-      e @ modelsql::SqlError::JsonError(_) => DataError::server_error(e.to_string()),
-      modelsql::SqlError::DbxError(e) => {
+      e @ fusionsql::SqlError::InvalidDatabase(_) => DataError::server_error(e.to_string()),
+      e @ fusionsql::SqlError::CantCreateModelManagerProvider(_) => DataError::server_error(e.to_string()),
+      e @ fusionsql::SqlError::IntoSeaError(_) => DataError::server_error(e.to_string()),
+      e @ fusionsql::SqlError::SeaQueryError(_) => DataError::server_error(e.to_string()),
+      e @ fusionsql::SqlError::JsonError(_) => DataError::server_error(e.to_string()),
+      fusionsql::SqlError::DbxError(e) => {
         DataError::InternalError { code: 500, msg: "Dbx Error".to_string(), cause: Some(Box::new(e)) }
       }
-      modelsql::SqlError::Sqlx(e) => {
+      fusionsql::SqlError::Sqlx(e) => {
         DataError::InternalError { code: 500, msg: "Sqlx Error".to_string(), cause: Some(Box::new(e)) }
       }
     }
   }
 }
 
-#[cfg(feature = "modelsql")]
-impl From<modelsql::store::DbxError> for DataError {
-  fn from(value: modelsql::store::DbxError) -> Self {
+#[cfg(feature = "fusionsql")]
+impl From<fusionsql::store::DbxError> for DataError {
+  fn from(value: fusionsql::store::DbxError) -> Self {
     DataError::server_error(value.to_string())
   }
 }

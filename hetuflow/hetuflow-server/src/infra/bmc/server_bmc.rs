@@ -1,7 +1,7 @@
 use fusion_common::time::now_offset;
-use modelsql::filter::OrderBys;
-use modelsql::{
-  ModelManager, SqlError, base::DbBmc, filter::OpValsInt32, generate_pg_bmc_common, generate_pg_bmc_filter,
+use fusionsql::filter::OrderBys;
+use fusionsql::{
+  ModelManager, SqlError, base::DbBmc, filter::OpValInt32, generate_pg_bmc_common, generate_pg_bmc_filter,
 };
 
 use hetuflow_core::models::{SchedServer, ServerFilter, ServerForRegister, ServerForUpdate};
@@ -43,14 +43,14 @@ generate_pg_bmc_filter!(
 impl ServerBmc {
   /// 查找活跃的服务器
   pub async fn find_active_servers(mm: &ModelManager) -> Result<Vec<SchedServer>, SqlError> {
-    let filter = ServerFilter { status: Some(OpValsInt32::eq(ServerStatus::Active as i32)), ..Default::default() };
+    let filter = ServerFilter { status: Some(OpValInt32::eq(ServerStatus::Active as i32)), ..Default::default() };
 
     Self::find_many(mm, vec![filter], None).await
   }
 
   /// 查找领导者服务器
   pub async fn find_leader_server(mm: &ModelManager) -> Result<Option<SchedServer>, SqlError> {
-    let filter = ServerFilter { status: Some(OpValsInt32::eq(ServerStatus::Active as i32)), ..Default::default() };
+    let filter = ServerFilter { status: Some(OpValInt32::eq(ServerStatus::Active as i32)), ..Default::default() };
 
     let servers = Self::find_many(mm, vec![filter], None).await?;
     Ok(servers.into_iter().next())

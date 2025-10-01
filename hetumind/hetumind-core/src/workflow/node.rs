@@ -435,7 +435,7 @@ pub struct NodeDefinition {
 }
 
 #[cfg(feature = "with-db")]
-modelsql::generate_string_newtype_to_sea_query_value!(Struct: NodeName, Struct: NodeKind);
+fusionsql::generate_string_newtype_to_sea_query_value!(Struct: NodeName, Struct: NodeKind);
 
 pub trait Node {
   fn default_version(&self) -> &Version;

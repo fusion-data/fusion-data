@@ -14,19 +14,20 @@ repository.workspace = true
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = false
 
+
 [lib]
 crate-type = ["cdylib", "rlib"]
 
 [features]
 default = []
-wasm = ["uuid/js", "hetuflow-core/tsify"]
+with-wasm = ["uuid/js", "hetuflow-core/with-wasm", "fusionsql-core/with-wasm"]
 # WASM optimization features
 wee_alloc = ["dep:wee_alloc"]
 
 
 [dependencies]
 fusion-common = { workspace = true, features = ["with-uuid"] }
-modelsql-core = { workspace = true, features = ["with-uuid"] }
+fusionsql-core = { workspace = true, features = ["with-uuid"] }
 hetuflow-core = { workspace = true }
 
 serde = { workspace = true }

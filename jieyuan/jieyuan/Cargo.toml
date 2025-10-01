@@ -48,7 +48,7 @@ log = { workspace = true }
 
 # -- db
 fusion-db = { workspace = true, features = ["with-postgres", "with-uuid"] }
-modelsql = { workspace = true, features = [
+fusionsql = { workspace = true, features = [
   "with-postgres",
   "with-uuid",
   "with-openapi",

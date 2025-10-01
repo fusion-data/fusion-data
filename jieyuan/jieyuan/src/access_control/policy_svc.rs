@@ -1,5 +1,5 @@
 use fusion_core::Result;
-use modelsql::{ModelManager, page::PageResult};
+use fusionsql::{ModelManager, page::PageResult};
 
 use jieyuan_core::model::{Policy, PolicyForCreate, PolicyForPage, PolicyForUpdate};
 

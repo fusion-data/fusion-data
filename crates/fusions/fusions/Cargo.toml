@@ -12,16 +12,16 @@ publish = true
 workspace = true
 
 [features]
-with-db = ["dep:fusion-db", "dep:modelsql"]
+with-db = ["dep:fusion-db", "dep:fusionsql"]
 with-grpc = ["dep:fusion-grpc", "dep:tonic"]
 with-web = ["dep:fusion-web", "dep:axum"]
 
 [dependencies]
 tokio = { workspace = true }
 fusion-core = { workspace = true }
-# -- db & modelsql
+# -- db & fusionsql
 fusion-db = { workspace = true, optional = true }
-modelsql = { workspace = true, optional = true }
+fusionsql = { workspace = true, optional = true }
 # -- web & axum
 fusion-web = { workspace = true, optional = true }
 axum = { workspace = true, optional = true }

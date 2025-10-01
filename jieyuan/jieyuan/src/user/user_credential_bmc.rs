@@ -1,4 +1,4 @@
-use modelsql::{base::DbBmc, generate_pg_bmc_common, generate_pg_bmc_filter};
+use fusionsql::{base::DbBmc, generate_pg_bmc_common, generate_pg_bmc_filter};
 
 use jieyuan_core::model::{
   TABLE_USER_CREDENTIAL, UserCredential, UserCredentialFilter, UserCredentialForCreate, UserCredentialForUpdate,

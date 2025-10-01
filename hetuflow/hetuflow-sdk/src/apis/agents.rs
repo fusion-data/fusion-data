@@ -8,8 +8,8 @@ use crate::{
 use fusion_common::model::IdStringResult;
 use hetuflow_core::models::{AgentFilter, AgentForCreate, AgentForQuery, AgentForUpdate, SchedAgent};
 use hetuflow_core::types::AgentStatus;
-use modelsql_core::filter::{OpValsInt32, OpValsString};
-use modelsql_core::page::PageResult;
+use fusionsql_core::filter::{OpValInt32, OpValString};
+use fusionsql_core::page::PageResult;
 use serde::de::DeserializeOwned;
 
 /// Agents API client
@@ -73,7 +73,7 @@ impl<'a> AgentsApi<'a> {
   /// Find agents by status
   pub async fn find_by_status(&self, status: AgentStatus) -> SdkResult<PageResult<SchedAgent>> {
     let query = AgentForQuery {
-      filter: AgentFilter { status: Some(OpValsInt32::eq(status as i32)), ..Default::default() },
+      filter: AgentFilter { status: Some(OpValInt32::eq(status as i32)), ..Default::default() },
       page: Default::default(),
     };
     self.query(query).await
@@ -82,7 +82,7 @@ impl<'a> AgentsApi<'a> {
   /// Find agents by address
   pub async fn find_by_address(&self, address: &str) -> SdkResult<PageResult<SchedAgent>> {
     let query = AgentForQuery {
-      filter: AgentFilter { address: Some(OpValsString::eq(address)), ..Default::default() },
+      filter: AgentFilter { address: Some(OpValString::eq(address)), ..Default::default() },
       page: Default::default(),
     };
     self.query(query).await

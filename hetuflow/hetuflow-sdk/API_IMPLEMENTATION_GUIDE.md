@@ -11,12 +11,14 @@
 ### ✅ 已完成
 
 1. **基础架构**
+
    - WASM 模块结构 (`src/wasm.rs`)
    - 序列化/反序列化支持
    - TypeScript 类型定义
    - 基础客户端包装类
 
 2. **WasmAgentsApi 实现**
+
    - 基础方法结构
    - Promise 基础的异步 API
    - 错误处理
@@ -78,11 +80,13 @@ impl WasmXxxApi {
 要将 WASM API 连接到真实的 Rust API 实现，需要：
 
 1. **序列化输入参数**
+
    ```rust
    let query_params = serialization::from_js_value::<QueryType>(&params)?;
    ```
 
 2. **调用 Rust API**
+
    ```rust
    let result = self.inner.xxx_api().method(query_params).await?;
    ```
@@ -161,10 +165,12 @@ impl WasmError {
 ### 高优先级（核心功能）
 
 1. **WasmJobsApi** - 作业管理
+
    - query, create, get, update, delete
    - 额外方法: start, stop, pause, resume
 
 2. **WasmTasksApi** - 任务管理
+
    - query, create, get, update, delete
    - 任务依赖关系处理
 
@@ -175,6 +181,7 @@ impl WasmError {
 ### 中优先级
 
 4. **WasmTaskInstancesApi** - 任务实例管理
+
    - query, get, create, update, delete
    - retry, cancel, getLogs 方法
 
@@ -185,10 +192,12 @@ impl WasmError {
 ### 低优先级
 
 6. **WasmSystemApi** - 系统操作
+
    - info, health, metrics, version
    - shutdown, restart 方法
 
 7. **WasmGatewayApi** - 网关操作
+
    - route, getRoutes, addRoute, removeRoute
 
 8. **WasmAuthApi** - 认证操作
@@ -202,6 +211,7 @@ impl WasmError {
 **问题**: Rust 模型类型和 JavaScript 对象之间的转换
 
 **解决方案**:
+
 - 使用 `serde-wasm-bindgen` 进行序列化
 - 为复杂类型创建自定义序列化器
 - 使用 `JsValue` 作为中间表示
@@ -211,6 +221,7 @@ impl WasmError {
 **问题**: Rust async/await 和 JavaScript Promises 的转换
 
 **解决方案**:
+
 - 使用 `wasm-bindgen-futures::future_to_promise`
 - 确保所有异步操作都正确包装
 - 处理超时和取消操作
@@ -220,6 +231,7 @@ impl WasmError {
 **问题**: Rust 错误类型和 JavaScript Error 的转换
 
 **解决方案**:
+
 - 创建统一的错误转换机制
 - 保持错误信息的完整性
 - 提供错误分类和上下文
@@ -229,6 +241,7 @@ impl WasmError {
 **问题**: 确保类型安全的同时提供灵活的 JavaScript API
 
 **解决方案**:
+
 - 完整的 TypeScript 类型定义
 - 运行时类型验证
 - 渐进式类型检查
@@ -245,10 +258,10 @@ impl WasmError {
 # 编辑 hetuflow_sdk.d.ts
 
 # 3. 测试编译
-cargo check --target wasm32-unknown-unknown --features wasm
+cargo check --target wasm32-unknown-unknown --features with-wasm
 
 # 4. 构建 WASM 包
-wasm-pack build --target web --features wasm
+wasm-pack build --target web --features with-wasm
 
 # 5. 测试功能
 # 使用 example.html 或创建专门的测试
@@ -295,10 +308,10 @@ mod tests {
 ```javascript
 // 在浏览器中测试
 describe('WasmAgentsApi', () => {
-    test('should query agents', async () => {
-        const result = await client.agents().query({ page: 1, limit: 10 });
-        expect(result).toBeDefined();
-    });
+  test('should query agents', async () => {
+    const result = await client.agents().query({ page: 1, limit: 10 });
+    expect(result).toBeDefined();
+  });
 });
 ```
 
@@ -307,10 +320,10 @@ describe('WasmAgentsApi', () => {
 ```javascript
 // 使用实际的服务器测试
 test('should create and retrieve agent', async () => {
-    const agentData = { name: 'Test Agent' };
-    const created = await client.agents().create(agentData);
-    const retrieved = await client.agents().get(created.id);
-    expect(retrieved.name).toBe('Test Agent');
+  const agentData = { name: 'Test Agent' };
+  const created = await client.agents().create(agentData);
+  const retrieved = await client.agents().get(created.id);
+  expect(retrieved.name).toBe('Test Agent');
 });
 ```
 
@@ -320,10 +333,10 @@ test('should create and retrieve agent', async () => {
 
 ```bash
 # 开发构建
-wasm-pack build --target web --features wasm
+wasm-pack build --target web --features with-wasm
 
 # 生产构建
-wasm-pack build --target web --features wasm --release
+wasm-pack build --target web --features with-wasm --release
 ```
 
 ### 2. 发布
@@ -395,4 +408,4 @@ npm version major  # 0.1.1 -> 1.0.0
 
 ---
 
-*此文档将随着实现进度持续更新。*
+_此文档将随着实现进度持续更新。_

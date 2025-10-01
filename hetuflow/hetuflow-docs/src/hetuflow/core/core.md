@@ -92,16 +92,19 @@ graph TD
 基于 [`models/`](../../../hetuflow-core/src/models/) 的实现：
 
 - **[`SchedJob`](../../../hetuflow-core/src/models/job.rs)**: 作业静态定义
+
   - 存储作业的"做什么"（命令、参数、环境）
   - 包含任务配置（超时、重试、资源限制）
   - 对应数据库表：`sched_job`
 
 - **[`SchedTask`](../../../hetuflow-core/src/models/task.rs)**: 任务执行计划
+
   - 存储根据调度策略生成的具体执行计划
   - 包含调度时间、参数、优先级等信息
   - 对应数据库表：`sched_task`
 
 - **[`SchedTaskInstance`](../../../hetuflow-core/src/models/task_instance.rs)**: 任务执行实例
+
   - 记录任务在 Agent 上的实际执行情况
   - 包含执行状态、结果、指标等详细信息
   - 对应数据库表：`sched_task_instance`
@@ -112,10 +115,10 @@ graph TD
 
 ### 3. 类型安全的数据访问
 
-基于 `modelsql` 框架，为每个核心实体提供：
+基于 `fusionsql` 框架，为每个核心实体提供：
 
-- **数据模型**: 使用 `#[derive(modelsql::Fields)]` 自动生成 CRUD 操作
-- **查询过滤**: 使用 `#[derive(modelsql::FilterNodes)]` 生成类型安全的查询过滤器
+- **数据模型**: 使用 `#[derive(fusionsql::Fields)]` 自动生成 CRUD 操作
+- **查询过滤**: 使用 `#[derive(fusionsql::FilterNodes)]` 生成类型安全的查询过滤器
 - **数据库集成**: 支持 `sqlx::FromRow` 和 OpenAPI 集成
 
 示例代码见：[`models/job.rs`](../../../hetuflow-core/src/models/job.rs#14-28)
@@ -137,12 +140,14 @@ hetuflow 的通信协议定义了 Agent 与 Server 之间的数据交换格式�
 #### 核心消息类型
 
 **Agent → Server 消息**:
+
 - **[`AgentRegisterRequest`](../../../hetuflow-core/src/protocol/agent.rs)**: Agent 注册请求
 - **[`HeartbeatRequest`](../../../hetuflow-core/src/protocol/heartbeat.rs)**: 心跳请求
 - **[`AcquireTaskRequest`](../../../hetuflow-core/src/protocol/task.rs)**: 任务拉取请求
 - **[`TaskInstanceUpdated`](../../../hetuflow-core/src/protocol/task.rs)**: 任务状态更新
 
 **Server → Agent 消息**:
+
 - **[`AgentRegisterResponse`](../../../hetuflow-core/src/protocol/agent.rs)**: 注册响应
 - **[`HeartbeatResponse`](../../../hetuflow-core/src/protocol/heartbeat.rs)**: 心跳响应
 - **[`ScheduledTask`](../../../hetuflow-core/src/protocol/task.rs)**: 分发的任务
@@ -244,7 +249,7 @@ hetuflow-core 作为整个系统的协议基础，提供了以下关键保障：
 - **Serde JSON**: 高效的序列化/反序列化
 - **UUID v7**: 时间有序的唯一标识符生成
 - **Chrono**: 强类型的日期时间处理
-- **modelsql 集成**: 与数据库 ORM 的无缝集成
+- **fusionsql 集成**: 与数据库 ORM 的无缝集成
 - **OpenAPI 支持**: 自动生成 API 文档
 
 ### 模块化设计

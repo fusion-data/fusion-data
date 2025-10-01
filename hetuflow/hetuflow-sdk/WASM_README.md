@@ -18,7 +18,7 @@ This document describes how to use the Hetuflow SDK WebAssembly bindings in Java
 
 ```bash
 # Build the WASM package
-wasm-pack build --target web --features wasm
+wasm-pack build --target web --features with-wasm
 
 # The package will be available in the `pkg/` directory
 ```
@@ -28,29 +28,29 @@ wasm-pack build --target web --features wasm
 ```html
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
     <script type="module">
-        import init, { WasmHetuflowClient } from './pkg/hetuflow_sdk.js';
+      import init, { WasmHetuflowClient } from './pkg/hetuflow_sdk.js';
 
-        async function main() {
-            // Initialize the WASM module
-            await init();
+      async function main() {
+        // Initialize the WASM module
+        await init();
 
-            // Create a client
-            const client = new WasmHetuflowClient("http://localhost:8080");
+        // Create a client
+        const client = new WasmHetuflowClient('http://localhost:8080');
 
-            // Use the client
-            try {
-                const agents = await client.agents().query({ page: 1, limit: 10 });
-                console.log("Agents:", agents);
-            } catch (error) {
-                console.error("Error:", error);
-            }
+        // Use the client
+        try {
+          const agents = await client.agents().query({ page: 1, limit: 10 });
+          console.log('Agents:', agents);
+        } catch (error) {
+          console.error('Error:', error);
         }
+      }
 
-        main();
+      main();
     </script>
-</head>
+  </head>
 </html>
 ```
 
@@ -60,11 +60,11 @@ wasm-pack build --target web --features wasm
 const { WasmHetuflowClient } = require('./pkg/hetuflow_sdk.js');
 
 async function main() {
-    // Note: In Node.js, you might need additional setup for WASM support
-    const client = new WasmHetuflowClient("http://localhost:8080");
+  // Note: In Node.js, you might need additional setup for WASM support
+  const client = new WasmHetuflowClient('http://localhost:8080');
 
-    const agents = await client.agents().query({});
-    console.log("Agents:", agents);
+  const agents = await client.agents().query({});
+  console.log('Agents:', agents);
 }
 
 main().catch(console.error);
@@ -76,27 +76,27 @@ main().catch(console.error);
 import { WasmHetuflowClient, WasmConfig, Agent, QueryParams } from './pkg/hetuflow_sdk.js';
 
 class HetuflowService {
-    private client: WasmHetuflowClient;
+  private client: WasmHetuflowClient;
 
-    constructor(baseURL: string, authToken?: string) {
-        const config = new WasmConfig(baseURL);
-        if (authToken) {
-            config.set_auth_token(authToken);
-        }
-        this.client = WasmHetuflowClient.withConfig(config);
+  constructor(baseURL: string, authToken?: string) {
+    const config = new WasmConfig(baseURL);
+    if (authToken) {
+      config.set_auth_token(authToken);
     }
+    this.client = WasmHetuflowClient.withConfig(config);
+  }
 
-    async getAgents(params?: QueryParams): Promise<{ items: Agent[], total: number }> {
-        return await this.client.agents().query(params || {});
-    }
+  async getAgents(params?: QueryParams): Promise<{ items: Agent[]; total: number }> {
+    return await this.client.agents().query(params || {});
+  }
 
-    async createAgent(data: { name: string, capabilities: string[] }): Promise<Agent> {
-        return await this.client.agents().create(data);
-    }
+  async createAgent(data: { name: string; capabilities: string[] }): Promise<Agent> {
+    return await this.client.agents().create(data);
+  }
 }
 
 // Usage
-const service = new HetuflowService("http://localhost:8080", "your-token");
+const service = new HetuflowService('http://localhost:8080', 'your-token');
 const agents = await service.getAgents({ page: 1, limit: 20 });
 ```
 
@@ -167,11 +167,11 @@ All API classes (WasmAgentsApi, WasmJobsApi, etc.) implement the same basic inte
 
 ```typescript
 interface BaseApi {
-    query(params?: QueryParams): Promise<QueryResult<T>>
-    get(id: string): Promise<T>
-    create(data: any): Promise<T>
-    update(id: string, data: any): Promise<T>
-    delete(id: string): Promise<void>
+  query(params?: QueryParams): Promise<QueryResult<T>>;
+  get(id: string): Promise<T>;
+  create(data: any): Promise<T>;
+  update(id: string, data: any): Promise<T>;
+  delete(id: string): Promise<void>;
 }
 ```
 
@@ -179,11 +179,11 @@ interface BaseApi {
 
 ```typescript
 interface QueryParams {
-    page?: number;
-    limit?: number;
-    sort?: string;
-    order?: 'asc' | 'desc';
-    [key: string]: any;
+  page?: number;
+  limit?: number;
+  sort?: string;
+  order?: 'asc' | 'desc';
+  [key: string]: any;
 }
 ```
 
@@ -191,11 +191,11 @@ interface QueryParams {
 
 ```typescript
 interface QueryResult<T = any> {
-    items: T[];
-    total: number;
-    page: number;
-    limit: number;
-    pages: number;
+  items: T[];
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
 }
 ```
 
@@ -205,14 +205,14 @@ All API methods throw JavaScript Error objects when something goes wrong:
 
 ```typescript
 try {
-    const agents = await client.agents().query({});
+  const agents = await client.agents().query({});
 } catch (error) {
-    console.error("API Error:", error.message);
-    // Error types include:
-    // - Network errors
-    // - Validation errors
-    // - Configuration errors
-    // - API errors (from the server)
+  console.error('API Error:', error.message);
+  // Error types include:
+  // - Network errors
+  // - Validation errors
+  // - Configuration errors
+  // - API errors (from the server)
 }
 ```
 
@@ -265,25 +265,25 @@ import init, { WasmHetuflowClient } from './pkg/hetuflow_sdk.js';
 await init();
 
 // Create client
-const client = new WasmHetuflowClient("http://localhost:8080");
+const client = new WasmHetuflowClient('http://localhost:8080');
 
 // List agents
 const agents = await client.agents().query({ limit: 10 });
-console.log("Found agents:", agents.items);
+console.log('Found agents:', agents.items);
 
 // Create a job
 const job = await client.jobs().create({
-    name: "Test Job",
-    description: "A test job created from WASM",
-    tasks: [
-        {
-            name: "Task 1",
-            type: "shell",
-            input: { command: "echo 'Hello from WASM!'" }
-        }
-    ]
+  name: 'Test Job',
+  description: 'A test job created from WASM',
+  tasks: [
+    {
+      name: 'Task 1',
+      type: 'shell',
+      input: { command: "echo 'Hello from WASM!'" },
+    },
+  ],
 });
-console.log("Created job:", job);
+console.log('Created job:', job);
 ```
 
 ### With Authentication
@@ -291,8 +291,8 @@ console.log("Created job:", job);
 ```javascript
 import { WasmHetuflowClient, WasmConfig } from './pkg/hetuflow_sdk.js';
 
-const config = new WasmConfig("http://localhost:8080");
-config.set_auth_token("your-jwt-token-here");
+const config = new WasmConfig('http://localhost:8080');
+config.set_auth_token('your-jwt-token-here');
 config.set_timeout(60000); // 60 seconds
 
 const client = WasmHetuflowClient.withConfig(config);
@@ -302,19 +302,19 @@ const client = WasmHetuflowClient.withConfig(config);
 
 ```javascript
 async function safeApiCall() {
-    try {
-        const result = await client.agents().query({});
-        return result;
-    } catch (error) {
-        if (error.message.includes("Network")) {
-            console.log("Network error - check your connection");
-        } else if (error.message.includes("Authentication")) {
-            console.log("Auth error - check your token");
-        } else {
-            console.log("Other error:", error.message);
-        }
-        throw error;
+  try {
+    const result = await client.agents().query({});
+    return result;
+  } catch (error) {
+    if (error.message.includes('Network')) {
+      console.log('Network error - check your connection');
+    } else if (error.message.includes('Authentication')) {
+      console.log('Auth error - check your token');
+    } else {
+      console.log('Other error:', error.message);
     }
+    throw error;
+  }
 }
 ```
 
@@ -324,15 +324,15 @@ To build the WASM package:
 
 ```bash
 # Development build
-wasm-pack build --target web --features wasm
+wasm-pack build --target web --features with-wasm
 
 # Production build (optimized)
-wasm-pack build --target web --features wasm --release
+wasm-pack build --target web --features with-wasm --release
 
 # Build for different targets
-wasm-pack build --target nodejs --features wasm    # Node.js
-wasm-pack build --target bundler --features wasm   # Webpack/other bundlers
-wasm-pack build --target web --features wasm       # Direct browser use
+wasm-pack build --target nodejs --features with-wasm    # Node.js
+wasm-pack build --target bundler --features with-wasm   # Webpack/other bundlers
+wasm-pack build --target web --features with-wasm       # Direct browser use
 ```
 
 ## Limitations

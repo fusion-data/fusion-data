@@ -1,6 +1,6 @@
 use fusion_common::regex;
 use fusion_core::{DataError, Result};
-use modelsql::{ModelManager, filter::OpValsInt64, page::PageResult};
+use fusionsql::{ModelManager, filter::OpValInt64, page::PageResult};
 
 use jieyuan_core::model::{
   User, UserCredential, UserFilter, UserForCreate, UserForPage, UserForUpdate, UserRoleForCreate,
@@ -30,7 +30,7 @@ impl UserSvc {
   }
 
   pub async fn find_option_by_id(&self, id: i64) -> Result<Option<User>> {
-    let f = UserFilter { id: Some(OpValsInt64::eq(id)), ..Default::default() };
+    let f = UserFilter { id: Some(OpValInt64::eq(id)), ..Default::default() };
     let u = UserBmc::find_unique(&self.mm, vec![f]).await?;
     Ok(u)
   }

@@ -1,5 +1,5 @@
 use fusion_core::Result;
-use modelsql::{ModelManager, filter::Page, page::PageResult};
+use fusionsql::{ModelManager, filter::Page, page::PageResult};
 
 use jieyuan_core::model::{CreateRoleDto, Role, RoleFilters, RoleForUpdate, RolePermissionForCreate};
 

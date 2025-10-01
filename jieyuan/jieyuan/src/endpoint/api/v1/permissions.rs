@@ -4,7 +4,7 @@ use axum::{
 };
 use fusion_core::application::Application;
 use fusion_web::{WebResult, ok_json};
-use modelsql::ModelManager;
+use fusionsql::ModelManager;
 use utoipa_axum::router::OpenApiRouter;
 
 use jieyuan_core::model::{Permission, PermissionForCreate, PermissionForPage, PermissionForUpdate};
@@ -109,7 +109,7 @@ async fn delete_permission(State(app): State<Application>, Path(id): Path<i64>) 
   path = "/page",
   request_body = PermissionForPage,
   responses(
-    (status = 200, description = "查询成功", body = modelsql::page::PageResult<Permission>),
+    (status = 200, description = "查询成功", body = fusionsql::page::PageResult<Permission>),
     (status = 400, description = "请求参数错误")
   ),
   tag = "权限管理"
@@ -117,7 +117,7 @@ async fn delete_permission(State(app): State<Application>, Path(id): Path<i64>) 
 async fn list_permissions(
   State(app): State<Application>,
   Json(req): Json<PermissionForPage>,
-) -> WebResult<modelsql::page::PageResult<Permission>> {
+) -> WebResult<fusionsql::page::PageResult<Permission>> {
   let mm = app.get_component::<ModelManager>().unwrap();
   let permission_svc = PermissionSvc::new(mm);
   let result = permission_svc.page(req).await?;

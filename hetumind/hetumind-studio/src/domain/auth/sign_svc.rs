@@ -5,11 +5,11 @@ use fusion_core::{
   security::pwd::{generate_pwd, verify_pwd},
 };
 use fusion_web::WebError;
+use fusionsql::{ModelManager, filter::OpValString};
 use hetumind_context::utils::make_token;
 use hetumind_core::credential::TokenType;
 use http::request::Parts;
 use log::info;
-use modelsql::{ModelManager, filter::OpValString};
 
 use crate::domain::user::{UserBmc, UserFilter, UserForCreate, UserStatus};
 
@@ -27,9 +27,9 @@ impl SignSvc {
     let phone = signin_req.as_phone();
 
     let filter = if let Some(email) = email {
-      UserFilter { email: Some(OpValString::Eq(email.to_string()).into()), ..Default::default() }
+      UserFilter { email: Some(OpValString::eq(email)), ..Default::default() }
     } else if let Some(phone) = phone {
-      UserFilter { phone: Some(OpValString::Eq(phone.to_string()).into()), ..Default::default() }
+      UserFilter { phone: Some(OpValString::eq(phone)), ..Default::default() }
     } else {
       return Err(DataError::unauthorized("Parameter account must be email or phone"));
     };

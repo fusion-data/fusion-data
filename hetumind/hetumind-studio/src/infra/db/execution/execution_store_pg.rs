@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use hetumind_core::workflow::{Execution, ExecutionForUpdate, ExecutionId, ExecutionStatus, WorkflowExecutionError};
-use modelsql::ModelManager;
+use fusionsql::ModelManager;
 
 use crate::{
   domain::workflow::ExecutionBmc,

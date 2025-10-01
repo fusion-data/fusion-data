@@ -12,7 +12,7 @@ publish = true
 workspace = true
 
 [features]
-with-db = ["sqlx", "sea-query", "modelsql", "modelsql-core/with-sea-query"]
+with-db = ["sqlx", "sea-query", "fusionsql", "fusionsql-core/with-sea-query"]
 
 [dependencies]
 fusion-corelib = { workspace = true }
@@ -40,8 +40,8 @@ uuid = { workspace = true }
 async-trait = { workspace = true }
 sqlx = { workspace = true, optional = true }
 sea-query = { workspace = true, optional = true }
-modelsql = { workspace = true, optional = true }
-modelsql-core = { workspace = true, features = ["with-uuid"] }
+fusionsql = { workspace = true, optional = true }
+fusionsql-core = { workspace = true, features = ["with-uuid"] }
 dashmap = { workspace = true }
 
 [dev-dependencies]

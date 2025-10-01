@@ -1,5 +1,5 @@
 #[cfg(feature = "with-db")]
-use modelsql::SqlError;
+use fusionsql::SqlError;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 

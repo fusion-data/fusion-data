@@ -1,8 +1,8 @@
 use chrono::{DateTime, FixedOffset};
 use fusion_common::ahash::HashMap;
-use modelsql_core::{
+use fusionsql_core::{
   field::FieldMask,
-  filter::{OpValsDateTime, OpValsInt32, OpValsString, OpValsUuid, OpValsValue, Page},
+  filter::{OpValDateTime, OpValInt32, OpValString, OpValUuid, OpValValue, Page},
 };
 use serde::{Deserialize, Serialize};
 use strum::AsRefStr;
@@ -75,7 +75,7 @@ impl TaskConfig {
 /// 任务执行指标
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
-#[cfg_attr(feature = "wasm", derive(tsify::Tsify), tsify(into_wasm_abi, from_wasm_abi))]
+#[cfg_attr(feature = "with-wasm", derive(tsify::Tsify), tsify(into_wasm_abi, from_wasm_abi))]
 pub struct TaskMetrics {
   pub cpu_time: f64,    // CPU 时间
   pub memory_peak: u64, // 内存峰值
@@ -87,7 +87,7 @@ pub struct TaskMetrics {
 
 /// SchedTask 数据模型
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(modelsql::Fields, sqlx::FromRow))]
+#[cfg_attr(feature = "with-db", derive(fusionsql::Fields, sqlx::FromRow))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct SchedTask {
   pub id: Uuid,
@@ -147,7 +147,7 @@ impl SchedTask {
 
 /// SchedTask 创建模型
 #[derive(Debug, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(modelsql::Fields))]
+#[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct TaskForCreate {
   pub id: Option<Uuid>,
@@ -183,7 +183,7 @@ fn default_parameters() -> serde_json::Value {
 
 /// SchedTask 更新模型
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(modelsql::Fields))]
+#[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct TaskForUpdate {
   pub priority: Option<i32>,
@@ -213,17 +213,17 @@ pub struct TaskForQuery {
 
 /// SchedTask 过滤器
 #[derive(Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(modelsql::FilterNodes))]
+#[cfg_attr(feature = "with-db", derive(fusionsql::FilterNodes))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct TaskFilter {
-  pub id: Option<OpValsUuid>,
-  pub job_id: Option<OpValsUuid>,
-  pub schedule_id: Option<OpValsUuid>,
-  pub namespace_id: Option<OpValsString>,
-  pub task_config: Option<OpValsValue>,
-  pub status: Option<OpValsInt32>,
-  pub scheduled_at: Option<OpValsDateTime>,
-  pub locked_at: Option<OpValsDateTime>,
-  pub created_at: Option<OpValsDateTime>,
-  pub updated_at: Option<OpValsDateTime>,
+  pub id: Option<OpValUuid>,
+  pub job_id: Option<OpValUuid>,
+  pub schedule_id: Option<OpValUuid>,
+  pub namespace_id: Option<OpValString>,
+  pub task_config: Option<OpValValue>,
+  pub status: Option<OpValInt32>,
+  pub scheduled_at: Option<OpValDateTime>,
+  pub locked_at: Option<OpValDateTime>,
+  pub created_at: Option<OpValDateTime>,
+  pub updated_at: Option<OpValDateTime>,
 }

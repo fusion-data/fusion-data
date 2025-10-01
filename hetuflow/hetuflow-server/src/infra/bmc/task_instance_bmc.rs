@@ -1,9 +1,9 @@
 use fusion_common::time::now_offset;
-use modelsql::{
+use fusionsql::{
   ModelManager, SqlError,
   base::DbBmc,
   field::FieldMask,
-  filter::{OpValsDateTime, OpValsInt32, OrderBys},
+  filter::{OpValDateTime, OpValInt32, OrderBys},
   generate_pg_bmc_common, generate_pg_bmc_filter,
 };
 use sqlx::Row;
@@ -117,8 +117,8 @@ impl TaskInstanceBmc {
     let cutoff_time = now_offset() - chrono::Duration::seconds(timeout_seconds);
 
     let filter = TaskInstanceFilter {
-      status: Some(OpValsInt32::eq(TaskInstanceStatus::Running as i32)),
-      started_at: Some(OpValsDateTime::lt(cutoff_time)),
+      status: Some(OpValInt32::eq(TaskInstanceStatus::Running as i32)),
+      started_at: Some(OpValDateTime::lt(cutoff_time)),
       ..Default::default()
     };
 

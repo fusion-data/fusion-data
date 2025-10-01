@@ -1,8 +1,8 @@
 use fusion_common::ahash::HashMap;
 use fusion_common::time::OffsetDateTime;
-use modelsql_core::{
+use fusionsql_core::{
   field::FieldMask,
-  filter::{OpValsDateTime, OpValsInt32, OpValsUuid, Page},
+  filter::{OpValDateTime, OpValInt32, OpValUuid, Page},
 };
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
@@ -56,7 +56,7 @@ pub enum ExecutionStatus {
 }
 
 #[cfg(feature = "with-db")]
-modelsql::generate_enum_i32_to_sea_query_value!(Enum: ExecutionStatus, Enum: ExecutionMode);
+fusionsql::generate_enum_i32_to_sea_query_value!(Enum: ExecutionStatus, Enum: ExecutionMode);
 
 #[derive(Debug, Clone, Serialize, Deserialize, TypedBuilder)]
 pub struct Execution {
@@ -117,7 +117,7 @@ impl ExecutionResult {
 }
 
 #[derive(Deserialize)]
-#[cfg_attr(feature = "modelsql", derive(modelsql::field::Fields))]
+#[cfg_attr(feature = "fusionsql", derive(fusionsql::field::Fields))]
 pub struct ExecutionForUpdate {
   pub status: Option<ExecutionStatus>,
   pub finished_at: Option<OffsetDateTime>,
@@ -126,7 +126,7 @@ pub struct ExecutionForUpdate {
   pub retry_success_id: Option<ExecutionId>,
   pub started_at: Option<OffsetDateTime>,
   pub deleted_at: Option<OffsetDateTime>,
-  #[cfg_attr(feature = "modelsql", field(skip))]
+  #[cfg_attr(feature = "fusionsql", field(skip))]
   pub field_mask: Option<FieldMask>,
 }
 
@@ -146,13 +146,13 @@ impl From<Execution> for ExecutionForUpdate {
 }
 
 #[derive(Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "modelsql", derive(modelsql::filter::FilterNodes))]
+#[cfg_attr(feature = "fusionsql", derive(fusionsql::filter::FilterNodes))]
 pub struct ExecutionFilter {
-  pub workflow_id: Option<OpValsUuid>,
-  pub status: Option<OpValsInt32>,
-  pub started_at: Option<OpValsDateTime>,
-  pub finished_at: Option<OpValsDateTime>,
-  pub wait_till: Option<OpValsDateTime>,
+  pub workflow_id: Option<OpValUuid>,
+  pub status: Option<OpValInt32>,
+  pub started_at: Option<OpValDateTime>,
+  pub finished_at: Option<OpValDateTime>,
+  pub wait_till: Option<OpValDateTime>,
 }
 
 #[derive(Serialize, Deserialize)]

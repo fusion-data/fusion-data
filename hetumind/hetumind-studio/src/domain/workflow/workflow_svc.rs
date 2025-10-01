@@ -9,7 +9,7 @@ use hetumind_core::workflow::{
   WorkflowForUpdate, WorkflowId, WorkflowStatus,
 };
 use http::request::Parts;
-use modelsql::page::PageResult;
+use fusionsql::page::PageResult;
 
 use super::{ExecutionBmc, ExecutionDataBmc, ExecutionDataEntity, ExecutionEntity, WorkflowBmc};
 

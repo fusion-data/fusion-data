@@ -38,16 +38,16 @@ src/
 - **ModelManager**: 数据库连接和操作管理器，统一管理数据库访问
 - **DbBmc (Database Basic Model Controller)**: 数据库操作抽象层，提供类型安全的 CRUD 操作
 - **Service 层**: 业务逻辑层，使用 ModelManager 和 DbBmc 进行数据库操作
-- **ultimate_core::DataError**: 统一的错误处理机制，将 modelsql::SqlError 转换为应用层错误
+- **ultimate_core::DataError**: 统一的错误处理机制，将 fusionsql::SqlError 转换为应用层错误
 
 ## 核心特性
 
 - 基于 Axum 框架的 HTTP API 服务
 - 使用现代化数据库技术栈：
   - **ultimate-core::Application**: 依赖注入容器和应用生命周期管理
-  - **modelsql::ModelManager**: 数据库连接池和操作管理
-  - **modelsql::base::DbBmc**: 统一的数据库操作抽象层
-  - **modelsql::SqlError →fusion_core::DataError**: 分层错误处理机制
+  - **fusionsql::ModelManager**: 数据库连接池和操作管理
+  - **fusionsql::base::DbBmc**: 统一的数据库操作抽象层
+  - **fusionsql::SqlError →fusion_core::DataError**: 分层错误处理机制
   - **sea-query**: 类型安全的 SQL 查询构建器
 - 基于 tokio-tungstenite 的高性能 WebSocket 服务
 - 支持任务的动态配置和热更新
@@ -73,7 +73,7 @@ src/
 ```rust
 use fusion_core::{DataError, application::Application};
 use fusion_db::DbPlugin;
-use modelsql::ModelManager;
+use fusionsql::ModelManager;
 use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
 use tokio::sync::{mpsc, RwLock, Mutex};
 use std::collections::HashMap;

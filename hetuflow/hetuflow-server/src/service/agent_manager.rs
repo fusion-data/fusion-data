@@ -8,9 +8,9 @@ use fusion_core::{
   DataError,
   concurrent::{ServiceHandle, ServiceTask, TaskResult},
 };
+use fusionsql::{ModelManager, filter::OpValUuid};
 use log::{error, info, warn};
 use mea::{mpsc, shutdown::ShutdownRecv};
-use modelsql::{ModelManager, filter::OpValsUuid};
 
 use hetuflow_core::{
   models::*,
@@ -137,7 +137,7 @@ impl AgentEventRunner {
     let task_map = TaskBmc::find_many(
       &mm,
       vec![TaskFilter {
-        id: Some(OpValsUuid::in_(task_instances.iter().map(|ti| ti.task_id).collect::<HashSet<_>>())),
+        id: Some(OpValUuid::in_(task_instances.iter().map(|ti| ti.task_id).collect::<HashSet<_>>())),
         ..Default::default()
       }],
       None,

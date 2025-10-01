@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use modelsql::{ModelManager, SqlError, base::DbBmc, generate_pg_bmc_common, generate_pg_bmc_filter};
+use fusionsql::{ModelManager, SqlError, base::DbBmc, generate_pg_bmc_common, generate_pg_bmc_filter};
 
 use crate::model::{DistributedLockEntity, DistributedLockFilter, DistributedLockForInsert, DistributedLockForUpdate};
 

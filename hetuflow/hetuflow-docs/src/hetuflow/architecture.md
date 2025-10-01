@@ -24,7 +24,7 @@ hetuflow 是一个现代化、高性能的分布式任务调度系统。该系�
 
 - **编程语言**: Rust 2024 Edition
 - **数据库**: PostgreSQL + pgvector 扩展
-- **ORM**: modelsql (基于 sea-query + sqlx)
+- **ORM**: fusionsql (基于 sea-query + sqlx)
 - **通信协议**: WebSocket (全双工)
 - **异步运行时**: Tokio
 - **序列化**: Serde JSON
@@ -36,12 +36,14 @@ hetuflow 是一个现代化、高性能的分布式任务调度系统。该系�
 ### 1. hetuflow-server（核心协调节点）
 
 **核心职责**:
+
 - 任务调度和分发管理
 - Agent 连接和状态管理
 - Web API 和管理界面
 - 数据持久化和事务处理
 
 **主要模块**:
+
 - `application/`: 应用容器和依赖管理
 - `scheduler/`: 任务调度引擎
 - `broker/`: 任务分发和负载均衡
@@ -52,12 +54,14 @@ hetuflow 是一个现代化、高性能的分布式任务调度系统。该系�
 ### 2. hetuflow-agent（任务执行单元）
 
 **核心职责**:
+
 - 接收并执行 Server 下发的任务
 - 任务状态监控和上报
 - 资源管理和进程控制
 - 自动重连和故障恢复
 
 **主要模块**:
+
 - `application/`: 应用容器
 - `connection/`: WebSocket 连接管理
 - `executor/`: 任务执行器
@@ -96,7 +100,7 @@ graph TB
             FC_ERROR[Error Handling]
         end
 
-        subgraph "modelsql"
+        subgraph "fusionsql"
             MS_MM[ModelManager]
             MS_BMC[DbBmc Layer]
             MS_QUERY[Query Builder]
@@ -143,17 +147,21 @@ graph TB
 ### 模块职责定义
 
 **应用层 (Application Layer)**:
-- **hetuflow-server**: 负责任务调度、Agent管理、API服务
+
+- **hetuflow-server**: 负责任务调度、Agent 管理、API 服务
 - **hetuflow-agent**: 负责任务执行、状态上报、资源管理
 
 **基础设施层 (Infrastructure Layer)**:
+
 - **fusion-core**: 提供 Application 容器、错误处理、配置管理等基础功能
-- **modelsql**: 提供 ModelManager、DbBmc、Query Builder 等数据库抽象层
+- **fusionsql**: 提供 ModelManager、DbBmc、Query Builder 等数据库抽象层
 
 **核心层 (Core Layer)**:
+
 - **hetuflow-core**: 定义通信协议、数据模型、类型规范的共享核心库
 
 **存储层 (Storage Layer)**:
+
 - **PostgreSQL**: 提供 ACID 事务保证的持久化存储
 
 ### 组件关系与交互
@@ -390,12 +398,14 @@ hetuflow 使用 WebSocket 协议实现 Agent 与 Server 之间的全双工通信
 基于最新代码实现，核心消息类型包括：
 
 #### Agent -> Server 消息
+
 - **AgentRegisterRequest**: Agent 注册请求 ([`protocol/agent.rs`](../../../hetuflow-core/src/protocol/agent.rs))
 - **HeartbeatRequest**: 心跳请求 ([`protocol/heartbeat.rs`](../../../hetuflow-core/src/protocol/heartbeat.rs))
 - **AcquireTaskRequest**: 任务拉取请求
 - **TaskInstanceUpdated**: 任务实例状态更新
 
 #### Server -> Agent 消息
+
 - **AgentRegisterResponse**: Agent 注册响应
 - **HeartbeatResponse**: 心跳响应
 - **ScheduledTask**: 分发的任务
@@ -424,7 +434,7 @@ hetuflow-core = { workspace = true }
 
 ## 数据模型设计
 
-hetuflow 采用基于 **modelsql** ORM 的分层数据模型设计，确保数据库访问的类型安全、错误处理的一致性和代码的可维护性。
+hetuflow 采用基于 **fusionsql** ORM 的分层数据模型设计，确保数据库访问的类型安全、错误处理的一致性和代码的可维护性。
 
 ### 三层任务模型
 
@@ -663,8 +673,8 @@ graph TD
 基于最新的代码实现，hetuflow 具备以下现代化架构特性：
 
 - **Application 容器模式**: 使用 [`fusion-core::Application`](../../../crates/libs/fusion-core/src/) 统一管理服务依赖和生命周期
-- **类型安全 ORM**: 基于 [`modelsql`](../../../crates/libs/modelsql/) 的全程类型安全数据库操作
-- **分层错误处理**: `modelsql::SqlError → fusion_core::DataError` 的分层错误转换机制
+- **类型安全 ORM**: 基于 [`fusionsql`](../../../crates/libs/fusionsql/) 的全程类型安全数据库操作
+- **分层错误处理**: `fusionsql::SqlError → fusion_core::DataError` 的分层错误转换机制
 - **WebSocket 全双工通信**: 支持服务器推送和 Agent 上报的双向实时通信
 - **强一致性存储**: 基于 PostgreSQL 事务保证的 ACID 特性
 
@@ -686,7 +696,7 @@ graph TD
 
 ### 4. 开发体验优化
 
-- **代码生成**: 使用 [`modelsql::Fields`](../../../crates/libs/modelsql/) 宏自动生成 CRUD 操作
+- **代码生成**: 使用 [`fusionsql::Fields`](../../../crates/libs/fusionsql/) 宏自动生成 CRUD 操作
 - **字段级更新**: 支持字段掩码的部分更新操作，减少数据传输
 - **过滤器 DSL**: 提供类型安全的查询过滤器系统
 - **编译时检查**: 全程类型安全，编译时发现错误
@@ -694,7 +704,7 @@ graph TD
 
 ## 系统总结
 
-hetuflow 是一个基于 Rust 2024 Edition 构建的现代化分布式任务调度系统，通过 WebSocket 全双工通信、PostgreSQL 强一致性存储、modelsql 类型安全 ORM 等现代技术栈，实现了高性能、高可靠性的任务调度能力。
+hetuflow 是一个基于 Rust 2024 Edition 构建的现代化分布式任务调度系统，通过 WebSocket 全双工通信、PostgreSQL 强一致性存储、fusionsql 类型安全 ORM 等现代技术栈，实现了高性能、高可靠性的任务调度能力。
 
 ### 核心价值主张
 

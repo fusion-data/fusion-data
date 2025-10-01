@@ -1,4 +1,4 @@
-use modelsql::{
+use fusionsql::{
   ModelManager, Result,
   base::{self, DbBmc, compute_page},
   filter::FilterGroups,

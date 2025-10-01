@@ -4,7 +4,7 @@
 
 fusion-data 是一个基于 Rust 生态开发的 **融合数据** 平台，当前正在进行中的项目有：
 
-- [modelsql](crates/libs/modelsql/): 基于 [sea-query](https://github.com/SeaQL/sea-query/) 开发的数据库访问层
+- [fusionsql](crates/fusions/fusionsql/): 基于 [sea-query](https://github.com/SeaQL/sea-query/) 开发的数据库访问层
 - [hetuflow](hetuflow/): **河图流动** 分布式作业调度系统
 - [hetumind](hetumind/): **河图智思** AI Agent/Flow 平台
 

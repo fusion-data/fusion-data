@@ -3,8 +3,8 @@ use std::sync::Arc;
 use fusion_core::{DataError, application::Application};
 use fusion_corelib::ctx::Ctx;
 use fusion_web::WebError;
+use fusionsql::ModelManager;
 use http::request::Parts;
-use modelsql::ModelManager;
 
 use crate::meta::RequestMetadata;
 

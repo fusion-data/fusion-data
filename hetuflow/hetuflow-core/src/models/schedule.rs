@@ -1,9 +1,9 @@
 use chrono::{DateTime, FixedOffset};
 use fusion_common::time::{OffsetDateTime, now_offset};
-use modelsql_core::filter::Page;
-use modelsql_core::{
+use fusionsql_core::filter::Page;
+use fusionsql_core::{
   field::FieldMask,
-  filter::{OpValsDateTime, OpValsInt32, OpValsUuid},
+  filter::{OpValDateTime, OpValInt32, OpValUuid},
 };
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -14,7 +14,7 @@ use crate::types::{ScheduleKind, ScheduleStatus};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(
   feature = "with-db",
-  derive(modelsql::Fields, sqlx::FromRow),
+  derive(fusionsql::Fields, sqlx::FromRow),
   sea_query::enum_def(table_name = "sched_schedule")
 )]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
@@ -59,7 +59,7 @@ impl SchedSchedule {
 
 /// Schedule 创建模型
 #[derive(Debug, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(modelsql::Fields))]
+#[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct ScheduleForCreate {
   pub id: Uuid,
@@ -77,7 +77,7 @@ pub struct ScheduleForCreate {
 
 /// Schedule 更新模型
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(modelsql::Fields))]
+#[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct ScheduleForUpdate {
   pub name: Option<String>,
@@ -94,15 +94,15 @@ pub struct ScheduleForUpdate {
 
 /// Schedule 过滤器
 #[derive(Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(modelsql::FilterNodes))]
+#[cfg_attr(feature = "with-db", derive(fusionsql::FilterNodes))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct ScheduleFilter {
-  pub id: Option<OpValsUuid>,
-  pub job_id: Option<OpValsUuid>,
-  pub schedule_kind: Option<OpValsInt32>,
-  pub status: Option<OpValsInt32>,
-  pub created_at: Option<OpValsDateTime>,
-  pub updated_at: Option<OpValsDateTime>,
+  pub id: Option<OpValUuid>,
+  pub job_id: Option<OpValUuid>,
+  pub schedule_kind: Option<OpValInt32>,
+  pub status: Option<OpValInt32>,
+  pub created_at: Option<OpValDateTime>,
+  pub updated_at: Option<OpValDateTime>,
 }
 
 #[derive(Default, Serialize, Deserialize)]

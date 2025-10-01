@@ -1,10 +1,10 @@
 use std::fmt::{self, Debug};
 
 use fusion_common::time::OffsetDateTime;
-use modelsql::generate_enum_i32_to_sea_query_value;
-use modelsql::{
+use fusionsql::generate_enum_i32_to_sea_query_value;
+use fusionsql::{
   field::{FieldMask, Fields},
-  filter::{FilterNodes, OpValsDateTime, OpValsInt32, OpValsString, OpValsUuid, Page},
+  filter::{FilterNodes, OpValDateTime, OpValInt32, OpValString, OpValUuid, Page},
   postgres::PgRowType,
 };
 use sea_query::enum_def;
@@ -94,22 +94,22 @@ pub struct UserForUpdate {
 /// 3. old_password 和 code 都为空，则需要验证当前用户是否是管理人。
 #[derive(Debug, Deserialize, Fields)]
 pub struct UserForUpdatePassword {
-  #[modelsql(skip)]
+  #[fusionsql(skip)]
   pub old_password: Option<String>,
-  #[modelsql(skip)]
+  #[fusionsql(skip)]
   pub code: Option<String>,
   pub password: String,
 }
 
 #[derive(Default, Deserialize, FilterNodes)]
 pub struct UserFilter {
-  pub id: Option<OpValsUuid>,
-  pub email: Option<OpValsString>,
-  pub phone: Option<OpValsString>,
-  pub name: Option<OpValsString>,
-  pub status: Option<OpValsInt32>,
-  pub created_at: Option<OpValsDateTime>,
-  pub updated_at: Option<OpValsDateTime>,
+  pub id: Option<OpValUuid>,
+  pub email: Option<OpValString>,
+  pub phone: Option<OpValString>,
+  pub name: Option<OpValString>,
+  pub status: Option<OpValInt32>,
+  pub created_at: Option<OpValDateTime>,
+  pub updated_at: Option<OpValDateTime>,
 }
 
 #[derive(Deserialize)]
@@ -121,7 +121,7 @@ pub struct UserForPage {
 #[cfg(test)]
 mod tests {
   use fusion_common::time::now;
-  use modelsql::field::HasSeaFields;
+  use fusionsql::field::HasSeaFields;
   use sea_query::ColumnRef;
 
   use super::*;

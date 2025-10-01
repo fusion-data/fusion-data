@@ -4,7 +4,7 @@ use fusion_common::time::now_offset;
 use fusion_core::{DataError, concurrent::ServiceTask};
 use log::{error, info};
 use mea::shutdown::ShutdownRecv;
-use modelsql::ModelManager;
+use fusionsql::ModelManager;
 use tokio::time::interval;
 
 use crate::setting::HetuflowSetting;

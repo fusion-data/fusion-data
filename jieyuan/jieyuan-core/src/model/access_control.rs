@@ -1,9 +1,9 @@
 use fusion_common::time::OffsetDateTime;
-use modelsql_core::filter::{OpValsInt32, OpValsInt64, OpValsString, Page};
+use fusionsql_core::filter::{OpValInt32, OpValInt64, OpValString, Page};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(sqlx::FromRow, modelsql::field::Fields), sea_query::enum_def)]
+#[cfg_attr(feature = "with-db", derive(sqlx::FromRow, fusionsql::field::Fields), sea_query::enum_def)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct Policy {
   pub id: i64,
@@ -19,7 +19,7 @@ pub struct Policy {
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(modelsql::field::Fields))]
+#[cfg_attr(feature = "with-db", derive(fusionsql::field::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct PolicyForCreate {
   pub id: i64,
@@ -29,7 +29,7 @@ pub struct PolicyForCreate {
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(modelsql::field::Fields))]
+#[cfg_attr(feature = "with-db", derive(fusionsql::field::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct PolicyForUpdate {
   pub description: Option<String>,
@@ -45,10 +45,10 @@ pub struct PolicyForPage {
 }
 
 #[derive(Debug, Default, Deserialize, Serialize)]
-#[cfg_attr(feature = "with-db", derive(modelsql::filter::FilterNodes))]
+#[cfg_attr(feature = "with-db", derive(fusionsql::filter::FilterNodes))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct PolicyFilter {
-  pub id: Option<OpValsInt64>,
-  pub description: Option<OpValsString>,
-  pub status: Option<OpValsInt32>,
+  pub id: Option<OpValInt64>,
+  pub description: Option<OpValString>,
+  pub status: Option<OpValInt32>,
 }

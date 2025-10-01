@@ -43,6 +43,7 @@ hetuflow Server 提供了一套完整的 RESTful API，用于管理分布式任�
 **端点**: `POST /api/v1/agents/query`
 
 **请求**:
+
 ```json
 {
   "filter": {
@@ -58,6 +59,7 @@ hetuflow Server 提供了一套完整的 RESTful API，用于管理分布式任�
 ```
 
 **响应**:
+
 ```json
 {
   "data": [
@@ -79,10 +81,11 @@ hetuflow Server 提供了一套完整的 RESTful API，用于管理分布式任�
 ```
 
 **Rust 代码示例**:
+
 ```rust
 // 请求类型
 use hetuflow_core::models::{AgentForQuery, SchedAgent};
-use modelsql::page::PageResult;
+use fusionsql::page::PageResult;
 
 // 服务调用
 let result = agent_svc.query(query_request).await?;
@@ -93,6 +96,7 @@ let result = agent_svc.query(query_request).await?;
 **端点**: `POST /api/v1/agents/create`
 
 **请求**:
+
 ```json
 {
   "namespace_id": "default",
@@ -103,6 +107,7 @@ let result = agent_svc.query(query_request).await?;
 ```
 
 **响应**:
+
 ```json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000"
@@ -114,6 +119,7 @@ let result = agent_svc.query(query_request).await?;
 **端点**: `GET /api/v1/agents/{id}`
 
 **响应**:
+
 ```json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
@@ -132,6 +138,7 @@ let result = agent_svc.query(query_request).await?;
 **端点**: `POST /api/v1/agents/{id}/update`
 
 **请求**:
+
 ```json
 {
   "name": "agent-01-updated",
@@ -158,6 +165,7 @@ let result = agent_svc.query(query_request).await?;
 **端点**: `POST /api/v1/jobs/page`
 
 **请求**:
+
 ```json
 {
   "filter": {
@@ -173,6 +181,7 @@ let result = agent_svc.query(query_request).await?;
 ```
 
 **响应**:
+
 ```json
 {
   "data": [
@@ -207,6 +216,7 @@ let result = agent_svc.query(query_request).await?;
 **端点**: `POST /api/v1/jobs/item`
 
 **请求**:
+
 ```json
 {
   "namespace_id": "default",
@@ -226,6 +236,7 @@ let result = agent_svc.query(query_request).await?;
 ```
 
 **响应**:
+
 ```json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000"
@@ -267,6 +278,7 @@ let result = agent_svc.query(query_request).await?;
 **端点**: `POST /api/v1/tasks/page`
 
 **请求**:
+
 ```json
 {
   "filter": {
@@ -282,6 +294,7 @@ let result = agent_svc.query(query_request).await?;
 ```
 
 **响应**:
+
 ```json
 {
   "data": [
@@ -328,7 +341,7 @@ let result = agent_svc.query(query_request).await?;
 
 - **路径**: `/api/v1/task-instances`
 - **模块**: [`task_instances.rs`](../../../hetuflow-server/src/endpoint/api/v1/task_instances.rs)
-- **服务**: [`TaskInstanceSvc`](../../../hetuflow-server/src/service/task_svc.rs)  # Note: Using TaskSvc for TaskInstance operations
+- **服务**: [`TaskInstanceSvc`](../../../hetuflow-server/src/service/task_svc.rs) # Note: Using TaskSvc for TaskInstance operations
 
 ### API 端点
 
@@ -337,6 +350,7 @@ let result = agent_svc.query(query_request).await?;
 **端点**: `POST /api/v1/task-instances/page`
 
 **请求**:
+
 ```json
 {
   "filter": {
@@ -352,6 +366,7 @@ let result = agent_svc.query(query_request).await?;
 ```
 
 **响应**:
+
 ```json
 {
   "data": [
@@ -392,6 +407,7 @@ let result = agent_svc.query(query_request).await?;
 **端点**: `POST /api/v1/schedules/page`
 
 **请求**:
+
 ```json
 {
   "filter": {
@@ -412,7 +428,7 @@ let result = agent_svc.query(query_request).await?;
 
 - **路径**: `/api/v1/system`
 - **模块**: [`system.rs`](../../../hetuflow-server/src/endpoint/api/v1/system.rs)
-- **服务**: [`SystemSvc`](../../../hetuflow-server/src/service/server_svc.rs)  # Note: System functionality handled by ServerSvc
+- **服务**: [`SystemSvc`](../../../hetuflow-server/src/service/server_svc.rs) # Note: System functionality handled by ServerSvc
 
 ### API 端点
 
@@ -421,6 +437,7 @@ let result = agent_svc.query(query_request).await?;
 **端点**: `GET /api/v1/system/health`
 
 **响应**:
+
 ```json
 {
   "status": "healthy",
@@ -445,7 +462,7 @@ let result = agent_svc.query(query_request).await?;
 
 - **路径**: `/api/v1/gateway`
 - **模块**: [`gateway.rs`](../../../hetuflow-server/src/endpoint/api/v1/gateway.rs)
-- **服务**: [`GatewaySvc`](../../../hetuflow-server/src/application.rs)  # Note: Gateway functionality integrated into ServerApplication
+- **服务**: [`GatewaySvc`](../../../hetuflow-server/src/application.rs) # Note: Gateway functionality integrated into ServerApplication
 
 ### API 端点
 
@@ -454,6 +471,7 @@ let result = agent_svc.query(query_request).await?;
 **端点**: `GET /api/v1/gateway/stats`
 
 **响应**:
+
 ```json
 {
   "total_connections": 5,
@@ -632,8 +650,8 @@ pub enum TaskInstanceStatus {
 ```json
 {
   "page": {
-    "page": 1,        // 页码（从 1 开始）
-    "page_size": 20   // 每页大小
+    "page": 1, // 页码（从 1 开始）
+    "page_size": 20 // 每页大小
   }
 }
 ```
@@ -643,12 +661,12 @@ pub enum TaskInstanceStatus {
 ```json
 {
   "filter": {
-    "id": { "eq": "550e8400-e29b-41d4-a716-446655440000" },  // 等于
+    "id": { "eq": "550e8400-e29b-41d4-a716-446655440000" }, // 等于
     "created_at": {
-      "gte": "2024-01-01T00:00:00Z",                     // 大于等于
-      "lte": "2024-12-31T23:59:59Z"                      // 小于等于
+      "gte": "2024-01-01T00:00:00Z", // 大于等于
+      "lte": "2024-12-31T23:59:59Z" // 小于等于
     },
-    "status": { "in": [1, 2, 3] }                        // 包含
+    "status": { "in": [1, 2, 3] } // 包含
   }
 }
 ```

@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use fusion_core::DataError;
 use log::{debug, info, warn};
-use modelsql::ModelManager;
+use fusionsql::ModelManager;
 use uuid::Uuid;
 
 use croner::Cron;

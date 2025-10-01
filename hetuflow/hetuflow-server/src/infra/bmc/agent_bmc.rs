@@ -1,8 +1,8 @@
 use fusion_common::time::now_offset;
-use modelsql::{
+use fusionsql::{
   ModelManager, SqlError,
   base::DbBmc,
-  filter::{OpValsDateTime, OpValsInt32},
+  filter::{OpValDateTime, OpValInt32},
   generate_pg_bmc_common, generate_pg_bmc_filter,
 };
 
@@ -42,7 +42,7 @@ generate_pg_bmc_filter!(
 impl AgentBmc {
   /// 查找在线的 Agent
   pub async fn find_online_agents(mm: &ModelManager) -> Result<Vec<SchedAgent>, SqlError> {
-    let filter = AgentFilter { status: Some(OpValsInt32::eq(AgentStatus::Online as i32)), ..Default::default() };
+    let filter = AgentFilter { status: Some(OpValInt32::eq(AgentStatus::Online as i32)), ..Default::default() };
 
     Self::find_many(mm, vec![filter], None).await
   }
@@ -62,8 +62,8 @@ impl AgentBmc {
     let cutoff_time = now_offset() - chrono::Duration::seconds(timeout_seconds);
 
     let filter = AgentFilter {
-      last_heartbeat_at: Some(OpValsDateTime::lt(cutoff_time)),
-      status: Some(OpValsInt32::eq(AgentStatus::Offline as i32)),
+      last_heartbeat_at: Some(OpValDateTime::lt(cutoff_time)),
+      status: Some(OpValInt32::eq(AgentStatus::Offline as i32)),
       ..Default::default()
     };
 

@@ -7,8 +7,8 @@ use crate::{
 };
 use fusion_common::model::IdUuidResult;
 use hetuflow_core::models::{JobForCreate, JobForQuery, JobForUpdate, SchedJob};
-use modelsql_core::filter::{OpValsString, OpValsUuid};
-use modelsql_core::page::PageResult;
+use fusionsql_core::filter::{OpValString, OpValUuid};
+use fusionsql_core::page::PageResult;
 use serde::de::DeserializeOwned;
 use uuid::Uuid;
 
@@ -85,7 +85,7 @@ impl<'a> JobsApi<'a> {
   /// Find jobs by name
   pub async fn find_by_name(&self, name: &str) -> SdkResult<Vec<SchedJob>> {
     let mut query = JobForQuery::default();
-    query.filter.name = Some(OpValsString::eq(name.to_string()));
+    query.filter.name = Some(OpValString::eq(name.to_string()));
 
     let result = self.query(query).await?;
     Ok(result.result)
@@ -94,7 +94,7 @@ impl<'a> JobsApi<'a> {
   /// Find jobs by namespace
   pub async fn namespace(&self, namespace_id: &str) -> SdkResult<Vec<SchedJob>> {
     let mut query = JobForQuery::default();
-    query.filter.namespace_id = Some(OpValsString::eq(namespace_id.to_string()));
+    query.filter.namespace_id = Some(OpValString::eq(namespace_id.to_string()));
 
     let result = self.query(query).await?;
     Ok(result.result)

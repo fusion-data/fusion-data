@@ -1,5 +1,5 @@
 use fusion_common::time::OffsetDateTime;
-use modelsql_core::filter::{OpValsInt32, OpValsString};
+use fusionsql_core::filter::{OpValInt32, OpValString};
 use serde::{Deserialize, Serialize};
 
 use super::RolePermissionFilter;
@@ -26,7 +26,7 @@ impl From<i32> for RoleStatus {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(modelsql::field::Fields, sqlx::FromRow), sea_query::enum_def)]
+#[cfg_attr(feature = "with-db", derive(fusionsql::field::Fields, sqlx::FromRow), sea_query::enum_def)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct Role {
   pub id: i64,
@@ -42,7 +42,7 @@ pub struct Role {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(modelsql::field::Fields))]
+#[cfg_attr(feature = "with-db", derive(fusionsql::field::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct CreateRoleDto {
   pub name: String,
@@ -51,7 +51,7 @@ pub struct CreateRoleDto {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(modelsql::field::Fields))]
+#[cfg_attr(feature = "with-db", derive(fusionsql::field::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct RoleForUpdate {
   pub name: Option<String>,
@@ -60,12 +60,12 @@ pub struct RoleForUpdate {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(modelsql::filter::FilterNodes))]
+#[cfg_attr(feature = "with-db", derive(fusionsql::filter::FilterNodes))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct RoleFilter {
-  pub name: Option<OpValsString>,
-  pub description: Option<OpValsString>,
-  pub status: Option<OpValsInt32>,
+  pub name: Option<OpValString>,
+  pub description: Option<OpValString>,
+  pub status: Option<OpValInt32>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]

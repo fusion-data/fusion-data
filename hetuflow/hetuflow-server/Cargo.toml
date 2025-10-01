@@ -26,7 +26,7 @@ fusion-common = { workspace = true, features = ["with-uuid"] }
 fusion-core = { workspace = true, features = ["with-uuid", "with-openapi"] }
 fusion-web = { workspace = true, features = ["with-uuid", "with-openapi"] }
 fusion-db = { workspace = true, features = ["with-postgres", "with-uuid"] }
-modelsql = { workspace = true, features = ["with-uuid", "with-openapi"] }
+fusionsql = { workspace = true, features = ["with-uuid", "with-openapi"] }
 sqlx = { workspace = true, features = [
   "runtime-tokio",
   "chrono",

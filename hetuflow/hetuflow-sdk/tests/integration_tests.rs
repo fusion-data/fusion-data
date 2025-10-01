@@ -5,7 +5,7 @@ use hetuflow_core::models::{
 };
 use hetuflow_core::types::{AgentStatus, JobStatus};
 use hetuflow_sdk::{Config, HetuflowClient};
-use modelsql_core::filter::Page;
+use fusionsql_core::filter::Page;
 
 #[tokio::test]
 async fn test_client_creation() {

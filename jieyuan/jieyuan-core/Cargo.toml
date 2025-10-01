@@ -14,7 +14,7 @@ workspace = true
 
 [features]
 with-openapi = ["dep:utoipa"]
-with-db = ["dep:sqlx", "dep:modelsql", "dep:sea-query"]
+with-db = ["dep:sqlx", "dep:fusionsql", "dep:sea-query"]
 
 [dependencies]
 fusion-corelib = { workspace = true }
@@ -26,5 +26,5 @@ serde_repr = { workspace = true }
 utoipa = { workspace = true, optional = true }
 sqlx = { workspace = true, optional = true }
 sea-query = { workspace = true, optional = true }
-modelsql = { workspace = true, optional = true }
-modelsql-core = { workspace = true }
+fusionsql = { workspace = true, optional = true }
+fusionsql-core = { workspace = true }
