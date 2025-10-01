@@ -22,7 +22,15 @@ with-openapi = [
   "modelsql-core/with-openapi",
 ]
 # WASM compatibility features
-wasm = ["fusion-common/wasm", "uuid/js", "wasm-bindgen", "js-sys", "gloo-timers", "web-sys"]
+wasm = [
+  "fusion-common/wasm",
+  "tsify",
+  "uuid/js",
+  "wasm-bindgen",
+  "js-sys",
+  "gloo-timers",
+  "web-sys",
+]
 
 [dependencies]
 fusion-common = { workspace = true, features = ["with-uuid"] }
@@ -52,11 +60,13 @@ toml = { workspace = true }
 utoipa = { workspace = true, optional = true }
 
 # WASM dependencies
-wasm-bindgen = { version = "0.2", features = ["serde-serialize"], optional = true }
+wasm-bindgen = { version = "0.2", features = [
+  "serde-serialize",
+], optional = true }
 js-sys = { version = "0.3", optional = true }
 gloo-timers = { version = "0.3", features = ["futures"], optional = true }
 web-sys = { version = "0.3", optional = true }
-
+tsify = { workspace = true, optional = true }
 
 [dev-dependencies]
 tokio-test = { workspace = true }

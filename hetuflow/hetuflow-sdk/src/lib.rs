@@ -58,6 +58,8 @@ pub use hetuflow_core::models::*;
 // API modules
 pub mod apis;
 
+pub mod hetuflow_client;
+
 // Platform detection for conditional compilation
 #[cfg(not(target_arch = "wasm32"))]
 mod platform {
@@ -68,3 +70,7 @@ mod platform {
 mod platform {
   pub use gloo_net::http::Response;
 }
+
+// WASM bindings
+#[cfg(target_arch = "wasm32")]
+pub mod wasm;

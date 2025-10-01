@@ -49,7 +49,7 @@ impl HetuflowClient {
   }
 
   /// Get access to the Agents API
-  pub fn agents(&self) -> crate::apis::AgentsApi {
+  pub fn agents(&'_ self) -> crate::apis::AgentsApi<'_> {
     crate::apis::AgentsApi::new(self)
   }
 
@@ -173,10 +173,7 @@ impl ApiService for HetuflowClient {
                 attempts += 1;
                 continue;
               } else {
-                return Err(SdkError::HttpError(format!(
-                  "Rate limited after {} attempts",
-                  attempts
-                )));
+                return Err(SdkError::HttpError(format!("Rate limited after {} attempts", attempts)));
               }
             }
 
@@ -206,7 +203,8 @@ impl ApiService for HetuflowClient {
     #[cfg(target_arch = "wasm32")]
     {
       use gloo_net::http::{Method, Request, RequestBuilder};
-      use web_sys::{AbortController, AbortSignal, RequestCredentials, RequestMode};
+      use web_sys::AbortSignal;
+      use web_sys::{AbortController, RequestCredentials, RequestMode};
 
       // Create abort controller for timeout handling
       let abort_controller = AbortController::new().ok();

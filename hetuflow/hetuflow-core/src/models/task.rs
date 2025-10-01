@@ -75,6 +75,7 @@ impl TaskConfig {
 /// 任务执行指标
 #[derive(Serialize, Deserialize, Debug, Clone, Default)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
+#[cfg_attr(feature = "wasm", derive(tsify::Tsify), tsify(into_wasm_abi, from_wasm_abi))]
 pub struct TaskMetrics {
   pub cpu_time: f64,    // CPU 时间
   pub memory_peak: u64, // 内存峰值
