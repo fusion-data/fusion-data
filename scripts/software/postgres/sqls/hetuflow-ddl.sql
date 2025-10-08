@@ -13,7 +13,7 @@ create table sched_server (
   id varchar(40) primary key,
   name varchar(255) not null,
   address varchar(255) not null,
-  bind_namespaces varchar(40)[] not null default '{}',
+  bind_namespaces varchar(40) [] not null default '{}',
   status int not null default 100, -- 见 ServerStatus
   description text,
   last_heartbeat_at timestamptz not null default now(),
@@ -41,7 +41,7 @@ create index if not exists idx_sched_agent_last_heartbeat on sched_agent (last_h
 -- 作业定义表 (sched_job)
 create table sched_job (
   id uuid primary key,
-  namespace_id varchar(40) not null default '00000000-0000-0000-0000-000000000000', -- namespace_id 由 fusion-iam 管理
+  namespace_id varchar(40) not null, -- namespace_id 由 fusion-iam 管理
   name varchar(255) not null,
   description text,
   -- 运行作业时添加的自定义环境变量
@@ -80,7 +80,7 @@ create table sched_schedule (
 create table sched_task (
   id uuid primary key,
   job_id uuid not null references sched_job (id),
-  namespace_id uuid not null default '00000000-0000-0000-0000-000000000000', -- namespace_id 由 fusion-iam 管理
+  namespace_id uuid not null, -- namespace_id 由 fusion-iam 管理
   priority int not null default 0, -- 任务优先级，数值越大优先级越高
   status int not null default 1, -- 见 TaskStatus 枚举
   schedule_id uuid references sched_schedule (id), -- 为空时表示手动触发：Event, Flow

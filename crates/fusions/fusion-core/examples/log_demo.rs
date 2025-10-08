@@ -11,6 +11,7 @@ fn main() {
 
   // 演示同时输出到控制台和文件的配置
   println!("\n测试同时输出到控制台和文件:");
+
   let config = LogSetting {
     enable: true,
     with_target: true,

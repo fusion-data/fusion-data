@@ -18,8 +18,8 @@ import {
   AgentStatus,
   AgentStatusColor,
   AgentStatusText,
-} from '../../services/api';
-import { useMessage } from '../../hooks/useMessage';
+} from '@/services/api';
+import { useMessage } from '@/hooks/useMessage';
 import dayjs from 'dayjs';
 
 const { Title } = Typography;

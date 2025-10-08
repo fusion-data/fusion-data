@@ -1,4 +1,4 @@
-use modelsql::{
+use fusionsql::{
   ModelManager, SqlError,
   base::DbBmc,
   filter::{FilterGroups, FilterNode, OpValInt64},
@@ -33,7 +33,7 @@ impl UserBmc {
     let mut query = Query::update();
     let fields = vec![(UserEntityIden::Password, pwd_hash.into())];
     query.table(Self::table_ref()).values(fields);
-    let filters: FilterGroups = FilterNode::new("id", vec![OpValInt64::Eq(id).into()]).into();
+    let filters: FilterGroups = FilterNode::new("id", OpValInt64::eq(id)).into();
     let cond: Condition = filters.try_into()?;
     query.cond_where(cond);
 

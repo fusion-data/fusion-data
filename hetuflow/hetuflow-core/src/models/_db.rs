@@ -1,4 +1,4 @@
-use modelsql::postgres::PgRowType;
+use fusionsql::postgres::PgRowType;
 use sqlx::encode::IsNull;
 use sqlx::error::BoxDynError;
 use sqlx::postgres::{PgArgumentBuffer, PgHasArrayType, PgTypeInfo, PgValueRef};

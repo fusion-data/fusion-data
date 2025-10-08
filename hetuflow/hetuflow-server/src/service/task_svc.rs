@@ -1,15 +1,15 @@
 use fusion_core::DataError;
-use modelsql::ModelManager;
-use modelsql::field::FieldMask;
-use modelsql::filter::OpValsUuid;
+use fusionsql::ModelManager;
+use fusionsql::field::FieldMask;
+use fusionsql::filter::OpValUuid;
 use uuid::Uuid;
 
+use fusionsql::page::PageResult;
 use hetuflow_core::models::{
   SchedTask, SchedTaskInstance, TaskFilter, TaskForCreate, TaskForQuery, TaskForUpdate, TaskInstanceFilter,
   TaskInstanceForCreate, TaskInstanceForQuery, TaskInstanceForUpdate,
 };
 use hetuflow_core::types::{ScheduleKind, TaskInstanceStatus, TaskStatus};
-use modelsql::page::PageResult;
 
 use crate::infra::bmc::{JobBmc, ScheduleBmc, TaskBmc, TaskInstanceBmc};
 pub struct TaskSvc {
@@ -82,7 +82,7 @@ impl TaskSvc {
 
   /// 根据作业 ID 查找任务
   pub async fn find_tasks_by_job(&self, job_id: Uuid) -> Result<Vec<SchedTask>, DataError> {
-    let filter = TaskFilter { job_id: Some(OpValsUuid::eq(job_id)), ..Default::default() };
+    let filter = TaskFilter { job_id: Some(OpValUuid::eq(job_id)), ..Default::default() };
 
     TaskBmc::find_many(&self.mm, vec![filter], None).await.map_err(DataError::from)
   }
@@ -115,7 +115,7 @@ impl TaskSvc {
 
   /// 查找任务的所有实例
   pub async fn find_task_instances(&self, task_id: Uuid) -> Result<Vec<SchedTaskInstance>, DataError> {
-    let filter = TaskInstanceFilter { task_id: Some(OpValsUuid::eq(task_id)), ..Default::default() };
+    let filter = TaskInstanceFilter { task_id: Some(OpValUuid::eq(task_id)), ..Default::default() };
 
     TaskInstanceBmc::find_many(&self.mm, vec![filter], None).await.map_err(DataError::from)
   }

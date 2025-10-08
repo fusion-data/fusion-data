@@ -8,6 +8,9 @@ pub mod types;
 pub mod user;
 pub mod utils;
 pub mod workflow;
+pub mod version {
+  pub use semver::*;
+}
 
 #[macro_export]
 macro_rules! generate_uuid_newtype {

@@ -4,7 +4,7 @@
 
 ### 数据模型架构
 
-基于 **modelsql** ORM 的分层数据模型设计，采用以下架构模式：
+基于 **fusionsql** ORM 的分层数据模型设计，采用以下架构模式：
 
 - **Entity 层**: 使用 Rust 结构体定义数据实体，支持字段扩展和过滤器
 - **BMC 层**: Database Basic Model Controller，提供类型安全的 CRUD 操作抽象

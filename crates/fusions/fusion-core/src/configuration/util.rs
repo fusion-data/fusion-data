@@ -23,7 +23,7 @@ pub fn load_config_with(custom_config: Option<Config>) -> ConfigureResult<Config
   b = load_from_files(&["app.toml".to_string(), "app.yaml".to_string(), "app.yml".to_string()], b);
 
   // load from profile files, if exists
-  let profile_files = if let Some(profiles_active) = env::var("FUSION__PROFILES__ACTIVE").ok() {
+  let profile_files = if let Ok(profiles_active) = env::var("FUSION__PROFILES__ACTIVE") {
     vec![
       format!("app-{profiles_active}.toml"),
       format!("app-{profiles_active}.yaml"),

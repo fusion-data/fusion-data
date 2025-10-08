@@ -1,6 +1,6 @@
+use fusion_common::page::Page;
 use fusion_common::time::OffsetDateTime;
-use modelsql::filter::Page;
-use modelsql_core::filter::{OpValsInt64, OpValsString};
+use fusionsql_core::filter::{OpValInt64, OpValString};
 use serde::{Deserialize, Serialize};
 
 use super::RolePermissionFilter;
@@ -9,7 +9,7 @@ use super::RolePermissionFilter;
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 #[cfg_attr(
   feature = "with-db",
-  derive(sqlx::FromRow, modelsql::field::Fields),
+  derive(sqlx::FromRow, fusionsql::field::Fields),
   sea_query::enum_def(table_name = "iam_permission")
 )]
 pub struct Permission {
@@ -27,7 +27,7 @@ pub struct Permission {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(modelsql::field::Fields))]
+#[cfg_attr(feature = "with-db", derive(fusionsql::field::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct PermissionForCreate {
   pub code: String,
@@ -37,7 +37,7 @@ pub struct PermissionForCreate {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(modelsql::field::Fields))]
+#[cfg_attr(feature = "with-db", derive(fusionsql::field::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct PermissionForUpdate {
   pub code: Option<String>,
@@ -47,14 +47,14 @@ pub struct PermissionForUpdate {
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(modelsql::filter::FilterNodes))]
+#[cfg_attr(feature = "with-db", derive(fusionsql::filter::FilterNodes))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct PermissionFilter {
-  pub id: Option<OpValsInt64>,
-  pub code: Option<OpValsString>,
-  pub description: Option<OpValsString>,
-  pub resource: Option<OpValsString>,
-  pub action: Option<OpValsString>,
+  pub id: Option<OpValInt64>,
+  pub code: Option<OpValString>,
+  pub description: Option<OpValString>,
+  pub resource: Option<OpValString>,
+  pub action: Option<OpValString>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]

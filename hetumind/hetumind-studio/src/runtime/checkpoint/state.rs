@@ -1,7 +1,9 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize)]
+// TODO
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ExecutionState {}
 
-#[derive(Debug, Serialize, Deserialize)]
+// TODO
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NodeExecutionState {}

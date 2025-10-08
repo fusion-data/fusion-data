@@ -54,7 +54,7 @@ use hetumind_core::{
     common::ParameterMap,
     workflow::{ExecutionId, Workflow, WorkflowId},
 };
-use modelsql::page::PageResult;
+use fusionsql::page::PageResult;
 use serde::{Deserialize, Serialize};
 use fusion_web::{WebError, WebResult};
 
@@ -203,7 +203,7 @@ use hetumind_core::{
     node::ExecutionData,
     workflow::{Execution, ExecutionId},
 };
-use modelsql::page::PageResult;
+use fusionsql::page::PageResult;
 use fusion_web::WebResult;
 
 use crate::domain::workflow::{ExecutionForQuery, ExecutionSvc};

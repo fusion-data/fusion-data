@@ -1,4 +1,4 @@
-use modelsql::{base::DbBmc, generate_pg_bmc_common};
+use fusionsql::{base::DbBmc, generate_pg_bmc_common};
 
 use jieyuan_core::model::{TABLE_USER_ROLE, UserRole, UserRoleForCreate, UserRoleForUpdate};
 

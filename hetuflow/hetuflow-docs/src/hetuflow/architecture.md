@@ -1,227 +1,415 @@
-# hetuflow 宏观架构
+# hetuflow 架构设计文档
 
 ## 概述
 
-hetuflow 是一个现代化、高性能的分布式任务调度系统。该系统通过简化架构、提升通信效率和统一技术栈，实现了更好的性能和可维护性。hetuflow 由两个核心二进制程序构成：**hetuflow-server**（核心协调节点）和 **hetuflow-agent**（任务执行单元），通过 WebSocket 协议进行全双工通信，使用 PostgreSQL 作为唯一的数据存储。
+hetuflow 是一个现代化、高性能的分布式任务调度系统。该系统通过 **WebSocket** 全双工通信、**PostgreSQL** 强一致性存储、**Rust** 类型安全保障，实现了高性能、高可靠性的任务调度能力。系统由两个核心二进制程序构成：**hetuflow-server**（核心协调节点）和 **hetuflow-agent**（任务执行单元）。
 
-### 主要模块
+### 核心特性
 
-- [hetuflow-core](core/core.md)：共享核心库，负责 Agent 与 Server 之间的通信协议定义、任务调度模型（Job/Task/TaskInstance）、消息结构及共享数据类型，确保类型安全、版本兼容和依赖统一。
-- [hetuflow-server](server/server.md)：服务端主程序，负责任务编排、分发、状态管理、权限控制、Web 管理界面和 API 服务，实现与 Agent 的 WebSocket 通信和数据库持久化。
-- [hetuflow-agent](agent/agent.md)：任务执行单元，部署于各执行节点，负责接收 Server 下发的任务、执行并上报状态，支持任务重试、资源监控和能力声明。
+- **WebSocket 全双工通信**：支持 Server 主动推送任务和 Agent 主动上报状态
+- **类型安全保障**：全程类型安全的数据库操作和通信协议
+- **强一致性存储**：基于 PostgreSQL 事务保证数据一致性
+- **现代化架构**：Application 容器模式 + ModelManager + BMC 分层设计
+- **网络穿透友好**：基于 HTTP/HTTPS，易于穿透防火墙和代理
 
-### 主要技术
+## 系统架构概览
 
-- 编程语言：Rust
-- 数据库：PostgreSQL（简称：PG）
-- 队列：使用 PG 数据表模拟实现
+### 核心组件
 
-## 核心组件详解
+- **hetuflow-core**: [`hetuflow-core/src/`](../../../hetuflow-core/src/) - 共享核心库，定义通信协议和数据模型
+- **hetuflow-server**: [`hetuflow-server/src/`](../../../hetuflow-server/src/) - 核心协调节点，负责任务编排和分发
+- **hetuflow-agent**: [`hetuflow-agent/src/`](../../../hetuflow-agent/src/) - 任务执行单元，负责具体任务执行
+
+### 核心技术栈
+
+- **编程语言**: Rust 2024 Edition
+- **数据库**: PostgreSQL + pgvector 扩展
+- **ORM**: fusionsql (基于 sea-query + sqlx)
+- **通信协议**: WebSocket (全双工)
+- **异步运行时**: Tokio
+- **序列化**: Serde JSON
+- **Web 框架**: Axum
+- **认证**: JWE (JSON Web Encryption)
+
+## 详细组件设计
 
 ### 1. hetuflow-server（核心协调节点）
 
-详细的实现设计和代码示例请见：[hetuflow-server 实现文档](server/server.md)
+**核心职责**:
+
+- 任务调度和分发管理
+- Agent 连接和状态管理
+- Web API 和管理界面
+- 数据持久化和事务处理
+
+**主要模块**:
+
+- `application/`: 应用容器和依赖管理
+- `scheduler/`: 任务调度引擎
+- `broker/`: 任务分发和负载均衡
+- `endpoint/`: HTTP API 端点
+- `service/`: 业务逻辑服务层
+- `infra/`: 基础设施层（BMC 数据库操作）
 
 ### 2. hetuflow-agent（任务执行单元）
 
-详细的实现设计和代码示例见： [hetuflow-agent 实现文档](agent/agent.md)
+**核心职责**:
 
-## 架构层次与依赖关系
+- 接收并执行 Server 下发的任务
+- 任务状态监控和上报
+- 资源管理和进程控制
+- 自动重连和故障恢复
 
-### 核心设计原则
+**主要模块**:
 
-hetuflow 采用分层架构设计，遵循以下核心原则：
+- `application/`: 应用容器
+- `connection/`: WebSocket 连接管理
+- `executor/`: 任务执行器
+- `process/`: 进程管理和资源控制
+- `scheduler/`: 任务调度和命令处理
 
-- **单一职责原则**：每个模块专注于特定的功能领域
-- **依赖倒置原则**：Server 和 Agent 都依赖抽象的协议定义，而非相互依赖
-- **开闭原则**：通过扩展 core 模块来添加新功能，无需修改现有实现
+## 系统架构设计
 
-### 依赖层次结构
+### 分层架构设计
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                   应用层 (Applications)                  │
-├─────────────────────┬───────────────────────────────────┤
-│ hetuflow-   │    hetuflow-agent         │
-│ server              │                                   │
-│ ├── Application     │    ├── executor/                  │
-│ ├── Services        │    ├── client/                    │
-│ ├── Infrastructures │    └── monitor/                   │
-│     └── BMC         │                                   │
-│ ├── gateway/        │                                   │
-│ └── scheduler/      │                                   │
-├─────────────────────┼───────────────────────────────────┤
-│                  基础设施层 (Infrastructure)              │
-├─────────────────────┼───────────────────────────────────┤
-│ ModelManager +      │    ultimate-core::Application     │
-│ modelsql::DbBmc     │    ultimate-core::DataError       │
-├─────────────────────┼───────────────────────────────────┤
-│                   核心层 (Core)                          │
-│            hetuflow-core                        │
-│            ├── protocol/  # 通信协议定义                  │
-│            ├── models/    # 共享数据模型                  │
-│            └── types/     # 基础类型定义                  │
-└─────────────────────────────────────────────────────────┘
-```
-
-### 模块职责重新定义
-
-- **基础设施层 (Infrastructure)**：
-
-  - **ultimate-core::Application**: 应用程序容器，管理服务依赖关系和生命周期
-  - **modelsql::ModelManager**: 数据库连接池管理，提供数据库访问接口
-  - **modelsql::base::DbBmc**: 数据库基础操作抽象，提供类型安全的 CRUD 接口
-  - **ultimate_core::DataError**: 应用层错误处理，统一错误类型和转换机制
-
-- **hetuflow-core**：
-
-  - 定义所有 WebSocket 通信协议（WebSocketMessage、MessageType 等）
-  - 定义任务调度模型（Job、Task、TaskInstance）
-  - 提供共享的数据类型和枚举定义
-  - 确保 Server 和 Agent 之间的协议一致性
-
-- **hetuflow-server**：
-
-  - **Application 层**: ServerApplication 容器管理所有服务和依赖
-  - **Service 层**: SchedulerSvc、GatewaySvc 等业务服务
-  - **BMC 层**: JobBmc、TaskBmc、AgentBmc 等数据库操作抽象
-  - **Gateway/Scheduler 模块**: 协议处理、连接管理、任务调度等具体实现
-  - 提供 Web API 和用户界面
-
-- **hetuflow-agent**：
-  - 实现协议消息的客户端处理
-  - 执行具体的任务实例
-  - 上报任务状态和系统指标
-
-## 组件关系图
+hetuflow 采用现代化的分层架构，遵循单一职责、依赖倒置和开闭原则：
 
 ```mermaid
 graph TB
-    subgraph "用户层"
-        U[用户/管理员]
-    end
-
-    subgraph "hetuflow-server"
-        subgraph "Application 容器"
-            APP[ServerApplication]
+    subgraph "应用层 (Application Layer)"
+        subgraph "hetuflow-server"
+            S_APP[ServerApplication]
+            S_SCHED[SchedulerSvc]
+            S_BROKER[BrokerSvc]
+            S_API[HTTP API]
+            S_WS[WebSocket Server]
         end
 
-        subgraph "Endpoint 模块"
-            API[HTTP API]
-            UI[Web 界面]
-            AUTH[认证授权]
-        end
-
-        subgraph "Service 层"
-            SCHEDULER_SVC[SchedulerSvc]
-            GATEWAY_SVC[GatewaySvc]
-            TASK_GENERATION_SVC[TaskGenerationSvc]
-            ENGINE[调度引擎]
-            DISPATCH[任务分发器]
-            AGENT_SVC[AgentSvc]
-        end
-
-        subgraph "Gateway 模块"
-            WS[WebSocket 服务器]
-            CONN_MGR[连接管理器]
-            MSG_ROUTER[消息路由器]
-        end
-
-        subgraph "BMC 数据操作层"
-            JOB_BMC[JobBmc]
-            TASK_BMC[TaskBmc]
-            SCHEDULE_BMC[ScheduleBmc]
-            AGENT_BMC[AgentBmc]
-        end
-
-        subgraph "基础设施层"
-            MM[ModelManager]
-            DM[DataError]
+        subgraph "hetuflow-agent"
+            A_APP[AgentApplication]
+            A_EXEC[TaskExecutor]
+            A_SCHED[TaskScheduler]
+            A_CONN[ConnectionManager]
         end
     end
 
-    subgraph "执行层"
-        A1[hetuflow-agent 1]
-        A2[hetuflow-agent 2]
-        A3[hetuflow-agent N]
+    subgraph "基础设施层 (Infrastructure Layer)"
+        subgraph "fusion-core"
+            FC_APP[Application Container]
+            FC_DB[Database Manager]
+            FC_ERROR[Error Handling]
+        end
+
+        subgraph "fusionsql"
+            MS_MM[ModelManager]
+            MS_BMC[DbBmc Layer]
+            MS_QUERY[Query Builder]
+        end
     end
 
-    subgraph "存储层"
+    subgraph "核心层 (Core Layer)"
+        subgraph "hetuflow-core"
+            HC_PROTO[Protocol Definitions]
+            HC_MODELS[Data Models]
+            HC_TYPES[Core Types]
+        end
+    end
+
+    subgraph "存储层 (Storage Layer)"
         PG[(PostgreSQL)]
     end
 
-    U -->|HTTP/HTTPS| API
-    U -->|Web 访问| UI
+    %% Dependencies
+    S_APP --> FC_APP
+    S_SCHED --> MS_MM
+    S_BROKER --> HC_PROTO
+    S_API --> FC_ERROR
 
-    API --> AUTH
-    API --> SCHEDULER_SVC
-    UI --> AUTH
+    A_APP --> FC_APP
+    A_EXEC --> MS_BMC
+    A_CONN --> HC_PROTO
 
-    APP --> SCHEDULER_SVC
-    APP --> GATEWAY_SVC
-    APP --> TASK_GENERATION_SVC
-    APP --> AGENT_SVC
-    APP --> MM
+    MS_MM --> PG
+    MS_BMC --> PG
+    MS_QUERY --> PG
 
-    SCHEDULER_SVC --> ENGINE
-    SCHEDULER_SVC --> TASK_BMC
-    SCHEDULER_SVC --> JOB_BMC
+    HC_PROTO --> HC_TYPES
+    HC_MODELS --> HC_TYPES
 
-    GATEWAY_SVC --> WS
-    GATEWAY_SVC --> CONN_MGR
-    GATEWAY_SVC --> MSG_ROUTER
-    GATEWAY_SVC --> AGENT_BMC
-
-    TASK_GENERATION_SVC --> SCHEDULE_BMC
-    ENGINE --> DISPATCH
-    DISPATCH --> GATEWAY_SVC
-
-    JOB_BMC --> MM
-    TASK_BMC --> MM
-    SCHEDULE_BMC --> MM
-    AGENT_BMC --> MM
-
-    MM --> PG
-
-    WS -->|WebSocket 连接| A1
-    WS -->|WebSocket 连接| A2
-    WS -->|WebSocket 连接| A3
-
-    A1 -->|状态上报| WS
-    A2 -->|状态上报| WS
-    A3 -->|状态上报| WS
-
-    style APP fill:#e3f2fd
-    style API fill:#e1f5fe
-    style UI fill:#e1f5fe
-    style SCHEDULER_SVC fill:#e8f5e8
-    style GATEWAY_SVC fill:#f3e5f5
-    style MM fill:#fff3e0
-    style JOB_BMC fill:#f0f4c3
-    style TASK_BMC fill:#f0f4c3
-    style A1 fill:#fff3e0
-    style A2 fill:#fff3e0
-    style A3 fill:#fff3e0
+    style S_APP fill:#e3f2fd
+    style A_APP fill:#e8f5e8
+    style FC_APP fill:#fff3e0
+    style MS_MM fill:#f3e5f5
+    style HC_PROTO fill:#e1f5fe
     style PG fill:#ffcda8
 ```
 
-## 通信协议
+### 模块职责定义
 
-hetuflow 使用 WebSocket 协议进行 Agent 与 Server 之间的通信。WebSocket 协议具有以下优势：
+**应用层 (Application Layer)**:
 
-- **全双工通信**：支持 Server 主动推送任务和 Agent 主动拉取任务
+- **hetuflow-server**: 负责任务调度、Agent 管理、API 服务
+- **hetuflow-agent**: 负责任务执行、状态上报、资源管理
+
+**基础设施层 (Infrastructure Layer)**:
+
+- **fusion-core**: 提供 Application 容器、错误处理、配置管理等基础功能
+- **fusionsql**: 提供 ModelManager、DbBmc、Query Builder 等数据库抽象层
+
+**核心层 (Core Layer)**:
+
+- **hetuflow-core**: 定义通信协议、数据模型、类型规范的共享核心库
+
+**存储层 (Storage Layer)**:
+
+- **PostgreSQL**: 提供 ACID 事务保证的持久化存储
+
+### 组件关系与交互
+
+```mermaid
+graph TB
+    subgraph "用户交互层"
+        USER[用户/管理员]
+        WEB[Web 界面]
+        API[REST API]
+    end
+
+    subgraph "hetuflow-server 核心服务"
+        subgraph "应用容器"
+            SRV_APP[ServerApplication]
+        end
+
+        subgraph "调度服务"
+            SCHEDULER[SchedulerSvc]
+            TASK_GEN[TaskGenerationSvc]
+            DISPATCHER[TaskDispatcher]
+        end
+
+        subgraph "代理服务"
+            BROKER[BrokerSvc]
+            LOAD_BAL[LoadBalancer]
+        end
+
+        subgraph "API 网关"
+            API_GATEWAY[API Gateway]
+            WS_SERVER[WebSocket Server]
+            AUTH[Auth Service]
+        end
+
+        subgraph "数据访问层"
+            JOB_BMC[JobBmc]
+            TASK_BMC[TaskBmc]
+            AGENT_BMC[AgentBmc]
+            SCHED_BMC[ScheduleBmc]
+        end
+    end
+
+    subgraph "hetuflow-agent 集群"
+        subgraph "Agent 1"
+            A1_APP[AgentApplication]
+            A1_EXEC[TaskExecutor]
+            A1_CONN[ConnectionManager]
+            A1_PROC[ProcessManager]
+        end
+
+        subgraph "Agent 2"
+            A2_APP[AgentApplication]
+            A2_EXEC[TaskExecutor]
+            A2_CONN[ConnectionManager]
+            A2_PROC[ProcessManager]
+        end
+
+        subgraph "Agent N"
+            AN_APP[AgentApplication]
+            AN_EXEC[TaskExecutor]
+            AN_CONN[ConnectionManager]
+            AN_PROC[ProcessManager]
+        end
+    end
+
+    subgraph "存储层"
+        DB[(PostgreSQL)]
+        CACHE[(Redis Cache)]
+    end
+
+    %% 交互关系
+    USER --> WEB
+    USER --> API
+    WEB --> API_GATEWAY
+    API --> API_GATEWAY
+
+    API_GATEWAY --> AUTH
+    API_GATEWAY --> SCHEDULER
+
+    SRV_APP --> SCHEDULER
+    SRV_APP --> BROKER
+    SRV_APP --> API_GATEWAY
+
+    SCHEDULER --> TASK_GEN
+    SCHEDULER --> DISPATCHER
+    TASK_GEN --> SCHED_BMC
+    DISPATCHER --> BROKER
+
+    BROKER --> LOAD_BAL
+    BROKER --> WS_SERVER
+
+    JOB_BMC --> DB
+    TASK_BMC --> DB
+    AGENT_BMC --> DB
+    SCHED_BMC --> DB
+
+    WS_SERVER --> A1_CONN
+    WS_SERVER --> A2_CONN
+    WS_SERVER --> AN_CONN
+
+    A1_CONN --> A1_APP
+    A1_APP --> A1_EXEC
+    A1_EXEC --> A1_PROC
+
+    A2_CONN --> A2_APP
+    A2_APP --> A2_EXEC
+    A2_EXEC --> A2_PROC
+
+    AN_CONN --> AN_APP
+    AN_APP --> AN_EXEC
+    AN_EXEC --> AN_PROC
+
+    %% 反向状态上报
+    A1_CONN -->|状态上报| WS_SERVER
+    A2_CONN -->|状态上报| WS_SERVER
+    AN_CONN -->|状态上报| WS_SERVER
+
+    style SRV_APP fill:#e3f2fd
+    style A1_APP fill:#e8f5e8
+    style A2_APP fill:#e8f5e8
+    style AN_APP fill:#e8f5e8
+    style DB fill:#ffcda8
+    style CACHE fill:#fff3e0
+```
+
+## 核心组件交互时序
+
+### 1. Agent 注册与连接建立时序
+
+```mermaid
+sequenceDiagram
+    participant A as hetuflow-agent
+    participant S as hetuflow-server
+    participant DB as PostgreSQL
+    participant L as LoadBalancer
+
+    Note over A,S: Agent 启动与注册
+    A->>L: WebSocket 连接请求
+    L->>S: 路由连接
+    S->>A: 连接建立成功
+
+    A->>S: AgentRegisterRequest (capabilities, labels)
+    S->>DB: 创建/更新 Agent 记录
+    DB-->>S: Agent 信息保存成功
+    S->>A: AgentRegisterResponse (success, config)
+
+    Note over A,S: 心跳维持
+    loop 定期心跳 (30s)
+        A->>S: HeartbeatRequest (status, metrics)
+        S->>DB: 更新 Agent 状态
+        S->>A: HeartbeatResponse (commands, config)
+    end
+
+    Note over A,S: 任务拉取
+    loop 任务拉取 (可配置间隔)
+        A->>S: AcquireTaskRequest (capacity, labels)
+        S->>DB: 查询匹配的任务
+        DB-->>S: 返回待执行任务列表
+        S->>A: AcquireTaskResponse (tasks, has_more)
+    end
+```
+
+### 2. 任务调度与执行时序
+
+```mermaid
+sequenceDiagram
+    participant User as 用户
+    participant API as HTTP API
+    participant SVC as SchedulerSvc
+    participant DB as PostgreSQL
+    participant BROKER as BrokerSvc
+    participant AGENT as hetuflow-agent
+    participant TASK as TaskExecutor
+
+    Note over User,DB: 任务创建与调度
+    User->>API: 创建 Job 和 Schedule
+    API->>DB: 保存 Job 和 Schedule
+    DB-->>API: 创建成功
+    API-->>User: 返回 Job 信息
+
+    Note over SVC,AGENT: 任务生成与分发
+    SVC->>DB: TaskGenerationSvc 预生成任务
+    DB-->>SVC: NOTIFY 'task_change'
+    SVC->>SVC: SchedulerEngine 检查新任务
+    SVC->>BROKER: 请求分发任务
+    BROKER->>DB: 查询合适的 Agent
+    DB-->>BROKER: 返回可用 Agent 列表
+    BROKER->>AGENT: WebSocket 发送任务
+
+    Note over AGENT,TASK: 任务执行
+    AGENT->>AGENT: TaskScheduler 接收任务
+    AGENT->>AGENT: ProcessManager 检查资源
+    AGENT->>TASK: 创建 TaskExecutor
+    TASK->>TASK: 执行任务命令
+    TASK->>AGENT: 实时状态更新
+
+    Note over AGENT,DB: 状态上报
+    AGENT->>BROKER: TaskInstanceUpdated (status, metrics)
+    BROKER->>DB: 更新 TaskInstance 状态
+    DB-->>BROKER: 保存成功
+    BROKER->>SVC: 任务状态变更通知
+    SVC->>DB: 更新 Task 状态
+
+    Note over TASK,AGENT: 任务完成
+    TASK->>AGENT: TaskInstance 执行完成
+    AGENT->>BROKER: 最终状态上报
+    BROKER->>DB: 保存最终结果
+    DB-->>API: 任务完成通知
+    API-->>User: 任务执行结果
+```
+
+## 通信协议设计
+
+### WebSocket 协议架构
+
+hetuflow 使用 WebSocket 协议实现 Agent 与 Server 之间的全双工通信，具备以下优势：
+
+- **全双工通信**：支持 Server 主动推送任务和 Agent 主动上报状态
 - **网络穿透友好**：基于 HTTP/HTTPS，易于穿透防火墙和代理
-- **统一端口**：减少网络配置复杂度
+- **连接复用**：长连接减少握手开销
 - **实时性强**：低延迟的消息传递
+- **自动重连**：Agent 支持断线重连和故障恢复
 
 ### 协议定义来源
 
-所有通信协议定义统一在 `hetuflow-core` 模块中管理：
+所有通信协议定义统一在 [`hetuflow-core/src/protocol/`](../../../hetuflow-core/src/protocol/) 模块中管理：
 
-- **协议规范**：[core.md - 通信协议 (Protocol)](./core/core.md#通信协议-protocol)
-- **消息格式**：WebSocketEvent/WebSocketCommand 双向消息包装器
-- **数据模型**：Job/Task/TaskInstance 三层任务模型
-- **类型定义**：所有枚举类型和结构体定义
+- **消息格式**：[`event.rs`](../../../hetuflow-core/src/protocol/event.rs) 和 [`command.rs`](../../../hetuflow-core/src/protocol/command.rs)
+- **数据模型**：[`models/`](../../../hetuflow-core/src/models/) 中的 Job/Task/TaskInstance 三层任务模型
+- **类型定义**：[`types/mod.rs`](../../../hetuflow-core/src/types/mod.rs) 中的状态枚举和配置结构体
+
+### 核心消息类型
+
+基于最新代码实现，核心消息类型包括：
+
+#### Agent -> Server 消息
+
+- **AgentRegisterRequest**: Agent 注册请求 ([`protocol/agent.rs`](../../../hetuflow-core/src/protocol/agent.rs))
+- **HeartbeatRequest**: 心跳请求 ([`protocol/heartbeat.rs`](../../../hetuflow-core/src/protocol/heartbeat.rs))
+- **AcquireTaskRequest**: 任务拉取请求
+- **TaskInstanceUpdated**: 任务实例状态更新
+
+#### Server -> Agent 消息
+
+- **AgentRegisterResponse**: Agent 注册响应
+- **HeartbeatResponse**: 心跳响应
+- **ScheduledTask**: 分发的任务
+- **AgentCommand**: 服务器指令
 
 ### 核心消息类型
 
@@ -244,186 +432,295 @@ hetuflow-core = { workspace = true }
 
 这确保了协议的版本一致性和类型安全。
 
-## 数据库设计
+## 数据模型设计
 
-hetuflow 采用基于 **modelsql** ORM 的分层数据模型设计，确保数据库访问的类型安全、错误处理的一致性和代码的可维护性。
+hetuflow 采用基于 **fusionsql** ORM 的分层数据模型设计，确保数据库访问的类型安全、错误处理的一致性和代码的可维护性。
 
-### 核心数据模型
-
-- **`SchedJob`**: 存储作业的静态定义（"做什么"），对应数据库表 `sched_job`
-- **`Schedule`**: 存储作业的调度策略（"何时做"），对应数据库表 `sched_schedule`
-- **`Task`**: 存储根据 `Schedule` 生成的、待执行的计划，对应数据库表 `sched_task`
-- **`TaskInstance`**: 存储 `Task` 在 Agent 上的实际执行记录，对应数据库表 `sched_task_instance`
-
-详细的数据模型实现、BMC 定义、Service 层代码示例、错误处理和数据库通知机制等，请参考：[hetuflow-server 实现文档](server/server.md)
-
-## 任务调度流程图
+### 三层任务模型
 
 ```mermaid
-flowchart TD
-    A[用户创建 Job 和 Schedule] --> B[数据保存到 `sched_job` 和 `sched_schedule` 表]
-    B --> C{Schedule 类型是?}
-    C -- Cron/Time --> D[TaskGenerationSvc 根据 Schedule 预生成 Task]
-    C -- Event --> E[API/Webhook 触发生成 Task]
-    D --> F[Task 写入 `sched_task` 表]
-    E --> F
+graph TD
+    subgraph "Job (作业定义)"
+        J1[Job ID]
+        J2[任务配置]
+        J3[调度策略]
+        J4[环境变量]
+    end
 
-    F --> G[PostgreSQL NOTIFY 触发 `task_change` 通知]
-    G --> H[SchedulerEngine 接收通知并查询待处理 Task]
-    H --> I[TaskDispatcher 选择合适的 Agent]
-    I --> J[Gateway 通过 WebSocket 发送 Task 到目标 Agent]
+    subgraph "Task (任务计划)"
+        T1[Task ID]
+        T2[Job ID 引用]
+        T3[调度时间]
+        T4[任务参数]
+        T5[重试次数]
+    end
 
-    J --> K[Agent TaskScheduler 接收 Task]
-    K --> L[ScheduleTaskRunner 调度任务到 ProcessManager]
-    L --> M[ProcessManager 检查并发容量并启动进程]
-    M --> N[TaskExecutor 执行任务实例]
-    N --> O[收集执行结果和状态]
-    O --> P[通过 WebSocket 上报 TaskInstance 状态]
+    subgraph "TaskInstance (执行实例)"
+        I1[Instance ID]
+        I2[Task ID 引用]
+        I3[Agent ID]
+        I4[执行状态]
+        I5[开始/结束时间]
+        I6[执行结果]
+    end
 
-    P --> Q[Server 接收状态并更新 `sched_task_instance` 表]
-    Q --> R[更新 `sched_task` 表状态]
-    R --> S[用户在 Console 查看 Job/Schedule/Task/Instance 状态]
+    J2 --> T2
+    J3 --> T3
+    T2 --> I2
+    T4 --> I4
+    T5 --> I6
 
-    style A fill:#e3f2fd
-    style S fill:#e3f2fd
-    style J fill:#f3e5f5
-    style P fill:#f3e5f5
-    style N fill:#e8f5e8
-    style Q fill:#ffcda8
-    style R fill:#ffcda8
+    style J1 fill:#e3f2fd
+    style T1 fill:#e8f5e8
+    style I1 fill:#fff3e0
 ```
 
-### 任务状态图
+### 核心数据实体
+
+基于最新代码实现 ([`models/mod.rs`](../../../hetuflow-core/src/models/mod.rs))：
+
+- **[`SchedJob`](../../../hetuflow-core/src/models/job.rs)**: 作业静态定义（"做什么"），表 `sched_job`
+- **[`SchedTask`](../../../hetuflow-core/src/models/task.rs)**: 待执行的计划（"何时做"），表 `sched_task`
+- **[`SchedTaskInstance`](../../../hetuflow-core/src/models/task_instance.rs)**: 实际执行记录，表 `sched_task_instance`
+- **[`SchedAgent`](../../../hetuflow-core/src/models/agent.rs)**: Agent 节点信息，表 `sched_agent`
+
+### 关键数据流走向
+
+#### 1. 任务创建与调度数据流
+
+```mermaid
+flowchart LR
+    subgraph "输入层"
+        USER[用户/API]
+        EVENT[外部事件]
+    end
+
+    subgraph "服务层"
+        API_GATEWAY[API Gateway]
+        SVC[SchedulerSvc]
+        TASK_GEN[TaskGenerationSvc]
+    end
+
+    subgraph "数据层"
+        JOB_BMC[JobBmc]
+        TASK_BMC[TaskBmc]
+        SCHED_BMC[ScheduleBmc]
+        DB[(PostgreSQL)]
+    end
+
+    subgraph "通知层"
+        NOTIFY[PG NOTIFY]
+        BROKER[BrokerSvc]
+    end
+
+    subgraph "执行层"
+        WS[WebSocket]
+        AGENTS[Agent集群]
+    end
+
+    USER --> API_GATEWAY
+    EVENT --> API_GATEWAY
+    API_GATEWAY --> SVC
+    SVC --> JOB_BMC
+    SVC --> SCHED_BMC
+
+    TASK_GEN --> SCHED_BMC
+    TASK_GEN --> TASK_BMC
+
+    JOB_BMC --> DB
+    TASK_BMC --> DB
+    SCHED_BMC --> DB
+
+    DB -.->|NOTIFY 'task_change'| NOTIFY
+    NOTIFY --> BROKER
+    BROKER --> WS
+    WS --> AGENTS
+
+    style USER fill:#e3f2fd
+    style DB fill:#ffcda8
+    style AGENTS fill:#e8f5e8
+```
+
+#### 2. 任务执行与状态更新数据流
+
+```mermaid
+flowchart TB
+    subgraph "Agent 执行层"
+        AGENT[hetuflow-agent]
+        EXECUTOR[TaskExecutor]
+        PROCESS[ProcessManager]
+    end
+
+    subgraph "状态收集层"
+        COLLECTOR[状态收集器]
+        METRICS[指标收集]
+    end
+
+    subgraph "通信层"
+        WS_CONN[WebSocket连接]
+        BROKER[BrokerSvc]
+    end
+
+    subgraph "服务层"
+        SVC[SchedulerSvc]
+        DB_SVC[TaskInstanceSvc]
+    end
+
+    subgraph "数据层"
+        TASK_BMC[TaskInstanceBmc]
+        TASK_INST_BMC[TaskInstanceBmc]
+        DB[(PostgreSQL)]
+    end
+
+    subgraph "监控层"
+        MONITOR[监控系统]
+        ALERT[告警系统]
+    end
+
+    EXECUTOR --> PROCESS
+    PROCESS --> COLLECTOR
+    COLLECTOR --> METRICS
+
+    METRICS --> WS_CONN
+    WS_CONN --> BROKER
+    BROKER --> SVC
+    BROKER --> DB_SVC
+
+    SVC --> TASK_BMC
+    DB_SVC --> TASK_INST_BMC
+
+    TASK_BMC --> DB
+    TASK_INST_BMC --> DB
+
+    DB -.->|状态变更| MONITOR
+    MONITOR --> ALERT
+
+    style AGENT fill:#e8f5e8
+    style DB fill:#ffcda8
+    style MONITOR fill:#fff3e0
+```
+
+## 任务状态流转
+
+### 任务状态机
+
+基于最新代码实现 ([`types/mod.rs`](../../../hetuflow-core/src/types/mod.rs#78-93))：
 
 ```mermaid
 stateDiagram-v2
-  [*] --> Pending
-  Pending --> Locked : Server从数据库获取数据时
-  Locked --> Dispatched : Agent已获取任务
-  Dispatched --> Running : Agent已运行任务
-  Running --> Failed : 任务执行失败
-  Failed --> WaitingRetry : Agent执行失败，等待重试（未达到重试次数限制）
-  WaitingRetry --> Running : Agent重试执行
-  Running --> Cancelled
-  Running --> Succeeded
-  Failed --> [*] : 任务失败结束（达到重试次数限制）
-  Cancelled --> [*] : 任务取消结束
-  Succeeded --> [*] : 任务成功结束
+    [*] --> Pending: 任务创建
+    Pending --> Locked: Server获取任务
+    Locked --> Dispatched: 分发给Agent
+    Dispatched --> Running: Agent开始执行
+    Running --> Failed: 执行失败
+    Failed --> WaitingRetry: 未达重试限制
+    WaitingRetry --> Running: 重试执行
+    Running --> Succeeded: 执行成功
+    Running --> Cancelled: 任务取消
+    Failed --> [*]: 达到重试限制
+    Succeeded --> [*]: 任务完成
+    Cancelled --> [*]: 任务结束
 ```
 
-## 系统启动与任务执行时序图
+### Agent 能力与标签匹配
+
+基于 [`types/mod.rs`](../../../hetuflow-core/src/types/mod.rs#14-41) 的实现，支持多种任务类型：
 
 ```mermaid
-sequenceDiagram
-    participant U as 用户
-    participant C as Console API
-    participant S as Scheduler 模块
-    participant G as Gateway 模块
-    participant PG as PostgreSQL
-    participant A as Agent
+graph TD
+    subgraph "调度类型 (ScheduleKind)"
+        CRON[Cron定时作业]
+        INTERVAL[间隔定时作业]
+        DAEMON[守护进程作业]
+        EVENT[事件驱动作业]
+        FLOW[流程任务]
+    end
 
-    Note over S,G: 系统启动阶段
-    S->>PG: 连接数据库并监听 'task_change' 通知
-    S->>PG: 加载所有启用的 Cron/Time Schedules 供 TaskGenerationSvc 使用
-    G->>G: 启动 WebSocket 服务器
+    subgraph "执行命令 (ExecuteCommand)"
+        BASH[Bash]
+        UV[Uv]
+        PYTHON[Python]
+        NODE[Node.js]
+        NPX[Npx]
+        CARGO[Cargo]
+        JAVA[Java]
+    end
 
-    A->>G: WebSocket 连接并注册 (RegisterAgent)
-    G->>PG: 更新 `sched_agent` 表状态为 'online'
-    G->>A: 返回注册成功响应
+    subgraph "Agent 标签匹配"
+        LABELS[任务标签]
+        CAPABILITIES[Agent能力]
+        RESOURCES[资源限制]
+    end
 
-    Note over U,A: Cron 任务调度与执行
-    S->>S: TaskGenerationSvc 预生成/补齐任务
-    S->>PG: 将新的 Task 写入 `sched_task` 表
-    PG->>S: NOTIFY 'task_change'
-    S->>S: SchedulerEngine 查询到新 Task
-    S->>G: 请求分发 Task
-    G->>A: WebSocket 发送 Task
-    A->>A: TaskScheduler 接收并调度任务
-    A->>A: ProcessManager 检查并发容量
-    A->>A: TaskExecutor 创建 TaskInstance 并执行
-    A->>G: 实时上报 TaskInstance 状态
-    G->>PG: 更新 `sched_task_instance` 表
+    CRON --> LABELS
+    INTERVAL --> LABELS
+    EVENT --> LABELS
+    DAEMON --> LABELS
+    FLOW --> LABELS
 
-    Note over U,A: Event 任务调度与执行
-    U->>C: API 调用触发 Event Schedule
-    C->>PG: 将新的 Task 写入 `sched_task` 表
-    PG->>S: NOTIFY 'task_change'
-    S->>S: (后续流程同上)
+    LABELS --> CAPABILITIES
+    CAPABILITIES --> RESOURCES
+
+    style CRON fill:#e3f2fd
+    style BASH fill:#e8f5e8
+    style LABELS fill:#fff3e0
 ```
 
-## 技术特性总结
+## 现代化技术特性
 
-### 1. 现代化架构特性
+### 1. 架构设计优势
 
-- **Application 容器模式**：使用 `ultimate-core::Application` 统一管理服务依赖和生命周期
-- **ModelManager 数据管理**：使用 `modelsql::ModelManager` 统一管理数据库连接和操作
-- **DbBmc 抽象层**：使用 `modelsql::base::DbBmc` 提供类型安全的数据库 CRUD 操作
-- **分层错误处理**：`modelsql::SqlError →fusion_core::DataError` 的分层错误转换机制
-- **组件整合**：将多个组件合并为核心的 Server 和 Agent，减少部署复杂度
-- **通信统一**：使用 WebSocket 协议，提供全双工通信和网络穿透能力
-- **存储统一**：使用 PostgreSQL 作为唯一存储，简化技术栈
+基于最新的代码实现，hetuflow 具备以下现代化架构特性：
+
+- **Application 容器模式**: 使用 [`fusion-core::Application`](../../../crates/libs/fusion-core/src/) 统一管理服务依赖和生命周期
+- **类型安全 ORM**: 基于 [`fusionsql`](../../../crates/libs/fusionsql/) 的全程类型安全数据库操作
+- **分层错误处理**: `fusionsql::SqlError → fusion_core::DataError` 的分层错误转换机制
+- **WebSocket 全双工通信**: 支持服务器推送和 Agent 上报的双向实时通信
+- **强一致性存储**: 基于 PostgreSQL 事务保证的 ACID 特性
 
 ### 2. 性能优化特性
 
-- **WebSocket 全双工通信**：真正的双向实时通信机制
-- **数据库通知**：基于 PostgreSQL LISTEN/NOTIFY 的实时队列处理
-- **连接复用**：Agent 与服务器保持长连接，减少连接开销
-- **批量处理**：支持任务的批量分发和状态更新
-- **消息压缩**：启用 WebSocket 消息压缩减少网络传输
-- **类型安全查询**：BMC 层提供编译时类型检查，避免运行时 SQL 错误
+- **连接复用**: Agent 与 Server 保持长连接，减少握手开销
+- **数据库通知**: 基于 PostgreSQL LISTEN/NOTIFY 的实时任务通知机制
+- **批量处理**: 支持任务的批量分发和状态更新
+- **资源限制**: 支持内存、CPU、执行时间等资源限制 ([`types/mod.rs#ResourceLimits`](../../../hetuflow-core/src/types/mod.rs#218-240))
+- **智能调度**: 基于标签匹配和负载均衡的任务分发算法
 
-### 3. 可靠性特性
+### 3. 可靠性保障
 
-- **强一致性**：所有状态存储在 PostgreSQL 中，避免数据不一致
-- **自动重连**：Agent 支持自动重连和故障恢复
-- **任务重试**：支持任务执行失败的自动重试机制
-- **事务保证**：利用 PostgreSQL 事务确保操作的原子性
-- **统一错误处理**：分层错误处理机制确保错误的正确传播和处理
-- **BMC 抽象保护**：数据库操作抽象层防止 SQL 注入和操作错误
+- **自动重连**: Agent 支持断线重连和故障恢复
+- **任务重试**: 支持可配置的重试策略和退避算法
+- **状态持久化**: 所有状态信息持久化到 PostgreSQL，避免数据丢失
+- **事务保证**: 利用数据库事务确保操作的原子性和一致性
+- **监控告警**: 完整的任务执行监控和错误告警机制
 
-### 4. 可扩展性特性
+### 4. 开发体验优化
 
-- **水平扩展**：支持多个 Agent 节点的动态添加
-- **负载均衡**：智能的任务分发算法
-- **命名空间隔离**：支持多租户环境
-- **插件化设计**：模块化的内部架构便于功能扩展
-- **依赖注入**：Application 容器模式便于服务替换和测试
-- **过滤器扩展**：modelsql 过滤器系统支持复杂查询条件
+- **代码生成**: 使用 [`fusionsql::Fields`](../../../crates/libs/fusionsql/) 宏自动生成 CRUD 操作
+- **字段级更新**: 支持字段掩码的部分更新操作，减少数据传输
+- **过滤器 DSL**: 提供类型安全的查询过滤器系统
+- **编译时检查**: 全程类型安全，编译时发现错误
+- **文档完整**: 完整的 API 文档和代码示例
 
-### 5. 开发体验特性
+## 系统总结
 
-- **类型安全**：全程类型安全的数据库操作，编译时发现错误
-- **代码生成**：使用宏自动生成常用的 CRUD 操作代码
-- **字段级更新**：支持字段掩码的部分更新操作
-- **过滤器 DSL**：提供易用的查询过滤器 DSL
-- **错误上下文**：详细的错误信息包含操作上下文和实体信息
-- **事务支持**：简化的事务操作 API
+hetuflow 是一个基于 Rust 2024 Edition 构建的现代化分布式任务调度系统，通过 WebSocket 全双工通信、PostgreSQL 强一致性存储、fusionsql 类型安全 ORM 等现代技术栈，实现了高性能、高可靠性的任务调度能力。
 
-## 总结
+### 核心价值主张
 
-hetuflow 是一个现代化的分布式任务调度系统，采用了先进的软件架构模式，实现了以下核心特性：
+1. **类型安全保障**: 从数据库操作到通信协议的全程类型安全
+2. **现代化架构**: Application 容器 + BMC 分层 + WebSocket 通信的统一架构
+3. **高性能通信**: WebSocket 全双工通信 + PostgreSQL 实时通知
+4. **强一致性存储**: 基于 PostgreSQL ACID 事务的数据一致性保证
+5. **网络友好**: 基于 HTTP/HTTPS 的 WebSocket，易于穿透防火墙
+6. **开发体验**: 代码生成、编译时检查、完整文档的现代化开发体验
 
-1. **现代化架构设计**：采用 Application 容器模式 + ModelManager + DbBmc 的分层架构
-2. **类型安全的数据访问**：全程类型安全的数据库操作，编译时错误检查
-3. **统一的错误处理**：分层错误处理机制，从 SqlError 到 DataError 的统一转换
-4. **简化的业务逻辑**：Service 层专注业务逻辑，BMC 层处理数据操作
-5. **统一技术栈**：使用 PostgreSQL 作为唯一存储，WebSocket 作为通信协议
-6. **提升性能**：WebSocket 全双工通信和数据库通知机制提供了更高的通信效率
-7. **增强可靠性**：强一致性存储和事务保证确保了系统的可靠性
-8. **网络适应性**：WebSocket 协议提供更好的网络穿透能力，支持跨网络部署
-9. **优秀的开发体验**：代码生成、过滤器 DSL、字段级更新等特性
+### 技术架构亮点
 
-整个系统采用现代化的 Rust 生态和最佳实践，通过 `ultimate-core::Application` 实现依赖注入和生命周期管理，通过 `modelsql` 实现类型安全的数据库操作，通过 WebSocket 实现高效的全双工通信，是一个设计优良、性能卓越、类型安全、易于维护的现代化分布式任务调度系统。
+- **统一的协议定义**: 通过 `hetuflow-core` 确保通信协议的一致性和类型安全
+- **三层任务模型**: Job → Task → TaskInstance 的清晰业务模型
+- **智能任务分发**: 基于标签匹配和负载均衡的智能调度算法
+- **完整的监控体系**: 从任务创建到执行完成的全链路监控
+- **灵活的扩展能力**: 支持多种调度类型和执行命令的插件化设计
 
-### 核心技术优势
-
-- **类型安全架构**：从数据库到业务层的全程类型安全保障
-- **现代化依赖管理**：Application 容器模式提供清晰的依赖关系管理
-- **抽象层保护**：BMC 层抽象隔离了直接的 SQL 操作，提高安全性和可维护性
-- **统一错误处理**：分层错误处理确保错误信息的正确传播和处理
-- **WebSocket 通信**：真正的双向实时通信，支持 Server 推送和 Agent 拉取
-- **网络穿透友好**：基于 HTTP/HTTPS，易于穿透防火墙和代理
-- **强一致性**：基于 PostgreSQL 的事务保证和强一致性存储
-- **高可扩展性**：支持水平扩展和多租户环境
-- **容错机制**：完善的重试策略和故障恢复机制
-- **开发体验优秀**：自动代码生成、类型推导、编译时检查等现代 Rust 特性
+hetuflow 特别适合需要 **高可靠性**、**强一致性**、**类型安全** 的分布式任务调度场景，是企业级任务调度系统的理想选择。

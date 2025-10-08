@@ -1,7 +1,7 @@
 use fusion_common::time::OffsetDateTime;
 use fusion_core::DataError;
 use hetumind_core::workflow::{Workflow, WorkflowId, WorkflowStatus};
-use modelsql::{field::Fields, postgres::PgRowType};
+use fusionsql::{field::Fields, postgres::PgRowType};
 use sea_query::enum_def;
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;

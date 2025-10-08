@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-use ahash::HashMap;
+use fusion_common::ahash::HashMap;
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use typed_builder::TypedBuilder;
@@ -11,6 +11,7 @@ use crate::{generate_uuid_newtype, types::JsonValue};
 use super::ValidationError;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, derive_more::From, derive_more::Into)]
+#[serde(transparent)]
 pub struct ParameterMap(serde_json::Map<String, JsonValue>);
 
 impl From<serde_json::Value> for ParameterMap {
@@ -130,13 +131,14 @@ impl GetNodeParameterOptions {
   Hash,
   Serialize,
   Deserialize,
-  derive_more::  Constructor,
+  derive_more::Constructor,
   derive_more::Display,
   derive_more::From,
   derive_more::Into,
   derive_more::AsRef,
 )]
 #[cfg_attr(feature = "with-db", derive(sqlx::Type), sqlx(transparent))]
+#[serde(transparent)]
 pub struct ExecutionId(Uuid);
 
 /// 工作流唯一标识符
@@ -148,48 +150,20 @@ pub struct ExecutionId(Uuid);
   Hash,
   Serialize,
   Deserialize,
-  derive_more::  Constructor,
+  derive_more::Constructor,
   derive_more::Display,
   derive_more::From,
   derive_more::Into,
   derive_more::AsRef,
 )]
 #[cfg_attr(feature = "with-db", derive(sqlx::Type), sqlx(transparent))]
+#[serde(transparent)]
 pub struct WorkflowId(Uuid);
 
 generate_uuid_newtype!(Struct: ExecutionId, Struct: WorkflowId);
 
 #[cfg(feature = "with-db")]
-modelsql::generate_uuid_newtype_to_sea_query_value!(Struct: ExecutionId, Struct: WorkflowId);
-
-/// 节点属性类型（元数据）
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum NodePropertyKind {
-  AssignmentCollection,
-  Boolean,
-  Button,
-  Callout,
-  Collection,
-  Color,
-  Credentials,
-  CredentialsSelect,
-  CurlImport,
-  DateTime,
-  Filter,
-  FixedCollection,
-  Hidden,
-  Json,
-  MultiOptions,
-  Notice,
-  Number,
-  Options,
-  ResourceLocator,
-  ResourceMapper,
-  #[default]
-  String,
-  WorkflowSelector,
-}
+fusionsql::generate_uuid_newtype_to_sea_query_value!(Struct: ExecutionId, Struct: WorkflowId);
 
 /// 代码自动完成类型
 #[derive(Debug, Clone, Copy, Serialize_repr, Deserialize_repr)]
@@ -412,143 +386,6 @@ pub struct AssignmentKindOptions {
   pub hide_kind: Option<bool>,
   pub default_kind: Option<FieldKind>,
   pub disable_kind: Option<bool>,
-}
-
-// 节点属性类型选项 - 主结构体
-#[derive(Debug, Clone, Serialize, Deserialize, TypedBuilder)]
-pub struct NodePropertyKindOptions {
-  /// 按钮配置 (支持: [NodePropertyKind::Button])
-  #[builder(default, setter(strip_option))]
-  pub button_config: Option<ButtonConfig>,
-
-  /// 容器类名 (支持: [NodePropertyKind::Notice])
-  #[builder(default, setter(strip_option))]
-  pub container_class: Option<String>,
-
-  /// 始终打开编辑窗口 (支持: [NodePropertyKind::Json])
-  #[builder(default, setter(strip_option))]
-  pub always_open_edit_window: Option<bool>,
-
-  /// 代码自动完成 (支持: [NodePropertyKind::String])
-  #[builder(default, setter(strip_option))]
-  pub code_autocomplete: Option<CodeAutocompleteType>,
-
-  /// 编辑器类型 (支持: [NodePropertyKind::String])
-  #[builder(default, setter(strip_option))]
-  pub editor: Option<EditorType>,
-
-  /// 编辑器只读 (支持: [NodePropertyKind::String])
-  #[builder(default, setter(strip_option))]
-  pub editor_is_read_only: Option<bool>,
-
-  /// SQL 方言 (支持: [EditorType::SqlEditor])
-  #[builder(default, setter(strip_option))]
-  pub sql_dialect: Option<SqlDialect>,
-
-  /// 加载选项依赖 (支持: [NodePropertyKind::Options])
-  #[builder(default, setter(into, strip_option))]
-  pub load_options_depends_on: Option<Vec<String>>,
-
-  /// 加载选项方法 (支持: [NodePropertyKind::Options])
-  #[builder(default, setter(strip_option))]
-  pub load_options_method: Option<String>,
-
-  /// 加载选项 (支持: [NodePropertyKind::Options])
-  #[builder(default, setter(strip_option))]
-  pub load_options: Option<LoadOptions>,
-
-  /// 最大值 (支持: [NodePropertyKind::Number])
-  #[builder(default, setter(strip_option))]
-  pub max_value: Option<f64>,
-
-  /// 最小值 (支持: [NodePropertyKind::Number])
-  #[builder(default, setter(strip_option))]
-  pub min_value: Option<f64>,
-
-  /// 多个值 (支持: all [NodePropertyKind])
-  #[builder(default, setter(strip_option))]
-  pub multiple_values: Option<bool>,
-
-  /// 多值按钮文本 (当 [Self::multiple_values]=true 时支持)
-  #[builder(default, setter(into, strip_option))]
-  pub multiple_value_button_text: Option<String>,
-
-  /// 数字精度 (支持: [NodePropertyKind::Number])
-  #[builder(default, setter(strip_option))]
-  pub number_precision: Option<i32>,
-
-  /// 密码字段 (支持: [NodePropertyKind::String])
-  #[builder(default, setter(strip_option))]
-  pub password: Option<bool>,
-
-  /// 行数 (支持: [NodePropertyKind::String])
-  #[builder(default, setter(into, strip_option))]
-  pub rows: Option<i32>,
-
-  /// 显示透明度 (支持: [NodePropertyKind::Color])
-  #[builder(default, setter(strip_option))]
-  pub show_alpha: Option<bool>,
-
-  /// 可排序 (当 [Self::multiple_values]=true 时支持)
-  #[builder(default, setter(strip_option))]
-  pub sortable: Option<bool>,
-
-  /// 可过期 (支持: [NodePropertyKind::Hidden]，仅在凭据中)
-  #[builder(default, setter(strip_option))]
-  pub expirable: Option<bool>,
-
-  /// 资源映射器配置
-  #[builder(default, setter(strip_option))]
-  pub resource_mapper: Option<ResourceMapperTypeOptions>,
-
-  /// 过滤器配置
-  #[builder(default, setter(strip_option))]
-  pub filter: Option<FilterTypeOptions>,
-
-  /// 赋值配置
-  #[builder(default, setter(strip_option))]
-  pub assignment: Option<AssignmentKindOptions>,
-
-  /// 最少必需字段数 (支持: [NodePropertyKind::FixedCollection])
-  #[builder(default, setter(strip_option))]
-  pub min_required_fields: Option<i32>,
-
-  /// 最多允许字段数 (支持: [NodePropertyKind::FixedCollection])
-  #[builder(default, setter(strip_option))]
-  pub max_allowed_fields: Option<i32>,
-
-  /// 调用动作 (支持: [NodePropertyKind::Callout])
-  #[builder(default, setter(strip_option))]
-  pub callout_action: Option<CalloutAction>,
-
-  /// 其他扩展字段
-  #[serde(skip_serializing_if = "serde_json::Map::is_empty")]
-  #[builder(default)]
-  pub additional_properties: serde_json::Map<String, JsonValue>,
-}
-
-// 值提取器配置
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct NodePropertyValueExtractor {
-  pub kind: String,
-  pub regex: Option<String>,
-  pub property: Option<String>,
-}
-
-// 节点属性模式
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct NodePropertyMode {
-  pub display_name: String,
-  pub name: String,
-  pub kind: NodePropertyKind,
-}
-
-/// 路由配置 - 简化版本
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct NodePropertyRouting {
-  pub request: Option<serde_json::Value>,
-  pub output: Option<serde_json::Value>,
-  pub operations: Option<serde_json::Value>,
 }
 
 /// 字段类型枚举

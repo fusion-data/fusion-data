@@ -10,8 +10,7 @@ time_format = "%Y-%m-%d %H:%M:%S%.3f"
 log_level = "info"
 log_writer = "both"
 log_dir = "./runs/logs/agent/"
-log_name = "hetuflow-agent"
-log_targets = ["hetuflow_core=debug", "hetuflow_agent=info"]
+log_targets = ["info", "hetuflow_core=debug", "hetuflow_agent=info"]
 
 [fusion.log.otel]
 enable = false

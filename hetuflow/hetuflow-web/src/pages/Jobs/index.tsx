@@ -1,17 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Card, Button, Space, Typography, Input, Row, Col, Switch, Dropdown, Popconfirm, Tooltip } from 'antd';
-import {
-  ReloadOutlined,
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  PlayCircleOutlined,
-  MoreOutlined,
-} from '@ant-design/icons';
+import { Table, Card, Button, Space, Typography, Input, Row, Col, Switch, Popconfirm, Tooltip } from 'antd';
+import { ReloadOutlined, PlusOutlined, EditOutlined, DeleteOutlined, PlayCircleOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useNavigate } from 'react-router-dom';
-import { apiService, SchedJob, JobForQuery, JobStatus } from '../../services/api';
-import { useMessage } from '../../hooks/useMessage';
+import { apiService, SchedJob, JobForQuery, JobStatus } from '@/services/api';
+import { useMessage } from '@/hooks/useMessage';
 import dayjs from 'dayjs';
 
 const { Title } = Typography;
@@ -128,47 +121,31 @@ const Jobs: React.FC = () => {
     {
       title: '操作',
       key: 'action',
-      render: (_, record) => {
-        const menuItems = [
-          {
-            key: 'edit',
-            icon: <EditOutlined />,
-            label: '编辑',
-            onClick: () => navigate(`/jobs/${record.id}`),
-          },
-          {
-            key: 'run',
-            icon: <PlayCircleOutlined />,
-            label: '立即执行',
-            onClick: () => handleExecute(record),
-          },
-          {
-            type: 'divider' as const,
-          },
-          {
-            key: 'delete',
-            icon: (
-              <Popconfirm
-                title="确认删除"
-                description={`确定要删除作业 "${record.name}" 吗？`}
-                okText="确定"
-                cancelText="取消"
-                onConfirm={() => handleDelete(record)}
-              >
-                <DeleteOutlined />
-              </Popconfirm>
-            ),
-            label: '删除',
-            danger: true,
-          },
-        ];
-
-        return (
-          <Dropdown menu={{ items: menuItems }} trigger={['click']}>
-            <Button type="text" icon={<MoreOutlined />} />
-          </Dropdown>
-        );
-      },
+      width: 340,
+      render: (_item, record) => (
+        <Space>
+          <a color="warning" onClick={() => handleExecute(record)}>
+            <PlayCircleOutlined />
+            立即执行
+          </a>
+          <a type="link" onClick={() => navigate(`/jobs/${record.id}`)}>
+            <EditOutlined />
+            编辑
+          </a>
+          <Popconfirm
+            title="确认删除"
+            description={`确定要删除作业 "${record.name}" 吗？`}
+            okText="确定"
+            cancelText="取消"
+            onConfirm={() => handleDelete(record)}
+          >
+            <a type="link">
+              <DeleteOutlined />
+              删除
+            </a>
+          </Popconfirm>
+        </Space>
+      ),
     },
   ];
 

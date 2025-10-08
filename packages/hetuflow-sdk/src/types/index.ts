@@ -306,23 +306,74 @@ export interface TaskForQuery {
 
 export interface SchedTask {
   id: string;
-  name: string;
-  description?: string;
   job_id: string;
-  config?: Record<string, any>;
+  namespace_id: string;
+  /// 任务优先级，数值越大优先级越高
+  priority: number;
   status: TaskStatus;
+
+  schedule_id?: string;
+  /// 下一次调度时间。在生成任务时将根据此 调度时间 + schedule_id 判断任务是否已生成，若任务已生成则不会再次生成。
+  scheduled_at: string;
+  schedule_kind: ScheduleKind;
+
+  /// 任务完成时间。当次任务完成或者所有 Schedule 的配置均已到期
+  completed_at?: string;
+
+  /// 任务环境变量，可能来自 SchedJob 或由事件/手动触发执行传入
+  environment?: Record<string, any>;
+
+  /// 任务参数，需要为 JSON Object。对于 Event 触发类型的任务，参数为 Event 触发时传入的参数
+  parameters: Record<string, any>;
+
+  /// 保存 SchedJob.config。当 SchedJob 被修改后，因 SchedTask 保存了 config，所有任务受 SchedJob.config 变更的影响
+  config: TaskConfig;
+
+  /// 任务重试次数
+  retry_count: number;
+
+  dependencies?: Record<string, any>;
+  locked_at?: string;
+  lock_version: number;
+  created_by: number;
   created_at: string;
-  updated_at: string;
+  updated_by?: number;
+  updated_at?: string;
+}
+
+export interface TaskMetrics {
+  // CPU 时间
+  cpu_time: number;
+  // 内存峰值
+  memory_peak: number;
+  // 磁盘读取量
+  disk_read: number;
+  // 磁盘写入量
+  disk_write: number;
+  // 网络接收量
+  network_in: number;
+  // 网络发送量
+  network_out: number;
 }
 
 export interface TaskInstanceForCreate {
+  id?: string;
+  job_id: string;
   task_id: string;
-  config?: Record<string, any>;
+  agent_id?: string;
+  status: TaskInstanceStatus;
+  started_at?: string;
 }
 
 export interface TaskInstanceForUpdate {
-  config?: Record<string, any>;
+  agent_id?: string;
   status?: TaskInstanceStatus;
+  started_at?: string;
+  completed_at?: string;
+  output?: string;
+  error_message?: string;
+  exit_code?: number;
+  metrics?: TaskMetrics;
 }
 
 export interface TaskInstanceFilter {
@@ -344,11 +395,15 @@ export interface TaskInstanceForQuery {
 export interface SchedTaskInstance {
   id: string;
   task_id: string;
-  config?: Record<string, any>;
+  job_id: string;
+  agent_id?: string;
   status: TaskInstanceStatus;
-  result?: Record<string, any>;
   started_at?: string;
-  finished_at?: string;
+  completed_at?: string;
+  output?: string;
+  error_message?: string;
+  exit_code?: number;
+  metrics?: TaskMetrics;
   created_at: string;
   updated_at: string;
 }
@@ -445,6 +500,16 @@ export const TaskStatus = {
 
 export type TaskStatus = (typeof TaskStatus)[keyof typeof TaskStatus];
 
+export const TaskStatusText = {
+  [TaskStatus.Pending]: '等待中',
+  [TaskStatus.Doing]: '运行中',
+  [TaskStatus.Failed]: '失败',
+  [TaskStatus.Cancelled]: '已取消',
+  [TaskStatus.Succeeded]: '成功',
+} as const;
+
+export type TaskStatusText = (typeof TaskStatusText)[keyof typeof TaskStatusText];
+
 export const TaskInstanceStatus = {
   // 等待分发
   Pending: 1,
@@ -467,6 +532,20 @@ export const TaskInstanceStatus = {
 } as const;
 
 export type TaskInstanceStatus = (typeof TaskInstanceStatus)[keyof typeof TaskInstanceStatus];
+
+export const TaskInstanceStatusText = {
+  [TaskInstanceStatus.Pending]: '等待分发',
+  [TaskInstanceStatus.Dispatched]: '已分发',
+  [TaskInstanceStatus.Running]: '运行中',
+  [TaskInstanceStatus.Timeout]: '超时',
+  [TaskInstanceStatus.Paused]: '暂停',
+  [TaskInstanceStatus.Skipped]: '跳过',
+  [TaskInstanceStatus.Failed]: '失败',
+  [TaskInstanceStatus.Cancelled]: '取消',
+  [TaskInstanceStatus.Succeeded]: '成功',
+} as const;
+
+export type TaskInstanceStatusText = (typeof TaskInstanceStatusText)[keyof typeof TaskInstanceStatusText];
 
 export const ServerStatus = {
   // 非活跃

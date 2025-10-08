@@ -60,7 +60,7 @@ impl ProcessManager {
     cmd.args(&task.task.config.args).stdout(Stdio::piped()).stderr(Stdio::piped()).stdin(Stdio::null());
 
     // Set working directory
-    let work_dir_path = self.config.run_base_dir()?.join(task.job_id().to_string()).join(instance_id.to_string());
+    let work_dir_path = self.config.run_base_dir()?.join(task.job_id().to_string()).join(task.task_id().to_string());
     if !work_dir_path.exists() {
       tokio::fs::create_dir_all(&work_dir_path).await?;
     }

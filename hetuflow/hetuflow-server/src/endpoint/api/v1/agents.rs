@@ -1,7 +1,7 @@
 use axum::{Json, extract::Path};
-use fusion_core::IdStringResult;
+use fusion_common::model::IdStringResult;
 use fusion_web::{WebResult, ok_json};
-use modelsql::page::PageResult;
+use fusionsql::page::PageResult;
 use serde_json::Value;
 
 use hetuflow_core::models::{AgentForCreate, AgentForQuery, AgentForUpdate, SchedAgent};

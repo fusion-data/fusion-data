@@ -1,7 +1,7 @@
-use modelsql::{
+use fusionsql::{
   ModelManager, Result,
   base::{self, DbBmc, compute_page},
-  filter::FilterGroups,
+  filter::{FilterGroups, apply_to_sea_query},
   generate_pg_bmc_common, generate_pg_bmc_filter,
 };
 use sea_query::{Condition, Expr, Query, SelectStatement};
@@ -55,7 +55,7 @@ impl PermissionBmc {
     }
 
     let list_options = compute_page::<Self>(Some(req.page))?;
-    list_options.apply_to_sea_query(stmt);
+    apply_to_sea_query(&list_options, stmt);
 
     Ok(())
   }

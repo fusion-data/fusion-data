@@ -130,11 +130,7 @@ impl WsRunner {
 
     for attempts in 0..self.setting.connection.max_reconnect_attempts {
       if self.shutdown_rx.is_shutdown_now() {
-        return Err(DataError::BizError {
-          code: 503,
-          msg: "Shutdown signal received, stopped connect to Server".into(),
-          detail: None,
-        });
+        return Err(DataError::biz_error(503, "Shutdown signal received, stopped connect to Server", None));
       }
       let connect_result = tokio::time::timeout(timeout_duration, tokio_tungstenite::connect_async(crb.clone())).await;
       match connect_result {

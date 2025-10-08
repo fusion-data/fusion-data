@@ -1,8 +1,9 @@
 use std::sync::Arc;
 
-use ahash::HashMap;
-use modelsql_core::field::FieldMask;
-use modelsql_core::filter::{OpValsBool, OpValsInt32, OpValsInt64, OpValsString, OpValsUuid, Page};
+use fusion_common::ahash::HashMap;
+use fusion_common::page::Page;
+use fusionsql_core::field::FieldMask;
+use fusionsql_core::filter::{OpValBool, OpValInt32, OpValInt64, OpValString, OpValUuid};
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use typed_builder::TypedBuilder;
@@ -56,7 +57,7 @@ pub enum ErrorHandlingStrategy {
 }
 
 #[cfg(feature = "with-db")]
-modelsql::generate_enum_i32_to_sea_query_value!(Enum: WorkflowStatus, Enum: ErrorHandlingStrategy);
+fusionsql::generate_enum_i32_to_sea_query_value!(Enum: WorkflowStatus, Enum: ErrorHandlingStrategy);
 
 /// 工作流设置
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -253,7 +254,7 @@ impl Workflow {
 }
 
 #[derive(Clone, Deserialize)]
-#[cfg_attr(feature = "modelsql", derive(modelsql::field::Fields))]
+#[cfg_attr(feature = "fusionsql", derive(fusionsql::field::Fields))]
 pub struct WorkflowForCreate {
   pub id: Option<WorkflowId>,
   pub name: String,
@@ -320,7 +321,7 @@ impl TryFrom<WorkflowForCreate> for Workflow {
 }
 
 #[derive(Clone, Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "modelsql", derive(modelsql::field::Fields))]
+#[cfg_attr(feature = "fusionsql", derive(fusionsql::field::Fields))]
 pub struct WorkflowForUpdate {
   pub name: Option<String>,
   pub status: Option<WorkflowStatus>,
@@ -334,7 +335,7 @@ pub struct WorkflowForUpdate {
   pub meta: Option<serde_json::Value>,
   pub parent_folder_id: Option<String>,
   pub is_archived: Option<bool>,
-  #[cfg_attr(feature = "modelsql", field(skip))]
+  #[cfg_attr(feature = "fusionsql", field(skip))]
   pub field_mask: Option<FieldMask>,
 }
 
@@ -377,14 +378,14 @@ pub struct WorkflowForQuery {
 }
 
 #[derive(Serialize, Deserialize)]
-#[cfg_attr(feature = "modelsql", derive(modelsql::filter::FilterNodes))]
+#[cfg_attr(feature = "fusionsql", derive(fusionsql::filter::FilterNodes))]
 pub struct WorkflowFilter {
-  pub name: Option<OpValsString>,
-  pub status: Option<OpValsInt32>,
-  pub version_id: Option<OpValsUuid>,
-  pub trigger_count: Option<OpValsInt64>,
-  pub parent_folder_id: Option<OpValsUuid>,
-  pub is_archived: Option<OpValsBool>,
+  pub name: Option<OpValString>,
+  pub status: Option<OpValInt32>,
+  pub version_id: Option<OpValUuid>,
+  pub trigger_count: Option<OpValInt64>,
+  pub parent_folder_id: Option<OpValUuid>,
+  pub is_archived: Option<OpValBool>,
 }
 
 /// Request body for validating a workflow.

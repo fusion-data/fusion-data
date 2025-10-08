@@ -1,5 +1,5 @@
 use fusion_common::time::OffsetDateTime;
-use modelsql::{field::Fields, generate_enum_i32_to_sea_query_value};
+use fusionsql::{field::Fields, generate_enum_i32_to_sea_query_value};
 use sea_query::enum_def;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};

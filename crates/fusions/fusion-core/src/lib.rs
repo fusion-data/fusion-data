@@ -5,7 +5,6 @@ pub mod configuration;
 mod data_error;
 pub mod log;
 pub mod metas;
-mod model;
 pub mod plugin;
 mod run_mode;
 pub mod security;
@@ -17,7 +16,6 @@ pub mod utils;
 pub use async_trait::async_trait;
 pub use data_error::*;
 pub use fusion_core_macros::Builder;
-pub use model::*;
 pub use run_mode::*;
 
 pub type Result<T> = core::result::Result<T, DataError>;

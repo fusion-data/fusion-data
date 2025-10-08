@@ -1,7 +1,7 @@
 use std::{ops::Deref, sync::Arc};
 
 use hetumind_core::task::{QueueError, TaskQueue};
-use modelsql::ModelManager;
+use fusionsql::ModelManager;
 
 #[cfg(feature = "with-redis")]
 use super::RedisQueue;

@@ -5,7 +5,7 @@ use hetumind_core::{
   task::{QueueTask, TaskResult},
   workflow::{ExecutionStatus, ParameterMap},
 };
-use modelsql::ModelManager;
+use fusionsql::ModelManager;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 

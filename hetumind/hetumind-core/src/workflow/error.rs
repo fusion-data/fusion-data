@@ -1,9 +1,9 @@
 #[cfg(feature = "with-db")]
-use modelsql::SqlError;
+use fusionsql::SqlError;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use crate::types::JsonValue;
+use crate::{types::JsonValue, workflow::NodeDefinitionBuilderError};
 
 use super::{ConnectionIndex, ConnectionKind, NodeKind, NodeName, WorkflowId};
 
@@ -149,4 +149,7 @@ pub enum TriggerError {
 pub enum RegistrationError {
   #[error("节点类型已存在: {node_kind}")]
   NodeKindAlreadyExists { node_kind: NodeKind },
+
+  #[error(transparent)]
+  NodeDefinitionBuilderError(#[from] NodeDefinitionBuilderError),
 }

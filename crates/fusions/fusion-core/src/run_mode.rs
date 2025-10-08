@@ -31,7 +31,7 @@ impl RunMode {
 }
 
 impl<'de> Deserialize<'de> for RunMode {
-  fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+  fn deserialize<D>(deserializer: D) -> core::result::Result<Self, D::Error>
   where
     D: Deserializer<'de>,
   {

@@ -23,7 +23,7 @@
 
 ```rust
 use fusion_core::DataError;
-use modelsql::ModelManager;
+use fusionsql::ModelManager;
 use std::sync::Arc;
 use tokio::sync::{mpsc, RwLock, Mutex};
 use std::collections::HashMap;
@@ -41,7 +41,7 @@ use std::collections::HashMap;
 use tokio::sync::{mpsc, Mutex};
 use tracing::{info, error};
 use fusion_core::DataError;
-use modelsql::ModelManager;
+use fusionsql::ModelManager;
 use std::sync::Arc;
 use super::{ConnectionManager, MessageHandler};
 
@@ -173,7 +173,7 @@ Agent 的连接、断开和心跳等事件将直接通过日志系统记录，�
 // 引用在 server-types-entities.md 中定义的 SchedAgent 和 AgentBmc
 use crate::bmc::{AgentBmc, SchedAgent, AgentForUpdate, AgentFilter};
 use fusion_core::DataError;
-use modelsql::{ModelManager, SqlError};
+use fusionsql::{ModelManager, SqlError};
 impl AgentBmc {
   /// 查找在线的 Agent
   pub async fn find_online_agents(mm: &ModelManager) -> Result<Vec<SchedAgent>, SqlError> {
@@ -268,7 +268,7 @@ graph TD
 
 ```rust
 use fusion_core::DataError;
-use modelsql::page::{PageResult, Page};
+use fusionsql::page::{PageResult, Page};
 
 pub struct ConnectionManager {
   mm: Arc<ModelManager>,
@@ -383,7 +383,7 @@ impl ConnectionManager {
 
     let filter = AgentFilter {
       status: Some(OpValString::Eq("online").into()),
-      last_heartbeat_at: Some(OpValsDateTime::lt(stale_threshold)),
+      last_heartbeat_at: Some(OpValDateTime::lt(stale_threshold)),
       ..Default::default()
     };
 

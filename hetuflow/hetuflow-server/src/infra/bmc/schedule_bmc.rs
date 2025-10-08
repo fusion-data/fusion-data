@@ -1,7 +1,7 @@
-use modelsql::{
+use fusionsql::{
   ModelManager, SqlError,
   base::DbBmc,
-  filter::{OpValsInt32, OpValsUuid},
+  filter::{OpValInt32, OpValUuid},
   generate_pg_bmc_common, generate_pg_bmc_filter,
 };
 use uuid::Uuid;
@@ -35,8 +35,8 @@ impl ScheduleBmc {
   /// 查找可调度的 Schedule 实体（Cron 和 Time 类型且状态为 Enabled）
   pub async fn find_schedulable_entities(mm: &ModelManager) -> Result<Vec<SchedSchedule>, SqlError> {
     let filter = ScheduleFilter {
-      schedule_kind: Some(OpValsInt32::in_([ScheduleKind::Cron as i32, ScheduleKind::Interval as i32])),
-      status: Some(OpValsInt32::eq(ScheduleStatus::Enabled as i32)),
+      schedule_kind: Some(OpValInt32::in_([ScheduleKind::Cron as i32, ScheduleKind::Interval as i32])),
+      status: Some(OpValInt32::eq(ScheduleStatus::Enabled as i32)),
       ..Default::default()
     };
 
@@ -51,7 +51,7 @@ impl ScheduleBmc {
 
   /// 根据作业ID查找调度
   pub async fn find_by_job_id(mm: &ModelManager, job_id: Uuid) -> Result<Vec<SchedSchedule>, SqlError> {
-    let filter = ScheduleFilter { job_id: Some(OpValsUuid::eq(job_id)), ..Default::default() };
+    let filter = ScheduleFilter { job_id: Some(OpValUuid::eq(job_id)), ..Default::default() };
 
     Self::find_many(mm, vec![filter], None).await
   }

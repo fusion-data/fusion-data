@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button, Dropdown, Space, Spin } from 'antd';
 import { SunOutlined, MoonOutlined, MonitorOutlined, DownOutlined } from '@ant-design/icons';
-import { useTheme, ThemeMode } from '../contexts/ThemeContext';
+import { useTheme, ThemeMode } from '@/contexts/ThemeContext';
 
 const ThemeSwitcher: React.FC = () => {
   const { themeMode, setThemeMode, currentTheme, isInitialized } = useTheme();

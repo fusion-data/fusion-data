@@ -1,7 +1,7 @@
 //! tests/api_workflows_test.rs
 //! `cargo test -p hetumind --test api_workflows_test -- --nocapture`
 
-use fusion_core::IdUuidResult;
+use fusion_common::model::IdUuidResult;
 use hetumind_core::workflow::{Workflow, WorkflowForUpdate, WorkflowStatus};
 use http::StatusCode;
 use serde_json::json;

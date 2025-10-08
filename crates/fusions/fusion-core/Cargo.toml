@@ -21,7 +21,6 @@ with-ulid = ["dep:ulid"]
 with-openapi = ["dep:utoipa"]
 
 [dependencies]
-fusion-corelib.workspace = true
 fusion-common.workspace = true
 fusion-core-macros = { workspace = true }
 thiserror = { workspace = true }
@@ -52,7 +51,7 @@ serde_repr.workspace = true
 utoipa = { workspace = true, optional = true }
 tonic = { workspace = true, optional = true }
 protobuf = { workspace = true, optional = true }
-modelsql = { workspace = true, optional = true }
+fusionsql = { workspace = true, optional = true }
 jiff = "0.2"
 
 

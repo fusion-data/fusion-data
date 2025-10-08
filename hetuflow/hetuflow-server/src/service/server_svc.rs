@@ -1,6 +1,6 @@
 use fusion_core::DataError;
 use hetuflow_core::models::{SchedServer, ServerForQuery, ServerForUpdate};
-use modelsql::{ModelManager, page::PageResult};
+use fusionsql::{ModelManager, page::PageResult};
 
 use crate::infra::bmc::ServerBmc;
 

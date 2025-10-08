@@ -21,23 +21,24 @@ pub enum JobStatus {
   Enabled = 100,
 }
 
-/// 作业类型 (ScheduleKind) - 定义了 Job 的核心调度和行为模式
+/// Job type (ScheduleKind) - defines the core scheduling and behavior patterns for Jobs
 #[derive(Serialize_repr, Deserialize_repr, Debug, Clone, Copy, PartialEq, Eq, AsRefStr)]
 #[cfg_attr(feature = "with-db", derive(sqlx::Type))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 #[repr(i32)]
 #[strum(serialize_all = "snake_case")]
 pub enum ScheduleKind {
-  /// Cron 定时作业
+  /// Cron like timed job
   Cron = 1,
-  /// 间隔定时作业。可以通过设置最大执行次数为 1 次来表达 Once 执行，可以通过设置 start_time 来设置定时执行时间
+  /// Interval-based job. Setting max executions to 1 can express a one-time execution.
+  /// Use start_time to specify execution time
   Interval = 2,
-  /// 守护进程作业
-  Daemon = 3,
-  /// 事件驱动作业
-  Event = 4,
-  /// 流程任务
-  Flow = 5,
+  /// Event-driven job
+  Event = 3,
+  /// Flow task
+  Flow = 4,
+  /// Daemon process job
+  Daemon = 5,
 }
 
 /// 调度状态
@@ -202,7 +203,7 @@ pub enum EventKind {
 }
 
 #[cfg(feature = "with-db")]
-modelsql::generate_enum_i32_to_sea_query_value!(
+fusionsql::generate_enum_i32_to_sea_query_value!(
   Enum: ScheduleKind,
   Enum: JobStatus,
   Enum: ScheduleStatus,

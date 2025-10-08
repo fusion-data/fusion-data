@@ -1,7 +1,8 @@
 use chrono::{DateTime, FixedOffset};
-use modelsql_core::{
+use fusion_common::page::Page;
+use fusionsql_core::{
   field::FieldMask,
-  filter::{OpValsDateTime, OpValsInt32, OpValsString, OpValsUuid, Page},
+  filter::{OpValDateTime, OpValInt32, OpValString, OpValUuid},
 };
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -12,7 +13,7 @@ use super::TaskConfig;
 
 /// SchedJob 数据模型
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(modelsql::Fields, sqlx::FromRow), sea_query::enum_def(table_name = "sched_job"))]
+#[cfg_attr(feature = "with-db", derive(fusionsql::Fields, sqlx::FromRow))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct SchedJob {
   pub id: Uuid,
@@ -28,8 +29,8 @@ pub struct SchedJob {
 }
 
 /// Job 创建模型
-#[derive(Debug, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(modelsql::Fields))]
+#[derive(Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct JobForCreate {
   pub id: Option<Uuid>,
@@ -42,8 +43,8 @@ pub struct JobForCreate {
 }
 
 /// Job 更新模型
-#[derive(Debug, Clone, Default, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(modelsql::Fields))]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct JobForUpdate {
   pub namespace_id: Option<String>,
@@ -57,7 +58,7 @@ pub struct JobForUpdate {
 }
 
 /// Job 查询请求
-#[derive(Default, Deserialize)]
+#[derive(Default, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct JobForQuery {
   pub filter: JobFilter,
@@ -65,14 +66,14 @@ pub struct JobForQuery {
 }
 
 /// Job 过滤器
-#[derive(Default, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(modelsql::FilterNodes))]
+#[derive(Default, Serialize, Deserialize)]
+#[cfg_attr(feature = "with-db", derive(fusionsql::FilterNodes))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct JobFilter {
-  pub id: Option<OpValsUuid>,
-  pub name: Option<OpValsString>,
-  pub namespace_id: Option<OpValsString>,
-  pub status: Option<OpValsInt32>,
-  pub created_at: Option<OpValsDateTime>,
-  pub updated_at: Option<OpValsDateTime>,
+  pub id: Option<OpValUuid>,
+  pub name: Option<OpValString>,
+  pub namespace_id: Option<OpValString>,
+  pub status: Option<OpValInt32>,
+  pub created_at: Option<OpValDateTime>,
+  pub updated_at: Option<OpValDateTime>,
 }

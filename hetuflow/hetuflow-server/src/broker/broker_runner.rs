@@ -8,9 +8,9 @@ use hetuflow_core::{
 };
 use log::{error, info};
 use mea::shutdown::ShutdownRecv;
-use modelsql::{
+use fusionsql::{
   ModelManager,
-  filter::{OpValsDateTime, OpValsInt32},
+  filter::{OpValDateTime, OpValInt32},
 };
 
 use crate::{
@@ -79,8 +79,8 @@ impl LeaderOrFollowerRunner {
 
     // 查找心跳超时的在线Agent
     let filter = AgentFilter {
-      status: Some(OpValsInt32::eq(AgentStatus::Online as i32)),
-      last_heartbeat_at: Some(OpValsDateTime::lt(timeout_threshold)),
+      status: Some(OpValInt32::eq(AgentStatus::Online as i32)),
+      last_heartbeat_at: Some(OpValDateTime::lt(timeout_threshold)),
       ..Default::default()
     };
     let timeout_agents = AgentBmc::find_many(&mm, vec![filter], None).await?;
@@ -103,8 +103,8 @@ impl LeaderOrFollowerRunner {
 
     // 查找心跳超时的在线Server
     let filter = ServerFilter {
-      status: Some(OpValsInt32::eq(ServerStatus::Active as i32)),
-      last_heartbeat_at: Some(OpValsDateTime::lt(timeout_threshold)),
+      status: Some(OpValInt32::eq(ServerStatus::Active as i32)),
+      last_heartbeat_at: Some(OpValDateTime::lt(timeout_threshold)),
       ..Default::default()
     };
     let timeout_servers = ServerBmc::find_many(&mm, vec![filter], None).await?;

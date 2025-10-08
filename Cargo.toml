@@ -1,12 +1,12 @@
 [workspace]
 members = [
   "crates/fusions/*",
-  "crates/libs/*",
   "jieyuan/jieyuan-core",
   "jieyuan/jieyuan",
   "hetuflow/hetuflow-core",
   "hetuflow/hetuflow-server",
   "hetuflow/hetuflow-agent",
+  "hetuflow/hetuflow-sdk",
   "hetuflow/hetuflow-test",
   "hetuflow/hetuflow-docs",
   "hetumind/hetumind-core",
@@ -21,7 +21,7 @@ resolver = "2"
 [workspace.package]
 version = "0.1.1"
 edition = "2024"
-rust-version = "1.89"
+rust-version = "1.90"
 description = "A data fusion platform with scheduler, ai agent studio and core libraries"
 license = "Apache-2.0"
 repository = "https://github.com/fusion-data/fusion-data"
@@ -61,14 +61,13 @@ opt-level = 3
 
 [workspace.dependencies]
 # -- projects begin
-fusion-corelib = { version = "0.1.1", path = "crates/fusions/fusion-corelib" }
-modelsql = { version = "0.1.1", path = "crates/libs/modelsql" }
-modelsql-core = { version = "0.1.1", path = "crates/libs/modelsql-core" }
-modelsql-macros = { version = "0.1.1", path = "crates/libs/modelsql-macros" }
 fusion-common = { version = "0.1.1", path = "crates/fusions/fusion-common" }
 fusion-core-macros = { version = "0.1.1", path = "crates/fusions/fusion-core-macros" }
 fusion-core = { version = "0.1.1", path = "crates/fusions/fusion-core" }
 fusion-security = { version = "0.1.1", path = "crates/fusions/fusion-security" }
+fusionsql-core = { version = "0.1.1", path = "crates/fusions/fusionsql-core" }
+fusionsql-macros = { version = "0.1.1", path = "crates/fusions/fusionsql-macros" }
+fusionsql = { version = "0.1.1", path = "crates/fusions/fusionsql" }
 fusion-db = { version = "0.1.1", path = "crates/fusions/fusion-db" }
 fusion-web = { version = "0.1.1", path = "crates/fusions/fusion-web" }
 fusion-grpc = { version = "0.1.1", path = "crates/fusions/fusion-grpc" }
@@ -88,6 +87,8 @@ tikv-jemallocator = "0.6"
 qrcode-rs = { version = "0.1" }
 image = { version = "0.25" }
 # -- Misc
+semver = { version = "1.0", features = ["serde"] }
+getrandom = { version = "0.3", default-features = false }
 windows-sys = { version = "0.61", features = [
   "Win32_Security",
   "Win32_System_Threading",
@@ -159,7 +160,7 @@ argon2 = { version = "0.5", default-features = false, features = [
 ] }
 # A non-cryptographic hash function using AES-NI for high performance, provides AHashMap and AHashSet
 # 胜在小键值（如 HashMap 键）的极低延迟
-ahash = { version = "0.8", features = ["serde"] }
+ahash = { version = "0.8", features = ["runtime-rng", "serde", "getrandom"] }
 # This crate is a native Rust port of Google’s HighwayHash, which is a fast, keyed, and strong hash function, whose output is hardware independent.
 # 胜在流式大文件的吞吐量（如文件校验）
 highway = { version = "1.3" }
@@ -191,7 +192,7 @@ dashmap = { version = "6.1" }
 mea = { version = "0.4" }
 # -- Logging
 log = "0.4"
-logforth = { version = "0.27", features = ["colored", "append-rolling-file"] }
+logforth = { version = "0.28", features = ["starter-log", "append-file"] }
 # -- Tracing
 fastrace = { version = "0.7" }
 metrics = "0.24"
@@ -213,8 +214,9 @@ sea-query-binder = { version = "0.7", features = ["with-json", "with-chrono"] }
 pgvector = { version = "0.4", features = ["sqlx"] }
 # -- Serde
 serde = { version = "1.0", features = ["derive", "rc"] }
-serde_with = { version = "3.14", features = ["chrono_0_4"] }
+serde_with = { version = "3.15", features = ["chrono_0_4"] }
 serde_json = { version = "1.0" }
+tsify = { version = "0.5", features = ["js"] }
 sonic-rs = { version = "0.5" }
 
 json-five = { version = "0.3" }
@@ -232,7 +234,7 @@ http = "1"
 http-body-util = "0.1"
 # async http client
 reqwest = { version = "0.12", features = [
-  "rustls-tls-webpki-roots",
+  # "rustls-tls-webpki-roots",
   "json",
   "gzip",
 ] }
@@ -272,10 +274,7 @@ utoipa = { version = "5.4", features = [
   "rc_schema",
 ] }
 utoipa-axum = "0.2"
-utoipa-swagger-ui = { version = "9.0", features = [
-  # "vendored",
-  "axum",
-] }
+utoipa-swagger-ui = { version = "9.0", features = ["vendored", "axum"] }
 # -- validator
 garde = { version = "0.22", features = ["derive"] }
 axum-valid = { version = "0.24", default-features = false, features = [
@@ -303,7 +302,7 @@ minijinja = { version = "2.5" }
 # -- Data Science
 polars = "0.51"
 # An Excel/OpenDocument Spreadsheets reader and deserializer in pure rust
-calamine = "0.30"
+calamine = "0.31"
 # -- Redis & Valkey client
 fred = { version = "10" }
 # -- cloud storage access
@@ -315,10 +314,10 @@ opendal = { version = "0.54", features = [
 ] }
 minio = { version = "0.3" }
 # -- LLM
-rig-core = { version = "0.20", features = ["derive"] }
+rig-core = { version = "0.21", features = ["derive"] }
 rig-postgres = { version = "0.1" }
 graph-flow = { version = "0.4" }
-rmcp = { version = "0.7", features = [
+rmcp = { version = "0.8", features = [
   "client",
   "reqwest",
   "transport-streamable-http-client-reqwest",

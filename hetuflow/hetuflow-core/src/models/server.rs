@@ -1,7 +1,8 @@
 use chrono::{DateTime, FixedOffset};
-use modelsql_core::{
+use fusion_common::page::Page;
+use fusionsql_core::{
   field::FieldMask,
-  filter::{OpValsDateTime, OpValsInt32, OpValsString, Page},
+  filter::{OpValDateTime, OpValInt32, OpValString},
 };
 use serde::{Deserialize, Serialize};
 
@@ -9,11 +10,7 @@ use crate::types::ServerStatus;
 
 /// SchedServer 数据模型
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(
-  feature = "with-db",
-  derive(modelsql::Fields, sqlx::FromRow),
-  sea_query::enum_def(table_name = "sched_server")
-)]
+#[cfg_attr(feature = "with-db", derive(fusionsql::Fields, sqlx::FromRow))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct SchedServer {
   pub id: String,
@@ -27,8 +24,8 @@ pub struct SchedServer {
 }
 
 /// Server 创建模型
-#[derive(Debug, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(modelsql::Fields))]
+#[derive(Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct ServerForRegister {
   pub id: String,
@@ -38,8 +35,8 @@ pub struct ServerForRegister {
 }
 
 /// Server 更新模型
-#[derive(Debug, Clone, Default, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(modelsql::Fields))]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct ServerForUpdate {
   pub name: Option<String>,
@@ -52,7 +49,7 @@ pub struct ServerForUpdate {
 }
 
 /// Server 查询请求
-#[derive(Default, Deserialize)]
+#[derive(Default, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct ServerForQuery {
   pub filter: ServerFilter,
@@ -60,15 +57,15 @@ pub struct ServerForQuery {
 }
 
 /// Server 过滤器
-#[derive(Default, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(modelsql::FilterNodes))]
+#[derive(Default, Serialize, Deserialize)]
+#[cfg_attr(feature = "with-db", derive(fusionsql::FilterNodes))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct ServerFilter {
-  pub id: Option<OpValsString>,
-  pub name: Option<OpValsString>,
-  pub bind_namespaces: Option<OpValsString>,
-  pub status: Option<OpValsInt32>,
-  pub address: Option<OpValsString>,
-  pub created_at: Option<OpValsDateTime>,
-  pub last_heartbeat_at: Option<OpValsDateTime>,
+  pub id: Option<OpValString>,
+  pub name: Option<OpValString>,
+  pub bind_namespaces: Option<OpValString>,
+  pub status: Option<OpValInt32>,
+  pub address: Option<OpValString>,
+  pub created_at: Option<OpValDateTime>,
+  pub last_heartbeat_at: Option<OpValDateTime>,
 }

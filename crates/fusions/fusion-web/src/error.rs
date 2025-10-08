@@ -74,22 +74,19 @@ impl IntoResponse for WebError {
 
 impl From<DataError> for WebError {
   fn from(err: DataError) -> Self {
-    match err {
-      DataError::BizError { code, msg, detail } => {
-        let error = Self::new_with_msg(msg).with_err_code(code);
-        if let Some(v) = detail { error.with_details(v) } else { error }
-      }
-      DataError::InternalError { code, msg, cause } => {
-        if let Some(cause) = cause {
-          log::error!("InternalError({}, {}) with cause: {:?}", code, msg, cause);
-        }
-        Self::new_with_msg(msg).with_err_code(code)
-      }
-      DataError::SystemTimeError(e) => Self::new_with_msg(e.to_string()),
-      DataError::ParseIntError(e) => Self::new_with_msg(e.to_string()).with_err_code(400),
-      DataError::IoError(e) => Self::new_with_msg(e.to_string()),
-      DataError::JsonError(e) => Self::new_with_msg(e.to_string()),
+    // Log the source error if present
+    if let Some(source) = err.source.as_ref() {
+      log::error!("DataError with code {}, msg {} has source: {:?}", err.code, err.msg, source);
     }
+
+    let mut web_error = Self::new_with_msg(err.msg.clone()).with_err_code(err.code);
+
+    // Add details if present
+    if let Some(data) = err.data.as_ref() {
+      web_error = web_error.with_details(Box::new(data.clone()));
+    }
+
+    web_error
   }
 }
 

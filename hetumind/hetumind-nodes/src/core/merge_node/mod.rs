@@ -9,7 +9,7 @@ use ahash::HashMap;
 use async_trait::async_trait;
 use hetumind_core::workflow::{
   ConnectionKind, DataSource, ExecutionData, InputPortConfig, NodeDefinition, NodeExecutionContext, NodeExecutionError,
-  NodeExecutor, NodeGroupKind, NodeKind, NodeName, NodeProperties, NodePropertyKind, OutputPortConfig, ValidationError,
+  NodeExecutable, NodeGroupKind, NodeKind, NodeName, NodeProperties, NodePropertyKind, OutputPortConfig, ValidationError,
   WorkflowNode,
 };
 use log::{debug, info, warn};
@@ -69,7 +69,7 @@ impl Default for MergeNode {
 }
 
 #[async_trait]
-impl NodeExecutor for MergeNode {
+impl NodeExecutable for MergeNode {
   fn definition(&self) -> Arc<NodeDefinition> {
     self.definition.clone()
   }

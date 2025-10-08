@@ -1,4 +1,4 @@
-use modelsql::field::{FieldMask, Fields};
+use fusionsql::field::{FieldMask, Fields};
 use serde::Deserialize;
 
 #[derive(Debug, Clone, Default, Deserialize, Fields)]
@@ -12,7 +12,7 @@ pub struct CredentialForUpdate {
 
 #[cfg(test)]
 mod tests {
-  use modelsql::field::HasSeaFields;
+  use fusionsql::field::HasSeaFields;
   use sea_query::ColumnRef;
 
   use super::*;

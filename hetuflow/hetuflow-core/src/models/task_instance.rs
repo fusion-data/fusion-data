@@ -1,7 +1,8 @@
 use chrono::{DateTime, FixedOffset};
-use modelsql_core::{
+use fusion_common::page::Page;
+use fusionsql_core::{
   field::FieldMask,
-  filter::{OpValsDateTime, OpValsInt32, OpValsString, OpValsUuid, Page},
+  filter::{OpValDateTime, OpValInt32, OpValString, OpValUuid},
 };
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -12,11 +13,7 @@ use super::TaskMetrics;
 
 /// SchedTaskInstance 数据模型
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(
-  feature = "with-db",
-  derive(modelsql::Fields, sqlx::FromRow),
-  sea_query::enum_def(table_name = "sched_task_instance")
-)]
+#[cfg_attr(feature = "with-db", derive(fusionsql::Fields, sqlx::FromRow))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct SchedTaskInstance {
   pub id: Uuid,
@@ -35,8 +32,8 @@ pub struct SchedTaskInstance {
 }
 
 /// TaskInstance 创建模型
-#[derive(Debug, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(modelsql::Fields))]
+#[derive(Debug, Serialize, Deserialize)]
+#[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct TaskInstanceForCreate {
   pub id: Option<Uuid>,
@@ -48,8 +45,8 @@ pub struct TaskInstanceForCreate {
 }
 
 /// TaskInstance 更新模型
-#[derive(Debug, Clone, Default, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(modelsql::Fields))]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct TaskInstanceForUpdate {
   pub agent_id: Option<String>,
@@ -59,12 +56,12 @@ pub struct TaskInstanceForUpdate {
   pub output: Option<String>,
   pub error_message: Option<String>,
   pub exit_code: Option<i32>,
-  pub metrics: Option<serde_json::Value>,
+  pub metrics: Option<TaskMetrics>,
   pub update_mask: Option<FieldMask>,
 }
 
 /// TaskInstance 查询请求
-#[derive(Default, Deserialize)]
+#[derive(Default, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct TaskInstanceForQuery {
   pub filter: TaskInstanceFilter,
@@ -72,18 +69,18 @@ pub struct TaskInstanceForQuery {
 }
 
 /// TaskInstance 过滤器
-#[derive(Default, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(modelsql::FilterNodes))]
+#[derive(Default, Serialize, Deserialize)]
+#[cfg_attr(feature = "with-db", derive(fusionsql::FilterNodes))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct TaskInstanceFilter {
-  pub id: Option<OpValsUuid>,
-  pub task_id: Option<OpValsUuid>,
-  pub agent_id: Option<OpValsString>,
-  pub status: Option<OpValsInt32>,
-  pub started_at: Option<OpValsDateTime>,
-  pub completed_at: Option<OpValsDateTime>,
-  pub created_at: Option<OpValsDateTime>,
-  pub updated_at: Option<OpValsDateTime>,
+  pub id: Option<OpValUuid>,
+  pub task_id: Option<OpValUuid>,
+  pub agent_id: Option<OpValString>,
+  pub status: Option<OpValInt32>,
+  pub started_at: Option<OpValDateTime>,
+  pub completed_at: Option<OpValDateTime>,
+  pub created_at: Option<OpValDateTime>,
+  pub updated_at: Option<OpValDateTime>,
 }
 
 /// 任务状态信息

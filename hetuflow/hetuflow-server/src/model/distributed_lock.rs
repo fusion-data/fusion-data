@@ -1,8 +1,9 @@
+use fusion_common::page::Page;
 use fusion_common::time::OffsetDateTime;
-use modelsql::{
+use fusionsql::{
   Fields, FilterNodes,
   field::FieldMask,
-  filter::{OpValsDateTime, OpValsInt64, OpValsString, Page},
+  filter::{OpValDateTime, OpValInt64, OpValString},
 };
 use sea_query::enum_def;
 use serde::Deserialize;
@@ -40,11 +41,11 @@ pub struct DistributedLockForUpdate {
 
 #[derive(Default, Deserialize, FilterNodes)]
 pub struct DistributedLockFilter {
-  pub id: Option<OpValsString>,
-  pub value: Option<OpValsString>,
-  pub locked_at: Option<OpValsDateTime>,
-  pub expires_at: Option<OpValsDateTime>,
-  pub token: Option<OpValsInt64>,
+  pub id: Option<OpValString>,
+  pub value: Option<OpValString>,
+  pub locked_at: Option<OpValDateTime>,
+  pub expires_at: Option<OpValDateTime>,
+  pub token: Option<OpValInt64>,
 }
 
 #[derive(Deserialize)]

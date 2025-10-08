@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hetuflow SDK WASM Example</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        .log {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 10px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .error {
+            color: #dc3545;
+        }
+        .success {
+            color: #28a745;
+        }
+        .input-group {
+            margin: 10px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+    <h1>Hetuflow SDK WebAssembly Example</h1>
+
+    <div class="container">
+        <h2>Client Configuration</h2>
+        <div class="input-group">
+            <label for="baseUrl">Base URL:</label>
+            <input type="text" id="baseUrl" value="http://localhost:8080" placeholder="Enter Hetuflow server URL">
+        </div>
+        <div class="input-group">
+            <label for="authToken">Auth Token (optional):</label>
+            <input type="text" id="authToken" placeholder="Enter authentication token">
+        </div>
+        <button id="initClient">Initialize Client</button>
+    </div>
+
+    <div class="container">
+        <h2>API Testing</h2>
+
+        <h3>Agents API Tests</h3>
+        <button id="testAgentsQuery" disabled>Query Agents</button>
+        <button id="testAgentsCreate" disabled>Create Agent</button>
+        <button id="testAgentsGet" disabled>Get Agent</button>
+        <button id="testAgentsUpdate" disabled>Update Agent</button>
+        <button id="testAgentsDelete" disabled>Delete Agent</button>
+
+        <h3>Other APIs</h3>
+        <button id="testJobs" disabled>Test Jobs API</button>
+        <button id="testTasks" disabled>Test Tasks API</button>
+        <button id="testSystem" disabled>Test System API</button>
+
+        <h3>Utilities</h3>
+        <button id="clearLog">Clear Log</button>
+        <div id="log" class="log"></div>
+    </div>
+
+    <script type="module">
+        import init, { WasmHetuflowClient, WasmConfig, WasmUtils } from './pkg/hetuflow_sdk.js';
+
+        let client = null;
+
+        const logElement = document.getElementById('log');
+        const baseUrlInput = document.getElementById('baseUrl');
+        const authTokenInput = document.getElementById('authToken');
+        const initButton = document.getElementById('initClient');
+
+        const testAgentsQueryButton = document.getElementById('testAgentsQuery');
+        const testAgentsCreateButton = document.getElementById('testAgentsCreate');
+        const testAgentsGetButton = document.getElementById('testAgentsGet');
+        const testAgentsUpdateButton = document.getElementById('testAgentsUpdate');
+        const testAgentsDeleteButton = document.getElementById('testAgentsDelete');
+        const testJobsButton = document.getElementById('testJobs');
+        const testTasksButton = document.getElementById('testTasks');
+        const testSystemButton = document.getElementById('testSystem');
+        const clearLogButton = document.getElementById('clearLog');
+
+        function log(message, isError = false) {
+            const timestamp = new Date().toLocaleTimeString();
+            const className = isError ? 'error' : 'success';
+            logElement.innerHTML += `<span class="${className}">[${timestamp}] ${message}</span>\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        function logError(message) {
+            log(`ERROR: ${message}`, true);
+        }
+
+        function logInfo(message) {
+            log(`INFO: ${message}`);
+        }
+
+        async function initializeClient() {
+            try {
+                initButton.disabled = true;
+                initButton.textContent = 'Initializing...';
+
+                const baseUrl = baseUrlInput.value.trim();
+                const authToken = authTokenInput.value.trim();
+
+                if (!baseUrl) {
+                    throw new Error('Base URL is required');
+                }
+
+                // Create configuration
+                const config = new WasmConfig(baseUrl);
+
+                if (authToken) {
+                    config.set_auth_token(authToken);
+                }
+
+                // Set timeout to 30 seconds
+                config.set_timeout(30000);
+
+                // Initialize client
+                client = new WasmHetuflowClient();
+
+                // Create client with config
+                client = WasmHetuflowClient.withConfig(config);
+
+                logInfo(`Client initialized successfully with base URL: ${baseUrl}`);
+
+                // Enable test buttons
+                testAgentsQueryButton.disabled = false;
+                testAgentsCreateButton.disabled = false;
+                testAgentsGetButton.disabled = false;
+                testAgentsUpdateButton.disabled = false;
+                testAgentsDeleteButton.disabled = false;
+                testJobsButton.disabled = false;
+                testTasksButton.disabled = false;
+                testSystemButton.disabled = false;
+
+                initButton.textContent = 'Reinitialize Client';
+            } catch (error) {
+                logError(`Failed to initialize client: ${error.message}`);
+            } finally {
+                initButton.disabled = false;
+            }
+        }
+
+        async function testApi(apiName, apiMethod) {
+            try {
+                logInfo(`Testing ${apiName}...`);
+                const result = await apiMethod();
+                logInfo(`${apiName} test completed. Result: ${JSON.stringify(result, null, 2)}`);
+            } catch (error) {
+                logError(`${apiName} test failed: ${error.message}`);
+            }
+        }
+
+        // Test specific API methods with different parameters
+        async function testAgentsQuery() {
+            try {
+                logInfo('Testing Agents API query...');
+                const params = { page: 1, limit: 10 };
+                const result = await client.agents().query(params);
+                logInfo(`Agents query result: ${result}`);
+            } catch (error) {
+                logError(`Agents query failed: ${error.message}`);
+            }
+        }
+
+        async function testAgentsCreate() {
+            try {
+                logInfo('Testing Agents API create...');
+                const agentData = {
+                    name: "Test Agent from WASM",
+                    address: "localhost:8081",
+                    capabilities: ["shell", "docker", "python"],
+                    metadata: { version: "1.0.0", environment: "test" }
+                };
+                const result = await client.agents().create(agentData);
+                logInfo(`Agents create result: ${result}`);
+            } catch (error) {
+                logError(`Agents create failed: ${error.message}`);
+            }
+        }
+
+        async function testAgentsGet() {
+            try {
+                logInfo('Testing Agents API get...');
+                const agentId = "test-agent-123";
+                const result = await client.agents().get(agentId);
+                logInfo(`Agents get result: ${result}`);
+            } catch (error) {
+                logError(`Agents get failed: ${error.message}`);
+            }
+        }
+
+        async function testAgentsUpdate() {
+            try {
+                logInfo('Testing Agents API update...');
+                const agentId = "test-agent-123";
+                const updateData = {
+                    name: "Updated Test Agent",
+                    capabilities: ["shell", "docker", "python", "nodejs"]
+                };
+                const result = await client.agents().update(agentId, updateData);
+                logInfo(`Agents update result: ${result}`);
+            } catch (error) {
+                logError(`Agents update failed: ${error.message}`);
+            }
+        }
+
+        async function testAgentsDelete() {
+            try {
+                logInfo('Testing Agents API delete...');
+                const agentId = "test-agent-123";
+                const result = await client.agents().delete(agentId);
+                logInfo(`Agents delete result: ${result}`);
+            } catch (error) {
+                logError(`Agents delete failed: ${error.message}`);
+            }
+        }
+
+        // Event listeners
+        initButton.addEventListener('click', initializeClient);
+
+        testAgentsQueryButton.addEventListener('click', testAgentsQuery);
+        testAgentsCreateButton.addEventListener('click', testAgentsCreate);
+        testAgentsGetButton.addEventListener('click', testAgentsGet);
+        testAgentsUpdateButton.addEventListener('click', testAgentsUpdate);
+        testAgentsDeleteButton.addEventListener('click', testAgentsDelete);
+
+        testJobsButton.addEventListener('click', () => {
+            testApi('Jobs API', () => client.jobs().query({}));
+        });
+
+        testTasksButton.addEventListener('click', () => {
+            testApi('Tasks API', () => client.tasks().query({}));
+        });
+
+        testSystemButton.addEventListener('click', () => {
+            testApi('System API', () => client.system().info());
+        });
+
+        clearLogButton.addEventListener('click', () => {
+            logElement.innerHTML = '';
+        });
+
+        // Initialize WASM module
+        async function run() {
+            try {
+                logInfo('Loading WASM module...');
+                await init();
+                logInfo('WASM module loaded successfully!');
+                initButton.disabled = false;
+            } catch (error) {
+                logError(`Failed to load WASM module: ${error.message}`);
+            }
+        }
+
+        // Start the application
+        run();
+    </script>
+</body>
+</html>

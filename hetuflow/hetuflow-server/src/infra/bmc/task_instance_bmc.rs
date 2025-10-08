@@ -1,15 +1,17 @@
+use fusion_common::page::OrderBys;
 use fusion_common::time::now_offset;
-use modelsql::{
+use fusionsql::{
   ModelManager, SqlError,
   base::DbBmc,
   field::FieldMask,
-  filter::{OpValsDateTime, OpValsInt32, OrderBys},
+  filter::{OpValDateTime, OpValInt32},
   generate_pg_bmc_common, generate_pg_bmc_filter,
 };
 use sqlx::Row;
 use uuid::Uuid;
 
 use hetuflow_core::{
+  models::TaskMetrics,
   protocol::AcquireTaskRequest,
   types::{TaskInstanceStatus, TaskStatus},
 };
@@ -68,7 +70,7 @@ impl TaskInstanceBmc {
     output: Option<String>,
     error_message: Option<String>,
     exit_code: Option<i32>,
-    metrics: Option<serde_json::Value>,
+    metrics: Option<TaskMetrics>,
   ) -> Result<(), SqlError> {
     let update = TaskInstanceForUpdate {
       status: Some(status),
@@ -116,8 +118,8 @@ impl TaskInstanceBmc {
     let cutoff_time = now_offset() - chrono::Duration::seconds(timeout_seconds);
 
     let filter = TaskInstanceFilter {
-      status: Some(OpValsInt32::eq(TaskInstanceStatus::Running as i32)),
-      started_at: Some(OpValsDateTime::lt(cutoff_time)),
+      status: Some(OpValInt32::eq(TaskInstanceStatus::Running as i32)),
+      started_at: Some(OpValDateTime::lt(cutoff_time)),
       ..Default::default()
     };
 

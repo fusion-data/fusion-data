@@ -1,5 +1,5 @@
 [package]
-name = "hetumind"
+name = "hetumind-studio"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -36,7 +36,7 @@ logforth = { workspace = true }
 
 # -- db
 fusion-db = { workspace = true, features = ["with-postgres", "with-uuid"] }
-modelsql = { workspace = true, features = [
+fusionsql = { workspace = true, features = [
   "with-postgres",
   "with-uuid",
   "with-rust_decimal",
@@ -73,6 +73,7 @@ reqwest = { workspace = true }
 tokio = { workspace = true }
 futures = { workspace = true }
 async-stream = { workspace = true }
+mea = { workspace = true }
 
 # -- tracing
 metrics = { workspace = true }

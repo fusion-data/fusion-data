@@ -1,4 +1,4 @@
-use modelsql_core::filter::OpValsString;
+use fusionsql_core::filter::OpValString;
 use serde::{Deserialize, Serialize};
 
 use super::UserFilter;
@@ -35,8 +35,8 @@ impl SigninRequest {
   pub fn into_split(self) -> (UserFilter, String) {
     (
       UserFilter {
-        email: self.email.map(OpValsString::eq),
-        phone: self.phone.map(OpValsString::eq),
+        email: self.email.map(OpValString::eq),
+        phone: self.phone.map(OpValString::eq),
         ..Default::default()
       },
       self.password,

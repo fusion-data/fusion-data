@@ -1,5 +1,5 @@
 use fusion_common::time::OffsetDateTime;
-use modelsql::{field::Fields, postgres::PgRowType};
+use fusionsql::{field::Fields, postgres::PgRowType};
 use sea_query::enum_def;
 use serde::Serialize;
 use sqlx::FromRow;

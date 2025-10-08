@@ -48,7 +48,7 @@
   - [x] 定义 `ExecutionStatus`, `NodeExecutionStatus`, `NodeKind` 等核心枚举
   - [x] 实现核心数据结构 `Workflow`, `WorkflowNode`, `Connection`，并添加 `serde` 支持
   - [x] 实现执行相关结构 `Execution`, `NodeExecution`, `ExecutionContext`, `ExecutionData`
-  - [x] 定义核心 Trait: `NodeExecutor`, `TriggerExecutor`, `WorkflowEngine`
+  - [x] 定义核心 Trait: `NodeExecutable`, `TriggerExecutor`, `WorkflowEngine`
   - [x] 使用 `thiserror` 设计并实现完整的错误处理类型 `GuixuError`, `WorkflowExecutionError`, etc.
 - [x] **基础执行引擎 (`hetumind::runtime`)**
   - [x] 创建 `WorkflowEngineImpl` 实现 `WorkflowEngine` Trait

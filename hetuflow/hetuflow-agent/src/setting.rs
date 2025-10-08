@@ -210,7 +210,8 @@ impl HetuflowAgentSetting {
         Err(_) => PathBuf::from(get_env("HOME")?).join(".hetuflow").join("agent.toml"),
       };
       std::fs::create_dir_all(path.parent().unwrap()).unwrap();
-      write_app_config(path, KEY_PATH_AGENT_ID, &agent_id.to_string())?;
+      write_app_config(path, KEY_PATH_AGENT_ID, &agent_id.to_string())
+        .map_err(|e| DataError::internal(500, "Error writing configuration file", Some(Box::new(e))))?;
       info!("Generated new agent_id: {}, and write to config file", agent_id);
 
       // Reload config registry

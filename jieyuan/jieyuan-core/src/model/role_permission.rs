@@ -1,10 +1,10 @@
 use fusion_common::time::OffsetDateTime;
-use modelsql_core::filter::OpValsInt64;
+use fusionsql_core::filter::OpValInt64;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
-#[cfg_attr(feature = "with-db", derive(sqlx::FromRow, modelsql::field::Fields), sea_query::enum_def)]
+#[cfg_attr(feature = "with-db", derive(sqlx::FromRow, fusionsql::field::Fields), sea_query::enum_def)]
 pub struct RolePermission {
   role_id: i64,
   permission_id: i64,
@@ -14,7 +14,7 @@ pub struct RolePermission {
 }
 
 #[derive(Debug)]
-#[cfg_attr(feature = "with-db", derive(modelsql::field::Fields))]
+#[cfg_attr(feature = "with-db", derive(fusionsql::field::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct RolePermissionForCreate {
   pub role_id: i64,
@@ -22,9 +22,9 @@ pub struct RolePermissionForCreate {
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(modelsql::filter::FilterNodes))]
+#[cfg_attr(feature = "with-db", derive(fusionsql::filter::FilterNodes))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct RolePermissionFilter {
-  pub role_id: Option<OpValsInt64>,
-  pub permission_id: Option<OpValsInt64>,
+  pub role_id: Option<OpValInt64>,
+  pub permission_id: Option<OpValInt64>,
 }

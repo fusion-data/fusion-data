@@ -1,66 +1,92 @@
-use std::{net::AddrParseError, num::ParseIntError};
+use std::net::AddrParseError;
 
 use config::ConfigError;
-use fusion_corelib::ctx::CtxError;
-use serde::{Serialize, ser::SerializeMap};
+use fusion_common::ctx::CtxError;
+use serde::Serialize;
 use serde_json::json;
-use thiserror::Error;
 
 use crate::{configuration::ConfigureError, security::Error as SecurityError};
 
-#[derive(Error, Debug)]
-pub enum DataError {
-  #[error("Biz error. code: {code}, msg: {msg}")]
-  BizError { code: i32, msg: String, detail: Option<Box<serde_json::Value>> },
+#[derive(Debug, Serialize)]
+pub struct DataError {
+  pub code: i32,
+  pub msg: String,
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub data: Option<serde_json::Value>,
+  #[serde(skip)]
+  pub source: Option<Box<dyn core::error::Error + Send + Sync>>,
+}
 
-  #[error("Internal error: {code} {msg}")]
-  InternalError { code: i32, msg: String, cause: Option<Box<dyn std::error::Error + Send + Sync>> },
+impl fusion_common::DataError for DataError {
+  fn code(&self) -> i32 {
+    self.code
+  }
 
-  #[error(transparent)]
-  SystemTimeError(#[from] std::time::SystemTimeError),
+  fn msg(&self) -> &str {
+    &self.msg
+  }
 
-  #[error(transparent)]
-  ParseIntError(#[from] ParseIntError),
+  fn data(&self) -> Option<&serde_json::Value> {
+    self.data.as_ref()
+  }
 
-  #[error(transparent)]
-  IoError(#[from] std::io::Error),
+  fn source(&self) -> Option<&(dyn core::error::Error + 'static)> {
+    self.source.as_ref().map(|e| &**e as &(dyn core::error::Error + 'static))
+  }
+}
 
-  #[error(transparent)]
-  JsonError(#[from] serde_json::Error),
+impl core::error::Error for DataError {
+  fn source(&self) -> Option<&(dyn core::error::Error + 'static)> {
+    self.source.as_ref().map(|e| &**e as &(dyn core::error::Error + 'static))
+  }
+}
+
+impl core::fmt::Display for DataError {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    write!(f, "{}:{}", self.code, self.msg)
+  }
 }
 
 impl DataError {
   pub fn bad_request(msg: impl Into<String>) -> Self {
-    DataError::BizError { code: 400, msg: msg.into(), detail: None }
+    Self { code: 400, msg: msg.into(), data: None, source: None }
   }
 
   pub fn not_found(msg: impl Into<String>) -> Self {
-    DataError::BizError { code: 404, msg: msg.into(), detail: None }
+    Self { code: 404, msg: msg.into(), data: None, source: None }
   }
 
   pub fn conflicted(msg: impl Into<String>) -> Self {
-    DataError::BizError { code: 409, msg: msg.into(), detail: None }
+    Self { code: 409, msg: msg.into(), data: None, source: None }
   }
 
   pub fn unauthorized(msg: impl Into<String>) -> Self {
-    DataError::BizError { code: 401, msg: msg.into(), detail: None }
+    Self { code: 401, msg: msg.into(), data: None, source: None }
   }
 
   pub fn forbidden(msg: impl Into<String>) -> Self {
-    DataError::BizError { code: 403, msg: msg.into(), detail: None }
+    Self { code: 403, msg: msg.into(), data: None, source: None }
   }
 
   pub fn server_error(msg: impl Into<String>) -> Self {
-    DataError::BizError { code: 500, msg: msg.into(), detail: None }
+    Self { code: 500, msg: msg.into(), data: None, source: None }
   }
 
-  pub fn internal(code: i32, msg: impl Into<String>, cause: Option<Box<dyn std::error::Error + Send + Sync>>) -> Self {
-    DataError::InternalError { code, msg: msg.into(), cause }
+  pub fn biz_error(code: i32, msg: impl Into<String>, data: Option<serde_json::Value>) -> Self {
+    Self { code, msg: msg.into(), data, source: None }
+  }
+
+  pub fn internal(
+    code: i32,
+    msg: impl Into<String>,
+    source: Option<Box<dyn core::error::Error + Send + Sync>>,
+  ) -> Self {
+    Self { code, msg: msg.into(), data: None, source }
   }
 
   pub fn retry_limit(msg: impl Into<String>, retry_limit: u32) -> Self {
     let detail = json!({ "retry_limit": retry_limit });
-    DataError::BizError { code: 1429, msg: msg.into(), detail: Some(Box::new(detail)) }
+    Self { code: 1429, msg: msg.into(), data: Some(detail), source: None }
   }
 }
 
@@ -70,30 +96,54 @@ impl From<fusion_common::Error> for DataError {
   }
 }
 
+impl From<std::time::SystemTimeError> for DataError {
+  fn from(value: std::time::SystemTimeError) -> Self {
+    Self::internal(500, "SystemTimeError", Some(Box::new(value)))
+  }
+}
+
+impl From<std::io::Error> for DataError {
+  fn from(value: std::io::Error) -> Self {
+    let error_msg = value.to_string();
+    DataError::internal(500, format!("IO error: {}", error_msg), Some(Box::new(value)))
+  }
+}
+
+impl From<serde_json::Error> for DataError {
+  fn from(value: serde_json::Error) -> Self {
+    DataError::internal(500, "JSON error", Some(Box::new(value)))
+  }
+}
+
 impl<T> From<tokio::sync::mpsc::error::SendError<T>> for DataError
 where
   T: Send + Sync + 'static,
 {
   fn from(e: tokio::sync::mpsc::error::SendError<T>) -> Self {
-    DataError::InternalError { code: 500, msg: "channel send error".into(), cause: Some(Box::new(e)) }
+    let compatible_error: Box<dyn std::error::Error + Send + Sync + 'static> = Box::new(e);
+    DataError::internal(500, "channel send error", Some(compatible_error))
   }
 }
 
 impl From<tokio::sync::oneshot::error::RecvError> for DataError {
   fn from(e: tokio::sync::oneshot::error::RecvError) -> Self {
-    DataError::InternalError { code: 500, msg: "channel recv error".into(), cause: Some(Box::new(e)) }
+    // tokio::sync::oneshot::error::RecvError implements Send + Sync
+    let compatible_error: Box<dyn std::error::Error + Send + Sync + 'static> = Box::new(e);
+    DataError::internal(500, "channel recv error", Some(compatible_error))
   }
 }
 
 impl From<tokio::task::JoinError> for DataError {
   fn from(value: tokio::task::JoinError) -> Self {
-    DataError::InternalError { code: 500, msg: "Join tokio task error".into(), cause: Some(Box::new(value)) }
+    // tokio::task::JoinError implements Send + Sync
+    let compatible_error: Box<dyn std::error::Error + Send + Sync + 'static> = Box::new(value);
+    DataError::internal(500, "Join tokio task error", Some(compatible_error))
   }
 }
 
 impl From<ConfigError> for DataError {
   fn from(value: ConfigError) -> Self {
-    DataError::server_error(format!("Config load error: {:?}", value.to_string()))
+    DataError::server_error(format!("Config load error: {}", value))
   }
 }
 
@@ -115,19 +165,7 @@ impl From<CtxError> for DataError {
 #[cfg(feature = "with-uuid")]
 impl From<uuid::Error> for DataError {
   fn from(value: uuid::Error) -> Self {
-    DataError::InternalError { code: 500, msg: value.to_string(), cause: None }
-  }
-}
-
-impl Serialize for DataError {
-  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-  where
-    S: serde::Serializer,
-  {
-    let mut map = serializer.serialize_map(Some(2))?;
-    // TODO
-    map.serialize_entry("aa", "error")?;
-    map.end()
+    DataError::internal(500, value.to_string(), None)
   }
 }
 
@@ -140,18 +178,16 @@ impl From<ConfigureError> for DataError {
 #[cfg(feature = "tonic")]
 impl From<protobuf::ParseError> for DataError {
   fn from(value: protobuf::ParseError) -> Self {
-    DataError::BizError { code: 400, msg: format!("Protobuf parse error: {}", value), detail: None }
+    DataError::biz_error(400, format!("Protobuf parse error: {}", value), None)
   }
 }
 
 #[cfg(feature = "tonic")]
 impl From<protobuf::SerializeError> for DataError {
   fn from(value: protobuf::SerializeError) -> Self {
-    DataError::InternalError {
-      code: 500,
-      msg: format!("Protobuf serialize error: {}", value),
-      cause: Some(Box::new(value)),
-    }
+    // protobuf::SerializeError might not implement Send + Sync, so we'll convert it to a string
+    let source: Option<Box<dyn core::error::Error + Send + Sync>> = Some(Box::new(value));
+    DataError::internal(500, "Protobuf serialize error", source)
   }
 }
 
@@ -193,105 +229,99 @@ impl From<tonic::Status> for DataError {
 #[cfg(feature = "tonic")]
 impl From<DataError> for tonic::Status {
   fn from(value: DataError) -> Self {
-    match value {
-      DataError::BizError { code, msg, .. } => make_tonic_status(code, msg),
-      DataError::InternalError { code, msg, .. } => make_tonic_status(code, msg),
-      DataError::SystemTimeError(ex) => tonic::Status::from_error(ex.into()),
-      DataError::ParseIntError(ex) => tonic::Status::from_error(ex.into()),
-      DataError::IoError(e) => tonic::Status::internal(e.to_string()),
-      DataError::JsonError(ex) => tonic::Status::from_error(ex.into()),
+    let code = match value.code {
+      400 => tonic::Code::InvalidArgument,
+      401 => tonic::Code::Unauthenticated,
+      403 => tonic::Code::PermissionDenied,
+      404 => tonic::Code::NotFound,
+      409 => tonic::Code::Aborted,
+      413 => tonic::Code::ResourceExhausted,
+      429 => tonic::Code::Unavailable,
+      500 => tonic::Code::Internal,
+      501 => tonic::Code::Unimplemented,
+      503 => tonic::Code::Unavailable,
+      504 => tonic::Code::DeadlineExceeded,
+      505 => tonic::Code::Unavailable,
+      0 | (200..=299) => tonic::Code::Ok,
+      _ => tonic::Code::Unknown,
+    };
+    let mut status = tonic::Status::new(code, value.msg);
+    // if let Some(detail) = value.detail {
+    //   status.set_details(detail);
+    // }
+    if let Some(e) = value.source {
+      // Convert the boxed error to an Arc to satisfy the set_source method
+      // We need to use Arc::from to properly handle the conversion from Box<T> to Arc<T>
+      let arc_error = std::sync::Arc::from(e);
+      status.set_source(arc_error);
     }
+    status
   }
 }
 
-#[cfg(feature = "tonic")]
-fn make_tonic_status(code: i32, msg: String) -> tonic::Status {
-  if code == 0 || (200..300).contains(&code) {
-    return tonic::Status::ok(msg);
-  }
-
-  if code == 400 {
-    return tonic::Status::invalid_argument(msg);
-  }
-
-  if code == 401 {
-    return tonic::Status::unauthenticated(msg);
-  }
-
-  if code == 403 {
-    return tonic::Status::permission_denied(msg);
-  }
-
-  if code == 404 {
-    return tonic::Status::not_found(msg);
-  }
-
-  if code == 409 {
-    return tonic::Status::already_exists(msg);
-  }
-
-  if code == 501 {
-    return tonic::Status::unimplemented(msg);
-  }
-
-  tonic::Status::internal(msg)
-}
-
-#[cfg(feature = "modelsql")]
-impl From<modelsql::SqlError> for DataError {
-  fn from(value: modelsql::SqlError) -> Self {
+#[cfg(feature = "fusionsql")]
+impl From<fusionsql::SqlError> for DataError {
+  fn from(value: fusionsql::SqlError) -> Self {
     match value {
-      modelsql::SqlError::Unauthorized(e) => DataError::unauthorized(e),
-      modelsql::SqlError::InvalidArgument { message } => DataError::bad_request(format!("InvalidArgument, {message}")),
-      modelsql::SqlError::EntityNotFound { schema, entity, id } => {
+      fusionsql::SqlError::Unauthorized(e) => DataError::unauthorized(e),
+      fusionsql::SqlError::InvalidArgument { message } => DataError::bad_request(format!("InvalidArgument, {message}")),
+      fusionsql::SqlError::EntityNotFound { schema, entity, id } => {
         DataError::not_found(format!("EntityNotFound, {}:{}:{}", schema.unwrap_or_default(), entity, id))
       }
-      modelsql::SqlError::NotFound { schema, table, sql } => {
+      fusionsql::SqlError::NotFound { schema, table, sql } => {
         log::debug!("NotFound, schema: {}, table: {}, sql: {}", schema.unwrap_or_default(), table, sql);
         DataError::not_found(format!("NotFound, {}:{}", schema.unwrap_or_default(), table))
       }
-      modelsql::SqlError::ListLimitOverMax { max, actual } => {
+      fusionsql::SqlError::ListLimitOverMax { max, actual } => {
         DataError::bad_request(format!("ListLimitOverMax, max: {max}, actual: {actual}"))
       }
-      modelsql::SqlError::ListLimitUnderMin { min, actual } => {
+      fusionsql::SqlError::ListLimitUnderMin { min, actual } => {
         DataError::bad_request(format!("ListLimitUnderMin, min: {min}, actual: {actual}"))
       }
-      modelsql::SqlError::ListPageUnderMin { min, actual } => {
+      fusionsql::SqlError::ListPageUnderMin { min, actual } => {
         DataError::bad_request(format!("ListPageUnderMin, min: {min}, actual: {actual}"))
       }
-      modelsql::SqlError::UserAlreadyExists { key, value } => {
+      fusionsql::SqlError::UserAlreadyExists { key, value } => {
         DataError::conflicted(format!("UserAlreadyExists, {key}:{value}"))
       }
-      modelsql::SqlError::UniqueViolation { table, constraint } => {
+      fusionsql::SqlError::UniqueViolation { table, constraint } => {
         DataError::conflicted(format!("UniqueViolation, {table}:{constraint}"))
       }
-      modelsql::SqlError::ExecuteError { table, message } => {
+      fusionsql::SqlError::ExecuteError { table, message } => {
         DataError::server_error(format!("ExecuteError, {}:{}", table, message))
       }
-      modelsql::SqlError::ExecuteFail { schema, table } => {
+      fusionsql::SqlError::ExecuteFail { schema, table } => {
         DataError::server_error(format!("ExecuteFail, {:?}:{}", schema, table))
       }
-      modelsql::SqlError::CountFail { schema, table } => {
+      fusionsql::SqlError::CountFail { schema, table } => {
         DataError::server_error(format!("CountFail, {:?}:{}", schema, table))
       }
-      e @ modelsql::SqlError::InvalidDatabase(_) => DataError::server_error(e.to_string()),
-      e @ modelsql::SqlError::CantCreateModelManagerProvider(_) => DataError::server_error(e.to_string()),
-      e @ modelsql::SqlError::IntoSeaError(_) => DataError::server_error(e.to_string()),
-      e @ modelsql::SqlError::SeaQueryError(_) => DataError::server_error(e.to_string()),
-      e @ modelsql::SqlError::JsonError(_) => DataError::server_error(e.to_string()),
-      modelsql::SqlError::DbxError(e) => {
-        DataError::InternalError { code: 500, msg: "Dbx Error".to_string(), cause: Some(Box::new(e)) }
+      e @ fusionsql::SqlError::InvalidDatabase(_) => DataError::server_error(e.to_string()),
+      e @ fusionsql::SqlError::CantCreateModelManagerProvider(_) => DataError::server_error(e.to_string()),
+      e @ fusionsql::SqlError::IntoSeaError(_) => DataError::server_error(e.to_string()),
+      e @ fusionsql::SqlError::SeaQueryError(_) => DataError::server_error(e.to_string()),
+      e @ fusionsql::SqlError::JsonError(_) => DataError::server_error(e.to_string()),
+      fusionsql::SqlError::DbxError(e) => {
+        // Convert to a compatible error that implements Send + Sync
+        let error_msg = e.to_string();
+        let compatible_error: Box<dyn std::error::Error + Send + Sync + 'static> =
+          Box::new(std::io::Error::new(std::io::ErrorKind::Other, error_msg));
+        DataError::internal(500, "Dbx Error", Some(compatible_error))
       }
-      modelsql::SqlError::Sqlx(e) => {
-        DataError::InternalError { code: 500, msg: "Sqlx Error".to_string(), cause: Some(Box::new(e)) }
+      fusionsql::SqlError::Sqlx(e) => {
+        // Convert to a compatible error that implements Send + Sync
+        let error_msg = e.to_string();
+        let compatible_error: Box<dyn std::error::Error + Send + Sync + 'static> =
+          Box::new(std::io::Error::new(std::io::ErrorKind::Other, error_msg));
+        DataError::internal(500, "Sqlx Error", Some(compatible_error))
       }
     }
   }
 }
 
-#[cfg(feature = "modelsql")]
-impl From<modelsql::store::DbxError> for DataError {
-  fn from(value: modelsql::store::DbxError) -> Self {
+#[cfg(feature = "fusionsql")]
+impl From<fusionsql::store::DbxError> for DataError {
+  fn from(value: fusionsql::store::DbxError) -> Self {
     DataError::server_error(value.to_string())
   }
 }

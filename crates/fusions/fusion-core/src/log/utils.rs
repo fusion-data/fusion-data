@@ -1,14 +1,15 @@
+use std::num::NonZeroUsize;
 use std::path::Path;
 
-use log::{Level, LevelFilter};
+use log::{Level, LevelFilter, info};
 use logforth::append::Stdout;
-use logforth::append::rolling_file::{RollingFileBuilder, Rotation};
+use logforth::append::file::FileBuilder;
 use logforth::filter::EnvFilter;
+use logforth::filter::env_filter::EnvFilterBuilder;
 use logforth::layout::TextLayout;
-use logforth::{DropGuard, LoggerBuilder};
+use logforth::starter_log::LogStarterBuilder;
 
 use crate::configuration::LogSetting;
-use std::sync::Once;
 
 pub fn get_trace_id() -> Option<String> {
   // TODO:
@@ -30,7 +31,7 @@ pub fn init_log(conf: &LogSetting) {
     Level::Trace => LevelFilter::Trace,
   };
 
-  let mut builder = logforth::builder();
+  let mut builder = logforth::starter_log::builder();
 
   // 根据 log_writer 配置不同的输出目标
   match conf.log_writer {
@@ -49,39 +50,26 @@ pub fn init_log(conf: &LogSetting) {
   // 应用配置
   builder.apply();
 
-  println!("日志系统初始化完成，级别: {}, 输出: {:?}", conf.log_level, conf.log_writer);
+  info!("Log system initialization completed, level: {}, writer: {:?}", conf.log_level, conf.log_writer);
 }
 
-// Store the guard in a static variable to keep the file appender alive
-static mut LOG_GUARD: Option<DropGuard> = None;
-static INIT: Once = Once::new();
-
-fn dispatch_file(conf: &LogSetting, level_filter: LevelFilter, builder: LoggerBuilder) -> LoggerBuilder {
+fn dispatch_file(conf: &LogSetting, level_filter: LevelFilter, builder: LogStarterBuilder) -> LogStarterBuilder {
   let log_name = conf.log_name.as_deref().unwrap_or("app.log");
   let log_path = Path::new(&conf.log_dir);
   let _ = std::fs::create_dir_all(log_path);
 
-  let (file_appender, guard) = RollingFileBuilder::new(log_path)
-    .filename_prefix(log_name)
-    .filename_suffix("log")
-    .rotation(Rotation::Daily)
-    .max_log_files(30)
+  let file_appender = FileBuilder::new(log_path, log_name)
+    .rollover_daily()
+    .max_log_files(NonZeroUsize::new(30).expect("Init NonZereUsize 30 failed"))
     .layout(build_text_layout(conf).no_color())
     .build()
     .expect("Failed to create log file appender");
-
-  // Initialize the guard
-  unsafe {
-    INIT.call_once(|| {
-      LOG_GUARD = Some(guard);
-    });
-  }
 
   let env_filter2 = build_env_filter(conf, level_filter);
   builder.dispatch(|d| d.filter(env_filter2).append(file_appender))
 }
 
-fn dispatch_stdout(conf: &LogSetting, level_filter: LevelFilter, builder: LoggerBuilder) -> LoggerBuilder {
+fn dispatch_stdout(conf: &LogSetting, level_filter: LevelFilter, builder: LogStarterBuilder) -> LogStarterBuilder {
   let env_filter = build_env_filter(conf, level_filter);
   let layout = build_text_layout(conf);
   builder.dispatch(|d| d.filter(env_filter).append(Stdout::default().with_layout(layout)))
@@ -110,7 +98,7 @@ fn build_env_filter(conf: &LogSetting, default_level: LevelFilter) -> EnvFilter 
   let filter_str = filter_parts.join(",");
 
   // 构建 EnvFilter
-  EnvFilter::from_default_env_or(&filter_str)
+  EnvFilterBuilder::from_default_env_or(filter_str).build()
 }
 
 /// 将 LevelFilter 转换为字符串
@@ -125,8 +113,6 @@ fn level_filter_to_string(level: LevelFilter) -> String {
   }
 }
 
-/// 根据配置构建文本布局
 fn build_text_layout(_conf: &LogSetting) -> TextLayout {
-  // let tz = jiff::tz::TimeZone::fixed(jiff::tz::offset(8));
-  TextLayout::default() //.timezone(tz)
+  TextLayout::default()
 }

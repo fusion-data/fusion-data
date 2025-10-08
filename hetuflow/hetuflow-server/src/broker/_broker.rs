@@ -5,7 +5,7 @@ use fusion_web::config::WebConfig;
 use hetuflow_core::{models::ServerForRegister, types::ServerStatus};
 use log::{error, info};
 use mea::shutdown::ShutdownRecv;
-use modelsql::ModelManager;
+use fusionsql::ModelManager;
 use tokio::task::JoinHandle;
 
 use crate::{

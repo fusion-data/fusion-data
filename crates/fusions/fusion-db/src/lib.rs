@@ -1,7 +1,7 @@
 use ::config::{File, FileFormat};
+use fusion_common::ctx::Ctx;
 use fusion_core::{application::ApplicationBuilder, async_trait, configuration::ConfigRegistry, plugin::Plugin};
-use fusion_corelib::ctx::Ctx;
-pub use modelsql::{DbConfig, ModelManager};
+pub use fusionsql::{DbConfig, ModelManager};
 
 pub mod acs;
 

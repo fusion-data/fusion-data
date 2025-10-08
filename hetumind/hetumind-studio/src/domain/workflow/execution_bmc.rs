@@ -1,5 +1,5 @@
 use hetumind_core::workflow::{ExecutionFilter, ExecutionForUpdate};
-use modelsql::{base::DbBmc, generate_pg_bmc_common, generate_pg_bmc_filter};
+use fusionsql::{base::DbBmc, generate_pg_bmc_common, generate_pg_bmc_filter};
 
 use crate::domain::workflow::ExecutionDataEntity;
 

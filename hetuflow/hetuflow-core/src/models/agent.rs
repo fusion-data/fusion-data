@@ -1,9 +1,10 @@
 use chrono::{DateTime, FixedOffset};
 use fusion_common::ahash::HashMap;
+use fusion_common::page::Page;
 use garde::Validate;
-use modelsql_core::{
+use fusionsql_core::{
   field::FieldMask,
-  filter::{OpValsDateTime, OpValsInt32, OpValsString, Page},
+  filter::{OpValDateTime, OpValInt32, OpValString},
 };
 use serde::{Deserialize, Serialize};
 
@@ -61,11 +62,7 @@ pub struct AgentStatistics {
 
 /// SchedAgent 数据模型
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(
-  feature = "with-db",
-  derive(sqlx::FromRow, modelsql::field::Fields),
-  sea_query::enum_def(table_name = "sched_agent")
-)]
+#[cfg_attr(feature = "with-db", derive(sqlx::FromRow, fusionsql::field::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct SchedAgent {
   pub id: String,
@@ -79,8 +76,8 @@ pub struct SchedAgent {
 }
 
 /// Agent 创建模型
-#[derive(Debug, Deserialize, Validate)]
-#[cfg_attr(feature = "with-db", derive(modelsql::Fields))]
+#[derive(Debug, Serialize, Deserialize, Validate)]
+#[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct AgentForCreate {
   #[garde(skip)]
@@ -98,8 +95,8 @@ pub struct AgentForCreate {
 }
 
 /// Agent 更新模型
-#[derive(Debug, Clone, Deserialize, Default)]
-#[cfg_attr(feature = "with-db", derive(modelsql::Fields))]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct AgentForUpdate {
   pub description: Option<String>,
@@ -113,19 +110,19 @@ pub struct AgentForUpdate {
 }
 
 /// Agent 过滤器
-#[derive(Default, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(modelsql::FilterNodes))]
+#[derive(Default, Serialize, Deserialize)]
+#[cfg_attr(feature = "with-db", derive(fusionsql::FilterNodes))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct AgentFilter {
-  pub id: Option<OpValsString>,
-  pub status: Option<OpValsInt32>,
-  pub address: Option<OpValsString>,
-  pub last_heartbeat_at: Option<OpValsDateTime>,
-  pub created_at: Option<OpValsDateTime>,
+  pub id: Option<OpValString>,
+  pub status: Option<OpValInt32>,
+  pub address: Option<OpValString>,
+  pub last_heartbeat_at: Option<OpValDateTime>,
+  pub created_at: Option<OpValDateTime>,
 }
 
 /// Agent 查询请求
-#[derive(Default, Deserialize)]
+#[derive(Default, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct AgentForQuery {
   pub filter: AgentFilter,

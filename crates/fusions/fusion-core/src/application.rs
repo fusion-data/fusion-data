@@ -185,8 +185,8 @@ impl ApplicationBuilder {
     self.config_registry.fusion_config()
   }
 
-  pub fn with_config_registry(&mut self, configuration: FusionConfigRegistry) -> &Self {
-    self.config_registry = configuration;
+  pub fn with_config_registry(&mut self, config_registry: FusionConfigRegistry) -> &Self {
+    self.config_registry = config_registry;
     self
   }
 

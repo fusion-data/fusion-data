@@ -5,7 +5,7 @@ use axum::{
 };
 use fusion_core::application::Application;
 use fusion_web::{Router, WebResult, ok_json};
-use modelsql::page::PageResult;
+use fusionsql::page::PageResult;
 
 use crate::domain::user::{UserEntity, UserForPage, UserForUpdate, UserSvc};
 

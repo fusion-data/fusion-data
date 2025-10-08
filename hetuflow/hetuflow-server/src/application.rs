@@ -7,12 +7,12 @@ use fusion_core::{
   configuration::ConfigRegistry,
 };
 use fusion_db::DbPlugin;
+use fusionsql::ModelManager;
 use log::{error, info};
 use mea::{
   mutex::Mutex,
   shutdown::{ShutdownRecv, ShutdownSend},
 };
-use modelsql::ModelManager;
 
 use crate::{
   broker::Broker,

@@ -1,5 +1,5 @@
 use fusion_core::DataError;
-use modelsql::{ModelManager, page::PageResult};
+use fusionsql::{ModelManager, page::PageResult};
 use uuid::Uuid;
 
 use hetuflow_core::models::{SchedSchedule, ScheduleForCreate, ScheduleForQuery, ScheduleForUpdate};

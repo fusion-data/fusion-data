@@ -1,4 +1,4 @@
-use ahash::HashMap;
+use fusion_common::ahash::HashMap;
 
 use super::{NodeName, Workflow};
 
@@ -32,7 +32,7 @@ impl ExecutionGraph {
 
     // 根据连接关系构建图
     for (source_id, kind_connections) in &workflow.connections {
-      for (kind, connections) in kind_connections {
+      for (_kind, connections) in kind_connections {
         for connection in connections {
           let target_id = connection.node_name();
 

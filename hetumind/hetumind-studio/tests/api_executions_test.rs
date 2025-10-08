@@ -1,11 +1,9 @@
 //! tests/api_executions_test.rs
 
-use fusion_core::IdResult;
+use fusion_common::model::IdResult;
+use fusion_common::page::{Page, PageResult};
+use fusionsql::filter::OpValUuid;
 use hetumind_core::workflow::{Execution, ExecutionFilter, ExecutionForQuery, WorkflowId};
-use modelsql::{
-  filter::{OpValUuid, Page},
-  page::PageResult,
-};
 use serde_json::json;
 
 use crate::common::get_server;
@@ -14,7 +12,6 @@ mod common;
 
 /// cargo test -p hetumind --test api_executions_test -- --nocapture --ignored test_execute_and_query_execution
 #[tokio::test]
-#[ignore]
 async fn test_execute_and_query_execution() {
   let server = get_server().await;
 
@@ -48,7 +45,7 @@ async fn test_execute_and_query_execution() {
     .post("/v1/executions/query")
     .json(&ExecutionForQuery {
       options: Page::default(),
-      filter: ExecutionFilter { workflow_id: Some(OpValUuid::Eq(*workflow_id.as_ref()).into()), ..Default::default() },
+      filter: ExecutionFilter { workflow_id: Some(OpValUuid::eq(*workflow_id.as_ref())), ..Default::default() },
     })
     .await;
 

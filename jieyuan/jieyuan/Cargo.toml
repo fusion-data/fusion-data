@@ -17,7 +17,6 @@ workspace = true
 
 [dependencies]
 # -- fusions
-fusion-corelib = { workspace = true }
 fusion-common = { workspace = true, features = ["with-uuid"] }
 fusion-core = { workspace = true, features = ["with-uuid"] }
 
@@ -48,7 +47,7 @@ log = { workspace = true }
 
 # -- db
 fusion-db = { workspace = true, features = ["with-postgres", "with-uuid"] }
-modelsql = { workspace = true, features = [
+fusionsql = { workspace = true, features = [
   "with-postgres",
   "with-uuid",
   "with-openapi",

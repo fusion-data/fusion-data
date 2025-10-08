@@ -1,4 +1,4 @@
-use ahash::HashMap;
+use fusion_common::ahash::HashMap;
 
 use super::Value;
 

@@ -2,7 +2,7 @@ use thiserror::Error;
 
 use crate::DataError;
 
-pub type ComponentResult<T> = std::result::Result<T, ComponentError>;
+pub type ComponentResult<T> = core::result::Result<T, ComponentError>;
 
 #[derive(Debug, Error)]
 pub enum ComponentError {
@@ -15,6 +15,6 @@ pub enum ComponentError {
 
 impl From<ComponentError> for DataError {
   fn from(value: ComponentError) -> Self {
-    DataError::InternalError { code: 500, msg: value.to_string(), cause: Some(Box::new(value)) }
+    DataError::internal(500, value.to_string(), Some(Box::new(value)))
   }
 }

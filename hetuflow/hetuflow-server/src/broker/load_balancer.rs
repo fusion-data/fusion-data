@@ -4,7 +4,7 @@ use std::sync::Arc;
 use fusion_common::time::{OffsetDateTime, now_offset};
 use fusion_core::DataError;
 use log::{debug, info, warn};
-use modelsql::ModelManager;
+use fusionsql::ModelManager;
 
 use hetuflow_core::models::*;
 

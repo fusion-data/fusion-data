@@ -88,7 +88,8 @@ impl HetuflowSetting {
         Err(_) => PathBuf::from(get_env("HOME")?).join(".hetuflow").join("server.toml"),
       };
       std::fs::create_dir_all(path.parent().unwrap()).unwrap();
-      write_app_config(path, KEY_PATH_SERVER_ID, &server_id.to_string())?;
+      write_app_config(path, KEY_PATH_SERVER_ID, &server_id.to_string())
+        .map_err(|e| DataError::internal(500, "Error writing configuration file", Some(Box::new(e))))?;
       // Reload config registry
       config_registry.reload()?;
     }

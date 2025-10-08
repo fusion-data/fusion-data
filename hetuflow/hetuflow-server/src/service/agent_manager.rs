@@ -8,9 +8,9 @@ use fusion_core::{
   DataError,
   concurrent::{ServiceHandle, ServiceTask, TaskResult},
 };
+use fusionsql::{ModelManager, filter::OpValUuid};
 use log::{error, info, warn};
 use mea::{mpsc, shutdown::ShutdownRecv};
-use modelsql::{ModelManager, filter::OpValsUuid};
 
 use hetuflow_core::{
   models::*,
@@ -137,7 +137,7 @@ impl AgentEventRunner {
     let task_map = TaskBmc::find_many(
       &mm,
       vec![TaskFilter {
-        id: Some(OpValsUuid::in_(task_instances.iter().map(|ti| ti.task_id).collect::<HashSet<_>>())),
+        id: Some(OpValUuid::in_(task_instances.iter().map(|ti| ti.task_id).collect::<HashSet<_>>())),
         ..Default::default()
       }],
       None,
@@ -180,10 +180,9 @@ impl AgentEventRunner {
     let mm = self.mm.get_txn_clone();
     mm.dbx().begin_txn().await?;
 
-    // 1. 获取任务实例信息以获取关联的任务ID
     let task_instance = TaskInstanceBmc::find_by_id(&mm, &payload.instance_id).await?;
 
-    // 2. 更新任务实例状态
+    // 1. 更新任务实例状态
     let instance_update = TaskInstanceForUpdate {
       status: Some(payload.status),
       started_at: if payload.status == TaskInstanceStatus::Running && task_instance.started_at.is_none() {
@@ -206,6 +205,9 @@ impl AgentEventRunner {
 
     info!("Instance updated is {:?}", instance_update);
     TaskInstanceBmc::update_by_id(&mm, payload.instance_id, instance_update).await?;
+
+    // 2. 获取更新后的任务实例信息以获取关联的任务ID
+    let task_instance = TaskInstanceBmc::find_by_id(&mm, &payload.instance_id).await?;
 
     // 3. 如果任务失败，需要更新任务的重试计数和状态
     if payload.status == TaskInstanceStatus::Failed {
@@ -237,11 +239,14 @@ impl AgentEventRunner {
 
     // 4. 更新 Agent 统计信息
     let success = payload.status == TaskInstanceStatus::Succeeded;
-    let response_time_ms = payload
-      .metrics
-      .as_ref()
-      .and_then(|m| m.end_time.map(|end| (end - m.start_time) as f64))
-      .unwrap_or(0.0);
+
+    let response_time_ms = if let Some(completed_at) = task_instance.completed_at
+      && let Some(started_at) = task_instance.started_at
+    {
+      (completed_at - started_at).num_milliseconds()
+    } else {
+      0
+    };
 
     if let Some(agent) = self.connection_manager.get_agent(agent_id).await? {
       agent.update_stats(success, response_time_ms).await;

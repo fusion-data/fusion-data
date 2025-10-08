@@ -17,7 +17,7 @@ use utoipa_axum::router::OpenApiRouter;
 
 use crate::{
   application::ServerApplication,
-  service::{JweSvc, JweError},
+  service::{JweError, JweSvc},
 };
 
 /// 认证相关路由

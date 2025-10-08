@@ -1,0 +1,40 @@
+[package]
+name = "fusionsql-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = true
+
+[lints]
+workspace = true
+
+[features]
+default = ["with-uuid", "with-sea-query"]
+with-sea-query = ["dep:sea-query", "dep:sea-query-binder"]
+with-uuid = [
+  "dep:uuid",
+  "sea-query-binder/with-uuid",
+  "fusion-common/with-uuid",
+]
+with-ilike = []
+with-openapi = ["dep:utoipa"]
+with-wasm = []
+
+[dependencies]
+fusion-common = { workspace = true }
+fusionsql-macros = { workspace = true }
+sea-query = { workspace = true, optional = true }
+sea-query-binder = { workspace = true, optional = true }
+thiserror = { workspace = true }
+uuid = { workspace = true, optional = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }
+utoipa = { workspace = true, optional = true }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = { version = "0.2", features = ["serde-serialize"] }
+tsify = { workspace = true }

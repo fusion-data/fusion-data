@@ -8,7 +8,7 @@ use axum::{
   },
   response::Response,
 };
-use fusion_core::IdUuidResult;
+use fusion_common::model::IdUuidResult;
 use fusion_web::{WebResult, ok_json};
 use futures_util::{SinkExt, StreamExt};
 use log::{error, info};

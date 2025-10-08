@@ -1,4 +1,4 @@
-use modelsql::postgres::PgRowType;
+use fusionsql::postgres::PgRowType;
 use sea_query::{Nullable, Value};
 
 use super::{Gender, Permission, Policy, RolePermission, RoleStatus, User, UserCredential, UserRole, UserStatus};

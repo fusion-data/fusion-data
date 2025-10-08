@@ -7,13 +7,13 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use hetumind_core::workflow::{
-  ConnectionKind, DataSource, ExecutionData, InputPortConfig, NodeDefinition, NodeExecutionContext, NodeExecutionError,
-  NodeExecutor, NodeGroupKind, NodeKind, NodeProperties, NodePropertyKind, OutputPortConfig, ValidationError,
+  ConnectionKind, DataSource, ExecutionData, InputPortConfig, NodeDefinition, NodeExecutable, NodeExecutionContext,
+  NodeExecutionError, NodeGroupKind, NodeKind, NodeProperties, NodePropertyKind, OutputPortConfig, ValidationError,
   WorkflowNode,
 };
+use log::{debug, info, warn};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
-use log::{debug, info, warn};
 
 use crate::constants::LOOP_OVER_ITEMS_NODE_KIND;
 
@@ -243,7 +243,7 @@ impl LoopOverItemsNode {
 }
 
 #[async_trait]
-impl NodeExecutor for LoopOverItemsNode {
+impl NodeExecutable for LoopOverItemsNode {
   fn definition(&self) -> Arc<NodeDefinition> {
     self.definition.clone()
   }

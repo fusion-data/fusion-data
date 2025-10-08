@@ -1,9 +1,10 @@
+use fusion_common::page::OrderBys;
 use fusion_common::time::{OffsetDateTime, now_offset};
-use modelsql::{
+use fusionsql::{
   ModelManager, SqlError,
   base::DbBmc,
   field::FieldMask,
-  filter::{OpValsDateTime, OpValsInt32, OpValsString, OpValsUuid, OrderBys},
+  filter::{OpValDateTime, OpValInt32, OpValString, OpValUuid},
   generate_pg_bmc_common, generate_pg_bmc_filter,
 };
 use uuid::Uuid;
@@ -40,9 +41,9 @@ impl TaskBmc {
   /// 查找待处理的任务
   pub async fn find_pending_tasks(mm: &ModelManager, namespace_id: &str) -> Result<Vec<SchedTask>, SqlError> {
     let filter = TaskFilter {
-      status: Some(OpValsInt32::eq(TaskStatus::Pending as i32)),
-      scheduled_at: Some(OpValsDateTime::lte(now_offset())),
-      namespace_id: Some(OpValsString::eq(namespace_id.to_string())),
+      status: Some(OpValInt32::eq(TaskStatus::Pending as i32)),
+      scheduled_at: Some(OpValDateTime::lte(now_offset())),
+      namespace_id: Some(OpValString::eq(namespace_id.to_string())),
       ..Default::default()
     };
 
@@ -67,7 +68,7 @@ impl TaskBmc {
 
   /// 重置失败任务为待处理状态
   pub async fn reset_failed_tasks(mm: &ModelManager) -> Result<Vec<SchedTask>, SqlError> {
-    let filter = TaskFilter { status: Some(OpValsInt32::eq(TaskStatus::Doing as i32)), ..Default::default() };
+    let filter = TaskFilter { status: Some(OpValInt32::eq(TaskStatus::Doing as i32)), ..Default::default() };
 
     let tasks = Self::find_many(mm, vec![filter], None).await?;
 
@@ -124,8 +125,8 @@ impl TaskBmc {
     scheduled_at: OffsetDateTime,
   ) -> Result<Option<SchedTask>, SqlError> {
     let filter = TaskFilter {
-      schedule_id: Some(OpValsUuid::eq(*schedule_id)),
-      scheduled_at: Some(OpValsDateTime::eq(scheduled_at)),
+      schedule_id: Some(OpValUuid::eq(*schedule_id)),
+      scheduled_at: Some(OpValDateTime::eq(scheduled_at)),
       ..Default::default()
     };
 

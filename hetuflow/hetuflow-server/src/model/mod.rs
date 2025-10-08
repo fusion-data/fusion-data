@@ -140,7 +140,7 @@ impl AgentConnection {
     stats.last_failure_ms = now_epoch_millis();
   }
 
-  pub async fn update_stats(&self, success: bool, response_time_ms: f64) {
+  pub async fn update_stats(&self, success: bool, response_time_ms: i64) {
     let mut stats = self.stats.write().await;
     stats.total_tasks += 1;
     if success {
@@ -154,7 +154,7 @@ impl AgentConnection {
 
     // 更新平均响应时间（简单移动平均）
     let total = stats.total_tasks as f64;
-    stats.avg_response_ms = (stats.avg_response_ms * (total - 1.0) + response_time_ms) / total;
+    stats.avg_response_ms = (stats.avg_response_ms * (total - 1.0) + response_time_ms as f64) / total;
   }
 }
 

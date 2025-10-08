@@ -1,7 +1,7 @@
-use ahash::HashMap;
+use fusion_common::ahash::HashMap;
 use fusion_common::time::OffsetDateTime;
 #[cfg(feature = "with-db")]
-use modelsql::generate_enum_i32_to_sea_query_value;
+use fusionsql::generate_enum_i32_to_sea_query_value;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 

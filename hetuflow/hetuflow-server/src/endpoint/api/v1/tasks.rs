@@ -1,8 +1,8 @@
 use axum::{Json, extract::Path};
-use fusion_core::IdUuidResult;
+use fusion_common::model::IdUuidResult;
 use fusion_web::{WebResult, ok_json};
 use hetuflow_core::models::{SchedTask, TaskForCreate, TaskForQuery, TaskForUpdate};
-use modelsql::page::PageResult;
+use fusionsql::page::PageResult;
 use serde_json::Value;
 use utoipa_axum::router::OpenApiRouter;
 use uuid::Uuid;
