@@ -1,11 +1,11 @@
 //! Integration tests for the Hetuflow SDK
 
+use fusion_common::page::Page;
 use hetuflow_core::models::{
   AgentCapabilities, AgentFilter, AgentForCreate, AgentForQuery, ExecuteCommand, JobForCreate, TaskConfig,
 };
 use hetuflow_core::types::{AgentStatus, JobStatus};
 use hetuflow_sdk::{Config, HetuflowClient};
-use fusionsql_core::filter::Page;
 
 #[tokio::test]
 async fn test_client_creation() {

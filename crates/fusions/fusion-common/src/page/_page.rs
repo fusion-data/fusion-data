@@ -1,11 +1,10 @@
 use serde::{Deserialize, Serialize};
 
-mod order_by;
+pub use super::*;
 
-pub use order_by::*;
-
-#[derive(Default, Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
+#[cfg_attr(feature = "with-wasm", derive(tsify::Tsify), tsify(into_wasm_abi, from_wasm_abi))]
 pub struct Page {
   /// 指定返回的页码
   pub page: Option<u64>,
@@ -56,30 +55,5 @@ impl From<OrderBy> for Page {
 impl From<OrderBy> for Option<Page> {
   fn from(val: OrderBy) -> Self {
     Some(Page { order_bys: Some(OrderBys::from(val)), ..Default::default() })
-  }
-}
-
-#[cfg(feature = "with-sea-query")]
-mod with_sea_query {
-  use sea_query::SelectStatement;
-
-  use super::*;
-
-  impl Page {
-    pub fn apply_to_sea_query(&self, select_query: &mut SelectStatement) {
-      if let Some(limit) = self.limit {
-        select_query.limit(limit);
-      }
-
-      if let Some(offset) = self.get_offset() {
-        select_query.offset(offset);
-      }
-
-      if let Some(order_bys) = &self.order_bys {
-        for (col, order) in order_bys.into_sea_col_order_iter() {
-          select_query.order_by(col, order);
-        }
-      }
-    }
   }
 }

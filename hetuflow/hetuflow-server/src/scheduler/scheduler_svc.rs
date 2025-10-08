@@ -1,8 +1,8 @@
 use std::time::Duration;
 
 use fusion_core::DataError;
-use log::{debug, info, warn};
 use fusionsql::ModelManager;
+use log::{debug, info, warn};
 use uuid::Uuid;
 
 use croner::Cron;

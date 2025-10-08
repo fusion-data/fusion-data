@@ -1,9 +1,9 @@
+use fusion_common::page::{Page, PageResult};
 use fusionsql::{
   ModelManager, Result,
   base::{self, DbBmc, compute_page},
-  filter::{FilterGroups, Page},
+  filter::{FilterGroups, apply_to_sea_query},
   generate_pg_bmc_common,
-  page::PageResult,
 };
 use sea_query::{Condition, Expr, Query, SelectStatement};
 
@@ -62,7 +62,7 @@ impl RoleBmc {
     }
 
     let list_options = compute_page::<RoleBmc>(list_options)?;
-    list_options.apply_to_sea_query(query);
+    apply_to_sea_query(&list_options, query);
 
     Ok(())
   }

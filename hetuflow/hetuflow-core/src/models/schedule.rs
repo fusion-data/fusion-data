@@ -1,6 +1,6 @@
 use chrono::{DateTime, FixedOffset};
+use fusion_common::page::Page;
 use fusion_common::time::{OffsetDateTime, now_offset};
-use fusionsql_core::filter::Page;
 use fusionsql_core::{
   field::FieldMask,
   filter::{OpValDateTime, OpValInt32, OpValUuid},

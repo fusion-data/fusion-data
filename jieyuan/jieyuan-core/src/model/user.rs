@@ -1,5 +1,6 @@
+use fusion_common::page::Page;
 use fusion_common::time::OffsetDateTime;
-use fusionsql_core::filter::{OpValDateTime, OpValInt32, OpValInt64, OpValString, Page};
+use fusionsql_core::filter::{OpValDateTime, OpValInt32, OpValInt64, OpValString};
 use serde::{Deserialize, Serialize};
 
 /// User status enumeration

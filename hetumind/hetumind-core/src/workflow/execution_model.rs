@@ -1,8 +1,9 @@
 use fusion_common::ahash::HashMap;
+use fusion_common::page::Page;
 use fusion_common::time::OffsetDateTime;
 use fusionsql_core::{
   field::FieldMask,
-  filter::{OpValDateTime, OpValInt32, OpValUuid, Page},
+  filter::{OpValDateTime, OpValInt32, OpValUuid},
 };
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};

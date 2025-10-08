@@ -1,7 +1,8 @@
 use chrono::{DateTime, FixedOffset};
+use fusion_common::page::Page;
 use fusionsql_core::{
   field::FieldMask,
-  filter::{OpValDateTime, OpValInt32, OpValString, OpValUuid, Page},
+  filter::{OpValDateTime, OpValInt32, OpValString, OpValUuid},
 };
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;

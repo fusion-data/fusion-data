@@ -2,6 +2,7 @@ use fusion_core::component::Component;
 use fusion_core::{application::Application, component::ComponentArc};
 use fusion_db::DbPlugin;
 use fusionsql::ModelManager;
+use log::info;
 
 #[derive(Clone, Component)]
 struct TestSvc {
@@ -18,7 +19,7 @@ impl TestSvc {
 
 #[tokio::main]
 async fn main() {
-  logforth::stdout().apply();
+  // logforth::starter_log::stdout().apply();
 
   let mut ab = Application::builder();
   ab.add_plugin(DbPlugin);
@@ -27,7 +28,7 @@ async fn main() {
   let mm: ComponentArc<ModelManager> = app.get_component_arc().unwrap();
 
   let addr: *const ModelManager = &*mm;
-  println!("ModelManager address: {:p}", addr);
+  info!("Memory address of ModelManager: {:p}", addr);
 
   let test_svc = app.get_component_arc::<TestSvc>().unwrap();
   let ret = test_svc.test().await.unwrap();

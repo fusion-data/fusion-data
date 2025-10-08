@@ -1,10 +1,11 @@
 use std::fmt::{self, Debug};
 
+use fusion_common::page::Page;
 use fusion_common::time::OffsetDateTime;
 use fusionsql::generate_enum_i32_to_sea_query_value;
 use fusionsql::{
   field::{FieldMask, Fields},
-  filter::{FilterNodes, OpValDateTime, OpValInt32, OpValString, OpValUuid, Page},
+  filter::{FilterNodes, OpValDateTime, OpValInt32, OpValString, OpValUuid},
   postgres::PgRowType,
 };
 use sea_query::enum_def;

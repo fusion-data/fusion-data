@@ -1,84 +1,52 @@
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use std::ops::Deref;
+
+use serde::{Deserialize, Serialize};
 
 // region:    --- OrderBy
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
-pub enum OrderBy {
-  Asc(String),
-  Desc(String),
+#[cfg_attr(feature = "with-wasm", derive(tsify::Tsify), tsify(into_wasm_abi, from_wasm_abi))]
+#[serde(transparent)]
+pub struct OrderBy(String);
+
+impl OrderBy {
+  pub fn to_sql(&self) -> String {
+    if let Some(stripped) = self.0.strip_prefix('!') { format!("{} desc", stripped) } else { format!("{} asc", self.0) }
+  }
 }
 
 impl From<&str> for OrderBy {
   fn from(value: &str) -> Self {
-    if let Some(stripped) = value.strip_prefix('!') {
-      OrderBy::Desc(stripped.to_string())
-    } else {
-      OrderBy::Asc(value.to_string())
-    }
+    Self(value.to_string())
   }
 }
 
 impl From<&String> for OrderBy {
   fn from(value: &String) -> Self {
-    if let Some(stripped) = value.strip_prefix('!') {
-      OrderBy::Desc(stripped.to_string())
-    } else {
-      OrderBy::Asc(value.to_string())
-    }
+    Self(value.to_string())
   }
 }
 
 impl From<String> for OrderBy {
   fn from(value: String) -> Self {
-    if let Some(stripped) = value.strip_prefix('!') { OrderBy::Desc(stripped.to_string()) } else { OrderBy::Asc(value) }
+    Self(value)
   }
 }
 
-impl Serialize for OrderBy {
-  fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-  where
-    S: Serializer,
-  {
-    match self {
-      OrderBy::Asc(v) => serializer.serialize_str(v),
-      OrderBy::Desc(v) => serializer.serialize_str(&format!("!{}", v)),
-    }
-  }
-}
+impl Deref for OrderBy {
+  type Target = String;
 
-impl<'de> Deserialize<'de> for OrderBy {
-  fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-  where
-    D: Deserializer<'de>,
-  {
-    let s = String::deserialize(deserializer)?;
-    Ok(OrderBy::from(s))
-  }
-}
-
-impl core::fmt::Display for OrderBy {
-  fn fmt(&self, fmt: &mut core::fmt::Formatter) -> core::fmt::Result {
-    match self {
-      OrderBy::Asc(val) => {
-        fmt.write_str(val)?;
-        fmt.write_str(" ")?;
-        fmt.write_str("asc")?;
-      }
-      OrderBy::Desc(val) => {
-        fmt.write_str(val)?;
-        fmt.write_str(" ")?;
-        fmt.write_str("desc")?;
-      }
-    };
-
-    Ok(())
+  fn deref(&self) -> &Self::Target {
+    &self.0
   }
 }
 // endregion: --- OrderBy
 
 // region:    --- OrderBys
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
+#[cfg_attr(feature = "with-wasm", derive(tsify::Tsify), tsify(into_wasm_abi, from_wasm_abi))]
+#[serde(transparent)]
 pub struct OrderBys(Vec<OrderBy>);
 
 impl Default for OrderBys {
@@ -168,27 +136,3 @@ impl From<Vec<String>> for OrderBys {
 }
 
 // endregion: --- OrderBys
-
-#[cfg(feature = "with-sea-query")]
-mod with_sea_query {
-  use super::*;
-  use crate::sea_utils::StringIden;
-  use sea_query::IntoColumnRef;
-
-  impl OrderBys {
-    pub fn into_sea_col_order_iter(&self) -> impl Iterator<Item = (sea_query::ColumnRef, sea_query::Order)> {
-      self.0.iter().map(OrderBy::into_sea_col_order)
-    }
-  }
-
-  impl OrderBy {
-    pub fn into_sea_col_order(&self) -> (sea_query::ColumnRef, sea_query::Order) {
-      let (col, order) = match self {
-        OrderBy::Asc(col) => (StringIden(col.clone()), sea_query::Order::Asc),
-        OrderBy::Desc(col) => (StringIden(col.clone()), sea_query::Order::Desc),
-      };
-
-      (col.into_column_ref(), order)
-    }
-  }
-}

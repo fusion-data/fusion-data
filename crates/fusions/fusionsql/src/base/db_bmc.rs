@@ -1,4 +1,5 @@
-use fusionsql_core::{filter::OrderBys, sea_utils::SIden};
+use fusion_common::page::OrderBys;
+use fusionsql_core::sea_utils::SIden;
 use sea_query::{IntoIden, TableRef};
 
 /// The DbBmc trait must be implemented for the Bmc struct of an entity.

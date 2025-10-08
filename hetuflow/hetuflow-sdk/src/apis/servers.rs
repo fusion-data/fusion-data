@@ -6,7 +6,7 @@ use crate::{
   platform::Response,
 };
 use hetuflow_core::models::{SchedServer, ServerForQuery, ServerForUpdate};
-use fusionsql_core::page::PageResult;
+use fusion_common::page::PageResult;
 use serde::de::DeserializeOwned;
 
 /// Servers API client

@@ -25,8 +25,4 @@ plaintext = true
 
 [fusion.db]
 enable = true
-host = "localhost"
-port = 45432
-database = "fusion"
-username = "fusion"
-password = "2024.Fusion"
+url = "postgres://fusiondata:2025.Fusiondata@localhost:5432/fusiondata"

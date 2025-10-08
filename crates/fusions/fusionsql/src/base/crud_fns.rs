@@ -320,7 +320,7 @@ pub async fn delete_by_ids<MC>(mm: &ModelManager, ids: Vec<Id>) -> Result<u64>
 where
   MC: DbBmc,
 {
-  let ctx: &fusion_corelib::ctx::Ctx = mm.ctx_ref()?;
+  let ctx: &fusion_common::ctx::Ctx = mm.ctx_ref()?;
 
   if ids.is_empty() {
     return Ok(0);
@@ -365,7 +365,7 @@ where
   MC: DbBmc,
   F: Into<FilterGroups>,
 {
-  let ctx: &fusion_corelib::ctx::Ctx = mm.ctx_ref()?;
+  let ctx: &fusion_common::ctx::Ctx = mm.ctx_ref()?;
 
   let filters: FilterGroups = filter.into();
   let cond: Condition = filters.try_into()?;

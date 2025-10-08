@@ -108,7 +108,7 @@ macro_rules! generate_pg_bmc_filter {
 			pub async fn find_many(
 				mm: &fusionsql::ModelManager,
 				filter: Vec<$filter>,
-				page: Option<fusionsql::filter::Page>,
+				page: Option<fusionsql::page::Page>,
 			) -> fusionsql::Result<Vec<$entity>> {
 				fusionsql::base::pg_find_many::<Self, _, _>(mm, filter, page).await
 			}
@@ -123,7 +123,7 @@ macro_rules! generate_pg_bmc_filter {
 			pub async fn page(
 				mm: &fusionsql::ModelManager,
 				filter: Vec<$filter>,
-				page: fusionsql::filter::Page,
+				page: fusionsql::page::Page,
 			) -> fusionsql::Result<fusionsql::page::PageResult<$entity>> {
 				fusionsql::base::pg_page::<Self, _, _>(mm, filter, page).await
 			}

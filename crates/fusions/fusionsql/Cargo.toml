@@ -44,7 +44,7 @@ path = "examples/example-db-config.rs"
 required-features = ["with-sqlite"]
 
 [dependencies]
-fusion-corelib = { workspace = true }
+fusion-common = { workspace = true }
 fusionsql-macros = { workspace = true }
 fusionsql-core = { workspace = true, features = ["with-sea-query"] }
 async-trait.workspace = true

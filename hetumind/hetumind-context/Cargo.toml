@@ -12,11 +12,10 @@ authors.workspace = true
 workspace = true
 
 [dependencies]
-fusion-corelib = { workspace = true }
-hetumind-core = { workspace = true, features = ["with-db"] }
 fusion-common = { workspace = true, features = ["with-uuid"] }
 fusion-core = { workspace = true, features = ["with-uuid", "fusionsql"] }
 fusion-web = { workspace = true }
+hetumind-core = { workspace = true, features = ["with-db"] }
 
 log = { workspace = true }
 thiserror = { workspace = true }

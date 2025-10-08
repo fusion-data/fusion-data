@@ -1,8 +1,10 @@
 // region:    --- Modules
 
 mod error;
+mod utils;
 
-pub use self::error::{IntoSeaError, SeaResult};
+pub use error::{IntoSeaError, SeaResult};
+pub use utils::*;
 
 use crate::filter::OpValValue;
 use sea_query::{ColumnRef, ConditionExpression};

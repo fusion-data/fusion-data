@@ -1,7 +1,8 @@
+use fusion_common::page::OrderBys;
 use fusionsql::{
   ModelManager, SqlError,
   base::DbBmc,
-  filter::{OpValInt32, OpValString, OpValUuid, OrderBys},
+  filter::{OpValInt32, OpValString, OpValUuid},
   generate_pg_bmc_common, generate_pg_bmc_filter,
 };
 use uuid::Uuid;

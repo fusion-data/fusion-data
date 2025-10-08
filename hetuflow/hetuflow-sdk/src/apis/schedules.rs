@@ -7,7 +7,7 @@ use crate::{
 };
 use fusion_common::model::IdUuidResult;
 use hetuflow_core::models::{SchedSchedule, ScheduleForCreate, ScheduleForQuery, ScheduleForUpdate};
-use fusionsql_core::page::PageResult;
+use fusion_common::page::PageResult;
 use serde::de::DeserializeOwned;
 use uuid::Uuid;
 

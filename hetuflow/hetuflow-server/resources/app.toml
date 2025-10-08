@@ -15,8 +15,8 @@ time_format = "%Y-%m-%d %H:%M:%S%.3f"
 log_level = "info"
 log_writer = "both"
 log_dir = "./runs/logs/server/"
-log_name = "hetuflow-server"
 log_targets = [
+  "info",
   "fusionsql=info",
   "fusion_web=info",
   "hetuflow_core=debug",

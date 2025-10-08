@@ -15,7 +15,6 @@ workspace = true
 with-db = ["sqlx", "sea-query", "fusionsql", "fusionsql-core/with-sea-query"]
 
 [dependencies]
-fusion-corelib = { workspace = true }
 fusion-common = { workspace = true, features = ["with-uuid"] }
 semver = { workspace = true }
 config = { workspace = true }

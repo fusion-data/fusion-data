@@ -17,7 +17,6 @@ with-ulid = ["dep:ulid", "fusion-core/with-ulid"]
 with-openapi = ["dep:utoipa", "fusion-core/with-openapi"]
 
 [dependencies]
-fusion-corelib.workspace = true
 fusion-common.workspace = true
 fusion-core.workspace = true
 futures.workspace = true

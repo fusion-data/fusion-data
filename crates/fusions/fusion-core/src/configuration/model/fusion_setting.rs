@@ -1,8 +1,6 @@
 use config::{Config, ConfigError};
 use serde::{Deserialize, Serialize};
 
-use crate::configuration::Configurable;
-
 use super::{AppSetting, LogSetting, SecuritySetting};
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -12,12 +10,6 @@ pub struct FusionSetting {
   security: SecuritySetting,
 
   log: LogSetting,
-}
-
-impl Configurable for FusionSetting {
-  fn config_prefix() -> &'static str {
-    "fusion"
-  }
 }
 
 impl FusionSetting {
@@ -38,6 +30,14 @@ impl TryFrom<&Config> for FusionSetting {
   type Error = ConfigError;
 
   fn try_from(value: &Config) -> core::result::Result<Self, Self::Error> {
-    value.get(FusionSetting::config_prefix())
+    match value.get::<FusionSetting>("fusion") {
+      Ok(mut setting) => {
+        if setting.log.log_name.is_none() || setting.log.log_name.iter().any(|s| s.is_empty()) {
+          setting.log.log_name = Some(format!("{}.log", setting.app.name()));
+        }
+        Ok(setting)
+      }
+      other => other,
+    }
   }
 }

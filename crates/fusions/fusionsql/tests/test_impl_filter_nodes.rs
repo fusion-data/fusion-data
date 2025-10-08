@@ -1,6 +1,6 @@
 //! Should compile. No test functions yet.
 
-use fusionsql::filter::{FilterNode, IntoFilterNodes, OpVal, OpValInt64, OpValString};
+use fusionsql::filter::{FilterNode, IntoFilterNodes, OpValInt64, OpValString};
 
 pub struct ProjectFilter {
   id: Option<OpValInt64>,

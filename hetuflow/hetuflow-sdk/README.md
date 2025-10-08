@@ -38,7 +38,7 @@ hetuflow-sdk = { version = "0.1.0", features = ["with-wasm"] }
 
 ```rust
 use hetuflow_sdk::HetuflowClient;
-use fusionsql_core::filter::Page;
+use fusion_common::page::Page;
 use hetuflow_core::models::{JobForCreate, TaskConfig};
 use hetuflow_core::types::JobStatus;
 
@@ -163,7 +163,7 @@ All list operations use a consistent query pattern:
 
 ```rust
 use hetuflow_core::models::AgentForQuery;
-use fusionsql_core::filter::Page;
+use fusion_common::page::Page;
 
 // Create query with filtering and pagination
 let mut query = AgentForQuery::default();
@@ -212,7 +212,7 @@ See the `examples/` directory for complete examples:
 use hetuflow_sdk::HetuflowClient;
 use hetuflow_core::models::{AgentForQuery, TaskForQuery};
 use hetuflow_core::types::TaskStatus;
-use fusionsql_core::filter::Page;
+use fusion_common::page::Page;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -271,7 +271,7 @@ The SDK provides comprehensive error handling:
 
 ```rust
 use hetuflow_core::models::AgentForQuery;
-use fusionsql_core::filter::Page;
+use fusion_common::page::Page;
 
 // Query specific agent
 let mut query = AgentForQuery::default();
@@ -330,7 +330,7 @@ The SDK uses data models from `hetuflow-core` and pagination types from `fusions
 use hetuflow_sdk::HetuflowClient;
 use hetuflow_core::models::{AgentForQuery, JobForCreate, TaskConfig};
 use hetuflow_core::types::{JobStatus, TaskStatus};
-use fusionsql_core::filter::Page;
+use fusion_common::page::Page;
 
 // Query with pagination
 let mut query = AgentForQuery::default();

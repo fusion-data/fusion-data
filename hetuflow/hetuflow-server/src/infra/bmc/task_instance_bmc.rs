@@ -1,9 +1,10 @@
+use fusion_common::page::OrderBys;
 use fusion_common::time::now_offset;
 use fusionsql::{
   ModelManager, SqlError,
   base::DbBmc,
   field::FieldMask,
-  filter::{OpValDateTime, OpValInt32, OrderBys},
+  filter::{OpValDateTime, OpValInt32},
   generate_pg_bmc_common, generate_pg_bmc_filter,
 };
 use sqlx::Row;

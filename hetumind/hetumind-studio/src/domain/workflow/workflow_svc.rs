@@ -2,6 +2,7 @@ use axum::extract::FromRequestParts;
 use fusion_common::time::now;
 use fusion_core::{DataError, application::Application};
 use fusion_web::WebError;
+use fusionsql::page::PageResult;
 use hetumind_context::{ctx::CtxW, utils::new_ctx_w_from_parts};
 use hetumind_core::workflow::{
   ExecuteWorkflowRequest, ExecutionGraph, ExecutionId, ExecutionIdResponse, ExecutionMode, ExecutionStatus,
@@ -9,7 +10,6 @@ use hetumind_core::workflow::{
   WorkflowForUpdate, WorkflowId, WorkflowStatus,
 };
 use http::request::Parts;
-use fusionsql::page::PageResult;
 
 use super::{ExecutionBmc, ExecutionDataBmc, ExecutionDataEntity, ExecutionEntity, WorkflowBmc};
 
@@ -53,11 +53,7 @@ impl WorkflowSvc {
     let wf = Workflow::try_from(entity_c.clone()).map_err(|e| DataError::bad_request(e.to_string()))?;
     let errors = self.validate_base(&wf);
     if !errors.is_empty() {
-      return Err(DataError::BizError {
-        code: 400,
-        msg: "工作流不合法".to_string(),
-        detail: Some(Box::new(serde_json::to_value(errors).unwrap())),
-      });
+      return Err(DataError::biz_error(400, "工作流不合法", Some(serde_json::to_value(errors).unwrap())));
     }
 
     WorkflowBmc::insert(self.ctx.mm(), entity_c).await?;
@@ -69,11 +65,7 @@ impl WorkflowSvc {
     let wf = Workflow::try_from(input.clone())?;
     let errors = self.validate_base(&wf);
     if !errors.is_empty() {
-      return Err(DataError::BizError {
-        code: 400,
-        msg: "工作流不合法".to_string(),
-        detail: Some(Box::new(serde_json::to_value(errors).unwrap())),
-      });
+      return Err(DataError::biz_error(400, "工作流不合法", Some(serde_json::to_value(errors).unwrap())));
     }
 
     let mm = self.ctx.mm().get_txn_clone();
@@ -88,11 +80,9 @@ impl WorkflowSvc {
       // 如果状态为活跃，则校验工作流是否合法
       if status == WorkflowStatus::Active {
         let wf = self.get_workflow(id).await?;
-        self.validate_activate(wf).map_err(|errors| DataError::BizError {
-          code: 400,
-          msg: "工作流不合法".to_string(),
-          detail: Some(Box::new(serde_json::to_value(errors).unwrap())),
-        })?;
+        self
+          .validate_activate(wf)
+          .map_err(|errors| DataError::biz_error(400, "工作流不合法", Some(serde_json::to_value(errors).unwrap())))?;
       }
       WorkflowBmc::update_by_id(&mm, id.clone(), WorkflowForUpdate { status: Some(status), ..Default::default() })
         .await?;
@@ -158,9 +148,7 @@ impl WorkflowSvc {
 
     // 检查工作流状态
     if workflow.status != WorkflowStatus::Active {
-      return Err(DataError::BizError {
-        code: 400, msg: "工作流未激活，无法执行".to_string(), detail: None
-      });
+      return Err(DataError::bad_request("工作流未激活，无法执行"));
     }
 
     // 2. 创建执行记录

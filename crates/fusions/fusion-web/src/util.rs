@@ -9,7 +9,7 @@ use fusion_core::DataError;
 use fusion_core::configuration::SecuritySetting;
 use fusion_core::log::get_trace_id;
 use fusion_core::security::{AccessToken, SecurityUtils};
-use fusion_corelib::ctx::Ctx;
+use fusion_common::ctx::Ctx;
 use headers::authorization::Bearer;
 use headers::{Authorization, HeaderMapExt};
 use serde::de::DeserializeOwned;

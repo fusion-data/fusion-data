@@ -2,7 +2,8 @@ use sea_query::{Condition, Query, SelectStatement};
 use sea_query_binder::SqlxBinder;
 use sqlx::{FromRow, postgres::PgRow};
 
-use fusionsql_core::filter::{FilterGroups, Page};
+use fusion_common::page::Page;
+use fusionsql_core::filter::{FilterGroups, apply_to_sea_query};
 
 use crate::{
   ModelManager, Result, SqlError,
@@ -42,7 +43,7 @@ where
 
   // page
   let page = compute_page::<MC>(page)?;
-  page.apply_to_sea_query(&mut query);
+  apply_to_sea_query(&page, &mut query);
 
   // -- Execute the query
   match mm.dbx() {

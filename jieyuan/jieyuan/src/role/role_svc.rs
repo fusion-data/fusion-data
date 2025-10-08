@@ -1,5 +1,6 @@
+use fusion_common::page::{Page, PageResult};
 use fusion_core::Result;
-use fusionsql::{ModelManager, filter::Page, page::PageResult};
+use fusionsql::ModelManager;
 
 use jieyuan_core::model::{CreateRoleDto, Role, RoleFilters, RoleForUpdate, RolePermissionForCreate};
 

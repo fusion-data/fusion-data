@@ -21,7 +21,6 @@ with-ulid = ["dep:ulid"]
 with-openapi = ["dep:utoipa"]
 
 [dependencies]
-fusion-corelib.workspace = true
 fusion-common.workspace = true
 fusion-core-macros = { workspace = true }
 thiserror = { workspace = true }

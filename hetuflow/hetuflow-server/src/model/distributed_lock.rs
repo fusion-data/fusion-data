@@ -1,8 +1,9 @@
+use fusion_common::page::Page;
 use fusion_common::time::OffsetDateTime;
 use fusionsql::{
   Fields, FilterNodes,
   field::FieldMask,
-  filter::{OpValDateTime, OpValInt64, OpValString, Page},
+  filter::{OpValDateTime, OpValInt64, OpValString},
 };
 use sea_query::enum_def;
 use serde::Deserialize;

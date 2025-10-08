@@ -13,7 +13,6 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
-fusion-corelib = { workspace = true }
 fusion-common = { workspace = true, features = ["with-uuid"] }
 fusion-core = { workspace = true, features = ["with-uuid"] }
 hetuflow-core = { workspace = true }

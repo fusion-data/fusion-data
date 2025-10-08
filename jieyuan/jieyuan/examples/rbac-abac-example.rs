@@ -2,17 +2,20 @@ use serde_json::{Value, json};
 use std::collections::{HashMap, HashSet};
 
 // RBAC 结构
+#[allow(dead_code)]
 struct User {
   id: i64,
   roles: HashSet<i64>,
 }
 
+#[allow(dead_code)]
 struct Role {
   id: i64,
   permissions: HashSet<String>,
 }
 
 // ABAC 结构
+#[allow(dead_code)]
 struct Policy {
   id: i64,
   name: String,

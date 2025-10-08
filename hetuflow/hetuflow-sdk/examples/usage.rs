@@ -1,6 +1,6 @@
 //! Usage example for the Hetuflow SDK using full APIs
 
-use fusionsql_core::filter::Page;
+use fusion_common::page::Page;
 use hetuflow_core::models::{AgentForQuery, JobForCreate, JobForQuery, TaskForQuery};
 use hetuflow_core::types::JobStatus;
 use hetuflow_sdk::HetuflowClient;
@@ -27,7 +27,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
   // Example 3: List all agents
   println!("\n=== Listing Agents ===");
   let mut query = AgentForQuery::default();
-  query.page = Page { page: Some(1), limit: Some(10), offset: Some(0), order_bys: None };
+  query.page.limit = Some(10);
 
   match client.agents().query(query).await {
     Ok(result) => {

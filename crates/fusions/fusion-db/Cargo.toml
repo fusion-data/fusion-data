@@ -17,7 +17,6 @@ with-sqlite = ["fusionsql/with-sqlite"]
 with-uuid = ["dep:uuid", "fusionsql/with-uuid"]
 
 [dependencies]
-fusion-corelib.workspace = true
 fusion-common.workspace = true
 fusion-core = { workspace = true, features = ["fusionsql"] }
 fusionsql = { workspace = true }

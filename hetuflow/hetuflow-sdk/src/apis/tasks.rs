@@ -9,7 +9,7 @@ use fusion_common::model::IdUuidResult;
 use hetuflow_core::models::{SchedTask, TaskForCreate, TaskForQuery, TaskForUpdate};
 use hetuflow_core::types::TaskStatus;
 use fusionsql_core::filter::{OpValInt32, OpValUuid};
-use fusionsql_core::page::PageResult;
+use fusion_common::page::PageResult;
 use serde::de::DeserializeOwned;
 use uuid::Uuid;
 

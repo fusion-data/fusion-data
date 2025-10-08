@@ -17,7 +17,6 @@ with-openapi = ["dep:utoipa"]
 with-db = ["dep:sqlx", "dep:fusionsql", "dep:sea-query"]
 
 [dependencies]
-fusion-corelib = { workspace = true }
 fusion-common = { workspace = true, features = ["with-uuid"] }
 uuid = { workspace = true }
 serde = { workspace = true }
