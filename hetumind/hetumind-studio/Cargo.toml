@@ -11,8 +11,6 @@ publish = false
 [lints]
 workspace = true
 
-[features]
-with-redis = []
 
 [dependencies]
 # -- hetumind
@@ -90,7 +88,7 @@ serde_repr = { workspace = true }
 [dev-dependencies]
 anyhow = { workspace = true }
 axum-test = { workspace = true }
-json-patch = { workspace = true }
+json-patch = { version = "4" }
 insta = { workspace = true }
 once_cell = { workspace = true }
 test-context = { workspace = true }

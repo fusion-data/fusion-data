@@ -101,7 +101,11 @@ impl ExecutionStore for MockExecutionStore {
 pub struct SimpleProcessNodeV1 {
   definition: Arc<NodeDefinition>,
 }
-
+impl Default for SimpleProcessNodeV1 {
+  fn default() -> Self {
+    Self::new()
+  }
+}
 impl SimpleProcessNodeV1 {
   pub fn new() -> Self {
     let definition = NodeDefinitionBuilder::default()

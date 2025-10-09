@@ -87,7 +87,6 @@ impl<'a> SchedulesApi<'a> {
 
     #[cfg(target_arch = "wasm32")]
     {
-      use gloo_net::http::Response;
       if response.ok() {
         response.json::<T>().await.map_err(|e| SdkError::from(e))
       } else {

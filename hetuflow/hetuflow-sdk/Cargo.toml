@@ -20,7 +20,12 @@ crate-type = ["cdylib", "rlib"]
 
 [features]
 default = []
-with-wasm = ["uuid/js", "hetuflow-core/with-wasm", "fusionsql-core/with-wasm"]
+with-wasm = [
+  "uuid/js",
+  "hetuflow-core/with-wasm",
+  "fusionsql-core/with-wasm",
+  "fusion-common/with-wasm",
+]
 # WASM optimization features
 wee_alloc = ["dep:wee_alloc"]
 
@@ -42,9 +47,9 @@ tokio = { workspace = true }
 
 # WASM-only dependencies
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-wasm-bindgen = { version = "0.2", features = ["serde-serialize"] }
-wasm-bindgen-futures = "0.4"
-web-sys = { version = "0.3", features = [
+wasm-bindgen = { workspace = true, features = ["serde-serialize"] }
+wasm-bindgen-futures = { workspace = true }
+web-sys = { workspace = true, features = [
   "Headers",
   "Request",
   "RequestInit",
@@ -54,14 +59,16 @@ web-sys = { version = "0.3", features = [
   "AbortController",
   "AbortSignal",
 ] }
-js-sys = "0.3"
-getrandom = { version = "0.3", features = ["wasm_js"] }
-gloo-net = { version = "0.6", features = ["http", "json"] }
-gloo-timers = { version = "0.3", features = ["futures"] }
-console_error_panic_hook = "0.1"
-serde-wasm-bindgen = "0.6"
-wee_alloc = { version = "0.4", optional = true }
+js-sys = { workspace = true }
+getrandom = { workspace = true, default-features = false, features = [
+  "wasm_js",
+] }
+gloo-net = { workspace = true, features = ["http", "json"] }
+gloo-timers = { workspace = true, features = ["futures"] }
+console_error_panic_hook = { workspace = true }
+serde-wasm-bindgen = { workspace = true }
 tsify = { workspace = true }
+wee_alloc = { workspace = true, optional = true }
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3"

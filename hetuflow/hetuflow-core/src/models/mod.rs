@@ -1,6 +1,6 @@
 //! 提供类型安全的数据库操作抽象层
 
-#[cfg(feature = "with-db")]
+#[cfg(all(feature = "with-db", not(target_arch = "wasm32")))]
 mod _db;
 mod agent;
 mod file;

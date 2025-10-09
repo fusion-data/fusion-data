@@ -1,3 +1,6 @@
+#![deny(clippy::all)]
+// #![warn(clippy::exhaustive_structs)]
+
 use fusionsql::postgres::PgRowType;
 use sqlx::encode::IsNull;
 use sqlx::error::BoxDynError;
@@ -31,12 +34,12 @@ impl PgHasArrayType for Labels {
 }
 impl Encode<'_, Postgres> for Labels {
   fn encode_by_ref(&self, buf: &mut PgArgumentBuffer) -> Result<IsNull, BoxDynError> {
-    Json(self).encode_by_ref(buf)
+    <Json<&Labels> as Encode<'_, Postgres>>::encode_by_ref(&Json(self), buf)
   }
 }
 impl<'r> Decode<'r, Postgres> for Labels {
   fn decode(value: PgValueRef<'r>) -> Result<Self, BoxDynError> {
-    Ok(Json::<Self>::decode(value)?.0)
+    Ok(<Json<Labels> as Decode<'r, Postgres>>::decode(value)?.0)
   }
 }
 
@@ -62,12 +65,12 @@ impl PgHasArrayType for TaskConfig {
 }
 impl Encode<'_, Postgres> for TaskConfig {
   fn encode_by_ref(&self, buf: &mut PgArgumentBuffer) -> Result<IsNull, BoxDynError> {
-    Json(self).encode_by_ref(buf)
+    <Json<&TaskConfig> as Encode<'_, Postgres>>::encode_by_ref(&Json(self), buf)
   }
 }
 impl<'r> Decode<'r, Postgres> for TaskConfig {
   fn decode(value: PgValueRef<'r>) -> Result<Self, BoxDynError> {
-    Ok(Json::<Self>::decode(value)?.0)
+    Ok(<Json<TaskConfig> as Decode<'r, Postgres>>::decode(value)?.0)
   }
 }
 
@@ -93,12 +96,12 @@ impl PgHasArrayType for AgentCapabilities {
 }
 impl Encode<'_, Postgres> for AgentCapabilities {
   fn encode_by_ref(&self, buf: &mut PgArgumentBuffer) -> Result<IsNull, BoxDynError> {
-    Json(self).encode_by_ref(buf)
+    <Json<&AgentCapabilities> as Encode<'_, Postgres>>::encode_by_ref(&Json(self), buf)
   }
 }
 impl<'r> Decode<'r, Postgres> for AgentCapabilities {
   fn decode(value: PgValueRef<'r>) -> Result<Self, BoxDynError> {
-    Ok(Json::<Self>::decode(value)?.0)
+    Ok(<Json<AgentCapabilities> as Decode<'r, Postgres>>::decode(value)?.0)
   }
 }
 
@@ -124,12 +127,12 @@ impl PgHasArrayType for AgentStatistics {
 }
 impl Encode<'_, Postgres> for AgentStatistics {
   fn encode_by_ref(&self, buf: &mut PgArgumentBuffer) -> Result<IsNull, BoxDynError> {
-    Json(self).encode_by_ref(buf)
+    <Json<&AgentStatistics> as Encode<'_, Postgres>>::encode_by_ref(&Json(self), buf)
   }
 }
 impl<'r> Decode<'r, Postgres> for AgentStatistics {
   fn decode(value: PgValueRef<'r>) -> Result<Self, BoxDynError> {
-    Ok(Json::<Self>::decode(value)?.0)
+    Ok(<Json<AgentStatistics> as Decode<'r, Postgres>>::decode(value)?.0)
   }
 }
 
@@ -155,12 +158,12 @@ impl PgHasArrayType for TaskMetrics {
 }
 impl Encode<'_, Postgres> for TaskMetrics {
   fn encode_by_ref(&self, buf: &mut PgArgumentBuffer) -> Result<IsNull, BoxDynError> {
-    Json(self).encode_by_ref(buf)
+    <Json<&TaskMetrics> as Encode<'_, Postgres>>::encode_by_ref(&Json(self), buf)
   }
 }
 impl<'r> Decode<'r, Postgres> for TaskMetrics {
   fn decode(value: PgValueRef<'r>) -> Result<Self, BoxDynError> {
-    Ok(Json::<Self>::decode(value)?.0)
+    Ok(<Json<TaskMetrics> as Decode<'r, Postgres>>::decode(value)?.0)
   }
 }
 

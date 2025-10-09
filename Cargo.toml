@@ -88,7 +88,6 @@ qrcode-rs = { version = "0.1" }
 image = { version = "0.25" }
 # -- Misc
 semver = { version = "1.0", features = ["serde"] }
-getrandom = { version = "0.3", default-features = false }
 windows-sys = { version = "0.61", features = [
   "Win32_Security",
   "Win32_System_Threading",
@@ -222,7 +221,6 @@ sonic-rs = { version = "0.5" }
 json-five = { version = "0.3" }
 serde_repr = "0.1"
 jsonpath-rust = { version = "1.0" }
-json-patch = { version = "4" }
 nom = "8.0"
 # -- Web
 url = "2.5"
@@ -232,6 +230,27 @@ headers = "0.4"
 mime = "0.3"
 http = "1"
 http-body-util = "0.1"
+# -- WASM
+js-sys = { version = "0.3" }
+wasm-bindgen = { version = "0.2", features = ["serde-serialize"] }
+wasm-bindgen-futures = { version = "0.4" }
+getrandom = { version = "0.3", default-features = false }
+rand_wasm = { version = "0.9", package = "rand" }
+web-sys = { version = "0.3", features = [
+  "Headers",
+  "Request",
+  "RequestInit",
+  "Response",
+  "Window",
+  "console",
+  "AbortController",
+  "AbortSignal",
+] }
+gloo-net = { version = "0.6", features = ["http", "json"] }
+gloo-timers = { version = "0.3", features = ["futures"] }
+console_error_panic_hook = { version = "0.1" }
+serde-wasm-bindgen = { version = "0.6" }
+wee_alloc = { version = "0.4" }
 # async http client
 reqwest = { version = "0.12", features = [
   # "rustls-tls-webpki-roots",
@@ -270,7 +289,6 @@ utoipa = { version = "5.4", features = [
   "axum_extras",
   "chrono",
   "decimal",
-  "uuid",
   "rc_schema",
 ] }
 utoipa-axum = "0.2"

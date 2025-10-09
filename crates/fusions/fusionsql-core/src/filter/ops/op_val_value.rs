@@ -22,38 +22,38 @@ use crate::filter::OpVal;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
-#[cfg_attr(feature = "with-wasm", derive(tsify::Tsify), tsify(into_wasm_abi, from_wasm_abi))]
+#[cfg_attr(target_arch = "wasm32", derive(tsify::Tsify), tsify(into_wasm_abi, from_wasm_abi))]
 pub struct OpValValue {
   #[serde(rename = "$eq")]
-  #[cfg_attr(feature = "with-wasm", tsify(type = "any"))]
+  #[cfg_attr(target_arch = "wasm32", tsify(type = "any"))]
   pub eq: Option<Value>,
 
   #[serde(rename = "$not")]
-  #[cfg_attr(feature = "with-wasm", tsify(type = "any"))]
+  #[cfg_attr(target_arch = "wasm32", tsify(type = "any"))]
   pub not: Option<Value>,
 
   #[serde(rename = "$in")]
-  #[cfg_attr(feature = "with-wasm", tsify(type = "any[]"))]
+  #[cfg_attr(target_arch = "wasm32", tsify(type = "any[]"))]
   pub in_: Option<Vec<Value>>,
 
   #[serde(rename = "$not_in")]
-  #[cfg_attr(feature = "with-wasm", tsify(type = "any[]"))]
+  #[cfg_attr(target_arch = "wasm32", tsify(type = "any[]"))]
   pub not_in: Option<Vec<Value>>,
 
   #[serde(rename = "$lt")]
-  #[cfg_attr(feature = "with-wasm", tsify(type = "any"))]
+  #[cfg_attr(target_arch = "wasm32", tsify(type = "any"))]
   pub lt: Option<Value>,
 
   #[serde(rename = "$lte")]
-  #[cfg_attr(feature = "with-wasm", tsify(type = "any"))]
+  #[cfg_attr(target_arch = "wasm32", tsify(type = "any"))]
   pub lte: Option<Value>,
 
   #[serde(rename = "$gt")]
-  #[cfg_attr(feature = "with-wasm", tsify(type = "any"))]
+  #[cfg_attr(target_arch = "wasm32", tsify(type = "any"))]
   pub gt: Option<Value>,
 
   #[serde(rename = "$gte")]
-  #[cfg_attr(feature = "with-wasm", tsify(type = "any"))]
+  #[cfg_attr(target_arch = "wasm32", tsify(type = "any"))]
   pub gte: Option<Value>,
 
   #[serde(rename = "$null")]

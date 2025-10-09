@@ -203,7 +203,6 @@ impl ApiService for HetuflowClient {
     #[cfg(target_arch = "wasm32")]
     {
       use gloo_net::http::{Method, Request, RequestBuilder};
-      use web_sys::AbortSignal;
       use web_sys::{AbortController, RequestCredentials, RequestMode};
 
       // Create abort controller for timeout handling

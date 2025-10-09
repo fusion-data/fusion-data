@@ -1783,6 +1783,7 @@ dependencies = [
  "sha2",
  "sqlx",
  "thiserror 2.0.17",
+ "tsify",
  "ulid",
  "utoipa",
  "uuid",
@@ -2519,7 +2520,6 @@ dependencies = [
  "mea",
  "rand 0.9.2",
  "sea-query",
- "sea-query-binder",
  "serde",
  "serde_json",
  "sqlx",
@@ -7324,6 +7324,7 @@ dependencies = [
  "quote",
  "regex",
  "syn 2.0.106",
+ "ulid",
  "uuid",
 ]
 

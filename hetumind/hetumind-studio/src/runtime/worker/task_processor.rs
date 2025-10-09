@@ -1,11 +1,11 @@
 use async_trait::async_trait;
 use fusion_common::time::now;
 use fusion_core::component::Component;
+use fusionsql::ModelManager;
 use hetumind_core::{
   task::{QueueTask, TaskResult},
   workflow::{ExecutionStatus, ParameterMap},
 };
-use fusionsql::ModelManager;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 

@@ -57,9 +57,6 @@ pub use hetuflow_core::models::*;
 
 // API modules
 pub mod apis;
-
-pub mod hetuflow_client;
-
 // Platform detection for conditional compilation
 #[cfg(not(target_arch = "wasm32"))]
 mod platform {

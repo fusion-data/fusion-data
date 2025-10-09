@@ -12,8 +12,13 @@ publish = true
 workspace = true
 
 [features]
-default = ["with-uuid", "with-sea-query"]
-with-sea-query = ["dep:sea-query", "dep:sea-query-binder"]
+# default = ["with-uuid", "with-sea-query"]
+with-sea-query = [
+  "dep:sea-query",
+  "dep:sea-query-binder",
+  "sea-query-binder/postgres-array",
+  "sea-query/postgres-array",
+]
 with-uuid = [
   "dep:uuid",
   "sea-query-binder/with-uuid",
@@ -21,7 +26,7 @@ with-uuid = [
 ]
 with-ilike = []
 with-openapi = ["dep:utoipa"]
-with-wasm = []
+with-wasm = ["fusion-common/with-wasm"]
 
 [dependencies]
 fusion-common = { workspace = true }

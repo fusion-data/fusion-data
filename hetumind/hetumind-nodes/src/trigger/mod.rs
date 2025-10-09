@@ -13,6 +13,6 @@ pub use webhook_trigger_node::*;
 use hetumind_core::workflow::{NodeRegistry, RegistrationError};
 
 pub fn register_nodes(registry: &NodeRegistry) -> Result<(), RegistrationError> {
-  let base_start = registry.register_node(Arc::new(StartNode::new()?))?;
-  Ok(())
+  let node = StartNode::new()?;
+  registry.register_node(Arc::new(node))
 }

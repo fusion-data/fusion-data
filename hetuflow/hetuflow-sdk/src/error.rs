@@ -14,7 +14,12 @@ pub enum SdkError {
   /// Configuration error
   ConfigError(String),
   /// API error response
-  ApiError { status: u16, message: String },
+  ApiError {
+    /// HTTP status code
+    status: u16,
+    /// Error message
+    message: String,
+  },
   /// Network error
   NetworkError(String),
   /// Authentication error

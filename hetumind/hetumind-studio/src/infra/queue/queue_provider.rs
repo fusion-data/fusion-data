@@ -1,10 +1,8 @@
 use std::{ops::Deref, sync::Arc};
 
-use hetumind_core::task::{QueueError, TaskQueue};
 use fusionsql::ModelManager;
+use hetumind_core::task::{QueueError, TaskQueue};
 
-#[cfg(feature = "with-redis")]
-use super::RedisQueue;
 use super::{PostgresQueue, QueueConfig};
 
 #[derive(Clone)]
@@ -23,12 +21,6 @@ impl QueueProvider {
     match config {
       QueueConfig::Postgres { postgres } => {
         let queue = PostgresQueue::new(mm, postgres);
-        queue.initialize().await?;
-        Ok(QueueProvider(Arc::new(queue)))
-      }
-      #[cfg(feature = "with-redis")]
-      QueueConfig::Redis { url, redis } => {
-        let queue = RedisQueue::new(url, redis)?;
         queue.initialize().await?;
         Ok(QueueProvider(Arc::new(queue)))
       }

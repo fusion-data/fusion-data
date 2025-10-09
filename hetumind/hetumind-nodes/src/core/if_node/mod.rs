@@ -35,6 +35,7 @@ pub struct ConditionConfig {
 
 impl ConditionConfig {
   /// Verify if the condition configuration is valid.
+  #[allow(dead_code)]
   pub fn validate(&self) -> Result<(), ValidationError> {
     // 非[相等或不相等]时，右值不可为空
     if !(self.op == ComparisonOperation::Eq || self.op == ComparisonOperation::Nq) && self.right.is_none() {

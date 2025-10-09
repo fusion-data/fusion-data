@@ -3,16 +3,12 @@ use serde::Deserialize;
 mod postgres_queue;
 mod queue_plugin;
 mod queue_provider;
-#[cfg(feature = "with-redis")]
-mod redis_queue;
 mod task_queue_entity;
 mod utils;
 
 pub use postgres_queue::{PostgresQueue, PostgresQueueConfig};
 pub use queue_plugin::QueueProviderPlugin;
 pub use queue_provider::QueueProvider;
-#[cfg(feature = "with-redis")]
-pub use redis_queue::{RedisQueue, RedisQueueConfig};
 pub use task_queue_entity::TaskQueueEntity;
 pub use utils::*;
 
@@ -22,12 +18,6 @@ pub enum QueueConfig {
   Postgres {
     #[serde(default)]
     postgres: PostgresQueueConfig,
-  },
-  #[cfg(feature = "with-redis")]
-  Redis {
-    url: String,
-    #[serde(default)]
-    redis: RedisQueueConfig,
   },
 }
 

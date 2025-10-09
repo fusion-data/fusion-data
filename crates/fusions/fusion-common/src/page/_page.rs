@@ -4,7 +4,7 @@ pub use super::*;
 
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
-#[cfg_attr(feature = "with-wasm", derive(tsify::Tsify), tsify(into_wasm_abi, from_wasm_abi))]
+#[cfg_attr(target_arch = "wasm32", derive(tsify::Tsify), tsify(into_wasm_abi, from_wasm_abi))]
 pub struct Page {
   /// 指定返回的页码
   pub page: Option<u64>,

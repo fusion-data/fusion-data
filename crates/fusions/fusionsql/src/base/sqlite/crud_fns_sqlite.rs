@@ -1,3 +1,5 @@
+use fusion_common::page::{Page, PageResult};
+use fusionsql_core::filter::{FilterGroups, apply_to_sea_query};
 use sea_query::{Condition, Query, SelectStatement, SqliteQueryBuilder};
 use sea_query_binder::SqlxBinder;
 use sqlx::{FromRow, sqlite::SqliteRow};
@@ -6,9 +8,7 @@ use crate::{
   ModelManager, Result, SqlError,
   base::{DbBmc, compute_page, count},
   field::HasSeaFields,
-  filter::{FilterGroups, Page},
   id::Id,
-  page::PageResult,
   store::Dbx,
 };
 
@@ -41,7 +41,7 @@ where
 
   // page
   let page = compute_page::<MC>(page)?;
-  page.apply_to_sea_query(&mut query);
+  apply_to_sea_query(&page, &mut query);
 
   // -- Execute the query
   match mm.dbx() {

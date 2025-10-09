@@ -5,38 +5,38 @@ use super::OpVal;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
-#[cfg_attr(feature = "with-wasm", derive(tsify::Tsify), tsify(into_wasm_abi, from_wasm_abi))]
+#[cfg_attr(target_arch = "wasm32", derive(tsify::Tsify), tsify(into_wasm_abi, from_wasm_abi))]
 pub struct OpValDateTime {
   #[serde(rename = "$eq")]
-  #[cfg_attr(feature = "with-wasm", tsify(type = "string"))]
+  #[cfg_attr(target_arch = "wasm32", tsify(type = "string"))]
   pub eq: Option<DateTime<FixedOffset>>,
 
   #[serde(rename = "$not")]
-  #[cfg_attr(feature = "with-wasm", tsify(type = "string"))]
+  #[cfg_attr(target_arch = "wasm32", tsify(type = "string"))]
   pub not: Option<DateTime<FixedOffset>>,
 
   #[serde(rename = "$in")]
-  #[cfg_attr(feature = "with-wasm", tsify(type = "string[]"))]
+  #[cfg_attr(target_arch = "wasm32", tsify(type = "string[]"))]
   pub in_: Option<Vec<DateTime<FixedOffset>>>,
 
   #[serde(rename = "$not_in")]
-  #[cfg_attr(feature = "with-wasm", tsify(type = "string[]"))]
+  #[cfg_attr(target_arch = "wasm32", tsify(type = "string[]"))]
   pub not_in: Option<Vec<DateTime<FixedOffset>>>,
 
   #[serde(rename = "$lt")]
-  #[cfg_attr(feature = "with-wasm", tsify(type = "string"))]
+  #[cfg_attr(target_arch = "wasm32", tsify(type = "string"))]
   pub lt: Option<DateTime<FixedOffset>>,
 
   #[serde(rename = "$lte")]
-  #[cfg_attr(feature = "with-wasm", tsify(type = "string"))]
+  #[cfg_attr(target_arch = "wasm32", tsify(type = "string"))]
   pub lte: Option<DateTime<FixedOffset>>,
 
   #[serde(rename = "$gt")]
-  #[cfg_attr(feature = "with-wasm", tsify(type = "string"))]
+  #[cfg_attr(target_arch = "wasm32", tsify(type = "string"))]
   pub gt: Option<DateTime<FixedOffset>>,
 
   #[serde(rename = "$gte")]
-  #[cfg_attr(feature = "with-wasm", tsify(type = "dayjs.Dayjs"))]
+  #[cfg_attr(target_arch = "wasm32", tsify(type = "dayjs.Dayjs"))]
   pub gte: Option<DateTime<FixedOffset>>,
 
   #[serde(rename = "$null")]

@@ -1,8 +1,7 @@
 use chrono::{DateTime, FixedOffset};
 
 use crate::filter::{
-  OpValBool, OpValDateTime, OpValFloat32, OpValFloat64, OpValInt32, OpValInt64, OpValString, OpValValue,
-  ops::OpVal,
+  OpValBool, OpValDateTime, OpValFloat32, OpValFloat64, OpValInt32, OpValInt64, OpValString, OpValValue, ops::OpVal,
 };
 
 pub trait IntoFilterNodes {

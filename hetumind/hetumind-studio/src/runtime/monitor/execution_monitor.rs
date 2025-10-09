@@ -14,7 +14,11 @@ pub struct ExecutionMonitor {
   // 追踪器
   // tracer: Arc<Tracer>,
 }
-
+impl Default for ExecutionMonitor {
+  fn default() -> Self {
+    Self::new()
+  }
+}
 impl ExecutionMonitor {
   pub fn new() -> Self {
     Self { metrics_collector: Arc::new(MetricsCollector::new()) }

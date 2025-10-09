@@ -1,10 +1,10 @@
+use fusion_common::ctx::{Ctx, CtxPayload};
 use fusion_core::{
   DataError,
   application::Application,
   configuration::{KeyConf, PwdConf},
   security::SecurityUtils,
 };
-use fusion_common::ctx::{Ctx, CtxPayload};
 use fusion_web::WebError;
 use fusionsql::ModelManager;
 use http::request::Parts;
