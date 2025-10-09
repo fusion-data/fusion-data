@@ -5,7 +5,7 @@ use hetumind_core::{
   version::Version,
   workflow::{
     ConnectionKind, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition, NodeDefinitionBuilder,
-    NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperties, NodePropertyKind, OutputPortConfig,
+    NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig,
     RegistrationError, make_execution_data_map,
   },
 };
@@ -104,7 +104,7 @@ impl TryFrom<NodeDefinitionBuilder> for LoopV1 {
       .inputs([InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build()])
       .outputs([OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build()])
       .properties([
-        NodeProperties::builder()
+        NodeProperty::builder()
           .display_name("循环模式")
           .name("mode")
           .kind(NodePropertyKind::Options)
@@ -112,13 +112,13 @@ impl TryFrom<NodeDefinitionBuilder> for LoopV1 {
           .description("循环执行策略")
           .value(json!(LoopMode::Items))
           .options(vec![
-            Box::new(NodeProperties::new_option("Items", "items", json!(LoopMode::Items), NodePropertyKind::String)),
-            Box::new(NodeProperties::new_option("Times", "times", json!(LoopMode::Times), NodePropertyKind::String)),
-            Box::new(NodeProperties::new_option("While", "while", json!(LoopMode::While), NodePropertyKind::String)),
-            Box::new(NodeProperties::new_option("Batch", "batch", json!(LoopMode::Batch), NodePropertyKind::String)),
+            Box::new(NodeProperty::new_option("Items", "items", json!(LoopMode::Items), NodePropertyKind::String)),
+            Box::new(NodeProperty::new_option("Times", "times", json!(LoopMode::Times), NodePropertyKind::String)),
+            Box::new(NodeProperty::new_option("While", "while", json!(LoopMode::While), NodePropertyKind::String)),
+            Box::new(NodeProperty::new_option("Batch", "batch", json!(LoopMode::Batch), NodePropertyKind::String)),
           ])
           .build(),
-        NodeProperties::builder()
+        NodeProperty::builder()
           .display_name("循环次数")
           .name("iterations")
           .kind(NodePropertyKind::Number)
@@ -126,7 +126,7 @@ impl TryFrom<NodeDefinitionBuilder> for LoopV1 {
           .description("循环执行次数（仅 Times 模式）")
           .value(json!(1))
           .build(),
-        NodeProperties::builder()
+        NodeProperty::builder()
           .display_name("批量大小")
           .name("batch_size")
           .kind(NodePropertyKind::Number)
@@ -134,7 +134,7 @@ impl TryFrom<NodeDefinitionBuilder> for LoopV1 {
           .description("每批处理的数据项数量（仅 Batch 模式）")
           .value(json!(10))
           .build(),
-        NodeProperties::builder()
+        NodeProperty::builder()
           .display_name("条件表达式")
           .name("condition")
           .kind(NodePropertyKind::String)
@@ -142,7 +142,7 @@ impl TryFrom<NodeDefinitionBuilder> for LoopV1 {
           .description("循环条件（仅 While 模式）")
           .placeholder("data.enabled")
           .build(),
-        NodeProperties::builder()
+        NodeProperty::builder()
           .display_name("最大循环次数")
           .name("max_iterations")
           .kind(NodePropertyKind::Number)
@@ -150,7 +150,7 @@ impl TryFrom<NodeDefinitionBuilder> for LoopV1 {
           .description("防止无限循环的最大迭代次数")
           .value(json!(1000))
           .build(),
-        NodeProperties::builder()
+        NodeProperty::builder()
           .display_name("包含索引")
           .name("include_index")
           .kind(NodePropertyKind::Boolean)
@@ -158,7 +158,7 @@ impl TryFrom<NodeDefinitionBuilder> for LoopV1 {
           .description("是否在输出中包含索引信息")
           .value(json!(false))
           .build(),
-        NodeProperties::builder()
+        NodeProperty::builder()
           .display_name("并行处理")
           .name("parallel")
           .kind(NodePropertyKind::Boolean)

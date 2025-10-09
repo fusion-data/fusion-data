@@ -31,8 +31,8 @@ impl Deref for ParameterMap {
 }
 
 impl ParameterMap {
-  pub fn new(map: serde_json::Map<String, JsonValue>) -> Self {
-    Self(map)
+  pub fn new(data: serde_json::Map<String, JsonValue>) -> Self {
+    Self(data)
   }
 
   pub fn get_parameter<T>(&self, field: &str) -> Result<T, ValidationError>

@@ -5,7 +5,7 @@ use hetumind_core::{
   version::Version,
   workflow::{
     ConnectionKind, DataSource, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition,
-    NodeDefinitionBuilder, NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperties, NodePropertyKind,
+    NodeDefinitionBuilder, NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind,
     OutputPortConfig, RegistrationError, make_execution_data_map,
   },
 };
@@ -111,7 +111,7 @@ impl TryFrom<NodeDefinitionBuilder> for SetV1 {
       .inputs([InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build()])
       .outputs([OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build()])
       .properties([
-        NodeProperties::builder()
+        NodeProperty::builder()
           .display_name("操作列表")
           .name("operations")
           .kind(NodePropertyKind::Collection)
@@ -120,7 +120,7 @@ impl TryFrom<NodeDefinitionBuilder> for SetV1 {
           .placeholder("添加操作...")
           .value(json!([]))
           .build(),
-        NodeProperties::builder()
+        NodeProperty::builder()
           .display_name("保持原始类型")
           .name("keep_original_type")
           .kind(NodePropertyKind::Boolean)

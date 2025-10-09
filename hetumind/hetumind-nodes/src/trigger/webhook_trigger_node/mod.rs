@@ -9,7 +9,7 @@ use hetumind_core::types::JsonValue;
 use hetumind_core::version::Version;
 use hetumind_core::workflow::{
   ConnectionKind, ExecutionDataItems, ExecutionDataMap, Node, NodeDefinition, NodeDefinitionBuilder, NodeExecutable,
-  NodeExecutionContext, NodeExecutionError, NodeExecutor, NodeGroupKind, NodeKind, NodeProperties, RegistrationError,
+  NodeExecutionContext, NodeExecutionError, NodeExecutor, NodeGroupKind, NodeKind, NodeProperty, RegistrationError,
   make_execution_data_map,
 };
 
@@ -80,36 +80,36 @@ fn create_base() -> NodeDefinitionBuilder {
     .outputs(vec![])
     .properties(vec![
       // HTTP Method
-      NodeProperties::builder()
+      NodeProperty::builder()
         .display_name("HTTP Method")
-        .name("httpMethod")
+        .name("http_method")
         .kind(hetumind_core::workflow::NodePropertyKind::Options)
         .options(vec![
-          Box::new(NodeProperties::new_option(
+          Box::new(NodeProperty::new_option(
             "GET",
             "get",
             JsonValue::String("GET".to_string()),
             hetumind_core::workflow::NodePropertyKind::String,
           )),
-          Box::new(NodeProperties::new_option(
+          Box::new(NodeProperty::new_option(
             "POST",
             "post",
             JsonValue::String("POST".to_string()),
             hetumind_core::workflow::NodePropertyKind::String,
           )),
-          Box::new(NodeProperties::new_option(
+          Box::new(NodeProperty::new_option(
             "PUT",
             "put",
             JsonValue::String("PUT".to_string()),
             hetumind_core::workflow::NodePropertyKind::String,
           )),
-          Box::new(NodeProperties::new_option(
+          Box::new(NodeProperty::new_option(
             "DELETE",
             "delete",
             JsonValue::String("DELETE".to_string()),
             hetumind_core::workflow::NodePropertyKind::String,
           )),
-          Box::new(NodeProperties::new_option(
+          Box::new(NodeProperty::new_option(
             "PATCH",
             "patch",
             JsonValue::String("PATCH".to_string()),
@@ -120,7 +120,7 @@ fn create_base() -> NodeDefinitionBuilder {
         .description("HTTP method for the webhook endpoint")
         .build(),
       // Path
-      NodeProperties::builder()
+      NodeProperty::builder()
         .display_name("Path")
         .name("path")
         .kind(hetumind_core::workflow::NodePropertyKind::String)
@@ -129,30 +129,30 @@ fn create_base() -> NodeDefinitionBuilder {
         .hint("e.g., /webhook/my-workflow")
         .build(),
       // Authentication
-      NodeProperties::builder()
+      NodeProperty::builder()
         .display_name("Authentication")
         .name("authentication")
         .kind(hetumind_core::workflow::NodePropertyKind::Options)
         .options(vec![
-          Box::new(NodeProperties::new_option(
+          Box::new(NodeProperty::new_option(
             "None",
             "none",
             JsonValue::String("none".to_string()),
             hetumind_core::workflow::NodePropertyKind::String,
           )),
-          Box::new(NodeProperties::new_option(
+          Box::new(NodeProperty::new_option(
             "Basic Auth",
             "basic",
             JsonValue::String("basic".to_string()),
             hetumind_core::workflow::NodePropertyKind::String,
           )),
-          Box::new(NodeProperties::new_option(
+          Box::new(NodeProperty::new_option(
             "Bearer Token",
             "bearer",
             JsonValue::String("bearer".to_string()),
             hetumind_core::workflow::NodePropertyKind::String,
           )),
-          Box::new(NodeProperties::new_option(
+          Box::new(NodeProperty::new_option(
             "Header Auth",
             "header",
             JsonValue::String("header".to_string()),
@@ -163,27 +163,27 @@ fn create_base() -> NodeDefinitionBuilder {
         .description("Authentication method for the webhook")
         .build(),
       // Response Code
-      NodeProperties::builder()
+      NodeProperty::builder()
         .display_name("Response Code")
-        .name("responseCode")
+        .name("response_code")
         .kind(hetumind_core::workflow::NodePropertyKind::Number)
         .required(false)
         .description("HTTP response code to return")
         .value(JsonValue::Number(serde_json::Number::from(200)))
         .build(),
       // Response Body
-      NodeProperties::builder()
+      NodeProperty::builder()
         .display_name("Response Body")
-        .name("responseBody")
+        .name("response_body")
         .kind(hetumind_core::workflow::NodePropertyKind::String)
         .required(false)
         .description("Response body template (JSON)")
         .value(JsonValue::String("{\"status\": \"success\"}".to_string()))
         .build(),
       // Headers
-      NodeProperties::builder()
+      NodeProperty::builder()
         .display_name("Response Headers")
-        .name("responseHeaders")
+        .name("response_headers")
         .kind(hetumind_core::workflow::NodePropertyKind::FixedCollection)
         .required(false)
         .description("Additional response headers")

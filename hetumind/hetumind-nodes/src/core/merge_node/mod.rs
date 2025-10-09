@@ -7,7 +7,7 @@ use std::sync::Arc;
 
 use hetumind_core::{
   version::Version,
-  workflow::{Node, NodeDefinitionBuilder, NodeExecutor, NodeGroupKind, NodeKind, RegistrationError, ValidationError},
+  workflow::{Node, NodeDefinitionBuilder, NodeExecutor, NodeGroupKind, NodeKind, RegistrationError},
 };
 use serde::{Deserialize, Serialize};
 

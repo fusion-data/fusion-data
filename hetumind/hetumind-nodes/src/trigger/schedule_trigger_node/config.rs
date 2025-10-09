@@ -3,11 +3,12 @@
 use hetumind_core::types::JsonValue;
 use hetumind_core::workflow::{NodeExecutionError, ValidationError};
 use regex::Regex;
+use serde::{Deserialize, Serialize};
 use serde_json::Map;
 use std::time::Duration;
 
 /// Schedule configuration parsed from node parameters
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ScheduleConfig {
   pub mode: ScheduleMode,
   pub cron_expression: Option<String>,
@@ -23,7 +24,7 @@ pub struct ScheduleConfig {
 }
 
 /// Scheduling mode
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum ScheduleMode {
   Cron,
   Interval,
@@ -33,9 +34,9 @@ pub enum ScheduleMode {
 /// Parse schedule configuration from node parameters
 pub fn parse_schedule_config(parameters: &Map<String, JsonValue>) -> Result<ScheduleConfig, NodeExecutionError> {
   let mode = parameters
-    .get("scheduleMode")
+    .get("schedule_mode")
     .and_then(|v| v.as_str())
-    .ok_or_else(|| NodeExecutionError::ParameterValidation(ValidationError::required_field_missing("scheduleMode")))?;
+    .ok_or_else(|| NodeExecutionError::ParameterValidation(ValidationError::required_field_missing("schedule_mode")))?;
 
   let schedule_mode = match mode {
     "cron" => ScheduleMode::Cron,
@@ -52,9 +53,9 @@ pub fn parse_schedule_config(parameters: &Map<String, JsonValue>) -> Result<Sche
   // Validate required fields for each mode
   match schedule_mode {
     ScheduleMode::Cron => {
-      if parameters.get("cronExpression").and_then(|v| v.as_str()).map_or(true, |s| s.trim().is_empty()) {
+      if parameters.get("cron_expression").and_then(|v| v.as_str()).map_or(true, |s| s.trim().is_empty()) {
         return Err(NodeExecutionError::ParameterValidation(ValidationError::invalid_field_value(
-          "cronExpression",
+          "cron_expression",
           "Cron expression is required for cron mode",
         )));
       }
@@ -62,7 +63,7 @@ pub fn parse_schedule_config(parameters: &Map<String, JsonValue>) -> Result<Sche
     ScheduleMode::Interval => {
       let has_interval = parameters.get("interval").and_then(|v| v.as_str()).map_or(false, |s| !s.trim().is_empty());
       let has_custom =
-        parameters.get("customInterval").and_then(|v| v.as_str()).map_or(false, |s| !s.trim().is_empty());
+        parameters.get("custom_interval").and_then(|v| v.as_str()).map_or(false, |s| !s.trim().is_empty());
       if !has_interval && !has_custom {
         return Err(NodeExecutionError::ParameterValidation(ValidationError::invalid_field_value(
           "interval",
@@ -71,9 +72,9 @@ pub fn parse_schedule_config(parameters: &Map<String, JsonValue>) -> Result<Sche
       }
     }
     ScheduleMode::Daily => {
-      if parameters.get("dailyTime").and_then(|v| v.as_str()).map_or(true, |s| s.trim().is_empty()) {
+      if parameters.get("daily_time").and_then(|v| v.as_str()).map_or(true, |s| s.trim().is_empty()) {
         return Err(NodeExecutionError::ParameterValidation(ValidationError::invalid_field_value(
-          "dailyTime",
+          "daily_time",
           "Daily time is required for daily mode",
         )));
       }
@@ -82,15 +83,15 @@ pub fn parse_schedule_config(parameters: &Map<String, JsonValue>) -> Result<Sche
 
   Ok(ScheduleConfig {
     mode: schedule_mode,
-    cron_expression: parameters.get("cronExpression").and_then(|v| v.as_str()).map(|s| s.trim().to_string()),
+    cron_expression: parameters.get("cron_expression").and_then(|v| v.as_str()).map(|s| s.trim().to_string()),
     interval: parameters.get("interval").and_then(|v| v.as_str()).map(|s| s.trim().to_string()),
-    custom_interval: parameters.get("customInterval").and_then(|v| v.as_str()).map(|s| s.trim().to_string()),
-    daily_time: parameters.get("dailyTime").and_then(|v| v.as_str()).map(|s| s.trim().to_string()),
+    custom_interval: parameters.get("custom_interval").and_then(|v| v.as_str()).map(|s| s.trim().to_string()),
+    daily_time: parameters.get("daily_time").and_then(|v| v.as_str()).map(|s| s.trim().to_string()),
     timezone: parameters.get("timezone").and_then(|v| v.as_str()).unwrap_or("UTC").to_string(),
-    start_delay: parameters.get("startDelay").and_then(|v| v.as_u64()).unwrap_or(0),
-    max_executions: parameters.get("maxExecutions").and_then(|v| v.as_u64()).unwrap_or(0) as u32,
-    retry_count: parameters.get("retryCount").and_then(|v| v.as_u64()).unwrap_or(3) as u32,
-    retry_interval: parameters.get("retryInterval").and_then(|v| v.as_str()).unwrap_or("5m").to_string(),
+    start_delay: parameters.get("start_delay").and_then(|v| v.as_u64()).unwrap_or(0),
+    max_executions: parameters.get("max_executions").and_then(|v| v.as_u64()).unwrap_or(0) as u32,
+    retry_count: parameters.get("retry_count").and_then(|v| v.as_u64()).unwrap_or(3) as u32,
+    retry_interval: parameters.get("retry_interval").and_then(|v| v.as_str()).unwrap_or("5m").to_string(),
     enabled: parameters.get("enabled").and_then(|v| v.as_bool()).unwrap_or(true),
   })
 }

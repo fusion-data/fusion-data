@@ -6,7 +6,7 @@ use async_trait::async_trait;
 use hetumind_core::version::Version;
 use hetumind_core::workflow::{
   ConnectionKind, DataSource, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition,
-  NodeDefinitionBuilder, NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeGroupKind, NodeProperties,
+  NodeDefinitionBuilder, NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeGroupKind, NodeProperty,
   NodePropertyKind, OutputPortConfig, RegistrationError, make_execution_data_map,
 };
 use log::{debug, error, info, warn};
@@ -198,7 +198,7 @@ pub(super) fn create_definition() -> Result<NodeDefinition, RegistrationError> {
     .inputs(vec![InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build()])
     .outputs(vec![OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build()])
     .properties(vec![
-      NodeProperties::builder()
+      NodeProperty::builder()
         .name("url".to_string())
         .kind(NodePropertyKind::String)
         .required(true)
@@ -206,7 +206,7 @@ pub(super) fn create_definition() -> Result<NodeDefinition, RegistrationError> {
         .description("请求的目标URL地址")
         .placeholder("https://api.example.com")
         .build(),
-      NodeProperties::builder()
+      NodeProperty::builder()
         .name("method".to_string())
         .kind(NodePropertyKind::Options)
         .required(true)
@@ -216,11 +216,11 @@ pub(super) fn create_definition() -> Result<NodeDefinition, RegistrationError> {
         .options(
           HttpMethod::ALL
             .iter()
-            .map(|m| Box::new(NodeProperties::new_option(m.as_ref(), m.as_ref(), json!(m), NodePropertyKind::Options)))
+            .map(|m| Box::new(NodeProperty::new_option(m.as_ref(), m.as_ref(), json!(m), NodePropertyKind::Options)))
             .collect(),
         )
         .build(),
-      NodeProperties::builder()
+      NodeProperty::builder()
         .name("headers".to_string())
         .kind(NodePropertyKind::String)
         .required(false)
@@ -228,7 +228,7 @@ pub(super) fn create_definition() -> Result<NodeDefinition, RegistrationError> {
         .description("HTTP请求头，JSON格式")
         .placeholder("{\"Content-Type\": \"application/json\"}")
         .build(),
-      NodeProperties::builder()
+      NodeProperty::builder()
         .name("body".to_string())
         .kind(NodePropertyKind::String)
         .required(false)
@@ -236,7 +236,7 @@ pub(super) fn create_definition() -> Result<NodeDefinition, RegistrationError> {
         .description("请求体内容，支持JSON格式")
         .placeholder("{\"key\": \"value\"}")
         .build(),
-      NodeProperties::builder()
+      NodeProperty::builder()
         .name("timeout".to_string())
         .kind(NodePropertyKind::Number)
         .required(false)
@@ -244,6 +244,14 @@ pub(super) fn create_definition() -> Result<NodeDefinition, RegistrationError> {
         .description("请求超时时间（秒），范围1-300")
         .value(json!(30))
         .placeholder("30")
+        .build(),
+      NodeProperty::builder()
+        .name("follow_redirects".to_string())
+        .kind(NodePropertyKind::Boolean)
+        .required(false)
+        .display_name("Follow Redirects")
+        .description("是否跟随重定向")
+        .value(json!(true))
         .build(),
     ])
     .build()

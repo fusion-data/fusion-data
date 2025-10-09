@@ -264,7 +264,7 @@ pub struct NodePropertyRouting {
 
 /// 节点属性定义（元数据）
 #[derive(Debug, Clone, Default, Serialize, Deserialize, TypedBuilder)]
-pub struct NodeProperties {
+pub struct NodeProperty {
   /// 显示名称
   #[builder(setter(into))]
   pub display_name: String,
@@ -307,7 +307,7 @@ pub struct NodeProperties {
 
   /// 选项
   #[builder(default, setter(strip_option))]
-  pub options: Option<Vec<Box<NodeProperties>>>,
+  pub options: Option<Vec<Box<NodeProperty>>>,
 
   /// 输入框占位符文本
   #[builder(default, setter(into, strip_option))]
@@ -359,7 +359,7 @@ pub struct NodeProperties {
   additional_properties: serde_json::Map<String, JsonValue>,
 }
 
-impl NodeProperties {
+impl NodeProperty {
   pub fn new_option(
     display_name: impl Into<String>,
     name: impl Into<String>,
@@ -403,7 +403,7 @@ pub struct NodeDefinition {
 
   /// 属性定义
   #[builder(default, setter(into))]
-  pub properties: Vec<NodeProperties>,
+  pub properties: Vec<NodeProperty>,
 
   /// 官方文档URL
   #[builder(default, setter(into, strip_option))]
@@ -459,20 +459,21 @@ pub trait Node {
 
 #[async_trait]
 pub trait NodeExecutable {
-  /// 初始化节点。可用于实现节点初始化逻辑，如加载配置、初始化资源等。
+  /// Initialize the node. This can be used to implement node initialization logic, such as loading configuration, initializing resources, etc.
   async fn init(&mut self, _context: &NodeExecutionContext) -> Result<(), NodeExecutionError> {
     Ok(())
   }
 
-  /// 执行节点
+  /// Execute the node
   ///
   /// Returns:
-  /// - 成功返回多个输出端口的数据，第 1 个输出端口从 0 开始
-  /// - 失败返回错误
+  /// - On success, returns data for multiple output ports, with the first output port starting from 0
+  /// - On failure, returns an error
   async fn execute(&self, context: &NodeExecutionContext) -> Result<ExecutionDataMap, NodeExecutionError>;
 
-  /// 获取节点定义
+  /// Get Node definition
   fn definition(&self) -> Arc<NodeDefinition>;
 }
 
+/// Node Executor Type
 pub type NodeExecutor = Arc<dyn NodeExecutable + Send + Sync>;

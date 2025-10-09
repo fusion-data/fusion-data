@@ -1,6 +1,6 @@
 //! Merge 节点工具函数
 
-use serde_json::{Map, Value, json};
+use serde_json::{Map, Value};
 use std::collections::HashMap;
 
 use super::{MergeConfig, MergeMode};
@@ -216,6 +216,8 @@ fn merge_values(value1: &Value, value2: &Value) -> Result<Value, NodeExecutionEr
 
 #[cfg(test)]
 mod tests {
+  use serde_json::json;
+
   use super::*;
 
   #[test]

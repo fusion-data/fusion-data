@@ -4,9 +4,9 @@ use async_trait::async_trait;
 use hetumind_core::{
   version::Version,
   workflow::{
-    ConnectionKind, DataSource, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition,
-    NodeDefinitionBuilder, NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperties, NodePropertyKind,
-    OutputPortConfig, RegistrationError, make_execution_data_map,
+    ConnectionKind, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition, NodeDefinitionBuilder,
+    NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig,
+    RegistrationError, make_execution_data_map,
   },
 };
 use serde_json::json;
@@ -94,7 +94,7 @@ impl TryFrom<NodeDefinitionBuilder> for MergeV1 {
       .inputs([InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build()])
       .outputs([OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build()])
       .properties([
-        NodeProperties::builder()
+        NodeProperty::builder()
           .display_name("合并模式")
           .name("mode")
           .kind(NodePropertyKind::Options)
@@ -102,25 +102,25 @@ impl TryFrom<NodeDefinitionBuilder> for MergeV1 {
           .description("数据合并策略")
           .value(json!(MergeMode::Append))
           .options(vec![
-            Box::new(NodeProperties::new_option(
+            Box::new(NodeProperty::new_option(
               "Append",
               "append",
               json!(MergeMode::Append),
               NodePropertyKind::String,
             )),
-            Box::new(NodeProperties::new_option(
+            Box::new(NodeProperty::new_option(
               "MergeByKey",
               "merge_by_key",
               json!(MergeMode::MergeByKey),
               NodePropertyKind::String,
             )),
-            Box::new(NodeProperties::new_option(
+            Box::new(NodeProperty::new_option(
               "MergeByIndex",
               "merge_by_index",
               json!(MergeMode::MergeByIndex),
               NodePropertyKind::String,
             )),
-            Box::new(NodeProperties::new_option(
+            Box::new(NodeProperty::new_option(
               "WaitForAll",
               "wait_for_all",
               json!(MergeMode::WaitForAll),
@@ -128,7 +128,7 @@ impl TryFrom<NodeDefinitionBuilder> for MergeV1 {
             )),
           ])
           .build(),
-        NodeProperties::builder()
+        NodeProperty::builder()
           .display_name("合并键")
           .name("merge_key")
           .kind(NodePropertyKind::String)
@@ -136,7 +136,7 @@ impl TryFrom<NodeDefinitionBuilder> for MergeV1 {
           .description("用于按键合并的字段名（仅 mergeByKey 模式）")
           .placeholder("id")
           .build(),
-        NodeProperties::builder()
+        NodeProperty::builder()
           .display_name("输入端口数量")
           .name("input_ports")
           .kind(NodePropertyKind::Number)

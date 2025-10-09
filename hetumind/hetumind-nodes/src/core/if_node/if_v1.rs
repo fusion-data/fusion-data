@@ -6,7 +6,7 @@ use hetumind_core::{
   version::Version,
   workflow::{
     ConnectionKind, ExecutionDataItems, ExecutionDataMap, FilterTypeOptions, InputPortConfig, NodeDefinition,
-    NodeDefinitionBuilder, NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperties, NodePropertyKind,
+    NodeDefinitionBuilder, NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind,
     NodePropertyKindOptions, OutputPortConfig, RegistrationError, make_execution_data_map,
   },
 };
@@ -141,7 +141,7 @@ impl TryFrom<NodeDefinitionBuilder> for IfV1 {
         OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("False").build(),
       ])
       .properties([
-        NodeProperties::builder()
+        NodeProperty::builder()
           .display_name("条件".to_string())
           .name("conditions")
           .required(true)
@@ -156,19 +156,19 @@ impl TryFrom<NodeDefinitionBuilder> for IfV1 {
               .build(),
           )
           .build(),
-        NodeProperties::builder()
+        NodeProperty::builder()
           .display_name("Options")
           .name("options")
           .required(false)
           .placeholder("Add Option")
-          .options(vec![Box::new(NodeProperties::new_option(
+          .options(vec![Box::new(NodeProperty::new_option(
             "Ignore Case",
             "ignore_case",
             json!(true),
             NodePropertyKind::Boolean,
           ))])
           .build(),
-        NodeProperties::builder()
+        NodeProperty::builder()
           .display_name("逻辑组合".to_string())
           .name("combination")
           .kind(NodePropertyKind::Options)
@@ -176,8 +176,8 @@ impl TryFrom<NodeDefinitionBuilder> for IfV1 {
           .description("多个条件之间的逻辑关系".to_string())
           .value(json!(LogicCombination::And))
           .options(vec![
-            Box::new(NodeProperties::new_option("AND", "and", json!(LogicCombination::And), NodePropertyKind::Boolean)),
-            Box::new(NodeProperties::new_option("OR", "or", json!(LogicCombination::Or), NodePropertyKind::Boolean)),
+            Box::new(NodeProperty::new_option("AND", "and", json!(LogicCombination::And), NodePropertyKind::Boolean)),
+            Box::new(NodeProperty::new_option("OR", "or", json!(LogicCombination::Or), NodePropertyKind::Boolean)),
           ])
           .placeholder("".to_string())
           .build(),
