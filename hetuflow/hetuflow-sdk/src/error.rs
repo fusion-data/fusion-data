@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
+/// Sdk Result type
 pub type SdkResult<T> = Result<T, SdkError>;
 
 /// SDK error types

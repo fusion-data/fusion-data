@@ -7,7 +7,7 @@ use crate::{
 };
 use fusion_common::model::IdUuidResult;
 use fusion_common::page::PageResult;
-use fusionsql_core::filter::{OpValString, OpValUuid};
+use fusionsql_core::filter::OpValString;
 use hetuflow_core::models::{JobForCreate, JobForQuery, JobForUpdate, SchedJob};
 use serde::de::DeserializeOwned;
 use uuid::Uuid;
@@ -104,8 +104,6 @@ impl<'a> JobsApi<'a> {
   async fn handle_response<T: DeserializeOwned>(response: Response) -> SdkResult<T> {
     #[cfg(not(target_arch = "wasm32"))]
     {
-      let status = response.status().as_u16();
-
       if response.status().is_success() {
         let text = response
           .text()

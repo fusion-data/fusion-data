@@ -92,8 +92,6 @@ impl<'a> AgentsApi<'a> {
   async fn handle_response<T: DeserializeOwned>(response: Response) -> SdkResult<T> {
     #[cfg(not(target_arch = "wasm32"))]
     {
-      let status = response.status().as_u16();
-
       if response.status().is_success() {
         let text = response
           .text()

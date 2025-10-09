@@ -3,9 +3,12 @@ use thiserror::Error;
 
 pub trait DataError: core::error::Error + core::fmt::Debug + core::fmt::Display + Serialize {
   fn code(&self) -> i32;
+
   fn msg(&self) -> &str;
-  fn source(&self) -> Option<&(dyn core::error::Error + 'static)>;
+
   fn data(&self) -> Option<&serde_json::Value>;
+
+  fn source(&self) -> Option<&(dyn core::error::Error + 'static)>;
 }
 
 pub type Result<T> = core::result::Result<T, Error>;

@@ -5,8 +5,8 @@ use crate::{
   error::{SdkError, SdkResult},
   platform::Response,
 };
-use hetuflow_core::models::{SchedServer, ServerForQuery, ServerForUpdate};
 use fusion_common::page::PageResult;
+use hetuflow_core::models::{SchedServer, ServerForQuery, ServerForUpdate};
 use serde::de::DeserializeOwned;
 
 /// Servers API client
@@ -26,25 +26,30 @@ impl<'a> ApiService for ServersApi<'a> {
 }
 
 impl<'a> ServersApi<'a> {
+  /// Create a new server
   pub fn new(client: &'a crate::HetuflowClient) -> Self {
     Self { client }
   }
 
+  /// Query servers
   pub async fn query(&self, query: ServerForQuery) -> SdkResult<PageResult<SchedServer>> {
     let response = self.client.post("servers/query", &query).await?;
     Self::handle_response(response).await
   }
 
+  /// Get a server
   pub async fn get(&self, id: &str) -> SdkResult<Option<SchedServer>> {
     let response = self.client.get(&format!("servers/{}", id)).await?;
     Self::handle_response(response).await
   }
 
+  /// Update a server
   pub async fn update(&self, id: &str, update: ServerForUpdate) -> SdkResult<()> {
     let response = self.client.post(&format!("servers/{}/update", id), &update).await?;
     Self::handle_response(response).await
   }
 
+  /// Delete a server
   pub async fn delete(&self, id: &str) -> SdkResult<()> {
     let response = self.client.delete(&format!("servers/{}", id)).await?;
     Self::handle_response(response).await

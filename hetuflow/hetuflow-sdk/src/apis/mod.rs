@@ -13,27 +13,32 @@ pub trait ApiService {
   }
 
   /// Make a GET request
-  async fn get(&self, path: &str) -> SdkResult<Response> {
-    self.request::<()>("GET", path, None).await
+  fn get(&self, path: &str) -> impl Future<Output = SdkResult<Response>> {
+    self.request::<()>("GET", path, None)
   }
 
   /// Make a POST request
-  async fn post<T: serde::Serialize>(&self, path: &str, body: &T) -> SdkResult<Response> {
-    self.request("POST", path, Some(body)).await
+  fn post<T: serde::Serialize>(&self, path: &str, body: &T) -> impl Future<Output = SdkResult<Response>> {
+    self.request("POST", path, Some(body))
   }
 
   /// Make a PUT request
-  async fn put<T: serde::Serialize>(&self, path: &str, body: &T) -> SdkResult<Response> {
-    self.request("PUT", path, Some(body)).await
+  fn put<T: serde::Serialize>(&self, path: &str, body: &T) -> impl Future<Output = SdkResult<Response>> {
+    self.request("PUT", path, Some(body))
   }
 
   /// Make a DELETE request
-  async fn delete(&self, path: &str) -> SdkResult<Response> {
-    self.request::<()>("DELETE", path, None).await
+  fn delete(&self, path: &str) -> impl Future<Output = SdkResult<Response>> {
+    self.request::<()>("DELETE", path, None)
   }
 
   /// Make an HTTP request
-  async fn request<T: serde::Serialize>(&self, method: &str, path: &str, body: Option<&T>) -> SdkResult<Response>;
+  fn request<T: serde::Serialize>(
+    &self,
+    method: &str,
+    path: &str,
+    body: Option<&T>,
+  ) -> impl Future<Output = SdkResult<Response>>;
 }
 
 mod agents;

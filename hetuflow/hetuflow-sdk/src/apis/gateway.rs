@@ -26,6 +26,7 @@ impl<'a> ApiService for GatewayApi<'a> {
 }
 
 impl<'a> GatewayApi<'a> {
+  /// Creates a new instance of the GatewayApi
   pub fn new(client: &'a crate::HetuflowClient) -> Self {
     Self { client }
   }

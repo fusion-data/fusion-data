@@ -25,6 +25,7 @@ impl<'a> ApiService for SystemApi<'a> {
 }
 
 impl<'a> SystemApi<'a> {
+  /// Create a new system API client
   pub fn new(client: &'a crate::HetuflowClient) -> Self {
     Self { client }
   }

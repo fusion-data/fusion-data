@@ -6,10 +6,10 @@ use crate::{
   platform::Response,
 };
 use fusion_common::model::IdUuidResult;
+use fusion_common::page::PageResult;
+use fusionsql_core::filter::{OpValInt32, OpValUuid};
 use hetuflow_core::models::{SchedTask, TaskForCreate, TaskForQuery, TaskForUpdate};
 use hetuflow_core::types::TaskStatus;
-use fusionsql_core::filter::{OpValInt32, OpValUuid};
-use fusion_common::page::PageResult;
 use serde::de::DeserializeOwned;
 use uuid::Uuid;
 
@@ -114,8 +114,6 @@ impl<'a> TasksApi<'a> {
   async fn handle_response<T: DeserializeOwned>(response: Response) -> SdkResult<T> {
     #[cfg(not(target_arch = "wasm32"))]
     {
-      let status = response.status().as_u16();
-
       if response.status().is_success() {
         let text = response
           .text()

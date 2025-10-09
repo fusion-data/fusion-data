@@ -25,6 +25,7 @@ impl<'a> ApiService for AuthApi<'a> {
 }
 
 impl<'a> AuthApi<'a> {
+  /// Creates a new instance of the AuthApi
   pub fn new(client: &'a crate::HetuflowClient) -> Self {
     Self { client }
   }

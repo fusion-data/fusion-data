@@ -12,15 +12,6 @@ fusion-data 是一个基于 Rust 生态开发的 **融合数据** 平台，当�
 
 开发环境详细配置请见：[development-zh](./documents/development-zh.md) 说明。
 
-## 🛠 许可证
-
-- **开源版本**：采用 [Apache License 2.0](./LICENSE.txt) 许可证
-- **商业版本**：如需在闭源或专有应用中使用，可获取[商业许可证](./LICENSE-COMMERCIAL.txt)
-
-~~如需避免 Apache-2.0 的限制，请[购买商业许可证](https://hetumind.com/pricing)。~~
-
-~~📩 联系方式：[sales@hetumind.com](mailto:sales@hetumind.com)~~
-
 ## 致谢
 
 本项目从以下优秀项目中汲取了大量灵感和代码：

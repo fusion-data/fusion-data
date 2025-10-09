@@ -9,7 +9,7 @@ use logforth::filter::env_filter::EnvFilterBuilder;
 use logforth::layout::TextLayout;
 use logforth::starter_log::LogStarterBuilder;
 
-use crate::configuration::LogSetting;
+use crate::configuration::{LogSetting, LogWriterType};
 
 pub fn get_trace_id() -> Option<String> {
   // TODO:
@@ -17,12 +17,12 @@ pub fn get_trace_id() -> Option<String> {
 }
 
 pub fn init_log(conf: &LogSetting) {
-  // 如果日志未启用，则不进行配置
+  // If the log is not enabled, do not enable it.
   if !conf.enable() {
     return;
   }
 
-  // 将 LogLevel 转换为 LevelFilter
+  // Convert LogLevel to LevelFilter
   let level_filter = match conf.log_level.0 {
     Level::Error => LevelFilter::Error,
     Level::Warn => LevelFilter::Warn,
@@ -34,23 +34,18 @@ pub fn init_log(conf: &LogSetting) {
   let mut builder = logforth::starter_log::builder();
 
   // 根据 log_writer 配置不同的输出目标
-  match conf.log_writer {
-    crate::configuration::LogWriterType::Stdout => {
-      builder = dispatch_stdout(conf, level_filter, builder);
-    }
-    crate::configuration::LogWriterType::File => {
-      builder = dispatch_file(conf, level_filter, builder);
-    }
-    crate::configuration::LogWriterType::Both => {
-      builder = dispatch_stdout(conf, level_filter, builder);
-      builder = dispatch_file(conf, level_filter, builder);
-    }
+
+  for log_writer in &conf.log_writers {
+    builder = match log_writer {
+      LogWriterType::Stdout => dispatch_stdout(conf, level_filter, builder),
+      LogWriterType::File => dispatch_file(conf, level_filter, builder),
+    };
   }
 
   // 应用配置
   builder.apply();
 
-  info!("Log system initialization completed, level: {}, writer: {:?}", conf.log_level, conf.log_writer);
+  info!("Log system initialization completed, level: {}, writer: {:?}", conf.log_level, conf.log_writers);
 }
 
 fn dispatch_file(conf: &LogSetting, level_filter: LevelFilter, builder: LogStarterBuilder) -> LogStarterBuilder {

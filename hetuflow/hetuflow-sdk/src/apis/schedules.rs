@@ -6,8 +6,8 @@ use crate::{
   platform::Response,
 };
 use fusion_common::model::IdUuidResult;
-use hetuflow_core::models::{SchedSchedule, ScheduleForCreate, ScheduleForQuery, ScheduleForUpdate};
 use fusion_common::page::PageResult;
+use hetuflow_core::models::{SchedSchedule, ScheduleForCreate, ScheduleForQuery, ScheduleForUpdate};
 use serde::de::DeserializeOwned;
 use uuid::Uuid;
 
@@ -28,35 +28,42 @@ impl<'a> ApiService for SchedulesApi<'a> {
 }
 
 impl<'a> SchedulesApi<'a> {
+  /// Create a new SchedulesApi instance
   pub fn new(client: &'a crate::HetuflowClient) -> Self {
     Self { client }
   }
 
+  /// Query schedules
   pub async fn query(&self, query: ScheduleForQuery) -> SdkResult<PageResult<SchedSchedule>> {
     let response = self.client.post("schedules/page", &query).await?;
     Self::handle_response(response).await
   }
 
+  /// Create a new schedule
   pub async fn create(&self, schedule: ScheduleForCreate) -> SdkResult<IdUuidResult> {
     let response = self.client.post("schedules/item", &schedule).await?;
     Self::handle_response(response).await
   }
 
+  /// Get a schedule by ID
   pub async fn get(&self, id: &Uuid) -> SdkResult<Option<SchedSchedule>> {
     let response = self.client.get(&format!("schedules/item/{}", id)).await?;
     Self::handle_response(response).await
   }
 
+  /// Update a schedule by ID
   pub async fn update(&self, id: &Uuid, update: ScheduleForUpdate) -> SdkResult<()> {
     let response = self.client.put(&format!("schedules/item/{}", id), &update).await?;
     Self::handle_response(response).await
   }
 
+  /// Delete a schedule by ID
   pub async fn delete(&self, id: &Uuid) -> SdkResult<()> {
     let response = self.client.delete(&format!("schedules/item/{}", id)).await?;
     Self::handle_response(response).await
   }
 
+  /// Get schedulable schedules
   pub async fn get_schedulable(&self) -> SdkResult<Vec<SchedSchedule>> {
     let response = self.client.get("schedules/schedulable").await?;
     Self::handle_response(response).await

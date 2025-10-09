@@ -37,7 +37,7 @@ server_addr = "0.0.0.0:50000"
 
 [fusion.log]
 enable = true
-log_writer = "both"
+log_writers = ["stdout", "file"]
 with_span_events = []
 log_level = "info"
 log_targets = [

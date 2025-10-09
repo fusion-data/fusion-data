@@ -43,7 +43,7 @@ impl HetuSdk {
     point
   }
 
-  pub async fn query(&self, query: Query) -> Point {
+  pub async fn query(&self, _query: Query) -> Point {
     Point { x: 0, y: 0 }
   }
 }
