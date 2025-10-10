@@ -25,7 +25,7 @@ pub enum CommonIden {
   OwnerId,
 
   /// Deleted at timestamp, used for soft(logical) delete
-  DeletedAt,
+  LogicalDeletion,
 
   /// A monotonically increasing integer
   OptimisticLock,

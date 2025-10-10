@@ -7,7 +7,7 @@ use fusionsql_core::filter::{FilterGroups, apply_to_sea_query};
 
 use crate::{
   ModelManager, Result, SqlError,
-  base::{DbBmc, compute_page, count},
+  base::{DbBmc, compute_page, count, fill_select_statement},
   field::HasSeaFields,
   id::Id,
   page::PageResult,
@@ -40,6 +40,7 @@ where
   let filters: FilterGroups = filter.into();
   let cond: Condition = filters.try_into()?;
   query.cond_where(cond);
+  fill_select_statement::<MC>(&mut query);
 
   // page
   let page = compute_page::<MC>(page)?;
@@ -71,6 +72,7 @@ where
 
   // condition from filter and list options
   f(&mut query)?;
+  fill_select_statement::<MC>(&mut query);
 
   // -- Execute the query
   match mm.dbx() {
@@ -112,6 +114,7 @@ where
   let filters: FilterGroups = id.to_filter_node(MC::COLUMN_ID).into();
   let cond: Condition = filters.try_into()?;
   query.cond_where(cond);
+  fill_select_statement::<MC>(&mut query);
 
   // -- Execute the query
   match mm.dbx() {
@@ -141,6 +144,7 @@ where
   let filters: FilterGroups = filter.into();
   let cond: Condition = filters.try_into()?;
   query.cond_where(cond);
+  fill_select_statement::<MC>(&mut query);
 
   // -- Execute the query
   match mm.dbx() {

@@ -276,7 +276,7 @@ create table if not exists execution_entity (
   --
   wait_till timestamptz,
   status varchar not null,
-  deleted_at timestamptz,
+  logical_deletion timestamptz,
   created_at timestamptz not null,
   created_by bigint not null,
   updated_at timestamptz,
@@ -292,28 +292,28 @@ create table if not exists execution_data (
   data text not null
 );
 
-create index if not exists execution_entity_idx_stopped_at_status_deleted_at on execution_entity (stopped_at, status, deleted_at)
+create index if not exists execution_entity_idx_stopped_at_status_logical_deletion on execution_entity (stopped_at, status, logical_deletion)
 where
   (
     (stopped_at is not null)
-    and (deleted_at is null)
+    and (logical_deletion is null)
   );
 
-create index if not exists idx_execution_entity_wait_till_status_deleted_at on execution_entity (wait_till, status, deleted_at)
+create index if not exists idx_execution_entity_wait_till_status_logical_deletion on execution_entity (wait_till, status, logical_deletion)
 where
   (
     (wait_till is not null)
-    and (deleted_at is null)
+    and (logical_deletion is null)
   );
 
 create index if not exists idx_execution_entity_workflow_id_started_at on execution_entity (workflow_id, started_at)
 where
   (
     (started_at is not null)
-    and (deleted_at is null)
+    and (logical_deletion is null)
   );
 
-create index if not exists execution_entity_idx_deleted_at on execution_entity (deleted_at);
+create index if not exists execution_entity_idx_logical_deletion on execution_entity (logical_deletion);
 
 create table if not exists execution_annotations (
   id uuid constraint execution_annotations_pk primary key,

@@ -70,7 +70,7 @@ impl JobBmc {
   pub async fn soft_delete_by_id(mm: &ModelManager, id: Uuid) -> Result<(), SqlError> {
     mm.dbx()
       .use_postgres(|dbx| async move {
-        sqlx::query("UPDATE sched_job SET deleted_at = NOW() WHERE id = $1")
+        sqlx::query("UPDATE sched_job SET logical_deletion = NOW() WHERE id = $1")
           .bind(id)
           .execute(dbx.db())
           .await?;

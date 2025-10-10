@@ -5,7 +5,9 @@ use sqlx::Row;
 use fusionsql_core::filter::FilterGroups;
 
 use crate::base::utils::{build_sqlx_for_delete, build_sqlx_for_update};
-use crate::base::{CommonIden, DbBmc, prep_fields_for_create, prep_fields_for_update};
+use crate::base::{
+  CommonIden, DbBmc, fill_select_statement, fill_update_statement, prep_fields_for_create, prep_fields_for_update,
+};
 use crate::common::now_offset;
 use crate::field::{HasSeaFields, SeaField, SeaFields};
 use crate::id::Id;
@@ -119,15 +121,14 @@ where
   F: Into<FilterGroups>,
 {
   // -- Build the query
-  let mut stmt = Query::select()
-    .from(MC::table_ref())
-    .expr_as(Expr::col(sea_query::Asterisk).count(), "count")
-    .to_owned();
+  let mut stmt = Query::select();
+  stmt.from(MC::table_ref()).expr_as(Expr::col(sea_query::Asterisk).count(), "count");
 
   // condition from filter
   let filters: FilterGroups = filter.into();
   let cond: Condition = filters.try_into()?;
   stmt.cond_where(cond);
+  fill_select_statement::<MC>(&mut stmt);
 
   match mm.dbx() {
     #[cfg(feature = "with-postgres")]
@@ -167,6 +168,7 @@ where
 
   // -- condition from filter
   f(&mut stmt)?;
+  fill_select_statement::<MC>(&mut stmt);
 
   match mm.dbx() {
     #[cfg(feature = "with-postgres")]
@@ -212,6 +214,7 @@ where
   let fields = fields.for_sea_update();
   let mut stmt = Query::update();
   stmt.table(MC::table_ref()).values(fields).and_where(Expr::col(MC::COLUMN_ID).eq(id.clone()));
+  fill_update_statement::<MC>(&mut stmt);
 
   // -- Execute query
   let count = match mm.dbx() {
@@ -284,7 +287,7 @@ where
   // -- Build query
   let (sql, values) = if MC::_use_logical_deletion() {
     // -- Prep Fields
-    let mut fields = SeaFields::new(vec![SeaField::new(CommonIden::DeletedAt, now_offset())]);
+    let mut fields = SeaFields::new(vec![SeaField::new(CommonIden::LogicalDeletion, now_offset())]);
     if MC::_has_updated_at() {
       fields = prep_fields_for_update::<MC>(fields, ctx);
     }
@@ -330,7 +333,7 @@ where
   // -- Build query
   let (sql, values) = if MC::_use_logical_deletion() {
     // -- Prep Fields
-    let mut fields = SeaFields::new(vec![SeaField::new(CommonIden::DeletedAt, now_offset())]);
+    let mut fields = SeaFields::new(vec![SeaField::new(CommonIden::LogicalDeletion, now_offset())]);
     if MC::_has_updated_at() {
       fields = prep_fields_for_update::<MC>(fields, ctx);
     }
@@ -374,7 +377,7 @@ where
   // -- Build query
   let (sql, values) = if MC::_use_logical_deletion() {
     // -- Prep Fields
-    let mut fields = SeaFields::new(vec![SeaField::new(CommonIden::DeletedAt, now_offset())]);
+    let mut fields = SeaFields::new(vec![SeaField::new(CommonIden::LogicalDeletion, now_offset())]);
     if MC::_has_updated_at() {
       fields = prep_fields_for_update::<MC>(fields, ctx);
     }

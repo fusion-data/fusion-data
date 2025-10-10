@@ -1,12 +1,7 @@
-use axum::{
-  Json,
-  extract::{Path, State},
-  http::StatusCode,
-};
+use axum::{Json, extract::Path, http::StatusCode};
 use fusion_common::model::IdI64Result;
 use fusion_core::application::Application;
 use fusion_web::{WebError, WebResult, ok_json};
-use fusionsql::ModelManager;
 use utoipa_axum::router::OpenApiRouter;
 
 use jieyuan_core::model::{User, UserForCreate, UserForPage, UserForUpdate};
@@ -34,11 +29,9 @@ pub fn routes() -> OpenApiRouter<Application> {
   tag = "用户管理"
 )]
 async fn user_create(
-  State(app): State<Application>,
+  user_svc: UserSvc,
   Json(req): Json<UserForCreate>,
 ) -> Result<(StatusCode, Json<IdI64Result>), WebError> {
-  let mm = app.get_component::<ModelManager>().unwrap();
-  let user_svc = UserSvc::new(mm);
   let id = user_svc.create(req).await?;
   Ok((StatusCode::CREATED, Json(IdI64Result::new(id))))
 }
@@ -56,9 +49,7 @@ async fn user_create(
   ),
   tag = "用户管理"
 )]
-async fn user_get(State(app): State<Application>, Path(id): Path<i64>) -> WebResult<Option<User>> {
-  let mm = app.get_component::<ModelManager>().unwrap();
-  let user_svc = UserSvc::new(mm);
+async fn user_get(user_svc: UserSvc, Path(id): Path<i64>) -> WebResult<Option<User>> {
   let user = user_svc.find_option_by_id(id).await?;
   ok_json!(user)
 }
@@ -77,13 +68,7 @@ async fn user_get(State(app): State<Application>, Path(id): Path<i64>) -> WebRes
   ),
   tag = "用户管理"
 )]
-async fn user_update(
-  State(app): State<Application>,
-  Path(id): Path<i64>,
-  Json(req): Json<UserForUpdate>,
-) -> WebResult<()> {
-  let mm = app.get_component::<ModelManager>().unwrap();
-  let user_svc = UserSvc::new(mm);
+async fn user_update(user_svc: UserSvc, Path(id): Path<i64>, Json(req): Json<UserForUpdate>) -> WebResult<()> {
   user_svc.update_by_id(id, req).await?;
   ok_json!(())
 }
@@ -101,9 +86,7 @@ async fn user_update(
   ),
   tag = "用户管理"
 )]
-async fn user_delete(State(app): State<Application>, Path(id): Path<i64>) -> WebResult<()> {
-  let mm = app.get_component::<ModelManager>().unwrap();
-  let user_svc = UserSvc::new(mm);
+async fn user_delete(user_svc: UserSvc, Path(id): Path<i64>) -> WebResult<()> {
   user_svc.delete_by_id(id).await?;
   ok_json!(())
 }
@@ -119,12 +102,7 @@ async fn user_delete(State(app): State<Application>, Path(id): Path<i64>) -> Web
   ),
   tag = "用户管理"
 )]
-async fn user_page(
-  State(app): State<Application>,
-  Json(req): Json<UserForPage>,
-) -> WebResult<fusionsql::page::PageResult<User>> {
-  let mm = app.get_component::<ModelManager>().unwrap();
-  let user_svc = UserSvc::new(mm);
+async fn user_page(user_svc: UserSvc, Json(req): Json<UserForPage>) -> WebResult<fusionsql::page::PageResult<User>> {
   let result = user_svc.page(req).await?;
   ok_json!(result)
 }

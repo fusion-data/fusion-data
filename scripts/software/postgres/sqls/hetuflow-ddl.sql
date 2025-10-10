@@ -52,7 +52,7 @@ create table sched_job (
   created_at timestamptz not null default now(),
   updated_by bigint,
   updated_at timestamptz,
-  deleted_at timestamptz
+  logical_deletion timestamptz
 );
 
 -- 调度策略表 (sched_schedule)

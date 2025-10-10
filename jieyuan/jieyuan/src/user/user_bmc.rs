@@ -5,6 +5,9 @@ use jieyuan_core::model::{TABLE_USER, User, UserFilter, UserForCreate, UserForUp
 pub struct UserBmc;
 impl DbBmc for UserBmc {
   const TABLE: &'static str = TABLE_USER;
+  fn _use_logical_deletion() -> bool {
+    true
+  }
 }
 
 generate_pg_bmc_common!(

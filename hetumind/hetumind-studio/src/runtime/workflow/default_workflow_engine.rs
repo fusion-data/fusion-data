@@ -6,7 +6,7 @@ use fusion_common::time::now;
 use hetumind_core::{
   expression::ExpressionEvaluator,
   workflow::{
-    ExecutionConfig, ExecutionContext, ExecutionDataMap, ExecutionGraph, ExecutionId, ExecutionResult, ExecutionStatus,
+    WorkflowEngineSetting, ExecutionContext, ExecutionDataMap, ExecutionGraph, ExecutionId, ExecutionResult, ExecutionStatus,
     NodeExecutionContext, NodeExecutionResult, NodeExecutionStatus, NodeName, NodeRegistry, NodesExecutionMap,
     WorkflowEngine, WorkflowExecutionError,
   },
@@ -30,11 +30,11 @@ pub struct DefaultWorkflowEngine {
   /// 监控器
   _monitor: Arc<ExecutionMonitor>,
   /// 配置
-  _config: ExecutionConfig,
+  _config: WorkflowEngineSetting,
 }
 
 impl DefaultWorkflowEngine {
-  pub fn new(node_registry: NodeRegistry, execution_store: Arc<dyn ExecutionStore>, _config: ExecutionConfig) -> Self {
+  pub fn new(node_registry: NodeRegistry, execution_store: Arc<dyn ExecutionStore>, _config: WorkflowEngineSetting) -> Self {
     let scheduler = Arc::new(TaskScheduler::new(_config.clone()));
     let _concurrency_controller = Arc::new(ConcurrencyController::new(_config.clone()));
     let _monitor = Arc::new(ExecutionMonitor::new());

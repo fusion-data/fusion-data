@@ -3,7 +3,7 @@ use std::{collections::VecDeque, sync::Arc, time::Duration};
 use ahash::HashMap;
 use fusion_common::time::now;
 use hetumind_core::workflow::{
-  ExecutionConfig, ExecutionData, ExecutionId, NodeExecutionError, NodeName, WorkflowExecutionError,
+  WorkflowEngineSetting, ExecutionData, ExecutionId, NodeExecutionError, NodeName, WorkflowExecutionError,
 };
 use tokio::sync::{RwLock, mpsc};
 
@@ -30,7 +30,7 @@ pub struct TaskScheduler {
 }
 
 impl TaskScheduler {
-  pub fn new(config: ExecutionConfig) -> Self {
+  pub fn new(config: WorkflowEngineSetting) -> Self {
     let (control_tx, control_rx) = mpsc::unbounded_channel();
 
     Self {

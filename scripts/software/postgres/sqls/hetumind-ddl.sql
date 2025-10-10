@@ -94,16 +94,17 @@ create table if not exists credential_entity (
   namespace_id varchar(40) not null,
   name varchar(128) not null,
   data text not null,
-  kind varchar(128) not null,
+  kind int not null,
   is_managed boolean default false not null,
   created_at timestamptz not null,
   created_by bigint not null,
   updated_at timestamptz,
   updated_by bigint,
-  deleted_at timestamptz
+  logical_deletion timestamptz
 );
 
 create index if not exists credential_entity_idx_kind on credential_entity (kind);
+
 create unique index if not exists credential_entity_idx_namespace_name on credential_entity (namespace_id, name);
 
 create table if not exists event_destination (
@@ -162,11 +163,7 @@ create table if not exists folder (
 
 create unique index if not exists folder_uidx_project_id_id on folder (project_id, id);
 
-create table if not exists setting (
-  key varchar(255) constraint setting_pk primary key,
-  value text not null,
-  load_on_startup boolean default false not null
-);
+create table if not exists setting (key varchar(255) constraint setting_pk primary key, value text not null, load_on_startup boolean default false not null);
 
 create table if not exists shared_credentials (
   credentials_id uuid not null constraint shared_credentials_fk_credentials references credential_entity on delete cascade,
@@ -279,7 +276,7 @@ create table if not exists execution_entity (
   --
   wait_till timestamptz,
   status varchar not null,
-  deleted_at timestamptz,
+  logical_deletion timestamptz,
   created_at timestamptz not null,
   created_by bigint not null,
   updated_at timestamptz,
@@ -295,28 +292,28 @@ create table if not exists execution_data (
   data text not null
 );
 
-create index if not exists execution_entity_idx_stopped_at_status_deleted_at on execution_entity (stopped_at, status, deleted_at)
+create index if not exists execution_entity_idx_stopped_at_status_logical_deletion on execution_entity (stopped_at, status, logical_deletion)
 where
   (
     (stopped_at is not null)
-    and (deleted_at is null)
+    and (logical_deletion is null)
   );
 
-create index if not exists idx_execution_entity_wait_till_status_deleted_at on execution_entity (wait_till, status, deleted_at)
+create index if not exists idx_execution_entity_wait_till_status_logical_deletion on execution_entity (wait_till, status, logical_deletion)
 where
   (
     (wait_till is not null)
-    and (deleted_at is null)
+    and (logical_deletion is null)
   );
 
 create index if not exists idx_execution_entity_workflow_id_started_at on execution_entity (workflow_id, started_at)
 where
   (
     (started_at is not null)
-    and (deleted_at is null)
+    and (logical_deletion is null)
   );
 
-create index if not exists execution_entity_idx_deleted_at on execution_entity (deleted_at);
+create index if not exists execution_entity_idx_logical_deletion on execution_entity (logical_deletion);
 
 create table if not exists execution_annotation (
   id uuid constraint execution_annotation_pk primary key,

@@ -78,7 +78,7 @@ pub fn get_fusionsql_field_props_and_skips<'a>(fields: &'a FieldsNamed) -> Model
     })
   }
 
-  ModelsqlFieldsAndSkips { fusionsql_fields: fusionsql_fields, skipped_fields, field_mask_field }
+  ModelsqlFieldsAndSkips { fusionsql_fields, skipped_fields, field_mask_field }
 }
 
 // endregion: --- Field Prop (i.e., sqlb Field)

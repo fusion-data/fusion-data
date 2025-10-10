@@ -15,7 +15,7 @@ impl Default for RetryConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ExecutionConfig {
+pub struct WorkflowEngineSetting {
   /// 最大并发执行数
   pub max_concurrent_executions: u32,
   /// 节点执行超时（秒）
@@ -28,7 +28,7 @@ pub struct ExecutionConfig {
   pub memory_limit_mb: u64,
 }
 
-impl Default for ExecutionConfig {
+impl Default for WorkflowEngineSetting {
   fn default() -> Self {
     Self {
       max_concurrent_executions: 10,

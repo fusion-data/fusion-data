@@ -17,7 +17,7 @@ workspace = true
 
 [dependencies]
 # -- fusions
-fusion-common = { workspace = true, features = ["with-uuid"] }
+fusion-common = { workspace = true, features = ["with-uuid", "with-openapi"] }
 fusion-core = { workspace = true, features = ["with-uuid"] }
 
 # -- hetus

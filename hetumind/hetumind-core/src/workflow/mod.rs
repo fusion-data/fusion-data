@@ -1,3 +1,5 @@
+#[cfg(feature = "with-db")]
+mod _db;
 mod config;
 mod connection;
 mod context;

@@ -3,7 +3,7 @@ use std::ops::Deref;
 use fusion_common::ahash::HashMap;
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use serde_repr::{Deserialize_repr, Serialize_repr};
-use strum::{AsRefStr, Display};
+use strum::Display;
 use typed_builder::TypedBuilder;
 use uuid::Uuid;
 
@@ -415,14 +415,13 @@ pub enum DataPathRequirement {
   Multiple = 2,
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, AsRefStr, Display)]
-#[serde(rename_all = "snake_case")]
-#[strum(serialize_all = "snake_case")]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize_repr, Deserialize_repr, Display)]
 #[cfg_attr(feature = "with-db", derive(sqlx::Type))]
+#[repr(i32)]
 pub enum CredentialKind {
-  Oauth2,
-  Authenticate,
-  GenericAuth,
+  GenericAuth = 1,
+  Authenticate = 2,
+  Oauth2 = 3,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -459,8 +458,3 @@ pub enum NodeParameterValueType {
   Boolean(bool),
   Object(HashMap<String, Box<NodeParameterValueType>>),
 }
-
-#[cfg(feature = "with-db")]
-fusionsql::generate_enum_string_to_sea_query_value!(
-  Enum: CredentialKind,
-);

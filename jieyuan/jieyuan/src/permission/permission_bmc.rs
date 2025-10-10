@@ -16,6 +16,9 @@ use crate::role::RolePermissionBmc;
 pub struct PermissionBmc;
 impl DbBmc for PermissionBmc {
   const TABLE: &'static str = TABLE_PERMISSION;
+  fn _use_logical_deletion() -> bool {
+    true
+  }
 }
 
 generate_pg_bmc_common!(

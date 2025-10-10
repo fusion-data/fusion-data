@@ -1,5 +1,13 @@
 # SQLs
 
+## Init ddl & dml
+
+### jieyuan
+
+```
+psql -h localhost -U fusiondata -d fusiondata -f scripts/software/postgres/sqls/jieyuan-ddl.sql
+```
+
 ## 清除脚本
 
 ### jieyuan

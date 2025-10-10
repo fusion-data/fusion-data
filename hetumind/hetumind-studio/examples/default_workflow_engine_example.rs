@@ -18,7 +18,7 @@ use hetumind_core::{
   types::JsonValue,
   version::Version,
   workflow::{
-    Connection, ConnectionKind, ExecutionConfig, ExecutionContext, ExecutionData, ExecutionDataItems, ExecutionDataMap,
+    Connection, ConnectionKind, WorkflowEngineSetting, ExecutionContext, ExecutionData, ExecutionDataItems, ExecutionDataMap,
     ExecutionId, ExecutionStatus, Node, NodeDefinition, NodeDefinitionBuilder, NodeExecutable, NodeExecutionContext,
     NodeExecutionError, NodeGroupKind, NodeKind, NodeName, NodeRegistry, ParameterMap, Workflow, WorkflowEngine,
     WorkflowId, WorkflowSettings,
@@ -230,7 +230,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
   // 5. Create the execution store and config
   let execution_store = Arc::new(MockExecutionStore::default());
-  let execution_config = ExecutionConfig::default();
+  let execution_config = WorkflowEngineSetting::default();
 
   // 6. Create the workflow engine
   let workflow_engine = DefaultWorkflowEngine::new(node_registry, execution_store, execution_config);

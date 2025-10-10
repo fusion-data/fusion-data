@@ -1,19 +1,12 @@
 //! tests/common/mod.rs
-#![allow(dead_code)]
 
 use axum::Router;
 use axum_test::TestServer;
 use config::File;
 use fusion_core::{DataError, application::Application};
-use fusion_db::DbPlugin;
 use fusionsql::{ModelManager, store::DbxPostgres};
 use hetumind_core::workflow::{ErrorHandlingStrategy, ExecutionMode, WorkflowId, WorkflowStatus};
-use hetumind_studio::{
-  endpoint,
-  infra::{db::execution::ExecutionStorePlugin, queue::QueueProviderPlugin},
-  runtime::workflow::WorkflowEnginePlugin,
-  utils::NodeRegistryPlugin,
-};
+use hetumind_studio::{endpoint, start::app_builder};
 use once_cell::sync::Lazy;
 use serde_json::json;
 use sqlx::{Connection, Executor, PgConnection};
@@ -57,19 +50,19 @@ impl TestContext {
     let application = Application::global();
     let mm = application.component::<ModelManager>();
 
-    // 运行数据库迁移
-    mm.dbx()
-      .use_postgres(|dbx| async move {
-        sqlx::migrate::Migrator::new(std::path::Path::new("scripts/migrations"))
-          .await
-          .unwrap()
-          .run(dbx.db())
-          .await
-          .unwrap();
-        Ok(())
-      })
-      .await
-      .unwrap();
+    // // 运行数据库迁移
+    // mm.dbx()
+    //   .use_postgres(|dbx| async move {
+    //     sqlx::migrate::Migrator::new(std::path::Path::new("scripts/migrations"))
+    //       .await
+    //       .unwrap()
+    //       .run(dbx.db())
+    //       .await
+    //       .unwrap();
+    //     Ok(())
+    //   })
+    //   .await
+    //   .unwrap();
 
     let router = endpoint::api::routes().with_state(application);
     let dbx = mm.dbx().db_postgres().unwrap().clone();
@@ -79,15 +72,7 @@ impl TestContext {
 }
 
 async fn init_application() -> Result<Application, DataError> {
-  Application::builder()
-    .add_config_source(File::with_name("resources/test-app.toml"))
-    .add_plugin(DbPlugin) // ModelManager
-    .add_plugin(NodeRegistryPlugin) // NodeRegistry
-    .add_plugin(ExecutionStorePlugin) // ExecutionStoreService
-    .add_plugin(QueueProviderPlugin) // QueueProvider
-    .add_plugin(WorkflowEnginePlugin) // WorkflowEngineService
-    .build()
-    .await
+  app_builder(Some(File::with_name("resources/test-app.toml"))).run().await
 }
 
 async fn create_test_database() {
@@ -127,4 +112,4 @@ pub fn create_test_workflow_json() -> (WorkflowId, serde_json::Value) {
   (id, workflow_json)
 }
 
-pub const ADMIN_TOKEN: &str = "eyJ0eXAiOiJKV1QiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiYWxnIjoiZGlyIn0..DgILOqv5oLrhjyZ_czY3SQ.0VtJ2ukXRcZ9XiJzB0rF99q2KM-AmZPe1HeFOHlHcwo.1rFXa0FUUBQX2y5xaTcm7A";
+pub const ADMIN_TOKEN: &str = "eyJ0eXAiOiJKV1QiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiYWxnIjoiZGlyIn0..03gYECTkpz9mT4yBeslZkw.hzfsYCVvvJYIC8JqQxu3w6MI2puqekcMJ0C6Q0G3FJ9lW9nCaRmUx8im7DGx8Zki.wdKF4I1iMTCFggcA7qjmug";

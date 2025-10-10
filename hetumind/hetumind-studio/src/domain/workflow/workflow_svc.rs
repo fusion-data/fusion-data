@@ -165,7 +165,7 @@ impl WorkflowSvc {
       wait_till: None,
       retry_of: None,
       retry_success_id: None,
-      deleted_at: None,
+      logical_deletion: None,
       created_at: now(),
       created_by,
       updated_at: None,

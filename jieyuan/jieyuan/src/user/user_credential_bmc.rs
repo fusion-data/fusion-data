@@ -1,7 +1,7 @@
 use fusionsql::{base::DbBmc, generate_pg_bmc_common, generate_pg_bmc_filter};
 
 use jieyuan_core::model::{
-  TABLE_USER_CREDENTIAL, UserCredential, UserCredentialFilter, UserCredentialForCreate, UserCredentialForUpdate,
+  TABLE_USER_CREDENTIAL, UserCredential, UserCredentialFilter, UserCredentialForInsert, UserCredentialForUpdate,
 };
 
 pub struct UserCredentialBmc;
@@ -12,8 +12,8 @@ impl DbBmc for UserCredentialBmc {
 generate_pg_bmc_common!(
   Bmc: UserCredentialBmc,
   Entity: UserCredential,
-  ForCreate: UserCredentialForCreate,
   ForUpdate: UserCredentialForUpdate,
+  ForInsert: UserCredentialForInsert,
 );
 
 generate_pg_bmc_filter!(

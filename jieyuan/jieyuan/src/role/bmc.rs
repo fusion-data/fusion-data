@@ -14,6 +14,9 @@ use super::RolePermissionBmc;
 pub struct RoleBmc;
 impl DbBmc for RoleBmc {
   const TABLE: &'static str = "iam_role";
+  fn _use_logical_deletion() -> bool {
+    true
+  }
 }
 
 generate_pg_bmc_common!(

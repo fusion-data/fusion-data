@@ -5,6 +5,9 @@ use jieyuan_core::model::{Policy, PolicyFilter, PolicyForCreate, PolicyForUpdate
 pub struct PolicyBmc;
 impl DbBmc for PolicyBmc {
   const TABLE: &'static str = TABLE_POLICY;
+  fn _use_logical_deletion() -> bool {
+    true
+  }
 }
 
 generate_pg_bmc_common!(

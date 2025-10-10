@@ -10,7 +10,7 @@ create table if not exists iam_user (
   created_at timestamptz not null default now(),
   updated_by bigint,
   updated_at timestamptz,
-  deleted_at timestamptz,
+  logical_deletion timestamptz,
   constraint iam_user_pk primary key (id)
 );
 
@@ -36,7 +36,7 @@ create table if not exists iam_policy (
   created_at timestamptz not null default now(),
   updated_by bigint,
   updated_at timestamptz,
-  deleted_at timestamptz,
+  logical_deletion timestamptz,
   constraint iam_policy_pk primary key (id)
 );
 
@@ -51,7 +51,7 @@ create table if not exists iam_permission (
   created_at timestamptz not null default now(),
   updated_by bigint,
   updated_at timestamptz,
-  deleted_at timestamptz,
+  logical_deletion timestamptz,
   constraint iam_permission_pk primary key (id)
 );
 
@@ -65,7 +65,7 @@ create table if not exists iam_role (
   created_at timestamptz not null default now(),
   updated_by bigint,
   updated_at timestamptz,
-  deleted_at timestamptz,
+  logical_deletion timestamptz,
   constraint iam_role_pk primary key (id)
 );
 

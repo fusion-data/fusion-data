@@ -23,7 +23,7 @@ impl From<i32> for TokenType {
 }
 
 /// Signin request
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct SigninRequest {
   pub email: Option<String>,
