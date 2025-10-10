@@ -3,6 +3,7 @@
 use fusion_common::page::Page;
 use hetuflow_core::models::{AgentForQuery, JobForCreate, JobForQuery, TaskForQuery};
 use hetuflow_core::types::JobStatus;
+use hetuflow_core::utils::defaults::default_namespace_id;
 use hetuflow_sdk::HetuflowClient;
 
 #[tokio::main]
@@ -63,7 +64,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
   println!("\n=== Creating Job ===");
   let create_job = JobForCreate {
     id: None,
-    namespace_id: Some("default".to_string()),
+    namespace_id: default_namespace_id(),
     name: "example-job".to_string(),
     description: Some("Example job created via SDK".to_string()),
     environment: Some(serde_json::json!({

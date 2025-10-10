@@ -94,35 +94,38 @@ impl NodeGroupKind {
   }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize_repr, Deserialize_repr, Default)]
-#[repr(i32)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
 pub enum NodeExecutionMode {
-  /// 每次执行一个 item
+  /// Execute one item at a time
   #[default]
-  EachItem = 1,
-  /// 将所有
-  All = 2,
+  EachItem,
+
+  /// Execute all items as a whole list
+  All,
 }
 
-/// 错误处理策略
-#[derive(Debug, Clone, Default, Serialize_repr, Deserialize_repr)]
-#[repr(i32)]
+/// The handling strategy when workflow execution encounters an error
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum OnErrorBehavior {
-  /// 停止工作流
+  /// Stop workflow execution
   #[default]
-  StopWorkflow = 1,
-  /// 继续执行，并跳过当前节点
-  Continue = 2,
-  /// 输出错误到指定端口
-  ContinueErrorOutput = 3,
+  Stop,
+
+  /// Continue execution and skip the current node
+  Continue,
+
+  /// Output error to specified port
+  ErrorOutput,
 }
 
-/// 节点固定数据
+/// Node fixed data
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct PinData {
-  /// 节点固定数据, 用于存储节点执行过程中需要保存的数据
-  /// - key: 节点 ID
-  /// - value: 节点执行数据（结果）
+  /// Node fixed data, used to store data that needs to be saved during node execution
+  /// - key: node name
+  /// - value: node execution data (results)
   pub data: HashMap<NodeName, VecExecutionData>,
 }
 
@@ -138,21 +141,21 @@ impl From<(i32, i32)> for Position {
   }
 }
 
-/// 工作流节点
+/// Workflow Node
 #[derive(Debug, Clone, Serialize, Deserialize, TypedBuilder)]
 pub struct WorkflowNode {
-  /// 流程内节点唯一标识名。可通过此名字访问其它 node，比如：访问其它 node 的数据。
-  pub name: NodeName,
-
-  /// 节点类型
   pub kind: NodeKind,
 
-  /// 节点显示名称，界面上节点显示的名称。未设置时使用 name 的值。
+  /// The unique identifier name of the node within the workflow. Other nodes can be accessed via this name,
+  /// for example, accessing other node's data through `$node(name)` in expressions.
+  pub name: NodeName,
+
+  /// The display name of the node, shown in the UI. Uses the value of `name` if not set.
   #[builder(default, setter(into, strip_option))]
   pub display_name: Option<String>,
 
-  /// 节点参数。
-  /// NodeDefinition.properties 限制可使用的参数。
+  /// Node parameters. Parameters configured when defining the workflow. For configurable parameters,
+  /// see the `properties` property of NodeDefinition.
   #[builder(default)]
   pub parameters: ParameterMap,
 
@@ -175,7 +178,6 @@ pub struct WorkflowNode {
   #[builder(default, setter(strip_option))]
   pub always_output_data: Option<bool>,
 
-  /// 只执行一次 (可选)。为 true 时将 items 作为整体
   #[serde(default)]
   #[builder(default)]
   pub execute_mode: NodeExecutionMode,

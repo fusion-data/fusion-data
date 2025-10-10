@@ -53,7 +53,7 @@ impl std::fmt::Display for NodeName {
   }
 }
 
-/// 节点类型，用于唯一标识一个节点，相同类型的不同版本节点使用相同的 NodeKind
+/// Node type, used to uniquely identify a node. Different versions of the same type of node use the same NodeKind.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, derive_more::Into)]
 #[serde(transparent)]
 #[cfg_attr(feature = "with-db", derive(sqlx::Type), sqlx(transparent))]
@@ -96,7 +96,7 @@ impl std::fmt::Display for NodeKind {
   }
 }
 
-/// 节点属性类型（元数据）
+/// Node property type (metadata)
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum NodePropertyKind {
@@ -125,7 +125,7 @@ pub enum NodePropertyKind {
   WorkflowSelector,
 }
 
-// 节点属性类型选项 - 主结构体
+// Node property type options - main structure
 #[derive(Debug, Clone, Serialize, Deserialize, TypedBuilder)]
 pub struct NodePropertyKindOptions {
   /// 按钮配置 (支持: [NodePropertyKind::Button])
@@ -282,7 +282,7 @@ pub struct NodeProperty {
   pub kind_options: Option<NodePropertyKindOptions>,
 
   /// 是否必填
-  #[builder(default = true)]
+  #[builder(default = false)]
   pub required: bool,
 
   /// 参数的默认值
@@ -367,6 +367,11 @@ impl NodeProperty {
     kind: NodePropertyKind,
   ) -> Self {
     Self::builder().display_name(display_name).name(name).value(value).kind(kind).build()
+  }
+
+  pub fn new_option_value(value: JsonValue, kind: NodePropertyKind) -> Self {
+    let name = serde_json::to_string(&value).unwrap();
+    Self::new_option(&name, &name, value, kind)
   }
 }
 

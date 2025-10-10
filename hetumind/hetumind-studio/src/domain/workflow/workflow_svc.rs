@@ -2,8 +2,8 @@ use axum::extract::FromRequestParts;
 use fusion_common::time::now;
 use fusion_core::{DataError, application::Application};
 use fusion_web::WebError;
-use fusionsql::page::PageResult;
-use hetumind_context::{ctx::CtxW, utils::new_ctx_w_from_parts};
+use fusionsql::{ModelManager, page::PageResult};
+use hetumind_context::utils::get_mm_from_parts;
 use hetumind_core::workflow::{
   ExecuteWorkflowRequest, ExecutionGraph, ExecutionId, ExecutionIdResponse, ExecutionMode, ExecutionStatus,
   ValidateWorkflowRequest, ValidateWorkflowResponse, ValidationError, Workflow, WorkflowForCreate, WorkflowForQuery,
@@ -14,17 +14,17 @@ use http::request::Parts;
 use super::{ExecutionBmc, ExecutionDataBmc, ExecutionDataEntity, ExecutionEntity, WorkflowBmc};
 
 pub struct WorkflowSvc {
-  ctx: CtxW,
+  mm: ModelManager,
 }
 
 impl WorkflowSvc {
   pub async fn get_workflow(&self, id: &WorkflowId) -> Result<Workflow, DataError> {
-    let entity = WorkflowBmc::find_by_id(self.ctx.mm(), id.clone()).await?;
+    let entity = WorkflowBmc::find_by_id(&self.mm, id.clone()).await?;
     Workflow::try_from(entity)
   }
 
   pub async fn delete_workflow(&self, workflow_id: &WorkflowId) -> Result<(), DataError> {
-    WorkflowBmc::delete_by_id(self.ctx.mm(), workflow_id.clone()).await?;
+    WorkflowBmc::delete_by_id(&self.mm, workflow_id.clone()).await?;
     Ok(())
   }
 
@@ -39,7 +39,7 @@ impl WorkflowSvc {
   }
 
   pub async fn query_workflows(&self, input: WorkflowForQuery) -> Result<PageResult<Workflow>, DataError> {
-    let res = WorkflowBmc::page(self.ctx.mm(), vec![input.filter], input.options).await?;
+    let res = WorkflowBmc::page(&self.mm, vec![input.filter], input.options).await?;
     let result = res.result.into_iter().map(Workflow::try_from).collect::<Result<Vec<_>, _>>()?;
     Ok(PageResult::new(res.page.total, result))
   }
@@ -56,7 +56,7 @@ impl WorkflowSvc {
       return Err(DataError::biz_error(400, "工作流不合法", Some(serde_json::to_value(errors).unwrap())));
     }
 
-    WorkflowBmc::insert(self.ctx.mm(), entity_c).await?;
+    WorkflowBmc::insert(&self.mm, entity_c).await?;
     Ok(workflow_id)
   }
 
@@ -68,7 +68,7 @@ impl WorkflowSvc {
       return Err(DataError::biz_error(400, "工作流不合法", Some(serde_json::to_value(errors).unwrap())));
     }
 
-    let mm = self.ctx.mm().get_txn_clone();
+    let mm = self.mm.get_txn_clone();
     mm.dbx().begin_txn().await?;
 
     // 不更新状态，只更新其他字段。如果状态发生变化，后面单独进行更新
@@ -152,7 +152,7 @@ impl WorkflowSvc {
     }
 
     // 2. 创建执行记录
-    let created_by = self.ctx.ctx()?.uid();
+    let created_by = self.mm.ctx_ref()?.uid();
     let execution_id = ExecutionId::now_v7();
     let execution_entity = ExecutionEntity {
       id: execution_id.clone(),
@@ -172,7 +172,7 @@ impl WorkflowSvc {
       updated_by: None,
     };
 
-    let mm = self.ctx.mm().get_txn_clone();
+    let mm = self.mm.get_txn_clone();
     mm.dbx().begin_txn().await?; // 开启事务
 
     // 插入执行记录
@@ -200,8 +200,8 @@ impl WorkflowSvc {
 }
 
 impl WorkflowSvc {
-  pub fn new(ctx: CtxW) -> Self {
-    Self { ctx }
+  pub fn new(mm: ModelManager) -> Self {
+    Self { mm }
   }
 }
 
@@ -209,6 +209,6 @@ impl FromRequestParts<Application> for WorkflowSvc {
   type Rejection = WebError;
 
   async fn from_request_parts(parts: &mut Parts, state: &Application) -> Result<Self, Self::Rejection> {
-    new_ctx_w_from_parts(parts, state).map(Self::new)
+    get_mm_from_parts(parts, state).map(Self::new)
   }
 }

@@ -3,7 +3,7 @@ use fusion_db::DbPlugin;
 
 use crate::{
   endpoint::init_web,
-  infra::{db::execution::ExecutionStorePlugin, queue::QueueProviderPlugin},
+  infra::{db::execution::ExecutionStorePlugin, queue::QueueProviderPlugin, security::EncryptionKeyManager},
   runtime::workflow::WorkflowEnginePlugin,
   utils::NodeRegistryPlugin,
 };
@@ -18,6 +18,8 @@ pub async fn start() -> Result<(), DataError> {
     .add_plugin(WorkflowEnginePlugin) // WorkflowEngineService
     .run()
     .await?;
+
+  app.add_component(EncryptionKeyManager::new());
 
   // 初始化 web
   init_web(app).await?;

@@ -89,8 +89,9 @@ create table if not exists auth_provider_sync_history (
   error text
 );
 
-create table if not exists credentials_entity (
-  id uuid constraint credentials_entity_pk primary key,
+create table if not exists credential_entity (
+  id uuid constraint credential_entity_pk primary key,
+  namespace_id varchar(40) not null,
   name varchar(128) not null,
   data text not null,
   kind varchar(128) not null,
@@ -98,13 +99,15 @@ create table if not exists credentials_entity (
   created_at timestamptz not null,
   created_by bigint not null,
   updated_at timestamptz,
-  updated_by bigint
+  updated_by bigint,
+  deleted_at timestamptz
 );
 
-create index if not exists credentials_entity_idx_kind on credentials_entity (kind);
+create index if not exists credential_entity_idx_kind on credential_entity (kind);
+create unique index if not exists credential_entity_idx_namespace_name on credential_entity (namespace_id, name);
 
-create table if not exists event_destinations (
-  id uuid constraint event_destinations_pk primary key,
+create table if not exists event_destination (
+  id uuid constraint event_destination_pk primary key,
   destination jsonb not null,
   created_at timestamptz not null,
   created_by bigint not null,
@@ -112,8 +115,8 @@ create table if not exists event_destinations (
   updated_by bigint
 );
 
-create table if not exists installed_packages (
-  package_name varchar(214) constraint installed_packages_pk primary key,
+create table if not exists installed_package (
+  package_name varchar(214) constraint installed_package_pk primary key,
   installed_version varchar(50) not null,
   author_name varchar(70),
   author_email varchar(70),
@@ -123,11 +126,11 @@ create table if not exists installed_packages (
   updated_by bigint
 );
 
-create table if not exists installed_nodes (
-  name varchar(200) constraint installed_nodes_pk primary key,
+create table if not exists installed_node (
+  name varchar(200) constraint installed_node_pk primary key,
   kind varchar(200) not null,
   latest_version integer default 1 not null,
-  package varchar(241) not null constraint installed_nodes_fk_package references installed_packages on update cascade on delete cascade
+  package varchar(241) not null constraint installed_node_fk_package references installed_package on update cascade on delete cascade
 );
 
 create table if not exists invalid_auth_token (token varchar(512) constraint invalid_auth_token_pk primary key, expires_at timestamptz not null);
@@ -159,14 +162,14 @@ create table if not exists folder (
 
 create unique index if not exists folder_uidx_project_id_id on folder (project_id, id);
 
-create table if not exists settings (
-  key varchar(255) constraint settings_pk primary key,
+create table if not exists setting (
+  key varchar(255) constraint setting_pk primary key,
   value text not null,
   load_on_startup boolean default false not null
 );
 
 create table if not exists shared_credentials (
-  credentials_id uuid not null constraint shared_credentials_fk_credentials references credentials_entity on delete cascade,
+  credentials_id uuid not null constraint shared_credentials_fk_credentials references credential_entity on delete cascade,
   project_id uuid not null constraint shared_credentials_fk_project references project on delete cascade,
   role text not null,
   created_at timestamptz not null,
@@ -251,13 +254,13 @@ create table if not exists workflow_entity (
 
 create index if not exists workflow_entity_idx_name on workflow_entity (name);
 
-create table if not exists workflows_tags (
-  workflow_id uuid not null constraint fk_workflows_tags_workflow_id references workflow_entity on delete cascade,
-  tag_id uuid not null constraint fk_workflows_tags_tag_id references tag_entity on delete cascade,
-  constraint workflows_tags_pk primary key (workflow_id, tag_id)
+create table if not exists workflow_tag (
+  workflow_id uuid not null constraint fk_workflow_tag_workflow_id references workflow_entity on delete cascade,
+  tag_id uuid not null constraint fk_workflow_tag_tag_id references tag_entity on delete cascade,
+  constraint workflow_tag_pk primary key (workflow_id, tag_id)
 );
 
-create index if not exists workflows_tags_idx_workflow_id on workflows_tags (workflow_id);
+create index if not exists workflow_tag_idx_workflow_id on workflow_tag (workflow_id);
 
 -- 工作流执行记录表
 -- 记录每次工作流执行的详细信息
@@ -315,9 +318,9 @@ where
 
 create index if not exists execution_entity_idx_deleted_at on execution_entity (deleted_at);
 
-create table if not exists execution_annotations (
-  id uuid constraint execution_annotations_pk primary key,
-  execution_id uuid not null constraint execution_annotations_fk_execution_entity references execution_entity on delete cascade,
+create table if not exists execution_annotation (
+  id uuid constraint execution_annotation_pk primary key,
+  execution_id uuid not null constraint execution_annotation_fk_execution_entity references execution_entity on delete cascade,
   vote varchar(6),
   note text,
   created_at timestamptz not null,
@@ -326,17 +329,17 @@ create table if not exists execution_annotations (
   updated_by bigint
 );
 
-create unique index if not exists execution_annotations_uidx_execution_id on execution_annotations (execution_id);
+create unique index if not exists execution_annotation_uidx_execution_id on execution_annotation (execution_id);
 
-create table if not exists execution_annotation_tags (
-  annotation_id uuid not null constraint execution_annotation_tags_fk_execution_annotations references execution_annotations on delete cascade,
-  tag_id uuid not null constraint execution_annotation_tags_fk_annotation_tag_entity references annotation_tag_entity on delete cascade,
-  constraint execution_annotation_tags_pk primary key (annotation_id, tag_id)
+create table if not exists execution_annotation_tag (
+  annotation_id uuid not null constraint execution_annotation_tag_fk_execution_annotation references execution_annotation on delete cascade,
+  tag_id uuid not null constraint execution_annotation_tag_fk_annotation_tag_entity references annotation_tag_entity on delete cascade,
+  constraint execution_annotation_tag_pk primary key (annotation_id, tag_id)
 );
 
-create index if not exists execution_annotation_tags_idx_tag_id on execution_annotation_tags (tag_id);
+create index if not exists execution_annotation_tag_idx_tag_id on execution_annotation_tag (tag_id);
 
-create index if not exists execution_annotation_tags_idx_annotation_id on execution_annotation_tags (annotation_id);
+create index if not exists execution_annotation_tag_idx_annotation_id on execution_annotation_tag (annotation_id);
 
 create table if not exists execution_metadata (
   id uuid constraint execution_metadata_pk primary key,
@@ -347,40 +350,40 @@ create table if not exists execution_metadata (
 
 create unique index if not exists execution_metadata_uidx_execution_id_key on execution_metadata (execution_id, key);
 
-create table if not exists insights_metadata (
-  meta_id serial constraint insights_metadata_pk primary key,
-  workflow_id uuid constraint insights_metadata_fk_workflow_entity references workflow_entity on delete set null,
-  project_id uuid constraint insights_metadata_fk_project references project on delete set null,
+create table if not exists insight_metadata (
+  meta_id serial constraint insight_metadata_pk primary key,
+  workflow_id uuid constraint insight_metadata_fk_workflow_entity references workflow_entity on delete set null,
+  project_id uuid constraint insight_metadata_fk_project references project on delete set null,
   workflow_name varchar(128) not null,
   project_name varchar(255) not null
 );
 
-create table if not exists insights_by_period (
-  id serial constraint insights_by_period_pk primary key,
-  meta_id integer not null constraint insights_by_period_fk_insights_metadata references insights_metadata on delete cascade,
+create table if not exists insight_by_period (
+  id serial constraint insight_by_period_pk primary key,
+  meta_id integer not null constraint insight_by_period_fk_insight_metadata references insight_metadata on delete cascade,
   kind integer not null,
   value integer not null,
   period_unit integer not null,
   period_start timestamptz default current_timestamp
 );
 
-comment on column insights_by_period.kind is '0: time_saved_minutes, 1: runtime_milliseconds, 2: success, 3: failure';
+comment on column insight_by_period.kind is '0: time_saved_minutes, 1: runtime_milliseconds, 2: success, 3: failure';
 
-comment on column insights_by_period.period_unit is '0: hour, 1: day, 2: week';
+comment on column insight_by_period.period_unit is '0: hour, 1: day, 2: week';
 
-create unique index if not exists insights_by_period_uidx_period_start_type_period_unit_meta_id on insights_by_period (period_start, kind, period_unit, meta_id);
+create unique index if not exists insight_by_period_uidx_period_start_type_period_unit_meta_id on insight_by_period (period_start, kind, period_unit, meta_id);
 
-create unique index if not exists insights_metadata_uidx_workflow_id on insights_metadata (workflow_id);
+create unique index if not exists insight_metadata_uidx_workflow_id on insight_metadata (workflow_id);
 
-create table if not exists insights_raw (
-  id serial constraint insights_raw_pk primary key,
-  meta_id integer not null constraint insights_raw_fk_insights_metadata references insights_metadata on delete cascade,
+create table if not exists insight_raw (
+  id serial constraint insight_raw_pk primary key,
+  meta_id integer not null constraint insight_raw_fk_insight_metadata references insight_metadata on delete cascade,
   kind integer not null,
   value integer not null,
   created_at timestamptz not null
 );
 
-comment on column insights_raw.kind is '0: time_saved_minutes, 1: runtime_milliseconds, 2: success, 3: failure';
+comment on column insight_raw.kind is '0: time_saved_minutes, 1: runtime_milliseconds, 2: success, 3: failure';
 
 create table if not exists processed_data (
   workflow_id uuid not null constraint processed_data_fk_workflow_entity references workflow_entity on delete cascade,

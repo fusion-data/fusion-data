@@ -6,6 +6,7 @@ use fusionsql_core::filter::FilterGroups;
 
 use crate::base::utils::{build_sqlx_for_delete, build_sqlx_for_update};
 use crate::base::{CommonIden, DbBmc, prep_fields_for_create, prep_fields_for_update};
+use crate::common::now_offset;
 use crate::field::{HasSeaFields, SeaField, SeaFields};
 use crate::id::Id;
 use crate::store::Dbx;
@@ -283,7 +284,7 @@ where
   // -- Build query
   let (sql, values) = if MC::_use_logical_deletion() {
     // -- Prep Fields
-    let mut fields = SeaFields::new(vec![SeaField::new(CommonIden::LogiscalDeletion, true)]);
+    let mut fields = SeaFields::new(vec![SeaField::new(CommonIden::DeletedAt, now_offset())]);
     if MC::_has_updated_at() {
       fields = prep_fields_for_update::<MC>(fields, ctx);
     }
@@ -329,7 +330,7 @@ where
   // -- Build query
   let (sql, values) = if MC::_use_logical_deletion() {
     // -- Prep Fields
-    let mut fields = SeaFields::new(vec![SeaField::new(CommonIden::LogiscalDeletion, true)]);
+    let mut fields = SeaFields::new(vec![SeaField::new(CommonIden::DeletedAt, now_offset())]);
     if MC::_has_updated_at() {
       fields = prep_fields_for_update::<MC>(fields, ctx);
     }
@@ -373,7 +374,7 @@ where
   // -- Build query
   let (sql, values) = if MC::_use_logical_deletion() {
     // -- Prep Fields
-    let mut fields = SeaFields::new(vec![SeaField::new(CommonIden::LogiscalDeletion, true)]);
+    let mut fields = SeaFields::new(vec![SeaField::new(CommonIden::DeletedAt, now_offset())]);
     if MC::_has_updated_at() {
       fields = prep_fields_for_update::<MC>(fields, ctx);
     }

@@ -13,29 +13,27 @@ publish = true
 workspace = true
 
 [dependencies]
-fusion-common = { workspace = true }
-fusion-core = { workspace = true }
+fusion-common = { workspace = true, features = ["with-uuid"] }
+fusion-core = { workspace = true, features = ["with-uuid"] }
 hetumind-core = { workspace = true }
 hetumind-context = { workspace = true }
 
-# 网络请求
+# network
 reqwest = { workspace = true }
 
-# 异步支持
+# async & concurrency
 async-trait = { workspace = true }
 tokio = { workspace = true }
 
-# 序列化
+# ser & deser
 serde = { workspace = true }
 serde_json = { workspace = true }
 
-# 错误处理
+# misc
 thiserror = { workspace = true }
-
-# 日志
 log = { workspace = true }
-
-# 其他工具
 ahash = { workspace = true }
 uuid = { workspace = true }
 regex = { workspace = true }
+croner = { workspace = true }
+duration-str = { workspace = true }

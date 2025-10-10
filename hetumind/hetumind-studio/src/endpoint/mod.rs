@@ -1,6 +1,6 @@
 use axum::Router;
 use fusion_core::{DataError, application::Application};
-use fusion_web::server::init_server;
+use fusion_web::server::WebServerBuilder;
 use http::header::AUTHORIZATION;
 use tower_http::{
   compression::CompressionLayer,
@@ -22,5 +22,5 @@ pub async fn init_web(app: Application) -> Result<(), DataError> {
     .layer(SetSensitiveRequestHeadersLayer::new(vec![AUTHORIZATION]))
     .layer(CompressionLayer::new());
 
-  init_server(router).await
+  WebServerBuilder::new(router).build().await
 }

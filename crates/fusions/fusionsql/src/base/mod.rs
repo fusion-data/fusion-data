@@ -21,9 +21,13 @@ pub const LIST_LIMIT_MAX: u64 = 5000;
 
 #[derive(Iden)]
 pub enum CommonIden {
-  // Id,
+  /// Owner user id,
   OwnerId,
-  LogiscalDeletion,
+
+  /// Deleted at timestamp, used for soft(logical) delete
+  DeletedAt,
+
+  /// A monotonically increasing integer
   OptimisticLock,
 }
 

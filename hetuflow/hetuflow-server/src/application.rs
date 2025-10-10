@@ -7,6 +7,7 @@ use fusion_core::{
   configuration::ConfigRegistry,
 };
 use fusion_db::DbPlugin;
+use fusion_web::server::WebServerBuilder;
 use fusionsql::ModelManager;
 use log::{error, info};
 use mea::{
@@ -122,8 +123,7 @@ impl ServerApplication {
     let shutdown_rx = self.get_shutdown_recv().await;
     let router = crate::endpoint::routes().with_state(self.clone());
     let handle = tokio::spawn(async move {
-      let conf = Application::global().get_config().expect("WebConfig not valid");
-      match fusion_web::server::init_server_with_config(&conf, router, Some(shutdown_rx)).await {
+      match WebServerBuilder::new(router).with_shutdown(shutdown_rx).build().await {
         Ok(_) => {
           info!("HTTP server has been shutdown");
         }

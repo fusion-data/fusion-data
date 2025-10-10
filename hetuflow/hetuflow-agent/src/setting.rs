@@ -3,7 +3,7 @@ use std::{env::consts, path::PathBuf, sync::Arc, time::Duration};
 use duration_str::deserialize_duration;
 use fusion_common::{ahash::HashMap, env::get_env};
 use fusion_core::{DataError, configuration::FusionConfigRegistry};
-use hetuflow_core::{types::Labels, utils::config::write_app_config};
+use hetuflow_core::{types::Labels, utils::setting::write_app_setting};
 use log::{info, warn};
 use serde::{Deserialize, Serialize};
 use sysinfo::System;
@@ -210,7 +210,7 @@ impl HetuflowAgentSetting {
         Err(_) => PathBuf::from(get_env("HOME")?).join(".hetuflow").join("agent.toml"),
       };
       std::fs::create_dir_all(path.parent().unwrap()).unwrap();
-      write_app_config(path, KEY_PATH_AGENT_ID, &agent_id.to_string())
+      write_app_setting(path, KEY_PATH_AGENT_ID, &agent_id.to_string())
         .map_err(|e| DataError::internal(500, "Error writing configuration file", Some(Box::new(e))))?;
       info!("Generated new agent_id: {}, and write to config file", agent_id);
 

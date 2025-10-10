@@ -7,13 +7,15 @@ use thiserror::Error;
 pub enum ConfigError {
   #[error(transparent)]
   ConfigError(#[from] config::ConfigError),
+
   #[error(transparent)]
   TomlError(#[from] toml::ser::Error),
+
   #[error(transparent)]
   IoError(#[from] std::io::Error),
 }
 
-pub fn write_app_config(path: PathBuf, key: &str, id: &str) -> Result<(), ConfigError> {
+pub fn write_app_setting(path: PathBuf, key: &str, id: &str) -> Result<(), ConfigError> {
   let config = Config::builder()
     .add_source(config::File::from(path.clone()))
     .add_source(config::File::from_str(&format!("{}: {}", key, id), config::FileFormat::Yaml))

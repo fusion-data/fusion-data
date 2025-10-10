@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::types::JobStatus;
+use crate::utils::defaults::default_namespace_id;
 
 use super::TaskConfig;
 
@@ -34,7 +35,8 @@ pub struct SchedJob {
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct JobForCreate {
   pub id: Option<Uuid>,
-  pub namespace_id: Option<String>,
+  #[serde(default = "default_namespace_id")]
+  pub namespace_id: String,
   pub name: String,
   pub description: Option<String>,
   pub environment: Option<serde_json::Value>,

@@ -1,15 +1,15 @@
 use axum::extract::FromRequestParts;
 use fusion_core::{DataError, application::Application};
 use fusion_web::WebError;
-use fusionsql::page::PageResult;
-use hetumind_context::{ctx::CtxW, utils::new_ctx_w_from_parts};
+use fusionsql::{ModelManager, page::PageResult};
+use hetumind_context::utils::get_mm_from_parts;
 use hetumind_core::workflow::{Execution, ExecutionData, ExecutionForQuery, ExecutionForUpdate, ExecutionId};
 use http::request::Parts;
 
 use crate::domain::workflow::ExecutionBmc;
 
 pub struct ExecutionSvc {
-  pub ctx: CtxW,
+  pub mm: ModelManager,
 }
 
 impl ExecutionSvc {
@@ -30,7 +30,7 @@ impl ExecutionSvc {
   }
 
   pub async fn find_execution_by_id(&self, execution_id: ExecutionId) -> Result<Execution, DataError> {
-    let entity = ExecutionBmc::find_by_id(self.ctx.mm(), execution_id).await?;
+    let entity = ExecutionBmc::find_by_id(&self.mm, execution_id).await?;
     // let execution = Execution::try_from(entity)?;
     todo!()
   }
@@ -53,8 +53,8 @@ impl ExecutionSvc {
 }
 
 impl ExecutionSvc {
-  pub fn new(ctx: CtxW) -> Self {
-    Self { ctx }
+  pub fn new(mm: ModelManager) -> Self {
+    Self { mm }
   }
 }
 
@@ -62,6 +62,6 @@ impl FromRequestParts<Application> for ExecutionSvc {
   type Rejection = WebError;
 
   async fn from_request_parts(parts: &mut Parts, state: &Application) -> Result<Self, Self::Rejection> {
-    new_ctx_w_from_parts(parts, state).map(Self::new)
+    get_mm_from_parts(parts, state).map(Self::new)
   }
 }
