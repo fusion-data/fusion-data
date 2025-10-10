@@ -18,13 +18,13 @@ use hetumind_core::{
   types::JsonValue,
   version::Version,
   workflow::{
-    Connection, ConnectionKind, WorkflowEngineSetting, ExecutionContext, ExecutionData, ExecutionDataItems, ExecutionDataMap,
-    ExecutionId, ExecutionStatus, Node, NodeDefinition, NodeDefinitionBuilder, NodeExecutable, NodeExecutionContext,
+    Connection, ConnectionKind, ExecutionContext, ExecutionData, ExecutionDataItems, ExecutionDataMap, ExecutionId,
+    ExecutionStatus, Node, NodeDefinition, NodeDefinitionBuilder, NodeExecutable, NodeExecutionContext,
     NodeExecutionError, NodeGroupKind, NodeKind, NodeName, NodeRegistry, ParameterMap, Workflow, WorkflowEngine,
-    WorkflowId, WorkflowSettings,
+    WorkflowEngineSetting, WorkflowId, WorkflowSettings,
   },
 };
-use hetumind_nodes::constants::START_NODE_KIND;
+use hetumind_nodes::constants::START_TRIGGER_NODE_KIND;
 use hetumind_nodes::trigger::StartNode;
 use hetumind_studio::runtime::{
   checkpoint::{CheckpointError, ExecutionCheckpoint},
@@ -326,7 +326,7 @@ fn create_sample_workflow() -> Result<Workflow, Box<dyn std::error::Error>> {
   // Create nodes
   let start_node = WorkflowNode::builder()
     .name(NodeName::from("start_node"))
-    .kind(NodeKind::from(START_NODE_KIND))
+    .kind(NodeKind::from(START_TRIGGER_NODE_KIND))
     .display_name("Start")
     .parameters(ParameterMap::default())
     .build();

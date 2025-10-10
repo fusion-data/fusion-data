@@ -1,12 +1,12 @@
-mod schedule_trigger_node;
-mod start_node;
-mod webhook_trigger_node;
+mod schedule_trigger;
+mod start;
+mod webhook_trigger;
 
 use std::sync::Arc;
 
-pub use schedule_trigger_node::ScheduleTriggerNode;
-pub use start_node::StartNode;
-pub use webhook_trigger_node::WebhookTriggerNode;
+pub use schedule_trigger::ScheduleTriggerNode;
+pub use start::StartNode;
+pub use webhook_trigger::WebhookTriggerNode;
 
 use hetumind_core::workflow::{NodeRegistry, RegistrationError};
 

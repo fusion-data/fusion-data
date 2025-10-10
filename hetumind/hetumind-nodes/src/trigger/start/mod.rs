@@ -12,7 +12,7 @@ use hetumind_core::workflow::{
   make_execution_data_map,
 };
 
-use crate::constants::START_NODE_KIND;
+use crate::constants::START_TRIGGER_NODE_KIND;
 
 pub struct StartNodeV1 {
   definition: Arc<NodeDefinition>,
@@ -69,7 +69,7 @@ impl StartNode {
 fn create_base() -> NodeDefinitionBuilder {
   let mut base = NodeDefinitionBuilder::default();
   base
-    .kind(START_NODE_KIND)
+    .kind(START_TRIGGER_NODE_KIND)
     .version(Version::new(1, 0, 0))
     .groups([NodeGroupKind::Trigger])
     .display_name("Start")
