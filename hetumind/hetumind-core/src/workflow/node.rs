@@ -422,6 +422,10 @@ pub struct NodeDefinition {
   #[builder(default = default_bool_false())]
   pub hidden: bool,
 
+  /// 当个工作流中允许最多允许配置多少个此类型的节点，默认不限制
+  #[builder(default, setter(strip_option))]
+  pub max_nodes: Option<u32>,
+
   /// 节点图标。（支持 FontAwesome 图标或文件图标）或自定义图标URL
   #[builder(default, setter(into, strip_option))]
   pub icon: Option<String>,

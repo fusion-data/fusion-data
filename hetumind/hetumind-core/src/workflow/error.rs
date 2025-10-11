@@ -2,8 +2,12 @@
 use fusionsql::SqlError;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
+use typed_builder::TypedBuilder;
 
-use crate::{types::JsonValue, workflow::NodeDefinitionBuilderError};
+use crate::{
+  types::JsonValue,
+  workflow::{ExecutionId, ExecutionMode, NodeDefinitionBuilderError},
+};
 
 use super::{ConnectionIndex, ConnectionKind, NodeKind, NodeName, WorkflowId};
 
@@ -152,4 +156,50 @@ pub enum RegistrationError {
 
   #[error(transparent)]
   NodeDefinitionBuilderError(#[from] NodeDefinitionBuilderError),
+}
+
+// 错误工作流触发数据结构
+#[derive(Debug, Clone, Serialize, Deserialize, TypedBuilder)]
+pub struct WorkflowErrorData {
+  /// 错误来源工作流信息
+  pub workflow: WorkflowErrorSource,
+  /// 执行错误信息（如果有执行上下文）
+  pub execution: Option<ExecutionErrorInfo>,
+  /// 触发器错误信息（如果没有执行上下文）
+  pub trigger: Option<TriggerErrorInfo>,
+}
+
+/// 错误来源工作流信息
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WorkflowErrorSource {
+  pub id: WorkflowId,
+  pub name: String,
+}
+
+/// 执行错误信息
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ExecutionErrorInfo {
+  pub id: ExecutionId,
+  pub url: Option<String>,
+  pub retry_of: Option<String>,
+  pub error: ErrorInfo,
+  pub last_node_executed: NodeName,
+  pub mode: ExecutionMode,
+}
+
+/// 触发器错误信息
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TriggerErrorInfo {
+  pub error: ErrorInfo,
+  pub mode: ExecutionMode,
+}
+
+/// 标准化错误信息结构
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ErrorInfo {
+  pub message: String,
+  pub stack: Option<String>,
+  pub name: Option<String>,
+  pub description: Option<String>,
+  pub timestamp: Option<chrono::DateTime<chrono::Utc>>,
 }

@@ -8,7 +8,7 @@ use hetumind_core::{
   workflow::{
     ExecutionContext, ExecutionDataMap, ExecutionGraph, ExecutionId, ExecutionResult, ExecutionStatus,
     NodeExecutionContext, NodeExecutionResult, NodeExecutionStatus, NodeName, NodeRegistry, NodesExecutionMap,
-    WorkflowEngine, WorkflowEngineSetting, WorkflowExecutionError,
+    WorkflowEngine, WorkflowEngineSetting, WorkflowErrorData, WorkflowExecutionError, WorkflowId,
   },
 };
 
@@ -120,6 +120,14 @@ fn collect_parents_results(
 // TODO: 若存在有多个开始节点的情况，需要考虑如何处理？
 #[async_trait]
 impl WorkflowEngine for DefaultWorkflowEngine {
+  async fn execute_error_workflow(
+    &self,
+    error_data: WorkflowErrorData,
+    error_workflow_id: Option<WorkflowId>,
+  ) -> Result<ExecutionResult, WorkflowExecutionError> {
+    todo!()
+  }
+
   async fn execute_workflow(
     &self,
     trigger_data: (NodeName, ExecutionDataMap),

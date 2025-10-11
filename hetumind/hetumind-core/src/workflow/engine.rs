@@ -1,7 +1,8 @@
 use async_trait::async_trait;
 
 use super::{
-  ExecutionContext, ExecutionDataMap, ExecutionId, ExecutionResult, ExecutionStatus, NodeName, WorkflowExecutionError,
+  ExecutionContext, ExecutionDataMap, ExecutionId, ExecutionResult, ExecutionStatus, NodeName, WorkflowErrorData,
+  WorkflowExecutionError, WorkflowId,
 };
 
 #[async_trait]
@@ -24,4 +25,11 @@ pub trait WorkflowEngine: Send + Sync {
 
   /// 获取执行状态
   async fn get_execution_status(&self, execution_id: &ExecutionId) -> Result<ExecutionStatus, WorkflowExecutionError>;
+
+  /// 执行错误工作流
+  async fn execute_error_workflow(
+    &self,
+    error_data: WorkflowErrorData,
+    error_workflow_id: Option<WorkflowId>,
+  ) -> Result<ExecutionResult, WorkflowExecutionError>;
 }

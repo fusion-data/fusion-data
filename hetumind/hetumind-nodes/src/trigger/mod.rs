@@ -1,4 +1,5 @@
 mod chat_trigger;
+mod error_trigger;
 mod schedule_trigger;
 mod start;
 mod webhook_trigger;
@@ -6,6 +7,7 @@ mod webhook_trigger;
 use std::sync::Arc;
 
 pub use chat_trigger::ChatTriggerNode;
+pub use error_trigger::ErrorTriggerNode;
 pub use schedule_trigger::ScheduleTriggerNode;
 pub use start::StartNode;
 pub use webhook_trigger::WebhookTriggerNode;
@@ -24,6 +26,9 @@ pub fn register_nodes(registry: &NodeRegistry) -> Result<(), RegistrationError> 
 
   let chat_node = ChatTriggerNode::new()?;
   registry.register_node(Arc::new(chat_node))?;
+
+  let error_node = ErrorTriggerNode::new()?;
+  registry.register_node(Arc::new(error_node))?;
 
   Ok(())
 }
