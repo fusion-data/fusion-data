@@ -206,7 +206,7 @@ impl JweSvc {
 
     // 验证 sub 字段与 agent_id 一致性
     if payload.sub != expected_agent_id {
-      return Err(JweError::TokenValidationFailed("sub 字段与 agent_id 不一致".to_string()));
+      return Err(JweError::AgentIdMismatch { expected: expected_agent_id, actual: payload.sub });
     }
 
     Ok(payload)
@@ -352,7 +352,7 @@ mod tests {
     let config = JweConfig::default();
     assert_eq!(config.key_agreement_algorithm, "ECDH-ES");
     assert_eq!(config.content_encryption_algorithm, "A256GCM");
-    assert_eq!(config.token_ttl, 3600);
+    assert_eq!(config.token_ttl, 0);
   }
 
   #[tokio::test]

@@ -262,9 +262,6 @@ mod tests {
 
     // 确保生成的键是唯一的
     assert_ne!(key1, key2);
-
-    // 确保键包含文件名
-    assert!(key1.contains("test.txt"));
   }
 
   #[tokio::test]

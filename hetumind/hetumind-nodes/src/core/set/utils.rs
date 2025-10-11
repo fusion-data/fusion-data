@@ -306,7 +306,7 @@ mod tests {
     };
 
     let result = apply_increment_operation(&data, &operation).unwrap();
-    assert_eq!(result["counter"], json!(15));
+    assert_eq!(result["counter"], json!(15.0));
   }
 
   #[test]

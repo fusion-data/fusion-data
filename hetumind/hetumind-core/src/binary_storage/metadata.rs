@@ -80,6 +80,7 @@ impl BinaryDataMetadata {
       self.directory = std::path::Path::new(file_name)
         .parent()
         .and_then(|parent| parent.to_str())
+        .filter(|path| !path.is_empty())
         .map(|path| path.to_string());
     }
   }
@@ -87,7 +88,7 @@ impl BinaryDataMetadata {
   /// 根据MIME类型确定文件类型
   fn determine_file_kind(&self, mime_type: &str) -> BinaryFileKind {
     match mime_type {
-      t if t.starts_with("text/") => BinaryFileKind::Text,
+      t if t.starts_with("text/") && mime_type != "text/html" => BinaryFileKind::Text,
       "application/json" => BinaryFileKind::Json,
       t if t.starts_with("image/") => BinaryFileKind::Image,
       t if t.starts_with("video/") => BinaryFileKind::Video,
@@ -143,7 +144,8 @@ mod tests {
 
     assert_eq!(metadata.file_kind, Some(BinaryFileKind::Pdf));
     assert_eq!(metadata.file_extension, Some("pdf".to_string()));
-    assert_eq!(metadata.directory, Some("document".to_string()));
+    // For a file without a path separator, directory should be None
+    assert_eq!(metadata.directory, None);
   }
 
   #[test]

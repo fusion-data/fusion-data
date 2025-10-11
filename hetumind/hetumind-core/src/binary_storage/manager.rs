@@ -319,7 +319,7 @@ impl BinaryDataManager {
   /// 根据MIME类型确定文件类型
   fn determine_file_kind(&self, mime_type: &str) -> BinaryFileKind {
     match mime_type {
-      t if t.starts_with("text/") => BinaryFileKind::Text,
+      t if t.starts_with("text/") && mime_type != "text/html" => BinaryFileKind::Text,
       "application/json" => BinaryFileKind::Json,
       t if t.starts_with("image/") => BinaryFileKind::Image,
       t if t.starts_with("video/") => BinaryFileKind::Video,
@@ -467,6 +467,9 @@ mod tests {
   async fn test_metrics() {
     let storage = Arc::new(MockStorage::new("test"));
     let manager = BinaryDataManager::with_default_cache(storage).unwrap();
+
+    // 重置统计信息以确保从零开始
+    manager.get_metrics_collector().reset_stats().await;
 
     // 执行一些操作
     let data = vec![1, 2, 3, 4, 5];

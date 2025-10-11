@@ -3,7 +3,7 @@ use std::sync::Arc;
 use ahash::HashMap;
 use hetumind_core::{
   user::UserId,
-  workflow::{WorkflowEngineSetting, NodeExecutionError, WorkflowExecutionError},
+  workflow::{NodeExecutionError, WorkflowEngineSetting, WorkflowExecutionError},
 };
 use tokio::sync::{Semaphore, SemaphorePermit};
 

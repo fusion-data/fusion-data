@@ -252,11 +252,6 @@ fn evaluate_condition(data: &Value, condition: &str) -> bool {
     return b;
   }
 
-  // 检查是否存在字段
-  if data.get(condition).is_some() {
-    return true;
-  }
-
   // 检查字符串值
   if let Some(str_value) = data.get(condition).and_then(|v| v.as_str()) {
     return !str_value.is_empty();
@@ -267,7 +262,8 @@ fn evaluate_condition(data: &Value, condition: &str) -> bool {
     return num_value > 0.0;
   }
 
-  false
+  // 检查是否存在字段（非空、非零值）
+  data.get(condition).is_some()
 }
 
 #[cfg(test)]
@@ -390,6 +386,7 @@ mod tests {
     assert!(evaluate_condition(&data_with_string, "status"));
 
     let data_empty_string = json!({"status": ""});
+    // Empty string should evaluate to false
     assert!(!evaluate_condition(&data_empty_string, "status"));
 
     // 测试数值条件

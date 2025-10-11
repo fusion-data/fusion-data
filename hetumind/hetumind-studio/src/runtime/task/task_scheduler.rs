@@ -3,7 +3,7 @@ use std::{collections::VecDeque, sync::Arc, time::Duration};
 use ahash::HashMap;
 use fusion_common::time::now;
 use hetumind_core::workflow::{
-  WorkflowEngineSetting, ExecutionData, ExecutionId, NodeExecutionError, NodeName, WorkflowExecutionError,
+  ExecutionData, ExecutionId, NodeExecutionError, NodeName, WorkflowEngineSetting, WorkflowExecutionError,
 };
 use tokio::sync::{RwLock, mpsc};
 

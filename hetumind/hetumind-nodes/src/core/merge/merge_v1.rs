@@ -102,12 +102,7 @@ impl TryFrom<NodeDefinitionBuilder> for MergeV1 {
           .description("数据合并策略")
           .value(json!(MergeMode::Append))
           .options(vec![
-            Box::new(NodeProperty::new_option(
-              "Append",
-              "append",
-              json!(MergeMode::Append),
-              NodePropertyKind::String,
-            )),
+            Box::new(NodeProperty::new_option("Append", "append", json!(MergeMode::Append), NodePropertyKind::String)),
             Box::new(NodeProperty::new_option(
               "MergeByKey",
               "merge_by_key",

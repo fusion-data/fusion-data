@@ -116,7 +116,7 @@ mod tests {
     let node = MergeNode::new().unwrap();
     let definition = node.default_node_executor().unwrap().definition();
 
-    assert_eq!(definition.kind.as_ref(), "Merge");
+    assert_eq!(definition.kind.as_ref(), "hetumind_nodes::Merge");
     assert_eq!(&definition.groups, &[NodeGroupKind::Transform, NodeGroupKind::Input, NodeGroupKind::Output]);
     assert_eq!(&definition.display_name, "Merge");
     assert_eq!(definition.inputs.len(), 1);

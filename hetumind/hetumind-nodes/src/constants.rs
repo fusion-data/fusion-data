@@ -2,6 +2,7 @@
 pub static IF_NODE_KIND: &str = "hetumind_nodes::If";
 pub static LOOP_OVER_ITEMS_NODE_KIND: &str = "hetumind_nodes::LoopOverItems";
 pub static MERGE_NODE_KIND: &str = "hetumind_nodes::Merge";
+pub static READ_WRITE_FILES_NODE_KIND: &str = "hetumind_nodes::ReadWriteFiles";
 pub static SPLIT_NODE_KIND: &str = "hetumind_nodes::Split";
 pub static SET_NODE_KIND: &str = "hetumind_nodes::Set";
 

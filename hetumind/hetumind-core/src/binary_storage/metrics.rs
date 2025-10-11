@@ -146,10 +146,7 @@ impl BasicMetricsCollector {
     let mut operations = self.operations.blocking_write();
     operations.insert(operation_id.clone(), progress);
 
-    // 更新统计
-    let mut stats = self.stats.blocking_write();
-    stats.total_operations += 1;
-
+    // 不在这里更新统计，而是在完成操作时更新
     operation_id
   }
 
@@ -170,10 +167,7 @@ impl BasicMetricsCollector {
     let mut operations = self.operations.write().await;
     operations.insert(operation_id.clone(), progress);
 
-    // 更新统计
-    let mut stats = self.stats.write().await;
-    stats.total_operations += 1;
-
+    // 不在这里更新统计，而是在完成操作时更新
     operation_id
   }
 
@@ -210,10 +204,12 @@ impl BasicMetricsCollector {
 
       // 更新统计
       let mut stats = self.stats.write().await;
+      stats.total_operations += 1; // 在这里增加总操作数
       if success {
-        stats.increment_successful(bytes_processed);
+        stats.successful_operations += 1;
+        stats.total_bytes_processed += bytes_processed;
       } else {
-        stats.increment_failed();
+        stats.failed_operations += 1;
       }
 
       Ok(())
@@ -234,7 +230,8 @@ impl BasicMetricsCollector {
 
       // 更新统计
       let mut stats = self.stats.write().await;
-      stats.increment_failed();
+      stats.total_operations += 1; // 在这里增加总操作数
+      stats.failed_operations += 1;
 
       Ok(())
     } else {
@@ -381,6 +378,9 @@ mod tests {
   #[tokio::test]
   async fn test_metrics_collector() {
     let collector = BasicMetricsCollector::new();
+
+    // 重置统计信息以确保从零开始
+    collector.reset_stats().await;
 
     // 测试开始操作
     let operation_id = collector.start_operation_async("store", 100).await;

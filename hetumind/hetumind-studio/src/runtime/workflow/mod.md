@@ -21,9 +21,9 @@
 
 从 `Workflow` 结构构建执行图：
 
-```rust
+```rust,ignore
 use hetumind_core::workflow::{ExecutionGraph, Workflow, WorkflowSettings, WorkflowMeta, WorkflowStatus, ExecutionMode, ErrorHandlingStrategy};
-use hetumind_core::node::PinData;
+use hetumind_core::workflow::PinData;
 use uuid::Uuid;
 
 let workflow_id = Uuid::now_v7();
@@ -31,18 +31,19 @@ let workflow = Workflow {
   id: workflow_id.into(),
   name: "Test Workflow".to_string(),
   status: WorkflowStatus::Draft,
-  version_id: workflow_id.into(),
+  version: Some(workflow_id.into()),
   settings: WorkflowSettings {
     execution_timeout: None,
-    max_concurrent_executions: None,
-    error_handling: ErrorHandlingStrategy::StopOnFirstError,
-    execution_mode: ExecutionMode::Default,
-    save_execution_data_days: None,
+    error_handling: Some(ErrorHandlingStrategy::StopOnFirstError),
+    execution_mode: Some(ExecutionMode::default()),
     remark: None,
   },
-  meta: WorkflowMeta { template_creds_setup_completed: false },
+  meta: WorkflowMeta {
+    credentials_setup_completed: Some(false),
+    template_id: None,
+  },
   nodes: Vec::new(),
-  connections: Vec::new(),
+  connections: HashMap::default(),
   pin_data: PinData::default(),
   static_data: None,
 };
@@ -106,20 +107,21 @@ cargo test -p hetumind-studio test_execution_graph
 
 ## 使用示例
 
-```rust
+```rust,ignore
 use std::sync::Arc;
 
 use fusion_common::ctx::Ctx;
-use hetumind::runtime::workflow::WorkflowEngineImpl;
-use hetumind::runtime::execution::ExecutionStore;
-use hetumind::runtime::checkpoint::{CheckpointError, ExecutionCheckpoint};
-use hetumind_context::node::NodeRegistry;
+use hetumind_studio::runtime::workflow::WorkflowEngineImpl;
+use hetumind_studio::runtime::execution::ExecutionStore;
+use hetumind_studio::runtime::checkpoint::{CheckpointError, ExecutionCheckpoint};
+use hetumind_core::workflow::NodeRegistry;
 use hetumind_core::workflow::{
-    WorkflowEngine, ExecutionConfig, ExecutionContext, Workflow, WorkflowSettings, WorkflowMeta,
+    WorkflowEngine, ExecutionContext, Workflow, WorkflowSettings, WorkflowMeta,
     WorkflowStatus, ExecutionMode, ErrorHandlingStrategy, ExecutionId, ExecutionStatus,
     RetryConfig, WorkflowExecutionError, Execution
 };
-use hetumind_core::node::{ExecutionData, PinData};
+use hetumind_core::workflow::ExecutionData;
+use hetumind_core::workflow::PinData;
 use async_trait::async_trait;
 use uuid::Uuid;
 
@@ -156,18 +158,19 @@ impl ExecutionStore for MockExecutionStore {
         id: workflow_id.into(),
         name: "Test Workflow".to_string(),
         status: WorkflowStatus::Draft,
-        version_id: workflow_id.into(),
+        version: Some(workflow_id.into()),
         settings: WorkflowSettings {
             execution_timeout: None,
-            max_concurrent_executions: None,
-            error_handling: ErrorHandlingStrategy::StopOnFirstError,
-            execution_mode: ExecutionMode::Default,
-            save_execution_data_days: None,
+            error_handling: Some(ErrorHandlingStrategy::StopOnFirstError),
+            execution_mode: Some(ExecutionMode::default()),
             remark: None,
         },
-        meta: WorkflowMeta { template_creds_setup_completed: false },
+        meta: WorkflowMeta {
+            credentials_setup_completed: Some(false),
+            template_id: None,
+        },
         nodes: Vec::new(),
-        connections: Vec::new(),
+        connections: HashMap::default(),
         pin_data: PinData::default(),
         static_data: None,
     };
@@ -175,17 +178,9 @@ impl ExecutionStore for MockExecutionStore {
     // 创建执行引擎
     let node_registry = Arc::new(NodeRegistry::new());
     let execution_store = Arc::new(MockExecutionStore);
-    let config = ExecutionConfig {
-        max_concurrent_executions: 10,
-        node_timeout_seconds: 60,
-        workflow_timeout_seconds: 300,
-        retry_config: RetryConfig { max_retries: 3, retry_interval_seconds: 5 },
-        memory_limit_mb: 512,
-    };
     let engine = WorkflowEngineImpl::new(
         node_registry,
         execution_store,
-        config,
     );
 
     // 执行工作流

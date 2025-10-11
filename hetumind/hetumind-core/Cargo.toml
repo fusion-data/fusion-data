@@ -42,6 +42,8 @@ sea-query = { workspace = true, optional = true }
 fusionsql = { workspace = true, optional = true }
 fusionsql-core = { workspace = true, features = ["with-uuid"] }
 dashmap = { workspace = true }
+content_inspector = "0.2"
+mime_guess = { workspace = true }
 
 [dev-dependencies]
 dotenvy = { workspace = true }

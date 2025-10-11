@@ -265,7 +265,7 @@ mod tests {
   #[test]
   fn test_node_definition() {
     let definition = create_definition().unwrap();
-    assert_eq!(definition.kind.as_ref(), "HttpRequest");
+    assert_eq!(definition.kind.as_ref(), "hetumind_nodes::HttpRequest");
     assert_eq!(definition.version, Version::new(1, 0, 0));
     assert_eq!(definition.groups, [NodeGroupKind::Input, NodeGroupKind::Output]);
     assert_eq!(definition.display_name, "HTTP Request");

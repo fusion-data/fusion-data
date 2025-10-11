@@ -262,9 +262,24 @@ mod tests {
     ];
 
     // 设置索引
-    let mut items_with_index = input_items;
-    items_with_index[0] = ExecutionData::new_json(json!({"name": "Alice"}), None);
-    items_with_index[1] = ExecutionData::new_json(json!({"age": 25}), None);
+    let items_with_index = vec![
+      ExecutionData::new_json(
+        json!({"name": "Alice"}),
+        Some(DataSource {
+          node_name: "test".into(),
+          output_port: hetumind_core::workflow::ConnectionKind::Main,
+          output_index: 0,
+        }),
+      ),
+      ExecutionData::new_json(
+        json!({"age": 25}),
+        Some(DataSource {
+          node_name: "test".into(),
+          output_port: hetumind_core::workflow::ConnectionKind::Main,
+          output_index: 1,
+        }),
+      ),
+    ];
 
     let result = merge_by_index(&items_with_index, &"test".into()).unwrap();
     assert_eq!(result.len(), 2);

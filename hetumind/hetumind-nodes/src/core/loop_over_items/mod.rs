@@ -140,7 +140,7 @@ mod tests {
     let node = LoopOverItemsNode::new().unwrap();
     let definition = node.default_node_executor().unwrap().definition();
 
-    assert_eq!(definition.kind.as_ref(), "LoopOverItems");
+    assert_eq!(definition.kind.as_ref(), "hetumind_nodes::LoopOverItems");
     assert_eq!(&definition.groups, &[NodeGroupKind::Transform, NodeGroupKind::Input, NodeGroupKind::Output]);
     assert_eq!(&definition.display_name, "Loop Over Items");
     assert_eq!(definition.inputs.len(), 1);

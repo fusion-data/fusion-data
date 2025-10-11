@@ -4,7 +4,6 @@ use fusion_core::{
   DataError,
   application::Application,
   concurrent::{ServiceHandle, ServiceTask, TaskResult, TaskServiceHandle},
-  configuration::ConfigRegistry,
 };
 use fusion_db::DbPlugin;
 use fusion_web::server::WebServerBuilder;

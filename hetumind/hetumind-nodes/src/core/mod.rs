@@ -5,11 +5,13 @@ use hetumind_core::workflow::{NodeRegistry, RegistrationError};
 mod r#if;
 mod loop_over_items;
 mod merge;
+mod read_write_files;
 mod set;
 
 pub use r#if::IfNode;
 pub use loop_over_items::LoopOverItemsNode;
 pub use merge::MergeNode;
+pub use read_write_files::ReadWriteFilesNode;
 pub use set::SetNode;
 
 pub fn register_nodes(node_registry: &NodeRegistry) -> Result<(), RegistrationError> {
@@ -24,6 +26,9 @@ pub fn register_nodes(node_registry: &NodeRegistry) -> Result<(), RegistrationEr
 
   let loop_over_items_node = Arc::new(LoopOverItemsNode::new()?);
   node_registry.register_node(loop_over_items_node)?;
+
+  let read_write_files_node = Arc::new(ReadWriteFilesNode::new()?);
+  node_registry.register_node(read_write_files_node)?;
 
   Ok(())
 }

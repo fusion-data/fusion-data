@@ -347,7 +347,9 @@ mod tests {
 
     // 验证消息结构可以正确序列化
     let json = serde_json::to_value(&chat_message).unwrap();
-    assert_eq!(json["chatId"], "test-chat-id");
+    assert_eq!(json["chat_id"], "test-chat-id");
     assert_eq!(json["content"], "Hello, world!");
+    assert_eq!(json["message_id"], "test-message-id");
+    assert_eq!(json["user_id"], "test-user");
   }
 }

@@ -143,7 +143,7 @@ mod tests {
     let node = IfNode::new().unwrap();
     let definition = node.default_node_executor().unwrap().definition();
 
-    assert_eq!(definition.kind.as_ref(), "If");
+    assert_eq!(definition.kind.as_ref(), "hetumind_nodes::If");
     assert_eq!(&definition.groups, &[NodeGroupKind::Transform, NodeGroupKind::Input, NodeGroupKind::Output]);
     assert_eq!(&definition.display_name, "If");
     assert_eq!(definition.inputs.len(), 1);
