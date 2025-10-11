@@ -9,14 +9,12 @@ use uuid::Uuid;
 
 use crate::{
   expression::ExpressionEvaluator,
-  types::JsonValue,
+  types::{BinaryFileKind, JsonValue},
   user::UserId,
   workflow::{ExecutionId, GetNodeParameterOptions, ValidationError, Workflow},
 };
 
-use super::{
-  BinaryFileKind, ConnectionIndex, ConnectionKind, NodeExecutionError, NodeExecutionStatus, NodeName, WorkflowNode,
-};
+use super::{ConnectionIndex, ConnectionKind, NodeExecutionError, NodeExecutionStatus, NodeName, WorkflowNode};
 
 #[derive(Debug, TypedBuilder)]
 pub struct NodeExecutionContext {

@@ -37,3 +37,10 @@ uuid = { workspace = true }
 regex = { workspace = true }
 croner = { workspace = true }
 duration-str = { workspace = true }
+chrono = { workspace = true }
+opendal = { workspace = true }
+
+# file processing
+mime_guess = { workspace = true }
+content_inspector = "0.2"
+glob = "0.3"

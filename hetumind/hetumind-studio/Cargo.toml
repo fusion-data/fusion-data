@@ -35,6 +35,13 @@ chrono = { workspace = true }
 config = { workspace = true }
 log = { workspace = true }
 logforth = { workspace = true }
+opendal = { workspace = true, features = [
+  "services-redis",
+  "services-oss",
+  "services-obs",
+  "services-s3",
+  "services-fs",
+] }
 
 # -- db
 fusion-db = { workspace = true, features = ["with-postgres", "with-uuid"] }

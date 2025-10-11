@@ -1,3 +1,4 @@
+pub mod binary_storage;
 mod core;
 pub mod domain;
 pub mod endpoint;

@@ -229,6 +229,7 @@ urlencoding = "2.1"
 serde_urlencoded = "0.7"
 headers = "0.4"
 mime = "0.3"
+mime_guess = "2.0"
 http = "1"
 http-body-util = "0.1"
 # -- WASM

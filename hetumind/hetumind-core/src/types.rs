@@ -49,3 +49,30 @@ pub enum CodeLanguage {
   JavaScript = 1,
   Python = 2,
 }
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum BinaryFileKind {
+  Text,
+  Json,
+  Image,
+  Video,
+  Audio,
+  Pdf,
+  Html,
+  Excel,
+  Word,
+  Ppt,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum TextFileType {
+  Csv,
+  Markdown,
+  Xml,
+  Yaml,
+  Toml,
+  Properties,
+  Ini,
+}

@@ -1,3 +1,4 @@
+pub mod binary_storage;
 pub mod config;
 pub mod credential;
 #[doc = include_str!("./expression/mod.md")]
