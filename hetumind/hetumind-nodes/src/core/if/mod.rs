@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 mod if_v1;
-mod utils;
+pub mod utils;
 
 use if_v1::IfV1;
 

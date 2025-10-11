@@ -9,12 +9,14 @@ mod loop_over_items;
 mod merge;
 mod read_write_files;
 mod set;
+mod switch;
 
 pub use r#if::IfNode;
 pub use loop_over_items::LoopOverItemsNode;
 pub use merge::MergeNode;
 pub use read_write_files::ReadWriteFilesNode;
 pub use set::SetNode;
+pub use switch::SwitchNode;
 
 pub fn register_nodes(node_registry: &NodeRegistry) -> Result<(), RegistrationError> {
   let if_node = Arc::new(IfNode::new()?);
@@ -31,6 +33,9 @@ pub fn register_nodes(node_registry: &NodeRegistry) -> Result<(), RegistrationEr
 
   let read_write_files_node = Arc::new(ReadWriteFilesNode::new()?);
   node_registry.register_node(read_write_files_node)?;
+
+  let switch_node = Arc::new(SwitchNode::new()?);
+  node_registry.register_node(switch_node)?;
 
   // Register AI nodes
   ai_agent::register_nodes(node_registry)?;
