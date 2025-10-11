@@ -743,13 +743,15 @@ impl OptimizedDefaultWorkflowEngine {
     ) -> Result<NodeExecutionResult, WorkflowExecutionError> {
         let start_time = chrono::FixedOffset::now();
 
-        // 1. 检查缓存
-        let cache_key = self.generate_cache_key(node_name, all_results, context);
-        if let Some(cached_result) = self.cache.get(&cache_key).await {
-            return Ok(cached_result);
+        // 1. 检查缓存（如果启用）
+        if let Some(ref cache) = self.cache {
+            let cache_key = self.generate_cache_key(node_name, all_results, context);
+            if let Some(cached_result) = cache.get(&cache_key).await {
+                return Ok(cached_result);
+            }
         }
 
-        // 2. 创建节点执行追踪
+        // 2. 创建节点执行追踪（如果启用）
         let node_trace = NodeTrace {
             node_name: node_name.clone(),
             start_time,
@@ -760,10 +762,12 @@ impl OptimizedDefaultWorkflowEngine {
             memory_peak_mb: 0.0,
         };
 
-        self.tracer.record_node_trace(context.execution_id(), node_trace.clone()).await;
+        if let Some(ref tracer) = self.tracer {
+            tracer.record_node_trace(context.execution_id(), node_trace.clone()).await;
+        }
 
         // 3. 获取超时设置
-        let timeout_duration = Duration::from_secs(self.config.node_execution_timeout);
+        let timeout_duration = Duration::from_secs(self.config.node_timeout_seconds);
 
         // 4. 执行节点（带超时和重试）
         let result = timeout(timeout_duration, self.execute_with_retry(node_name, graph, all_results, context)).await;
@@ -776,10 +780,15 @@ impl OptimizedDefaultWorkflowEngine {
                 trace.status = NodeExecutionStatus::Success;
                 trace.output_size_bytes = self.calculate_data_size(&execution_result);
 
-                self.tracer.update_node_trace(context.execution_id(), trace).await;
+                // 更新追踪（如果启用）
+                if let Some(ref tracer) = self.tracer {
+                    tracer.update_node_trace(context.execution_id(), trace).await;
+                }
 
-                // 缓存结果
-                self.cache.put(&cache_key, &execution_result).await;
+                // 缓存结果（如果启用）
+                if let (Some(ref cache), Some(ref cache_config)) = (&self.cache, &self.config.cache_config) {
+                    cache.put(&cache_key, &execution_result).await;
+                }
 
                 execution_result
             },
@@ -789,7 +798,10 @@ impl OptimizedDefaultWorkflowEngine {
                 trace.end_time = Some(chrono::FixedOffset::now());
                 trace.status = NodeExecutionStatus::Failed;
 
-                self.tracer.update_node_trace(context.execution_id(), trace).await;
+                // 更新追踪（如果启用）
+                if let Some(ref tracer) = self.tracer {
+                    tracer.update_node_trace(context.execution_id(), trace).await;
+                }
 
                 return Err(e);
             },
@@ -799,11 +811,14 @@ impl OptimizedDefaultWorkflowEngine {
                 trace.end_time = Some(chrono::FixedOffset::now());
                 trace.status = NodeExecutionStatus::Failed;
 
-                self.tracer.update_node_trace(context.execution_id(), trace).await;
+                // 更新追踪（如果启用）
+                if let Some(ref tracer) = self.tracer {
+                    tracer.update_node_trace(context.execution_id(), trace).await;
+                }
 
                 return Err(WorkflowExecutionError::NodeTimeout {
                     node_name: node_name.clone(),
-                    timeout_seconds: self.config.node_execution_timeout,
+                    timeout_seconds: self.config.node_timeout_seconds,
                 });
             },
         };
@@ -829,7 +844,7 @@ impl OptimizedDefaultWorkflowEngine {
                     retry_count += 1;
 
                     // 检查是否可以重试
-                    if retry_count >= self.config.retry_policy.max_retries {
+                    if retry_count >= self.config.retry_config.max_retries {
                         return Err(e);
                     }
 
@@ -950,10 +965,10 @@ impl OptimizedDefaultWorkflowEngine {
 
     /// 计算重试延迟
     fn calculate_retry_delay(&self, retry_count: u32) -> u64 {
-        let delay = self.config.retry_policy.base_delay_ms
-            * (self.config.retry_policy.backoff_multiplier.powi(retry_count as i32 - 1) as u64);
+        let delay = self.config.retry_config.base_delay_ms
+            * (self.config.retry_config.backoff_multiplier.powi(retry_count as i32 - 1) as u64);
 
-        delay.min(self.config.retry_policy.max_delay_ms)
+        delay.min(self.config.retry_config.max_delay_ms)
     }
 
     /// 错误工作流处理
@@ -1042,9 +1057,11 @@ impl OptimizedWorkflowEngine for OptimizedDefaultWorkflowEngine {
             }
         }
 
-        // 7. 收集指标
-        let metrics = self.collect_execution_metrics(execution_id, &execution_state).await;
-        self.metrics_collector.record_metrics(metrics).await;
+        // 7. 收集指标（如果启用）
+        if let Some(ref metrics_collector) = self.metrics_collector {
+            let metrics = self.collect_execution_metrics(execution_id, &execution_state).await;
+            metrics_collector.record_metrics(metrics).await;
+        }
 
         result
     }
@@ -1068,6 +1085,47 @@ impl Clone for OptimizedDefaultWorkflowEngine {
             tracer: self.tracer.clone(),
             execution_states: self.execution_states.clone(),
         }
+    }
+}
+```
+
+#### 2.2.2 更新工作流引擎插件
+
+为了使用优化后的工作流引擎，需要更新 `WorkflowEnginePlugin` 的实现：
+
+```rust
+// 在 hetumind-studio/src/runtime/workflow/workflow_engine_plugin.rs 中更新
+use std::sync::Arc;
+use async_trait::async_trait;
+use fusion_core::{application::ApplicationBuilder, configuration::ConfigRegistry, plugin::Plugin};
+use hetumind_core::workflow::{NodeRegistry, WorkflowEngineSetting};
+
+use crate::{
+    infra::db::execution::{ExecutionStorePlugin, ExecutionStoreService},
+    runtime::workflow::{OptimizedDefaultWorkflowEngine, WorkflowEngineService},
+    utils::NodeRegistryPlugin,
+};
+
+pub struct OptimizedWorkflowEnginePlugin;
+
+#[async_trait]
+impl Plugin for OptimizedWorkflowEnginePlugin {
+    async fn build(&self, app: &mut ApplicationBuilder) {
+        let execution_store: ExecutionStoreService = app.component();
+        let node_registry: NodeRegistry = app.component();
+
+        // 从配置路径加载工作流引擎配置
+        let setting: WorkflowEngineSetting = app.get_config_by_path("hetumind.workflow.engine")
+            .unwrap_or_else(|_| WorkflowEngineSetting::default());
+
+        // 创建优化的工作流引擎实例
+        let workflow_engine: WorkflowEngineService =
+          Arc::new(OptimizedDefaultWorkflowEngine::new(node_registry, execution_store, setting));
+        app.add_component(workflow_engine);
+    }
+
+    fn dependencies(&self) -> Vec<&str> {
+        vec![std::any::type_name::<ExecutionStorePlugin>(), std::any::type_name::<NodeRegistryPlugin>()]
     }
 }
 ```
@@ -1713,6 +1771,36 @@ impl ExecutionDataPool {
 ## 5. 配置管理和部署
 
 ### 5.1 配置文件优化
+
+#### 5.1.1 与现有项目结构的对齐
+
+本优化方案已完全对齐到当前项目的配置结构和代码组织方式：
+
+1. **配置路径对齐**：
+
+   - 使用 `hetumind.workflow.engine` 作为配置路径，与现有 `app.toml` 结构一致
+   - 保持与 `hetumind.workflow` 全局配置的分离
+
+2. **配置结构对齐**：
+
+   - 基于现有的 `WorkflowEngineSetting` 结构进行扩展
+   - 保持与 `RetryConfig` 的兼容性
+   - 使用字符串类型的 `error_handling_strategy`，与现有配置一致
+
+3. **代码结构对齐**：
+
+   - 优化的 `OptimizedDefaultWorkflowEngine` 接受 `WorkflowEngineSetting` 作为输入参数
+   - 提供与现有插件系统兼容的 `OptimizedWorkflowEnginePlugin`
+   - 保持与现有组件注册和依赖注入机制的兼容性
+
+4. **向后兼容性**：
+   - 所有新增配置项都使用 `Option` 类型，确保向后兼容
+   - 保持现有默认值不变
+   - 提供平滑的迁移路径
+
+这种对齐方式确保了优化方案可以无缝集成到现有项目中，而不需要大规模的代码重构。
+
+#### 5.1.2 配置文件示例
 
 ```toml
 # app.toml - 基于当前项目结构的优化配置

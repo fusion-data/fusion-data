@@ -12,6 +12,7 @@ pub static WEBHOOK_TRIGGER_NODE_KIND: &str = "hetumind_nodes::WebhookTrigger";
 pub static START_TRIGGER_NODE_KIND: &str = "hetumind_nodes::Start";
 pub static CHAT_TRIGGERN_NODE_KIND: &str = "hetumind_nodes::ChatTrigger";
 pub static ERROR_TRIGGER_NODE_KIND: &str = "hetumind_nodes::ErrorTrigger";
+pub static MANUAL_TRIGGER_NODE_KIND: &str = "hetumind_nodes::ManualTrigger";
 
 // Integration Nodes
 pub static HTTP_REQUEST_NODE_KIND: &str = "hetumind_nodes::HttpRequest";

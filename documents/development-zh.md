@@ -42,7 +42,8 @@ cargo test
 如： `hetumind` 包主要是一个库（即 `src/lib.rs` 是主要入口），您可以使用以下命令：
 
 ```shell
-cargo test --all-features -p hetumind-nodes -- --nocapture
+cargo test --features=with-db -p hetumind-core -- --nocapture
+cargo test -p hetumind-nodes -- --nocapture
 
 cargo test -p hetumind-studio --lib
 ```

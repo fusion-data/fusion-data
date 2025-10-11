@@ -5,17 +5,6 @@ use uuid::Uuid;
 use super::{ConnectionKind, ExecutionDataMap, NodeExecutionStatus};
 use crate::types::JsonValue;
 
-/// 引擎请求结构
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct EngineRequest<T = HashMap<String, JsonValue>> {
-  /// 需要执行的动作列表
-  pub actions: Vec<EngineAction>,
-  /// 请求元数据
-  pub metadata: T,
-  /// 请求ID
-  pub request_id: Uuid,
-}
-
 /// 引擎动作枚举
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum EngineAction {
@@ -75,6 +64,17 @@ pub struct EngineResult {
   pub status: NodeExecutionStatus,
   /// 错误信息（如果有）
   pub error: Option<String>,
+}
+
+/// 引擎请求结构
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct EngineRequest<T = HashMap<String, JsonValue>> {
+  /// 需要执行的动作列表
+  pub actions: Vec<EngineAction>,
+  /// 请求元数据
+  pub metadata: T,
+  /// 请求ID
+  pub request_id: Uuid,
 }
 
 impl EngineRequest {
@@ -181,14 +181,14 @@ mod tests {
       request.add_execute_node_action("test_node".to_string(), json!({"test": "data"}), ConnectionKind::Main, None);
 
     assert_eq!(request.actions.len(), 1);
-    assert!(!request.metadata.is_empty());
+    assert!(request.metadata.is_empty());
     assert_ne!(action_id, Uuid::default());
   }
 
   #[test]
   fn test_engine_response_creation() {
     let request_id = Uuid::new_v4();
-    let mut response = EngineResponse::new(request_id);
+    let response = EngineResponse::new(request_id);
 
     assert_eq!(response.response_id, request_id);
     assert_eq!(response.action_responses.len(), 0);

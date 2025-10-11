@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use fusion_common::ahash::HashMap;
 use fusion_common::time::OffsetDateTime;
-use serde::{Deserialize, Serialize, de::DeserializeOwned};
+use serde::{Deserialize, Serialize};
 use typed_builder::TypedBuilder;
 use uuid::Uuid;
 

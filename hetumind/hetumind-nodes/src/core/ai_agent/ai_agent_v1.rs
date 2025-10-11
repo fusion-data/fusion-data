@@ -125,10 +125,7 @@ impl TryFrom<NodeDefinitionBuilder> for AiAgentV1 {
 
 #[async_trait]
 impl NodeExecutable for AiAgentV1 {
-  async fn execute(
-    &self,
-    context: &NodeExecutionContext,
-  ) -> Result<ExecutionDataMap, NodeExecutionError> {
+  async fn execute(&self, context: &NodeExecutionContext) -> Result<ExecutionDataMap, NodeExecutionError> {
     // 1. 获取输入数据和配置
     let input_data = context.get_input_data("main")?;
     let config: AiAgentConfig = context.get_parameters()?;

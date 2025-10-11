@@ -1,11 +1,6 @@
-use std::str::FromStr;
-
 use serde::{Deserialize, Serialize};
 
-use fusion_common::{
-  DataError,
-  helper::{default_bool_true, default_usize_0, is_true},
-};
+use fusion_common::helper::{default_bool_true, default_usize_0, is_true};
 use typed_builder::TypedBuilder;
 
 use super::NodeName;
@@ -54,14 +49,6 @@ pub enum ConnectionKind {
   AiReranker = 135,
   /// 文本分割器
   AiTextSplitter = 136,
-}
-
-impl FromStr for ConnectionKind {
-  type Err = Box<dyn core::error::Error>;
-
-  fn from_str(s: &str) -> Result<Self, Self::Err> {
-    todo!()
-  }
 }
 
 /// 连接条件

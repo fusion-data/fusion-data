@@ -42,5 +42,5 @@ opendal = { workspace = true }
 
 # file processing
 mime_guess = { workspace = true }
-content_inspector = "0.2"
-glob = "0.3"
+content_inspector = { workspace = true }
+glob = { workspace = true }

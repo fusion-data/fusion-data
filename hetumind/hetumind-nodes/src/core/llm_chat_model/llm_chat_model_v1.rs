@@ -6,8 +6,8 @@ use hetumind_core::{
   version::Version,
   workflow::{
     ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition,
-    NodeDefinitionBuilder, NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeGroupKind, NodeProperty, NodePropertyKind,
-    OutputPortConfig, RegistrationError,
+    NodeDefinitionBuilder, NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeGroupKind, NodeProperty,
+    NodePropertyKind, OutputPortConfig, RegistrationError,
   },
 };
 use serde_json::json;
@@ -131,10 +131,7 @@ impl TryFrom<NodeDefinitionBuilder> for LlmChatModelV1 {
 
 #[async_trait]
 impl NodeExecutable for LlmChatModelV1 {
-  async fn execute(
-    &self,
-    context: &NodeExecutionContext,
-  ) -> Result<ExecutionDataMap, NodeExecutionError> {
+  async fn execute(&self, context: &NodeExecutionContext) -> Result<ExecutionDataMap, NodeExecutionError> {
     // 1. 获取输入数据和配置
     let input_data = context.get_input_data("main")?;
     let config: LlmConfig = context.get_parameters()?;
@@ -151,13 +148,19 @@ impl NodeExecutable for LlmChatModelV1 {
 
     // 4. 构建输出数据
     Ok(make_execution_data_map(vec![
-        ("main", ExecutionDataItems::Items(vec![ExecutionData::new_json(response.clone(), None)])),
-        ("ai_language_model", ExecutionDataItems::Items(vec![ExecutionData::new_json(json!({
-            "client": self.serialize_model_client(&model_client),
-            "config": json!(config),
-            "capabilities": self.get_model_capabilities(&config),
-            "model_id": uuid::Uuid::new_v4().to_string(),
-        }), None)]))
+      ("main", ExecutionDataItems::Items(vec![ExecutionData::new_json(response.clone(), None)])),
+      (
+        "ai_language_model",
+        ExecutionDataItems::Items(vec![ExecutionData::new_json(
+          json!({
+              "client": self.serialize_model_client(&model_client),
+              "config": json!(config),
+              "capabilities": self.get_model_capabilities(&config),
+              "model_id": uuid::Uuid::new_v4().to_string(),
+          }),
+          None,
+        )]),
+      ),
     ]))
   }
 
@@ -178,11 +181,7 @@ impl LlmChatModelV1 {
           return Err(NodeExecutionError::ConfigurationError("OpenAI API key not provided".to_string()));
         };
 
-        Ok(ModelClient::OpenAI(OpenAIModel {
-          model: config.model.clone(),
-          api_key,
-          base_url: config.base_url.clone()
-        }))
+        Ok(ModelClient::OpenAI(OpenAIModel { model: config.model.clone(), api_key, base_url: config.base_url.clone() }))
       }
       "anthropic" => {
         let api_key = if let Some(key) = &config.api_key {
@@ -348,26 +347,26 @@ impl LlmChatModelV1 {
 
 // Helper function for creating ExecutionDataMap
 fn make_execution_data_map(data: Vec<(&str, ExecutionDataItems)>) -> ExecutionDataMap {
-    use fusion_common::ahash::{HashMap, HashMapExt};
-    let mut map = HashMap::new();
-    for (key, value) in data {
-        let connection_kind = match key {
-            "main" => ConnectionKind::Main,
-            "error" => ConnectionKind::Error,
-            "ai_agent" => ConnectionKind::AiAgent,
-            "ai_tool" => ConnectionKind::AiTool,
-            "ai_language_model" => ConnectionKind::AiLanguageModel,
-            "ai_output_parser" => ConnectionKind::AiOutputParser,
-            "ai_memory" => ConnectionKind::AiMemory,
-            "ai_document" => ConnectionKind::AiDocument,
-            "ai_embedding" => ConnectionKind::AiEmbedding,
-            "ai_retriever" => ConnectionKind::AiRetriever,
-            "ai_vector_store" => ConnectionKind::AiVectorStore,
-            "ai_reranker" => ConnectionKind::AiReranker,
-            "ai_text_splitter" => ConnectionKind::AiTextSplitter,
-            _ => continue, // Skip unknown connection types
-        };
-        map.insert(connection_kind, vec![value]);
-    }
-    map
+  use fusion_common::ahash::{HashMap, HashMapExt};
+  let mut map = HashMap::new();
+  for (key, value) in data {
+    let connection_kind = match key {
+      "main" => ConnectionKind::Main,
+      "error" => ConnectionKind::Error,
+      "ai_agent" => ConnectionKind::AiAgent,
+      "ai_tool" => ConnectionKind::AiTool,
+      "ai_language_model" => ConnectionKind::AiLanguageModel,
+      "ai_output_parser" => ConnectionKind::AiOutputParser,
+      "ai_memory" => ConnectionKind::AiMemory,
+      "ai_document" => ConnectionKind::AiDocument,
+      "ai_embedding" => ConnectionKind::AiEmbedding,
+      "ai_retriever" => ConnectionKind::AiRetriever,
+      "ai_vector_store" => ConnectionKind::AiVectorStore,
+      "ai_reranker" => ConnectionKind::AiReranker,
+      "ai_text_splitter" => ConnectionKind::AiTextSplitter,
+      _ => continue, // Skip unknown connection types
+    };
+    map.insert(connection_kind, vec![value]);
+  }
+  map
 }
