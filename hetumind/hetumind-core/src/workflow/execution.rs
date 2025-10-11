@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use fusion_common::ahash::HashMap;
 use fusion_common::time::OffsetDateTime;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use typed_builder::TypedBuilder;
 use uuid::Uuid;
 
@@ -14,7 +14,10 @@ use crate::{
   workflow::{ExecutionId, GetNodeParameterOptions, ValidationError, Workflow},
 };
 
-use super::{ConnectionIndex, ConnectionKind, NodeExecutionError, NodeExecutionStatus, NodeName, WorkflowNode};
+use super::{
+  ConnectionIndex, ConnectionKind, EngineResponse, NodeExecutionError, NodeExecutionStatus, NodeName, ParameterMap,
+  WorkflowNode,
+};
 
 #[derive(Debug, TypedBuilder)]
 pub struct NodeExecutionContext {
@@ -32,8 +35,11 @@ pub struct NodeExecutionContext {
   pub user_id: Option<UserId>,
   /// 环境变量
   pub env_vars: HashMap<String, String>,
-
+  /// 表达式评估器
   pub expression_evaluator: ExpressionEvaluator,
+  /// 引擎响应（用于子节点执行）
+  #[builder(default)]
+  pub engine_response: Option<EngineResponse>,
 }
 
 impl NodeExecutionContext {
@@ -79,6 +85,69 @@ impl NodeExecutionContext {
     }
 
     todo!()
+  }
+
+  /// 获取指定连接类型和索引的连接数据
+  pub fn get_connection_data(&self, connection_type: ConnectionKind, index: usize) -> Option<ExecutionData> {
+    self
+      .get_input_items(connection_type, index)
+      .and_then(|items| items.get_data_items())
+      .and_then(|data| data.first().cloned())
+  }
+
+  /// 获取指定连接类型的所有连接数据
+  pub fn get_all_connections(&self, connection_type: ConnectionKind) -> Vec<ExecutionData> {
+    let mut all_data = Vec::new();
+
+    if let Some(items) = self.input_data.get(&connection_type) {
+      for item in items {
+        if let Some(data) = item.get_data_items() {
+          all_data.extend(data);
+        }
+      }
+    }
+
+    all_data
+  }
+
+  /// 获取输入数据的便捷方法
+  pub fn get_input_data(&self, port_name: &str) -> Result<ExecutionData, NodeExecutionError> {
+    let connection_type = match port_name {
+      "main" => ConnectionKind::Main,
+      "ai_agent" => ConnectionKind::AiAgent,
+      "ai_tool" => ConnectionKind::AiTool,
+      "ai_language_model" => ConnectionKind::AiLanguageModel,
+      "ai_memory" => ConnectionKind::AiMemory,
+      "error" => ConnectionKind::Error,
+      _ => return Err(NodeExecutionError::InvalidInput(format!("Unknown port: {}", port_name))),
+    };
+
+    self
+      .get_connection_data(connection_type, 0)
+      .ok_or_else(|| NodeExecutionError::InvalidInput(format!("No data on port: {}", port_name)))
+  }
+
+  /// 获取节点参数的便捷方法
+  pub fn get_parameters<T>(&self) -> Result<T, NodeExecutionError>
+  where
+    T: for<'de> Deserialize<'de>,
+  {
+    let node = self.current_node()?;
+    let parameters: &ParameterMap = &node.parameters;
+
+    parameters
+      .get::<T>()
+      .map_err(|e| NodeExecutionError::ConfigurationError(format!("Failed to parse parameters: {}", e)))
+  }
+
+  /// 检查是否是子节点执行
+  pub fn is_sub_node_execution(&self) -> bool {
+    self.engine_response.is_some()
+  }
+
+  /// 获取子节点执行结果
+  pub fn get_sub_node_results(&self) -> Option<&EngineResponse> {
+    self.engine_response.as_ref()
   }
 }
 

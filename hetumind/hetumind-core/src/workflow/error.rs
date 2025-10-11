@@ -132,6 +132,15 @@ pub enum NodeExecutionError {
 
   #[error("资源不足")]
   ResourceExhausted,
+
+  #[error("输入数据无效: {0}")]
+  InvalidInput(String),
+
+  #[error("配置错误: {0}")]
+  ConfigurationError(String),
+
+  #[error("连接错误: {0}")]
+  ConnectionError(String),
 }
 
 #[derive(Debug, Error)]
