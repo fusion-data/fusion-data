@@ -71,6 +71,7 @@ fusionsql = { version = "0.1.1", path = "crates/fusions/fusionsql" }
 fusion-db = { version = "0.1.1", path = "crates/fusions/fusion-db" }
 fusion-web = { version = "0.1.1", path = "crates/fusions/fusion-web" }
 fusion-grpc = { version = "0.1.1", path = "crates/fusions/fusion-grpc" }
+fusion-ai = { version = "0.1.1", path = "crates/fusions/fusion-ai" }
 fusions = { version = "0.1.1", path = "crates/fusions/fusions" }
 jieyuan-core = { version = "0.1.1", path = "jieyuan/jieyuan-core" }
 hetuflow-core = { version = "0.1.1", path = "hetuflow/hetuflow-core" }

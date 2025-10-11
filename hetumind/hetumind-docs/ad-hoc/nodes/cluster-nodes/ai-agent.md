@@ -2,7 +2,28 @@
 
 ## 概述
 
-本文档基于对 n8n AI Agent 与 LLM 节点数据流转机制的分析，结合 hetuflow/hetumind 项目的技术架构，提出了完整的 AI Agent 和 LLM Chat Model 节点技术实现方案。该方案充分利用了 rig-core 和 graph-flow crates 的 AI 能力，并与 hetumind 现有的工作流引擎深度集成。
+本文档基于对 n8n AI Agent 与 LLM 节点数据流转机制的分析，结合 hetuflow/hetumind 项目的技术架构，提出了完整的 AI Agent 和 LLM Chat Model 节点技术实现方案。该方案充分利用了 rig-core 的 AI 能力，并与 hetumind 现有的工作流引擎深度集成。
+
+## 最新实现状态
+
+### ✅ 已完成的优化
+
+1. **rig-core 深度集成**：
+   - 在 `hetumind-nodes/Cargo.toml` 中添加了 `rig-core` 依赖
+   - AI Agent V1 节点集成了 rig-core Agent 和 AgentBuilder
+   - LLM Chat Model V1 节点支持 OpenAI 和 Anthropic 模型
+
+2. **API 密钥管理优化**：
+   - LLM 节点新增 `credential_id` 参数支持
+   - 实现了从凭证服务获取 API 密钥的框架
+   - 保留环境变量和直接配置的兼容性
+
+3. **工具调用机制完善**：
+   - 创建了 `ToolManager` 工具管理器
+   - 实现了动态工具转换框架
+   - 支持 JSON 格式的工具定义
+
+### 🔧 技术架构更新
 
 ## 1. 技术架构设计
 
@@ -41,13 +62,21 @@ graph TB
 
 ### 1.2 核心组件说明
 
-#### 1.2.1 连接类型设计
+#### 1.2.1 依赖管理策略
+
+基于项目实际情况，采用以下依赖管理策略：
+
+- **hetumind-nodes 直接依赖 rig-core**：在 `Cargo.toml` 中添加了 `rig-core = { workspace = true, features = ["derive"] }`
+- **API 密钥管理**：通过 `credential_svc` 服务管理，基于 `CredentialEntity` 实体
+- **工具节点标准化**：采用 JSON 格式作为输入/输出格式，使用 `ExecutionDataMap` 数据类型
+
+#### 1.2.2 连接类型设计
 
 基于 n8n 的设计，我们定义以下连接类型：
 
 - 复用在 `hetumind/hetumind-core/src/workflow/connection.rs` 中定义的 `ConnectionKind` enum类型
 
-#### 1.2.2 EngineRequest/Response 架构
+#### 1.2.3 EngineRequest/Response 架构
 
 ```rust
 // 在 hetumind-core/src/workflow/engine_request.rs 中
@@ -114,50 +143,87 @@ pub struct EngineResult {
 
 ```rust
 // 在 hetumind-nodes/src/core/ai_agent/mod.rs 中
+use hetumind_core::{
+  version::Version,
+  workflow::{Node, NodeRegistry, RegistrationError},
+};
 use std::sync::Arc;
-use hetumind_core::workflow::{NodeRegistry, RegistrationError};
-use rig_core::providers::openai;
-use serde_json::json;
 
 pub mod ai_agent_v1;
-pub mod utils;
+pub mod parameters;
+pub mod tool_manager;
 
-pub use ai_agent_v1::AiAgentV1;
+use ai_agent_v1::AiAgentV1;
+
+pub struct AiAgentNode {
+  default_version: Version,
+  executors: Vec<NodeExecutor>,
+}
+
+impl AiAgentNode {
+  pub fn new() -> Result<Self, RegistrationError> {
+    let executors: Vec<NodeExecutor> = vec![Arc::new(AiAgentV1::new()?)];
+    let default_version = executors.iter().map(|node| node.definition().version.clone()).max().unwrap();
+    Ok(Self { default_version, executors })
+  }
+}
+
+impl Node for AiAgentNode {
+  fn default_version(&self) -> &Version {
+    &self.default_version
+  }
+
+  fn node_executors(&self) -> &[NodeExecutor] {
+    &self.executors
+  }
+
+  fn kind(&self) -> NodeKind {
+    self.executors[0].definition().kind.clone()
+  }
+}
 
 pub fn register_nodes(node_registry: &NodeRegistry) -> Result<(), RegistrationError> {
-    let ai_agent_node = Arc::new(AiAgentV1::new()?);
-    node_registry.register_node(ai_agent_node)?;
-    Ok(())
+  let ai_agent_node = Arc::new(AiAgentNode::new()?);
+  node_registry.register_node(ai_agent_node)?;
+  Ok(())
 }
 ```
 
-### 2.2 AI Agent V1 实现
+### 2.2 AI Agent V1 实现（已优化）
 
 ```rust
 // 在 hetumind-nodes/src/core/ai_agent/ai_agent_v1.rs 中
 use std::sync::Arc;
 
+use ahash::{HashMap, HashMapExt};
 use async_trait::async_trait;
 use hetumind_core::{
     types::JsonValue,
+    version::Version,
     workflow::{
-        ConnectionKind, ExecutionDataItems, ExecutionDataMap, NodeDefinition,
+        ConnectionKind, EngineAction, EngineRequest, EngineResponse, ExecuteNodeAction,
+        ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition,
         NodeDefinitionBuilder, NodeExecutable, NodeExecutionContext, NodeExecutionError,
-        NodeProperty, NodePropertyKind, InputPortConfig, OutputPortConfig, RegistrationError,
+        NodeProperty, NodePropertyKind, OutputPortConfig, RegistrationError, make_execution_data_map,
     },
 };
-use rig_core::{
+use rig::{
+    agent::{Agent, AgentBuilder},
     completion::Prompt,
-    agents::{Agent, AgentBuilder},
-    providers::openai::Client as OpenAIClient,
+    tool::Tool,
 };
 use serde_json::json;
+use uuid::Uuid;
 
-use super::{AiAgentConfig, ToolCallRequest, ToolCallResult};
+use crate::core::ai_agent::parameters::ToolExecutionStatus;
+use crate::core::ai_agent::tool_manager::ToolManager;
+
+use super::parameters::{AiAgentConfig, ModelInstance, ToolCallRequest, ToolCallResult};
 
 #[derive(Debug)]
 pub struct AiAgentV1 {
     pub definition: Arc<NodeDefinition>,
+    tool_manager: Arc<tokio::sync::RwLock<ToolManager>>,
 }
 
 impl AiAgentV1 {
@@ -288,7 +354,7 @@ impl NodeExecutable for AiAgentV1 {
 
 impl AiAgentV1 {
     async fn get_llm_instance(&self, context: &dyn NodeExecutionContext)
-        -> Result<rig_core::agents::Agent, NodeExecutionError> {
+        -> Result<rig::agent::Agent, NodeExecutionError> {
         // 通过连接类型获取 LLM 实例
         let connection_data = context.get_connection_data(ConnectionKind::AiLanguageModel, 0)
             .await
@@ -300,7 +366,7 @@ impl AiAgentV1 {
     }
 
     async fn get_tools(&self, context: &dyn NodeExecutionContext)
-        -> Result<Vec<rig_core::tool::Tool>, NodeExecutionError> {
+        -> Result<Vec<rig::tool::Tool>, NodeExecutionError> {
         // 获取所有连接的工具
         let tool_connections = context.get_all_connections(ConnectionKind::AiTool)
             .await;
@@ -317,10 +383,10 @@ impl AiAgentV1 {
 
     async fn create_agent(
         &self,
-        llm: rig_core::agents::Agent,
-        tools: Vec<rig_core::tool::Tool>,
+        llm: rig::agent::Agent,
+        tools: Vec<rig::tool::Tool>,
         config: &AiAgentConfig,
-    ) -> Result<rig_core::agents::Agent, NodeExecutionError> {
+    ) -> Result<rig::agent::Agent, NodeExecutionError> {
         // 使用 rig-core 的 AgentBuilder 创建 Agent
         let mut agent_builder = AgentBuilder::new(llm)
             .with_system_prompt(&config.system_prompt)
@@ -485,7 +551,7 @@ use hetumind_core::{
         NodeProperty, NodePropertyKind, InputPortConfig, OutputPortConfig, RegistrationError,
     },
 };
-use rig_core::{
+use rig::{
     completion::Prompt,
     providers::{
         openai::{Client as OpenAIClient, GPT_4},
@@ -626,7 +692,7 @@ impl LlmChatModelV1 {
                 let client = OpenAIClient::new(&api_key);
                 let model = match config.model.as_str() {
                     "gpt-4" => GPT_4,
-                    "gpt-3.5-turbo" => rig_core::providers::openai::GPT_3_5_TURBO,
+                    "gpt-3.5-turbo" => rig::providers::openai::GPT_3_5_TURBO,
                     _ => return Err(NodeExecutionError::ConfigurationError(
                         format!("Unsupported OpenAI model: {}", config.model)
                     )),
@@ -644,7 +710,7 @@ impl LlmChatModelV1 {
                 let client = AnthropicClient::new(&api_key);
                 let model = match config.model.as_str() {
                     "claude-3-opus" => CLAUDE_3_OPUS,
-                    "claude-3-sonnet" => rig_core::providers::anthropic::CLAUDE_3_SONNET,
+                    "claude-3-sonnet" => rig::providers::anthropic::CLAUDE_3_SONNET,
                     _ => return Err(NodeExecutionError::ConfigurationError(
                         format!("Unsupported Anthropic model: {}", config.model)
                     )),
@@ -708,8 +774,8 @@ impl LlmChatModelV1 {
 
 #[derive(Debug)]
 pub enum ModelClient {
-    OpenAI(rig_core::providers::openai::Model),
-    Anthropic(rig_core::providers::anthropic::Model),
+    OpenAI(rig::providers::openai::Model),
+    Anthropic(rig::providers::anthropic::Model),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -1051,15 +1117,47 @@ impl AiMetrics {
 }
 ```
 
-## 8. 总结
+## 8. 实现状态与后续计划
 
-本技术方案完整地描述了在 hetuflow 系统中实现 AI Agent 和 LLM Chat Model 节点的技术架构和实现细节。主要特点包括：
+### 8.1 当前实现状态
 
-1. **基于 n8n 的成熟模式**：借鉴了 n8n 中 EngineRequest/Response 的成功设计，确保架构的可靠性
+#### ✅ 已完成
+- rig-core 深度集成，支持 OpenAI 和 Anthropic 模型
+- API 密钥管理框架，支持凭证服务集成
+- 工具调用机制基础框架，支持动态工具转换
+- EngineRequest/Response 机制完善
+- AI Agent 和 LLM 节点核心功能实现
+
+#### 🔧 技术债务与待完善
+- **工具转换实现**：`ToolManager.convert_tool_definition()` 需要实现具体的工具转换逻辑
+- **凭证服务集成**：LLM 节点的凭证服务调用需要实际集成
+- **工具调用解析**：AI Agent 的工具调用解析需要实现具体逻辑
+- **错误处理增强**：需要更完善的错误处理和重试机制
+- **流式响应支持**：需要实现完整的流式推理能力
+
+### 8.2 架构优势总结
+
+1. **基于成熟模式**：借鉴了 n8n 中 EngineRequest/Response 的成功设计，确保架构可靠性
 2. **rig-core 深度集成**：充分利用 rig-core 的 AI 能力，支持多种 LLM 提供者
-3. **异步并发处理**：采用 Rust 的异步编程模型，确保高性能和高并发
-4. **模块化设计**：各组件职责清晰，易于扩展和维护
-5. **完善的监控体系**：包含性能指标、错误处理和日志记录
-6. **流式处理支持**：支持实时响应，提升用户体验
+3. **模块化设计**：各组件职责清晰，易于扩展和维护
+4. **异步并发处理**：采用 Rust 的异步编程模型，确保高性能
+5. **标准化接口**：通过 ExecutionDataMap 实现统一的数据流转
 
-该方案为 hetuflow 系统提供了强大的 AI 工作流能力，能够支持复杂的 AI 应用场景，包括智能客服、自动化任务处理、数据分析等。通过标准化的接口和灵活的配置，开发者可以快速构建各种 AI 应用。
+### 8.3 应用场景
+
+该方案为 hetuflow 系统提供了强大的 AI 工作流能力，能够支持：
+- 智能客服和对话系统
+- 自动化任务处理
+- 数据分析和报告生成
+- 多工具协作的复杂工作流
+- AI 驱动的业务流程自动化
+
+### 8.4 后续优化建议
+
+1. **完善工具生态**：实现更多预定义工具节点
+2. **增强监控能力**：添加 Agent 执行指标和链路追踪
+3. **性能优化**：实现连接池和缓存机制
+4. **安全加固**：完善 API 密钥管理和权限控制
+5. **用户体验**：优化配置界面和错误提示
+
+通过标准化的接口和灵活的配置，开发者可以快速构建各种 AI 应用，为 hetuflow 系统的智能化能力提供坚实基础。

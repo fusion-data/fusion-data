@@ -5,12 +5,14 @@ use hetumind_core::{
   types::JsonValue,
   version::Version,
   workflow::{
-    ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition,
-    NodeDefinitionBuilder, NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeGroupKind, NodeProperty,
-    NodePropertyKind, OutputPortConfig, RegistrationError,
+    ConnectionKind, CredentialKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig,
+    NodeDefinition, NodeDefinitionBuilder, NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeGroupKind,
+    NodeProperty, NodePropertyKind, OutputPortConfig, RegistrationError,
   },
 };
+use rig::providers::{anthropic::Client as AnthropicClient, openai::Client as OpenAIClient};
 use serde_json::json;
+use uuid::Uuid;
 
 use super::parameters::{
   AnthropicModel, CustomModel, LlmConfig, LocalModel, ModelCapabilities, ModelClient, OpenAIModel, UsageStats,
@@ -82,9 +84,17 @@ impl TryFrom<NodeDefinitionBuilder> for LlmChatModelV1 {
             .required(true)
             .build(),
           NodeProperty::builder()
+            .name("credential_id")
+            .kind(NodePropertyKind::String)
+            .display_name("凭证ID")
+            .description("用于获取API密钥的凭证ID，如果提供则优先使用凭证服务")
+            .required(false)
+            .build(),
+          NodeProperty::builder()
             .name("api_key")
             .kind(NodePropertyKind::String)
             .display_name("API 密钥")
+            .description("API密钥，当未指定凭证ID时使用")
             .required(false)  // 可以从环境变量获取
             .build(),
           NodeProperty::builder()
@@ -173,25 +183,17 @@ impl LlmChatModelV1 {
   async fn create_model_client(&self, config: &LlmConfig) -> Result<ModelClient, NodeExecutionError> {
     match config.provider.as_str() {
       "openai" => {
-        let api_key = if let Some(key) = &config.api_key {
-          key.clone()
-        } else if let Ok(key) = std::env::var("OPENAI_API_KEY") {
-          key
-        } else {
-          return Err(NodeExecutionError::ConfigurationError("OpenAI API key not provided".to_string()));
-        };
+        let api_key = self.get_api_key_from_config_or_env(config, "OPENAI_API_KEY").await?;
+        let client = OpenAIClient::new(&api_key);
 
+        // 创建一个简化的ModelClient，不使用rig-core的model方法
         Ok(ModelClient::OpenAI(OpenAIModel { model: config.model.clone(), api_key, base_url: config.base_url.clone() }))
       }
       "anthropic" => {
-        let api_key = if let Some(key) = &config.api_key {
-          key.clone()
-        } else if let Ok(key) = std::env::var("ANTHROPIC_API_KEY") {
-          key
-        } else {
-          return Err(NodeExecutionError::ConfigurationError("Anthropic API key not provided".to_string()));
-        };
+        let api_key = self.get_api_key_from_config_or_env(config, "ANTHROPIC_API_KEY").await?;
+        let client = AnthropicClient::new(&api_key);
 
+        // 创建一个简化的ModelClient
         Ok(ModelClient::Anthropic(AnthropicModel {
           model: config.model.clone(),
           api_key,
@@ -212,6 +214,36 @@ impl LlmChatModelV1 {
       }
       provider => Err(NodeExecutionError::ConfigurationError(format!("Unsupported provider: {}", provider))),
     }
+  }
+
+  /// 从配置或环境变量获取API密钥，支持凭证服务
+  async fn get_api_key_from_config_or_env(
+    &self,
+    config: &LlmConfig,
+    env_var: &str,
+  ) -> Result<String, NodeExecutionError> {
+    // 1. 优先使用配置中的API密钥
+    if let Some(api_key) = &config.api_key {
+      return Ok(api_key.clone());
+    }
+
+    // 2. 如果配置了凭证ID，尝试从凭证服务获取（这里需要注入凭证服务）
+    if let Some(credential_id) = &config.credential_id {
+      // TODO: 这里需要实际的凭证服务集成
+      // 目前返回错误，提示需要实现凭证服务集成
+      return Err(NodeExecutionError::ConfigurationError(format!(
+        "Credential service integration not yet implemented for credential_id: {}",
+        credential_id
+      )));
+    }
+
+    // 3. 最后尝试从环境变量获取
+    std::env::var(env_var).map_err(|_| {
+      NodeExecutionError::ConfigurationError(format!(
+        "API key not provided. Please set credential_id, api_key parameter, or {} environment variable",
+        env_var
+      ))
+    })
   }
 
   async fn execute_standard_inference(

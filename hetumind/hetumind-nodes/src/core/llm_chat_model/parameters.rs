@@ -8,6 +8,8 @@ pub struct LlmConfig {
   pub provider: String,
   /// 模型名称
   pub model: String,
+  /// 凭证ID（用于从凭证服务获取API密钥）
+  pub credential_id: Option<String>,
   /// API 密钥
   pub api_key: Option<String>,
   /// API 基础URL
@@ -29,6 +31,7 @@ impl Default for LlmConfig {
     Self {
       provider: "openai".to_string(),
       model: "gpt-3.5-turbo".to_string(),
+      credential_id: None,
       api_key: None,
       base_url: None,
       max_tokens: 2000,

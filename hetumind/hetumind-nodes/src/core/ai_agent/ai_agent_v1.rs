@@ -4,23 +4,28 @@ use ahash::{HashMap, HashMapExt};
 use async_trait::async_trait;
 use hetumind_core::{
   types::JsonValue,
-  version::Version,
   workflow::{
     ConnectionKind, EngineAction, EngineRequest, EngineResponse, ExecuteNodeAction, ExecutionData, ExecutionDataItems,
     ExecutionDataMap, InputPortConfig, NodeDefinition, NodeDefinitionBuilder, NodeExecutable, NodeExecutionContext,
     NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig, RegistrationError, make_execution_data_map,
   },
 };
+use rig::{
+  agent::{Agent, AgentBuilder},
+  client::CompletionClient,
+  completion::Prompt,
+};
 use serde_json::json;
 use uuid::Uuid;
 
 use crate::core::ai_agent::parameters::ToolExecutionStatus;
+use crate::core::ai_agent::tool_manager::ToolManager;
 
 use super::parameters::{AiAgentConfig, ModelInstance, ToolCallRequest, ToolCallResult};
 
-#[derive(Debug)]
 pub struct AiAgentV1 {
   pub definition: Arc<NodeDefinition>,
+  tool_manager: Arc<tokio::sync::RwLock<ToolManager>>,
 }
 
 impl AiAgentV1 {
@@ -119,7 +124,7 @@ impl TryFrom<NodeDefinitionBuilder> for AiAgentV1 {
       ]);
 
     let definition = base.build()?;
-    Ok(Self { definition: Arc::new(definition) })
+    Ok(Self { definition: Arc::new(definition), tool_manager: Arc::new(tokio::sync::RwLock::new(ToolManager::new())) })
   }
 }
 
@@ -203,32 +208,46 @@ impl AiAgentV1 {
 
   async fn create_agent(
     &self,
-    llm: ModelInstance,
-    tools: Vec<JsonValue>,
+    llm_instance: ModelInstance,
+    _tools: Vec<JsonValue>,
     config: &AiAgentConfig,
-  ) -> Result<JsonValue, NodeExecutionError> {
-    // 创建 Agent 配置
-    Ok(json!({
-        "llm": llm,
-        "tools": tools,
-        "system_prompt": config.system_prompt,
-        "max_iterations": config.max_iterations,
-        "temperature": config.temperature,
-    }))
+  ) -> Result<Box<dyn std::any::Any + Send + Sync>, NodeExecutionError> {
+    // 创建 rig-core Agent
+    let agent = self.create_rig_agent(&llm_instance).await?;
+    Ok(Box::new(agent))
   }
 
   async fn execute_agent(
     &self,
-    agent: &JsonValue,
+    agent: &Box<dyn std::any::Any + Send + Sync>,
     input_data: &ExecutionData,
-    config: &AiAgentConfig,
+    _config: &AiAgentConfig,
   ) -> Result<String, NodeExecutionError> {
-    // 模拟 Agent 执行，实际实现需要集成 rig-core
-    let prompt = input_data.json().get("prompt").and_then(|v| v.as_str()).unwrap_or("请处理这个请求");
+    let prompt = input_data
+      .json()
+      .get("prompt")
+      .and_then(|v| v.as_str())
+      .map(|s| s.to_string())
+      .unwrap_or_else(|| input_data.json().to_string());
 
-    // 这里应该使用 rig-core 的 Agent 执行
-    // 目前返回模拟响应
-    Ok(format!("AI Agent 响应: {}", prompt))
+    // 尝试转换为不同类型的 Agent
+    if let Some(openai_agent) =
+      agent.downcast_ref::<rig::agent::Agent<rig::providers::openai::completion::CompletionModel>>()
+    {
+      openai_agent
+        .prompt(prompt)
+        .await
+        .map_err(|e| NodeExecutionError::ExecutionFailed { node_name: "AiAgentV1".to_string().into() })
+    } else if let Some(anthropic_agent) =
+      agent.downcast_ref::<rig::agent::Agent<rig::providers::anthropic::completion::CompletionModel>>()
+    {
+      anthropic_agent
+        .prompt(prompt)
+        .await
+        .map_err(|_| NodeExecutionError::ExecutionFailed { node_name: "AiAgentV1".to_string().into() })
+    } else {
+      Err(NodeExecutionError::ExecutionFailed { node_name: "AiAgentV1".to_string().into() })
+    }
   }
 
   fn parse_tool_calls(&self, result: &str) -> Option<Vec<ToolCallRequest>> {
@@ -350,5 +369,57 @@ impl AiAgentV1 {
       ConnectionKind::AiTool,
       vec![ExecutionDataItems::Items(vec![ExecutionData::new_json(json!(engine_request), None)])],
     )]))
+  }
+
+  /// 创建 rig-core Agent 实例
+  async fn create_rig_agent(
+    &self,
+    llm_instance: &ModelInstance,
+  ) -> Result<Box<dyn std::any::Any + Send + Sync>, NodeExecutionError> {
+    // 从ModelInstance的config中获取LLM配置
+    let config = &llm_instance.config;
+
+    let provider = config.get("provider").and_then(|v| v.as_str()).unwrap_or("openai");
+
+    match provider {
+      "openai" => {
+        use rig::providers::openai;
+
+        let api_key = config
+          .get("api_key")
+          .and_then(|v| v.as_str())
+          .ok_or_else(|| NodeExecutionError::ConfigurationError("OpenAI API key not found".to_string()))?;
+
+        let client = openai::Client::new(api_key);
+
+        // 根据文档示例，直接使用 client.agent() 方法创建
+        let model_name = config.get("model").and_then(|v| v.as_str()).unwrap_or("gpt-3.5-turbo");
+
+        let agent = client.agent(model_name).build();
+        Ok(Box::new(agent))
+      }
+      "anthropic" => {
+        use rig::providers::anthropic;
+
+        let api_key = config
+          .get("api_key")
+          .and_then(|v| v.as_str())
+          .ok_or_else(|| NodeExecutionError::ConfigurationError("Anthropic API key not found".to_string()))?;
+
+        let client = anthropic::Client::new(api_key);
+
+        let model_name = config.get("model").and_then(|v| v.as_str()).unwrap_or("claude-3-sonnet-20240229");
+
+        let agent = client.agent(model_name).build();
+        Ok(Box::new(agent))
+      }
+      _ => Err(NodeExecutionError::ConfigurationError(format!("Unsupported LLM provider: {}", provider))),
+    }
+  }
+
+  /// 将工具定义转换为 rig-core 格式（暂时不实现）
+  async fn convert_to_rig_tool(&self, _tool: JsonValue) -> Result<String, NodeExecutionError> {
+    // 暂时不实现工具转换，直接返回工具名称
+    Ok("tool_conversion_not_implemented".to_string())
   }
 }
