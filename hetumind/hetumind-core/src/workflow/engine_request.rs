@@ -133,6 +133,12 @@ impl Default for EngineRequest {
   }
 }
 
+impl Default for EngineResponse {
+  fn default() -> Self {
+    Self::new(Uuid::new_v4())
+  }
+}
+
 impl EngineResponse {
   /// 创建新的引擎响应
   pub fn new(request_id: Uuid) -> Self {

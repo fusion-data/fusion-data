@@ -1,5 +1,6 @@
 use hetumind_core::types::JsonValue;
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 /// LLM 配置
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -150,4 +151,72 @@ pub struct StreamingMetadata {
   pub finished: bool,
   /// 错误信息（如果有）
   pub error: Option<String>,
+}
+
+/// 流式响应块
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StreamingChunk {
+  /// 内容块
+  pub content: String,
+  /// 是否是最后一个块
+  pub is_finished: bool,
+  /// 元数据
+  pub metadata: Option<StreamingMetadata>,
+  /// 时间戳
+  pub timestamp: chrono::DateTime<chrono::Utc>,
+}
+
+/// 流式响应
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct StreamingResponse {
+  /// 流ID
+  pub stream_id: String,
+  /// 响应块列表
+  pub chunks: Vec<StreamingChunk>,
+  /// 是否完成
+  pub finished: bool,
+  /// 总体元数据
+  pub metadata: StreamingMetadata,
+}
+
+impl StreamingResponse {
+  /// 创建新的流式响应
+  pub fn new(stream_id: String, model: String, provider: String) -> Self {
+    Self {
+      stream_id,
+      chunks: Vec::new(),
+      finished: false,
+      metadata: StreamingMetadata {
+        request_id: uuid::Uuid::new_v4().to_string(),
+        model,
+        provider,
+        total_tokens: 0,
+        finished: false,
+        error: None,
+      },
+    }
+  }
+
+  /// 添加内容块
+  pub fn add_chunk(&mut self, content: String) {
+    let chunk =
+      StreamingChunk { content: content.clone(), is_finished: false, metadata: None, timestamp: chrono::Utc::now() };
+    self.chunks.push(chunk);
+  }
+
+  /// 完成流式响应
+  pub fn finish(&mut self) {
+    self.finished = true;
+    self.metadata.finished = true;
+
+    if let Some(last_chunk) = self.chunks.last_mut() {
+      last_chunk.is_finished = true;
+    }
+  }
+
+  /// 设置错误
+  pub fn set_error(&mut self, error: String) {
+    self.metadata.error = Some(error);
+    self.finished = true;
+  }
 }

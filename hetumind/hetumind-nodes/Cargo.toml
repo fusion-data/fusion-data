@@ -41,6 +41,7 @@ croner = { workspace = true }
 duration-str = { workspace = true }
 chrono = { workspace = true }
 opendal = { workspace = true }
+once_cell = "1.19"
 
 # file processing
 mime_guess = { workspace = true }

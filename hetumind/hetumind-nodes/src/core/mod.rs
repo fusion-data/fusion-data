@@ -3,7 +3,8 @@ use std::sync::Arc;
 use hetumind_core::workflow::{NodeRegistry, RegistrationError};
 
 mod ai_agent;
-mod r#if;
+mod connection_manager;
+mod if_node;
 mod llm_chat_model;
 mod loop_over_items;
 mod merge;
@@ -11,7 +12,7 @@ mod read_write_files;
 mod set;
 mod switch;
 
-pub use r#if::IfNode;
+pub use if_node::IfNode;
 pub use loop_over_items::LoopOverItemsNode;
 pub use merge::MergeNode;
 pub use read_write_files::ReadWriteFilesNode;

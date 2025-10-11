@@ -96,6 +96,15 @@ pub enum WorkflowExecutionError {
   #[error("资源不足")]
   ResourceExhausted,
 
+  #[error("工作流结构无效: {0}")]
+  InvalidWorkflowStructure(String),
+
+  #[error("节点执行超时: {node_name}, timeout_seconds: {timeout_seconds}")]
+  NodeTimeout { node_name: NodeName, timeout_seconds: u64 },
+
+  #[error("执行限制超过")]
+  ExecutionLimitExceeded,
+
   #[cfg(feature = "with-db")]
   #[error("存储错误: {0}")]
   StoreError(#[from] SqlError),

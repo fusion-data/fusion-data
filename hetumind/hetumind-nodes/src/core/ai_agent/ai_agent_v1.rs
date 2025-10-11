@@ -10,16 +10,13 @@ use hetumind_core::{
     NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig, RegistrationError, make_execution_data_map,
   },
 };
-use rig::{
-  agent::{Agent, AgentBuilder},
-  client::CompletionClient,
-  completion::Prompt,
-};
+use rig::{agent::Agent, client::CompletionClient, completion::Prompt};
 use serde_json::json;
 use uuid::Uuid;
 
 use crate::core::ai_agent::parameters::ToolExecutionStatus;
 use crate::core::ai_agent::tool_manager::ToolManager;
+use crate::core::connection_manager::OptimizedConnectionContext;
 
 use super::parameters::{AiAgentConfig, ModelInstance, ToolCallRequest, ToolCallResult};
 
@@ -150,7 +147,11 @@ impl NodeExecutable for AiAgentV1 {
     let agent = self.create_agent(llm_instance, tools, &config).await?;
 
     // 6. 执行 Agent
-    let result = self.execute_agent(&agent, &input_data, &config).await?;
+    let result = if config.enable_streaming {
+      self.execute_agent_streaming(&agent, &input_data, &config).await?
+    } else {
+      self.execute_agent(&agent, &input_data, &config).await?
+    };
 
     // 7. 解析响应，检查是否需要工具调用
     if let Some(tool_calls) = self.parse_tool_calls(&result) {
@@ -165,6 +166,7 @@ impl NodeExecutable for AiAgentV1 {
         json!({
             "response": result,
             "agent_type": "ai_agent_v1",
+            "streaming": config.enable_streaming,
             "timestamp": chrono::Utc::now().timestamp(),
         }),
         None,
@@ -179,9 +181,10 @@ impl NodeExecutable for AiAgentV1 {
 
 impl AiAgentV1 {
   async fn get_llm_instance(&self, context: &NodeExecutionContext) -> Result<ModelInstance, NodeExecutionError> {
-    // 通过连接类型获取 LLM 实例
+    // 通过优化的连接类型获取 LLM 实例
     let connection_data = context
-      .get_connection_data(ConnectionKind::AiLanguageModel, 0)
+      .get_connection_data_optimized(ConnectionKind::AiLanguageModel, 0)
+      .await?
       .ok_or_else(|| NodeExecutionError::ConnectionError("No LLM model connected".to_string()))?;
 
     // 解析 LLM 实例
@@ -195,8 +198,8 @@ impl AiAgentV1 {
   }
 
   async fn get_tools(&self, context: &NodeExecutionContext) -> Result<Vec<JsonValue>, NodeExecutionError> {
-    // 获取所有连接的工具
-    let tool_connections = context.get_all_connections(ConnectionKind::AiTool);
+    // 获取所有连接的工具（使用优化的批量获取）
+    let tool_connections = context.get_all_connections_optimized(ConnectionKind::AiTool).await?;
 
     let mut tools = Vec::new();
     for connection in tool_connections {
@@ -295,19 +298,17 @@ impl AiAgentV1 {
     // 从引擎结果中提取工具调用结果
     match &result.action {
       EngineAction::ExecuteNode(node_action) => {
-        if let Some(data) = result.data.get(&ConnectionKind::AiTool) {
-          if let Some(items) = data.first() {
-            if let Some(data_items) = items.get_data_items() {
-              if let Some(execution_data) = data_items.first() {
-                return Some(ToolCallResult {
-                  tool_call_id: node_action.action_id.to_string(),
-                  tool_name: node_action.node_name.clone(),
-                  result: execution_data.json().clone(),
-                  status: ToolExecutionStatus::Success,
-                });
-              }
-            }
-          }
+        if let Some(data) = result.data.get(&ConnectionKind::AiTool)
+          && let Some(items) = data.first()
+          && let Some(data_items) = items.get_data_items()
+          && let Some(execution_data) = data_items.first()
+        {
+          return Some(ToolCallResult {
+            tool_call_id: node_action.action_id.to_string(),
+            tool_name: node_action.node_name.clone(),
+            result: execution_data.json().clone(),
+            status: ToolExecutionStatus::Success,
+          });
         }
       }
       _ => {}
@@ -419,7 +420,41 @@ impl AiAgentV1 {
 
   /// 将工具定义转换为 rig-core 格式（暂时不实现）
   async fn convert_to_rig_tool(&self, _tool: JsonValue) -> Result<String, NodeExecutionError> {
-    // 暂时不实现工具转换，直接返回工具名称
+    // TODO: 暂时不实现工具转换，直接返回工具名称
     Ok("tool_conversion_not_implemented".to_string())
+  }
+
+  /// 流式执行Agent
+  async fn execute_agent_streaming(
+    &self,
+    agent: &Box<dyn std::any::Any + Send + Sync>,
+    input_data: &ExecutionData,
+    config: &AiAgentConfig,
+  ) -> Result<String, NodeExecutionError> {
+    let prompt = input_data
+      .json()
+      .get("prompt")
+      .and_then(|v| v.as_str())
+      .map(|s| s.to_string())
+      .unwrap_or_else(|| input_data.json().to_string());
+
+    // 模拟流式Agent执行
+    let mut streaming_response = String::new();
+
+    // 模拟AI Agent思考过程的流式输出
+    let thinking_steps = vec!["正在分析用户请求...", "理解问题上下文...", "准备生成响应..."];
+
+    for step in thinking_steps {
+      streaming_response.push_str(&format!("[{}]\n", step));
+
+      // 模拟思考时间
+      tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
+    }
+
+    // 执行实际的Agent推理
+    let final_response = self.execute_agent(agent, input_data, config).await?;
+    streaming_response.push_str(&final_response);
+
+    Ok(streaming_response)
   }
 }

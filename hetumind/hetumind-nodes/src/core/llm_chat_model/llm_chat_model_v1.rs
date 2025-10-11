@@ -5,17 +5,17 @@ use hetumind_core::{
   types::JsonValue,
   version::Version,
   workflow::{
-    ConnectionKind, CredentialKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig,
-    NodeDefinition, NodeDefinitionBuilder, NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeGroupKind,
-    NodeProperty, NodePropertyKind, OutputPortConfig, RegistrationError,
+    ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition,
+    NodeDefinitionBuilder, NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeGroupKind, NodeProperty,
+    NodePropertyKind, OutputPortConfig, RegistrationError,
   },
 };
 use rig::providers::{anthropic::Client as AnthropicClient, openai::Client as OpenAIClient};
 use serde_json::json;
-use uuid::Uuid;
 
 use super::parameters::{
-  AnthropicModel, CustomModel, LlmConfig, LocalModel, ModelCapabilities, ModelClient, OpenAIModel, UsageStats,
+  AnthropicModel, LlmConfig, LocalModel, ModelCapabilities, ModelClient, OpenAIModel, StreamingChunk,
+  StreamingMetadata, StreamingResponse, UsageStats,
 };
 
 #[derive(Debug)]
@@ -282,7 +282,7 @@ impl LlmChatModelV1 {
 
   async fn execute_streaming_inference(
     &self,
-    _client: &ModelClient,
+    client: &ModelClient,
     input_data: &hetumind_core::workflow::ExecutionData,
     config: &LlmConfig,
   ) -> Result<JsonValue, NodeExecutionError> {
@@ -292,17 +292,55 @@ impl LlmChatModelV1 {
       .and_then(|v| v.as_str())
       .ok_or_else(|| NodeExecutionError::InvalidInput("No prompt provided".to_string()))?;
 
-    // 模拟流式推理
-    let mock_response = format!("这是来自 {} 模型的流式响应: {}", config.model, prompt);
+    // 创建流式响应
+    let stream_id = uuid::Uuid::new_v4().to_string();
+    let mut streaming_response =
+      StreamingResponse::new(stream_id.clone(), config.model.clone(), config.provider.clone());
+
+    // 模拟流式响应生成过程
+    let simulated_chunks = self.simulate_streaming_chunks(&config.model, prompt).await?;
+
+    // 添加流式块
+    for chunk in simulated_chunks {
+      streaming_response.add_chunk(chunk);
+    }
+
+    // 完成流式响应
+    streaming_response.finish();
 
     Ok(json!({
-        "response": mock_response,
+        "streaming_response": streaming_response,
         "model": config.model,
         "provider": config.provider,
         "streaming": true,
         "timestamp": chrono::Utc::now().timestamp(),
-        "request_id": uuid::Uuid::new_v4().to_string(),
+        "request_id": streaming_response.metadata.request_id,
     }))
+  }
+
+  /// 模拟流式响应块生成
+  async fn simulate_streaming_chunks(&self, model: &str, prompt: &str) -> Result<Vec<String>, NodeExecutionError> {
+    let full_response = format!("这是来自 {} 模型的流式响应: {}", model, prompt);
+
+    // 将完整响应分割成多个块来模拟流式输出
+    let chunk_size = 10; // 每个块10个字符
+    let mut chunks = Vec::new();
+
+    for (i, chunk) in full_response.chars().collect::<Vec<_>>().chunks(chunk_size).enumerate() {
+      let chunk_str: String = chunk.iter().collect();
+
+      // 模拟网络延迟
+      tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+
+      chunks.push(chunk_str);
+
+      // 最后一个块添加完成标记
+      if i == (full_response.chars().count() + chunk_size - 1) / chunk_size - 1 {
+        chunks.push("[DONE]".to_string());
+      }
+    }
+
+    Ok(chunks)
   }
 
   fn serialize_model_client(&self, client: &ModelClient) -> JsonValue {

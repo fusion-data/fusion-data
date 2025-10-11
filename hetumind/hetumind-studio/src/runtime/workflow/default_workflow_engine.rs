@@ -1,15 +1,22 @@
 use std::sync::Arc;
+use std::time::Duration;
 
-use ahash::HashMap;
 use async_trait::async_trait;
+use fusion_common::ahash::HashMap;
 use fusion_common::time::now;
+use futures::future::join_all;
+use tokio::sync::{RwLock, Semaphore};
+use tokio::time::timeout;
+
 use hetumind_core::{
   expression::ExpressionEvaluator,
   workflow::{
-    ConnectionKind, EngineAction, EngineRequest, EngineResponse, EngineResult, ExecuteNodeAction, ExecutionContext,
-    ExecutionData, ExecutionDataItems, ExecutionDataMap, ExecutionGraph, ExecutionId, ExecutionResult, ExecutionStatus,
+    ConnectionKind, EngineAction, EngineRequest, EngineResponse, EngineResult, ErrorTrace, ExecuteNodeAction,
+    ExecutionContext, ExecutionData, ExecutionDataItems, ExecutionDataMap, ExecutionGraph, ExecutionId,
+    ExecutionMetrics, ExecutionPlan, ExecutionPlanner, ExecutionResult, ExecutionStatus, ExecutionTrace,
     GetConnectionDataAction, NodeExecutionContext, NodeExecutionResult, NodeExecutionStatus, NodeName, NodeRegistry,
-    NodesExecutionMap, WorkflowEngine, WorkflowEngineSetting, WorkflowErrorData, WorkflowExecutionError, WorkflowId,
+    NodeTrace, NodesExecutionMap, WorkflowEngine, WorkflowEngineSetting, WorkflowErrorData, WorkflowExecutionError,
+    WorkflowId,
   },
 };
 
@@ -32,6 +39,8 @@ pub struct DefaultWorkflowEngine {
   _monitor: Arc<ExecutionMonitor>,
   /// 配置
   _config: WorkflowEngineSetting,
+  /// 执行计划器
+  execution_planner: ExecutionPlanner,
 }
 
 impl DefaultWorkflowEngine {
@@ -43,8 +52,9 @@ impl DefaultWorkflowEngine {
     let scheduler = Arc::new(TaskScheduler::new(_config.clone()));
     let _concurrency_controller = Arc::new(ConcurrencyController::new(_config.clone()));
     let _monitor = Arc::new(ExecutionMonitor::new());
+    let execution_planner = ExecutionPlanner::new();
 
-    Self { node_registry, execution_store, scheduler, _concurrency_controller, _monitor, _config }
+    Self { node_registry, execution_store, scheduler, _concurrency_controller, _monitor, _config, execution_planner }
   }
 
   /// 执行单个节点
@@ -256,11 +266,151 @@ impl WorkflowEngine for DefaultWorkflowEngine {
   async fn get_execution_status(&self, execution_id: &ExecutionId) -> Result<ExecutionStatus, WorkflowExecutionError> {
     self.execution_store.get_execution_status(execution_id).await
   }
+
+  // 实现新增的优化方法
+  async fn get_execution_metrics(
+    &self,
+    execution_id: &ExecutionId,
+  ) -> Result<Option<ExecutionMetrics>, WorkflowExecutionError> {
+    // 从存储中获取执行记录
+    if let Some(execution) = self.execution_store.get_execution(execution_id).await? {
+      // 计算执行时长
+      let duration_ms = match (execution.started_at, execution.finished_at) {
+        (Some(start), Some(end)) => {
+          let duration = end.signed_duration_since(start);
+          duration.num_milliseconds() as u64
+        }
+        _ => 0,
+      };
+
+      // 获取内存使用情况
+      let memory_usage_mb = self.get_memory_usage().await?;
+      let cpu_usage_percent = self.get_cpu_usage().await?;
+      let cache_hit_rate = self.get_cache_hit_rate().await?;
+
+      let metrics = ExecutionMetrics {
+        execution_id: execution_id.clone(),
+        duration_ms,
+        nodes_executed: 0, // TODO: 从执行记录中获取详细信息
+        nodes_succeeded: 0,
+        nodes_failed: 0,
+        memory_usage_mb,
+        cpu_usage_percent,
+        cache_hit_rate,
+        retry_count: 0, // TODO: 从重试配置中获取
+      };
+
+      Ok(Some(metrics))
+    } else {
+      Ok(None)
+    }
+  }
+
+  async fn get_execution_trace(
+    &self,
+    execution_id: &ExecutionId,
+  ) -> Result<Option<ExecutionTrace>, WorkflowExecutionError> {
+    if let Some(execution) = self.execution_store.get_execution(execution_id).await? {
+      let start_time = execution
+        .started_at
+        .map(|dt| chrono::DateTime::from_timestamp(dt.timestamp(), 0).unwrap_or_default().fixed_offset())
+        .unwrap_or_else(|| chrono::Utc::now().fixed_offset());
+
+      let end_time = execution
+        .finished_at
+        .map(|dt| Some(chrono::DateTime::from_timestamp(dt.timestamp(), 0).unwrap_or_default().fixed_offset()))
+        .unwrap_or(Some(chrono::Utc::now().fixed_offset()));
+
+      let trace = ExecutionTrace {
+        execution_id: execution_id.clone(),
+        start_time,
+        end_time,
+        node_traces: vec![],  // TODO: 从执行记录中构建节点追踪
+        error_traces: vec![], // TODO: 收集错误追踪
+      };
+
+      Ok(Some(trace))
+    } else {
+      Ok(None)
+    }
+  }
+
+  async fn set_parallel_execution(&self, enabled: bool) -> Result<(), WorkflowExecutionError> {
+    // 由于配置是只读的，这里返回错误
+    Err(WorkflowExecutionError::InvalidWorkflowStructure(
+      "Dynamic parallel execution configuration not supported".to_string(),
+    ))
+  }
+
+  async fn set_node_caching(&self, enabled: bool) -> Result<(), WorkflowExecutionError> {
+    // 由于配置是只读的，这里返回错误
+    Err(WorkflowExecutionError::InvalidWorkflowStructure(
+      "Dynamic node caching configuration not supported".to_string(),
+    ))
+  }
 }
 
 impl DefaultWorkflowEngine {
+  /// 获取内存使用情况
+  async fn get_memory_usage(&self) -> Result<f64, WorkflowExecutionError> {
+    // 简单实现，返回当前进程内存使用情况
+    let memory_bytes = self.get_process_memory().unwrap_or(0);
+    Ok(memory_bytes as f64 / (1024.0 * 1024.0)) // 转换为 MB
+  }
+
+  /// 获取 CPU 使用情况
+  async fn get_cpu_usage(&self) -> Result<f64, WorkflowExecutionError> {
+    // 简单实现，返回模拟 CPU 使用率
+    Ok(50.0) // TODO: 实现真实的 CPU 监控
+  }
+
+  /// 获取缓存命中率
+  async fn get_cache_hit_rate(&self) -> Result<f64, WorkflowExecutionError> {
+    // 简单实现，返回模拟缓存命中率
+    Ok(85.0) // TODO: 实现真实的缓存命中率统计
+  }
+
+  /// 获取进程内存使用情况
+  fn get_process_memory(&self) -> Option<usize> {
+    #[cfg(unix)]
+    {
+      use std::fs;
+      let status = fs::read_to_string("/proc/self/status").ok()?;
+      for line in status.lines() {
+        if line.starts_with("VmRSS:") {
+          let parts: Vec<&str> = line.split_whitespace().collect();
+          if parts.len() >= 2 {
+            return parts[1].parse::<usize>().ok();
+          }
+        }
+      }
+    }
+    None
+  }
+
+  /// 估算数据大小
+  fn estimate_data_size(&self, _data: &ExecutionDataMap) -> u64 {
+    // 简单实现，返回估算的大小
+    1024 // TODO: 实现真实的数据大小计算
+  }
+
   /// 执行支持引擎请求的工作流
   async fn execute_with_engine_requests(
+    &self,
+    trigger_data: (NodeName, ExecutionDataMap),
+    context: &ExecutionContext,
+    graph: &ExecutionGraph,
+  ) -> Result<ExecutionResult, WorkflowExecutionError> {
+    // 使用执行计划器进行并行执行
+    if self._config.enable_parallel_execution {
+      self.execute_workflow_parallel(trigger_data, context, graph).await
+    } else {
+      self.execute_workflow_sequential(trigger_data, context, graph).await
+    }
+  }
+
+  /// 顺序执行工作流（原有实现）
+  async fn execute_workflow_sequential(
     &self,
     trigger_data: (NodeName, ExecutionDataMap),
     context: &ExecutionContext,
@@ -350,6 +500,121 @@ impl DefaultWorkflowEngine {
         .duration_ms(duration_ms)
         .build(),
     )
+  }
+
+  /// 并行执行工作流（新实现）
+  async fn execute_workflow_parallel(
+    &self,
+    trigger_data: (NodeName, ExecutionDataMap),
+    context: &ExecutionContext,
+    graph: &ExecutionGraph,
+  ) -> Result<ExecutionResult, WorkflowExecutionError> {
+    // 生成执行计划
+    let mut execution_plan = self.execution_planner.plan_execution(graph)?;
+    self.execution_planner.optimize_execution_plan(&mut execution_plan)?;
+
+    let mut all_results: NodesExecutionMap = HashMap::default();
+    all_results.insert(trigger_data.0, trigger_data.1);
+
+    let mut nodes_result: HashMap<NodeName, NodeExecutionResult> = HashMap::default();
+    let mut engine_responses: HashMap<NodeName, EngineResponse> = HashMap::default();
+
+    // 按照并行组执行
+    for parallel_group in execution_plan.parallel_groups {
+      if parallel_group.is_empty() {
+        continue;
+      }
+
+      // 检查组内所有节点是否可以执行
+      let mut ready_nodes = Vec::new();
+      for node_name in &parallel_group {
+        if self.can_execute_node(node_name, graph, &all_results) {
+          ready_nodes.push(node_name.clone());
+        }
+      }
+
+      if ready_nodes.is_empty() {
+        continue;
+      }
+
+      // 执行组内节点（简化版：顺序执行，但组间按照依赖关系优化）
+      for node_name in ready_nodes {
+        let started_at = now();
+
+        // 检查是否有待处理的引擎请求
+        let engine_response = engine_responses.remove(&node_name);
+
+        let execute_result =
+          self.execute_single_node(&node_name, graph, &all_results, context, engine_response.as_ref()).await;
+        let duration_ms = now().signed_duration_since(started_at).num_milliseconds() as u64;
+
+        let node_execution_result = match execute_result {
+          Ok(output_data) => {
+            // 检查是否返回了引擎请求
+            if let Some(engine_request) = self.extract_engine_request(&output_data) {
+              // 处理引擎请求
+              match self.handle_engine_request(engine_request, context).await {
+                Ok(response) => {
+                  // 将响应存储以便后续节点使用
+                  engine_responses.insert(node_name.clone(), response);
+
+                  NodeExecutionResult::builder()
+                    .node_name(node_name.clone())
+                    .output_data(output_data)
+                    .status(NodeExecutionStatus::Success)
+                    .duration_ms(duration_ms)
+                    .build()
+                }
+                Err(e) => NodeExecutionResult::builder()
+                  .node_name(node_name.clone())
+                  .output_data(ExecutionDataMap::default())
+                  .status(NodeExecutionStatus::Failed)
+                  .error(e.to_string())
+                  .duration_ms(duration_ms)
+                  .build(),
+              }
+            } else {
+              NodeExecutionResult::builder()
+                .node_name(node_name.clone())
+                .output_data(output_data)
+                .status(NodeExecutionStatus::Success)
+                .duration_ms(duration_ms)
+                .build()
+            }
+          }
+          Err(e) => NodeExecutionResult::builder()
+            .node_name(node_name.clone())
+            .output_data(ExecutionDataMap::default())
+            .status(NodeExecutionStatus::Failed)
+            .error(e.to_string())
+            .duration_ms(duration_ms)
+            .build(),
+        };
+
+        all_results.insert(node_name.clone(), node_execution_result.output_data.clone());
+        nodes_result.insert(node_name.clone(), node_execution_result);
+      }
+    }
+
+    let duration_ms = now().signed_duration_since(context.started_at()).num_milliseconds() as u64;
+    Ok(
+      ExecutionResult::builder()
+        .execution_id(context.execution_id().clone())
+        .status(ExecutionStatus::Success)
+        .nodes_result(nodes_result)
+        .end_nodes(graph.get_end_nodes())
+        .duration_ms(duration_ms)
+        .build(),
+    )
+  }
+
+  /// 检查节点是否可以执行
+  fn can_execute_node(&self, node_name: &NodeName, graph: &ExecutionGraph, all_results: &NodesExecutionMap) -> bool {
+    if let Some(parent_names) = graph.get_parents(node_name) {
+      parent_names.iter().all(|parent_name| all_results.contains_key(parent_name))
+    } else {
+      true // 无父节点，可以执行
+    }
   }
 
   /// 从输出数据中提取引擎请求

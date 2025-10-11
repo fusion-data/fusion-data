@@ -196,7 +196,7 @@ impl NodeExecutable for SwitchV1 {
 
         for (index, rule_value) in rules.into_iter().enumerate() {
           if let serde_json::Value::Object(_rule_obj) = rule_value {
-            let conditions: Vec<crate::core::r#if::ConditionConfig> =
+            let conditions: Vec<crate::core::if_node::ConditionConfig> =
               node.get_parameter(&format!("rules.values[{}].conditions", index))?;
             let output_key: Option<String> = node.get_optional_parameter(&format!("rules.values[{}].outputKey", index));
 

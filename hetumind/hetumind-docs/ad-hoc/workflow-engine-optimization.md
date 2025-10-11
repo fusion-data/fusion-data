@@ -231,29 +231,37 @@ use async_trait::async_trait;
 use tokio::sync::RwLock;
 use serde::{Deserialize, Serialize};
 
-/// 工作流引擎配置 - 基于现有 WorkflowEngineSetting 扩展
+/// 扩展现有的 WorkflowEngineSetting 结构
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct WorkflowEngineConfig {
-    /// 最大并发执行数量
+pub struct WorkflowEngineSetting {
+    // 现有字段保持不变
     pub max_concurrent_executions: u32,
-    /// 节点执行超时时间（秒）
     pub node_timeout_seconds: u64,
-    /// 工作流执行超时时间（秒）
     pub workflow_timeout_seconds: u64,
-    /// 内存限制（MB）
     pub memory_limit_mb: u64,
-    /// 重试配置
     pub retry_config: RetryConfig,
-    /// 错误处理策略
-    pub error_handling_strategy: String,
-    /// 执行模式
-    pub execution_mode: u32,
-    /// 执行超时时间（毫秒）
-    pub execution_timeout_ms: u64,
-    /// 缓存配置（新增）
+
+    // 新增优化字段
+    pub enable_parallel_execution: bool,
+    pub enable_node_caching: bool,
     pub cache_config: Option<CacheConfig>,
-    /// 监控配置（新增）
-    pub monitoring_config: Option<MonitoringConfig>,
+    pub resource_management: ResourceManagementConfig,
+}
+
+/// 资源管理配置
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ResourceManagementConfig {
+    pub cpu_core_based_scaling: bool,
+    pub deadlock_detection_enabled: bool,
+    pub resource_allocation_strategy: ResourceAllocationStrategy,
+}
+
+/// 资源分配策略
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ResourceAllocationStrategy {
+    Equal,      // 平均分配
+    Weighted,   // 权重分配
+    Adaptive,   // 自适应分配
 }
 
 /// 重试策略配置 - 基于现有 RetryConfig 扩展
@@ -329,35 +337,22 @@ pub struct CacheConfig {
     pub max_cache_size: usize,
 }
 
-impl Default for WorkflowEngineConfig {
+impl Default for WorkflowEngineSetting {
     fn default() -> Self {
         Self {
-            max_concurrent_executions: 10,
+            max_concurrent_executions: num_cpus::get() as u32, // 基于 CPU 逻辑核数
             node_timeout_seconds: 30,
             workflow_timeout_seconds: 300,
             memory_limit_mb: 1024,
-            retry_config: RetryConfig {
-                max_retries: 3,
-                retry_interval_seconds: 10,
-                base_delay_ms: 1000,
-                max_delay_ms: 30000,
-                backoff_multiplier: 2.0,
-                retryable_errors: vec!["timeout".to_string(), "network".to_string(), "resource_unavailable".to_string()],
+            retry_config: RetryConfig::default(),
+            enable_parallel_execution: true,
+            enable_node_caching: true,
+            cache_config: Some(CacheConfig::default()),
+            resource_management: ResourceManagementConfig {
+                cpu_core_based_scaling: true,
+                deadlock_detection_enabled: true,
+                resource_allocation_strategy: ResourceAllocationStrategy::Equal,
             },
-            error_handling_strategy: "StopOnFirstError".to_string(),
-            execution_mode: 1,
-            execution_timeout_ms: 7200000, // 2小时
-            cache_config: Some(CacheConfig {
-                enable_node_result_cache: true,
-                cache_ttl_seconds: 3600,
-                max_cache_size: 1000,
-            }),
-            monitoring_config: Some(MonitoringConfig {
-                enable_metrics: true,
-                enable_tracing: true,
-                metrics_sample_rate: 0.1,
-                tracing_sample_rate: 0.01,
-            }),
         }
     }
 }
@@ -375,41 +370,35 @@ impl Default for RetryConfig {
     }
 }
 
-/// 优化的工作流引擎接口
+/// 统一的工作流引擎接口 - 保持现有API兼容性
 #[async_trait]
-pub trait OptimizedWorkflowEngine: Send + Sync {
-    /// 执行工作流（优化版）
-    async fn execute_workflow_optimized(
+pub trait WorkflowEngine: Send + Sync {
+    // 保持现有方法签名不变
+    async fn execute_workflow(
         &self,
         trigger_data: (NodeName, ExecutionDataMap),
         context: &ExecutionContext,
-        config: Option<WorkflowEngineConfig>,
     ) -> Result<ExecutionResult, WorkflowExecutionError>;
 
-    /// 暂停执行
-    async fn pause_execution(&self, execution_id: &ExecutionId) -> Result<(), WorkflowExecutionError>;
-
-    /// 恢复执行
-    async fn resume_execution(&self, execution_id: &ExecutionId) -> Result<(), WorkflowExecutionError>;
-
-    /// 取消执行
-    async fn cancel_execution(&self, execution_id: &ExecutionId) -> Result<(), WorkflowExecutionError>;
-
-    /// 获取执行状态
-    async fn get_execution_status(&self, execution_id: &ExecutionId) -> Result<ExecutionStatus, WorkflowExecutionError>;
-
-    /// 执行错误工作流
     async fn execute_error_workflow(
         &self,
         error_data: WorkflowErrorData,
         error_workflow_id: Option<WorkflowId>,
     ) -> Result<ExecutionResult, WorkflowExecutionError>;
 
-    /// 获取执行指标
-    async fn get_execution_metrics(&self, execution_id: &ExecutionId) -> Result<ExecutionMetrics, WorkflowExecutionError>;
+    async fn pause_execution(&self, execution_id: &ExecutionId) -> Result<(), WorkflowExecutionError>;
+    async fn resume_execution(&self, execution_id: &ExecutionId) -> Result<(), WorkflowExecutionError>;
+    async fn cancel_execution(&self, execution_id: &ExecutionId) -> Result<(), WorkflowExecutionError>;
+    async fn get_execution_status(&self, execution_id: &ExecutionId) -> Result<ExecutionStatus, WorkflowExecutionError>;
 
-    /// 获取执行追踪
-    async fn get_execution_trace(&self, execution_id: &ExecutionId) -> Result<ExecutionTrace, WorkflowExecutionError>;
+    // 新增优化方法（可选实现）
+    async fn get_execution_metrics(&self, execution_id: &ExecutionId) -> Result<Option<ExecutionMetrics>, WorkflowExecutionError> {
+        Ok(None) // 默认实现返回空
+    }
+
+    async fn get_execution_trace(&self, execution_id: &ExecutionId) -> Result<Option<ExecutionTrace>, WorkflowExecutionError> {
+        Ok(None) // 默认实现返回空
+    }
 }
 
 /// 执行指标
@@ -464,7 +453,7 @@ pub struct ErrorTrace {
 #### 2.2.1 增强的 DefaultWorkflowEngine
 
 ```rust
-// 在 hetumind-studio/src/runtime/workflow/optimized_workflow_engine.rs 中
+// 在 hetumind-studio/src/runtime/workflow/default_workflow_engine.rs 中
 use std::sync::Arc;
 use std::collections::HashMap;
 use std::time::Duration;
@@ -480,7 +469,7 @@ use hetumind_core::{
         ExecutionContext, ExecutionDataMap, ExecutionGraph, ExecutionId, ExecutionResult,
         ExecutionStatus, EngineRequest, EngineResponse, NodeExecutionContext, NodeExecutionResult,
         NodeExecutionStatus, NodeName, NodeRegistry, NodesExecutionMap, WorkflowEngine,
-        WorkflowErrorData, WorkflowExecutionError, WorkflowId, OptimizedWorkflowEngine,
+        WorkflowErrorData, WorkflowExecutionError, WorkflowId, WorkflowEngine,
         WorkflowEngineConfig, ExecutionMetrics, ExecutionTrace, NodeTrace, ErrorTrace,
     },
 };
@@ -494,7 +483,7 @@ use crate::runtime::{
     tracing::ExecutionTracer,
 };
 
-pub struct OptimizedDefaultWorkflowEngine {
+pub struct DefaultWorkflowEngine {
     /// 节点执行器注册表
     node_registry: Arc<NodeRegistry>,
     /// 执行状态存储
@@ -534,7 +523,7 @@ pub struct ExecutionState {
     pub config: WorkflowEngineConfig,
 }
 
-impl OptimizedDefaultWorkflowEngine {
+impl DefaultWorkflowEngine {
     pub fn new(
         node_registry: Arc<NodeRegistry>,
         execution_store: Arc<dyn ExecutionStore>,
@@ -643,7 +632,7 @@ fn load_config_from_path(config_path: &str) -> Result<WorkflowEngineSetting, Box
     Ok(WorkflowEngineSetting::default())
 }
 
-impl OptimizedDefaultWorkflowEngine {
+impl DefaultWorkflowEngine {
     /// 并行执行节点组
     async fn execute_parallel_nodes(
         &self,
@@ -997,7 +986,7 @@ impl OptimizedDefaultWorkflowEngine {
 }
 
 #[async_trait]
-impl OptimizedWorkflowEngine for OptimizedDefaultWorkflowEngine {
+impl WorkflowEngine for DefaultWorkflowEngine {
     async fn execute_workflow_optimized(
         &self,
         trigger_data: (NodeName, ExecutionDataMap),
@@ -1069,7 +1058,7 @@ impl OptimizedWorkflowEngine for OptimizedDefaultWorkflowEngine {
     // ... 其他接口实现保持不变 ...
 }
 
-impl Clone for OptimizedDefaultWorkflowEngine {
+impl Clone for DefaultWorkflowEngine {
     fn clone(&self) -> Self {
         Self {
             node_registry: self.node_registry.clone(),
@@ -1102,14 +1091,14 @@ use hetumind_core::workflow::{NodeRegistry, WorkflowEngineSetting};
 
 use crate::{
     infra::db::execution::{ExecutionStorePlugin, ExecutionStoreService},
-    runtime::workflow::{OptimizedDefaultWorkflowEngine, WorkflowEngineService},
+    runtime::workflow::{DefaultWorkflowEngine, WorkflowEngineService},
     utils::NodeRegistryPlugin,
 };
 
-pub struct OptimizedWorkflowEnginePlugin;
+pub struct WorkflowEnginePlugin;
 
 #[async_trait]
-impl Plugin for OptimizedWorkflowEnginePlugin {
+impl Plugin for WorkflowEnginePlugin {
     async fn build(&self, app: &mut ApplicationBuilder) {
         let execution_store: ExecutionStoreService = app.component();
         let node_registry: NodeRegistry = app.component();
@@ -1120,7 +1109,7 @@ impl Plugin for OptimizedWorkflowEnginePlugin {
 
         // 创建优化的工作流引擎实例
         let workflow_engine: WorkflowEngineService =
-          Arc::new(OptimizedDefaultWorkflowEngine::new(node_registry, execution_store, setting));
+          Arc::new(DefaultWorkflowEngine::new(node_registry, execution_store, setting));
         app.add_component(workflow_engine);
     }
 
@@ -1130,9 +1119,362 @@ impl Plugin for OptimizedWorkflowEnginePlugin {
 }
 ```
 
-### 2.3 错误处理优化
+### 2.3 资源竞争和死锁处理机制
 
-#### 2.3.1 分层错误处理机制
+#### 2.3.1 资源竞争管理器
+
+基于澄清的回答，我们设计了基于 CPU 逻辑核数的资源分配和平均分配策略的竞争处理机制：
+
+```rust
+// 在 hetumind-studio/src/runtime/resource/competition_manager.rs 中新增
+use std::sync::Arc;
+use tokio::sync::{Mutex, Semaphore};
+use std::collections::HashMap;
+use petgraph::{Direction, Graph};
+use std::time::{Duration, Instant};
+
+pub struct ResourceCompetitionManager {
+    /// 资源池管理
+    resource_pools: Arc<Mutex<HashMap<ResourceType, ResourcePool>>>,
+    /// 资源依赖图（用于死锁检测）
+    resource_graph: Arc<Mutex<Graph<ResourceId, ResourceDependency>>>,
+    /// 等待队列管理
+    waiting_queues: Arc<Mutex<HashMap<ResourceId, Vec<WaitingTask>>>>,
+    /// 死锁检测器
+    deadlock_detector: Arc<DeadlockDetector>,
+}
+
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+pub enum ResourceType {
+    Cpu,
+    Memory,
+    Network,
+    Disk,
+    Custom(String),
+}
+
+#[derive(Debug, Clone)]
+pub struct ResourceRequest {
+    pub resource_type: ResourceType,
+    pub amount: u64,
+    pub priority: TaskPriority,
+    pub timeout: Duration,
+    pub task_id: TaskId,
+}
+
+#[derive(Debug, Clone)]
+pub struct WaitingTask {
+    pub task_id: TaskId,
+    pub resource_requests: Vec<ResourceRequest>,
+    pub waiting_since: Instant,
+    pub priority: TaskPriority,
+}
+
+impl ResourceCompetitionManager {
+    pub fn new(config: &ResourceManagementConfig) -> Self {
+        let cpu_cores = num_cpus::get() as u64;
+        let mut resource_pools = HashMap::new();
+
+        // 基于 CPU 核心数初始化资源池
+        resource_pools.insert(ResourceType::Cpu, ResourcePool::new(cpu_cores));
+        resource_pools.insert(ResourceType::Memory, ResourcePool::new(1024 * 1024 * 1024)); // 1GB
+
+        Self {
+            resource_pools: Arc::new(Mutex::new(resource_pools)),
+            resource_graph: Arc::new(Mutex::new(Graph::new())),
+            waiting_queues: Arc::new(Mutex::new(HashMap::new())),
+            deadlock_detector: Arc::new(DeadlockDetector::new()),
+        }
+    }
+
+    /// 请求资源（支持资源竞争处理）
+    pub async fn acquire_resources(
+        &self,
+        task_id: TaskId,
+        requests: Vec<ResourceRequest>,
+    ) -> Result<ResourceAllocation, ResourceError> {
+        // 1. 检查是否会导致死锁
+        if self.would_cause_deadlock(&task_id, &requests).await? {
+            return Err(ResourceError::DeadlockRisk { task_id });
+        }
+
+        // 2. 尝试立即分配资源
+        if let Some(allocation) = self.try_allocate_immediately(&task_id, &requests).await? {
+            return Ok(allocation);
+        }
+
+        // 3. 加入等待队列
+        self.enqueue_waiting_task(task_id, requests).await?;
+
+        // 4. 等待资源分配或超时
+        self.wait_for_allocation(task_id).await
+    }
+
+    /// 检查是否会导致死锁
+    async fn would_cause_deadlock(
+        &self,
+        task_id: &TaskId,
+        requests: &[ResourceRequest],
+    ) -> Result<bool, ResourceError> {
+        let mut graph = self.resource_graph.lock().await;
+
+        // 临时添加当前任务的资源请求
+        let temp_node = graph.add_node(ResourceId::Task(task_id.clone()));
+
+        for request in requests {
+            let resource_node = graph.add_node(ResourceId::Resource(request.resource_type.clone()));
+            graph.add_edge(temp_node, resource_node, ResourceDependency::Requires);
+        }
+
+        // 使用 DFS 检测环路
+        let has_cycle = petgraph::algo::is_cyclic_directed(&graph);
+
+        // 移除临时节点
+        graph.remove_node(temp_node);
+
+        Ok(has_cycle)
+    }
+
+    /// 尝试立即分配资源
+    async fn try_allocate_immediately(
+        &self,
+        task_id: &TaskId,
+        requests: &[ResourceRequest],
+    ) -> Result<Option<ResourceAllocation>, ResourceError> {
+        let mut pools = self.resource_pools.lock().await;
+        let mut allocated = HashMap::new();
+
+        // 检查所有资源是否可用
+        for request in requests {
+            let pool = pools.get_mut(&request.resource_type)
+                .ok_or(ResourceError::UnsupportedResourceType {
+                    resource_type: request.resource_type.clone()
+                })?;
+
+            if !pool.can_allocate(request.amount) {
+                return Ok(None); // 资源不足，无法立即分配
+            }
+        }
+
+        // 分配所有资源
+        for request in requests {
+            let pool = pools.get_mut(&request.resource_type).unwrap();
+            let allocated_amount = pool.allocate(request.amount)?;
+            allocated.insert(request.resource_type.clone(), allocated_amount);
+        }
+
+        Ok(Some(ResourceAllocation {
+            task_id: task_id.clone(),
+            resources: allocated,
+            allocated_at: Instant::now(),
+        }))
+    }
+
+    /// 等待资源分配
+    async fn wait_for_allocation(&self, task_id: TaskId) -> Result<ResourceAllocation, ResourceError> {
+        let timeout_duration = Duration::from_secs(30); // 默认30秒超时
+
+        tokio::time::timeout(timeout_duration, async {
+            let mut interval = tokio::time::interval(Duration::from_millis(100));
+
+            loop {
+                interval.tick().await;
+
+                // 检查是否已经分配了资源
+                if let Some(allocation) = self.try_get_allocation(&task_id).await? {
+                    return Ok(allocation);
+                }
+
+                // 检查是否被死锁检测器标记为需要取消
+                if self.deadlock_detector.is_marked_for_cancellation(&task_id).await {
+                    return Err(ResourceError::DeadlockDetected { task_id });
+                }
+            }
+        }).await.map_err(|_| ResourceError::AllocationTimeout { task_id })?
+    }
+
+    /// 释放资源
+    pub async fn release_resources(&self, allocation: ResourceAllocation) -> Result<(), ResourceError> {
+        let mut pools = self.resource_pools.lock().await;
+
+        for (resource_type, amount) in allocation.resources {
+            let pool = pools.get_mut(&resource_type)
+                .ok_or(ResourceError::UnsupportedResourceType { resource_type })?;
+
+            pool.release(amount)?;
+        }
+
+        // 尝试为等待中的任务分配资源
+        self.try_allocate_waiting_tasks().await?;
+
+        Ok(())
+    }
+}
+
+/// 资源分配结果
+#[derive(Debug, Clone)]
+pub struct ResourceAllocation {
+    pub task_id: TaskId,
+    pub resources: HashMap<ResourceType, u64>,
+    pub allocated_at: Instant,
+}
+
+/// 资源池
+pub struct ResourcePool {
+    total_capacity: u64,
+    available: u64,
+}
+
+impl ResourcePool {
+    pub fn new(capacity: u64) -> Self {
+        Self {
+            total_capacity: capacity,
+            available: capacity,
+        }
+    }
+
+    pub fn can_allocate(&self, amount: u64) -> bool {
+        self.available >= amount
+    }
+
+    pub fn allocate(&mut self, amount: u64) -> Result<u64, ResourceError> {
+        if self.available < amount {
+            return Err(ResourceError::InsufficientResources);
+        }
+
+        self.available -= amount;
+        Ok(amount)
+    }
+
+    pub fn release(&mut self, amount: u64) -> Result<(), ResourceError> {
+        if self.available + amount > self.total_capacity {
+            return Err(ResourceError::ResourceLeak);
+        }
+
+        self.available += amount;
+        Ok(())
+    }
+}
+```
+
+#### 2.3.2 死锁检测器
+
+```rust
+// 在 hetumind-studio/src/runtime/resource/deadlock_detector.rs 中新增
+use std::sync::Arc;
+use tokio::sync::Mutex;
+use std::collections::{HashMap, HashSet};
+use petgraph::{Graph, Direction};
+
+pub struct DeadlockDetector {
+    /// 等待图
+    wait_graph: Arc<Mutex<Graph<TaskId, WaitEdge>>>,
+    /// 检测间隔
+    detection_interval: Duration,
+    /// 标记为需要取消的任务
+    marked_for_cancellation: Arc<Mutex<HashSet<TaskId>>>,
+}
+
+#[derive(Debug, Clone)]
+pub enum WaitEdge {
+    WaitForResource(ResourceType),
+    WaitForTask(TaskId),
+}
+
+impl DeadlockDetector {
+    pub fn new() -> Self {
+        Self {
+            wait_graph: Arc::new(Mutex::new(Graph::new())),
+            detection_interval: Duration::from_millis(500),
+            marked_for_cancellation: Arc::new(Mutex::new(HashSet::new())),
+        }
+    }
+
+    /// 启动死锁检测
+    pub async fn start_detection(&self) {
+        let detector = self.clone();
+        tokio::spawn(async move {
+            let mut interval = tokio::time::interval(detector.detection_interval);
+
+            loop {
+                interval.tick().await;
+                if let Err(e) = detector.detect_and_resolve_deadlocks().await {
+                    tracing::error!("Deadlock detection failed: {}", e);
+                }
+            }
+        });
+    }
+
+    /// 检测并解决死锁
+    async fn detect_and_resolve_deadlocks(&self) -> Result<(), DeadlockError> {
+        let graph = self.wait_graph.lock().await;
+
+        // 查找强连通分量（死锁环）
+        let sccs = petgraph::algo::kosaraju_scc(&graph);
+
+        for scc in sccs {
+            if scc.len() > 1 {
+                // 发现死锁环，选择优先级最低的任务进行取消
+                let victim_task = self.select_victim_task(&scc).await?;
+
+                let mut marked = self.marked_for_cancellation.lock().await;
+                marked.insert(victim_task);
+
+                tracing::warn!("Deadlock detected, marking task {} for cancellation", victim_task);
+            }
+        }
+
+        Ok(())
+    }
+
+    /// 选择死锁环中的受害者任务
+    async fn select_victim_task(&self, deadlocked_tasks: &[TaskId]) -> Result<TaskId, DeadlockError> {
+        // 简单策略：选择等待时间最短的任务
+        // 在实际实现中，可以基于优先级、资源使用量等更复杂的策略
+
+        let mut min_wait_time = Duration::MAX;
+        let mut victim_task = deadlocked_tasks[0].clone();
+
+        for task_id in deadlocked_tasks {
+            // 这里需要访问任务管理器获取等待时间
+            // 简化实现，实际需要与任务管理器集成
+            if let Some(wait_time) = self.get_task_wait_time(task_id).await {
+                if wait_time < min_wait_time {
+                    min_wait_time = wait_time;
+                    victim_task = task_id.clone();
+                }
+            }
+        }
+
+        Ok(victim_task)
+    }
+
+    /// 检查任务是否被标记为需要取消
+    pub async fn is_marked_for_cancellation(&self, task_id: &TaskId) -> bool {
+        let marked = self.marked_for_cancellation.lock().await;
+        marked.contains(task_id)
+    }
+
+    /// 清理已完成的任务
+    pub async fn cleanup_completed_task(&self, task_id: &TaskId) {
+        let mut graph = self.wait_graph.lock().await;
+        let mut marked = self.marked_for_cancellation.lock().await;
+
+        // 从等待图中移除任务节点
+        if let Some(node_index) = graph.node_indices()
+            .find(|&idx| graph[idx] == *task_id) {
+            graph.remove_node(node_index);
+        }
+
+        // 从标记列表中移除
+        marked.remove(task_id);
+    }
+}
+```
+
+### 2.4 错误处理优化
+
+#### 2.4.1 分层错误处理机制
 
 ```rust
 // 在 hetumind-core/src/workflow/error_handling.rs 中新增
@@ -1529,7 +1871,7 @@ impl PerformanceMonitor {
 ```mermaid
 flowchart TD
     subgraph "优化后的工作流引擎架构"
-        A[OptimizedWorkflowEngine Trait] --> B[OptimizedDefaultWorkflowEngine]
+        A[WorkflowEngine Trait] --> B[DefaultWorkflowEngine]
         B --> C[ExecutionPlanner]
         B --> D[NodeResultCache]
         B --> E[ErrorHandler]
@@ -1576,7 +1918,7 @@ flowchart TD
 ```mermaid
 sequenceDiagram
     participant User as 用户/系统
-    participant WE as OptimizedWorkflowEngine
+    participant WE as WorkflowEngine
     participant EP as ExecutionPlanner
     participant PG as ParallelGroupExecutor
     participant NC as NodeExecutor
@@ -1789,8 +2131,8 @@ impl ExecutionDataPool {
 
 3. **代码结构对齐**：
 
-   - 优化的 `OptimizedDefaultWorkflowEngine` 接受 `WorkflowEngineSetting` 作为输入参数
-   - 提供与现有插件系统兼容的 `OptimizedWorkflowEnginePlugin`
+   - 优化的 `DefaultWorkflowEngine` 接受 `WorkflowEngineSetting` 作为输入参数
+   - 提供与现有插件系统兼容的 `WorkflowEnginePlugin`
    - 保持与现有组件注册和依赖注入机制的兼容性
 
 4. **向后兼容性**：
@@ -2027,7 +2369,7 @@ impl StressTestRunner {
         }
     }
 
-    pub async fn run_stress_test(&mut self, engine: &OptimizedDefaultWorkflowEngine) {
+    pub async fn run_stress_test(&mut self, engine: &DefaultWorkflowEngine) {
         let start_time = Instant::now();
         let mut tasks = FuturesUnordered::new();
         let results = Arc::new(Mutex::new(Vec::new()));

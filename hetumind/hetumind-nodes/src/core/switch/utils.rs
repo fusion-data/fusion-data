@@ -5,7 +5,7 @@ use log::debug;
 use hetumind_core::types::JsonValue;
 use hetumind_core::workflow::NodeExecutionError;
 
-use crate::core::r#if::{ConditionConfig, utils::evaluate_single_condition};
+use crate::core::if_node::{ConditionConfig, utils::evaluate_single_condition};
 
 /// 评估规则集合
 pub fn evaluate_rules(
@@ -161,7 +161,7 @@ mod tests {
   use serde_json::json;
 
   use super::*;
-  use crate::core::r#if::{ComparisonOperation, ConditionConfig};
+  use crate::core::if_node::{ComparisonOperation, ConditionConfig};
   use crate::core::switch::{FallbackOutput, SwitchOptions, SwitchRule};
 
   #[test]

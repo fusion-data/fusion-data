@@ -83,6 +83,7 @@ tokio = { workspace = true }
 futures = { workspace = true }
 async-stream = { workspace = true }
 mea = { workspace = true }
+num_cpus = { workspace = true }
 
 # -- tracing
 metrics = { workspace = true }

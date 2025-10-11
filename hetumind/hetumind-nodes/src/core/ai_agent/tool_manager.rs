@@ -1,8 +1,6 @@
-use async_trait::async_trait;
+use ahash::HashMap;
 use hetumind_core::workflow::NodeExecutionError;
-use rig::message::ToolResult;
 use serde_json::Value;
-use std::collections::HashMap;
 
 /// 工具定义结构
 #[derive(Debug, Clone)]
@@ -20,7 +18,7 @@ pub struct ToolManager {
 impl ToolManager {
   /// 创建新的工具管理器
   pub fn new() -> Self {
-    Self { tools: HashMap::new() }
+    Self { tools: HashMap::default() }
   }
 
   /// 注册工具定义

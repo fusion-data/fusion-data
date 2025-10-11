@@ -12,7 +12,7 @@ use hetumind_core::{
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use crate::core::r#if::ConditionConfig;
+use crate::core::if_node::ConditionConfig;
 
 mod switch_v1;
 mod utils;
