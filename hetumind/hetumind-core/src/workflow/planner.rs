@@ -1,5 +1,4 @@
-use std::collections::{HashMap, HashSet};
-
+use ahash::{HashMap, HashSet};
 use petgraph::algo::toposort;
 use petgraph::prelude::*;
 
@@ -81,7 +80,7 @@ impl ExecutionPlanner {
   /// 构建依赖关系图
   fn build_dependency_graph(&self, graph: &ExecutionGraph) -> Result<DiGraph<NodeName, ()>, WorkflowExecutionError> {
     let mut g = DiGraph::new();
-    let mut node_indices = HashMap::new();
+    let mut node_indices = HashMap::default();
 
     // 添加所有节点
     for node_name in &graph.nodes {
@@ -113,7 +112,7 @@ impl ExecutionPlanner {
 
     // 2. 按层级分组
     let mut groups = Vec::new();
-    let mut processed = HashSet::new();
+    let mut processed = HashSet::default();
 
     while !sorted_nodes.is_empty() {
       let mut current_group = Vec::new();
@@ -273,13 +272,112 @@ mod tests {
     let planner = ExecutionPlanner::new();
 
     // 创建一个简单的测试工作流图
-    // 这里需要实际的ExecutionGraph创建逻辑
-    // let graph = create_test_execution_graph().await;
+    let graph = create_test_execution_graph().await;
 
-    // let plan = planner.plan_execution(&graph).unwrap();
+    let plan = planner.plan_execution(&graph).unwrap();
 
-    // assert!(!plan.execution_order.is_empty());
-    // assert!(!plan.parallel_groups.is_empty());
+    assert!(!plan.execution_order.is_empty());
+    assert!(!plan.parallel_groups.is_empty());
+
+    // 验证执行顺序的层数
+    assert_eq!(plan.execution_order.len(), 3); // 应该有3层：A -> B,C -> D
+
+    // 验证第一层（起始节点）
+    assert_eq!(plan.execution_order[0].len(), 1);
+    assert_eq!(plan.execution_order[0][0].as_str(), "node_A");
+
+    // 验证第二层（并行节点）
+    assert_eq!(plan.execution_order[1].len(), 2);
+    assert!(plan.execution_order[1].contains(&"node_B".into()));
+    assert!(plan.execution_order[1].contains(&"node_C".into()));
+
+    // 验证第三层（结束节点）
+    assert_eq!(plan.execution_order[2].len(), 1);
+    assert_eq!(plan.execution_order[2][0].as_str(), "node_D");
+
+    // 验证关键路径
+    assert_eq!(plan.critical_path.len(), 4);
+    assert_eq!(plan.critical_path[0].as_str(), "node_A");
+    assert_eq!(plan.critical_path[3].as_str(), "node_D");
+
+    // 验证中间两个节点是 node_B 和 node_C（顺序可以任意）
+    let middle_nodes = &plan.critical_path[1..3];
+    assert!(middle_nodes.contains(&"node_B".into()));
+    assert!(middle_nodes.contains(&"node_C".into()));
+
+    // 验证执行计划的有效性
+    planner.validate_execution_plan(&plan).unwrap();
+  }
+
+  /// 创建测试用的执行图
+  ///
+  /// 创建以下结构的测试工作流：
+  /// node_A -> node_B -> node_D
+  ///         -> node_C ->
+  async fn create_test_execution_graph() -> ExecutionGraph {
+    use crate::workflow::{Workflow, WorkflowNode, NodeKind, Connection, ConnectionKind, WorkflowId};
+    use fusion_common::ahash::HashMap;
+
+    // 创建节点
+    let nodes = vec![
+      WorkflowNode::builder()
+        .kind(NodeKind::from("test::TestNode".to_string()))
+        .name("node_A".into())
+        .build(),
+      WorkflowNode::builder()
+        .kind(NodeKind::from("test::TestNode".to_string()))
+        .name("node_B".into())
+        .build(),
+      WorkflowNode::builder()
+        .kind(NodeKind::from("test::TestNode".to_string()))
+        .name("node_C".into())
+        .build(),
+      WorkflowNode::builder()
+        .kind(NodeKind::from("test::TestNode".to_string()))
+        .name("node_D".into())
+        .build(),
+    ];
+
+    // 创建连接关系
+    let mut connections = HashMap::default();
+
+    // node_A -> node_B 和 node_C
+    let mut main_connections_a = HashMap::default();
+    main_connections_a.insert(
+      ConnectionKind::Main,
+      vec![
+        Connection::new("node_B", ConnectionKind::Main, 0),
+        Connection::new("node_C", ConnectionKind::Main, 0),
+      ],
+    );
+    connections.insert("node_A".into(), main_connections_a);
+
+    // node_B -> node_D
+    let mut main_connections_b = HashMap::default();
+    main_connections_b.insert(
+      ConnectionKind::Main,
+      vec![Connection::new("node_D", ConnectionKind::Main, 0)],
+    );
+    connections.insert("node_B".into(), main_connections_b);
+
+    // node_C -> node_D
+    let mut main_connections_c = HashMap::default();
+    main_connections_c.insert(
+      ConnectionKind::Main,
+      vec![Connection::new("node_D", ConnectionKind::Main, 0)],
+    );
+    connections.insert("node_C".into(), main_connections_c);
+
+    // 创建工作流
+    let workflow = Workflow::builder()
+      .id(WorkflowId::now_v7())
+      .name("Test Workflow")
+      .nodes(nodes)
+      .connections(connections)
+      .build();
+
+    // 构建执行图
+    ExecutionGraph::new(&workflow)
   }
 
   #[test]

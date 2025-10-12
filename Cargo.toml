@@ -329,6 +329,8 @@ minijinja = { version = "2.5" }
 polars = "0.51"
 # An Excel/OpenDocument Spreadsheets reader and deserializer in pure rust
 calamine = "0.31"
+# This written in pure Rust to read and write xlsx file.
+umya-spreadsheet = "2.3"
 # -- Redis & Valkey client
 fred = { version = "10" }
 # -- cloud storage access
