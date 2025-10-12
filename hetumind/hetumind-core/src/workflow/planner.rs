@@ -165,7 +165,7 @@ impl ExecutionPlanner {
 
   /// 生成执行顺序
   fn generate_execution_order(&self, groups: &[Vec<NodeName>]) -> Vec<Vec<NodeName>> {
-    groups.iter().cloned().collect()
+    groups.to_vec()
   }
 
   /// 优化执行计划
@@ -186,7 +186,7 @@ impl ExecutionPlanner {
   /// 优化并行组
   fn optimize_parallel_groups(
     &self,
-    parallel_groups: &mut Vec<Vec<NodeName>>,
+    parallel_groups: &mut [Vec<NodeName>],
     critical_path: &[NodeName],
   ) -> Result<(), WorkflowExecutionError> {
     let critical_set: HashSet<&NodeName> = critical_path.iter().collect();
@@ -267,8 +267,6 @@ impl Default for ExecutionPlanner {
 #[cfg(test)]
 mod tests {
   use super::*;
-  use crate::workflow::ExecutionGraph;
-  use crate::workflow::workflow_model::Workflow;
 
   #[tokio::test]
   async fn test_execution_planner_basic() {

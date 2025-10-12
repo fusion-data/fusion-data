@@ -193,6 +193,7 @@ mod tests {
           op: ComparisonOperation::Eq,
           right: Some(json!("A")),
           data_type: DataType::String,
+          ..Default::default()
         }],
         output_index: Some(0),
       },
@@ -203,6 +204,7 @@ mod tests {
           op: ComparisonOperation::Gt,
           right: Some(json!(5)),
           data_type: DataType::Number,
+          ..Default::default()
         }],
         output_index: Some(1),
       },

@@ -1,5 +1,6 @@
 pub mod checkpoint;
 pub mod execution;
+pub mod metrics;
 pub mod monitor;
 // pub mod node;
 pub mod resource;

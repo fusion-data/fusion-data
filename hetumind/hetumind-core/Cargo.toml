@@ -26,7 +26,7 @@ strum = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 serde_repr = { workspace = true }
-jsonpath-rust = { workspace = true }
+serde_json_path = { workspace = true }
 nom = { workspace = true }
 ahash = { workspace = true }
 regex = { workspace = true }

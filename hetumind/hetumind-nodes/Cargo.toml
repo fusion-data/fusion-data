@@ -30,6 +30,7 @@ tokio = { workspace = true }
 # ser & deser
 serde = { workspace = true }
 serde_json = { workspace = true }
+serde_json_path = { workspace = true }
 
 # misc
 thiserror = { workspace = true }
@@ -42,6 +43,7 @@ duration-str = { workspace = true }
 chrono = { workspace = true }
 opendal = { workspace = true }
 once_cell = "1.19"
+rand = { workspace = true }
 
 # file processing
 mime_guess = { workspace = true }

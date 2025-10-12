@@ -63,11 +63,17 @@ impl Application {
     }
   }
 
-  pub async fn shutdown() -> bool {
+  pub async fn shutdown() {
+    let app = Self::global();
+    if let Some((shutdown_tx, _)) = app.0.shutdown.lock().await.as_ref() {
+      shutdown_tx.shutdown();
+    }
+  }
+
+  pub async fn await_shutdown() -> bool {
     let app = Self::global();
     if let Some((shutdown_tx, shutdown_rx)) = app.0.shutdown.lock().await.take() {
       drop(shutdown_rx);
-      shutdown_tx.shutdown();
       shutdown_tx.await_shutdown().await;
       true
     } else {

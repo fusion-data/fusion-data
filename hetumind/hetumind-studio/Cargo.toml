@@ -84,6 +84,7 @@ futures = { workspace = true }
 async-stream = { workspace = true }
 mea = { workspace = true }
 num_cpus = { workspace = true }
+rand = { workspace = true }
 
 # -- tracing
 metrics = { workspace = true }

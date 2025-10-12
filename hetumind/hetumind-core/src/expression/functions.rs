@@ -2,9 +2,9 @@
 use chrono::{Duration, NaiveTime};
 use fusion_common::ahash::HashMap;
 use fusion_common::time::now;
-use jsonpath_rust::JsonPath;
 use log::error;
 use regex::Regex;
+use serde_json_path::JsonPath;
 
 use super::{
   context::ExpressionExecutionContext,
@@ -120,7 +120,7 @@ impl FunctionRegistry {
       Ok(Value::DateTime(datetime.plus(duration)))
     });
 
-    // JSONPath 查询函数（使用 jsonpath-rust）
+    // JSONPath 查询函数（使用 serde_json_path）
     self.register("$jsonpath", |args, _proxy, _ctx| {
       if args.len() != 2 {
         return Err(FunctionError::ArgumentError { message: "$jsonpath() 需要2个参数: (path, data)".to_string() });
@@ -134,14 +134,18 @@ impl FunctionRegistry {
       // 转换为 serde_json::Value
       let json_value = args[1].to_json_value();
 
-      // 使用 jsonpath-rust 实现完整的 JSONPath 支持
-      let results = json_value.query(path).map_err(|e| FunctionError::RuntimeError { message: e.to_string() })?;
+      // 使用 serde_json_path 实现完整的 JSONPath 支持
+      let json_path = JsonPath::parse(path)
+        .map_err(|e| FunctionError::RuntimeError { message: format!("JSON Path 解析错误: {}", e) })?;
+
+      let results = json_path.query(&json_value);
 
       if results.is_empty() {
         return Ok(Value::Null);
       }
 
-      let result = results[0]; // TODO: 只返回第一个结果
+      // 取第一个结果，使用 NodeList 的 first() 方法
+      let result = results.first().unwrap();
 
       // 将 serde_json::Value 转换回我们的 Value 类型
       let converted_result = match result {

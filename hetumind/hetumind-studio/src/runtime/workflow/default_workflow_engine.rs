@@ -73,10 +73,12 @@ impl DefaultWorkflowEngine {
     })?;
 
     // 1. 查找节点执行器
+    println!("[DEBUG] 查找节点执行器: {} ({})", node_name, node.kind);
     let executor = self.node_registry.get_executor(&node.kind).ok_or(WorkflowExecutionError::NodeExecutionFailed {
       workflow_id: workflow.id.clone(),
       node_name: node_name.clone(),
     })?;
+    println!("[DEBUG] 找到节点执行器: {} ({})", node_name, node.kind);
 
     // 2. 汇集父节点的输出
     let parents_results = collect_parents_results(node_name, graph, all_results);
@@ -85,9 +87,15 @@ impl DefaultWorkflowEngine {
     let node_context = make_node_context(context, node_name, parents_results, engine_response.cloned());
 
     // 4. 执行节点
-    let output_data = executor.execute(&node_context).await.map_err(|_| {
+    println!("[DEBUG] 开始执行节点: {} ({})", node_name, node.kind);
+    println!("[DEBUG] 节点参数: {:?}", node.parameters);
+    let output_data = executor.execute(&node_context).await.map_err(|e| {
+      println!("[DEBUG] 节点 {} 执行失败: {:?}", node_name, e);
+      println!("[DEBUG] 错误类型: {}", std::any::type_name_of_val(&e));
+      println!("[DEBUG] 详细错误信息: {}", e);
       WorkflowExecutionError::NodeExecutionFailed { workflow_id: workflow.id.clone(), node_name: node_name.clone() }
     })?;
+    println!("[DEBUG] 节点 {} 执行成功", node_name);
 
     Ok(output_data)
   }
@@ -470,13 +478,16 @@ impl DefaultWorkflowEngine {
                 .build()
             }
           }
-          Err(e) => NodeExecutionResult::builder()
+          Err(e) => {
+          log::error!("节点 {} 执行返回错误: {}", node_name, e);
+          NodeExecutionResult::builder()
             .node_name(node_name.clone())
             .output_data(ExecutionDataMap::default())
             .status(NodeExecutionStatus::Failed)
             .error(e.to_string())
             .duration_ms(duration_ms)
-            .build(),
+            .build()
+        },
         };
 
         all_results.insert(node_name.clone(), node_execution_result.output_data.clone());
@@ -491,10 +502,18 @@ impl DefaultWorkflowEngine {
     }
 
     let duration_ms = now().signed_duration_since(context.started_at()).num_milliseconds() as u64;
+
+    // 计算最终状态：如果任何节点失败，工作流状态为失败
+    let final_status = if nodes_result.values().any(|r| r.status == NodeExecutionStatus::Failed) {
+      ExecutionStatus::Failed
+    } else {
+      ExecutionStatus::Success
+    };
+
     Ok(
       ExecutionResult::builder()
         .execution_id(context.execution_id().clone())
-        .status(ExecutionStatus::Success)
+        .status(final_status)
         .nodes_result(nodes_result)
         .end_nodes(graph.get_end_nodes())
         .duration_ms(duration_ms)
@@ -582,13 +601,16 @@ impl DefaultWorkflowEngine {
                 .build()
             }
           }
-          Err(e) => NodeExecutionResult::builder()
+          Err(e) => {
+          log::error!("节点 {} 执行返回错误: {}", node_name, e);
+          NodeExecutionResult::builder()
             .node_name(node_name.clone())
             .output_data(ExecutionDataMap::default())
             .status(NodeExecutionStatus::Failed)
             .error(e.to_string())
             .duration_ms(duration_ms)
-            .build(),
+            .build()
+        },
         };
 
         all_results.insert(node_name.clone(), node_execution_result.output_data.clone());
@@ -597,10 +619,18 @@ impl DefaultWorkflowEngine {
     }
 
     let duration_ms = now().signed_duration_since(context.started_at()).num_milliseconds() as u64;
+
+    // 计算最终状态：如果任何节点失败，工作流状态为失败
+    let final_status = if nodes_result.values().any(|r| r.status == NodeExecutionStatus::Failed) {
+      ExecutionStatus::Failed
+    } else {
+      ExecutionStatus::Success
+    };
+
     Ok(
       ExecutionResult::builder()
         .execution_id(context.execution_id().clone())
-        .status(ExecutionStatus::Success)
+        .status(final_status)
         .nodes_result(nodes_result)
         .end_nodes(graph.get_end_nodes())
         .duration_ms(duration_ms)

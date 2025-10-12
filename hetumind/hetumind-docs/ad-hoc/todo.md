@@ -98,17 +98,18 @@
 ## 4. 性能监控和指标任务
 
 ### 4.1 指标收集器
-- [ ] **创建 `hetumind-studio/src/runtime/metrics.rs`**
-  - [ ] 实现 `ExecutionMetricsCollector` 指标收集器
-  - [ ] 添加采样率控制逻辑 `should_sample`
-  - [ ] 实现指标记录和查询接口
-  - [ ] 添加统计信息计算 `get_statistics`
-  - [ ] 实现过期指标清理 `cleanup_old_metrics`
-  - [ ] 定义 `ExecutionStatistics` 统计结构
-  - [ ] 添加 `PerformanceMonitor` 性能监控器
-  - [ ] 实现 `AlertThresholds` 告警阈值
-  - [ ] 添加 `AlertHandler` 告警处理器接口
-  - [ ] 实现实时告警逻辑
+- [x] **创建 `hetumind-studio/src/runtime/metrics.rs`**
+  - [x] 实现 `ExecutionMetricsCollector` 指标收集器
+  - [x] 添加采样率控制逻辑 `should_sample`
+  - [x] 实现指标记录和查询接口
+  - [x] 添加统计信息计算 `get_statistics`
+  - [x] 实现过期指标清理 `cleanup_old_metrics`
+  - [x] 定义 `ExecutionStatistics` 统计结构
+  - [x] 添加 `PerformanceMonitor` 性能监控器
+  - [x] 实现 `AlertThresholds` 告警阈值
+  - [x] 添加 `AlertHandler` 告警处理器接口
+  - [x] 实现实时告警逻辑
+  - [x] 修复所有编译错误并确保模块正确导入
 
 ### 4.2 执行追踪器
 - [ ] **创建 `hetumind-studio/src/runtime/tracing.rs`**

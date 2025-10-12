@@ -86,7 +86,7 @@ pub trait WorkflowEngine: Send + Sync {
   /// 获取执行指标
   async fn get_execution_metrics(
     &self,
-    execution_id: &ExecutionId,
+    _execution_id: &ExecutionId,
   ) -> Result<Option<ExecutionMetrics>, WorkflowExecutionError> {
     Ok(None) // 默认实现返回空
   }
@@ -94,13 +94,13 @@ pub trait WorkflowEngine: Send + Sync {
   /// 获取执行追踪
   async fn get_execution_trace(
     &self,
-    execution_id: &ExecutionId,
+    _execution_id: &ExecutionId,
   ) -> Result<Option<ExecutionTrace>, WorkflowExecutionError> {
     Ok(None) // 默认实现返回空
   }
 
   /// 启用/禁用并行执行
-  async fn set_parallel_execution(&self, enabled: bool) -> Result<(), WorkflowExecutionError> {
+  async fn set_parallel_execution(&self, _enabled: bool) -> Result<(), WorkflowExecutionError> {
     // 默认实现不支持动态配置
     Err(WorkflowExecutionError::InvalidWorkflowStructure(
       "Dynamic parallel execution configuration not supported".to_string(),
@@ -108,7 +108,7 @@ pub trait WorkflowEngine: Send + Sync {
   }
 
   /// 启用/禁用节点缓存
-  async fn set_node_caching(&self, enabled: bool) -> Result<(), WorkflowExecutionError> {
+  async fn set_node_caching(&self, _enabled: bool) -> Result<(), WorkflowExecutionError> {
     // 默认实现不支持动态配置
     Err(WorkflowExecutionError::InvalidWorkflowStructure(
       "Dynamic node caching configuration not supported".to_string(),

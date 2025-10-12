@@ -12,7 +12,10 @@ use hetumind_core::{
 };
 use serde_json::json;
 
-use super::{ConditionConfig, LogicCombination, utils::evaluate_single_condition};
+use super::{
+  AdvancedConditionGroup, ConditionConfig, ErrorHandlingStrategy, IfNodeOptions, LogicCombination,
+  utils::evaluate_single_condition_with_options,
+};
 
 #[derive(Debug)]
 pub struct IfV1 {
@@ -20,19 +23,22 @@ pub struct IfV1 {
 }
 
 impl IfV1 {
-  /// 评估所有条件
-  pub fn evaluate_conditions(
+  /// 评估所有条件（带配置选项）
+  pub fn evaluate_conditions_with_options(
     &self,
     conditions: &[ConditionConfig],
     combination: &LogicCombination,
     input_data: &JsonValue,
+    options: &IfNodeOptions,
   ) -> Result<bool, NodeExecutionError> {
     if conditions.is_empty() {
       return Ok(false);
     }
 
-    let results: Result<Vec<bool>, NodeExecutionError> =
-      conditions.iter().map(|condition| evaluate_single_condition(condition, input_data)).collect();
+    let results: Result<Vec<bool>, NodeExecutionError> = conditions
+      .iter()
+      .map(|condition| evaluate_single_condition_with_options(condition, input_data, options))
+      .collect();
 
     let results = results?;
 
@@ -40,6 +46,73 @@ impl IfV1 {
       LogicCombination::And => results.iter().all(|&x| x),
       LogicCombination::Or => results.iter().any(|&x| x),
     };
+
+    Ok(final_result)
+  }
+
+  /// 评估所有条件（保持向后兼容）
+  pub fn evaluate_conditions(
+    &self,
+    conditions: &[ConditionConfig],
+    combination: &LogicCombination,
+    input_data: &JsonValue,
+  ) -> Result<bool, NodeExecutionError> {
+    let options = IfNodeOptions::default();
+    self.evaluate_conditions_with_options(conditions, combination, input_data, &options)
+  }
+
+  /// 评估高级条件组合
+  pub fn evaluate_advanced_conditions(
+    &self,
+    advanced_group: &AdvancedConditionGroup,
+    input_data: &JsonValue,
+    options: &IfNodeOptions,
+  ) -> Result<bool, NodeExecutionError> {
+    advanced_group.evaluate(input_data, options)
+  }
+
+  /// 混合条件评估（支持简单条件和高级条件组合）
+  pub fn evaluate_mixed_conditions(
+    &self,
+    simple_conditions: &[ConditionConfig],
+    simple_combination: &LogicCombination,
+    advanced_groups: &[AdvancedConditionGroup],
+    input_data: &JsonValue,
+    options: &IfNodeOptions,
+  ) -> Result<bool, NodeExecutionError> {
+    let mut all_results = Vec::new();
+
+    // 评估简单条件
+    if !simple_conditions.is_empty() {
+      let simple_result =
+        self.evaluate_conditions_with_options(simple_conditions, simple_combination, input_data, options)?;
+      all_results.push(simple_result);
+
+      if options.debug_mode {
+        log::debug!("简单条件评估结果: {}", simple_result);
+      }
+    }
+
+    // 评估高级条件组合
+    for (index, advanced_group) in advanced_groups.iter().enumerate() {
+      let advanced_result = self.evaluate_advanced_conditions(advanced_group, input_data, options)?;
+      all_results.push(advanced_result);
+
+      if options.debug_mode {
+        if let Some(name) = &advanced_group.name {
+          log::debug!("高级条件组 '{}' (#{}) 评估结果: {}", name, index, advanced_result);
+        } else {
+          log::debug!("高级条件组 #{} 评估结果: {}", index, advanced_result);
+        }
+      }
+    }
+
+    // 默认使用 AND 逻辑组合所有结果
+    let final_result = all_results.iter().all(|&x| x);
+
+    if options.debug_mode {
+      log::debug!("混合条件最终评估结果: {} ({} 个结果)", final_result, all_results.len());
+    }
 
     Ok(final_result)
   }
@@ -82,8 +155,7 @@ impl NodeExecutable for IfV1 {
 
   async fn execute(&self, context: &NodeExecutionContext) -> Result<ExecutionDataMap, NodeExecutionError> {
     let node = context.current_node()?;
-    log::info!(
-      "开始执行 If 条件判断节点 workflow_id:{}, node_name:{}, node_kind:{}",
+    println!("[DEBUG] 开始执行 If 条件判断节点 workflow_id:{}, node_name:{}, node_kind:{}",
       context.workflow.id,
       node.name,
       node.kind
@@ -93,9 +165,13 @@ impl NodeExecutable for IfV1 {
     let input_items = if let Some(input_collection) = context.get_input_items(ConnectionKind::Main, 0)
       && let ExecutionDataItems::Items(input_data) = input_collection
     {
+      log::info!("If 节点接收到 {} 个输入项", input_data.len());
+      for (i, item) in input_data.iter().enumerate() {
+        log::info!("输入项 {}: {}", i, serde_json::to_string(item.json()).unwrap_or_default());
+      }
       input_data
     } else {
-      log::warn!("If 节点没有接收到输入数据");
+      log::error!("If 节点没有接收到输入数据");
       // 如果没有输入数据，默认走 false 分支
       return Ok(make_execution_data_map(vec![(
         ConnectionKind::Main,
@@ -108,22 +184,117 @@ impl NodeExecutable for IfV1 {
     let logic_combination: LogicCombination =
       node.get_optional_parameter("combination").unwrap_or(LogicCombination::And);
 
-    log::debug!("条件判断: {} 个条件，逻辑组合: {:?}", conditions.len(), logic_combination);
+    // 尝试获取高级条件组合（可选）
+    let advanced_groups: Vec<AdvancedConditionGroup> =
+      node.get_optional_parameter("advanced_condition_groups").unwrap_or_default();
 
-    // 最终结果
-    let mut logic_value = true;
+    // 获取配置选项
+    let options: IfNodeOptions = node.get_optional_parameter("options").unwrap_or_default();
 
-    for (index, input) in input_items.iter().enumerate() {
-      let result = self.evaluate_conditions(&conditions, &logic_combination, input.json())?;
-      logic_value = logic_value && result;
-      log::debug!("输入数据项:{} 结果:{} 条件判断结果:{}", index, result, logic_value);
+    log::info!(
+      "条件判断 - 简单条件: {} 个, 高级条件组: {} 个, 逻辑组合: {:?}, 配置: {:?}",
+      conditions.len(),
+      advanced_groups.len(),
+      logic_combination,
+      options
+    );
+
+    // 打印条件配置详细信息
+    if !conditions.is_empty() {
+      log::info!("条件配置详情: {:?}", serde_json::to_string(&conditions).unwrap_or_default());
     }
 
-    let res = if logic_value {
-      vec![ExecutionDataItems::new_items(input_items), ExecutionDataItems::new_null()]
-    } else {
-      vec![ExecutionDataItems::new_null(), ExecutionDataItems::new_items(input_items)]
-    };
+    // 修复：对每个输入项独立处理，而不是共享同一个结果
+    let mut true_items = Vec::new();
+    let mut false_items = Vec::new();
+    let mut skipped_items = Vec::new();
+
+    for (index, input) in input_items.iter().enumerate() {
+      log::info!("开始处理输入项 {}: {}", index, serde_json::to_string(input.json()).unwrap_or_default());
+
+      let evaluation_result = if !advanced_groups.is_empty() && !conditions.is_empty() {
+        // 混合条件评估
+        log::info!("使用混合条件评估模式");
+        self.evaluate_mixed_conditions(&conditions, &logic_combination, &advanced_groups, input.json(), &options)
+      } else if !advanced_groups.is_empty() {
+        // 仅高级条件评估
+        log::info!("使用高级条件评估模式");
+        let mut advanced_results = Vec::new();
+        for advanced_group in &advanced_groups {
+          let result = self.evaluate_advanced_conditions(advanced_group, input.json(), &options)?;
+          advanced_results.push(result);
+        }
+        // 高级条件组之间使用 AND 逻辑
+        Ok(advanced_results.iter().all(|&x| x))
+      } else {
+        // 传统简单条件评估
+        log::info!("使用简单条件评估模式");
+        self.evaluate_conditions_with_options(&conditions, &logic_combination, input.json(), &options)
+      };
+
+      match evaluation_result {
+        Ok(result) => {
+          if result {
+            true_items.push(input.clone());
+            if options.debug_mode {
+              log::debug!("输入数据项:{} 结果:true -> 分配到 true 分支", index);
+            }
+          } else {
+            false_items.push(input.clone());
+            if options.debug_mode {
+              log::debug!("输入数据项:{} 结果:false -> 分配到 false 分支", index);
+            }
+          }
+        }
+        Err(e) => match options.error_handling_strategy {
+          ErrorHandlingStrategy::SkipItem => {
+            skipped_items.push(input.clone());
+            log::warn!("输入数据项:{} 条件评估失败: {} -> 跳过该项", index, e);
+          }
+          ErrorHandlingStrategy::StopExecution => {
+            log::error!("输入数据项:{} 条件评估失败: {} -> 停止执行", index, e);
+            return Err(e);
+          }
+          ErrorHandlingStrategy::GoToDefaultBranch => {
+            false_items.push(input.clone());
+            log::error!("输入数据项:{} 条件评估失败: {} -> 分配到 false 分支", index, e);
+          }
+          ErrorHandlingStrategy::LogAndContinue => {
+            false_items.push(input.clone());
+            log::warn!("输入数据项:{} 条件评估失败: {} -> 记录错误但继续", index, e);
+          }
+        },
+      }
+    }
+
+    // 记录执行统计
+    log::info!(
+      "条件评估完成 - true 分支: {} 项, false 分支: {} 项, 跳过: {} 项",
+      true_items.len(),
+      false_items.len(),
+      skipped_items.len()
+    );
+
+    // 处理跳过的项目
+    if !skipped_items.is_empty() {
+      match options.error_handling_strategy {
+        ErrorHandlingStrategy::SkipItem => {
+          // 跳过的项目不进入任何分支
+          log::info!("跳过的项目将被丢弃，不进入任何输出分支");
+        }
+        _ => {
+          // 其他策略已经在上面的循环中处理
+        }
+      }
+    }
+
+    log::info!("条件评估完成 - true 分支: {} 项, false 分支: {} 项", true_items.len(), false_items.len());
+
+    // 根据实际评估结果分发数据
+    let res = vec![
+      ExecutionDataItems::new_items(true_items),  // true 分支
+      ExecutionDataItems::new_items(false_items), // false 分支
+    ];
 
     Ok(make_execution_data_map(vec![(ConnectionKind::Main, res)]))
   }
@@ -180,6 +351,31 @@ impl TryFrom<NodeDefinitionBuilder> for IfV1 {
             Box::new(NodeProperty::new_option("OR", "or", json!(LogicCombination::Or), NodePropertyKind::Boolean)),
           ])
           .placeholder("".to_string())
+          .build(),
+        // 高级配置选项
+        NodeProperty::builder()
+          .display_name("高级选项".to_string())
+          .name("advanced_options")
+          .required(false)
+          .description("IfNode 高级配置选项".to_string())
+          .kind(NodePropertyKind::String)
+          .build(),
+        // 高级条件组合（V2 功能）
+        NodeProperty::builder()
+          .display_name("高级条件组合".to_string())
+          .name("advanced_condition_groups")
+          .required(false)
+          .description("高级条件组合配置，支持复杂的条件逻辑组合".to_string())
+          .kind(NodePropertyKind::String)
+          .placeholder("配置高级条件组...")
+          .build(),
+        // 条件描述和配置
+        NodeProperty::builder()
+          .display_name("条件配置".to_string())
+          .name("condition_config")
+          .required(false)
+          .description("条件的高级配置选项".to_string())
+          .kind(NodePropertyKind::String)
           .build(),
       ]);
 
