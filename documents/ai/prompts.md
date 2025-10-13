@@ -16,15 +16,16 @@
 
 ### 分析 n8n node
 
-分析 **Wait** node 的技术实现，若有必要的话使用 mermaid 绘制架构或数据流转图。将分析后的结果使用 Markdown 格式写入 @specs/nodes/core/ 目录中。
+分析 **Email Trigger (IMAP) ** node 的技术实现，若有必要的话使用 mermaid 绘制架构或数据流转图。将分析后的结果使用 Markdown 格式写入 @specs/nodes/core/ 目录中。
 
 * 只需要分析此 node 最新版本的功能，不用考虑兼容历史版本
 * 定位并分析节点的核心实现文件和相关配置
-* 分析节点的 execute 方法实现
+* 分析节点的 execute 方法实现，处理数据的核心算
+* 分析节点的 Input, Output 数据集，数据处理机制和性能特征
+* 分析节点的错误处理机制
 * 绘制节点的数据流转图
 * 绘制类继承/实现关系图
 * 绘制工作流执行序列图
-* 分析数据处理机制和性能特征
 * 识别设计模式和架构决策
 * 分析使用场景和最佳实践
 * 与同类节点进行对比分析
@@ -36,16 +37,17 @@
 
 <这里粘贴 XXX技术分析文档>
 ----
-结合以上对 n8n 的 **Wait** node 技术实现分析，实现符合 hetumind 项目风格的 Rust 版本 WaitNode node。要求：
+结合以上对 n8n 的 **Edit Image** node 技术实现分析，实现符合 hetumind 项目风格的 Rust 版本 EditImageNode node。要求：
 
-- 使用已有的错误处理模式
+- 复用已有的错误处理模式
 - 复用现有的数据结构（hetumind-core 及 hetumind-nodes 两个项目）
 - 遵循当前项目 Rust 编程最佳实践，对参数使用 snake_case 风格命名
 - 注意 Arc 的使用以支持并发访问
 - 定义结构化的数据类型优先（如：`pub struct Config`）；若需要直接使用 JSON 对象，请使用 `serde_json::json!` 宏进行构造
+- 当使用到第 3 方 crate 时，应先学习所依赖库的正确使用方法，避免猜测使用方法
 - 参考 @/hetumind/hetumind-nodes/src/core/if_node, @/hetumind/hetumind-nodes/src/core/merge 的实现方式进行实现，包括代码风格和文件结构等
 - 在 @/hetumind/hetumind-nodes/src/core 中实现 hetumind 版本的 node
-- 编写单元测试验证 node 的功能实现是否完整、正确。使用 serde 宏注解的数据结构时，注意序列化风格，如： snake_case, camelCase, CamelCase, UPPER_CASE 等
+- 编写单元测试验证 node 的功能实现是否完整、正确，使用 serde 宏注解的数据结构时，注意序列化风格，如： snake_case, camelCase, CamelCase, UPPER_CASE 等。使用 `cargo test` 命令进行验证。
 
 ----
 

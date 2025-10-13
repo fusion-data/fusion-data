@@ -6,7 +6,7 @@ use hetumind_core::workflow::ValidationError;
 use serde_json::Value;
 use std::collections::HashMap;
 
-use super::{ErrorLevel, ErrorObject, ErrorType, StopAndErrorConfig};
+use super::{ErrorLevel, ErrorObject, StopAndErrorConfig};
 
 /// 错误处理结果
 #[derive(Debug, Clone)]
@@ -56,21 +56,10 @@ pub fn create_error_from_config(config: &StopAndErrorConfig, node_name: &str) ->
   let retry_after = config.get_retry_after();
 
   // 确保消息不为空
-  let final_message = if message.trim().is_empty() {
-    format!("Error occurred in node: {}", node_name)
-  } else {
-    message
-  };
+  let final_message =
+    if message.trim().is_empty() { format!("Error occurred in node: {}", node_name) } else { message };
 
-  Ok(ErrorResult {
-    message: final_message,
-    description,
-    error_code,
-    error_level,
-    metadata,
-    retryable,
-    retry_after,
-  })
+  Ok(ErrorResult { message: final_message, description, error_code, error_level, metadata, retryable, retry_after })
 }
 
 /// 验证配置并添加上下文信息
@@ -110,10 +99,7 @@ pub fn validate_config_with_context(config: &StopAndErrorConfig, node_name: &str
     super::ErrorType::ErrorObject => {
       if let Some(ref error_obj) = config.error_object {
         // 验证错误对象的字段组合
-        if error_obj.message.is_none()
-          && error_obj.description.is_none()
-          && error_obj.code.is_none()
-        {
+        if error_obj.message.is_none() && error_obj.description.is_none() && error_obj.code.is_none() {
           return Err(ValidationError::invalid_field_value(
             "error_object".to_string(),
             "Error object must contain at least one of: message, description, or code".to_string(),
@@ -125,10 +111,7 @@ pub fn validate_config_with_context(config: &StopAndErrorConfig, node_name: &str
           if retryable {
             // 如果可重试，建议设置重试延迟
             if error_obj.retry_after.is_none() {
-              log::warn!(
-                "Node '{}' has retryable error but no retry_after set, using default 60 seconds",
-                node_name
-              );
+              log::warn!("Node '{}' has retryable error but no retry_after set, using default 60 seconds", node_name);
             } else if let Some(retry_after) = error_obj.retry_after {
               if retry_after == 0 {
                 return Err(ValidationError::invalid_field_value(
@@ -330,9 +313,7 @@ pub fn validate_error_message(message: &str) -> Result<(), ValidationError> {
   }
 
   // 检查是否包含潜在的恶意内容
-  let suspicious_patterns = vec![
-    "<script", "</script>", "javascript:", "data:", "vbscript:",
-  ];
+  let suspicious_patterns = vec!["<script", "</script>", "javascript:", "data:", "vbscript:"];
 
   let lower_message = message.to_lowercase();
   for pattern in suspicious_patterns {
@@ -374,8 +355,11 @@ pub fn create_default_error_object(node_name: &str, context: &str) -> ErrorObjec
 
 #[cfg(test)]
 mod tests {
-  use super::*;
   use serde_json::json;
+
+  use crate::core::stop_and_error_node::ErrorType;
+
+  use super::*;
 
   #[test]
   fn test_create_error_from_simple_config() {
@@ -408,11 +392,8 @@ mod tests {
       retry_after: Some(120),
     };
 
-    let config = StopAndErrorConfig {
-      error_type: ErrorType::ErrorObject,
-      error_message: None,
-      error_object: Some(error_obj),
-    };
+    let config =
+      StopAndErrorConfig { error_type: ErrorType::ErrorObject, error_message: None, error_object: Some(error_obj) };
 
     let result = create_error_from_config(&config, "test_node").unwrap();
 
@@ -525,7 +506,6 @@ mod tests {
     // 具体行为取决于 ErrorObject 的 serde 实现
   }
 
-  
   #[test]
   fn test_format_error_level() {
     assert_eq!(format_error_level(&ErrorLevel::Info), "info");

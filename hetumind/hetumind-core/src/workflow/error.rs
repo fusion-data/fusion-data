@@ -130,8 +130,8 @@ pub enum NodeExecutionError {
   #[error("超时错误")]
   Timeout,
 
-  #[error("节点执行失败: {node_name}")]
-  ExecutionFailed { node_name: NodeName },
+  #[error("节点执行失败: {node_name}, {message:?}")]
+  ExecutionFailed { node_name: NodeName, message: Option<String> },
 
   #[error("当前节点不存在，workflow_id:{workflow_id}, node_name:{node_name}")]
   NodeNotFound { workflow_id: WorkflowId, node_name: NodeName },

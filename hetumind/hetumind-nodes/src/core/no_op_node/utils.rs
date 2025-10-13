@@ -29,11 +29,7 @@ pub fn format_data_summary(data: &ExecutionData) -> String {
     }
     Value::Array(arr) => {
       let len = arr.len();
-      if len == 0 {
-        "空数组 []".to_string()
-      } else {
-        format!("数组 [{} 项]", len)
-      }
+      if len == 0 { "空数组 []".to_string() } else { format!("数组 [{} 项]", len) }
     }
     Value::String(s) => {
       if s.len() > 50 {
@@ -48,9 +44,7 @@ pub fn format_data_summary(data: &ExecutionData) -> String {
     Value::Bool(b) => {
       format!("布尔值 {}", b)
     }
-    Value::Null => {
-      "null".to_string()
-    }
+    Value::Null => "null".to_string(),
   }
 }
 
@@ -78,12 +72,8 @@ fn estimate_json_size(value: &Value) -> usize {
       }
       size
     }
-    Value::Array(arr) => {
-      arr.iter().map(estimate_json_size).sum()
-    }
-    Value::String(s) => {
-      s.len()
-    }
+    Value::Array(arr) => arr.iter().map(estimate_json_size).sum(),
+    Value::String(s) => s.len(),
     Value::Number(_) => {
       8 // 数字近似大小
     }
@@ -232,12 +222,7 @@ mod tests {
 
   #[test]
   fn test_create_performance_metrics() {
-    let metrics = create_performance_metrics(
-      5,
-      5,
-      std::time::Duration::from_millis(100),
-      1024,
-    );
+    let metrics = create_performance_metrics(5, 5, std::time::Duration::from_millis(100), 1024);
 
     assert_eq!(metrics["input_count"], 5);
     assert_eq!(metrics["output_count"], 5);

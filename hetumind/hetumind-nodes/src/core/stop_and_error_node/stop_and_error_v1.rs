@@ -5,15 +5,14 @@ use hetumind_core::{
   version::Version,
   workflow::{
     ConnectionKind, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition, NodeDefinitionBuilder,
-    NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind,
-    RegistrationError,
+    NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, RegistrationError,
   },
 };
 use serde_json::json;
 
 use super::{
-  utils::{create_error_from_config, validate_config_with_context, format_error_level},
   ErrorType, StopAndErrorConfig,
+  utils::{create_error_from_config, format_error_level, validate_config_with_context},
 };
 
 /// Stop And Error 节点 V1
@@ -75,17 +74,13 @@ impl NodeExecutable for StopAndErrorV1 {
     let config = StopAndErrorConfig {
       error_type,
       error_message,
-      error_object: error_object.and_then(|value| {
-        serde_json::from_value(value).ok()
-      }),
+      error_object: error_object.and_then(|value| serde_json::from_value(value).ok()),
     };
 
     // 验证配置
     if let Err(e) = validate_config_with_context(&config, &context.current_node_name) {
       log::error!("Stop And Error 配置验证失败: {}", e);
-      return Err(NodeExecutionError::ConfigurationError(
-        format!("Invalid Stop and Error configuration: {}", e)
-      ));
+      return Err(NodeExecutionError::ConfigurationError(format!("Invalid Stop and Error configuration: {}", e)));
     }
 
     log::debug!("错误配置: 类型={:?}, 消息={:?}", config.error_type, config.get_error_message());
@@ -124,8 +119,9 @@ impl NodeExecutable for StopAndErrorV1 {
 
     // 抛出工作流执行错误
     Err(NodeExecutionError::ExecutionFailed {
-      node_name: context.current_node_name.clone(),
-    })
+        node_name: context.current_node_name.clone(),
+        message: Some(error_message)
+      })
   }
 }
 
@@ -214,5 +210,4 @@ mod tests {
     assert!(error_object_prop.is_some());
     assert!(!error_object_prop.unwrap().required);
   }
-
-  }
+}

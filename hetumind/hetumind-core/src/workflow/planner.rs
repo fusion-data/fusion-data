@@ -315,7 +315,7 @@ mod tests {
   /// node_A -> node_B -> node_D
   ///         -> node_C ->
   async fn create_test_execution_graph() -> ExecutionGraph {
-    use crate::workflow::{Workflow, WorkflowNode, NodeKind, Connection, ConnectionKind, WorkflowId};
+    use crate::workflow::{Connection, ConnectionKind, NodeKind, Workflow, WorkflowId, WorkflowNode};
     use fusion_common::ahash::HashMap;
 
     // 创建节点
@@ -354,18 +354,12 @@ mod tests {
 
     // node_B -> node_D
     let mut main_connections_b = HashMap::default();
-    main_connections_b.insert(
-      ConnectionKind::Main,
-      vec![Connection::new("node_D", ConnectionKind::Main, 0)],
-    );
+    main_connections_b.insert(ConnectionKind::Main, vec![Connection::new("node_D", ConnectionKind::Main, 0)]);
     connections.insert("node_B".into(), main_connections_b);
 
     // node_C -> node_D
     let mut main_connections_c = HashMap::default();
-    main_connections_c.insert(
-      ConnectionKind::Main,
-      vec![Connection::new("node_D", ConnectionKind::Main, 0)],
-    );
+    main_connections_c.insert(ConnectionKind::Main, vec![Connection::new("node_D", ConnectionKind::Main, 0)]);
     connections.insert("node_C".into(), main_connections_c);
 
     // 创建工作流

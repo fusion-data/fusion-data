@@ -2,13 +2,15 @@
 //!
 //! 提供数据聚合、分组和格式化的核心工具函数。
 
-use hetumind_core::workflow::{ConnectionKind, ExecutionData, ExecutionDataItems, NodeExecutionError, make_execution_data_map};
-use serde_json::{json, Value};
+use hetumind_core::workflow::{
+  ConnectionKind, ExecutionData, ExecutionDataItems, NodeExecutionError, make_execution_data_map,
+};
+use serde_json::{Value, json};
 use std::collections::{HashMap, HashSet};
 
 use super::{
-  AggregateField, AggregateOperation, DataType, ErrorHandlingStrategy, GroupByConfig, GroupSortOrder,
-  OutputFormat, SerializationStyle, SummarizeConfig,
+  AggregateField, AggregateOperation, DataType, ErrorHandlingStrategy, GroupByConfig, GroupSortOrder, OutputFormat,
+  SerializationStyle, SummarizeConfig,
 };
 
 /// 聚合结果
@@ -62,9 +64,7 @@ pub fn aggregate_data(
     return Ok(vec![]);
   }
 
-  log::debug!("开始聚合数据: 输入项={}, 分组配置={}",
-    input_items.len(),
-    config.group_by.is_some());
+  log::debug!("开始聚合数据: 输入项={}, 分组配置={}", input_items.len(), config.group_by.is_some());
 
   let result = if let Some(ref group_config) = config.group_by {
     // 分组聚合
@@ -102,8 +102,7 @@ fn aggregate_by_groups(
 
   // 分组数据
   for item in input_items {
-    let group_value = extract_field_value(item.json(), &group_config.group_field)
-      .unwrap_or(Value::Null);
+    let group_value = extract_field_value(item.json(), &group_config.group_field).unwrap_or(Value::Null);
 
     groups.entry(group_value).or_insert_with(Vec::new).push(item.clone());
   }
@@ -230,12 +229,7 @@ fn calculate_single_aggregate(
   metadata.insert("count".to_string(), Value::Number(serde_json::Number::from(valid_count)));
   metadata.insert("null_count".to_string(), Value::Number(serde_json::Number::from(null_count)));
 
-  Ok(AggregateResult {
-    value: aggregate_value,
-    data_type,
-    count: valid_count,
-    metadata: Some(metadata),
-  })
+  Ok(AggregateResult { value: aggregate_value, data_type, count: valid_count, metadata: Some(metadata) })
 }
 
 /// 提取字段值（支持 JSON 路径）
@@ -261,12 +255,10 @@ fn extract_nested_value(data: &Value, path: &str) -> Option<Value> {
 
   for part in parts {
     match current {
-      Value::Object(map) => {
-        match map.get(part) {
-          Some(value) => current = value,
-          None => return None,
-        }
-      }
+      Value::Object(map) => match map.get(part) {
+        Some(value) => current = value,
+        None => return None,
+      },
       Value::Array(arr) => {
         if let Ok(index) = part.parse::<usize>() {
           if index < arr.len() {
@@ -291,19 +283,16 @@ fn convert_value_to_type(value: &Value, target_type: &Option<DataType>) -> Resul
 
   match (target_type, value) {
     (DataType::String, _) => Ok(Value::String(format!("{}", value))),
-    (DataType::Number, Value::String(s)) => {
-      s.parse::<f64>()
-        .map(|n| Value::Number(serde_json::Number::from_f64(n).unwrap_or(serde_json::Number::from(0))))
-        .map_err(|_| format!("Cannot convert '{}' to number", s))
-    }
+    (DataType::Number, Value::String(s)) => s
+      .parse::<f64>()
+      .map(|n| Value::Number(serde_json::Number::from_f64(n).unwrap_or(serde_json::Number::from(0))))
+      .map_err(|_| format!("Cannot convert '{}' to number", s)),
     (DataType::Number, Value::Number(n)) => Ok(Value::Number(n.clone())),
-    (DataType::Boolean, Value::String(s)) => {
-      match s.to_lowercase().as_str() {
-        "true" | "1" | "yes" | "on" => Ok(Value::Bool(true)),
-        "false" | "0" | "no" | "off" => Ok(Value::Bool(false)),
-        _ => Err(format!("Cannot convert '{}' to boolean", s)),
-      }
-    }
+    (DataType::Boolean, Value::String(s)) => match s.to_lowercase().as_str() {
+      "true" | "1" | "yes" | "on" => Ok(Value::Bool(true)),
+      "false" | "0" | "no" | "off" => Ok(Value::Bool(false)),
+      _ => Err(format!("Cannot convert '{}' to boolean", s)),
+    },
     (DataType::Boolean, Value::Bool(b)) => Ok(Value::Bool(*b)),
     _ => Ok(value.clone()),
   }
@@ -324,11 +313,9 @@ fn handle_conversion_error(
       log::warn!("字段 {} 转换错误: {} (使用默认值)", field_name, error);
       Ok(())
     }
-    ErrorHandlingStrategy::StopExecution => {
-      Err(NodeExecutionError::DataProcessingError {
-        message: format!("Field conversion error for '{}': {}", field_name, error),
-      })
-    }
+    ErrorHandlingStrategy::StopExecution => Err(NodeExecutionError::DataProcessingError {
+      message: format!("Field conversion error for '{}': {}", field_name, error),
+    }),
     ErrorHandlingStrategy::LogAndContinue => {
       log::warn!("字段 {} 转换错误: {} (记录但继续)", field_name, error);
       Ok(())
@@ -363,9 +350,7 @@ fn calculate_avg(values: &[Value]) -> Result<Value, NodeExecutionError> {
     let avg = n.as_f64().unwrap_or(0.0) / values.len() as f64;
     Ok(Value::Number(serde_json::Number::from_f64(avg).unwrap_or(serde_json::Number::from(0))))
   } else {
-    Err(NodeExecutionError::DataProcessingError {
-      message: "Failed to calculate average".to_string(),
-    })
+    Err(NodeExecutionError::DataProcessingError { message: "Failed to calculate average".to_string() })
   }
 }
 
@@ -387,9 +372,11 @@ fn calculate_min(values: &[Value]) -> Result<Value, NodeExecutionError> {
     }
   }
 
-  Ok(min_value
-    .map(|v| Value::Number(serde_json::Number::from_f64(v).unwrap_or(serde_json::Number::from(0))))
-    .unwrap_or(Value::Null))
+  Ok(
+    min_value
+      .map(|v| Value::Number(serde_json::Number::from_f64(v).unwrap_or(serde_json::Number::from(0))))
+      .unwrap_or(Value::Null),
+  )
 }
 
 fn calculate_max(values: &[Value]) -> Result<Value, NodeExecutionError> {
@@ -410,9 +397,11 @@ fn calculate_max(values: &[Value]) -> Result<Value, NodeExecutionError> {
     }
   }
 
-  Ok(max_value
-    .map(|v| Value::Number(serde_json::Number::from_f64(v).unwrap_or(serde_json::Number::from(0))))
-    .unwrap_or(Value::Null))
+  Ok(
+    max_value
+      .map(|v| Value::Number(serde_json::Number::from_f64(v).unwrap_or(serde_json::Number::from(0))))
+      .unwrap_or(Value::Null),
+  )
 }
 
 fn calculate_median(values: &[Value]) -> Result<Value, NodeExecutionError> {
@@ -583,11 +572,7 @@ fn to_pascal_case(name: &str) -> String {
     })
     .collect();
 
-  if parts.is_empty() {
-    name.to_string()
-  } else {
-    parts.join("")
-  }
+  if parts.is_empty() { name.to_string() } else { parts.join("") }
 }
 
 /// 转换为 kebab-case
@@ -658,7 +643,8 @@ fn create_metadata(items: &[ExecutionData], config: &SummarizeConfig) -> Result<
 
   metadata.insert("total_items".to_string(), Value::Number(serde_json::Number::from(items.len())));
   metadata.insert("aggregated_at".to_string(), Value::String(chrono::Utc::now().to_rfc3339()));
-  metadata.insert("aggregate_fields".to_string(), Value::Number(serde_json::Number::from(config.aggregate_fields.len())));
+  metadata
+    .insert("aggregate_fields".to_string(), Value::Number(serde_json::Number::from(config.aggregate_fields.len())));
 
   if config.group_by.is_some() {
     metadata.insert("grouped".to_string(), Value::Bool(true));
@@ -683,10 +669,7 @@ fn create_group_metadata(
 }
 
 /// 格式化输出
-pub fn format_output(
-  aggregated_data: &[Value],
-  config: &SummarizeConfig,
-) -> Result<Vec<Value>, NodeExecutionError> {
+pub fn format_output(aggregated_data: &[Value], config: &SummarizeConfig) -> Result<Vec<Value>, NodeExecutionError> {
   match config.output_format {
     OutputFormat::Json => Ok(aggregated_data.to_vec()),
     OutputFormat::KeyValueArray => convert_to_key_value_array(aggregated_data, config),
@@ -695,10 +678,7 @@ pub fn format_output(
 }
 
 /// 转换为键值对数组
-fn convert_to_key_value_array(
-  data: &[Value],
-  config: &SummarizeConfig,
-) -> Result<Vec<Value>, NodeExecutionError> {
+fn convert_to_key_value_array(data: &[Value], config: &SummarizeConfig) -> Result<Vec<Value>, NodeExecutionError> {
   let mut result = Vec::new();
 
   for item in data {
@@ -721,10 +701,7 @@ fn convert_to_key_value_array(
 }
 
 /// 转换为表格格式
-fn convert_to_table_format(
-  data: &[Value],
-  config: &SummarizeConfig,
-) -> Result<Vec<Value>, NodeExecutionError> {
+fn convert_to_table_format(data: &[Value], config: &SummarizeConfig) -> Result<Vec<Value>, NodeExecutionError> {
   let mut result = Vec::new();
 
   for item in data {

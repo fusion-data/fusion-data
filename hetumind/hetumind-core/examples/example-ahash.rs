@@ -1,6 +1,6 @@
 use std::collections::HashMap as StdHashMap;
 
-use ahash::{AHashMap, HashMap, RandomState};
+use ahash::{AHashMap, RandomState};
 
 fn main() {
   let m1: StdHashMap<String, String, RandomState> = StdHashMap::with_hasher(RandomState::new());

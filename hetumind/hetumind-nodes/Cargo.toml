@@ -49,3 +49,15 @@ rand = { workspace = true }
 mime_guess = { workspace = true }
 content_inspector = { workspace = true }
 glob = { workspace = true }
+
+# image processing
+image = "0.25"
+imageproc = "0.25"
+rusttype = "0.9"
+base64 = "0.22"
+
+# email processing
+lettre = { version = "0.11", default-features = false, features = ["tokio1", "rustls-tls", "tokio1-rustls", "builder", "smtp-transport"] }
+
+# async utilities
+futures = "0.3"

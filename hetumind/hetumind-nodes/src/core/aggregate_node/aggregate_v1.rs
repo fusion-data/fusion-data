@@ -4,19 +4,18 @@ use async_trait::async_trait;
 use hetumind_core::{
   version::Version,
   workflow::{
-    ConnectionKind, DisplayOptions, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition,
+    ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition,
     NodeDefinitionBuilder, NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind,
-    NodePropertyKindOptions, OutputPortConfig, RegistrationError, ShowOptions, make_execution_data_map, ValidationError,
+    NodePropertyKindOptions, OutputPortConfig, RegistrationError, ValidationError, make_execution_data_map,
   },
 };
-use fusion_common::{ahash::HashMap, ahash::HashMapExt};
-use serde_json::{json, Value};
+use serde_json::{Value, json};
 
 use super::{
   AggregateConfig, AggregateMode, AggregateOptions, FieldToAggregate,
   utils::{
-    add_binaries_to_item, apply_field_filter, get_field_value,
-    prepare_fields_array, process_field_value, FieldExistenceTracker,
+    FieldExistenceTracker, add_binaries_to_item, apply_field_filter, get_field_value, prepare_fields_array,
+    process_field_value,
   },
 };
 
@@ -52,17 +51,12 @@ impl AggregateV1 {
         let field_value = get_field_value(item.json(), field_path, config.options.disable_dot_notation);
 
         // 记录字段存在性
-        field_existence_tracker.record_field_existence(
-          field_path,
-          field_value.is_some(),
-        );
+        field_existence_tracker.record_field_existence(field_path, field_value.is_some());
 
         // 处理字段值
-        if let Some(processed_value) = process_field_value(
-          field_value,
-          config.options.keep_missing,
-          config.options.merge_lists,
-        ) {
+        if let Some(processed_value) =
+          process_field_value(field_value, config.options.keep_missing, config.options.merge_lists)
+        {
           if let Value::Array(values) = processed_value {
             field_values.extend(values);
           } else {
@@ -86,11 +80,7 @@ impl AggregateV1 {
     // 处理二进制数据（如果启用）
     if config.options.include_binaries {
       log::info!("包含二进制数据聚合");
-      add_binaries_to_item(
-        &mut new_item,
-        input_items,
-        config.options.keep_only_unique,
-      )?;
+      add_binaries_to_item(&mut new_item, input_items, config.options.keep_only_unique)?;
     }
 
     // 生成执行提示
@@ -98,10 +88,7 @@ impl AggregateV1 {
 
     log::info!("Individual Fields 聚合完成");
 
-    Ok(make_execution_data_map(vec![(
-      ConnectionKind::Main,
-      vec![ExecutionDataItems::new_items(vec![new_item])],
-    )]))
+    Ok(make_execution_data_map(vec![(ConnectionKind::Main, vec![ExecutionDataItems::new_items(vec![new_item])])]))
   }
 
   /// 执行 All Item Data 聚合模式
@@ -113,21 +100,15 @@ impl AggregateV1 {
   ) -> Result<ExecutionDataMap, NodeExecutionError> {
     log::info!("执行 All Item Data 聚合模式");
 
-    let destination_field = config.destination_field_name.as_ref()
-      .ok_or_else(|| NodeExecutionError::ParameterValidation(
-        ValidationError::required_field_missing("destination_field_name")
-      ))?;
+    let destination_field = config.destination_field_name.as_ref().ok_or_else(|| {
+      NodeExecutionError::ParameterValidation(ValidationError::required_field_missing("destination_field_name"))
+    })?;
 
     // 准备字段过滤配置
     let fields_to_exclude = &config.fields_to_exclude;
     let fields_to_include = &config.fields_to_include;
 
-    log::info!(
-      "目标字段: {}, 排除字段: {:?}, 包含字段: {:?}",
-      destination_field,
-      fields_to_exclude,
-      fields_to_include
-    );
+    log::info!("目标字段: {}, 排除字段: {:?}, 包含字段: {:?}", destination_field, fields_to_exclude, fields_to_include);
 
     let mut filtered_items = Vec::new();
     let mut paired_items = Vec::new();
@@ -157,30 +138,16 @@ impl AggregateV1 {
       let original_items: Vec<ExecutionData> = paired_items
         .iter()
         .filter_map(|paired| {
-          paired.get("item")
-            .and_then(|v| v.as_u64())
-            .and_then(|idx| input_items.get(idx as usize))
-            .cloned()
+          paired.get("item").and_then(|v| v.as_u64()).and_then(|idx| input_items.get(idx as usize)).cloned()
         })
         .collect();
 
-      add_binaries_to_item(
-        &mut new_item,
-        &original_items,
-        config.options.keep_only_unique,
-      )?;
+      add_binaries_to_item(&mut new_item, &original_items, config.options.keep_only_unique)?;
     }
 
-    log::info!(
-      "All Item Data 聚合完成 - 输入项: {}, 过滤后项: {}",
-      input_items.len(),
-      filtered_items.len()
-    );
+    log::info!("All Item Data 聚合完成 - 输入项: {}, 过滤后项: {}", input_items.len(), filtered_items.len());
 
-    Ok(make_execution_data_map(vec![(
-      ConnectionKind::Main,
-      vec![ExecutionDataItems::new_items(vec![new_item])],
-    )]))
+    Ok(make_execution_data_map(vec![(ConnectionKind::Main, vec![ExecutionDataItems::new_items(vec![new_item])])]))
   }
 
   /// 生成字段存在性提示
@@ -243,10 +210,7 @@ impl NodeExecutable for AggregateV1 {
       input_data
     } else {
       log::error!("Aggregate 节点没有接收到输入数据");
-      return Ok(make_execution_data_map(vec![(
-        ConnectionKind::Main,
-        vec![ExecutionDataItems::new_items(vec![])],
-      )]));
+      return Ok(make_execution_data_map(vec![(ConnectionKind::Main, vec![ExecutionDataItems::new_items(vec![])])]));
     };
 
     // 获取聚合配置
@@ -261,9 +225,9 @@ impl NodeExecutable for AggregateV1 {
         let fields_to_aggregate: Vec<FieldToAggregate> = node.get_parameter("fields_to_aggregate")?;
 
         if fields_to_aggregate.is_empty() {
-          return Err(NodeExecutionError::ParameterValidation(
-            ValidationError::required_field_missing("fields_to_aggregate")
-          ));
+          return Err(NodeExecutionError::ParameterValidation(ValidationError::required_field_missing(
+            "fields_to_aggregate",
+          )));
         }
 
         let config = AggregateConfig {
@@ -277,9 +241,10 @@ impl NodeExecutable for AggregateV1 {
 
         // 验证配置
         config.validate().map_err(|e| {
-          NodeExecutionError::ParameterValidation(
-            ValidationError::invalid_field_value("aggregation_config", format!("Invalid configuration: {}", e))
-          )
+          NodeExecutionError::ParameterValidation(ValidationError::invalid_field_value(
+            "aggregation_config",
+            format!("Invalid configuration: {}", e),
+          ))
         })?;
 
         self.execute_individual_fields(context, &input_items, &config).await
@@ -306,9 +271,10 @@ impl NodeExecutable for AggregateV1 {
 
         // 验证配置
         config.validate().map_err(|e| {
-          NodeExecutionError::ParameterValidation(
-            ValidationError::invalid_field_value("aggregation_config", format!("Invalid configuration: {}", e))
-          )
+          NodeExecutionError::ParameterValidation(ValidationError::invalid_field_value(
+            "aggregation_config",
+            format!("Invalid configuration: {}", e),
+          ))
         })?;
 
         self.execute_all_item_data(context, &input_items, &config).await
@@ -357,12 +323,8 @@ impl TryFrom<NodeDefinitionBuilder> for AggregateV1 {
           .description("Fields to aggregate together".to_string())
           .placeholder("Add Field To Aggregate".to_string())
           .kind(NodePropertyKind::FixedCollection)
-          .kind_options(
-            NodePropertyKindOptions::builder()
-              .multiple_values(true)
-              .build(),
-          )
-                    .build(),
+          .kind_options(NodePropertyKindOptions::builder().multiple_values(true).build())
+          .build(),
         // All Item Data 模式的目标字段配置
         NodeProperty::builder()
           .display_name("Destination Field Name".to_string())
@@ -371,7 +333,7 @@ impl TryFrom<NodeDefinitionBuilder> for AggregateV1 {
           .description("The name of the field to put the aggregated data in".to_string())
           .placeholder("e.g. items".to_string())
           .kind(NodePropertyKind::String)
-                    .build(),
+          .build(),
         // 字段排除配置
         NodeProperty::builder()
           .display_name("Fields To Exclude".to_string())
@@ -380,7 +342,7 @@ impl TryFrom<NodeDefinitionBuilder> for AggregateV1 {
           .description("Fields to exclude from aggregation".to_string())
           .placeholder("e.g. password,secret".to_string())
           .kind(NodePropertyKind::String)
-                    .build(),
+          .build(),
         // 字段包含配置
         NodeProperty::builder()
           .display_name("Fields To Include".to_string())
@@ -389,7 +351,7 @@ impl TryFrom<NodeDefinitionBuilder> for AggregateV1 {
           .description("Fields to include in aggregation (if empty, include all)".to_string())
           .placeholder("e.g. name,email".to_string())
           .kind(NodePropertyKind::String)
-                    .build(),
+          .build(),
         // 高级选项
         NodeProperty::builder()
           .display_name("Options".to_string())
@@ -404,18 +366,8 @@ impl TryFrom<NodeDefinitionBuilder> for AggregateV1 {
               json!(false),
               NodePropertyKind::Boolean,
             )),
-            Box::new(NodeProperty::new_option(
-              "Merge Lists",
-              "merge_lists",
-              json!(false),
-              NodePropertyKind::Boolean,
-            )),
-            Box::new(NodeProperty::new_option(
-              "Keep Missing",
-              "keep_missing",
-              json!(true),
-              NodePropertyKind::Boolean,
-            )),
+            Box::new(NodeProperty::new_option("Merge Lists", "merge_lists", json!(false), NodePropertyKind::Boolean)),
+            Box::new(NodeProperty::new_option("Keep Missing", "keep_missing", json!(true), NodePropertyKind::Boolean)),
             Box::new(NodeProperty::new_option(
               "Include Binaries",
               "include_binaries",

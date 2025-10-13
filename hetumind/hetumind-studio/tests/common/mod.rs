@@ -5,12 +5,13 @@ use axum_test::TestServer;
 use config::File;
 use fusion_core::{DataError, application::Application};
 use fusionsql::{ModelManager, store::DbxPostgres};
-use hetumind_core::workflow::{ErrorHandlingStrategy, ExecutionMode, WorkflowId, WorkflowStatus};
-use hetumind_studio::{endpoint, start::app_builder};
 use once_cell::sync::Lazy;
 use serde_json::json;
-use sqlx::{Connection, Executor, PgConnection};
+use sqlx::Executor;
 use tokio::sync::OnceCell;
+
+use hetumind_core::workflow::{ErrorHandlingStrategy, ExecutionMode, WorkflowId, WorkflowStatus};
+use hetumind_studio::{endpoint, start::app_builder};
 
 // 使用 std::sync::Once 确保只初始化一次
 static ONCE: Lazy<OnceCell<Application>> = Lazy::new(OnceCell::new);
@@ -75,15 +76,7 @@ async fn init_application() -> Result<Application, DataError> {
   app_builder(Some(File::with_name("resources/test-app.toml"))).run().await
 }
 
-async fn create_test_database() {
-  // We need to set up the database for the tests.
-  // We will create a new database for each test run.
-  let db_url = "postgresql://fusiondata:2025.Fusiondata@localhost:5432/template1";
-  let mut conn = PgConnection::connect(db_url).await.unwrap();
-  conn.execute("drop database if exists fusiondata_test;").await.unwrap();
-  conn.execute("create database fusiondata_test owner=fusiondata;").await.unwrap();
-}
-
+#[allow(dead_code)]
 pub fn create_test_workflow_json() -> (WorkflowId, serde_json::Value) {
   let id = WorkflowId::now_v7();
   let workflow_json = json!({

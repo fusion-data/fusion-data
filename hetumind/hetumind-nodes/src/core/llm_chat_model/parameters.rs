@@ -1,6 +1,5 @@
 use hetumind_core::types::JsonValue;
 use serde::{Deserialize, Serialize};
-use uuid::Uuid;
 
 /// LLM 配置
 #[derive(Debug, Clone, Serialize, Deserialize)]

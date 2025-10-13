@@ -1,4 +1,5 @@
 mod chat_trigger;
+mod email_trigger;
 mod error_trigger;
 mod manual_trigger;
 mod schedule_trigger;
@@ -8,6 +9,7 @@ mod webhook_trigger;
 use std::sync::Arc;
 
 pub use chat_trigger::ChatTriggerNode;
+pub use email_trigger::EmailTriggerNode;
 pub use error_trigger::ErrorTriggerNode;
 pub use manual_trigger::ManualTriggerNode;
 pub use schedule_trigger::ScheduleTriggerNode;
@@ -34,6 +36,9 @@ pub fn register_nodes(registry: &NodeRegistry) -> Result<(), RegistrationError> 
 
   let manual_trigger_node = ManualTriggerNode::new()?;
   registry.register_node(Arc::new(manual_trigger_node))?;
+
+  let email_trigger_node = EmailTriggerNode::new()?;
+  registry.register_node(Arc::new(email_trigger_node))?;
 
   Ok(())
 }

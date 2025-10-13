@@ -469,7 +469,10 @@ fn handle_evaluation_error(error_msg: &str, options: &IfNodeOptions) -> Result<b
   match options.error_handling_strategy {
     ErrorHandlingStrategy::StopExecution => {
       error!("停止执行: {}", error_msg);
-      Err(NodeExecutionError::ExecutionFailed { node_name: "IfNode".to_string().into() })
+      Err(NodeExecutionError::ExecutionFailed {
+        node_name: "IfNode".to_string().into(),
+        message: Some(error_msg.to_string())
+      })
     }
     ErrorHandlingStrategy::SkipItem => {
       warn!("跳过当前项: {}", error_msg);
@@ -655,8 +658,8 @@ pub fn parse_expression_expression(expression: &str, input_data: &JsonValue) -> 
       } else if expr == "$random" {
         // 随机数
         use rand::Rng;
-        let mut rng = rand::thread_rng();
-        let random_value: f64 = rng.r#gen();
+        let mut rng = rand::rng();
+        let random_value: f64 = rng.random();
         Ok(json!(random_value))
       } else if expr.starts_with("$env.") {
         // 环境变量

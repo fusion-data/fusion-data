@@ -228,12 +228,10 @@ impl AggregateField {
 
   /// 获取有效的分隔符
   pub fn get_separator(&self) -> String {
-    self.separator.clone().unwrap_or_else(|| {
-      match self.operation {
-        AggregateOperation::Join => ", ".to_string(),
-        AggregateOperation::Concat => "".to_string(),
-        _ => "".to_string(),
-      }
+    self.separator.clone().unwrap_or_else(|| match self.operation {
+      AggregateOperation::Join => ", ".to_string(),
+      AggregateOperation::Concat => "".to_string(),
+      _ => "".to_string(),
     })
   }
 
@@ -265,11 +263,7 @@ impl GroupByConfig {
 
   /// 获取分组字段输出名称
   pub fn get_group_output_name(&self) -> String {
-    if self.group_output_name.trim().is_empty() {
-      self.group_field.clone()
-    } else {
-      self.group_output_name.clone()
-    }
+    if self.group_output_name.trim().is_empty() { self.group_field.clone() } else { self.group_output_name.clone() }
   }
 
   /// 是否保留原始数据
@@ -301,10 +295,7 @@ impl SummarizeConfig {
     // 验证分组配置
     if let Some(ref group_by) = self.group_by {
       group_by.validate().map_err(|e| {
-        ValidationError::invalid_field_value(
-          "group_by".to_string(),
-          format!("Invalid group configuration: {}", e),
-        )
+        ValidationError::invalid_field_value("group_by".to_string(), format!("Invalid group configuration: {}", e))
       })?;
     }
 

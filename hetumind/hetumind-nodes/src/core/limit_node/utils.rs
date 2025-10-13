@@ -48,12 +48,7 @@ pub fn apply_limit_operation(input_items: &[ExecutionData], config: &LimitConfig
     }
   };
 
-  info!(
-    "限制操作完成 - 输入: {} 项, 输出: {} 项, 策略: {:?}",
-    input_items.len(),
-    result.len(),
-    config.keep_strategy
-  );
+  info!("限制操作完成 - 输入: {} 项, 输出: {} 项, 策略: {:?}", input_items.len(), result.len(), config.keep_strategy);
 
   result
 }
@@ -86,11 +81,7 @@ impl LimitStats {
 
   /// 获取限制比例 (0.0 - 1.0)
   pub fn limit_ratio(&self) -> f64 {
-    if self.input_count == 0 {
-      0.0
-    } else {
-      self.output_count as f64 / self.input_count as f64
-    }
+    if self.input_count == 0 { 0.0 } else { self.output_count as f64 / self.input_count as f64 }
   }
 
   /// 是否应用了限制
@@ -168,11 +159,7 @@ mod tests {
   #[test]
   fn test_apply_limit_first_items() {
     let input = create_test_data(10);
-    let config = LimitConfig {
-      max_items: 3,
-      keep_strategy: KeepStrategy::FirstItems,
-      warn_on_limit: false,
-    };
+    let config = LimitConfig { max_items: 3, keep_strategy: KeepStrategy::FirstItems, warn_on_limit: false };
 
     let result = apply_limit_operation(&input, &config);
 
@@ -184,11 +171,7 @@ mod tests {
   #[test]
   fn test_apply_limit_last_items() {
     let input = create_test_data(10);
-    let config = LimitConfig {
-      max_items: 3,
-      keep_strategy: KeepStrategy::LastItems,
-      warn_on_limit: false,
-    };
+    let config = LimitConfig { max_items: 3, keep_strategy: KeepStrategy::LastItems, warn_on_limit: false };
 
     let result = apply_limit_operation(&input, &config);
 
@@ -200,11 +183,7 @@ mod tests {
   #[test]
   fn test_apply_limit_no_limit_needed() {
     let input = create_test_data(3);
-    let config = LimitConfig {
-      max_items: 5,
-      keep_strategy: KeepStrategy::FirstItems,
-      warn_on_limit: false,
-    };
+    let config = LimitConfig { max_items: 5, keep_strategy: KeepStrategy::FirstItems, warn_on_limit: false };
 
     let result = apply_limit_operation(&input, &config);
 
@@ -215,11 +194,7 @@ mod tests {
   #[test]
   fn test_limit_stats() {
     let input = create_test_data(10);
-    let config = LimitConfig {
-      max_items: 3,
-      keep_strategy: KeepStrategy::FirstItems,
-      warn_on_limit: false,
-    };
+    let config = LimitConfig { max_items: 3, keep_strategy: KeepStrategy::FirstItems, warn_on_limit: false };
 
     let result = apply_limit_operation(&input, &config);
     let stats = LimitStats::new(&input, &result, &config);

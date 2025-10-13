@@ -155,10 +155,9 @@ impl NodeExecutable for IfV1 {
 
   async fn execute(&self, context: &NodeExecutionContext) -> Result<ExecutionDataMap, NodeExecutionError> {
     let node = context.current_node()?;
-    println!("[DEBUG] 开始执行 If 条件判断节点 workflow_id:{}, node_name:{}, node_kind:{}",
-      context.workflow.id,
-      node.name,
-      node.kind
+    println!(
+      "[DEBUG] 开始执行 If 条件判断节点 workflow_id:{}, node_name:{}, node_kind:{}",
+      context.workflow.id, node.name, node.kind
     );
 
     // 获取输入数据

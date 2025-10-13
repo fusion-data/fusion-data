@@ -16,7 +16,7 @@ pub struct BinaryStorageConfig {
 
 /// 支持的存储类型
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "snake_case")]
 pub enum StorageType {
   /// 本地文件系统
   Fs,

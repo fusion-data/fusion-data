@@ -84,11 +84,7 @@ impl FieldToSplit {
   pub fn get_destination_field(&self) -> String {
     self.destination_field.clone().unwrap_or_else(|| {
       // 从源字段路径中提取最后的字段名
-      self.field_to_split
-        .split('.')
-        .last()
-        .unwrap_or(&self.field_to_split)
-        .to_string()
+      self.field_to_split.split('.').last().unwrap_or(&self.field_to_split).to_string()
     })
   }
 }
@@ -226,37 +222,24 @@ mod tests {
   #[test]
   fn test_field_to_split_validation() {
     // 有效的字段配置
-    let valid_field = FieldToSplit {
-      field_to_split: "data.items".to_string(),
-      destination_field: Some("items".to_string()),
-    };
+    let valid_field =
+      FieldToSplit { field_to_split: "data.items".to_string(), destination_field: Some("items".to_string()) };
     assert!(valid_field.validate().is_ok());
 
     // 空字段名
-    let invalid_field = FieldToSplit {
-      field_to_split: "".to_string(),
-      destination_field: None,
-    };
+    let invalid_field = FieldToSplit { field_to_split: "".to_string(), destination_field: None };
     assert!(invalid_field.validate().is_err());
 
     // 空目标字段
-    let invalid_dest = FieldToSplit {
-      field_to_split: "data".to_string(),
-      destination_field: Some("".to_string()),
-    };
+    let invalid_dest = FieldToSplit { field_to_split: "data".to_string(), destination_field: Some("".to_string()) };
     assert!(invalid_dest.validate().is_err());
 
     // 获取目标字段名
-    let field_with_dest = FieldToSplit {
-      field_to_split: "data.items".to_string(),
-      destination_field: Some("processed_items".to_string()),
-    };
+    let field_with_dest =
+      FieldToSplit { field_to_split: "data.items".to_string(), destination_field: Some("processed_items".to_string()) };
     assert_eq!(field_with_dest.get_destination_field(), "processed_items");
 
-    let field_without_dest = FieldToSplit {
-      field_to_split: "data.items".to_string(),
-      destination_field: None,
-    };
+    let field_without_dest = FieldToSplit { field_to_split: "data.items".to_string(), destination_field: None };
     assert_eq!(field_without_dest.get_destination_field(), "items");
   }
 
@@ -264,10 +247,7 @@ mod tests {
   fn test_split_out_config_validation() {
     // 有效的配置
     let valid_config = SplitOutConfig {
-      fields_to_split: vec![FieldToSplit {
-        field_to_split: "items".to_string(),
-        destination_field: None,
-      }],
+      fields_to_split: vec![FieldToSplit { field_to_split: "items".to_string(), destination_field: None }],
       include_strategy: IncludeStrategy::AllOtherFields,
       fields_to_include: vec![],
       disable_dot_notation: false,
@@ -287,10 +267,7 @@ mod tests {
 
     // 无效配置：选择性包含但没有字段列表
     let invalid_selected = SplitOutConfig {
-      fields_to_split: vec![FieldToSplit {
-        field_to_split: "items".to_string(),
-        destination_field: None,
-      }],
+      fields_to_split: vec![FieldToSplit { field_to_split: "items".to_string(), destination_field: None }],
       include_strategy: IncludeStrategy::SelectedOtherFields,
       fields_to_include: vec![],
       disable_dot_notation: false,

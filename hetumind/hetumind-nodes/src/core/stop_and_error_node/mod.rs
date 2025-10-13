@@ -115,12 +115,11 @@ impl StopAndErrorConfig {
   /// 获取有效的错误消息
   pub fn get_error_message(&self) -> String {
     match &self.error_type {
-      ErrorType::ErrorMessage => {
-        self.error_message.clone().unwrap_or_else(|| "Error occurred".to_string())
-      }
+      ErrorType::ErrorMessage => self.error_message.clone().unwrap_or_else(|| "Error occurred".to_string()),
       ErrorType::ErrorObject => {
         if let Some(ref error_obj) = self.error_object {
-          error_obj.message
+          error_obj
+            .message
             .clone()
             .or_else(|| error_obj.description.clone())
             .or_else(|| error_obj.code.clone())
@@ -136,14 +135,10 @@ impl StopAndErrorConfig {
   pub fn get_error_description(&self) -> Option<String> {
     match &self.error_type {
       ErrorType::ErrorMessage => self.error_message.clone(),
-      ErrorType::ErrorObject => {
-        self.error_object.as_ref().and_then(|obj| {
-          obj.message
-            .clone()
-            .or_else(|| obj.description.clone())
-            .or_else(|| obj.code.clone())
-        })
-      }
+      ErrorType::ErrorObject => self
+        .error_object
+        .as_ref()
+        .and_then(|obj| obj.message.clone().or_else(|| obj.description.clone()).or_else(|| obj.code.clone())),
     }
   }
 
@@ -151,9 +146,7 @@ impl StopAndErrorConfig {
   pub fn get_error_code(&self) -> Option<String> {
     match &self.error_type {
       ErrorType::ErrorMessage => None,
-      ErrorType::ErrorObject => {
-        self.error_object.as_ref().and_then(|obj| obj.code.clone())
-      }
+      ErrorType::ErrorObject => self.error_object.as_ref().and_then(|obj| obj.code.clone()),
     }
   }
 
@@ -162,10 +155,7 @@ impl StopAndErrorConfig {
     match &self.error_type {
       ErrorType::ErrorMessage => ErrorLevel::Error,
       ErrorType::ErrorObject => {
-        self.error_object
-          .as_ref()
-          .and_then(|obj| obj.level.clone())
-          .unwrap_or(ErrorLevel::Error)
+        self.error_object.as_ref().and_then(|obj| obj.level.clone()).unwrap_or(ErrorLevel::Error)
       }
     }
   }
@@ -173,37 +163,33 @@ impl StopAndErrorConfig {
   /// 获取错误元数据
   pub fn get_error_metadata(&self) -> Option<Value> {
     match &self.error_type {
-      ErrorType::ErrorMessage => {
-        Some(serde_json::json!({
-          "error_type": "simple_message",
-          "message": self.error_message
-        }))
-      }
-      ErrorType::ErrorObject => {
-        self.error_object.as_ref().and_then(|obj| {
-          let mut metadata = obj.metadata.clone().unwrap_or(Value::Object(Default::default()));
+      ErrorType::ErrorMessage => Some(serde_json::json!({
+        "error_type": "simple_message",
+        "message": self.error_message
+      })),
+      ErrorType::ErrorObject => self.error_object.as_ref().and_then(|obj| {
+        let mut metadata = obj.metadata.clone().unwrap_or(Value::Object(Default::default()));
 
-          if let Value::Object(ref mut map) = metadata {
-            if let Some(ref code) = obj.code {
-              map.insert("code".to_string(), Value::String(code.clone()));
-            }
-            if let Some(ref error_type) = obj.error_type {
-              map.insert("error_type".to_string(), Value::String(error_type.clone()));
-            }
-            if let Some(ref level) = obj.level {
-              map.insert("level".to_string(), serde_json::to_value(level).unwrap_or(Value::Null));
-            }
-            if obj.retryable.is_some() {
-              map.insert("retryable".to_string(), serde_json::to_value(obj.retryable).unwrap_or(Value::Null));
-            }
-            if let Some(retry_after) = obj.retry_after {
-              map.insert("retry_after".to_string(), Value::Number(serde_json::Number::from(retry_after)));
-            }
+        if let Value::Object(ref mut map) = metadata {
+          if let Some(ref code) = obj.code {
+            map.insert("code".to_string(), Value::String(code.clone()));
           }
+          if let Some(ref error_type) = obj.error_type {
+            map.insert("error_type".to_string(), Value::String(error_type.clone()));
+          }
+          if let Some(ref level) = obj.level {
+            map.insert("level".to_string(), serde_json::to_value(level).unwrap_or(Value::Null));
+          }
+          if obj.retryable.is_some() {
+            map.insert("retryable".to_string(), serde_json::to_value(obj.retryable).unwrap_or(Value::Null));
+          }
+          if let Some(retry_after) = obj.retry_after {
+            map.insert("retry_after".to_string(), Value::Number(serde_json::Number::from(retry_after)));
+          }
+        }
 
-          Some(metadata)
-        })
-      }
+        Some(metadata)
+      }),
     }
   }
 
@@ -211,9 +197,7 @@ impl StopAndErrorConfig {
   pub fn is_retryable(&self) -> bool {
     match &self.error_type {
       ErrorType::ErrorMessage => false,
-      ErrorType::ErrorObject => {
-        self.error_object.as_ref().and_then(|obj| obj.retryable).unwrap_or(false)
-      }
+      ErrorType::ErrorObject => self.error_object.as_ref().and_then(|obj| obj.retryable).unwrap_or(false),
     }
   }
 
@@ -221,20 +205,14 @@ impl StopAndErrorConfig {
   pub fn get_retry_after(&self) -> Option<u64> {
     match &self.error_type {
       ErrorType::ErrorMessage => None,
-      ErrorType::ErrorObject => {
-        self.error_object.as_ref().and_then(|obj| obj.retry_after)
-      }
+      ErrorType::ErrorObject => self.error_object.as_ref().and_then(|obj| obj.retry_after),
     }
   }
 }
 
 impl Default for StopAndErrorConfig {
   fn default() -> Self {
-    Self {
-      error_type: ErrorType::ErrorMessage,
-      error_message: Some("Error occurred".to_string()),
-      error_object: None,
-    }
+    Self { error_type: ErrorType::ErrorMessage, error_message: Some("Error occurred".to_string()), error_object: None }
   }
 }
 
@@ -381,11 +359,8 @@ mod tests {
     assert!(valid_complex_config.validate().is_ok());
 
     // 无效的复杂错误配置（缺少错误对象）
-    let invalid_complex_config = StopAndErrorConfig {
-      error_type: ErrorType::ErrorObject,
-      error_message: None,
-      error_object: None,
-    };
+    let invalid_complex_config =
+      StopAndErrorConfig { error_type: ErrorType::ErrorObject, error_message: None, error_object: None };
     assert!(invalid_complex_config.validate().is_err());
 
     // 无效的复杂错误配置（空错误对象）

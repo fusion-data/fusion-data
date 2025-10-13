@@ -10,7 +10,7 @@ use hetumind_core::{
     NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig, RegistrationError, make_execution_data_map,
   },
 };
-use rig::{agent::Agent, client::CompletionClient, completion::Prompt};
+use rig::{client::CompletionClient, completion::Prompt};
 use serde_json::json;
 use uuid::Uuid;
 
@@ -237,19 +237,22 @@ impl AiAgentV1 {
     if let Some(openai_agent) =
       agent.downcast_ref::<rig::agent::Agent<rig::providers::openai::completion::CompletionModel>>()
     {
-      openai_agent
-        .prompt(prompt)
-        .await
-        .map_err(|e| NodeExecutionError::ExecutionFailed { node_name: "AiAgentV1".to_string().into() })
+      openai_agent.prompt(prompt).await.map_err(|e| NodeExecutionError::ExecutionFailed {
+        node_name: "AiAgentV1".to_string().into(),
+        message: Some(format!("OpenAI API call failed: {}", e)),
+      })
     } else if let Some(anthropic_agent) =
       agent.downcast_ref::<rig::agent::Agent<rig::providers::anthropic::completion::CompletionModel>>()
     {
-      anthropic_agent
-        .prompt(prompt)
-        .await
-        .map_err(|_| NodeExecutionError::ExecutionFailed { node_name: "AiAgentV1".to_string().into() })
+      anthropic_agent.prompt(prompt).await.map_err(|_| NodeExecutionError::ExecutionFailed {
+        node_name: "AiAgentV1".to_string().into(),
+        message: Some("Anthropic API call failed".to_string()),
+      })
     } else {
-      Err(NodeExecutionError::ExecutionFailed { node_name: "AiAgentV1".to_string().into() })
+      Err(NodeExecutionError::ExecutionFailed {
+        node_name: "AiAgentV1".to_string().into(),
+        message: Some("Unsupported AI Agent type".to_string()),
+      })
     }
   }
 

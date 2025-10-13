@@ -6,15 +6,15 @@ use hetumind_core::{
   version::Version,
   workflow::{
     ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition,
-    NodeDefinitionBuilder, NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty,
-    NodePropertyKind, OutputPortConfig, RegistrationError, ValidationError, make_execution_data_map,
+    NodeDefinitionBuilder, NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind,
+    OutputPortConfig, RegistrationError, ValidationError, make_execution_data_map,
   },
 };
 use serde_json::json;
 
 use super::{
-  utils::{self, prepare_fields_array},
   FieldToSplit, IncludeStrategy, SplitOutConfig,
+  utils::{self, prepare_fields_array},
 };
 
 #[derive(Debug)]
@@ -59,10 +59,7 @@ impl SplitOutV1 {
 
     log::info!("Split Out 节点执行完成 - 总输入项: {}, 总输出项: {}", input_items.len(), all_output_items.len());
 
-    Ok(make_execution_data_map(vec![(
-      ConnectionKind::Main,
-      vec![ExecutionDataItems::new_items(all_output_items)],
-    )]))
+    Ok(make_execution_data_map(vec![(ConnectionKind::Main, vec![ExecutionDataItems::new_items(all_output_items)])]))
   }
 
   /// 处理单个输入项
@@ -99,13 +96,8 @@ impl SplitOutV1 {
           }
 
           // 创建拆分后的数据项
-          let field_results = self.create_split_items(
-            &normalized_data,
-            item_json,
-            &destination_field,
-            config,
-            field_index,
-          )?;
+          let field_results =
+            self.create_split_items(&normalized_data, item_json, &destination_field, config, field_index)?;
 
           split_results.extend(field_results);
         }
@@ -151,7 +143,11 @@ impl SplitOutV1 {
         }
         IncludeStrategy::AllOtherFields => {
           // 保留所有其他字段，但移除拆分的源字段
-          self.apply_all_other_fields(&mut new_item_json, original_item, &config.fields_to_split[field_index].field_to_split)?;
+          self.apply_all_other_fields(
+            &mut new_item_json,
+            original_item,
+            &config.fields_to_split[field_index].field_to_split,
+          )?;
         }
         IncludeStrategy::SelectedOtherFields => {
           // 选择性保留字段
@@ -168,12 +164,7 @@ impl SplitOutV1 {
       let execution_data = ExecutionData::new_json(new_item_json, None);
       results.push(execution_data);
 
-      log::debug!(
-        "创建拆分项 {} - 字段索引: {}, 元素索引: {}",
-        results.len(),
-        field_index,
-        element_index
-      );
+      log::debug!("创建拆分项 {} - 字段索引: {}, 元素索引: {}", results.len(), field_index, element_index);
     }
 
     Ok(results)
@@ -235,10 +226,8 @@ impl SplitOutV1 {
     let missing_fields = tracker.get_completely_missing_fields();
 
     if !missing_fields.is_empty() {
-      let hints: Vec<String> = missing_fields
-        .iter()
-        .map(|field| format!("字段 '{}' 在所有输入项中都未找到", field))
-        .collect();
+      let hints: Vec<String> =
+        missing_fields.iter().map(|field| format!("字段 '{}' 在所有输入项中都未找到", field)).collect();
 
       log::warn!("Split Out 执行提示: {}", hints.join(", "));
 
@@ -293,10 +282,7 @@ impl NodeExecutable for SplitOutV1 {
       input_data
     } else {
       log::warn!("Split Out 节点没有接收到输入数据");
-      return Ok(make_execution_data_map(vec![(
-        ConnectionKind::Main,
-        vec![ExecutionDataItems::new_items(vec![])],
-      )]));
+      return Ok(make_execution_data_map(vec![(ConnectionKind::Main, vec![ExecutionDataItems::new_items(vec![])])]));
     };
 
     // 解析配置参数
@@ -309,9 +295,10 @@ impl NodeExecutable for SplitOutV1 {
       "allOtherFields" => IncludeStrategy::AllOtherFields,
       "selectedOtherFields" => IncludeStrategy::SelectedOtherFields,
       _ => {
-        return Err(NodeExecutionError::ParameterValidation(
-          ValidationError::invalid_field_value("include_strategy", format!("Unknown strategy: {}", include_strategy_str))
-        ));
+        return Err(NodeExecutionError::ParameterValidation(ValidationError::invalid_field_value(
+          "include_strategy",
+          format!("Unknown strategy: {}", include_strategy_str),
+        )));
       }
     };
 
@@ -321,19 +308,15 @@ impl NodeExecutable for SplitOutV1 {
     let disable_dot_notation: bool = node.get_optional_parameter("disable_dot_notation").unwrap_or(false);
     let include_binary: bool = node.get_optional_parameter("include_binary").unwrap_or(false);
 
-    let config = SplitOutConfig {
-      fields_to_split,
-      include_strategy,
-      fields_to_include,
-      disable_dot_notation,
-      include_binary,
-    };
+    let config =
+      SplitOutConfig { fields_to_split, include_strategy, fields_to_include, disable_dot_notation, include_binary };
 
     // 验证配置
     config.validate().map_err(|e| {
-      NodeExecutionError::ParameterValidation(
-        ValidationError::invalid_field_value("split_config", format!("Invalid configuration: {}", e))
-      )
+      NodeExecutionError::ParameterValidation(ValidationError::invalid_field_value(
+        "split_config",
+        format!("Invalid configuration: {}", e),
+      ))
     })?;
 
     log::info!(
@@ -353,17 +336,16 @@ impl SplitOutV1 {
   /// 解析要拆分的字段字符串
   fn parse_fields_to_split(fields_str: &str) -> Result<Vec<FieldToSplit>, NodeExecutionError> {
     if fields_str.trim().is_empty() {
-      return Err(NodeExecutionError::ParameterValidation(
-        ValidationError::required_field_missing("fields_to_split")
-      ));
+      return Err(NodeExecutionError::ParameterValidation(ValidationError::required_field_missing("fields_to_split")));
     }
 
     let fields: Vec<&str> = fields_str.split(',').map(|s| s.trim()).filter(|s| !s.is_empty()).collect();
 
     if fields.is_empty() {
-      return Err(NodeExecutionError::ParameterValidation(
-        ValidationError::invalid_field_value("fields_to_split", "No fields specified".to_string())
-      ));
+      return Err(NodeExecutionError::ParameterValidation(ValidationError::invalid_field_value(
+        "fields_to_split",
+        "No fields specified".to_string(),
+      )));
     }
 
     let mut result = Vec::new();

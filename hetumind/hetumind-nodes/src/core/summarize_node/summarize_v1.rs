@@ -4,17 +4,17 @@ use async_trait::async_trait;
 use hetumind_core::{
   version::Version,
   workflow::{
-    ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition, NodeDefinitionBuilder,
-    NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig,
-    RegistrationError, make_execution_data_map,
+    ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition,
+    NodeDefinitionBuilder, NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind,
+    OutputPortConfig, RegistrationError, make_execution_data_map,
   },
 };
 use serde_json::json;
 
 use super::{
-  utils::{aggregate_data, format_output, convert_field_name},
-  AggregateField, AggregateOperation, DataType, ErrorHandlingStrategy, GroupByConfig, GroupSortOrder,
-  OutputFormat, SerializationStyle, SummarizeConfig,
+  AggregateField, AggregateOperation, DataType, ErrorHandlingStrategy, GroupByConfig, GroupSortOrder, OutputFormat,
+  SerializationStyle, SummarizeConfig,
+  utils::{aggregate_data, format_output},
 };
 
 /// Summarize 数据聚合节点 V1
@@ -97,8 +97,8 @@ impl NodeExecutable for SummarizeV1 {
     let output_format: OutputFormat = node.get_optional_parameter("output_format").unwrap_or(OutputFormat::Json);
 
     // 获取序列化风格
-    let serialization_style: SerializationStyle = node.get_optional_parameter("serialization_style")
-      .unwrap_or(SerializationStyle::SnakeCase);
+    let serialization_style: SerializationStyle =
+      node.get_optional_parameter("serialization_style").unwrap_or(SerializationStyle::SnakeCase);
 
     // 获取其他选项
     let include_metadata: Option<bool> = node.get_optional_parameter("include_metadata");
@@ -116,21 +116,25 @@ impl NodeExecutable for SummarizeV1 {
     // 验证配置
     if let Err(e) = config.validate() {
       log::error!("Summarize 配置验证失败: {}", e);
-      return Err(NodeExecutionError::ConfigurationError(
-        format!("Invalid Summarize configuration: {}", e)
-      ));
+      return Err(NodeExecutionError::ConfigurationError(format!("Invalid Summarize configuration: {}", e)));
     }
 
-    log::debug!("聚合配置: 字段数={}, 分组={}, 输出格式={:?}",
+    log::debug!(
+      "聚合配置: 字段数={}, 分组={}, 输出格式={:?}",
       config.aggregate_fields.len(),
       config.group_by.is_some(),
-      config.output_format);
+      config.output_format
+    );
 
     // 打印配置详情（调试模式）
     for (index, field) in config.aggregate_fields.iter().enumerate() {
-      log::debug!("聚合字段 {}: {} -> {} ({})",
-        index, field.source_field, field.output_field,
-        serde_json::to_string(&field.operation).unwrap_or_default());
+      log::debug!(
+        "聚合字段 {}: {} -> {} ({})",
+        index,
+        field.source_field,
+        field.output_field,
+        serde_json::to_string(&field.operation).unwrap_or_default()
+      );
     }
 
     // 执行聚合操作
@@ -139,14 +143,10 @@ impl NodeExecutable for SummarizeV1 {
     // 格式化输出
     let formatted_output = format_output(&aggregated_data, &config)?;
 
-    log::info!("Summarize 节点执行完成: 输入 {} 项，输出 {} 项",
-      input_items.len(),
-      formatted_output.len());
+    log::info!("Summarize 节点执行完成: 输入 {} 项，输出 {} 项", input_items.len(), formatted_output.len());
 
-    let execution_data: Vec<ExecutionData> = formatted_output
-      .into_iter()
-      .map(|value| ExecutionData::new_json(value, None))
-      .collect();
+    let execution_data: Vec<ExecutionData> =
+      formatted_output.into_iter().map(|value| ExecutionData::new_json(value, None)).collect();
 
     Ok(make_execution_data_map(vec![(ConnectionKind::Main, vec![ExecutionDataItems::new_items(execution_data)])]))
   }
@@ -188,12 +188,7 @@ impl TryFrom<NodeDefinitionBuilder> for SummarizeV1 {
           .description("选择输出数据的格式")
           .value(json!(OutputFormat::Json))
           .options(vec![
-            Box::new(NodeProperty::new_option(
-              "JSON",
-              "json",
-              json!(OutputFormat::Json),
-              NodePropertyKind::String,
-            )),
+            Box::new(NodeProperty::new_option("JSON", "json", json!(OutputFormat::Json), NodePropertyKind::String)),
             Box::new(NodeProperty::new_option(
               "键值对数组",
               "key_value_array",

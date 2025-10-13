@@ -51,11 +51,7 @@ pub struct LimitConfig {
 
 impl Default for LimitConfig {
   fn default() -> Self {
-    Self {
-      max_items: 1,
-      keep_strategy: KeepStrategy::FirstItems,
-      warn_on_limit: true,
-    }
+    Self { max_items: 1, keep_strategy: KeepStrategy::FirstItems, warn_on_limit: true }
   }
 }
 

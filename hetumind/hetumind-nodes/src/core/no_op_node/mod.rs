@@ -39,10 +39,7 @@ pub struct NoOpConfig {
 
 impl Default for NoOpConfig {
   fn default() -> Self {
-    Self {
-      enable_logging: false,
-      enable_metrics: false,
-    }
+    Self { enable_logging: false, enable_metrics: false }
   }
 }
 
@@ -137,10 +134,7 @@ mod tests {
 
   #[test]
   fn test_noop_config_serialization() {
-    let config = NoOpConfig {
-      enable_logging: true,
-      enable_metrics: false,
-    };
+    let config = NoOpConfig { enable_logging: true, enable_metrics: false };
 
     let serialized = serde_json::to_string(&config).unwrap();
     let deserialized: NoOpConfig = serde_json::from_str(&serialized).unwrap();

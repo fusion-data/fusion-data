@@ -142,10 +142,9 @@ impl ReadWriteFilesV1 {
     context: &NodeExecutionContext,
   ) -> Result<ExecutionDataMap, NodeExecutionError> {
     let node = context.current_node()?;
-    println!("[DEBUG] 开始执行 Write Files 节点 workflow_id:{}, node_name:{}, node_kind:{}",
-      context.workflow.id,
-      node.name,
-      node.kind
+    println!(
+      "[DEBUG] 开始执行 Write Files 节点 workflow_id:{}, node_name:{}, node_kind:{}",
+      context.workflow.id, node.name, node.kind
     );
 
     // 获取输入数据

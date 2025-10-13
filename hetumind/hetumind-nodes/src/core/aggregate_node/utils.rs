@@ -15,11 +15,7 @@ pub fn prepare_fields_array(fields: &str, field_name: &str) -> Vec<String> {
     return vec![];
   }
 
-  fields
-    .split(',')
-    .map(|s| s.trim().to_string())
-    .filter(|s| !s.is_empty())
-    .collect()
+  fields.split(',').map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).collect()
 }
 
 /// 获取字段值，支持点记号路径
@@ -76,11 +72,7 @@ pub fn extract_field_name(field_path: &str, disable_dot_notation: bool) -> Strin
   if disable_dot_notation {
     field_path.to_string()
   } else {
-    field_path
-      .split('.')
-      .last()
-      .unwrap_or(field_path)
-      .to_string()
+    field_path.split('.').last().unwrap_or(field_path).to_string()
   }
 }
 
@@ -161,17 +153,12 @@ pub struct FieldExistenceTracker {
 
 impl FieldExistenceTracker {
   pub fn new() -> Self {
-    Self {
-      not_found_fields: HashMap::new(),
-    }
+    Self { not_found_fields: HashMap::new() }
   }
 
   /// 记录字段是否存在
   pub fn record_field_existence(&mut self, field: &str, exists: bool) {
-    self.not_found_fields
-      .entry(field.to_string())
-      .or_insert_with(Vec::new)
-      .push(exists);
+    self.not_found_fields.entry(field.to_string()).or_insert_with(Vec::new).push(exists);
   }
 
   /// 获取完全不存在的字段列表
@@ -199,11 +186,7 @@ impl FieldExistenceTracker {
 }
 
 /// 处理字段值，根据配置过滤空值和合并列表
-pub fn process_field_value(
-  value: Option<Value>,
-  keep_missing: bool,
-  merge_lists: bool,
-) -> Option<Value> {
+pub fn process_field_value(value: Option<Value>, keep_missing: bool, merge_lists: bool) -> Option<Value> {
   match value {
     Some(mut val) => {
       if !keep_missing {
@@ -265,11 +248,7 @@ pub fn apply_field_filter(
       has_fields = true;
     }
 
-    if has_fields {
-      Some(Value::Object(filtered_obj))
-    } else {
-      None
-    }
+    if has_fields { Some(Value::Object(filtered_obj)) } else { None }
   } else {
     Some(item.clone())
   }
@@ -309,34 +288,16 @@ mod tests {
     });
 
     // 直接属性访问
-    assert_eq!(
-      get_field_value(&data, "name", true),
-      Some(json!("John"))
-    );
-    assert_eq!(
-      get_field_value(&data, "nonexistent", true),
-      None
-    );
+    assert_eq!(get_field_value(&data, "name", true), Some(json!("John")));
+    assert_eq!(get_field_value(&data, "nonexistent", true), None);
 
     // 点记号访问
-    assert_eq!(
-      get_field_value(&data, "profile.age", false),
-      Some(json!(30))
-    );
-    assert_eq!(
-      get_field_value(&data, "profile.address.city", false),
-      Some(json!("New York"))
-    );
-    assert_eq!(
-      get_field_value(&data, "profile.nonexistent", false),
-      None
-    );
+    assert_eq!(get_field_value(&data, "profile.age", false), Some(json!(30)));
+    assert_eq!(get_field_value(&data, "profile.address.city", false), Some(json!("New York")));
+    assert_eq!(get_field_value(&data, "profile.nonexistent", false), None);
 
     // 数组索引访问
-    assert_eq!(
-      get_field_value(&data, "tags.0", false),
-      Some(json!("tag1"))
-    );
+    assert_eq!(get_field_value(&data, "tags.0", false), Some(json!("tag1")));
   }
 
   #[test]
@@ -420,11 +381,7 @@ mod tests {
     );
 
     // 测试同时排除和包含
-    let filtered = apply_field_filter(
-      &item,
-      &["password".to_string()],
-      &["name".to_string(), "email".to_string()]
-    );
+    let filtered = apply_field_filter(&item, &["password".to_string()], &["name".to_string(), "email".to_string()]);
     assert_eq!(
       filtered,
       Some(json!({

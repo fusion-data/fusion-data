@@ -4,14 +4,14 @@ use async_trait::async_trait;
 use hetumind_core::{
   version::Version,
   workflow::{
-    ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition, NodeDefinitionBuilder,
-    NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, NodePropertyKindOptions,
+    ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition,
+    NodeDefinitionBuilder, NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind,
     OutputPortConfig, RegistrationError, make_execution_data_map,
   },
 };
 use serde_json::json;
 
-use super::{KeepStrategy, LimitConfig, utils::apply_limit_operation};
+use super::{KeepStrategy, LimitConfig};
 
 #[derive(Debug)]
 pub struct LimitV1 {
@@ -95,22 +95,17 @@ impl NodeExecutable for LimitV1 {
 
     // 获取限制配置
     let max_items: usize = node.get_parameter("max_items")?;
-    let keep_strategy: KeepStrategy = node
-      .get_optional_parameter("keep_strategy")
-      .unwrap_or(KeepStrategy::FirstItems);
+    let keep_strategy: KeepStrategy = node.get_optional_parameter("keep_strategy").unwrap_or(KeepStrategy::FirstItems);
     let warn_on_limit: bool = node.get_optional_parameter("warn_on_limit").unwrap_or(true);
 
-    let config = LimitConfig {
-      max_items,
-      keep_strategy,
-      warn_on_limit,
-    };
+    let config = LimitConfig { max_items, keep_strategy, warn_on_limit };
 
     // 验证配置
     if let Err(e) = config.validate() {
       log::error!("Limit 配置验证失败: {:?}", e);
       return Err(NodeExecutionError::ExecutionFailed {
         node_name: node.name.clone().into(),
+        message: Some(format!("Limit 配置验证失败: {:?}", e))
       });
     }
 

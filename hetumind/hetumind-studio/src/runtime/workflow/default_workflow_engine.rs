@@ -479,15 +479,15 @@ impl DefaultWorkflowEngine {
             }
           }
           Err(e) => {
-          log::error!("节点 {} 执行返回错误: {}", node_name, e);
-          NodeExecutionResult::builder()
-            .node_name(node_name.clone())
-            .output_data(ExecutionDataMap::default())
-            .status(NodeExecutionStatus::Failed)
-            .error(e.to_string())
-            .duration_ms(duration_ms)
-            .build()
-        },
+            log::error!("节点 {} 执行返回错误: {}", node_name, e);
+            NodeExecutionResult::builder()
+              .node_name(node_name.clone())
+              .output_data(ExecutionDataMap::default())
+              .status(NodeExecutionStatus::Failed)
+              .error(e.to_string())
+              .duration_ms(duration_ms)
+              .build()
+          }
         };
 
         all_results.insert(node_name.clone(), node_execution_result.output_data.clone());
@@ -602,15 +602,15 @@ impl DefaultWorkflowEngine {
             }
           }
           Err(e) => {
-          log::error!("节点 {} 执行返回错误: {}", node_name, e);
-          NodeExecutionResult::builder()
-            .node_name(node_name.clone())
-            .output_data(ExecutionDataMap::default())
-            .status(NodeExecutionStatus::Failed)
-            .error(e.to_string())
-            .duration_ms(duration_ms)
-            .build()
-        },
+            log::error!("节点 {} 执行返回错误: {}", node_name, e);
+            NodeExecutionResult::builder()
+              .node_name(node_name.clone())
+              .output_data(ExecutionDataMap::default())
+              .status(NodeExecutionStatus::Failed)
+              .error(e.to_string())
+              .duration_ms(duration_ms)
+              .build()
+          }
         };
 
         all_results.insert(node_name.clone(), node_execution_result.output_data.clone());

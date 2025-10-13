@@ -223,27 +223,18 @@ mod tests {
   #[test]
   fn test_field_to_aggregate_validation() {
     // 有效的字段配置
-    let valid_field = FieldToAggregate {
-      field_to_aggregate: "name".to_string(),
-      rename_field: false,
-      output_field_name: None,
-    };
+    let valid_field =
+      FieldToAggregate { field_to_aggregate: "name".to_string(), rename_field: false, output_field_name: None };
     assert!(valid_field.validate().is_ok());
 
     // 无效的空字段名
-    let invalid_field = FieldToAggregate {
-      field_to_aggregate: "".to_string(),
-      rename_field: false,
-      output_field_name: None,
-    };
+    let invalid_field =
+      FieldToAggregate { field_to_aggregate: "".to_string(), rename_field: false, output_field_name: None };
     assert!(invalid_field.validate().is_err());
 
     // 重命名但缺少输出字段名
-    let invalid_rename = FieldToAggregate {
-      field_to_aggregate: "name".to_string(),
-      rename_field: true,
-      output_field_name: None,
-    };
+    let invalid_rename =
+      FieldToAggregate { field_to_aggregate: "name".to_string(), rename_field: true, output_field_name: None };
     assert!(invalid_rename.validate().is_err());
 
     // 有效的重命名配置

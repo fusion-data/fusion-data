@@ -5,13 +5,13 @@ use hetumind_core::{
   version::Version,
   workflow::{
     ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition,
-    NodeDefinitionBuilder, NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty,
-    NodePropertyKind, OutputPortConfig, RegistrationError, make_execution_data_map,
+    NodeDefinitionBuilder, NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind,
+    OutputPortConfig, RegistrationError, make_execution_data_map,
   },
 };
 use serde_json::json;
 
-use super::{utils, NoOpConfig};
+use super::{NoOpConfig, utils};
 
 #[derive(Debug)]
 pub struct NoOpV1 {
@@ -44,11 +44,7 @@ impl NoOpV1 {
     }
 
     // 如果启用了性能指标，记录执行时间
-    let start_time = if config.enable_metrics {
-      Some(std::time::Instant::now())
-    } else {
-      None
-    };
+    let start_time = if config.enable_metrics { Some(std::time::Instant::now()) } else { None };
 
     // NoOp 的核心逻辑：原样传递输入数据
     let output_items = input_items.to_vec();
@@ -63,10 +59,7 @@ impl NoOpV1 {
     log::info!("NoOp 节点执行完成 - 输入项: {}, 输出项: {}", input_items.len(), output_items.len());
 
     // 返回原样的数据
-    Ok(make_execution_data_map(vec![(
-      ConnectionKind::Main,
-      vec![ExecutionDataItems::new_items(output_items)],
-    )]))
+    Ok(make_execution_data_map(vec![(ConnectionKind::Main, vec![ExecutionDataItems::new_items(output_items)])]))
   }
 }
 
@@ -108,20 +101,14 @@ impl NodeExecutable for NoOpV1 {
       input_data
     } else {
       log::warn!("NoOp 节点没有接收到输入数据");
-      return Ok(make_execution_data_map(vec![(
-        ConnectionKind::Main,
-        vec![ExecutionDataItems::new_items(vec![])],
-      )]));
+      return Ok(make_execution_data_map(vec![(ConnectionKind::Main, vec![ExecutionDataItems::new_items(vec![])])]));
     };
 
     // 获取配置参数
     let enable_logging: bool = node.get_optional_parameter("enable_logging").unwrap_or(false);
     let enable_metrics: bool = node.get_optional_parameter("enable_metrics").unwrap_or(false);
 
-    let config = NoOpConfig {
-      enable_logging,
-      enable_metrics,
-    };
+    let config = NoOpConfig { enable_logging, enable_metrics };
 
     log::info!("NoOp 配置: 日志记录={}, 性能监控={}", enable_logging, enable_metrics);
 

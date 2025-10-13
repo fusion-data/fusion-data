@@ -14,8 +14,7 @@ use rig::providers::{anthropic::Client as AnthropicClient, openai::Client as Ope
 use serde_json::json;
 
 use super::parameters::{
-  AnthropicModel, LlmConfig, LocalModel, ModelCapabilities, ModelClient, OpenAIModel, StreamingChunk,
-  StreamingMetadata, StreamingResponse, UsageStats,
+  AnthropicModel, LlmConfig, LocalModel, ModelCapabilities, ModelClient, OpenAIModel, StreamingResponse, UsageStats,
 };
 
 #[derive(Debug)]

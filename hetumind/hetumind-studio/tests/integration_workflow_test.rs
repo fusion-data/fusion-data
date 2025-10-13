@@ -1,10 +1,10 @@
 //! # Integration Workflow Test
 //!
-//! Complete integration test using ManualTriggerNode, IfNode, SetNode, and ReadWriteFilesNode
+//! Complete integration test using ManualTriggerNode, IfNode, EditFieldsNode, and ReadWriteFilesNode
 //! with DefaultWorkflowEngine. This test demonstrates:
 //! - Manual workflow triggering
 //! - Conditional branching with IfNode
-//! - Data transformation with SetNode
+//! - Data transformation with EditFieldsNode
 //! - File I/O operations with ReadWriteFilesNode
 //! - Complete workflow execution with DefaultWorkflowEngine
 
@@ -22,8 +22,10 @@ use hetumind_core::workflow::{
   WorkflowEngine, WorkflowEngineSetting, WorkflowExecutionError, WorkflowId, WorkflowMeta, WorkflowNode,
   WorkflowSettings, WorkflowStatus,
 };
-use hetumind_nodes::constants::{IF_NODE_KIND, MANUAL_TRIGGER_NODE_KIND, READ_WRITE_FILES_NODE_KIND, SET_NODE_KIND};
-use hetumind_nodes::core::{IfNode, ReadWriteFilesNode, SetNode};
+use hetumind_nodes::constants::{
+  EDIT_FIELDS_NODE_KIND, IF_NODE_KIND, MANUAL_TRIGGER_NODE_KIND, READ_WRITE_FILES_NODE_KIND,
+};
+use hetumind_nodes::core::{EditFieldsNode, IfNode, ReadWriteFilesNode};
 use hetumind_nodes::trigger::ManualTriggerNode;
 use hetumind_studio::runtime::{
   checkpoint::{CheckpointError, ExecutionCheckpoint},
@@ -116,18 +118,18 @@ fn create_integration_workflow() -> Result<Workflow, Box<dyn std::error::Error>>
     .parameters(create_if_node_parameters())
     .build();
 
-  // Create SetNode for data transformation (true branch)
+  // Create EditFieldsNode for data transformation (true branch)
   let set_node_true = WorkflowNode::builder()
     .name(NodeName::from("set_data_true"))
-    .kind(NodeKind::from(SET_NODE_KIND))
+    .kind(NodeKind::from(EDIT_FIELDS_NODE_KIND))
     .display_name("Set Data (True)")
     .parameters(create_set_node_parameters_true())
     .build();
 
-  // Create SetNode for data transformation (false branch)
+  // Create EditFieldsNode for data transformation (false branch)
   let set_node_false = WorkflowNode::builder()
     .name(NodeName::from("set_data_false"))
-    .kind(NodeKind::from(SET_NODE_KIND))
+    .kind(NodeKind::from(EDIT_FIELDS_NODE_KIND))
     .display_name("Set Data (False)")
     .parameters(create_set_node_parameters_false())
     .build();
@@ -214,7 +216,7 @@ fn create_if_node_parameters() -> ParameterMap {
   ParameterMap::new(params)
 }
 
-/// Create parameters for SetNode (true branch)
+/// Create parameters for EditFieldsNode (true branch)
 fn create_set_node_parameters_true() -> ParameterMap {
   let mut params = serde_json::Map::new();
 
@@ -243,7 +245,7 @@ fn create_set_node_parameters_true() -> ParameterMap {
   ParameterMap::new(params)
 }
 
-/// Create parameters for SetNode (false branch)
+/// Create parameters for EditFieldsNode (false branch)
 fn create_set_node_parameters_false() -> ParameterMap {
   let mut params = serde_json::Map::new();
 
@@ -309,7 +311,7 @@ async fn test_integration_workflow() -> Result<(), Box<dyn std::error::Error>> {
   let if_node = IfNode::new()?;
   node_registry.register_node(Arc::new(if_node))?;
 
-  let set_node = SetNode::new()?;
+  let set_node = EditFieldsNode::new()?;
   node_registry.register_node(Arc::new(set_node))?;
 
   let file_node = ReadWriteFilesNode::new()?;
@@ -378,7 +380,8 @@ async fn test_integration_workflow() -> Result<(), Box<dyn std::error::Error>> {
       assert_eq!(execution_result.nodes_result.len(), 5); // All 5 nodes should execute
 
       // Check for any failed nodes
-      let failed_nodes: Vec<_> = execution_result.nodes_result
+      let failed_nodes: Vec<_> = execution_result
+        .nodes_result
         .iter()
         .filter(|(_, result)| result.status == NodeExecutionStatus::Failed)
         .collect();
@@ -393,12 +396,20 @@ async fn test_integration_workflow() -> Result<(), Box<dyn std::error::Error>> {
         }
       }
 
-      assert_eq!(execution_result.status, ExecutionStatus::Success,
-        "工作流执行失败！失败的节点: {:?}", failed_nodes.iter().map(|(name, _)| name).collect::<Vec<_>>());
+      assert_eq!(
+        execution_result.status,
+        ExecutionStatus::Success,
+        "工作流执行失败！失败的节点: {:?}",
+        failed_nodes.iter().map(|(name, _)| name).collect::<Vec<_>>()
+      );
 
       // 验证所有节点都成功执行
-      assert!(failed_nodes.is_empty(), "存在 {} 个失败的节点: {:?}",
-        failed_nodes.len(), failed_nodes.iter().map(|(name, _)| name).collect::<Vec<_>>());
+      assert!(
+        failed_nodes.is_empty(),
+        "存在 {} 个失败的节点: {:?}",
+        failed_nodes.len(),
+        failed_nodes.iter().map(|(name, _)| name).collect::<Vec<_>>()
+      );
 
       // Print node execution details
       println!("\n📊 Node Execution Results:");
@@ -487,7 +498,7 @@ async fn test_integration_workflow_false_branch() -> Result<(), Box<dyn std::err
   let if_node = IfNode::new()?;
   node_registry.register_node(Arc::new(if_node))?;
 
-  let set_node = SetNode::new()?;
+  let set_node = EditFieldsNode::new()?;
   node_registry.register_node(Arc::new(set_node))?;
 
   let file_node = ReadWriteFilesNode::new()?;
@@ -527,7 +538,8 @@ async fn test_integration_workflow_false_branch() -> Result<(), Box<dyn std::err
   let result = workflow_engine.execute_workflow(trigger_data, &execution_context).await?;
 
   // Check for any failed nodes
-  let failed_nodes: Vec<_> = result.nodes_result
+  let failed_nodes: Vec<_> = result
+    .nodes_result
     .iter()
     .filter(|(_, node_result)| node_result.status == NodeExecutionStatus::Failed)
     .collect();
@@ -542,12 +554,20 @@ async fn test_integration_workflow_false_branch() -> Result<(), Box<dyn std::err
     }
   }
 
-  assert_eq!(result.status, ExecutionStatus::Success,
-    "False Branch 工作流执行失败！失败的节点: {:?}", failed_nodes.iter().map(|(name, _)| name).collect::<Vec<_>>());
+  assert_eq!(
+    result.status,
+    ExecutionStatus::Success,
+    "False Branch 工作流执行失败！失败的节点: {:?}",
+    failed_nodes.iter().map(|(name, _)| name).collect::<Vec<_>>()
+  );
 
   // 验证所有节点都成功执行
-  assert!(failed_nodes.is_empty(), "False Branch 测试中存在 {} 个失败的节点: {:?}",
-    failed_nodes.len(), failed_nodes.iter().map(|(name, _)| name).collect::<Vec<_>>());
+  assert!(
+    failed_nodes.is_empty(),
+    "False Branch 测试中存在 {} 个失败的节点: {:?}",
+    failed_nodes.len(),
+    failed_nodes.iter().map(|(name, _)| name).collect::<Vec<_>>()
+  );
 
   // Verify false branch was executed
   let set_false_result = result.nodes_result.get(&NodeName::from("set_data_false"));

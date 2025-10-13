@@ -6,7 +6,7 @@ use hetumind_core::types::JsonValue;
 use serde_json::Value;
 use std::collections::HashMap;
 
-use super::{IncludeStrategy, FieldToSplit, SplitOutConfig};
+use super::IncludeStrategy;
 
 /// 准备字段数组，将字符串或数组转换为标准化的字段列表
 pub fn prepare_fields_array(fields: &str, _field_name: &str) -> Vec<String> {
@@ -14,11 +14,7 @@ pub fn prepare_fields_array(fields: &str, _field_name: &str) -> Vec<String> {
     return vec![];
   }
 
-  fields
-    .split(',')
-    .map(|s| s.trim().to_string())
-    .filter(|s| !s.is_empty())
-    .collect()
+  fields.split(',').map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).collect()
 }
 
 /// 提取字段数据，支持点记号路径
@@ -99,17 +95,12 @@ pub struct MissingFieldsTracker {
 impl MissingFieldsTracker {
   /// 创建新的跟踪器
   pub fn new() -> Self {
-    Self {
-      not_found_fields: HashMap::new(),
-    }
+    Self { not_found_fields: HashMap::new() }
   }
 
   /// 记录字段是否存在
   pub fn record_field_existence(&mut self, field: &str, exists: bool) {
-    self.not_found_fields
-      .entry(field.to_string())
-      .or_insert_with(Vec::new)
-      .push(exists);
+    self.not_found_fields.entry(field.to_string()).or_insert_with(Vec::new).push(exists);
   }
 
   /// 获取完全缺失的字段列表
@@ -152,12 +143,10 @@ impl MissingFieldsTracker {
         FieldExistenceType::PartiallyFound
       };
 
-      summary.insert(field.clone(), FieldExistenceSummary {
-        total_items: total,
-        found_items: found,
-        missing_items: missing,
-        existence_type,
-      });
+      summary.insert(
+        field.clone(),
+        FieldExistenceSummary { total_items: total, found_items: found, missing_items: missing, existence_type },
+      );
     }
 
     summary
@@ -195,27 +184,15 @@ impl DataTypeAnalyzer {
   /// 分析数据类型
   pub fn analyze_data_type(data: &JsonValue) -> DataTypeInfo {
     match data {
-      Value::Null => DataTypeInfo {
-        base_type: BaseType::Null,
-        is_array: false,
-        is_object: false,
-        depth: 0,
-        size_estimate: 0,
-      },
-      Value::Bool(_) => DataTypeInfo {
-        base_type: BaseType::Boolean,
-        is_array: false,
-        is_object: false,
-        depth: 0,
-        size_estimate: 1,
-      },
-      Value::Number(_) => DataTypeInfo {
-        base_type: BaseType::Number,
-        is_array: false,
-        is_object: false,
-        depth: 0,
-        size_estimate: 8,
-      },
+      Value::Null => {
+        DataTypeInfo { base_type: BaseType::Null, is_array: false, is_object: false, depth: 0, size_estimate: 0 }
+      }
+      Value::Bool(_) => {
+        DataTypeInfo { base_type: BaseType::Boolean, is_array: false, is_object: false, depth: 0, size_estimate: 1 }
+      }
+      Value::Number(_) => {
+        DataTypeInfo { base_type: BaseType::Number, is_array: false, is_object: false, depth: 0, size_estimate: 8 }
+      }
       Value::String(s) => DataTypeInfo {
         base_type: BaseType::String,
         is_array: false,
@@ -225,23 +202,11 @@ impl DataTypeAnalyzer {
       },
       Value::Array(arr) => {
         let depth = Self::calculate_depth(data);
-        DataTypeInfo {
-          base_type: BaseType::Array,
-          is_array: true,
-          is_object: false,
-          depth,
-          size_estimate: arr.len(),
-        }
+        DataTypeInfo { base_type: BaseType::Array, is_array: true, is_object: false, depth, size_estimate: arr.len() }
       }
       Value::Object(obj) => {
         let depth = Self::calculate_depth(data);
-        DataTypeInfo {
-          base_type: BaseType::Object,
-          is_array: false,
-          is_object: true,
-          depth,
-          size_estimate: obj.len(),
-        }
+        DataTypeInfo { base_type: BaseType::Object, is_array: false, is_object: true, depth, size_estimate: obj.len() }
       }
     }
   }
@@ -327,12 +292,8 @@ impl DataTypeAnalyzer {
       Value::Bool(_) => 1,
       Value::Number(_) => 8,
       Value::String(s) => s.len(),
-      Value::Array(arr) => {
-        arr.iter().map(|v| Self::estimate_memory_size(v)).sum()
-      }
-      Value::Object(obj) => {
-        obj.iter().map(|(k, v)| k.len() + Self::estimate_memory_size(v)).sum()
-      }
+      Value::Array(arr) => arr.iter().map(|v| Self::estimate_memory_size(v)).sum(),
+      Value::Object(obj) => obj.iter().map(|(k, v)| k.len() + Self::estimate_memory_size(v)).sum(),
     }
   }
 }
@@ -455,7 +416,10 @@ impl SplitOperationValidator {
       warnings.push(ValidationIssue {
         severity: ValidationSeverity::Warning,
         code: "HIGH_MEMORY_USAGE".to_string(),
-        message: format!("This operation may use {}x more memory", (1.0 / memory_analysis.memory_efficiency_ratio) as u32),
+        message: format!(
+          "This operation may use {}x more memory",
+          (1.0 / memory_analysis.memory_efficiency_ratio) as u32
+        ),
         suggestion: Some("Consider processing data in batches or reducing the number of fields to include".to_string()),
       });
     }
@@ -506,8 +470,11 @@ pub enum ValidationSeverity {
 
 #[cfg(test)]
 mod tests {
-  use super::*;
   use serde_json::json;
+
+  use crate::core::split_out_node::{FieldToSplit, SplitOutConfig};
+
+  use super::*;
 
   #[test]
   fn test_prepare_fields_array() {
@@ -538,30 +505,15 @@ mod tests {
     });
 
     // 直接属性访问
-    assert_eq!(
-      extract_field_data(&data, "name", true),
-      Some(json!("John"))
-    );
-    assert_eq!(
-      extract_field_data(&data, "nonexistent", true),
-      None
-    );
+    assert_eq!(extract_field_data(&data, "name", true), Some(json!("John")));
+    assert_eq!(extract_field_data(&data, "nonexistent", true), None);
 
     // 点记号访问
-    assert_eq!(
-      extract_field_data(&data, "profile.age", false),
-      Some(json!(30))
-    );
-    assert_eq!(
-      extract_field_data(&data, "profile.address.city", false),
-      Some(json!("New York"))
-    );
+    assert_eq!(extract_field_data(&data, "profile.age", false), Some(json!(30)));
+    assert_eq!(extract_field_data(&data, "profile.address.city", false), Some(json!("New York")));
 
     // 数组索引访问
-    assert_eq!(
-      extract_field_data(&data, "tags.0", false),
-      Some(json!("tag1"))
-    );
+    assert_eq!(extract_field_data(&data, "tags.0", false), Some(json!("tag1")));
   }
 
   #[test]
@@ -655,10 +607,7 @@ mod tests {
     });
 
     let config = SplitOutConfig {
-      fields_to_split: vec![FieldToSplit {
-        field_to_split: "items".to_string(),
-        destination_field: None,
-      }],
+      fields_to_split: vec![FieldToSplit { field_to_split: "items".to_string(), destination_field: None }],
       include_strategy: IncludeStrategy::AllOtherFields,
       fields_to_include: vec![],
       disable_dot_notation: false,

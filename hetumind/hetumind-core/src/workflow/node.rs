@@ -353,6 +353,10 @@ pub struct NodeProperty {
   #[builder(default, setter(strip_option))]
   pub ignore_validation_during_execution: Option<bool>,
 
+  /// 是否是密码类型？
+  #[builder(default, setter(strip_option))]
+  pub password: Option<bool>,
+
   /// 扩展属性
   #[serde(default, skip_serializing_if = "serde_json::Map::is_empty")]
   #[builder(default)]
