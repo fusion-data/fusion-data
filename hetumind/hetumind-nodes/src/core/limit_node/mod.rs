@@ -8,7 +8,7 @@ use std::sync::Arc;
 use hetumind_core::{
   version::Version,
   workflow::{
-    Node, NodeDefinitionBuilder, NodeExecutionError, NodeExecutor, NodeGroupKind, NodeKind, RegistrationError,
+    Node, NodeDefinition, NodeExecutionError, NodeExecutor, NodeGroupKind, NodeKind, RegistrationError,
     ValidationError,
   },
 };
@@ -93,16 +93,11 @@ impl LimitNode {
     Ok(Self { default_version, executors })
   }
 
-  fn base() -> NodeDefinitionBuilder {
-    let mut base = NodeDefinitionBuilder::default();
-    base
-      .kind(NodeKind::from("hetumind_nodes::Limit"))
-      .groups(vec![NodeGroupKind::Transform])
-      .display_name("Limit")
-      .description("Restrict the number of items that pass through. Keeps first or last N items.")
-      .icon("scissors")
-      .version(Version::new(1, 0, 0));
-    base
+  fn base() -> NodeDefinition {
+    NodeDefinition::new("hetumind_nodes::Limit", Version::new(1, 0, 0), "Limit")
+      .add_group(NodeGroupKind::Transform)
+      .with_description("Restrict the number of items that pass through. Keeps first or last N items.")
+      .with_icon("scissors")
   }
 }
 

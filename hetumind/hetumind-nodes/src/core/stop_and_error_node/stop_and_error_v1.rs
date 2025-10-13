@@ -4,8 +4,8 @@ use async_trait::async_trait;
 use hetumind_core::{
   version::Version,
   workflow::{
-    ConnectionKind, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition, NodeDefinitionBuilder,
-    NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, RegistrationError,
+    ConnectionKind, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition, NodeExecutable,
+    NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, RegistrationError,
   },
 };
 use serde_json::json;
@@ -125,15 +125,13 @@ impl NodeExecutable for StopAndErrorV1 {
   }
 }
 
-impl TryFrom<NodeDefinitionBuilder> for StopAndErrorV1 {
+impl TryFrom<NodeDefinition> for StopAndErrorV1 {
   type Error = RegistrationError;
 
-  fn try_from(mut base: NodeDefinitionBuilder) -> Result<Self, Self::Error> {
-    base
-      .version(Version::new(1, 0, 0))
-      .inputs([InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build()])
-      .outputs([]) // Stop and Error 节点没有输出端口
-      .properties([
+  fn try_from(mut base: NodeDefinition) -> Result<Self, Self::Error> {
+    let definition = base
+      .add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build())
+      .add_property(
         NodeProperty::builder()
           .display_name("错误类型")
           .name("error_type")
@@ -156,6 +154,8 @@ impl TryFrom<NodeDefinitionBuilder> for StopAndErrorV1 {
             )),
           ])
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("错误消息")
           .name("error_message")
@@ -164,6 +164,8 @@ impl TryFrom<NodeDefinitionBuilder> for StopAndErrorV1 {
           .description("要抛出的错误消息（当错误类型为「错误消息」时使用）")
           .placeholder("输入错误消息...")
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("错误对象")
           .name("error_object")
@@ -172,10 +174,7 @@ impl TryFrom<NodeDefinitionBuilder> for StopAndErrorV1 {
           .description("结构化错误对象（当错误类型为「错误对象」时使用）")
           .placeholder("输入 JSON 格式的错误对象...")
           .build(),
-      ]);
-
-    let definition = base.build()?;
-
+      );
     Ok(Self { definition: Arc::new(definition) })
   }
 }

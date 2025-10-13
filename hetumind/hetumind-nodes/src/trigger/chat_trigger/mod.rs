@@ -11,12 +11,12 @@ use fusion_common::time::now_offset;
 use hetumind_core::types::JsonValue;
 use hetumind_core::version::Version;
 use hetumind_core::workflow::{
-  ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, Node, NodeDefinition, NodeDefinitionBuilder,
-  NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeExecutor, NodeGroupKind, NodeKind, NodeProperty,
-  RegistrationError, make_execution_data_map,
+  ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, Node, NodeDefinition, NodeExecutable,
+  NodeExecutionContext, NodeExecutionError, NodeExecutor, NodeGroupKind, NodeKind, NodeProperty, RegistrationError,
+  make_execution_data_map,
 };
 
-use crate::constants::CHAT_TRIGGERN_NODE_KIND;
+use crate::constants::CHAT_TRIGGERN_NODE_KIND as CHAT_TRIGGER_NODE_KIND;
 
 // 聊天消息结构
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -62,11 +62,10 @@ pub struct ChatTriggerNodeV1 {
   definition: Arc<NodeDefinition>,
 }
 
-impl TryFrom<NodeDefinitionBuilder> for ChatTriggerNodeV1 {
+impl TryFrom<NodeDefinition> for ChatTriggerNodeV1 {
   type Error = RegistrationError;
 
-  fn try_from(builder: NodeDefinitionBuilder) -> Result<Self, Self::Error> {
-    let definition = builder.build()?;
+  fn try_from(definition: NodeDefinition) -> Result<Self, Self::Error> {
     Ok(Self { definition: Arc::new(definition) })
   }
 }
@@ -149,17 +148,11 @@ impl ChatTriggerNode {
   }
 }
 
-fn create_base() -> NodeDefinitionBuilder {
-  let mut base = NodeDefinitionBuilder::default();
-  base
-    .kind(CHAT_TRIGGERN_NODE_KIND)
-    .version(Version::new(1, 0, 0))
-    .groups([NodeGroupKind::Trigger])
-    .display_name("Chat Trigger")
-    .description("Use the Chat Trigger node when building AI workflows for chatbots and other chat interfaces.")
-    .outputs(vec![])
-    .properties(vec![
-      // 聊天接口类型
+fn create_base() -> NodeDefinition {
+  NodeDefinition::new(CHAT_TRIGGER_NODE_KIND, Version::new(1, 0, 0), "Chat Trigger")
+    .add_group(NodeGroupKind::Trigger)
+    .with_description("Use the Chat Trigger node when building AI workflows for chatbots and other chat interfaces.")
+    .add_property(
       NodeProperty::builder()
         .display_name("Chat Interface")
         .name("chatInterface")
@@ -193,7 +186,8 @@ fn create_base() -> NodeDefinitionBuilder {
         .required(true)
         .description("The type of chat interface to use")
         .build(),
-      // 会话管理
+    )
+    .add_property(
       NodeProperty::builder()
         .display_name("Session Timeout (minutes)")
         .name("sessionTimeout")
@@ -202,6 +196,8 @@ fn create_base() -> NodeDefinitionBuilder {
         .description("Session timeout in minutes")
         .value(JsonValue::Number(serde_json::Number::from(30)))
         .build(),
+    )
+    .add_property(
       NodeProperty::builder()
         .display_name("Max Session Length")
         .name("maxSessionLength")
@@ -210,6 +206,8 @@ fn create_base() -> NodeDefinitionBuilder {
         .description("Maximum number of messages in a session")
         .value(JsonValue::Number(serde_json::Number::from(50)))
         .build(),
+    )
+    .add_property(
       NodeProperty::builder()
         .display_name("Persist Session")
         .name("persistSession")
@@ -218,7 +216,8 @@ fn create_base() -> NodeDefinitionBuilder {
         .description("Whether to persist session data")
         .value(JsonValue::Bool(true))
         .build(),
-      // 响应选项
+    )
+    .add_property(
       NodeProperty::builder()
         .display_name("Response Format")
         .name("responseFormat")
@@ -246,6 +245,8 @@ fn create_base() -> NodeDefinitionBuilder {
         .required(true)
         .description("Format of the response")
         .build(),
+    )
+    .add_property(
       NodeProperty::builder()
         .display_name("Immediate Response")
         .name("immediateResponse")
@@ -254,6 +255,8 @@ fn create_base() -> NodeDefinitionBuilder {
         .description("Whether to send an immediate response")
         .value(JsonValue::Bool(false))
         .build(),
+    )
+    .add_property(
       NodeProperty::builder()
         .display_name("Response Template")
         .name("responseTemplate")
@@ -262,7 +265,8 @@ fn create_base() -> NodeDefinitionBuilder {
         .description("Template for immediate responses")
         .value(JsonValue::String("{\"status\": \"received\", \"chatId\": \"{{chatId}}\"}".to_string()))
         .build(),
-      // 安全配置
+    )
+    .add_property(
       NodeProperty::builder()
         .display_name("Authentication")
         .name("authentication")
@@ -290,7 +294,8 @@ fn create_base() -> NodeDefinitionBuilder {
         .required(true)
         .description("Authentication method for the chat interface")
         .build(),
-      // 高级选项
+    )
+    .add_property(
       NodeProperty::builder()
         .display_name("Include Metadata")
         .name("includeMetadata")
@@ -299,8 +304,7 @@ fn create_base() -> NodeDefinitionBuilder {
         .description("Whether to include metadata in the output")
         .value(JsonValue::Bool(true))
         .build(),
-    ]);
-  base
+    )
 }
 
 #[cfg(test)]
@@ -328,7 +332,7 @@ mod tests {
     let executor = &node.node_executors()[0];
     let definition = executor.definition();
 
-    assert_eq!(definition.display_name, "Chat Trigger");
+    assert_eq!(definition.display_name.as_str(), "Chat Trigger");
     assert!(definition.description.as_deref().is_some_and(|s| s.contains("chatbots")));
     assert_eq!(definition.groups, vec![NodeGroupKind::Trigger]);
   }

@@ -16,7 +16,7 @@ use std::sync::Arc;
 
 use hetumind_core::{
   version::Version,
-  workflow::{Node, NodeExecutor, NodeGroupKind, NodeKind, RegistrationError},
+  workflow::{Node, NodeDefinition, NodeExecutor, NodeGroupKind, NodeKind, RegistrationError},
 };
 use serde::{Deserialize, Serialize};
 
@@ -261,16 +261,11 @@ impl SendEmailNode {
     Ok(Self { default_version, executors })
   }
 
-  fn base() -> hetumind_core::workflow::NodeDefinitionBuilder {
-    let mut base = hetumind_core::workflow::NodeDefinitionBuilder::default();
-    base
-      .kind(NodeKind::from(SEND_EMAIL_NODE_KIND))
-      .groups(vec![NodeGroupKind::Output])
-      .display_name("Send Email")
-      .description("Sends emails via SMTP. Supports text/HTML formats, attachments, and multiple recipients.")
-      .icon("mail")
-      .version(Version::new(1, 0, 0));
-    base
+  fn base() -> NodeDefinition {
+    NodeDefinition::new(SEND_EMAIL_NODE_KIND, Version::new(1, 0, 0), "Send Email")
+      .add_group(NodeGroupKind::Output)
+      .with_description("Sends emails via SMTP. Supports text/HTML formats, attachments, and multiple recipients.")
+      .with_icon("mail")
   }
 }
 

@@ -1,23 +1,17 @@
 use hetumind_core::{
   types::JsonValue,
   version::Version,
-  workflow::{NodeDefinitionBuilder, NodeGroupKind, NodeProperty, NodePropertyKind},
+  workflow::{NodeDefinition, NodeGroupKind, NodeProperty, NodePropertyKind},
 };
 use serde_json::json;
 
 use crate::constants::SCHEDULE_TRIGGER_NODE_KIND;
 
-pub fn create_base() -> NodeDefinitionBuilder {
-  let mut base = NodeDefinitionBuilder::default();
-  base
-    .kind(SCHEDULE_TRIGGER_NODE_KIND)
-    .version(Version::new(1, 0, 0))
-    .groups([NodeGroupKind::Trigger])
-    .display_name("Schedule Trigger")
-    .description("Triggers workflow execution on a scheduled basis")
-    .outputs(vec![])
-    .properties(vec![
-      // 调度模式选择
+pub fn create_base() -> NodeDefinition {
+  NodeDefinition::new(SCHEDULE_TRIGGER_NODE_KIND, Version::new(1, 0, 0), "Schedule Trigger")
+    .add_group(NodeGroupKind::Trigger)
+    .with_description("Triggers workflow execution on a scheduled basis")
+    .add_property(
       NodeProperty::builder()
         .display_name("Schedule Mode")
         .name("schedule_mode")
@@ -45,7 +39,8 @@ pub fn create_base() -> NodeDefinitionBuilder {
         .required(true)
         .description("The scheduling mode to use")
         .build(),
-      // Cron 表达式
+    )
+    .add_property(
       NodeProperty::builder()
         .display_name("Cron Expression")
         .name("cron_expression")
@@ -55,7 +50,8 @@ pub fn create_base() -> NodeDefinitionBuilder {
         .hint("支持标准 cron 语法：分 时 日 月 周")
         .placeholder("0 */6 * * *")
         .build(),
-      // 间隔模式
+    )
+    .add_property(
       NodeProperty::builder()
         .display_name("Interval")
         .name("interval")
@@ -63,7 +59,8 @@ pub fn create_base() -> NodeDefinitionBuilder {
         .required(false)
         .description("Predefined interval for scheduling (e.g., '30m', '1h', '2d')")
         .build(),
-      // 每日时间
+    )
+    .add_property(
       NodeProperty::builder()
         .display_name("Daily Time")
         .name("daily_time")
@@ -73,7 +70,8 @@ pub fn create_base() -> NodeDefinitionBuilder {
         .hint("24小时制格式 (HH:MM:ss)")
         .placeholder("13:30:00")
         .build(),
-      // 时区
+    )
+    .add_property(
       NodeProperty::builder()
         .display_name("Timezone")
         .name("timezone")
@@ -102,7 +100,8 @@ pub fn create_base() -> NodeDefinitionBuilder {
         ])
         .description("Timezone for scheduling")
         .build(),
-      // 启动延迟
+    )
+    .add_property(
       NodeProperty::builder()
         .display_name("Start Delay")
         .name("start_delay")
@@ -110,7 +109,8 @@ pub fn create_base() -> NodeDefinitionBuilder {
         .required(false)
         .description("Delay before first execution (e.g., '30s', '1m', '2h')")
         .build(),
-      // 最大执行次数
+    )
+    .add_property(
       NodeProperty::builder()
         .display_name("Max Executions")
         .name("max_executions")
@@ -119,7 +119,8 @@ pub fn create_base() -> NodeDefinitionBuilder {
         .description("Maximum number of executions (0 = unlimited)")
         .value(JsonValue::Number(serde_json::Number::from(0)))
         .build(),
-      // 错误重试次数
+    )
+    .add_property(
       NodeProperty::builder()
         .display_name("Retry Count")
         .name("retry_count")
@@ -128,7 +129,8 @@ pub fn create_base() -> NodeDefinitionBuilder {
         .description("Number of retries on failure (0 = no retry)")
         .value(JsonValue::Number(serde_json::Number::from(3)))
         .build(),
-      // 重试间隔
+    )
+    .add_property(
       NodeProperty::builder()
         .display_name("Retry Interval")
         .name("retry_interval")
@@ -168,7 +170,8 @@ pub fn create_base() -> NodeDefinitionBuilder {
         ])
         .description("Interval between retry attempts")
         .build(),
-      // 启用状态
+    )
+    .add_property(
       NodeProperty::builder()
         .display_name("Enabled")
         .name("enabled")
@@ -177,6 +180,5 @@ pub fn create_base() -> NodeDefinitionBuilder {
         .description("Whether the schedule trigger is enabled")
         .value(JsonValue::Bool(true))
         .build(),
-    ]);
-  base
+    )
 }

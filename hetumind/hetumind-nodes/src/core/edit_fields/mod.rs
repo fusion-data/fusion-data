@@ -38,7 +38,7 @@ use std::sync::Arc;
 
 use hetumind_core::{
   version::Version,
-  workflow::{Node, NodeDefinitionBuilder, NodeExecutor, NodeGroupKind, NodeKind, RegistrationError},
+  workflow::{Node, NodeDefinition, NodeExecutor, NodeGroupKind, NodeKind, RegistrationError},
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -381,16 +381,13 @@ impl EditFieldsNode {
     Ok(Self { default_version, executors })
   }
 
-  fn base() -> NodeDefinitionBuilder {
-    let mut base = NodeDefinitionBuilder::default();
-    base
-      .kind(NodeKind::from(EDIT_FIELDS_NODE_KIND))
-      .groups(vec![NodeGroupKind::Transform, NodeGroupKind::Input, NodeGroupKind::Output])
-      .display_name("Edit Fields")
-      .description("Edit, modify, or delete data fields. Supports both manual mapping and JSON modes with advanced output control options.")
-      .icon("edit")
-      .version(Version::new(1, 0, 0));
-    base
+  fn base() -> NodeDefinition {
+    NodeDefinition::new(EDIT_FIELDS_NODE_KIND, Version::new(1, 0, 0), "Edit Fields")
+      .add_group(NodeGroupKind::Transform)
+      .add_group(NodeGroupKind::Input)
+      .add_group(NodeGroupKind::Output)
+      .with_description("Edit, modify, or delete data fields. Supports both manual mapping and JSON modes with advanced output control options.")
+      .with_icon("edit")
   }
 }
 

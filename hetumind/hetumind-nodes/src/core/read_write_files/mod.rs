@@ -7,7 +7,7 @@ use std::sync::Arc;
 
 use hetumind_core::{
   version::Version,
-  workflow::{Node, NodeDefinitionBuilder, NodeExecutor, NodeGroupKind, NodeKind, RegistrationError},
+  workflow::{Node, NodeDefinition, NodeExecutor, NodeGroupKind, NodeKind, RegistrationError},
 };
 use serde::{Deserialize, Serialize};
 
@@ -48,16 +48,12 @@ impl ReadWriteFilesNode {
     Ok(Self { default_version, executors })
   }
 
-  fn base() -> NodeDefinitionBuilder {
-    let mut base = NodeDefinitionBuilder::default();
-    base
-      .kind(NodeKind::from(READ_WRITE_FILES_NODE_KIND))
-      .groups(vec![NodeGroupKind::Input, NodeGroupKind::Output])
-      .display_name("Read/Write Files")
-      .description("从磁盘读取文件或将文件写入磁盘。支持多种文件格式和操作模式。")
-      .icon("file")
-      .version(Version::new(1, 0, 0));
-    base
+  fn base() -> NodeDefinition {
+    NodeDefinition::new(READ_WRITE_FILES_NODE_KIND, Version::new(1, 0, 0), "Read/Write Files")
+      .add_group(NodeGroupKind::Input)
+      .add_group(NodeGroupKind::Output)
+      .with_description("从磁盘读取文件或将文件写入磁盘。支持多种文件格式和操作模式。")
+      .with_icon("file")
   }
 }
 

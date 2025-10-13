@@ -9,6 +9,12 @@ type = "postgres"
 max_pool_size = 10
 visibility_timeout = "30s"
 
+# 工作流全局配置
+[hetumind.workflow]
+error_handling_strategy = "StopOnFirstError"
+execution_mode = 1                           # Local 单机执行模式
+execution_timeout_ms = 7200000               # 2小时
+
 # 添加工作流引擎配置
 [hetumind.workflow.engine]
 max_concurrent_executions = 10
@@ -16,16 +22,18 @@ node_timeout_seconds = 30
 workflow_timeout_seconds = 300
 memory_limit_mb = 1024
 
-# 工作流全局配置
-[hetumind.workflow]
-error_handling_strategy = "StopOnFirstError"
-execution_mode = 1                           # Local 单机执行模式
-execution_timeout_ms = 7200000               # 2小时
-
-
 [hetumind.workflow.engine.retry_config]
 max_retries = 3
 retry_interval_seconds = 10
+base_delay_ms = 1000
+max_delay_ms = 60000
+backoff_multiplier = 2.0
+retryable_errors = ["timeout", "network", "resource_unavailable"]
+
+[hetumind.workflow.engine.resource_management]
+cpu_core_based_scaling = true
+deadlock_detection_enabled = true
+resource_allocation_strategy = "Adaptive"
 
 [hetumind.binary_storage]
 kind = "memory"

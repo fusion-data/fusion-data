@@ -7,7 +7,7 @@ use std::sync::Arc;
 
 use hetumind_core::{
   version::Version,
-  workflow::{Node, NodeDefinitionBuilder, NodeExecutor, NodeGroupKind, NodeKind, RegistrationError, ValidationError},
+  workflow::{Node, NodeDefinition, NodeExecutor, NodeGroupKind, NodeKind, RegistrationError, ValidationError},
 };
 use serde::{Deserialize, Serialize};
 
@@ -399,16 +399,12 @@ impl SummarizeNode {
     Ok(Self { default_version, executors })
   }
 
-  fn base() -> NodeDefinitionBuilder {
-    let mut base = NodeDefinitionBuilder::default();
-    base
-      .kind(NodeKind::from(SUMMARIZE_NODE_KIND))
-      .groups(vec![NodeGroupKind::Transform, NodeGroupKind::Input])
-      .display_name("Summarize")
-      .description("对数据进行聚合计算和统计。支持多种聚合操作、分组和输出格式。")
-      .icon("calculator")
-      .version(Version::new(1, 0, 0));
-    base
+  fn base() -> NodeDefinition {
+    NodeDefinition::new(SUMMARIZE_NODE_KIND, Version::new(1, 0, 0), "Summarize")
+      .add_group(NodeGroupKind::Transform)
+      .add_group(NodeGroupKind::Input)
+      .with_description("对数据进行聚合计算和统计。支持多种聚合操作、分组和输出格式。")
+      .with_icon("calculator")
   }
 }
 

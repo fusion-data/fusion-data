@@ -5,7 +5,7 @@ use hetumind_core::{
   types::JsonValue,
   version::Version,
   workflow::{
-    ConnectionKind, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition, NodeDefinitionBuilder,
+    ConnectionKind, ExecutionDataItems, ExecutionDataMap, FilterTypeOptions, InputPortConfig, NodeDefinition,
     NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, NodePropertyKindOptions,
     OutputPortConfig, RegistrationError, make_execution_data_map,
   },
@@ -265,18 +265,15 @@ impl NodeExecutable for SwitchV1 {
   }
 }
 
-impl TryFrom<NodeDefinitionBuilder> for SwitchV1 {
+impl TryFrom<NodeDefinition> for SwitchV1 {
   type Error = RegistrationError;
 
-  fn try_from(mut base: NodeDefinitionBuilder) -> Result<Self, Self::Error> {
-    base
-      .version(Version::new(1, 0, 0))
-      .inputs([InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build()])
-      .outputs([
-        OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output 0").build(),
-        OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output 1").build(),
-      ])
-      .properties([
+  fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
+    let definition = base
+      .add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build())
+      .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output 0").build())
+      .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output 1").build())
+      .add_property(
         NodeProperty::builder()
           .display_name("模式")
           .name("mode")
@@ -294,6 +291,8 @@ impl TryFrom<NodeDefinitionBuilder> for SwitchV1 {
             )),
           ])
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("规则")
           .name("rules")
@@ -303,14 +302,12 @@ impl TryFrom<NodeDefinitionBuilder> for SwitchV1 {
           .placeholder("添加规则...")
           .kind_options(
             NodePropertyKindOptions::builder()
-              .filter(
-                hetumind_core::workflow::FilterTypeOptions::builder()
-                  .case_sensitive(json!("={{!$parameter.options.ignoreCase}}"))
-                  .build(),
-              )
+              .filter(FilterTypeOptions::builder().case_sensitive(json!("={{!$parameter.options.ignoreCase}}")).build())
               .build(),
           )
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("输出数量")
           .name("numberOutputs")
@@ -319,6 +316,8 @@ impl TryFrom<NodeDefinitionBuilder> for SwitchV1 {
           .description("输出端口数量（Expression 模式）")
           .value(json!(2))
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("输出表达式")
           .name("outputExpression")
@@ -327,6 +326,8 @@ impl TryFrom<NodeDefinitionBuilder> for SwitchV1 {
           .description("用于计算输出索引的表达式（Expression 模式）")
           .placeholder("{{ $json.index }}")
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("选项")
           .name("options")
@@ -354,10 +355,7 @@ impl TryFrom<NodeDefinitionBuilder> for SwitchV1 {
             )),
           ])
           .build(),
-      ]);
-
-    let definition = base.build()?;
-
+      );
     Ok(Self { definition: Arc::new(definition) })
   }
 }

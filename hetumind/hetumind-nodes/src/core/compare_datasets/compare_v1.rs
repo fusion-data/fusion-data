@@ -1,13 +1,10 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use hetumind_core::{
-  version::Version,
-  workflow::{
-    ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition,
-    NodeDefinitionBuilder, NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind,
-    OutputPortConfig, RegistrationError, make_execution_data_map,
-  },
+use hetumind_core::workflow::{
+  ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition, NodeExecutable,
+  NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig, RegistrationError,
+  make_execution_data_map,
 };
 use serde_json::json;
 
@@ -284,23 +281,18 @@ impl NodeExecutable for CompareDatasetsV1 {
   }
 }
 
-impl TryFrom<NodeDefinitionBuilder> for CompareDatasetsV1 {
+impl TryFrom<NodeDefinition> for CompareDatasetsV1 {
   type Error = RegistrationError;
 
-  fn try_from(mut base: NodeDefinitionBuilder) -> Result<Self, Self::Error> {
-    base
-      .version(Version::new(1, 0, 0))
-      .inputs([
-        InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input Dataset A").build(),
-        InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input Dataset B").build(),
-      ])
-      .outputs([
-        OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("In A Only").build(),
-        OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("In B Only").build(),
-        OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Same").build(),
-        OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Different").build(),
-      ])
-      .properties([
+  fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
+    let definition = base
+      .add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input Dataset A").build())
+      .add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input Dataset B").build())
+      .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("In A Only").build())
+      .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("In B Only").build())
+      .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Same").build())
+      .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Different").build())
+      .add_property(
         // Match Fields Configuration
         NodeProperty::builder()
           .display_name("Match Fields".to_string())
@@ -310,6 +302,8 @@ impl TryFrom<NodeDefinitionBuilder> for CompareDatasetsV1 {
           .description("Fields to match datasets on".to_string())
           .value(json!([]))
           .build(),
+      )
+      .add_property(
         // Conflict Resolution Strategy
         NodeProperty::builder()
           .display_name("Conflict Resolution".to_string())
@@ -340,6 +334,8 @@ impl TryFrom<NodeDefinitionBuilder> for CompareDatasetsV1 {
             )),
           ])
           .build(),
+      )
+      .add_property(
         // Additional Options
         NodeProperty::builder()
           .display_name("Include All Fields".to_string())
@@ -349,6 +345,8 @@ impl TryFrom<NodeDefinitionBuilder> for CompareDatasetsV1 {
           .description("Include all fields in output results".to_string())
           .value(json!(true))
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Enable Fuzzy Matching".to_string())
           .name("enable_fuzzy_matching")
@@ -357,6 +355,8 @@ impl TryFrom<NodeDefinitionBuilder> for CompareDatasetsV1 {
           .description("Enable fuzzy matching for all fields".to_string())
           .value(json!(false))
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Global Fuzzy Threshold".to_string())
           .name("fuzzy_threshold")
@@ -365,6 +365,8 @@ impl TryFrom<NodeDefinitionBuilder> for CompareDatasetsV1 {
           .description("Global threshold for fuzzy matching (0.0-1.0)".to_string())
           .value(json!(0.8))
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Max Differences".to_string())
           .name("max_differences")
@@ -373,6 +375,8 @@ impl TryFrom<NodeDefinitionBuilder> for CompareDatasetsV1 {
           .description("Maximum number of differences to include in output".to_string())
           .value(json!(null))
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Sort Results".to_string())
           .name("sort_results")
@@ -381,6 +385,8 @@ impl TryFrom<NodeDefinitionBuilder> for CompareDatasetsV1 {
           .description("Sort the output results".to_string())
           .value(json!(false))
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Sort Field".to_string())
           .name("sort_field")
@@ -389,9 +395,7 @@ impl TryFrom<NodeDefinitionBuilder> for CompareDatasetsV1 {
           .description("Field to sort results by".to_string())
           .value(json!(""))
           .build(),
-      ]);
-
-    let definition = base.build()?;
+      );
 
     Ok(Self { definition: Arc::new(definition) })
   }

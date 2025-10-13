@@ -5,8 +5,8 @@ use hetumind_core::{
   version::Version,
   workflow::{
     ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition,
-    NodeDefinitionBuilder, NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind,
-    OutputPortConfig, RegistrationError, make_execution_data_map,
+    NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig,
+    RegistrationError, make_execution_data_map,
   },
 };
 use serde_json::json;
@@ -134,15 +134,14 @@ impl NodeExecutable for LimitV1 {
   }
 }
 
-impl TryFrom<NodeDefinitionBuilder> for LimitV1 {
+impl TryFrom<NodeDefinition> for LimitV1 {
   type Error = RegistrationError;
 
-  fn try_from(mut base: NodeDefinitionBuilder) -> Result<Self, Self::Error> {
-    base
-      .version(Version::new(1, 0, 0))
-      .inputs([InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build()])
-      .outputs([OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build()])
-      .properties([
+  fn try_from(mut base: NodeDefinition) -> Result<Self, Self::Error> {
+    let definition = base
+      .add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build())
+      .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build())
+      .add_property(
         NodeProperty::builder()
           .display_name("Max Items".to_string())
           .name("max_items")
@@ -152,6 +151,8 @@ impl TryFrom<NodeDefinitionBuilder> for LimitV1 {
           .placeholder("1".to_string())
           .value(json!(1))
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Keep".to_string())
           .name("keep_strategy")
@@ -173,8 +174,9 @@ impl TryFrom<NodeDefinitionBuilder> for LimitV1 {
               NodePropertyKind::String,
             )),
           ])
-          .placeholder("".to_string())
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Warn on Limit".to_string())
           .name("warn_on_limit")
@@ -183,10 +185,7 @@ impl TryFrom<NodeDefinitionBuilder> for LimitV1 {
           .description("Whether to log a warning when the limit is applied".to_string())
           .value(json!(true))
           .build(),
-      ]);
-
-    let definition = base.build()?;
-
+      );
     Ok(Self { definition: Arc::new(definition) })
   }
 }

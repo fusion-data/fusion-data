@@ -7,7 +7,7 @@ use std::sync::Arc;
 
 use hetumind_core::{
   version::Version,
-  workflow::{Node, NodeDefinitionBuilder, NodeExecutor, NodeGroupKind, NodeKind, RegistrationError},
+  workflow::{Node, NodeDefinition, NodeExecutor, NodeGroupKind, NodeKind, RegistrationError},
 };
 use serde::{Deserialize, Serialize};
 
@@ -102,16 +102,13 @@ impl LoopOverItemsNode {
     Ok(Self { default_version, executors })
   }
 
-  fn base() -> NodeDefinitionBuilder {
-    let mut base = NodeDefinitionBuilder::default();
-    base
-      .kind(NodeKind::from(LOOP_OVER_ITEMS_NODE_KIND))
-      .groups(vec![NodeGroupKind::Transform, NodeGroupKind::Input, NodeGroupKind::Output])
-      .display_name("Loop Over Items")
-      .description("对数据集合进行迭代处理。支持多种循环模式和批量处理。")
-      .icon("repeat")
-      .version(Version::new(1, 0, 0));
-    base
+  fn base() -> NodeDefinition {
+    NodeDefinition::new(LOOP_OVER_ITEMS_NODE_KIND, Version::new(1, 0, 0), "Loop Over Items")
+      .add_group(NodeGroupKind::Transform)
+      .add_group(NodeGroupKind::Input)
+      .add_group(NodeGroupKind::Output)
+      .with_description("对数据集合进行迭代处理。支持多种循环模式和批量处理。")
+      .with_icon("repeat")
   }
 }
 

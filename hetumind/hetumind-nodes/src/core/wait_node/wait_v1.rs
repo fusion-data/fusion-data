@@ -6,8 +6,8 @@ use hetumind_core::{
   version::Version,
   workflow::{
     ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition,
-    NodeDefinitionBuilder, NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind,
-    OutputPortConfig, RegistrationError, make_execution_data_map,
+    NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig,
+    RegistrationError, make_execution_data_map,
   },
 };
 use serde_json::json;
@@ -342,15 +342,14 @@ impl NodeExecutable for WaitV1 {
   }
 }
 
-impl TryFrom<NodeDefinitionBuilder> for WaitV1 {
+impl TryFrom<NodeDefinition> for WaitV1 {
   type Error = RegistrationError;
 
-  fn try_from(mut base: NodeDefinitionBuilder) -> Result<Self, Self::Error> {
-    base
-      .version(Version::new(1, 0, 0))
-      .inputs([InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build()])
-      .outputs([OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build()])
-      .properties([
+  fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
+    let definition = base
+      .add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build())
+      .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build())
+      .add_property(
         // 等待模式配置
         NodeProperty::builder()
           .display_name("等待模式")
@@ -381,6 +380,8 @@ impl TryFrom<NodeDefinitionBuilder> for WaitV1 {
             Box::new(NodeProperty::new_option("表单提交", "form", json!(WaitMode::Form), NodePropertyKind::String)),
           ])
           .build(),
+      )
+      .add_property(
         // 时间间隔配置
         NodeProperty::builder()
           .display_name("等待时间")
@@ -390,6 +391,8 @@ impl TryFrom<NodeDefinitionBuilder> for WaitV1 {
           .description("等待的时间数量")
           .placeholder("输入等待时间...")
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("时间单位")
           .name("time_unit")
@@ -404,6 +407,8 @@ impl TryFrom<NodeDefinitionBuilder> for WaitV1 {
             Box::new(NodeProperty::new_option("天", "days", json!(TimeUnit::Days), NodePropertyKind::String)),
           ])
           .build(),
+      )
+      .add_property(
         // 特定时间配置
         NodeProperty::builder()
           .display_name("特定时间")
@@ -413,6 +418,8 @@ impl TryFrom<NodeDefinitionBuilder> for WaitV1 {
           .description("等待到指定的日期和时间 (RFC3339 格式)")
           .placeholder("2024-12-31T23:59:59Z")
           .build(),
+      )
+      .add_property(
         // Webhook 配置
         NodeProperty::builder()
           .display_name("Webhook HTTP 方法")
@@ -429,6 +436,8 @@ impl TryFrom<NodeDefinitionBuilder> for WaitV1 {
             Box::new(NodeProperty::new_option("DELETE", "delete", json!(HttpMethod::Delete), NodePropertyKind::String)),
           ])
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Webhook 响应模式")
           .name("webhook_response_mode")
@@ -452,6 +461,8 @@ impl TryFrom<NodeDefinitionBuilder> for WaitV1 {
             Box::new(NodeProperty::new_option("不响应", "never", json!(ResponseMode::Never), NodePropertyKind::String)),
           ])
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Webhook 后缀")
           .name("webhook_suffix")
@@ -460,6 +471,8 @@ impl TryFrom<NodeDefinitionBuilder> for WaitV1 {
           .description("Webhook URL 的后缀")
           .placeholder("webhook-suffix")
           .build(),
+      )
+      .add_property(
         // 表单配置
         NodeProperty::builder()
           .display_name("表单标题")
@@ -467,8 +480,10 @@ impl TryFrom<NodeDefinitionBuilder> for WaitV1 {
           .kind(NodePropertyKind::String)
           .required(false)
           .description("表单的标题")
-          .placeholder("请填写表单")
+          .placeholder("请填写表单标题")
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("表单描述")
           .name("form_description")
@@ -477,6 +492,8 @@ impl TryFrom<NodeDefinitionBuilder> for WaitV1 {
           .description("表单的描述信息")
           .placeholder("请填写以下信息")
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("重定向 URL")
           .name("form_redirect_url")
@@ -485,6 +502,8 @@ impl TryFrom<NodeDefinitionBuilder> for WaitV1 {
           .description("表单提交后重定向的 URL")
           .placeholder("https://example.com/success")
           .build(),
+      )
+      .add_property(
         // 时间限制配置
         NodeProperty::builder()
           .display_name("启用时间限制")
@@ -494,6 +513,8 @@ impl TryFrom<NodeDefinitionBuilder> for WaitV1 {
           .description("是否限制 Webhook 等待的时间")
           .value(json!(false))
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("启用时间限制")
           .name("form_limit_wait_time")
@@ -502,10 +523,7 @@ impl TryFrom<NodeDefinitionBuilder> for WaitV1 {
           .description("是否限制表单等待的时间")
           .value(json!(false))
           .build(),
-      ]);
-
-    let definition = base.build()?;
-
+      );
     Ok(Self { definition: Arc::new(definition) })
   }
 }

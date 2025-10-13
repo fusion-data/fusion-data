@@ -27,3 +27,6 @@ pub static EMAIL_TRIGGER_NODE_KIND: &str = "hetumind_nodes::EmailTrigger";
 // Integration Nodes
 pub static HTTP_REQUEST_NODE_KIND: &str = "hetumind_nodes::HttpRequest";
 pub static SEND_EMAIL_NODE_KIND: &str = "hetumind_nodes::SendEmail";
+
+// Cluster Nodes
+pub static AI_AGENT_NODE_KIND: &str = "hetumind_nodes::AiAgent";

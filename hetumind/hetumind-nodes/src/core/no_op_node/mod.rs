@@ -14,7 +14,7 @@ use std::sync::Arc;
 
 use hetumind_core::{
   version::Version,
-  workflow::{Node, NodeDefinitionBuilder, NodeExecutor, NodeGroupKind, NodeKind, RegistrationError},
+  workflow::{Node, NodeDefinition, NodeExecutor, NodeGroupKind, NodeKind, RegistrationError},
 };
 use serde::{Deserialize, Serialize};
 
@@ -66,16 +66,11 @@ impl NoOpNode {
   }
 
   /// 创建基础节点定义构建器
-  fn base() -> NodeDefinitionBuilder {
-    let mut base = NodeDefinitionBuilder::default();
-    base
-      .kind(NodeKind::from(NOOP_NODE_KIND))
-      .groups(vec![NodeGroupKind::Transform])
-      .display_name("No Operation")
-      .description("Pass through data without any modifications")
-      .icon("arrow-right")
-      .version(Version::new(1, 0, 0));
-    base
+  fn base() -> NodeDefinition {
+    NodeDefinition::new(NOOP_NODE_KIND, Version::new(1, 0, 0), "No Operation")
+      .add_group(NodeGroupKind::Transform)
+      .with_description("Pass through data without any modifications")
+      .with_icon("arrow-right")
   }
 }
 

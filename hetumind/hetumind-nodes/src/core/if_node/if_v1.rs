@@ -6,8 +6,8 @@ use hetumind_core::{
   version::Version,
   workflow::{
     ConnectionKind, ExecutionDataItems, ExecutionDataMap, FilterTypeOptions, InputPortConfig, NodeDefinition,
-    NodeDefinitionBuilder, NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind,
-    NodePropertyKindOptions, OutputPortConfig, RegistrationError, make_execution_data_map,
+    NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, NodePropertyKindOptions,
+    OutputPortConfig, RegistrationError, make_execution_data_map,
   },
 };
 use serde_json::json;
@@ -299,18 +299,15 @@ impl NodeExecutable for IfV1 {
   }
 }
 
-impl TryFrom<NodeDefinitionBuilder> for IfV1 {
+impl TryFrom<NodeDefinition> for IfV1 {
   type Error = RegistrationError;
 
-  fn try_from(mut base: NodeDefinitionBuilder) -> Result<Self, Self::Error> {
-    base
-      .version(Version::new(1, 0, 0))
-      .inputs([InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build()])
-      .outputs([
-        OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("True").build(),
-        OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("False").build(),
-      ])
-      .properties([
+  fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
+    let definition = base
+      .add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build())
+      .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("True").build())
+      .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("False").build())
+      .add_property(
         NodeProperty::builder()
           .display_name("条件".to_string())
           .name("conditions")
@@ -326,6 +323,8 @@ impl TryFrom<NodeDefinitionBuilder> for IfV1 {
               .build(),
           )
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Options")
           .name("options")
@@ -338,6 +337,8 @@ impl TryFrom<NodeDefinitionBuilder> for IfV1 {
             NodePropertyKind::Boolean,
           ))])
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("逻辑组合".to_string())
           .name("combination")
@@ -351,6 +352,8 @@ impl TryFrom<NodeDefinitionBuilder> for IfV1 {
           ])
           .placeholder("".to_string())
           .build(),
+      )
+      .add_property(
         // 高级配置选项
         NodeProperty::builder()
           .display_name("高级选项".to_string())
@@ -359,6 +362,8 @@ impl TryFrom<NodeDefinitionBuilder> for IfV1 {
           .description("IfNode 高级配置选项".to_string())
           .kind(NodePropertyKind::String)
           .build(),
+      )
+      .add_property(
         // 高级条件组合（V2 功能）
         NodeProperty::builder()
           .display_name("高级条件组合".to_string())
@@ -368,6 +373,8 @@ impl TryFrom<NodeDefinitionBuilder> for IfV1 {
           .kind(NodePropertyKind::String)
           .placeholder("配置高级条件组...")
           .build(),
+      )
+      .add_property(
         // 条件描述和配置
         NodeProperty::builder()
           .display_name("条件配置".to_string())
@@ -376,9 +383,7 @@ impl TryFrom<NodeDefinitionBuilder> for IfV1 {
           .description("条件的高级配置选项".to_string())
           .kind(NodePropertyKind::String)
           .build(),
-      ]);
-
-    let definition = base.build()?;
+      );
 
     Ok(Self { definition: Arc::new(definition) })
   }

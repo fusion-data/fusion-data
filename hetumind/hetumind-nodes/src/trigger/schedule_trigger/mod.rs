@@ -7,8 +7,8 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use hetumind_core::version::Version;
 use hetumind_core::workflow::{
-  ConnectionKind, ExecutionDataItems, ExecutionDataMap, Node, NodeDefinition, NodeDefinitionBuilder, NodeExecutable,
-  NodeExecutionContext, NodeExecutionError, NodeExecutor, NodeKind, RegistrationError, make_execution_data_map,
+  ConnectionKind, ExecutionDataItems, ExecutionDataMap, Node, NodeDefinition, NodeExecutable, NodeExecutionContext,
+  NodeExecutionError, NodeExecutor, NodeKind, RegistrationError, make_execution_data_map,
 };
 
 mod parameters;
@@ -20,11 +20,10 @@ pub struct ScheduleTriggerNodeV1 {
   definition: Arc<NodeDefinition>,
 }
 
-impl TryFrom<NodeDefinitionBuilder> for ScheduleTriggerNodeV1 {
+impl TryFrom<NodeDefinition> for ScheduleTriggerNodeV1 {
   type Error = RegistrationError;
 
-  fn try_from(builder: NodeDefinitionBuilder) -> Result<Self, Self::Error> {
-    let definition = builder.build()?;
+  fn try_from(definition: NodeDefinition) -> Result<Self, Self::Error> {
     Ok(Self { definition: Arc::new(definition) })
   }
 }
@@ -40,7 +39,11 @@ impl NodeExecutable for ScheduleTriggerNodeV1 {
     // 实际的调度逻辑在触发器框架层面完成
 
     let node = context.current_node()?;
-    let paramters = parse_schedule_parameteres(&node.parameters)?;
+    let _paramters = parse_schedule_parameters(&node.parameters)?;
+
+    // TODO: 解析参数，根据模式执行调度
+    // 1. 如果是 cron 表达式，解析并设置 cron 调度
+    // 2. 如果是 interval 表达式，解析并设置固定时间间隔调度
 
     Ok(make_execution_data_map(vec![(ConnectionKind::Main, vec![ExecutionDataItems::new_items(vec![])])]))
   }

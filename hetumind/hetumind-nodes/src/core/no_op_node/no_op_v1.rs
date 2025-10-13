@@ -1,13 +1,10 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use hetumind_core::{
-  version::Version,
-  workflow::{
-    ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition,
-    NodeDefinitionBuilder, NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind,
-    OutputPortConfig, RegistrationError, make_execution_data_map,
-  },
+use hetumind_core::workflow::{
+  ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition, NodeExecutable,
+  NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig, RegistrationError,
+  make_execution_data_map,
 };
 use serde_json::json;
 
@@ -117,15 +114,14 @@ impl NodeExecutable for NoOpV1 {
   }
 }
 
-impl TryFrom<NodeDefinitionBuilder> for NoOpV1 {
+impl TryFrom<NodeDefinition> for NoOpV1 {
   type Error = RegistrationError;
 
-  fn try_from(mut base: NodeDefinitionBuilder) -> Result<Self, Self::Error> {
-    base
-      .version(Version::new(1, 0, 0))
-      .inputs([InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build()])
-      .outputs([OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build()])
-      .properties([
+  fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
+    let definition = base
+      .add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build())
+      .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build())
+      .add_property(
         // 调试选项
         NodeProperty::builder()
           .display_name("Enable Logging".to_string())
@@ -135,6 +131,8 @@ impl TryFrom<NodeDefinitionBuilder> for NoOpV1 {
           .kind(NodePropertyKind::Boolean)
           .value(json!(false))
           .build(),
+      )
+      .add_property(
         // 性能监控选项
         NodeProperty::builder()
           .display_name("Enable Metrics".to_string())
@@ -144,10 +142,7 @@ impl TryFrom<NodeDefinitionBuilder> for NoOpV1 {
           .kind(NodePropertyKind::Boolean)
           .value(json!(false))
           .build(),
-      ]);
-
-    let definition = base.build()?;
-
+      );
     Ok(Self { definition: Arc::new(definition) })
   }
 }

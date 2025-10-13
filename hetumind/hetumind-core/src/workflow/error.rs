@@ -7,7 +7,7 @@ use typed_builder::TypedBuilder;
 
 use crate::{
   types::JsonValue,
-  workflow::{ExecutionId, ExecutionMode, NodeDefinitionBuilderError},
+  workflow::{ExecutionId, ExecutionMode},
 };
 
 use super::{ConnectionIndex, ConnectionKind, ExecutionData, NodeKind, NodeName, WorkflowId};
@@ -176,8 +176,8 @@ pub enum RegistrationError {
   #[error("节点类型已存在: {node_kind}")]
   NodeKindAlreadyExists { node_kind: NodeKind },
 
-  #[error(transparent)]
-  NodeDefinitionBuilderError(#[from] NodeDefinitionBuilderError),
+  #[error("节点定义错误: {0}")]
+  NodeDefinitionError(String),
 }
 
 // 错误工作流触发数据结构

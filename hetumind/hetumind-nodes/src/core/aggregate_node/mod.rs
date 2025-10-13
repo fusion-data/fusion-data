@@ -7,7 +7,7 @@ use std::sync::Arc;
 
 use hetumind_core::{
   version::Version,
-  workflow::{Node, NodeDefinitionBuilder, NodeExecutor, NodeGroupKind, NodeKind, RegistrationError},
+  workflow::{Node, NodeDefinition, NodeExecutor, NodeGroupKind, NodeKind, RegistrationError},
 };
 use serde::{Deserialize, Serialize};
 
@@ -161,16 +161,11 @@ impl AggregateNode {
     Ok(Self { default_version, executors })
   }
 
-  fn base() -> NodeDefinitionBuilder {
-    let mut base = NodeDefinitionBuilder::default();
-    base
-      .kind(NodeKind::from(AGGREGATE_NODE_KIND))
-      .groups(vec![NodeGroupKind::Transform])
-      .display_name("Aggregate")
-      .description("Combine a field from many items into a list in a single item")
-      .icon("object-group")
-      .version(Version::new(1, 0, 0));
-    base
+  fn base() -> NodeDefinition {
+    NodeDefinition::new(AGGREGATE_NODE_KIND, Version::new(1, 0, 0), "Aggregate")
+      .add_group(NodeGroupKind::Transform)
+      .with_description("Combine a field from many items into a list in a single item")
+      .with_icon("object-group")
   }
 }
 

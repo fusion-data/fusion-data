@@ -4,8 +4,8 @@ use async_trait::async_trait;
 use hetumind_core::types::JsonValue;
 use hetumind_core::version::Version;
 use hetumind_core::workflow::{
-  ConnectionKind, ExecutionDataItems, ExecutionDataMap, NodeDefinition, NodeDefinitionBuilder, NodeExecutable,
-  NodeExecutionContext, NodeExecutionError, NodeGroupKind, NodeProperty, RegistrationError, make_execution_data_map,
+  ConnectionKind, ExecutionDataItems, ExecutionDataMap, NodeDefinition, NodeExecutable, NodeExecutionContext,
+  NodeExecutionError, NodeGroupKind, NodeProperty, RegistrationError, make_execution_data_map,
 };
 
 use crate::constants::EMAIL_TRIGGER_NODE_KIND;
@@ -16,11 +16,10 @@ pub struct EmailTriggerV1 {
   definition: Arc<NodeDefinition>,
 }
 
-impl TryFrom<NodeDefinitionBuilder> for EmailTriggerV1 {
+impl TryFrom<NodeDefinition> for EmailTriggerV1 {
   type Error = RegistrationError;
 
-  fn try_from(builder: NodeDefinitionBuilder) -> Result<Self, Self::Error> {
-    let definition = builder.build()?;
+  fn try_from(definition: NodeDefinition) -> Result<Self, Self::Error> {
     Ok(Self { definition: Arc::new(definition) })
   }
 }
@@ -255,17 +254,11 @@ impl EmailTriggerV1 {
 
 impl EmailTriggerV1 {
   /// 创建基础的节点定义
-  pub fn create_base() -> NodeDefinitionBuilder {
-    let mut base = NodeDefinitionBuilder::default();
-    base
-      .kind(EMAIL_TRIGGER_NODE_KIND)
-      .version(Version::new(1, 0, 0))
-      .groups([NodeGroupKind::Trigger])
-      .display_name("Email Trigger")
-      .description("Triggers workflow when new emails are received via IMAP")
-      .outputs(vec![])
-      .properties(vec![
-        // IMAP Connection Section
+  pub fn create_base() -> NodeDefinition {
+    NodeDefinition::new(EMAIL_TRIGGER_NODE_KIND, Version::new(1, 0, 0), "Email Trigger")
+      .add_group(NodeGroupKind::Trigger)
+      .with_description("Triggers workflow when new emails are received via IMAP")
+      .add_property(
         NodeProperty::builder()
           .display_name("IMAP Host")
           .name("imap_host")
@@ -274,6 +267,8 @@ impl EmailTriggerV1 {
           .description("IMAP server hostname (e.g., imap.gmail.com)")
           .hint("e.g., imap.gmail.com")
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("IMAP Port")
           .name("imap_port")
@@ -282,6 +277,8 @@ impl EmailTriggerV1 {
           .description("IMAP server port number")
           .value(JsonValue::Number(serde_json::Number::from(993)))
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Security")
           .name("imap_security")
@@ -310,6 +307,8 @@ impl EmailTriggerV1 {
           .description("Connection security mode")
           .value(JsonValue::String("ssl".to_string()))
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Authentication")
           .name("imap_authentication")
@@ -344,6 +343,8 @@ impl EmailTriggerV1 {
           .description("IMAP authentication method")
           .value(JsonValue::String("normal".to_string()))
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Username")
           .name("imap_username")
@@ -352,6 +353,8 @@ impl EmailTriggerV1 {
           .description("IMAP username")
           .hint("e.g., your-email@gmail.com")
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Password")
           .name("imap_password")
@@ -360,6 +363,8 @@ impl EmailTriggerV1 {
           .description("IMAP password or access token")
           .hint("Use app-specific password for Gmail")
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Mailbox")
           .name("imap_mailbox")
@@ -368,6 +373,8 @@ impl EmailTriggerV1 {
           .description("Mailbox name (default: INBOX)")
           .value(JsonValue::String("INBOX".to_string()))
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Connection Timeout (seconds)")
           .name("connection_timeout")
@@ -376,6 +383,8 @@ impl EmailTriggerV1 {
           .description("Connection timeout in seconds")
           .value(JsonValue::Number(serde_json::Number::from(30)))
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Read Timeout (seconds)")
           .name("read_timeout")
@@ -384,7 +393,8 @@ impl EmailTriggerV1 {
           .description("Read timeout in seconds")
           .value(JsonValue::Number(serde_json::Number::from(60)))
           .build(),
-        // Email Processing Section
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Email Read Format")
           .name("email_read_format")
@@ -413,6 +423,8 @@ impl EmailTriggerV1 {
           .description("Email output format")
           .value(JsonValue::String("resolved".to_string()))
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Max Emails per Poll")
           .name("max_emails")
@@ -421,6 +433,8 @@ impl EmailTriggerV1 {
           .description("Maximum number of emails to process per poll")
           .value(JsonValue::Number(serde_json::Number::from(50)))
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Mark as Read")
           .name("mark_as_read")
@@ -429,6 +443,8 @@ impl EmailTriggerV1 {
           .description("Mark processed emails as read")
           .value(JsonValue::Bool(true))
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Delete After Read")
           .name("delete_after_read")
@@ -437,7 +453,8 @@ impl EmailTriggerV1 {
           .description("Delete emails after processing")
           .value(JsonValue::Bool(false))
           .build(),
-        // Filter Section
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Enable Filter")
           .name("enable_filter")
@@ -446,6 +463,8 @@ impl EmailTriggerV1 {
           .description("Enable email filtering")
           .value(JsonValue::Bool(false))
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("From Filter")
           .name("from_filter")
@@ -454,6 +473,8 @@ impl EmailTriggerV1 {
           .description("Filter by sender (supports wildcards)")
           .hint("e.g., noreply@*.com, support@company.com")
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("To Filter")
           .name("to_filter")
@@ -462,6 +483,8 @@ impl EmailTriggerV1 {
           .description("Filter by recipient (supports wildcards)")
           .hint("e.g., support@*.com")
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Subject Filter")
           .name("subject_filter")
@@ -470,6 +493,8 @@ impl EmailTriggerV1 {
           .description("Filter by subject (supports wildcards)")
           .hint("e.g., *Invoice*, *Alert*")
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Content Filter")
           .name("content_filter")
@@ -478,6 +503,8 @@ impl EmailTriggerV1 {
           .description("Filter by content keywords")
           .hint("e.g., urgent, important")
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Read Only Unread")
           .name("read_only_unread")
@@ -486,6 +513,8 @@ impl EmailTriggerV1 {
           .description("Only process unread emails")
           .value(JsonValue::Bool(true))
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Has Attachments")
           .name("has_attachments_filter")
@@ -493,7 +522,8 @@ impl EmailTriggerV1 {
           .required(false)
           .description("Filter emails with attachments")
           .build(),
-        // Attachment Options Section
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Download Attachments")
           .name("download_attachments")
@@ -502,6 +532,8 @@ impl EmailTriggerV1 {
           .description("Download email attachments")
           .value(JsonValue::Bool(true))
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
         .display_name("Max Attachment Size (bytes)")
         .name("max_attachment_size")
@@ -510,6 +542,8 @@ impl EmailTriggerV1 {
         .description("Maximum attachment size in bytes")
         .value(JsonValue::Number(serde_json::Number::from(10485760))) // 10MB
         .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Allowed File Types")
           .name("allowed_file_types")
@@ -518,6 +552,8 @@ impl EmailTriggerV1 {
           .description("Comma-separated list of allowed file extensions")
           .hint("e.g., pdf,doc,jpg,png")
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Forbidden File Types")
           .name("forbidden_file_types")
@@ -526,7 +562,8 @@ impl EmailTriggerV1 {
           .description("Comma-separated list of forbidden file extensions")
           .hint("e.g., exe,bat,scr")
           .build(),
-        // Trigger Settings
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Poll Interval (seconds)")
           .name("poll_interval")
@@ -535,6 +572,8 @@ impl EmailTriggerV1 {
           .description("How often to check for new emails")
           .value(JsonValue::Number(serde_json::Number::from(60)))
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Enabled")
           .name("enabled")
@@ -543,7 +582,6 @@ impl EmailTriggerV1 {
           .description("Enable or disable the trigger")
           .value(JsonValue::Bool(true))
           .build(),
-      ]);
-    base
+      )
   }
 }

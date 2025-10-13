@@ -6,8 +6,8 @@ use async_trait::async_trait;
 use hetumind_core::version::Version;
 use hetumind_core::workflow::{
   ConnectionKind, DataSource, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition,
-  NodeDefinitionBuilder, NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeGroupKind, NodeProperty,
-  NodePropertyKind, OutputPortConfig, RegistrationError, make_execution_data_map,
+  NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeGroupKind, NodeProperty, NodePropertyKind,
+  OutputPortConfig, RegistrationError, make_execution_data_map,
 };
 use log::{debug, error, info, warn};
 use reqwest::Client;
@@ -188,74 +188,95 @@ impl NodeExecutable for HttpRequestV1 {
 
 /// Create node definition
 pub(super) fn create_definition() -> Result<NodeDefinition, RegistrationError> {
-  NodeDefinitionBuilder::default()
-    .kind(HTTP_REQUEST_NODE_KIND)
-    .version(Version::new(1, 0, 0))
-    .groups([NodeGroupKind::Input, NodeGroupKind::Output])
-    .display_name("HTTP Request")
-    .description("发送HTTP请求并获取响应数据。支持GET、POST、PUT、DELETE等方法。")
-    .icon("globe")
-    .inputs(vec![InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build()])
-    .outputs(vec![OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build()])
-    .properties(vec![
-      NodeProperty::builder()
-        .name("url".to_string())
-        .kind(NodePropertyKind::String)
-        .required(true)
-        .display_name("URL")
-        .description("请求的目标URL地址")
-        .placeholder("https://api.example.com")
-        .build(),
-      NodeProperty::builder()
-        .name("method".to_string())
-        .kind(NodePropertyKind::Options)
-        .required(true)
-        .display_name("Method")
-        .description("HTTP请求方法")
-        .value(json!(HttpMethod::Get))
-        .options(
-          HttpMethod::ALL
-            .iter()
-            .map(|m| Box::new(NodeProperty::new_option(m.as_ref(), m.as_ref(), json!(m), NodePropertyKind::Options)))
-            .collect(),
-        )
-        .build(),
-      NodeProperty::builder()
-        .name("headers".to_string())
-        .kind(NodePropertyKind::String)
-        .required(false)
-        .display_name("Headers")
-        .description("HTTP请求头，JSON格式")
-        .placeholder("{\"Content-Type\": \"application/json\"}")
-        .build(),
-      NodeProperty::builder()
-        .name("body".to_string())
-        .kind(NodePropertyKind::String)
-        .required(false)
-        .display_name("Body")
-        .description("请求体内容，支持JSON格式")
-        .placeholder("{\"key\": \"value\"}")
-        .build(),
-      NodeProperty::builder()
-        .name("timeout".to_string())
-        .kind(NodePropertyKind::Number)
-        .required(false)
-        .display_name("Timeout")
-        .description("请求超时时间（秒），范围1-300")
-        .value(json!(30))
-        .placeholder("30")
-        .build(),
-      NodeProperty::builder()
-        .name("follow_redirects".to_string())
-        .kind(NodePropertyKind::Boolean)
-        .required(false)
-        .display_name("Follow Redirects")
-        .description("是否跟随重定向")
-        .value(json!(true))
-        .build(),
-    ])
-    .build()
-    .map_err(RegistrationError::NodeDefinitionBuilderError)
+  let mut definition = NodeDefinition::new(HTTP_REQUEST_NODE_KIND, Version::new(1, 0, 0), "HTTP Request")
+    .add_group(NodeGroupKind::Input)
+    .add_group(NodeGroupKind::Output)
+    .with_description("发送HTTP请求并获取响应数据。支持GET、POST、PUT、DELETE等方法。")
+    .with_icon("globe");
+
+  // Add input port
+  definition =
+    definition.add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build());
+
+  // Add output port
+  definition =
+    definition.add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build());
+
+  // Add properties
+  definition = definition.add_property(
+    NodeProperty::builder()
+      .name("url".to_string())
+      .kind(NodePropertyKind::String)
+      .required(true)
+      .display_name("URL")
+      .description("请求的目标URL地址")
+      .placeholder("https://api.example.com")
+      .build(),
+  );
+
+  definition = definition.add_property(
+    NodeProperty::builder()
+      .name("method".to_string())
+      .kind(NodePropertyKind::Options)
+      .required(true)
+      .display_name("Method")
+      .description("HTTP请求方法")
+      .value(json!(HttpMethod::Get))
+      .options(
+        HttpMethod::ALL
+          .iter()
+          .map(|m| Box::new(NodeProperty::new_option(m.as_ref(), m.as_ref(), json!(m), NodePropertyKind::Options)))
+          .collect(),
+      )
+      .build(),
+  );
+
+  definition = definition.add_property(
+    NodeProperty::builder()
+      .name("headers".to_string())
+      .kind(NodePropertyKind::String)
+      .required(false)
+      .display_name("Headers")
+      .description("HTTP请求头，JSON格式")
+      .placeholder("{\"Content-Type\": \"application/json\"}")
+      .build(),
+  );
+
+  definition = definition.add_property(
+    NodeProperty::builder()
+      .name("body".to_string())
+      .kind(NodePropertyKind::String)
+      .required(false)
+      .display_name("Body")
+      .description("请求体内容，支持JSON格式")
+      .placeholder("{\"key\": \"value\"}")
+      .build(),
+  );
+
+  definition = definition.add_property(
+    NodeProperty::builder()
+      .name("timeout".to_string())
+      .kind(NodePropertyKind::Number)
+      .required(false)
+      .display_name("Timeout")
+      .description("请求超时时间（秒），范围1-300")
+      .value(json!(30))
+      .placeholder("30")
+      .build(),
+  );
+
+  definition = definition.add_property(
+    NodeProperty::builder()
+      .name("follow_redirects".to_string())
+      .kind(NodePropertyKind::Boolean)
+      .required(false)
+      .display_name("Follow Redirects")
+      .description("是否跟随重定向")
+      .value(json!(true))
+      .build(),
+  );
+
+  Ok(definition)
 }
 
 #[cfg(test)]

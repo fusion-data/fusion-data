@@ -1,24 +1,18 @@
 use hetumind_core::{
   types::JsonValue,
   version::Version,
-  workflow::{NodeDefinitionBuilder, NodeExecutionContext, NodeGroupKind, NodeProperty, NodePropertyKind},
+  workflow::{NodeDefinition, NodeExecutionContext, NodeGroupKind, NodeProperty, NodePropertyKind},
 };
 use serde_json::json;
 
 use crate::constants::ERROR_TRIGGER_NODE_KIND;
 
-pub fn create_base() -> NodeDefinitionBuilder {
-  let mut base = NodeDefinitionBuilder::default();
-  base
-    .kind(ERROR_TRIGGER_NODE_KIND)
-    .version(Version::new(1, 0, 0))
-    .groups([NodeGroupKind::Trigger])
-    .display_name("Error Trigger")
-    .description("Triggers workflow when other workflows encounter errors")
-    .max_nodes(1)
-    .outputs(vec![])
-    .properties(vec![
-      // 触发模式
+pub fn create_base() -> NodeDefinition {
+  NodeDefinition::new(ERROR_TRIGGER_NODE_KIND, Version::new(1, 0, 0), "Error Trigger")
+    .add_group(NodeGroupKind::Trigger)
+    .with_description("Triggers workflow when other workflows encounter errors")
+    .with_max_nodes(1)
+    .add_property(
       NodeProperty::builder()
         .display_name("Trigger Mode")
         .name("trigger_mode")
@@ -46,7 +40,8 @@ pub fn create_base() -> NodeDefinitionBuilder {
         .required(true)
         .description("Select which workflows to monitor for errors")
         .build(),
-      // 监听工作流ID
+    )
+    .add_property(
       NodeProperty::builder()
         .display_name("Workflow IDs")
         .name("workflow_ids")
@@ -55,7 +50,8 @@ pub fn create_base() -> NodeDefinitionBuilder {
         .description("Specific workflow IDs to monitor (comma-separated)")
         .hint("Leave empty to monitor all workflows")
         .build(),
-      // 错误类型过滤
+    )
+    .add_property(
       NodeProperty::builder()
         .display_name("Error Types")
         .name("error_types")
@@ -101,7 +97,8 @@ pub fn create_base() -> NodeDefinitionBuilder {
         .required(false)
         .description("Types of errors to trigger on")
         .build(),
-      // 节点名称过滤
+    )
+    .add_property(
       NodeProperty::builder()
         .display_name("Node Names")
         .name("node_names")
@@ -110,7 +107,8 @@ pub fn create_base() -> NodeDefinitionBuilder {
         .description("Specific node names to monitor (comma-separated)")
         .hint("Leave empty to monitor all nodes")
         .build(),
-      // 错误严重级别
+    )
+    .add_property(
       NodeProperty::builder()
         .display_name("Error Severity")
         .name("error_severity")
@@ -144,7 +142,8 @@ pub fn create_base() -> NodeDefinitionBuilder {
         .required(false)
         .description("Minimum error severity to trigger")
         .build(),
-      // 重试配置
+    )
+    .add_property(
       NodeProperty::builder()
         .display_name("Enable Retry")
         .name("enable_retry")
@@ -153,7 +152,8 @@ pub fn create_base() -> NodeDefinitionBuilder {
         .description("Enable automatic retry for failed executions")
         .value(JsonValue::Bool(false))
         .build(),
-      // 最大重试次数
+    )
+    .add_property(
       NodeProperty::builder()
         .display_name("Max Retry Count")
         .name("max_retry_count")
@@ -162,7 +162,8 @@ pub fn create_base() -> NodeDefinitionBuilder {
         .description("Maximum number of retry attempts")
         .value(JsonValue::Number(serde_json::Number::from(3)))
         .build(),
-      // 重试间隔
+    )
+    .add_property(
       NodeProperty::builder()
         .display_name("Retry Interval (seconds)")
         .name("retry_interval_seconds")
@@ -171,7 +172,8 @@ pub fn create_base() -> NodeDefinitionBuilder {
         .description("Interval between retry attempts in seconds")
         .value(JsonValue::Number(serde_json::Number::from(60)))
         .build(),
-      // 发送通知
+    )
+    .add_property(
       NodeProperty::builder()
         .display_name("Send Notification")
         .name("send_notification")
@@ -180,7 +182,8 @@ pub fn create_base() -> NodeDefinitionBuilder {
         .description("Send notifications when errors occur")
         .value(JsonValue::Bool(true))
         .build(),
-      // 通知方式
+    )
+    .add_property(
       NodeProperty::builder()
         .display_name("Notification Methods")
         .name("notification_methods")
@@ -214,8 +217,7 @@ pub fn create_base() -> NodeDefinitionBuilder {
         .required(false)
         .description("Methods to send notifications")
         .build(),
-    ]);
-  base
+    )
 }
 
 /// 检查是否为手动测试模式

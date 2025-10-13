@@ -11,6 +11,9 @@
 mod common;
 
 use common::TestContext;
+use fusion_core::application::Application;
+use hetumind_studio::runtime::workflow::WorkflowEngineService;
+use uuid::Uuid;
 
 use std::fs;
 use std::path::PathBuf;
@@ -23,8 +26,8 @@ use fusion_common::time::now;
 use hetumind_core::workflow::{
   Connection, ConnectionKind, Execution, ExecutionContext, ExecutionData, ExecutionDataItems, ExecutionDataMap,
   ExecutionId, ExecutionStatus, NodeExecutionStatus, NodeKind, NodeName, NodeRegistry, ParameterMap, PinData, Workflow,
-  WorkflowEngine, WorkflowEngineSetting, WorkflowExecutionError, WorkflowId, WorkflowMeta, WorkflowNode,
-  WorkflowSettings, WorkflowStatus, WorkflowTriggerData,
+  WorkflowEngine, WorkflowExecutionError, WorkflowId, WorkflowMeta, WorkflowNode, WorkflowSettings, WorkflowStatus,
+  WorkflowTriggerData,
 };
 use hetumind_nodes::constants::{
   EDIT_FIELDS_NODE_KIND, IF_NODE_KIND, MANUAL_TRIGGER_NODE_KIND, READ_WRITE_FILES_NODE_KIND,
@@ -329,16 +332,13 @@ async fn test_integration_workflow() -> Result<(), Box<dyn std::error::Error>> {
   println!("✅ Created workflow with {} nodes", workflow.nodes.len());
 
   // 3. Create execution store and engine
-  let execution_store = Arc::new(MockExecutionStore::default());
-  let execution_config = WorkflowEngineSetting::default();
-  let workflow_engine = DefaultWorkflowEngine::new(node_registry, execution_store, execution_config);
+  let workflow_engine: WorkflowEngineService = Application::global().component();
   println!("✅ Created DefaultWorkflowEngine");
 
   // 4. Create execution context
   let execution_id = ExecutionId::now_v7();
   let workflow_arc = Arc::new(workflow);
-  let ctx =
-    Ctx::try_new(CtxPayload::default(), Some(std::time::SystemTime::now()), Some(uuid::Uuid::now_v7().to_string()))?;
+  let ctx = Ctx::try_new(CtxPayload::default(), Some(std::time::SystemTime::now()), Some(Uuid::now_v7().to_string()))?;
 
   let execution_context = ExecutionContext::new(execution_id.clone(), workflow_arc, ctx);
   println!("✅ Created execution context");
@@ -350,7 +350,7 @@ async fn test_integration_workflow() -> Result<(), Box<dyn std::error::Error>> {
       "trigger_type": "manual",
       "execution_mode": "test",
       "timestamp": now().timestamp(),
-      "trigger_id": uuid::Uuid::new_v4().to_string(),
+      "trigger_id": Uuid::new_v4().to_string(),
       "message": "Integration test workflow started",
       "enabled": true,
       "test_data": {
@@ -510,15 +510,11 @@ async fn test_integration_workflow_false_branch() -> Result<(), Box<dyn std::err
   let file_node = ReadWriteFilesNode::new()?;
   node_registry.register_node(Arc::new(file_node))?;
 
-  let workflow = create_integration_workflow()?;
-  let execution_store = Arc::new(MockExecutionStore::default());
-  let execution_config = WorkflowEngineSetting::default();
-  let workflow_engine = DefaultWorkflowEngine::new(node_registry, execution_store, execution_config);
+  let workflow_engine: WorkflowEngineService = Application::global().component();
 
   let execution_id = ExecutionId::now_v7();
-  let workflow_arc = Arc::new(workflow);
-  let ctx =
-    Ctx::try_new(CtxPayload::default(), Some(std::time::SystemTime::now()), Some(uuid::Uuid::now_v7().to_string()))?;
+  let workflow_arc = Arc::new(create_integration_workflow()?);
+  let ctx = Ctx::try_new(CtxPayload::default(), Some(std::time::SystemTime::now()), Some(Uuid::now_v7().to_string()))?;
 
   let execution_context = ExecutionContext::new(execution_id.clone(), workflow_arc, ctx);
 
@@ -529,7 +525,7 @@ async fn test_integration_workflow_false_branch() -> Result<(), Box<dyn std::err
       "trigger_type": "manual",
       "execution_mode": "production", // This will trigger the false branch
       "timestamp": now().timestamp(),
-      "trigger_id": uuid::Uuid::new_v4().to_string(),
+      "trigger_id": Uuid::now_v7().to_string(),
       "message": "False branch test workflow started",
       "enabled": true,
     }]),

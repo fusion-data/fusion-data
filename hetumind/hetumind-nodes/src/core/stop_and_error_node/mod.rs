@@ -7,7 +7,7 @@ use std::sync::Arc;
 
 use hetumind_core::{
   version::Version,
-  workflow::{Node, NodeDefinitionBuilder, NodeExecutor, NodeGroupKind, NodeKind, RegistrationError, ValidationError},
+  workflow::{Node, NodeDefinition, NodeExecutor, NodeGroupKind, NodeKind, RegistrationError, ValidationError},
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -241,16 +241,12 @@ impl StopAndErrorNode {
     Ok(Self { default_version, executors })
   }
 
-  fn base() -> NodeDefinitionBuilder {
-    let mut base = NodeDefinitionBuilder::default();
-    base
-      .kind(NodeKind::from(STOP_AND_ERROR_NODE_KIND))
-      .groups(vec![NodeGroupKind::Transform, NodeGroupKind::Input])
-      .display_name("Stop and Error")
-      .description("主动抛出错误以终止工作流执行。支持简单错误消息和复杂错误对象。")
-      .icon("exclamation-triangle")
-      .version(Version::new(1, 0, 0));
-    base
+  fn base() -> NodeDefinition {
+    NodeDefinition::new(STOP_AND_ERROR_NODE_KIND, Version::new(1, 0, 0), "Stop and Error")
+      .add_group(NodeGroupKind::Transform)
+      .add_group(NodeGroupKind::Input)
+      .with_description("主动抛出错误以终止工作流执行。支持简单错误消息和复杂错误对象。")
+      .with_icon("exclamation-triangle")
   }
 }
 

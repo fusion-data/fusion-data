@@ -7,7 +7,7 @@ use std::sync::Arc;
 
 use hetumind_core::{
   version::Version,
-  workflow::{Node, NodeDefinitionBuilder, NodeExecutor, NodeGroupKind, NodeKind, RegistrationError, ValidationError},
+  workflow::{Node, NodeDefinition, NodeExecutor, NodeGroupKind, NodeKind, RegistrationError, ValidationError},
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -137,18 +137,15 @@ impl SwitchNode {
     Ok(Self { default_version, executors })
   }
 
-  fn base() -> NodeDefinitionBuilder {
-    let mut base = NodeDefinitionBuilder::default();
-    base
-      .kind(NodeKind::from(SWITCH_NODE_KIND))
-      .groups(vec![NodeGroupKind::Transform, NodeGroupKind::Input, NodeGroupKind::Output])
-      .display_name("Switch")
-      .description(
+  fn base() -> NodeDefinition {
+    NodeDefinition::new(SWITCH_NODE_KIND, Version::new(1, 0, 0), "Switch")
+      .add_group(NodeGroupKind::Transform)
+      .add_group(NodeGroupKind::Input)
+      .add_group(NodeGroupKind::Output)
+      .with_description(
         "Routes input data to different output ports based on conditions or expressions. Supports both rules-based and expression-based routing.",
       )
-      .icon("code-branch")
-      .version(Version::new(1, 0, 0));
-    base
+      .with_icon("code-branch")
   }
 }
 

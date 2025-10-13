@@ -9,9 +9,9 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use hetumind_core::version::Version;
 use hetumind_core::workflow::{
-  ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, Node, NodeDefinition, NodeDefinitionBuilder,
-  NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeExecutor, NodeGroupKind, NodeKind, NodeProperty,
-  NodePropertyKind, RegistrationError, make_execution_data_map,
+  ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, Node, NodeDefinition, NodeExecutable,
+  NodeExecutionContext, NodeExecutionError, NodeExecutor, NodeGroupKind, NodeKind, NodeProperty, NodePropertyKind,
+  RegistrationError, make_execution_data_map,
 };
 use serde_json::json;
 
@@ -24,53 +24,52 @@ pub struct ManualTriggerNodeV1 {
   definition: Arc<NodeDefinition>,
 }
 
-impl TryFrom<NodeDefinitionBuilder> for ManualTriggerNodeV1 {
+impl TryFrom<NodeDefinition> for ManualTriggerNodeV1 {
   type Error = RegistrationError;
 
-  fn try_from(mut base: NodeDefinitionBuilder) -> Result<Self, Self::Error> {
-    base
-      .kind(MANUAL_TRIGGER_NODE_KIND)
-      .version(Version::new(1, 0, 0))
-      .groups([NodeGroupKind::Trigger])
-      .display_name("Manual Trigger")
-      .description("手动触发工作流执行，支持执行模式和启用状态配置")
-      .outputs(vec![])
-      .properties(vec![
-        // 操作提示信息
-        NodeProperty::builder()
-          .display_name("操作提示")
-          .name("notice")
-          .kind(NodePropertyKind::Notice)
-          .description("这是工作流执行的起点，点击'执行工作流'按钮来触发工作流")
-          .value(json!("点击执行工作流按钮来启动工作流"))
-          .build(),
-        // 执行模式
-        NodeProperty::builder()
-          .display_name("执行模式")
-          .name("execution_mode")
-          .kind(NodePropertyKind::Options)
-          .options(vec![
-            Box::new(NodeProperty::new_option("测试模式", "test", json!("test"), NodePropertyKind::String)),
-            Box::new(NodeProperty::new_option("生产模式", "production", json!("production"), NodePropertyKind::String)),
-          ])
-          .required(true)
-          .description("选择工作流执行模式")
-          .value(json!("test"))
-          .build(),
-        // 启用状态
-        NodeProperty::builder()
-          .display_name("启用状态")
-          .name("enabled")
-          .kind(NodePropertyKind::Boolean)
-          .required(false)
-          .description("是否启用手动触发功能")
-          .value(json!(true))
-          .build(),
-      ]);
-
-    let definition = base.build()?;
+  fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
+    let definition = base;
     Ok(Self { definition: Arc::new(definition) })
   }
+}
+
+pub fn create_base() -> NodeDefinition {
+  NodeDefinition::new(MANUAL_TRIGGER_NODE_KIND, Version::new(1, 0, 0), "Manual Trigger")
+    .add_group(NodeGroupKind::Trigger)
+    .with_description("手动触发工作流执行，支持执行模式和启用状态配置")
+    .add_property(
+      NodeProperty::builder()
+        .display_name("操作提示")
+        .name("notice")
+        .kind(NodePropertyKind::Notice)
+        .description("这是工作流执行的起点，点击'执行工作流'按钮来触发工作流")
+        .value(json!("点击执行工作流按钮来启动工作流"))
+        .build(),
+    )
+    .add_property(
+      NodeProperty::builder()
+        .display_name("执行模式")
+        .name("execution_mode")
+        .kind(NodePropertyKind::Options)
+        .options(vec![
+          Box::new(NodeProperty::new_option("测试模式", "test", json!("test"), NodePropertyKind::String)),
+          Box::new(NodeProperty::new_option("生产模式", "production", json!("production"), NodePropertyKind::String)),
+        ])
+        .required(true)
+        .description("选择工作流执行模式")
+        .value(json!("test"))
+        .build(),
+    )
+    .add_property(
+      NodeProperty::builder()
+        .display_name("启用状态")
+        .name("enabled")
+        .kind(NodePropertyKind::Boolean)
+        .required(false)
+        .description("是否启用手动触发功能")
+        .value(json!(true))
+        .build(),
+    )
 }
 
 #[async_trait]
@@ -152,9 +151,8 @@ impl Node for ManualTriggerNode {
 
 impl ManualTriggerNode {
   pub fn new() -> Result<Self, RegistrationError> {
-    let executors: Vec<NodeExecutor> = vec![Arc::new(ManualTriggerNodeV1::try_from(NodeDefinitionBuilder::default())?)];
-    let default_version = executors.iter().map(|node| node.definition().version.clone()).max().unwrap();
-
-    Ok(Self { default_version, executors })
+    let base = create_base();
+    let executors: Vec<NodeExecutor> = vec![Arc::new(ManualTriggerNodeV1::try_from(base)?)];
+    Ok(Self { default_version: Version::new(1, 0, 0), executors })
   }
 }

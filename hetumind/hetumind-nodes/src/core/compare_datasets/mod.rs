@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use hetumind_core::{
   version::Version,
-  workflow::{Node, NodeDefinitionBuilder, NodeExecutor, NodeGroupKind, NodeKind, RegistrationError},
+  workflow::{Node, NodeDefinition, NodeExecutor, NodeGroupKind, NodeKind, RegistrationError},
 };
 use serde::{Deserialize, Serialize};
 
@@ -224,16 +224,11 @@ impl CompareDatasetsNode {
     Ok(Self { default_version, executors })
   }
 
-  fn base() -> NodeDefinitionBuilder {
-    let mut base = NodeDefinitionBuilder::default();
-    base
-      .kind(NodeKind::from("hetumind_nodes::CompareDatasets"))
-      .groups(vec![NodeGroupKind::Transform])
-      .display_name("Compare Datasets")
-      .description("Compare two datasets and categorize results into matched, unmatched, and different records")
-      .icon("compare")
-      .version(Version::new(1, 0, 0));
-    base
+  fn base() -> NodeDefinition {
+    NodeDefinition::new("hetumind_nodes::CompareDatasets", Version::new(1, 0, 0), "Compare Datasets")
+      .add_group(NodeGroupKind::Transform)
+      .with_description("Compare two datasets and categorize results into matched, unmatched, and different records")
+      .with_icon("compare")
   }
 }
 

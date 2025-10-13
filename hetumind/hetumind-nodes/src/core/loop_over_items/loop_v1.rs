@@ -4,9 +4,9 @@ use async_trait::async_trait;
 use hetumind_core::{
   version::Version,
   workflow::{
-    ConnectionKind, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition, NodeDefinitionBuilder,
-    NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig,
-    RegistrationError, make_execution_data_map,
+    ConnectionKind, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition, NodeExecutable,
+    NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig, RegistrationError,
+    make_execution_data_map,
   },
 };
 use serde_json::json;
@@ -95,15 +95,14 @@ impl NodeExecutable for LoopV1 {
   }
 }
 
-impl TryFrom<NodeDefinitionBuilder> for LoopV1 {
+impl TryFrom<NodeDefinition> for LoopV1 {
   type Error = RegistrationError;
 
-  fn try_from(mut base: NodeDefinitionBuilder) -> Result<Self, Self::Error> {
-    base
-      .version(Version::new(1, 0, 0))
-      .inputs([InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build()])
-      .outputs([OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build()])
-      .properties([
+  fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
+    let definition = base
+      .add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build())
+      .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build())
+      .add_property(
         NodeProperty::builder()
           .display_name("循环模式")
           .name("mode")
@@ -118,6 +117,8 @@ impl TryFrom<NodeDefinitionBuilder> for LoopV1 {
             Box::new(NodeProperty::new_option("Batch", "batch", json!(LoopMode::Batch), NodePropertyKind::String)),
           ])
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("循环次数")
           .name("iterations")
@@ -126,6 +127,8 @@ impl TryFrom<NodeDefinitionBuilder> for LoopV1 {
           .description("循环执行次数（仅 Times 模式）")
           .value(json!(1))
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("批量大小")
           .name("batch_size")
@@ -134,6 +137,8 @@ impl TryFrom<NodeDefinitionBuilder> for LoopV1 {
           .description("每批处理的数据项数量（仅 Batch 模式）")
           .value(json!(10))
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("条件表达式")
           .name("condition")
@@ -142,6 +147,8 @@ impl TryFrom<NodeDefinitionBuilder> for LoopV1 {
           .description("循环条件（仅 While 模式）")
           .placeholder("data.enabled")
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("最大循环次数")
           .name("max_iterations")
@@ -150,6 +157,8 @@ impl TryFrom<NodeDefinitionBuilder> for LoopV1 {
           .description("防止无限循环的最大迭代次数")
           .value(json!(1000))
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("包含索引")
           .name("include_index")
@@ -158,6 +167,8 @@ impl TryFrom<NodeDefinitionBuilder> for LoopV1 {
           .description("是否在输出中包含索引信息")
           .value(json!(false))
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("并行处理")
           .name("parallel")
@@ -166,10 +177,7 @@ impl TryFrom<NodeDefinitionBuilder> for LoopV1 {
           .description("是否并行处理数据项")
           .value(json!(false))
           .build(),
-      ]);
-
-    let definition = base.build()?;
-
+      );
     Ok(Self { definition: Arc::new(definition) })
   }
 }

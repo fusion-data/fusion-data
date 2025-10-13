@@ -9,7 +9,7 @@ use hetumind_core::{
   types::{DataType, JsonValue},
   version::Version,
   workflow::{
-    Node, NodeDefinitionBuilder, NodeExecutionError, NodeExecutor, NodeGroupKind, NodeKind, RegistrationError,
+    Node, NodeDefinition, NodeExecutionError, NodeExecutor, NodeGroupKind, NodeKind, RegistrationError,
     ValidationError,
   },
 };
@@ -360,18 +360,15 @@ impl IfNode {
     Ok(Self { default_version, executors })
   }
 
-  fn base() -> NodeDefinitionBuilder {
-    let mut base = NodeDefinitionBuilder::default();
-    base
-      .kind(NodeKind::from(IF_NODE_KIND))
-      .groups(vec![NodeGroupKind::Transform, NodeGroupKind::Input, NodeGroupKind::Output])
-      .display_name("If")
-      .description(
+  fn base() -> NodeDefinition {
+    NodeDefinition::new(IF_NODE_KIND, Version::new(1, 0, 0), "If")
+      .add_group(NodeGroupKind::Transform)
+      .add_group(NodeGroupKind::Input)
+      .add_group(NodeGroupKind::Output)
+      .with_description(
         "Splits workflow execution paths based on conditions. Supports comparison operations for multiple data types.",
       )
-      .icon("code-branch")
-      .version(Version::new(1, 0, 0));
-    base
+      .with_icon("code-branch")
   }
 }
 

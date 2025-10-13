@@ -39,7 +39,7 @@ pub enum ScheduleMode {
 }
 
 /// Parse schedule configuration from node parameters
-pub fn parse_schedule_parameteres(parameters: &ParameterMap) -> Result<ScheduleParameters, NodeExecutionError> {
+pub fn parse_schedule_parameters(parameters: &ParameterMap) -> Result<ScheduleParameters, NodeExecutionError> {
   let config: ScheduleParameters = parameters.get()?;
   if config.mode == ScheduleMode::Cron {
     if let Some(cron_expression) = config.cron_expression.as_deref() {

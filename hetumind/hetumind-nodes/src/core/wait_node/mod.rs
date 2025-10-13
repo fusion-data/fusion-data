@@ -8,7 +8,7 @@ use std::sync::Arc;
 
 use hetumind_core::{
   version::Version,
-  workflow::{Node, NodeDefinitionBuilder, NodeExecutor, NodeGroupKind, NodeKind, RegistrationError, ValidationError},
+  workflow::{Node, NodeDefinition, NodeExecutor, NodeGroupKind, NodeKind, RegistrationError, ValidationError},
 };
 use serde::{Deserialize, Serialize};
 
@@ -524,16 +524,12 @@ impl WaitNode {
     Ok(Self { default_version, executors })
   }
 
-  fn base() -> NodeDefinitionBuilder {
-    let mut base = NodeDefinitionBuilder::default();
-    base
-      .kind(NodeKind::from(WAIT_NODE_KIND))
-      .groups(vec![NodeGroupKind::Transform, NodeGroupKind::Input])
-      .display_name("Wait")
-      .description("在工作流执行过程中添加等待机制。支持时间间隔、特定时间、Webhook 触发和表单提交等待。")
-      .icon("pause-circle")
-      .version(Version::new(1, 0, 0));
-    base
+  fn base() -> NodeDefinition {
+    NodeDefinition::new(WAIT_NODE_KIND, Version::new(1, 0, 0), "Wait")
+      .add_group(NodeGroupKind::Transform)
+      .add_group(NodeGroupKind::Input)
+      .with_description("在工作流执行过程中添加等待机制。支持时间间隔、特定时间、Webhook 触发和表单提交等待。")
+      .with_icon("pause-circle")
   }
 }
 

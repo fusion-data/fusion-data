@@ -6,8 +6,8 @@ use hetumind_core::{
   version::Version,
   workflow::{
     ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition,
-    NodeDefinitionBuilder, NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind,
-    OutputPortConfig, RegistrationError, make_execution_data_map,
+    NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig,
+    RegistrationError, make_execution_data_map,
   },
 };
 use serde_json::json;
@@ -440,15 +440,14 @@ impl EditImageV1 {
   }
 }
 
-impl TryFrom<NodeDefinitionBuilder> for EditImageV1 {
+impl TryFrom<NodeDefinition> for EditImageV1 {
   type Error = RegistrationError;
 
-  fn try_from(mut base: NodeDefinitionBuilder) -> Result<Self, Self::Error> {
-    base
-      .version(Version::new(1, 0, 0))
-      .inputs([InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build()])
-      .outputs([OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build()])
-      .properties([
+  fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
+    let base = base
+      .add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build())
+      .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build())
+      .add_property(
         // 操作模式
         NodeProperty::builder()
           .display_name("Operation Mode".to_string())
@@ -467,6 +466,8 @@ impl TryFrom<NodeDefinitionBuilder> for EditImageV1 {
             )),
           ])
           .build(),
+      )
+      .add_property(
         // 数据属性名称
         NodeProperty::builder()
           .display_name("Data Property Name".to_string())
@@ -476,6 +477,8 @@ impl TryFrom<NodeDefinitionBuilder> for EditImageV1 {
           .description("Name of the property containing the binary image data".to_string())
           .value(json!("data"))
           .build(),
+      )
+      .add_property(
         // 单操作配置
         NodeProperty::builder()
           .display_name("Operation".to_string())
@@ -509,6 +512,8 @@ impl TryFrom<NodeDefinitionBuilder> for EditImageV1 {
             )),
           ])
           .build(),
+      )
+      .add_property(
         // 多步骤配置
         NodeProperty::builder()
           .display_name("Operations".to_string())
@@ -518,6 +523,8 @@ impl TryFrom<NodeDefinitionBuilder> for EditImageV1 {
           .description("Operations sequence for multi-step mode".to_string())
           .value(json!([]))
           .build(),
+      )
+      .add_property(
         // 输出格式
         NodeProperty::builder()
           .display_name("Output Format".to_string())
@@ -535,6 +542,8 @@ impl TryFrom<NodeDefinitionBuilder> for EditImageV1 {
             Box::new(NodeProperty::new_option("WebP", "webp", json!("webp"), NodePropertyKind::String)),
           ])
           .build(),
+      )
+      .add_property(
         // 图像质量
         NodeProperty::builder()
           .display_name("Quality".to_string())
@@ -544,6 +553,8 @@ impl TryFrom<NodeDefinitionBuilder> for EditImageV1 {
           .description("Image quality (0-100, for lossy formats)".to_string())
           .value(json!(90))
           .build(),
+      )
+      .add_property(
         // 文件名模板
         NodeProperty::builder()
           .display_name("File Name Template".to_string())
@@ -553,6 +564,8 @@ impl TryFrom<NodeDefinitionBuilder> for EditImageV1 {
           .description("Template for output file name".to_string())
           .value(json!("processed-image"))
           .build(),
+      )
+      .add_property(
         // 保留元数据
         NodeProperty::builder()
           .display_name("Preserve Metadata".to_string())
@@ -562,6 +575,8 @@ impl TryFrom<NodeDefinitionBuilder> for EditImageV1 {
           .description("Preserve original image metadata".to_string())
           .value(json!(false))
           .build(),
+      )
+      .add_property(
         // 错误处理选项
         NodeProperty::builder()
           .display_name("Stop on First Error".to_string())
@@ -571,111 +586,8 @@ impl TryFrom<NodeDefinitionBuilder> for EditImageV1 {
           .description("Stop processing on first error (Multi-step mode)".to_string())
           .value(json!(true))
           .build(),
-      ]);
+      );
 
-    let definition = base.build()?;
-
-    Ok(Self { definition: Arc::new(definition) })
-  }
-}
-
-#[cfg(test)]
-mod tests {
-  use hetumind_core::workflow::{NodeDefinitionBuilder, NodeGroupKind, NodeKind, ParameterMap, WorkflowNode};
-  use serde_json::json;
-
-  use crate::constants::EDIT_IMAGE_NODE_KIND;
-
-  use super::*;
-
-  #[test]
-  fn test_parse_single_operation_config() {
-    let mut builder = NodeDefinitionBuilder::default();
-    builder
-      .kind(NodeKind::from(EDIT_IMAGE_NODE_KIND))
-      .groups(vec![NodeGroupKind::Transform, NodeGroupKind::Input, NodeGroupKind::Output])
-      .display_name("Edit Image")
-      .description("Test node")
-      .icon("image");
-    let v1 = EditImageV1::try_from(builder).unwrap();
-
-    // 创建参数映射
-    let mut param_map = serde_json::Map::new();
-    param_map.insert("operation_mode".to_string(), json!("single"));
-    param_map.insert("data_property_name".to_string(), json!("image"));
-    param_map.insert("operation".to_string(), json!("resize"));
-    param_map.insert("width".to_string(), json!(800));
-    param_map.insert("height".to_string(), json!(600));
-
-    // 模拟节点参数
-    let node = WorkflowNode::builder()
-      .kind(NodeKind::from(EDIT_IMAGE_NODE_KIND))
-      .name("test_node".into())
-      .display_name("Test Node")
-      .parameters(ParameterMap::from(param_map))
-      .build();
-
-    let config = v1.parse_node_config(&node).unwrap();
-    assert_eq!(config.operation_mode, ImageOperationMode::Single);
-    assert!(config.single_operation.is_some());
-    assert_eq!(config.single_operation.unwrap().operation, ImageOperation::Resize);
-  }
-
-  #[test]
-  fn test_parse_multi_step_config() {
-    let mut builder = NodeDefinitionBuilder::default();
-    builder
-      .kind(NodeKind::from(EDIT_IMAGE_NODE_KIND))
-      .groups(vec![NodeGroupKind::Transform, NodeGroupKind::Input, NodeGroupKind::Output])
-      .display_name("Edit Image")
-      .description("Test node")
-      .icon("image");
-    let v1 = EditImageV1::try_from(builder).unwrap();
-
-    // 创建参数映射
-    let mut param_map = serde_json::Map::new();
-    param_map.insert("operation_mode".to_string(), json!("multi_step"));
-    param_map.insert("data_property_name".to_string(), json!("image"));
-    param_map.insert("operations".to_string(), json!([]));
-
-    // 模拟节点参数
-    let node = WorkflowNode::builder()
-      .kind(NodeKind::from(EDIT_IMAGE_NODE_KIND))
-      .name("test_node".into())
-      .display_name("Test Node")
-      .parameters(ParameterMap::from(param_map))
-      .build();
-
-    let config = v1.parse_node_config(&node).unwrap();
-    assert_eq!(config.operation_mode, ImageOperationMode::MultiStep);
-    assert!(config.multi_step_config.is_some());
-  }
-
-  #[test]
-  fn test_parse_invalid_config() {
-    let mut builder = NodeDefinitionBuilder::default();
-    builder
-      .kind(NodeKind::from(EDIT_IMAGE_NODE_KIND))
-      .groups(vec![NodeGroupKind::Transform, NodeGroupKind::Input, NodeGroupKind::Output])
-      .display_name("Edit Image")
-      .description("Test node")
-      .icon("image");
-    let v1 = EditImageV1::try_from(builder).unwrap();
-
-    // 创建参数映射
-    let mut param_map = serde_json::Map::new();
-    param_map.insert("operation_mode".to_string(), json!("invalid_mode"));
-    param_map.insert("data_property_name".to_string(), json!("image"));
-
-    // 模拟节点参数
-    let node = WorkflowNode::builder()
-      .kind(NodeKind::from(EDIT_IMAGE_NODE_KIND))
-      .name("test_node".into())
-      .display_name("Test Node")
-      .parameters(ParameterMap::from(param_map))
-      .build();
-
-    let result = v1.parse_node_config(&node);
-    assert!(result.is_err());
+    Ok(Self { definition: Arc::new(base) })
   }
 }

@@ -5,7 +5,7 @@ use hetumind_core::{
   version::Version,
   workflow::{
     ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition,
-    NodeDefinitionBuilder, NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind,
+    NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind,
     NodePropertyKindOptions, OutputPortConfig, RegistrationError, ValidationError, make_execution_data_map,
   },
 };
@@ -283,15 +283,14 @@ impl NodeExecutable for AggregateV1 {
   }
 }
 
-impl TryFrom<NodeDefinitionBuilder> for AggregateV1 {
+impl TryFrom<NodeDefinition> for AggregateV1 {
   type Error = RegistrationError;
 
-  fn try_from(mut base: NodeDefinitionBuilder) -> Result<Self, Self::Error> {
-    base
-      .version(Version::new(1, 0, 0))
-      .inputs([InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build()])
-      .outputs([OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build()])
-      .properties([
+  fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
+    let definition = base
+      .add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build())
+      .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build())
+      .add_property(
         // 聚合模式选择
         NodeProperty::builder()
           .display_name("Aggregate".to_string())
@@ -315,6 +314,8 @@ impl TryFrom<NodeDefinitionBuilder> for AggregateV1 {
             )),
           ])
           .build(),
+      )
+      .add_property(
         // Individual Fields 模式的字段配置
         NodeProperty::builder()
           .display_name("Fields To Aggregate".to_string())
@@ -325,6 +326,8 @@ impl TryFrom<NodeDefinitionBuilder> for AggregateV1 {
           .kind(NodePropertyKind::FixedCollection)
           .kind_options(NodePropertyKindOptions::builder().multiple_values(true).build())
           .build(),
+      )
+      .add_property(
         // All Item Data 模式的目标字段配置
         NodeProperty::builder()
           .display_name("Destination Field Name".to_string())
@@ -334,6 +337,8 @@ impl TryFrom<NodeDefinitionBuilder> for AggregateV1 {
           .placeholder("e.g. items".to_string())
           .kind(NodePropertyKind::String)
           .build(),
+      )
+      .add_property(
         // 字段排除配置
         NodeProperty::builder()
           .display_name("Fields To Exclude".to_string())
@@ -343,6 +348,8 @@ impl TryFrom<NodeDefinitionBuilder> for AggregateV1 {
           .placeholder("e.g. password,secret".to_string())
           .kind(NodePropertyKind::String)
           .build(),
+      )
+      .add_property(
         // 字段包含配置
         NodeProperty::builder()
           .display_name("Fields To Include".to_string())
@@ -352,6 +359,8 @@ impl TryFrom<NodeDefinitionBuilder> for AggregateV1 {
           .placeholder("e.g. name,email".to_string())
           .kind(NodePropertyKind::String)
           .build(),
+      )
+      .add_property(
         // 高级选项
         NodeProperty::builder()
           .display_name("Options".to_string())
@@ -382,9 +391,7 @@ impl TryFrom<NodeDefinitionBuilder> for AggregateV1 {
             )),
           ])
           .build(),
-      ]);
-
-    let definition = base.build()?;
+      );
 
     Ok(Self { definition: Arc::new(definition) })
   }

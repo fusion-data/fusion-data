@@ -16,7 +16,7 @@ use std::sync::Arc;
 
 use hetumind_core::{
   version::Version,
-  workflow::{Node, NodeDefinitionBuilder, NodeExecutor, NodeGroupKind, NodeKind, RegistrationError},
+  workflow::{Node, NodeDefinition, NodeExecutor, NodeGroupKind, NodeKind, RegistrationError},
 };
 use serde::{Deserialize, Serialize};
 
@@ -160,16 +160,11 @@ impl SplitOutNode {
   }
 
   /// 创建基础节点定义构建器
-  fn base() -> NodeDefinitionBuilder {
-    let mut base = NodeDefinitionBuilder::default();
-    base
-      .kind(NodeKind::from(SPLIT_OUT_NODE_KIND))
-      .groups(vec![NodeGroupKind::Transform])
-      .display_name("Split Out")
-      .description("Turn a list inside item(s) into separate items")
-      .icon("file-split")
-      .version(Version::new(1, 0, 0));
-    base
+  fn base() -> NodeDefinition {
+    NodeDefinition::new(SPLIT_OUT_NODE_KIND, Version::new(1, 0, 0), "Split Out")
+      .add_group(NodeGroupKind::Transform)
+      .with_description("Turn a list inside item(s) into separate items")
+      .with_icon("file-split")
   }
 }
 

@@ -7,8 +7,8 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use hetumind_core::version::Version;
 use hetumind_core::workflow::{
-  ConnectionKind, ExecutionDataItems, ExecutionDataMap, Node, NodeDefinition, NodeDefinitionBuilder, NodeExecutable,
-  NodeExecutionContext, NodeExecutionError, NodeExecutor, NodeKind, RegistrationError, make_execution_data_map,
+  ConnectionKind, ExecutionDataItems, ExecutionDataMap, Node, NodeDefinition, NodeExecutable, NodeExecutionContext,
+  NodeExecutionError, NodeExecutor, NodeKind, RegistrationError, make_execution_data_map,
 };
 
 mod parameters;
@@ -18,11 +18,10 @@ pub struct ErrorTriggerNodeV1 {
   definition: Arc<NodeDefinition>,
 }
 
-impl TryFrom<NodeDefinitionBuilder> for ErrorTriggerNodeV1 {
+impl TryFrom<NodeDefinition> for ErrorTriggerNodeV1 {
   type Error = RegistrationError;
 
-  fn try_from(builder: NodeDefinitionBuilder) -> Result<Self, Self::Error> {
-    let definition = builder.build()?;
+  fn try_from(definition: NodeDefinition) -> Result<Self, Self::Error> {
     Ok(Self { definition: Arc::new(definition) })
   }
 }

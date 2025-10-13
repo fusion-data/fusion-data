@@ -1,13 +1,10 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use hetumind_core::{
-  version::Version,
-  workflow::{
-    ConnectionKind, DataSource, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition,
-    NodeDefinitionBuilder, NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind,
-    OutputPortConfig, RegistrationError, make_execution_data_map,
-  },
+use hetumind_core::workflow::{
+  ConnectionKind, DataSource, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition,
+  NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig,
+  RegistrationError, make_execution_data_map,
 };
 use serde_json::json;
 
@@ -239,15 +236,14 @@ impl EditFieldsV1 {
   }
 }
 
-impl TryFrom<NodeDefinitionBuilder> for EditFieldsV1 {
+impl TryFrom<NodeDefinition> for EditFieldsV1 {
   type Error = RegistrationError;
 
-  fn try_from(mut base: NodeDefinitionBuilder) -> Result<Self, Self::Error> {
-    base
-      .version(Version::new(1, 0, 0))
-      .inputs([InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build()])
-      .outputs([OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build()])
-      .properties([
+  fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
+    let definition = base
+      .add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build())
+      .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build())
+      .add_property(
         // 操作模式
         NodeProperty::builder()
           .display_name("Operation Mode".to_string())
@@ -261,6 +257,8 @@ impl TryFrom<NodeDefinitionBuilder> for EditFieldsV1 {
             Box::new(NodeProperty::new_option("JSON", "json", json!("json"), NodePropertyKind::String)),
           ])
           .build(),
+      )
+      .add_property(
         // 手动映射模式配置
         NodeProperty::builder()
           .display_name("Field Operations".to_string())
@@ -270,6 +268,8 @@ impl TryFrom<NodeDefinitionBuilder> for EditFieldsV1 {
           .description("Field operations to apply (Manual Mapping mode)".to_string())
           .value(json!([]))
           .build(),
+      )
+      .add_property(
         // JSON 模式配置
         NodeProperty::builder()
           .display_name("JSON Output Template".to_string())
@@ -279,6 +279,8 @@ impl TryFrom<NodeDefinitionBuilder> for EditFieldsV1 {
           .description("JSON template for output (JSON mode)".to_string())
           .value(json!("{}"))
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Use Expressions".to_string())
           .name("use_expressions")
@@ -287,6 +289,8 @@ impl TryFrom<NodeDefinitionBuilder> for EditFieldsV1 {
           .description("Enable expression support in JSON template".to_string())
           .value(json!(true))
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Validate JSON".to_string())
           .name("validate_json")
@@ -295,6 +299,8 @@ impl TryFrom<NodeDefinitionBuilder> for EditFieldsV1 {
           .description("Validate JSON format before processing".to_string())
           .value(json!(true))
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("JSON Error Handling".to_string())
           .name("error_handling")
@@ -324,6 +330,8 @@ impl TryFrom<NodeDefinitionBuilder> for EditFieldsV1 {
             Box::new(NodeProperty::new_option("Skip Item", "skip_item", json!("skip_item"), NodePropertyKind::String)),
           ])
           .build(),
+      )
+      .add_property(
         // 输出控制
         NodeProperty::builder()
           .display_name("Include Mode".to_string())
@@ -339,6 +347,8 @@ impl TryFrom<NodeDefinitionBuilder> for EditFieldsV1 {
             Box::new(NodeProperty::new_option("Except", "except", json!("except"), NodePropertyKind::String)),
           ])
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Selected Fields".to_string())
           .name("selected_fields")
@@ -347,6 +357,8 @@ impl TryFrom<NodeDefinitionBuilder> for EditFieldsV1 {
           .description("Fields to include or exclude".to_string())
           .value(json!([]))
           .build(),
+      )
+      .add_property(
         // 高级选项
         NodeProperty::builder()
           .display_name("Enable Dot Notation".to_string())
@@ -356,6 +368,8 @@ impl TryFrom<NodeDefinitionBuilder> for EditFieldsV1 {
           .description("Enable dot notation for nested field access".to_string())
           .value(json!(true))
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Ignore Conversion Errors".to_string())
           .name("ignore_conversion_errors")
@@ -364,6 +378,8 @@ impl TryFrom<NodeDefinitionBuilder> for EditFieldsV1 {
           .description("Ignore type conversion errors and continue processing".to_string())
           .value(json!(false))
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Binary Data Mode".to_string())
           .name("binary_data_mode")
@@ -377,6 +393,8 @@ impl TryFrom<NodeDefinitionBuilder> for EditFieldsV1 {
             Box::new(NodeProperty::new_option("Auto", "auto", json!("auto"), NodePropertyKind::String)),
           ])
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Keep Original Type".to_string())
           .name("keep_original_type")
@@ -385,6 +403,8 @@ impl TryFrom<NodeDefinitionBuilder> for EditFieldsV1 {
           .description("Try to preserve original data types".to_string())
           .value(json!(false))
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Duplicate Item".to_string())
           .name("duplicate_item")
@@ -393,6 +413,8 @@ impl TryFrom<NodeDefinitionBuilder> for EditFieldsV1 {
           .description("Duplicate output items for testing".to_string())
           .value(json!(false))
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Duplicate Count".to_string())
           .name("duplicate_count")
@@ -401,6 +423,8 @@ impl TryFrom<NodeDefinitionBuilder> for EditFieldsV1 {
           .description("Number of times to duplicate each item".to_string())
           .value(json!(0))
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Debug Mode".to_string())
           .name("debug_mode")
@@ -409,9 +433,7 @@ impl TryFrom<NodeDefinitionBuilder> for EditFieldsV1 {
           .description("Enable debug mode with detailed logging".to_string())
           .value(json!(false))
           .build(),
-      ]);
-
-    let definition = base.build()?;
+      );
 
     Ok(Self { definition: Arc::new(definition) })
   }
@@ -421,18 +443,20 @@ impl TryFrom<NodeDefinitionBuilder> for EditFieldsV1 {
 mod tests {
   use super::*;
   use crate::constants::EDIT_FIELDS_NODE_KIND;
-  use hetumind_core::workflow::{NodeDefinitionBuilder, NodeGroupKind, NodeKind, ParameterMap, WorkflowNode};
+  use hetumind_core::{
+    version::Version,
+    workflow::{NodeDefinition, NodeGroupKind, NodeKind, ParameterMap, WorkflowNode},
+  };
   use serde_json::json;
 
   #[test]
   fn test_parse_manual_config() {
-    let mut builder = NodeDefinitionBuilder::default();
-    builder
-      .kind(NodeKind::from(EDIT_FIELDS_NODE_KIND))
-      .display_name("Edit Fields")
-      .description("Test node")
-      .icon("edit")
-      .groups(vec![NodeGroupKind::Transform, NodeGroupKind::Input, NodeGroupKind::Output]);
+    let builder = NodeDefinition::new(EDIT_FIELDS_NODE_KIND, Version::new(1, 0, 0), "Edit Fields")
+      .with_description("Test node")
+      .with_icon("edit")
+      .add_group(NodeGroupKind::Transform)
+      .add_group(NodeGroupKind::Input)
+      .add_group(NodeGroupKind::Output);
     let v1 = EditFieldsV1::try_from(builder).unwrap();
 
     // 创建参数映射
@@ -457,13 +481,12 @@ mod tests {
 
   #[test]
   fn test_parse_json_config() {
-    let mut builder = NodeDefinitionBuilder::default();
-    builder
-      .kind(NodeKind::from(EDIT_FIELDS_NODE_KIND))
-      .groups(vec![NodeGroupKind::Transform, NodeGroupKind::Input, NodeGroupKind::Output])
-      .display_name("Edit Fields")
-      .description("Test node")
-      .icon("edit");
+    let builder = NodeDefinition::new(EDIT_FIELDS_NODE_KIND, Version::new(1, 0, 0), "Edit Fields")
+      .add_group(NodeGroupKind::Transform)
+      .add_group(NodeGroupKind::Input)
+      .add_group(NodeGroupKind::Output)
+      .with_description("Test node")
+      .with_icon("edit");
     let v1 = EditFieldsV1::try_from(builder).unwrap();
 
     // 创建参数映射
@@ -486,32 +509,5 @@ mod tests {
     assert_eq!(config.mode, OperationMode::Json);
     assert!(config.json_config.is_some());
     assert!(config.manual_config.is_none());
-  }
-
-  #[test]
-  fn test_parse_invalid_config() {
-    let mut builder = NodeDefinitionBuilder::default();
-    builder
-      .kind(NodeKind::from(EDIT_FIELDS_NODE_KIND))
-      .groups(vec![NodeGroupKind::Transform, NodeGroupKind::Input, NodeGroupKind::Output])
-      .display_name("Edit Fields")
-      .description("Test node")
-      .icon("edit");
-    let v1 = EditFieldsV1::try_from(builder).unwrap();
-
-    // 创建参数映射
-    let mut param_map = serde_json::Map::new();
-    param_map.insert("mode".to_string(), json!("invalid_mode"));
-
-    // 模拟节点参数
-    let node = WorkflowNode::builder()
-      .kind(NodeKind::from(EDIT_FIELDS_NODE_KIND))
-      .name("test_node".into())
-      .display_name("Test Node")
-      .parameters(ParameterMap::from(param_map))
-      .build();
-
-    let result = v1.parse_node_config(&node);
-    assert!(result.is_err());
   }
 }

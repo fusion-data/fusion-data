@@ -5,8 +5,8 @@ use hetumind_core::{
   version::Version,
   workflow::{
     ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition,
-    NodeDefinitionBuilder, NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind,
-    OutputPortConfig, RegistrationError, make_execution_data_map,
+    NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig,
+    RegistrationError, make_execution_data_map,
   },
 };
 use serde_json::json;
@@ -152,15 +152,14 @@ impl NodeExecutable for SummarizeV1 {
   }
 }
 
-impl TryFrom<NodeDefinitionBuilder> for SummarizeV1 {
+impl TryFrom<NodeDefinition> for SummarizeV1 {
   type Error = RegistrationError;
 
-  fn try_from(mut base: NodeDefinitionBuilder) -> Result<Self, Self::Error> {
-    base
-      .version(Version::new(1, 0, 0))
-      .inputs([InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build()])
-      .outputs([OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build()])
-      .properties([
+  fn try_from(mut base: NodeDefinition) -> Result<Self, Self::Error> {
+    let definition = base
+      .add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build())
+      .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build())
+      .add_property(
         // 聚合字段配置
         NodeProperty::builder()
           .display_name("聚合字段")
@@ -170,6 +169,8 @@ impl TryFrom<NodeDefinitionBuilder> for SummarizeV1 {
           .description("要聚合的字段配置列表")
           .placeholder("添加聚合字段...")
           .build(),
+      )
+      .add_property(
         // 分组配置
         NodeProperty::builder()
           .display_name("分组配置")
@@ -179,6 +180,8 @@ impl TryFrom<NodeDefinitionBuilder> for SummarizeV1 {
           .description("按字段分组进行聚合")
           .placeholder("配置分组...")
           .build(),
+      )
+      .add_property(
         // 输出格式
         NodeProperty::builder()
           .display_name("输出格式")
@@ -203,6 +206,8 @@ impl TryFrom<NodeDefinitionBuilder> for SummarizeV1 {
             )),
           ])
           .build(),
+      )
+      .add_property(
         // 序列化风格
         NodeProperty::builder()
           .display_name("序列化风格")
@@ -238,6 +243,8 @@ impl TryFrom<NodeDefinitionBuilder> for SummarizeV1 {
             )),
           ])
           .build(),
+      )
+      .add_property(
         // 高级选项
         NodeProperty::builder()
           .display_name("高级选项")
@@ -246,6 +253,8 @@ impl TryFrom<NodeDefinitionBuilder> for SummarizeV1 {
           .required(false)
           .description("高级配置选项")
           .build(),
+      )
+      .add_property(
         // 包含元数据
         NodeProperty::builder()
           .display_name("包含元数据")
@@ -255,6 +264,8 @@ impl TryFrom<NodeDefinitionBuilder> for SummarizeV1 {
           .description("是否在输出中包含聚合元数据")
           .value(json!(false))
           .build(),
+      )
+      .add_property(
         // 错误处理
         NodeProperty::builder()
           .display_name("错误处理")
@@ -290,6 +301,8 @@ impl TryFrom<NodeDefinitionBuilder> for SummarizeV1 {
             )),
           ])
           .build(),
+      )
+      .add_property(
         // 聚合字段详细配置（用于 FixedCollection）
         NodeProperty::builder()
           .display_name("字段配置")
@@ -298,6 +311,8 @@ impl TryFrom<NodeDefinitionBuilder> for SummarizeV1 {
           .required(false)
           .description("聚合字段的详细配置")
           .build(),
+      )
+      .add_property(
         // 分组字段详细配置
         NodeProperty::builder()
           .display_name("分组字段配置")
@@ -306,10 +321,7 @@ impl TryFrom<NodeDefinitionBuilder> for SummarizeV1 {
           .required(false)
           .description("分组字段的详细配置")
           .build(),
-      ]);
-
-    let definition = base.build()?;
-
+      );
     Ok(Self { definition: Arc::new(definition) })
   }
 }

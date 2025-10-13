@@ -7,9 +7,8 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use hetumind_core::version::Version;
 use hetumind_core::workflow::{
-  ConnectionKind, ExecutionDataItems, ExecutionDataMap, Node, NodeDefinition, NodeDefinitionBuilder, NodeExecutable,
-  NodeExecutionContext, NodeExecutionError, NodeExecutor, NodeGroupKind, NodeKind, RegistrationError,
-  make_execution_data_map,
+  ConnectionKind, ExecutionDataItems, ExecutionDataMap, Node, NodeDefinition, NodeExecutable, NodeExecutionContext,
+  NodeExecutionError, NodeExecutor, NodeGroupKind, NodeKind, RegistrationError, make_execution_data_map,
 };
 
 use crate::constants::START_TRIGGER_NODE_KIND;
@@ -18,11 +17,10 @@ pub struct StartNodeV1 {
   definition: Arc<NodeDefinition>,
 }
 
-impl TryFrom<NodeDefinitionBuilder> for StartNodeV1 {
+impl TryFrom<NodeDefinition> for StartNodeV1 {
   type Error = RegistrationError;
 
-  fn try_from(builder: NodeDefinitionBuilder) -> Result<Self, Self::Error> {
-    let definition = builder.build()?;
+  fn try_from(definition: NodeDefinition) -> Result<Self, Self::Error> {
     Ok(Self { definition: Arc::new(definition) })
   }
 }
@@ -66,14 +64,8 @@ impl StartNode {
   }
 }
 
-fn create_base() -> NodeDefinitionBuilder {
-  let mut base = NodeDefinitionBuilder::default();
-  base
-    .kind(START_TRIGGER_NODE_KIND)
-    .version(Version::new(1, 0, 0))
-    .groups([NodeGroupKind::Trigger])
-    .display_name("Start")
-    .description("The entry point of the workflow.")
-    .outputs(vec![]);
-  base
+fn create_base() -> NodeDefinition {
+  NodeDefinition::new(START_TRIGGER_NODE_KIND, Version::new(1, 0, 0), "Start")
+    .add_group(NodeGroupKind::Trigger)
+    .with_description("The entry point of the workflow.")
 }

@@ -6,8 +6,8 @@ use hetumind_core::{
   version::Version,
   workflow::{
     ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition,
-    NodeDefinitionBuilder, NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind,
-    OutputPortConfig, RegistrationError, ValidationError, make_execution_data_map,
+    NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig,
+    RegistrationError, ValidationError, make_execution_data_map,
   },
 };
 use serde_json::json;
@@ -360,15 +360,14 @@ impl SplitOutV1 {
   }
 }
 
-impl TryFrom<NodeDefinitionBuilder> for SplitOutV1 {
+impl TryFrom<NodeDefinition> for SplitOutV1 {
   type Error = RegistrationError;
 
-  fn try_from(mut base: NodeDefinitionBuilder) -> Result<Self, Self::Error> {
-    base
-      .version(Version::new(1, 0, 0))
-      .inputs([InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build()])
-      .outputs([OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build()])
-      .properties([
+  fn try_from(mut base: NodeDefinition) -> Result<Self, Self::Error> {
+    let definition = base
+      .add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build())
+      .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build())
+      .add_property(
         // 要拆分的字段
         NodeProperty::builder()
           .display_name("Fields to Split".to_string())
@@ -378,6 +377,8 @@ impl TryFrom<NodeDefinitionBuilder> for SplitOutV1 {
           .placeholder("e.g. data.items, users")
           .kind(NodePropertyKind::String)
           .build(),
+      )
+      .add_property(
         // 字段包含策略
         NodeProperty::builder()
           .display_name("Include".to_string())
@@ -407,6 +408,8 @@ impl TryFrom<NodeDefinitionBuilder> for SplitOutV1 {
             )),
           ])
           .build(),
+      )
+      .add_property(
         // 选择性包含字段
         NodeProperty::builder()
           .display_name("Fields to Include".to_string())
@@ -416,6 +419,8 @@ impl TryFrom<NodeDefinitionBuilder> for SplitOutV1 {
           .placeholder("e.g. id, timestamp, status")
           .kind(NodePropertyKind::String)
           .build(),
+      )
+      .add_property(
         // 高级选项
         NodeProperty::builder()
           .display_name("Options".to_string())
@@ -438,10 +443,7 @@ impl TryFrom<NodeDefinitionBuilder> for SplitOutV1 {
             )),
           ])
           .build(),
-      ]);
-
-    let definition = base.build()?;
-
+      );
     Ok(Self { definition: Arc::new(definition) })
   }
 }

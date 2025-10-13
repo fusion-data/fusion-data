@@ -4,9 +4,9 @@ use async_trait::async_trait;
 use hetumind_core::{
   version::Version,
   workflow::{
-    ConnectionKind, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition, NodeDefinitionBuilder,
-    NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig,
-    RegistrationError, make_execution_data_map,
+    ConnectionKind, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition, NodeExecutable,
+    NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig, RegistrationError,
+    make_execution_data_map,
   },
 };
 use serde_json::json;
@@ -488,15 +488,14 @@ impl NodeExecutable for SendEmailV1 {
   }
 }
 
-impl TryFrom<NodeDefinitionBuilder> for SendEmailV1 {
+impl TryFrom<NodeDefinition> for SendEmailV1 {
   type Error = RegistrationError;
 
-  fn try_from(mut base: NodeDefinitionBuilder) -> Result<Self, Self::Error> {
-    base
-      .version(Version::new(1, 0, 0))
-      .inputs([InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build()])
-      .outputs([OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build()])
-      .properties([
+  fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
+    let definition = base
+      .add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build())
+      .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build())
+      .add_property(
         // SMTP 配置
         NodeProperty::builder()
           .display_name("SMTP Host".to_string())
@@ -506,6 +505,8 @@ impl TryFrom<NodeDefinitionBuilder> for SendEmailV1 {
           .kind(NodePropertyKind::String)
           .placeholder("smtp.gmail.com".to_string())
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("SMTP Port".to_string())
           .name("smtp_port")
@@ -514,6 +515,8 @@ impl TryFrom<NodeDefinitionBuilder> for SendEmailV1 {
           .kind(NodePropertyKind::Number)
           .value(json!(587))
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("SMTP Security".to_string())
           .name("smtp_security")
@@ -532,6 +535,8 @@ impl TryFrom<NodeDefinitionBuilder> for SendEmailV1 {
             Box::new(NodeProperty::new_option("None", "none", json!(SmtpSecurity::None), NodePropertyKind::String)),
           ])
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("SMTP Username".to_string())
           .name("smtp_username")
@@ -540,6 +545,8 @@ impl TryFrom<NodeDefinitionBuilder> for SendEmailV1 {
           .kind(NodePropertyKind::String)
           .placeholder("your-email@gmail.com".to_string())
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("SMTP Password".to_string())
           .name("smtp_password")
@@ -548,6 +555,8 @@ impl TryFrom<NodeDefinitionBuilder> for SendEmailV1 {
           .kind(NodePropertyKind::String)
           .password(true)
           .build(),
+      )
+      .add_property(
         // 发件人配置
         NodeProperty::builder()
           .display_name("From Email".to_string())
@@ -557,6 +566,8 @@ impl TryFrom<NodeDefinitionBuilder> for SendEmailV1 {
           .kind(NodePropertyKind::String)
           .placeholder("sender@example.com".to_string())
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("From Name".to_string())
           .name("from_name")
@@ -565,6 +576,8 @@ impl TryFrom<NodeDefinitionBuilder> for SendEmailV1 {
           .kind(NodePropertyKind::String)
           .placeholder("Your Name".to_string())
           .build(),
+      )
+      .add_property(
         // 收件人配置
         NodeProperty::builder()
           .display_name("To Emails".to_string())
@@ -574,6 +587,8 @@ impl TryFrom<NodeDefinitionBuilder> for SendEmailV1 {
           .kind(NodePropertyKind::String)
           .placeholder("recipient1@example.com, recipient2@example.com".to_string())
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("CC Emails".to_string())
           .name("cc_emails")
@@ -582,6 +597,8 @@ impl TryFrom<NodeDefinitionBuilder> for SendEmailV1 {
           .kind(NodePropertyKind::String)
           .placeholder("cc1@example.com, cc2@example.com".to_string())
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("BCC Emails".to_string())
           .name("bcc_emails")
@@ -590,6 +607,8 @@ impl TryFrom<NodeDefinitionBuilder> for SendEmailV1 {
           .kind(NodePropertyKind::String)
           .placeholder("bcc1@example.com, bcc2@example.com".to_string())
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Reply To".to_string())
           .name("reply_to")
@@ -598,6 +617,8 @@ impl TryFrom<NodeDefinitionBuilder> for SendEmailV1 {
           .kind(NodePropertyKind::String)
           .placeholder("reply@example.com".to_string())
           .build(),
+      )
+      .add_property(
         // 邮件内容配置
         NodeProperty::builder()
           .display_name("Subject".to_string())
@@ -607,6 +628,8 @@ impl TryFrom<NodeDefinitionBuilder> for SendEmailV1 {
           .kind(NodePropertyKind::String)
           .placeholder("Your Subject Here".to_string())
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Email Format".to_string())
           .name("email_format")
@@ -625,6 +648,8 @@ impl TryFrom<NodeDefinitionBuilder> for SendEmailV1 {
             )),
           ])
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Text Content".to_string())
           .name("text_content")
@@ -633,6 +658,8 @@ impl TryFrom<NodeDefinitionBuilder> for SendEmailV1 {
           .kind(NodePropertyKind::String)
           .placeholder("Hello, this is the plain text version of the email.".to_string())
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("HTML Content".to_string())
           .name("html_content")
@@ -641,6 +668,8 @@ impl TryFrom<NodeDefinitionBuilder> for SendEmailV1 {
           .kind(NodePropertyKind::String)
           .placeholder("<h1>Hello</h1><p>This is the <strong>HTML</strong> version of the email.</p>".to_string())
           .build(),
+      )
+      .add_property(
         // 附件配置
         NodeProperty::builder()
           .display_name("Attachment Fields".to_string())
@@ -650,6 +679,8 @@ impl TryFrom<NodeDefinitionBuilder> for SendEmailV1 {
           .kind(NodePropertyKind::String)
           .placeholder("attachment1, attachment2".to_string())
           .build(),
+      )
+      .add_property(
         // 选项配置
         NodeProperty::builder()
           .display_name("Priority".to_string())
@@ -669,6 +700,8 @@ impl TryFrom<NodeDefinitionBuilder> for SendEmailV1 {
             Box::new(NodeProperty::new_option("High", "high", json!(EmailPriority::High), NodePropertyKind::String)),
           ])
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Continue on Fail".to_string())
           .name("continue_on_fail")
@@ -677,6 +710,8 @@ impl TryFrom<NodeDefinitionBuilder> for SendEmailV1 {
           .kind(NodePropertyKind::Boolean)
           .value(json!(true))
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Append Attribution".to_string())
           .name("append_attribution")
@@ -685,6 +720,8 @@ impl TryFrom<NodeDefinitionBuilder> for SendEmailV1 {
           .kind(NodePropertyKind::Boolean)
           .value(json!(false))
           .build(),
+      )
+      .add_property(
         // 高级配置
         NodeProperty::builder()
           .display_name("Connection Timeout".to_string())
@@ -694,6 +731,8 @@ impl TryFrom<NodeDefinitionBuilder> for SendEmailV1 {
           .kind(NodePropertyKind::Number)
           .value(json!(30))
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Allow Unauthorized Certs".to_string())
           .name("allow_unauthorized_certs")
@@ -702,6 +741,8 @@ impl TryFrom<NodeDefinitionBuilder> for SendEmailV1 {
           .kind(NodePropertyKind::Boolean)
           .value(json!(false))
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Use Async Sending".to_string())
           .name("use_async")
@@ -710,6 +751,8 @@ impl TryFrom<NodeDefinitionBuilder> for SendEmailV1 {
           .kind(NodePropertyKind::Boolean)
           .value(json!(false))
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Max Concurrent".to_string())
           .name("max_concurrent")
@@ -718,6 +761,8 @@ impl TryFrom<NodeDefinitionBuilder> for SendEmailV1 {
           .kind(NodePropertyKind::Number)
           .value(json!(5))
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Custom Headers".to_string())
           .name("custom_headers")
@@ -726,6 +771,8 @@ impl TryFrom<NodeDefinitionBuilder> for SendEmailV1 {
           .kind(NodePropertyKind::String)
           .placeholder(r#"{"X-Custom-Header": "value"}"#.to_string())
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("Test Connection Only".to_string())
           .name("test_connection_only")
@@ -734,10 +781,7 @@ impl TryFrom<NodeDefinitionBuilder> for SendEmailV1 {
           .kind(NodePropertyKind::Boolean)
           .value(json!(false))
           .build(),
-      ]);
-
-    let definition = base.build()?;
-
+      );
     Ok(Self { definition: Arc::new(definition) })
   }
 }

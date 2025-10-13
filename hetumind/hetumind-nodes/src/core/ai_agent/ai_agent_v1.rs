@@ -4,19 +4,20 @@ use ahash::{HashMap, HashMapExt};
 use async_trait::async_trait;
 use hetumind_core::{
   types::JsonValue,
+  version::Version,
   workflow::{
     ConnectionKind, EngineAction, EngineRequest, EngineResponse, ExecuteNodeAction, ExecutionData, ExecutionDataItems,
-    ExecutionDataMap, InputPortConfig, NodeDefinition, NodeDefinitionBuilder, NodeExecutable, NodeExecutionContext,
-    NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig, RegistrationError, make_execution_data_map,
+    ExecutionDataMap, InputPortConfig, NodeDefinition, NodeExecutable, NodeExecutionContext, NodeExecutionError,
+    NodeProperty, NodePropertyKind, OutputPortConfig, RegistrationError, make_execution_data_map,
   },
 };
 use rig::{client::CompletionClient, completion::Prompt};
 use serde_json::json;
 use uuid::Uuid;
 
-use crate::core::ai_agent::parameters::ToolExecutionStatus;
 use crate::core::ai_agent::tool_manager::ToolManager;
 use crate::core::connection_manager::OptimizedConnectionContext;
+use crate::{constants::AI_AGENT_NODE_KIND, core::ai_agent::parameters::ToolExecutionStatus};
 
 use super::parameters::{AiAgentConfig, ModelInstance, ToolCallRequest, ToolCallResult};
 
@@ -27,100 +28,89 @@ pub struct AiAgentV1 {
 
 impl AiAgentV1 {
   pub fn new() -> Result<Self, RegistrationError> {
-    let base = NodeDefinitionBuilder::default();
+    let base = NodeDefinition::new(AI_AGENT_NODE_KIND, Version::new(1, 0, 0), "AI Agent");
     Self::try_from(base)
   }
 }
 
-impl TryFrom<NodeDefinitionBuilder> for AiAgentV1 {
+impl TryFrom<NodeDefinition> for AiAgentV1 {
   type Error = RegistrationError;
 
-  fn try_from(mut base: NodeDefinitionBuilder) -> Result<Self, Self::Error> {
-    base
-      .kind(hetumind_core::workflow::NodeKind::from("ai_agent"))
-      .version(hetumind_core::version::Version::new(1, 0, 0))
-      .display_name("AI Agent")
-      .description("AI Agent 节点，支持工具调用和记忆功能")
-      .icon("🤖")
-
+  fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
+    let definition = base
+      .with_description("AI Agent 节点，支持工具调用和记忆功能")
+      .with_icon("🤖")
       // 输入端口
-      .inputs([
-        InputPortConfig::builder()
+      .add_input(InputPortConfig::builder()
           .kind(ConnectionKind::Main)
           .display_name("Main Input")
           .required(true)
-          .build(),
-        InputPortConfig::builder()
+          .build())
+      .add_input(InputPortConfig::builder()
           .kind(ConnectionKind::AiModel)
           .display_name("Large Language Model")
           .required(true)
           .max_connections(1)
-          .build(),
-        InputPortConfig::builder()
+          .build())
+      .add_input(InputPortConfig::builder()
           .kind(ConnectionKind::AiMemory)
           .display_name("Memory(Vector storage)")
           .required(false)
-          .build(),
-        InputPortConfig::builder()
+          .build())
+      .add_input(InputPortConfig::builder()
           .kind(ConnectionKind::AiTool)
           .display_name("AI Tool")
           .required(false)
-          .build(),
-      ])
+          .build())
 
       // 输出端口
-      .outputs([
-          OutputPortConfig::builder()
+      .add_output(OutputPortConfig::builder()
             .kind(ConnectionKind::Main)
             .display_name("AI 响应输出")
-            .build(),
-          OutputPortConfig::builder()
+            .build())
+      .add_output(OutputPortConfig::builder()
             .kind(ConnectionKind::AiTool)
             .display_name("工具调用请求")
-            .build(),
-          OutputPortConfig::builder()
+            .build())
+      .add_output(OutputPortConfig::builder()
             .kind(ConnectionKind::Error)
             .display_name("错误输出")
-            .build(),
-      ])
+            .build())
 
       // 参数
-      .properties([
-        NodeProperty::builder()
+      .add_property(NodeProperty::builder()
           .display_name("系统提示词")
           .name("system_prompt")
           .kind(NodePropertyKind::String)
           .required(false)
           .description("AI Agent 的系统提示词")
           .value(json!("你是一个有帮助的AI助手"))
-          .build(),
-        NodeProperty::builder()
+          .build())
+      .add_property(NodeProperty::builder()
           .display_name("最大迭代次数")
           .name("max_iterations")
           .kind(NodePropertyKind::Number)
           .required(false)
           .description("AI Agent 的最大迭代次数")
           .value(json!(10))
-          .build(),
-        NodeProperty::builder()
+          .build())
+      .add_property(NodeProperty::builder()
           .display_name("温度参数")
           .name("temperature")
           .kind(NodePropertyKind::Number)
           .required(false)
           .description("控制生成文本的随机性")
           .value(json!(0.7))
-          .build(),
-        NodeProperty::builder()
+          .build())
+      .add_property(NodeProperty::builder()
           .display_name("是否启用流式响应")
           .name("enable_streaming")
           .kind(NodePropertyKind::Boolean)
           .required(false)
           .description("是否启用流式响应")
           .value(json!(false))
-          .build(),
-      ]);
+          .build());
 
-    let definition = base.build()?;
     Ok(Self { definition: Arc::new(definition), tool_manager: Arc::new(tokio::sync::RwLock::new(ToolManager::new())) })
   }
 }
@@ -399,7 +389,7 @@ impl AiAgentV1 {
         // 根据文档示例，直接使用 client.agent() 方法创建
         let model_name = config.get("model").and_then(|v| v.as_str()).unwrap_or("gpt-3.5-turbo");
 
-        let agent = client.agent(model_name).build();
+        let agent = client.agent(model_name);
         Ok(Box::new(agent))
       }
       "anthropic" => {
@@ -414,7 +404,7 @@ impl AiAgentV1 {
 
         let model_name = config.get("model").and_then(|v| v.as_str()).unwrap_or("claude-3-sonnet-20240229");
 
-        let agent = client.agent(model_name).build();
+        let agent = client.agent(model_name);
         Ok(Box::new(agent))
       }
       _ => Err(NodeExecutionError::ConfigurationError(format!("Unsupported LLM provider: {}", provider))),

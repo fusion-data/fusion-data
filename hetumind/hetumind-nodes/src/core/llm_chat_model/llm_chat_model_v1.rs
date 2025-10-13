@@ -6,8 +6,8 @@ use hetumind_core::{
   version::Version,
   workflow::{
     ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition,
-    NodeDefinitionBuilder, NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeGroupKind, NodeProperty,
-    NodePropertyKind, OutputPortConfig, RegistrationError,
+    NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeGroupKind, NodeProperty, NodePropertyKind,
+    OutputPortConfig, RegistrationError,
   },
 };
 use rig::providers::{anthropic::Client as AnthropicClient, openai::Client as OpenAIClient};
@@ -24,116 +24,96 @@ pub struct LlmChatModelV1 {
 
 impl LlmChatModelV1 {
   pub fn new() -> Result<Self, RegistrationError> {
-    let base = NodeDefinitionBuilder::default();
+    let base = NodeDefinition::new("placeholder", Version::new(1, 0, 0), "placeholder");
     Self::try_from(base)
   }
 }
 
-impl TryFrom<NodeDefinitionBuilder> for LlmChatModelV1 {
+impl TryFrom<NodeDefinition> for LlmChatModelV1 {
   type Error = RegistrationError;
 
-  fn try_from(mut base: NodeDefinitionBuilder) -> Result<Self, Self::Error> {
-    base
-      .kind("llm_chat_model")
-      .version(Version::new(1, 0, 0))
-      .display_name("LLM Chat Model")
-      .description("LLM 聊天模型节点，支持多种模型提供者")
-      .groups(vec![NodeGroupKind::Transform])
-      .icon("🧠")
-
+  fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
+    let definition = base
+      .with_description("LLM 聊天模型节点，支持多种模型提供者")
+      .add_group(NodeGroupKind::Transform)
+      .with_icon("🧠")
       // 输入端口
-      .inputs([
-        InputPortConfig::builder()
+      .add_input(InputPortConfig::builder()
           .kind(ConnectionKind::Main)
           .display_name("聊天消息输入")
           .required(true)
-          .build(),
-      ])
-
+          .build())
       // 输出端口
-      .outputs([
-          OutputPortConfig::builder()
+      .add_output(OutputPortConfig::builder()
             .kind(ConnectionKind::Main)
             .display_name("模型响应")
-            .build(),
-          OutputPortConfig::builder()
+            .build())
+      // 模型实例端口
+      .add_output(OutputPortConfig::builder()
             .kind(ConnectionKind::AiModel)
             .display_name("模型实例")
-            .build(),
-          OutputPortConfig::builder()
+            .build())
+      // 错误输出端口
+      .add_output(OutputPortConfig::builder()
             .kind(ConnectionKind::Error)
             .display_name("错误输出")
-            .build(),
-      ])
-
+            .build())
       // 参数
-      .properties([
-          NodeProperty::builder()
+      .add_property(NodeProperty::builder()
             .name("provider")
             .kind(NodePropertyKind::String)
             .display_name("模型提供者")
             .value(json!("openai"))
             .required(true)
-            .build(),
-          NodeProperty::builder()
+            .build())
+      .add_property(NodeProperty::builder()
             .name("model")
             .kind(NodePropertyKind::String)
             .display_name("模型名称")
             .value(json!("gpt-3.5-turbo"))
-            .required(true)
-            .build(),
-          NodeProperty::builder()
+            .required(true).build())
+          .add_property(NodeProperty::builder()
             .name("credential_id")
             .kind(NodePropertyKind::String)
             .display_name("凭证ID")
             .description("用于获取API密钥的凭证ID，如果提供则优先使用凭证服务")
-            .required(false)
-            .build(),
-          NodeProperty::builder()
+            .required(false).build())
+          .add_property(NodeProperty::builder()
             .name("api_key")
             .kind(NodePropertyKind::String)
             .display_name("API 密钥")
             .description("API密钥，当未指定凭证ID时使用")
-            .required(false)  // 可以从环境变量获取
-            .build(),
-          NodeProperty::builder()
+            .required(false).build())
+          .add_property(NodeProperty::builder()
             .name("base_url")
             .kind(NodePropertyKind::String)
             .display_name("API 基础URL")
-            .required(false)
-            .build(),
-          NodeProperty::builder()
+            .required(false).build())
+          .add_property(NodeProperty::builder()
             .name("max_tokens")
             .kind(NodePropertyKind::Number)
             .display_name("最大令牌数")
             .value(json!(2000))
-            .required(false)
-            .build(),
-          NodeProperty::builder()
+            .required(false).build())
+          .add_property(NodeProperty::builder()
             .name("temperature")
             .kind(NodePropertyKind::Number)
             .display_name("温度参数")
             .value(json!(0.7))
-            .required(false)
-            .build(),
-          NodeProperty::builder()
+            .required(false).build())
+          .add_property(NodeProperty::builder()
             .name("stream")
             .kind(NodePropertyKind::Boolean)
             .display_name("是否启用流式响应")
             .value(json!(false))
-            .required(false)
-            .build(),
-          NodeProperty::builder()
+            .required(false).build())
+          .add_property(NodeProperty::builder()
             .name("timeout")
             .kind(NodePropertyKind::Number)
             .display_name("超时时间（秒）")
             .value(json!(60))
             .required(false)
-            .build(),
-      ]);
-
-    let definition = base.build()?;
-
+            .build());
     Ok(Self { definition: Arc::new(definition) })
   }
 }

@@ -7,13 +7,16 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use hetumind_core::{
   types::JsonValue,
+  version::Version,
   workflow::{
     ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition,
-    NodeDefinitionBuilder, NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeGroupKind, NodeProperty,
-    NodePropertyKind, OutputPortConfig, RegistrationError,
+    NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeGroupKind, NodeProperty, NodePropertyKind,
+    OutputPortConfig, RegistrationError,
   },
 };
 use serde_json::json;
+
+use crate::constants::READ_WRITE_FILES_NODE_KIND;
 
 use super::utils::{FileReader, FileWriter};
 
@@ -270,103 +273,65 @@ impl NodeExecutable for ReadWriteFilesV1 {
   }
 }
 
-impl TryFrom<NodeDefinitionBuilder> for ReadWriteFilesV1 {
+impl TryFrom<NodeDefinition> for ReadWriteFilesV1 {
   type Error = RegistrationError;
 
-  fn try_from(_base: NodeDefinitionBuilder) -> Result<Self, Self::Error> {
-    let definition = create_definition()?;
-    Ok(Self::new(definition))
-  }
-}
-
-/// 创建 Read/Write Files 节点定义
-pub fn create_definition() -> Result<NodeDefinition, RegistrationError> {
-  NodeDefinitionBuilder::default()
-    .kind("hetumind_nodes::ReadWriteFiles")
-    .version(hetumind_core::version::Version::new(1, 0, 0))
-    .groups([NodeGroupKind::Input, NodeGroupKind::Output])
-    .display_name("Read/Write Files")
-    .description("从磁盘读取文件或将文件写入磁盘。支持多种文件格式和操作模式。")
-    .icon("file")
-    .inputs(vec![InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build()])
-    .outputs(vec![OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build()])
-    .properties(vec![
-      // 操作类型选择
-      NodeProperty::builder()
-        .display_name("操作类型")
-        .name("operation")
-        .kind(NodePropertyKind::Options)
-        .required(true)
-        .description("选择要执行的操作类型")
-        .value(json!("read"))
-        .options(vec![
-          Box::new(NodeProperty::new_option("读取文件", "read", json!("read"), NodePropertyKind::Options)),
-          Box::new(NodeProperty::new_option("写入文件", "write", json!("write"), NodePropertyKind::Options)),
-        ])
-        .build(),
-      // 读操作参数
-      NodeProperty::builder()
-        .display_name("文件选择器")
-        .name("file_selector")
-        .kind(NodePropertyKind::String)
-        .required(false)
-        .description("用于匹配文件的 glob 模式，支持通配符如 * 和 **")
-        .placeholder("/path/to/files/*.txt")
-        .build(),
-      // 写操作参数
-      NodeProperty::builder()
-        .display_name("文件路径")
-        .name("file_path")
-        .kind(NodePropertyKind::String)
-        .required(false)
-        .description("要写入的文件路径")
-        .placeholder("/path/to/output/file.txt")
-        .build(),
-      // 选项参数
-      NodeProperty::builder()
-        .display_name("选项")
-        .name("options")
-        .kind(NodePropertyKind::Collection)
-        .required(false)
-        .placeholder("添加选项")
-        .options(vec![
-          Box::new(NodeProperty::new_option("继续执行", "continue_on_fail", json!(false), NodePropertyKind::Boolean)),
-          Box::new(NodeProperty::new_option("追加模式", "append", json!(false), NodePropertyKind::Boolean)),
-          Box::new(NodeProperty::new_option("文件名", "file_name", json!(""), NodePropertyKind::String)),
-        ])
-        .build(),
-    ])
-    .build()
-    .map_err(RegistrationError::NodeDefinitionBuilderError)
-}
-
-#[cfg(test)]
-mod tests {
-  use crate::core::read_write_files::OperationKind;
-
-  use super::*;
-
-  #[test]
-  fn test_definition_creation() {
-    let definition = create_definition().unwrap();
-    assert_eq!(definition.kind.as_ref(), "hetumind_nodes::ReadWriteFiles");
-    assert_eq!(definition.display_name, "Read/Write Files");
-    assert_eq!(definition.inputs.len(), 1);
-    assert_eq!(definition.outputs.len(), 1);
-    assert_eq!(definition.properties.len(), 4); // operation, file_selector, file_path, options
-  }
-
-  #[test]
-  fn test_operation_kind_validation() {
-    let read_op = OperationKind::Read;
-    let serialized = serde_json::to_string(&read_op).unwrap();
-    assert_eq!(serialized, "\"read\"");
-
-    let write_op = OperationKind::Write;
-    let serialized = serde_json::to_string(&write_op).unwrap();
-    assert_eq!(serialized, "\"write\"");
-
-    let deserialized: OperationKind = serde_json::from_str("\"read\"").unwrap();
-    assert_eq!(deserialized, OperationKind::Read);
+  fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
+    let definition = base
+      .add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build())
+      .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build())
+      .add_property(
+        // 操作类型选择
+        NodeProperty::builder()
+          .display_name("操作类型")
+          .name("operation")
+          .kind(NodePropertyKind::Options)
+          .required(true)
+          .description("选择要执行的操作类型")
+          .value(json!("read"))
+          .options(vec![
+            Box::new(NodeProperty::new_option("读取文件", "read", json!("read"), NodePropertyKind::Options)),
+            Box::new(NodeProperty::new_option("写入文件", "write", json!("write"), NodePropertyKind::Options)),
+          ])
+          .build(),
+      )
+      .add_property(
+        // 读操作参数
+        NodeProperty::builder()
+          .display_name("文件选择器")
+          .name("file_selector")
+          .kind(NodePropertyKind::String)
+          .required(false)
+          .description("用于匹配文件的 glob 模式，支持通配符如 * 和 **")
+          .placeholder("/path/to/files/*.txt")
+          .build(),
+      )
+      .add_property(
+        // 写操作参数
+        NodeProperty::builder()
+          .display_name("文件路径")
+          .name("file_path")
+          .kind(NodePropertyKind::String)
+          .required(false)
+          .description("要写入的文件路径")
+          .placeholder("/path/to/output/file.txt")
+          .build(),
+      )
+      .add_property(
+        // 选项参数
+        NodeProperty::builder()
+          .display_name("选项")
+          .name("options")
+          .kind(NodePropertyKind::Collection)
+          .required(false)
+          .placeholder("添加选项")
+          .options(vec![
+            Box::new(NodeProperty::new_option("继续执行", "continue_on_fail", json!(false), NodePropertyKind::Boolean)),
+            Box::new(NodeProperty::new_option("追加模式", "append", json!(false), NodePropertyKind::Boolean)),
+            Box::new(NodeProperty::new_option("文件名", "file_name", json!(""), NodePropertyKind::String)),
+          ])
+          .build(),
+      );
+    Ok(Self { definition: Arc::new(definition) })
   }
 }

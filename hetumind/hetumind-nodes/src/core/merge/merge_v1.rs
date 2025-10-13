@@ -4,9 +4,9 @@ use async_trait::async_trait;
 use hetumind_core::{
   version::Version,
   workflow::{
-    ConnectionKind, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition, NodeDefinitionBuilder,
-    NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig,
-    RegistrationError, make_execution_data_map,
+    ConnectionKind, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition, NodeExecutable,
+    NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig, RegistrationError,
+    make_execution_data_map,
   },
 };
 use serde_json::json;
@@ -85,15 +85,14 @@ impl NodeExecutable for MergeV1 {
   }
 }
 
-impl TryFrom<NodeDefinitionBuilder> for MergeV1 {
+impl TryFrom<NodeDefinition> for MergeV1 {
   type Error = RegistrationError;
 
-  fn try_from(mut base: NodeDefinitionBuilder) -> Result<Self, Self::Error> {
-    base
-      .version(Version::new(1, 0, 0))
-      .inputs([InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build()])
-      .outputs([OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build()])
-      .properties([
+  fn try_from(mut base: NodeDefinition) -> Result<Self, Self::Error> {
+    let definition = base
+      .add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build())
+      .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build())
+      .add_property(
         NodeProperty::builder()
           .display_name("合并模式")
           .name("mode")
@@ -123,6 +122,8 @@ impl TryFrom<NodeDefinitionBuilder> for MergeV1 {
             )),
           ])
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("合并键")
           .name("merge_key")
@@ -131,6 +132,8 @@ impl TryFrom<NodeDefinitionBuilder> for MergeV1 {
           .description("用于按键合并的字段名（仅 mergeByKey 模式）")
           .placeholder("id")
           .build(),
+      )
+      .add_property(
         NodeProperty::builder()
           .display_name("输入端口数量")
           .name("input_ports")
@@ -139,10 +142,7 @@ impl TryFrom<NodeDefinitionBuilder> for MergeV1 {
           .description("期望的输入端口数量（2-10）")
           .value(json!(2))
           .build(),
-      ]);
-
-    let definition = base.build()?;
-
+      );
     Ok(Self { definition: Arc::new(definition) })
   }
 }

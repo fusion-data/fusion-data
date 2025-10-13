@@ -47,7 +47,6 @@ pub fn create_smtp_transport(config: &SmtpConfig) -> Result<SmtpTransport, NodeE
         })?
         .port(config.port)
         .credentials(credentials)
-        .build()
     }
     SmtpSecurity::Starttls => {
       // STARTTLS 连接 (通常端口 587)
@@ -58,12 +57,11 @@ pub fn create_smtp_transport(config: &SmtpConfig) -> Result<SmtpTransport, NodeE
         })?
         .port(config.port)
         .credentials(credentials)
-        .build()
     }
     SmtpSecurity::None => {
       // 无加密连接 (不推荐)
       warn!("Using unencrypted SMTP connection. This is not recommended for production.");
-      SmtpTransport::builder_dangerous(&config.host).port(config.port).credentials(credentials).build()
+      SmtpTransport::builder_dangerous(&config.host).port(config.port).credentials(credentials)
     }
   };
 
@@ -79,7 +77,7 @@ pub fn create_smtp_transport(config: &SmtpConfig) -> Result<SmtpTransport, NodeE
     // Note: lettre 的证书验证配置可能需要根据具体版本调整
   }
 
-  Ok(transport)
+  Ok(transport.build())
 }
 
 /// 创建异步 SMTP 传输器
@@ -98,7 +96,6 @@ pub async fn create_async_smtp_transport(
         })?
         .port(config.port)
         .credentials(credentials)
-        .build()
     }
     SmtpSecurity::Starttls => {
       // STARTTLS 连接
@@ -109,7 +106,6 @@ pub async fn create_async_smtp_transport(
         })?
         .port(config.port)
         .credentials(credentials)
-        .build()
     }
     SmtpSecurity::None => {
       // 无加密连接
@@ -117,11 +113,10 @@ pub async fn create_async_smtp_transport(
       lettre::AsyncSmtpTransport::<lettre::Tokio1Executor>::builder_dangerous(&config.host)
         .port(config.port)
         .credentials(credentials)
-        .build()
     }
   };
 
-  Ok(transport)
+  Ok(transport.build())
 }
 
 /// 构建邮件消息

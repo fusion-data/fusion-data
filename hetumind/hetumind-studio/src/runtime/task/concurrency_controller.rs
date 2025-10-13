@@ -23,7 +23,7 @@ pub struct ConcurrencyController {
 impl ConcurrencyController {
   pub fn new(config: WorkflowEngineSetting) -> Self {
     Self {
-      execution_semaphore: Arc::new(Semaphore::new(config.max_concurrent_executions as usize)),
+      execution_semaphore: Arc::new(Semaphore::new(config.max_concurrent_executions())),
       node_type_limits: HashMap::default(),
       user_limits: HashMap::default(),
       resource_monitor: Arc::new(ResourceMonitor::new()),

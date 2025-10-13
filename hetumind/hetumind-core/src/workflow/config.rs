@@ -16,19 +16,6 @@ pub struct RetryConfig {
   pub retryable_errors: Vec<String>,
 }
 
-impl Default for RetryConfig {
-  fn default() -> Self {
-    Self {
-      max_retries: 3,
-      retry_interval_seconds: 10,
-      base_delay_ms: 1000,
-      max_delay_ms: 30000,
-      backoff_multiplier: 2.0,
-      retryable_errors: vec!["timeout".to_string(), "network".to_string(), "resource_unavailable".to_string()],
-    }
-  }
-}
-
 /// 资源管理配置
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ResourceManagementConfig {
@@ -65,38 +52,24 @@ pub struct CacheConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WorkflowEngineSetting {
   /// 最大并发执行数
-  pub max_concurrent_executions: u32,
+  pub max_concurrent_executions: Option<u32>,
   /// 节点执行超时（秒）
   pub node_timeout_seconds: u64,
   /// 工作流执行超时（秒）
   pub workflow_timeout_seconds: u64,
-  /// 重试配置
-  pub retry_config: RetryConfig,
   /// 内存限制（MB）
   pub memory_limit_mb: u64,
-  /// 新增优化字段
-  pub enable_parallel_execution: bool,
-  pub enable_node_caching: bool,
+  /// 重试配置
+  pub retry_config: RetryConfig,
   pub cache_config: Option<CacheConfig>,
   pub resource_management: ResourceManagementConfig,
 }
 
-impl Default for WorkflowEngineSetting {
-  fn default() -> Self {
-    Self {
-      max_concurrent_executions: num_cpus::get() as u32, // 基于 CPU 逻辑核数
-      node_timeout_seconds: 30,
-      workflow_timeout_seconds: 300,
-      retry_config: RetryConfig::default(),
-      memory_limit_mb: 1024,
-      enable_parallel_execution: true,
-      enable_node_caching: true,
-      cache_config: Some(CacheConfig::default()),
-      resource_management: ResourceManagementConfig {
-        cpu_core_based_scaling: true,
-        deadlock_detection_enabled: true,
-        resource_allocation_strategy: ResourceAllocationStrategy::Equal,
-      },
+impl WorkflowEngineSetting {
+  pub fn max_concurrent_executions(&self) -> usize {
+    match self.max_concurrent_executions {
+      Some(v) => v as usize,
+      None => num_cpus::get(),
     }
   }
 }
