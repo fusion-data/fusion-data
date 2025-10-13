@@ -13,7 +13,7 @@ use tokio::sync::OnceCell;
 use hetumind_core::workflow::{ErrorHandlingStrategy, ExecutionMode, WorkflowId, WorkflowStatus};
 use hetumind_studio::{endpoint, start::app_builder};
 
-// 使用 std::sync::Once 确保只初始化一次
+// 确保只初始化一次
 static ONCE: Lazy<OnceCell<Application>> = Lazy::new(OnceCell::new);
 
 pub async fn get_server() -> TestServer {
@@ -45,35 +45,18 @@ pub struct TestContext {
 
 impl TestContext {
   pub async fn setup() -> Self {
-    // 使用 std::sync::Once 确保只运行一次全局设置
-    ONCE.get_or_init(|| async { init_application().await.unwrap() }).await;
+    ONCE
+      .get_or_init(|| async { app_builder(Some(File::with_name("resources/test-app.toml"))).run().await.unwrap() })
+      .await;
 
     let application = Application::global();
     let mm = application.component::<ModelManager>();
-
-    // // 运行数据库迁移
-    // mm.dbx()
-    //   .use_postgres(|dbx| async move {
-    //     sqlx::migrate::Migrator::new(std::path::Path::new("scripts/migrations"))
-    //       .await
-    //       .unwrap()
-    //       .run(dbx.db())
-    //       .await
-    //       .unwrap();
-    //     Ok(())
-    //   })
-    //   .await
-    //   .unwrap();
 
     let router = endpoint::api::routes().with_state(application);
     let dbx = mm.dbx().db_postgres().unwrap().clone();
 
     TestContext { router, dbx }
   }
-}
-
-async fn init_application() -> Result<Application, DataError> {
-  app_builder(Some(File::with_name("resources/test-app.toml"))).run().await
 }
 
 #[allow(dead_code)]

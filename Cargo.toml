@@ -6,7 +6,7 @@ members = [
   "hetuflow/hetuflow-core",
   "hetuflow/hetuflow-server",
   "hetuflow/hetuflow-agent",
-  "hetuflow/hetuflow-sdk",
+  # "hetuflow/hetuflow-sdk",
   "hetuflow/hetuflow-test",
   "hetuflow/hetuflow-docs",
   "hetumind/hetumind-core",

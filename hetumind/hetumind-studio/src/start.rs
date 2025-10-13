@@ -39,7 +39,5 @@ pub async fn start() -> Result<(), DataError> {
   let app = app_builder::<config::Config>(None).run().await?;
 
   // 初始化 web
-  init_web(app).await?;
-
-  Ok(())
+  init_web(app).await
 }

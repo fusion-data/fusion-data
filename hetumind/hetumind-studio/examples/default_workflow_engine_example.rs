@@ -13,7 +13,9 @@ use async_trait::async_trait;
 use fusion_common::ahash::HashMap;
 use fusion_common::ctx::{Ctx, CtxPayload};
 use fusion_common::time::now;
-use hetumind_core::workflow::{Execution, PinData, WorkflowExecutionError, WorkflowMeta, WorkflowNode, WorkflowStatus, WorkflowTriggerData};
+use hetumind_core::workflow::{
+  Execution, PinData, WorkflowExecutionError, WorkflowMeta, WorkflowNode, WorkflowStatus, WorkflowTriggerData,
+};
 use hetumind_core::{
   types::JsonValue,
   version::Version,

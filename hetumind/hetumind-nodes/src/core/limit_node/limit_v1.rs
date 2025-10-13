@@ -105,7 +105,7 @@ impl NodeExecutable for LimitV1 {
       log::error!("Limit 配置验证失败: {:?}", e);
       return Err(NodeExecutionError::ExecutionFailed {
         node_name: node.name.clone().into(),
-        message: Some(format!("Limit 配置验证失败: {:?}", e))
+        message: Some(format!("Limit 配置验证失败: {:?}", e)),
       });
     }
 

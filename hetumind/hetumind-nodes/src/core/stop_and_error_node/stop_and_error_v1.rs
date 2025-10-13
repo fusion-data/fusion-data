@@ -119,9 +119,9 @@ impl NodeExecutable for StopAndErrorV1 {
 
     // 抛出工作流执行错误
     Err(NodeExecutionError::ExecutionFailed {
-        node_name: context.current_node_name.clone(),
-        message: Some(error_message)
-      })
+      node_name: context.current_node_name.clone(),
+      message: Some(error_message),
+    })
   }
 }
 

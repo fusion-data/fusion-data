@@ -2,7 +2,8 @@ use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 
 use super::{
-  ExecutionContext, ExecutionId, ExecutionResult, ExecutionStatus, NodeName, WorkflowExecutionError, WorkflowTriggerData,
+  ExecutionContext, ExecutionId, ExecutionResult, ExecutionStatus, NodeName, WorkflowExecutionError,
+  WorkflowTriggerData,
 };
 
 /// 执行指标

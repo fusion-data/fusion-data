@@ -471,7 +471,7 @@ fn handle_evaluation_error(error_msg: &str, options: &IfNodeOptions) -> Result<b
       error!("停止执行: {}", error_msg);
       Err(NodeExecutionError::ExecutionFailed {
         node_name: "IfNode".to_string().into(),
-        message: Some(error_msg.to_string())
+        message: Some(error_msg.to_string()),
       })
     }
     ErrorHandlingStrategy::SkipItem => {

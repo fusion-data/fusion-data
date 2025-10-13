@@ -2,7 +2,7 @@
 
 use async_trait::async_trait;
 use hetumind_core::binary_storage::{
-  BinaryDataMetadata, BinaryDataStorage, BinaryStorageError, StorageCapabilities, StorageType,
+  BinaryDataMetadata, BinaryDataStorage, BinaryStorageError, StorageCapabilities, StorageKind,
 };
 use log::debug;
 use opendal::{ErrorKind, Operator};
@@ -11,7 +11,7 @@ use uuid::Uuid;
 /// 基于 opendal 的存储实现
 pub struct OpenDalStorage {
   operator: Operator,
-  storage_type: StorageType,
+  storage_kind: StorageKind,
   capabilities: StorageCapabilities,
 }
 
@@ -24,15 +24,14 @@ impl OpenDalStorage {
   ///
   /// # 返回
   /// - `Result<Self, BinaryStorageError>`: 创建结果
-  pub fn new(operator: Operator, storage_type: StorageType) -> Result<Self, BinaryStorageError> {
+  pub fn new(operator: Operator, storage_type: StorageKind) -> Result<Self, BinaryStorageError> {
     let capabilities = match storage_type {
-      StorageType::Fs => StorageCapabilities::for_filesystem(),
-      StorageType::S3 => StorageCapabilities::for_object_storage(),
-      StorageType::Memory => StorageCapabilities::for_memory(),
-      StorageType::Redis => StorageCapabilities::for_memory(), // Redis 类似于内存存储
+      StorageKind::Fs => StorageCapabilities::for_filesystem(),
+      StorageKind::S3 => StorageCapabilities::for_object_storage(),
+      StorageKind::Memory => StorageCapabilities::for_memory(),
     };
 
-    Ok(Self { operator, storage_type, capabilities })
+    Ok(Self { operator, storage_kind: storage_type, capabilities })
   }
 
   /// 生成唯一文件键
@@ -141,11 +140,10 @@ impl BinaryDataStorage for OpenDalStorage {
   }
 
   fn storage_type_name(&self) -> &'static str {
-    match self.storage_type {
-      StorageType::Fs => "fs",
-      StorageType::S3 => "s3",
-      StorageType::Memory => "memory",
-      StorageType::Redis => "redis",
+    match self.storage_kind {
+      StorageKind::Fs => "fs",
+      StorageKind::S3 => "s3",
+      StorageKind::Memory => "memory",
     }
   }
 }
@@ -160,7 +158,7 @@ impl BinaryDataStorage for OpenDalStorage {
 pub async fn create_fs_storage(root: &str) -> Result<OpenDalStorage, BinaryStorageError> {
   let builder = opendal::services::Fs::default().root(root);
   let operator = Operator::new(builder).map_err(|e| BinaryStorageError::config(e.to_string()))?.finish();
-  OpenDalStorage::new(operator, StorageType::Fs)
+  OpenDalStorage::new(operator, StorageKind::Fs)
 }
 
 /// 创建S3存储
@@ -190,7 +188,7 @@ pub async fn create_s3_storage(
     builder = builder.endpoint(ep);
   }
   let operator = Operator::new(builder).map_err(|e| BinaryStorageError::config(e.to_string()))?.finish();
-  OpenDalStorage::new(operator, StorageType::S3)
+  OpenDalStorage::new(operator, StorageKind::S3)
 }
 
 /// 创建内存存储
@@ -200,21 +198,7 @@ pub async fn create_s3_storage(
 pub async fn create_memory_storage() -> Result<OpenDalStorage, BinaryStorageError> {
   let builder = opendal::services::Memory::default();
   let operator = Operator::new(builder).map_err(|e| BinaryStorageError::config(e.to_string()))?.finish();
-  OpenDalStorage::new(operator, StorageType::Memory)
-}
-
-/// 创建Redis存储
-///
-/// # 参数
-/// - `endpoint`: Redis端点
-/// - `db`: 数据库编号
-///
-/// # 返回
-/// - `Result<OpenDalStorage, BinaryStorageError>`: 存储实例
-pub async fn create_redis_storage(endpoint: &str, db: i64) -> Result<OpenDalStorage, BinaryStorageError> {
-  let builder = opendal::services::Redis::default().endpoint(endpoint).db(db);
-  let operator = Operator::new(builder).map_err(|e| BinaryStorageError::config(e.to_string()))?.finish();
-  OpenDalStorage::new(operator, StorageType::Redis)
+  OpenDalStorage::new(operator, StorageKind::Memory)
 }
 
 #[cfg(test)]

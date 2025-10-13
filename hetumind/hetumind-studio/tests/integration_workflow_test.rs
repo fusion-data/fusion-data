@@ -8,6 +8,10 @@
 //! - File I/O operations with ReadWriteFilesNode
 //! - Complete workflow execution with DefaultWorkflowEngine
 
+mod common;
+
+use common::TestContext;
+
 use std::fs;
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -301,6 +305,7 @@ async fn test_integration_workflow() -> Result<(), Box<dyn std::error::Error>> {
 
   println!("🚀 Starting Integration Workflow Test");
   println!("=====================================");
+  TestContext::setup().await;
 
   // 1. Create node registry and register all required nodes
   let node_registry = NodeRegistry::new();
@@ -488,6 +493,7 @@ async fn test_integration_workflow() -> Result<(), Box<dyn std::error::Error>> {
 async fn test_integration_workflow_false_branch() -> Result<(), Box<dyn std::error::Error>> {
   // Test the false branch by changing the trigger data
   println!("\n🔄 Testing False Branch...");
+  TestContext::setup().await;
 
   // Setup similar to main test but with different trigger data
   let node_registry = NodeRegistry::new();

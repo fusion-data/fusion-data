@@ -7,7 +7,7 @@ use log::debug;
 use tokio::sync::RwLock;
 
 use crate::binary_storage::{
-  BasicMetricsCollector, BinaryDataMetadata, BinaryDataStorage, BinaryStorageError, StorageType,
+  BasicMetricsCollector, BinaryDataMetadata, BinaryDataStorage, BinaryStorageError, StorageKind,
 };
 use crate::types::BinaryFileKind;
 use crate::workflow::BinaryDataReference;
@@ -26,7 +26,7 @@ pub struct BinaryDataManager {
   /// 当前缓存大小
   cache_size: Arc<RwLock<usize>>,
   /// 存储类型
-  storage_type: StorageType,
+  storage_type: StorageKind,
   /// 指标收集器
   metrics_collector: Arc<BasicMetricsCollector>,
 }
@@ -35,11 +35,9 @@ impl BinaryDataManager {
   /// 创建新的二进制数据管理器
   pub fn new(storage: Arc<dyn BinaryDataStorage>, cache_limit: usize) -> Result<Self, BinaryStorageError> {
     let storage_type = match storage.storage_type_name() {
-      "fs" => StorageType::Fs,
-      "s3" => StorageType::S3,
-      "memory" => StorageType::Memory,
-      "redis" => StorageType::Redis,
-      _ => StorageType::Memory,
+      "fs" => StorageKind::Fs,
+      "s3" => StorageKind::S3,
+      _ => StorageKind::Memory,
     };
 
     Ok(Self {
@@ -312,7 +310,7 @@ impl BinaryDataManager {
   fn should_cache(&self, data: &[u8]) -> bool {
     // 只缓存小文件和非内存存储
     match self.storage_type {
-      StorageType::Memory => false,       // 内存存储不需要缓存
+      StorageKind::Memory => false,       // 内存存储不需要缓存
       _ => data.len() < 10 * 1024 * 1024, // 只缓存小于10MB的文件
     }
   }
@@ -335,7 +333,7 @@ impl BinaryDataManager {
   }
 
   /// 获取存储类型
-  pub fn storage_type(&self) -> StorageType {
+  pub fn storage_type(&self) -> StorageKind {
     self.storage_type.clone()
   }
 

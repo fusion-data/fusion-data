@@ -69,12 +69,12 @@ impl DefaultWorkflowEngine {
     })?;
 
     // 1. 查找节点执行器
-    println!("[DEBUG] 查找节点执行器: {} ({})", node_name, node.kind);
+    log::debug!("查找节点执行器: {} ({})", node_name, node.kind);
     let executor = self.node_registry.get_executor(&node.kind).ok_or(WorkflowExecutionError::NodeExecutionFailed {
       workflow_id: workflow.id.clone(),
       node_name: node_name.clone(),
     })?;
-    println!("[DEBUG] 找到节点执行器: {} ({})", node_name, node.kind);
+    log::debug!("找到节点执行器: {} ({})", node_name, node.kind);
 
     // 2. 汇集父节点的输出
     let parents_results = collect_parents_results(node_name, graph, all_results);
@@ -83,15 +83,15 @@ impl DefaultWorkflowEngine {
     let node_context = make_node_context(context, node_name, parents_results, engine_response.cloned());
 
     // 4. 执行节点
-    println!("[DEBUG] 开始执行节点: {} ({})", node_name, node.kind);
-    println!("[DEBUG] 节点参数: {:?}", node.parameters);
+    log::debug!("开始执行节点: {} ({})", node_name, node.kind);
+    log::debug!("节点参数: {:?}", node.parameters);
     let output_data = executor.execute(&node_context).await.map_err(|e| {
-      println!("[DEBUG] 节点 {} 执行失败: {:?}", node_name, e);
-      println!("[DEBUG] 错误类型: {}", std::any::type_name_of_val(&e));
-      println!("[DEBUG] 详细错误信息: {}", e);
+      log::debug!("节点 {} 执行失败: {:?}", node_name, e);
+      log::debug!("错误类型: {}", std::any::type_name_of_val(&e));
+      log::debug!("详细错误信息: {}", e);
       WorkflowExecutionError::NodeExecutionFailed { workflow_id: workflow.id.clone(), node_name: node_name.clone() }
     })?;
-    println!("[DEBUG] 节点 {} 执行成功", node_name);
+    log::debug!("节点 {} 执行成功", node_name);
 
     Ok(output_data)
   }
@@ -393,12 +393,6 @@ impl DefaultWorkflowEngine {
     None
   }
 
-  /// 估算数据大小
-  fn estimate_data_size(&self, _data: &ExecutionDataMap) -> u64 {
-    // 简单实现，返回估算的大小
-    1024 // TODO: 实现真实的数据大小计算
-  }
-
   /// 执行支持引擎请求的工作流
   async fn execute_with_engine_requests(
     &self,
@@ -406,119 +400,11 @@ impl DefaultWorkflowEngine {
     context: &ExecutionContext,
     graph: &ExecutionGraph,
   ) -> Result<ExecutionResult, WorkflowExecutionError> {
-    // 使用执行计划器进行并行执行
-    if self._config.enable_parallel_execution {
-      self.execute_workflow_parallel(trigger_data, context, graph).await
-    } else {
-      self.execute_workflow_sequential(trigger_data, context, graph).await
-    }
+    // 默认使用并行执行，根据节点依赖关系自动并行化
+    self.execute_workflow_parallel(trigger_data, context, graph).await
   }
 
-  /// 顺序执行工作流（原有实现）
-  async fn execute_workflow_sequential(
-    &self,
-    trigger_data: (NodeName, ExecutionDataMap),
-    context: &ExecutionContext,
-    graph: &ExecutionGraph,
-  ) -> Result<ExecutionResult, WorkflowExecutionError> {
-    let mut all_results: NodesExecutionMap = HashMap::default();
-    all_results.insert(trigger_data.0, trigger_data.1);
-
-    let mut nodes_result: HashMap<NodeName, NodeExecutionResult> = HashMap::default();
-    let mut pending_nodes = graph.get_start_nodes();
-    let mut engine_responses: HashMap<NodeName, EngineResponse> = HashMap::default();
-
-    while !pending_nodes.is_empty() {
-      let nodes = std::mem::take(&mut pending_nodes);
-
-      for node_name in nodes {
-        let started_at = now();
-
-        // 检查是否有待处理的引擎请求
-        let engine_response = engine_responses.remove(&node_name);
-
-        let execute_result =
-          self.execute_single_node(&node_name, graph, &all_results, context, engine_response.as_ref()).await;
-        let duration_ms = now().signed_duration_since(started_at).num_milliseconds() as u64;
-
-        let node_execution_result = match execute_result {
-          Ok(output_data) => {
-            // 检查是否返回了引擎请求
-            if let Some(engine_request) = self.extract_engine_request(&output_data) {
-              // 处理引擎请求
-              match self.handle_engine_request(engine_request, context).await {
-                Ok(response) => {
-                  // 将响应存储以便后续节点使用
-                  engine_responses.insert(node_name.clone(), response);
-
-                  NodeExecutionResult::builder()
-                    .node_name(node_name.clone())
-                    .output_data(output_data)
-                    .status(NodeExecutionStatus::Success)
-                    .duration_ms(duration_ms)
-                    .build()
-                }
-                Err(e) => NodeExecutionResult::builder()
-                  .node_name(node_name.clone())
-                  .output_data(ExecutionDataMap::default())
-                  .status(NodeExecutionStatus::Failed)
-                  .error(e.to_string())
-                  .duration_ms(duration_ms)
-                  .build(),
-              }
-            } else {
-              NodeExecutionResult::builder()
-                .node_name(node_name.clone())
-                .output_data(output_data)
-                .status(NodeExecutionStatus::Success)
-                .duration_ms(duration_ms)
-                .build()
-            }
-          }
-          Err(e) => {
-            log::error!("节点 {} 执行返回错误: {}", node_name, e);
-            NodeExecutionResult::builder()
-              .node_name(node_name.clone())
-              .output_data(ExecutionDataMap::default())
-              .status(NodeExecutionStatus::Failed)
-              .error(e.to_string())
-              .duration_ms(duration_ms)
-              .build()
-          }
-        };
-
-        all_results.insert(node_name.clone(), node_execution_result.output_data.clone());
-        nodes_result.insert(node_name.clone(), node_execution_result);
-
-        if let Some(children) = graph.get_children(&node_name)
-          && !children.is_empty()
-        {
-          pending_nodes.extend(children.clone());
-        }
-      }
-    }
-
-    let duration_ms = now().signed_duration_since(context.started_at()).num_milliseconds() as u64;
-
-    // 计算最终状态：如果任何节点失败，工作流状态为失败
-    let final_status = if nodes_result.values().any(|r| r.status == NodeExecutionStatus::Failed) {
-      ExecutionStatus::Failed
-    } else {
-      ExecutionStatus::Success
-    };
-
-    Ok(
-      ExecutionResult::builder()
-        .execution_id(context.execution_id().clone())
-        .status(final_status)
-        .nodes_result(nodes_result)
-        .end_nodes(graph.get_end_nodes())
-        .duration_ms(duration_ms)
-        .build(),
-    )
-  }
-
-  /// 并行执行工作流（新实现）
+  /// 并行执行工作流（真正的并行执行）
   async fn execute_workflow_parallel(
     &self,
     trigger_data: (NodeName, ExecutionDataMap),
@@ -535,7 +421,7 @@ impl DefaultWorkflowEngine {
     let mut nodes_result: HashMap<NodeName, NodeExecutionResult> = HashMap::default();
     let mut engine_responses: HashMap<NodeName, EngineResponse> = HashMap::default();
 
-    // 按照并行组执行
+    // 按照并行组执行 - 真正的并行执行
     for parallel_group in execution_plan.parallel_groups {
       if parallel_group.is_empty() {
         continue;
@@ -553,65 +439,37 @@ impl DefaultWorkflowEngine {
         continue;
       }
 
-      // 执行组内节点（简化版：顺序执行，但组间按照依赖关系优化）
+      // 并行执行组内节点
+      let mut node_futures = Vec::new();
       for node_name in ready_nodes {
-        let started_at = now();
+        let node_future = {
+          let node_name = node_name.clone();
+          let graph = &graph;
+          let all_results = &all_results;
+          let context = &context;
+          let engine_response = engine_responses.remove(&node_name);
 
-        // 检查是否有待处理的引擎请求
-        let engine_response = engine_responses.remove(&node_name);
+          async move { self.execute_node_in_parallel(node_name, graph, all_results, context, engine_response).await }
+        };
+        node_futures.push(node_future);
+      }
 
-        let execute_result =
-          self.execute_single_node(&node_name, graph, &all_results, context, engine_response.as_ref()).await;
-        let duration_ms = now().signed_duration_since(started_at).num_milliseconds() as u64;
+      // 等待所有节点完成
+      let node_results = futures::future::join_all(node_futures).await;
 
-        let node_execution_result = match execute_result {
-          Ok(output_data) => {
-            // 检查是否返回了引擎请求
-            if let Some(engine_request) = self.extract_engine_request(&output_data) {
-              // 处理引擎请求
-              match self.handle_engine_request(engine_request, context).await {
-                Ok(response) => {
-                  // 将响应存储以便后续节点使用
-                  engine_responses.insert(node_name.clone(), response);
-
-                  NodeExecutionResult::builder()
-                    .node_name(node_name.clone())
-                    .output_data(output_data)
-                    .status(NodeExecutionStatus::Success)
-                    .duration_ms(duration_ms)
-                    .build()
-                }
-                Err(e) => NodeExecutionResult::builder()
-                  .node_name(node_name.clone())
-                  .output_data(ExecutionDataMap::default())
-                  .status(NodeExecutionStatus::Failed)
-                  .error(e.to_string())
-                  .duration_ms(duration_ms)
-                  .build(),
-              }
-            } else {
-              NodeExecutionResult::builder()
-                .node_name(node_name.clone())
-                .output_data(output_data)
-                .status(NodeExecutionStatus::Success)
-                .duration_ms(duration_ms)
-                .build()
-            }
+      // 处理并行执行结果
+      for node_result in node_results {
+        match node_result {
+          Ok((result, _output_data)) => {
+            // 使用节点的实际输出数据
+            all_results.insert(result.node_name.clone(), result.output_data.clone());
+            nodes_result.insert(result.node_name.clone(), result);
           }
           Err(e) => {
-            log::error!("节点 {} 执行返回错误: {}", node_name, e);
-            NodeExecutionResult::builder()
-              .node_name(node_name.clone())
-              .output_data(ExecutionDataMap::default())
-              .status(NodeExecutionStatus::Failed)
-              .error(e.to_string())
-              .duration_ms(duration_ms)
-              .build()
+            log::error!("并行执行节点失败: {}", e);
+            // 并行执行中错误信息已经在 execute_node_in_parallel 中处理
           }
-        };
-
-        all_results.insert(node_name.clone(), node_execution_result.output_data.clone());
-        nodes_result.insert(node_name.clone(), node_execution_result);
+        }
       }
     }
 
@@ -633,6 +491,51 @@ impl DefaultWorkflowEngine {
         .duration_ms(duration_ms)
         .build(),
     )
+  }
+
+  /// 并行执行单个节点
+  async fn execute_node_in_parallel(
+    &self,
+    node_name: NodeName,
+    graph: &ExecutionGraph,
+    all_results: &NodesExecutionMap,
+    context: &ExecutionContext,
+    engine_response: Option<EngineResponse>,
+  ) -> Result<(NodeExecutionResult, ExecutionDataMap), WorkflowExecutionError> {
+    let started_at = now();
+
+    let execute_result =
+      self.execute_single_node(&node_name, &graph, &all_results, &context, engine_response.as_ref()).await;
+    let duration_ms = now().signed_duration_since(started_at).num_milliseconds() as u64;
+
+    let (output_data, status, error_msg) = match execute_result {
+      Ok(output_data) => {
+        // 检查是否返回了引擎请求
+        if let Some(engine_request) = self.extract_engine_request(&output_data) {
+          // 在并行执行中处理引擎请求
+          match self.handle_engine_request(engine_request, &context).await {
+            Ok(_response) => (output_data, NodeExecutionStatus::Success, None),
+            Err(e) => (ExecutionDataMap::default(), NodeExecutionStatus::Failed, Some(e.to_string())),
+          }
+        } else {
+          (output_data, NodeExecutionStatus::Success, None)
+        }
+      }
+      Err(e) => {
+        log::error!("并行节点 {} 执行返回错误: {}", node_name, e);
+        (ExecutionDataMap::default(), NodeExecutionStatus::Failed, Some(e.to_string()))
+      }
+    };
+
+    let node_execution_result = NodeExecutionResult::builder()
+      .node_name(node_name.clone())
+      .output_data(output_data.clone())
+      .status(status)
+      .duration_ms(duration_ms)
+      .error(error_msg.unwrap_or_default())
+      .build();
+
+    Ok((node_execution_result, output_data))
   }
 
   /// 检查节点是否可以执行

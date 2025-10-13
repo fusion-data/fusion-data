@@ -206,7 +206,10 @@ pub fn filter_emails(emails: Vec<EmailData>, filter: &EmailFilter) -> Vec<EmailD
       }
 
       // 检查只读未读邮件
-      if let Some(read_only_unread) = filter.read_only_unread && read_only_unread && email.is_read {
+      if let Some(read_only_unread) = filter.read_only_unread
+        && read_only_unread
+        && email.is_read
+      {
         return false;
       }
 

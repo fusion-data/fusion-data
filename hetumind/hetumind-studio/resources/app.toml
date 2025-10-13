@@ -27,6 +27,11 @@ execution_timeout_ms = 7200000               # 2小时
 max_retries = 3
 retry_interval_seconds = 10
 
+[hetumind.binary_storage]
+kind = "memory"
+root = "/tmp"
+max_pool_size = 10
+
 [fusion.security.pwd]
 expires_in = 604800
 default_pwd = "2025.Hetumind"

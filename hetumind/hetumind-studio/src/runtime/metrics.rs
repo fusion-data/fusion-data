@@ -60,7 +60,7 @@ impl ExecutionMetricsCollector {
   /// 清理过期指标
   pub async fn cleanup_old_metrics(&self, older_than: Duration) {
     let cutoff = (chrono::Utc::now() - chrono::Duration::from_std(older_than).unwrap_or(chrono::Duration::zero()))
-      .with_timezone(&chrono::FixedOffset::east_opt(0).unwrap_or_else(|| chrono::FixedOffset::east(0)));
+      .with_timezone(&chrono::FixedOffset::east_opt(0).unwrap_or_else(|| chrono::FixedOffset::east_opt(0).unwrap()));
 
     let mut metrics_map = self.metrics.write().await;
     metrics_map.retain(|_, metrics| {
@@ -134,7 +134,7 @@ impl ExecutionMetricsCollector {
       return true;
     }
 
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
     rng.random::<f64>() < sample_rate
   }
 
@@ -304,8 +304,9 @@ impl PerformanceMonitor {
           severity: AlertSeverity::Warning,
           message: format!("Execution time exceeded threshold: {}ms", metrics.duration_ms),
           metrics: metrics.clone(),
-          timestamp: chrono::Utc::now()
-            .with_timezone(&chrono::FixedOffset::east_opt(0).unwrap_or_else(|| chrono::FixedOffset::east(0))),
+          timestamp: chrono::Utc::now().with_timezone(
+            &chrono::FixedOffset::east_opt(0).unwrap_or_else(|| chrono::FixedOffset::east_opt(0).unwrap()),
+          ),
           execution_id: metrics.execution_id.clone(),
         })
         .await;
@@ -319,8 +320,9 @@ impl PerformanceMonitor {
           severity: AlertSeverity::Warning,
           message: format!("Memory usage exceeded threshold: {}MB", metrics.memory_usage_mb),
           metrics: metrics.clone(),
-          timestamp: chrono::Utc::now()
-            .with_timezone(&chrono::FixedOffset::east_opt(0).unwrap_or_else(|| chrono::FixedOffset::east(0))),
+          timestamp: chrono::Utc::now().with_timezone(
+            &chrono::FixedOffset::east_opt(0).unwrap_or_else(|| chrono::FixedOffset::east_opt(0).unwrap()),
+          ),
           execution_id: metrics.execution_id.clone(),
         })
         .await;
@@ -336,8 +338,9 @@ impl PerformanceMonitor {
             severity: AlertSeverity::Error,
             message: format!("High error rate: {:.2}%", error_rate * 100.0),
             metrics: metrics.clone(),
-            timestamp: chrono::Utc::now()
-              .with_timezone(&chrono::FixedOffset::east_opt(0).unwrap_or_else(|| chrono::FixedOffset::east(0))),
+            timestamp: chrono::Utc::now().with_timezone(
+              &chrono::FixedOffset::east_opt(0).unwrap_or_else(|| chrono::FixedOffset::east_opt(0).unwrap()),
+            ),
             execution_id: metrics.execution_id.clone(),
           })
           .await;
@@ -352,8 +355,9 @@ impl PerformanceMonitor {
           severity: AlertSeverity::Info,
           message: format!("Low cache hit rate: {:.2}%", metrics.cache_hit_rate * 100.0),
           metrics: metrics.clone(),
-          timestamp: chrono::Utc::now()
-            .with_timezone(&chrono::FixedOffset::east_opt(0).unwrap_or_else(|| chrono::FixedOffset::east(0))),
+          timestamp: chrono::Utc::now().with_timezone(
+            &chrono::FixedOffset::east_opt(0).unwrap_or_else(|| chrono::FixedOffset::east_opt(0).unwrap()),
+          ),
           execution_id: metrics.execution_id.clone(),
         })
         .await;
@@ -367,8 +371,9 @@ impl PerformanceMonitor {
           severity: AlertSeverity::Warning,
           message: format!("High CPU usage: {:.2}%", metrics.cpu_usage_percent),
           metrics: metrics.clone(),
-          timestamp: chrono::Utc::now()
-            .with_timezone(&chrono::FixedOffset::east_opt(0).unwrap_or_else(|| chrono::FixedOffset::east(0))),
+          timestamp: chrono::Utc::now().with_timezone(
+            &chrono::FixedOffset::east_opt(0).unwrap_or_else(|| chrono::FixedOffset::east_opt(0).unwrap()),
+          ),
           execution_id: metrics.execution_id.clone(),
         })
         .await;
@@ -382,8 +387,9 @@ impl PerformanceMonitor {
           severity: AlertSeverity::Warning,
           message: format!("High retry count: {}", metrics.retry_count),
           metrics: metrics.clone(),
-          timestamp: chrono::Utc::now()
-            .with_timezone(&chrono::FixedOffset::east_opt(0).unwrap_or_else(|| chrono::FixedOffset::east(0))),
+          timestamp: chrono::Utc::now().with_timezone(
+            &chrono::FixedOffset::east_opt(0).unwrap_or_else(|| chrono::FixedOffset::east_opt(0).unwrap()),
+          ),
           execution_id: metrics.execution_id.clone(),
         })
         .await;
@@ -397,8 +403,9 @@ impl PerformanceMonitor {
           severity: AlertSeverity::Error,
           message: format!("Node execution failures: {}", metrics.nodes_failed),
           metrics: metrics.clone(),
-          timestamp: chrono::Utc::now()
-            .with_timezone(&chrono::FixedOffset::east_opt(0).unwrap_or_else(|| chrono::FixedOffset::east(0))),
+          timestamp: chrono::Utc::now().with_timezone(
+            &chrono::FixedOffset::east_opt(0).unwrap_or_else(|| chrono::FixedOffset::east_opt(0).unwrap()),
+          ),
           execution_id: metrics.execution_id.clone(),
         })
         .await;
@@ -443,7 +450,7 @@ impl PerformanceMonitor {
       alert_thresholds: self.alert_thresholds.clone(),
       active_alerts_count: self.alert_handlers.len() as u32,
       last_check_time: chrono::Utc::now()
-        .with_timezone(&chrono::FixedOffset::east_opt(0).unwrap_or_else(|| chrono::FixedOffset::east(0))),
+        .with_timezone(&chrono::FixedOffset::east_opt(0).unwrap_or_else(|| chrono::FixedOffset::east_opt(0).unwrap())),
     }
   }
 }

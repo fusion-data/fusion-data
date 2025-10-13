@@ -447,6 +447,92 @@ pub struct NodeDefinition {
   pub badge_icon_url: Option<String>,
 }
 
+impl NodeDefinition {
+  /// Create a new NodeDefinition with required fields
+  pub fn new(kind: impl Into<NodeKind>, version: impl Into<Version>, display_name: impl Into<String>) -> Self {
+    Self {
+      kind: kind.into(),
+      version: version.into(),
+      groups: Vec::new(),
+      display_name: display_name.into(),
+      description: None,
+      inputs: Vec::new(),
+      outputs: Vec::new(),
+      properties: Vec::new(),
+      document_url: None,
+      sub_title: None,
+      hidden: false,
+      max_nodes: None,
+      icon: None,
+      icon_color: None,
+      icon_url: None,
+      badge_icon_url: None,
+    }
+  }
+
+  // Methods for Option<T> fields
+  pub fn with_description(mut self, description: impl Into<String>) -> Self {
+    self.description = Some(description.into());
+    self
+  }
+
+  pub fn with_document_url(mut self, document_url: impl Into<String>) -> Self {
+    self.document_url = Some(document_url.into());
+    self
+  }
+
+  pub fn with_sub_title(mut self, sub_title: impl Into<String>) -> Self {
+    self.sub_title = Some(sub_title.into());
+    self
+  }
+
+  pub fn with_max_nodes(mut self, max_nodes: u32) -> Self {
+    self.max_nodes = Some(max_nodes);
+    self
+  }
+
+  pub fn with_icon(mut self, icon: impl Into<String>) -> Self {
+    self.icon = Some(icon.into());
+    self
+  }
+
+  pub fn with_icon_color(mut self, icon_color: impl Into<IconColor>) -> Self {
+    self.icon_color = Some(icon_color.into());
+    self
+  }
+
+  pub fn with_icon_url(mut self, icon_url: impl Into<String>) -> Self {
+    self.icon_url = Some(icon_url.into());
+    self
+  }
+
+  pub fn with_badge_icon_url(mut self, badge_icon_url: impl Into<String>) -> Self {
+    self.badge_icon_url = Some(badge_icon_url.into());
+    self
+  }
+
+  // Methods for Vec<T> fields
+  pub fn add_input(mut self, input: InputPortConfig) -> Self {
+    self.inputs.push(input);
+    self
+  }
+
+  pub fn add_output(mut self, output: OutputPortConfig) -> Self {
+    self.outputs.push(output);
+    self
+  }
+
+  pub fn add_property(mut self, property: NodeProperty) -> Self {
+    self.properties.push(property);
+    self
+  }
+
+  pub fn add_group(mut self, group: NodeGroupKind) -> Self {
+    self.groups.push(group);
+    self
+  }
+}
+
 #[cfg(feature = "with-db")]
 fusionsql::generate_string_newtype_to_sea_query_value!(Struct: NodeName, Struct: NodeKind);
 
