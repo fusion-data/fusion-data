@@ -9,10 +9,7 @@ use fusion_db::DbPlugin;
 use fusion_web::server::WebServerBuilder;
 use fusionsql::ModelManager;
 use log::{error, info};
-use mea::{
-  mutex::Mutex,
-  shutdown::{ShutdownRecv, ShutdownSend},
-};
+use mea::{mutex::Mutex, shutdown::ShutdownRecv};
 
 use crate::{
   broker::Broker,
@@ -30,7 +27,6 @@ pub struct ServerApplication {
   pub message_handler: Arc<MessageHandler>,
   agent_manager: Arc<AgentManager>,
   pub log_svc: LogSvc,
-  shutdown: Arc<Mutex<Option<(ShutdownSend, ShutdownRecv)>>>,
   handles: Arc<Mutex<Vec<TaskServiceHandle>>>,
 }
 
@@ -53,8 +49,6 @@ impl ServerApplication {
 
     let setting = Arc::new(HetuflowSetting::load(application.config_registry())?);
 
-    let (shutdown_tx, shutdown_rx) = mea::shutdown::new_pair();
-
     let connection_manager = Arc::new(ConnectionManager::new());
 
     let message_handler = Arc::new(MessageHandler::new(connection_manager.clone()));
@@ -62,8 +56,12 @@ impl ServerApplication {
     let agent_manager =
       Arc::new(AgentManager::new(application.component(), connection_manager.clone(), setting.clone()));
 
-    let log_svc =
-      LogSvc::new(Arc::new(setting.task_log.clone()), shutdown_rx.clone(), connection_manager.clone()).await?;
+    let log_svc = LogSvc::new(
+      Arc::new(setting.task_log.clone()),
+      application.get_shutdown_recv().await,
+      connection_manager.clone(),
+    )
+    .await?;
 
     let broker = Broker::new(setting.clone(), application.component());
 
@@ -74,7 +72,6 @@ impl ServerApplication {
       message_handler,
       agent_manager,
       log_svc,
-      shutdown: Arc::new(Mutex::new(Some((shutdown_tx, shutdown_rx)))),
       handles: Arc::new(Mutex::new(Vec::new())),
     })
   }
@@ -94,9 +91,7 @@ impl ServerApplication {
   }
 
   pub async fn get_shutdown_recv(&self) -> ShutdownRecv {
-    let maybe = self.shutdown.lock().await;
-    let tuple = maybe.as_ref().unwrap();
-    tuple.1.clone()
+    Application::global().get_shutdown_recv().await
   }
 
   /// 启动通用服务
@@ -139,20 +134,14 @@ impl ServerApplication {
 
   /// 优雅关闭
   pub async fn shutdown(self) -> Result<(), DataError> {
-    info!("Shutting down Hetuflow Application");
-    let shutdown_tx = match self.shutdown.lock().await.take() {
-      Some((tx, _)) => tx, // discard ShutdownRecv
-      None => return Err(DataError::server_error("AgentApplication is not running")),
-    };
-
     // 发送关闭信号
-    shutdown_tx.shutdown();
+    Application::shutdown().await;
 
     drop(self.connection_manager);
     drop(self.agent_manager);
     drop(self.log_svc);
 
-    shutdown_tx.await_shutdown().await;
+    Application::await_shutdown().await;
 
     info!("Waiting for all service tasks to complete");
     let mut handles_guard = self.handles.lock().await;
