@@ -2,8 +2,7 @@ use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 
 use super::{
-  ExecutionContext, ExecutionDataMap, ExecutionId, ExecutionResult, ExecutionStatus, NodeName, WorkflowErrorData,
-  WorkflowExecutionError, WorkflowId,
+  ExecutionContext, ExecutionId, ExecutionResult, ExecutionStatus, NodeName, WorkflowExecutionError, WorkflowTriggerData,
 };
 
 /// 执行指标
@@ -56,10 +55,10 @@ use crate::workflow::NodeExecutionStatus;
 
 #[async_trait]
 pub trait WorkflowEngine: Send + Sync {
-  /// 执行工作流
+  /// 执行工作流（新的统一接口）
   async fn execute_workflow(
     &self,
-    trigger_data: (NodeName, ExecutionDataMap),
+    trigger_data: WorkflowTriggerData,
     context: &ExecutionContext,
   ) -> Result<ExecutionResult, WorkflowExecutionError>;
 
@@ -74,13 +73,6 @@ pub trait WorkflowEngine: Send + Sync {
 
   /// 获取执行状态
   async fn get_execution_status(&self, execution_id: &ExecutionId) -> Result<ExecutionStatus, WorkflowExecutionError>;
-
-  /// 执行错误工作流
-  async fn execute_error_workflow(
-    &self,
-    error_data: WorkflowErrorData,
-    error_workflow_id: Option<WorkflowId>,
-  ) -> Result<ExecutionResult, WorkflowExecutionError>;
 
   // 新增优化方法（可选实现）
   /// 获取执行指标

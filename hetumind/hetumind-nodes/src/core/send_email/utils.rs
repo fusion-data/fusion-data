@@ -125,9 +125,10 @@ pub async fn create_async_smtp_transport(
 }
 
 /// 构建邮件消息
-pub fn build_email_message(
+pub async fn build_email_message(
   config: &super::SendEmailConfig,
   input_data: &ExecutionData,
+  binary_data_manager: &BinaryDataManager,
 ) -> Result<Message, NodeExecutionError> {
   let from_address = config.smtp_config.get_from_address();
   let from_mailbox = from_address.parse::<Mailbox>().map_err(|e| NodeExecutionError::ExecutionFailed {
@@ -174,7 +175,7 @@ pub fn build_email_message(
   }
 
   // 根据邮件格式构建内容
-  let email_body = build_email_body(config, input_data)?;
+  let email_body = build_email_body(config, input_data, binary_data_manager).await?;
   let message = message_builder.multipart(email_body).map_err(|e| NodeExecutionError::ExecutionFailed {
     node_name: "SendEmailNode".to_string().into(),
     message: Some(format!("Failed to build email message: {}", e)),
@@ -184,9 +185,10 @@ pub fn build_email_message(
 }
 
 /// 构建邮件内容
-pub fn build_email_body(
+pub async fn build_email_body(
   config: &super::SendEmailConfig,
   input_data: &ExecutionData,
+  binary_data_manager: &BinaryDataManager,
 ) -> Result<MultiPart, NodeExecutionError> {
   let mut content_parts = Vec::new();
 
@@ -228,13 +230,35 @@ pub fn build_email_body(
     multi_part
   };
 
-  // 暂时跳过附件处理，因为需要 BinaryDataManager 支持
-  if let Some(attachments) = &config.attachments {
-    if !attachments.is_empty() {
-      warn!(
-        "Attachment support is temporarily disabled in this version. {} attachment fields configured.",
-        attachments.len()
-      );
+  // 处理附件
+  if let Some(attachments) = &config.attachments
+    && !attachments.is_empty()
+  {
+    let mut attachment_parts = Vec::new();
+
+    for attachment_config in attachments {
+      match build_attachment_part(binary_data_manager, attachment_config, input_data).await {
+        Ok(attachment_part) => {
+          info!("Successfully built attachment for field: {}", attachment_config.field_name);
+          attachment_parts.push(attachment_part);
+        }
+        Err(e) => {
+          warn!("Failed to build attachment for field '{}': {}", attachment_config.field_name, e);
+          // 继续处理其他附件，不因单个附件失败而中断整个邮件发送
+        }
+      }
+    }
+
+    if !attachment_parts.is_empty() {
+      // 构建包含附件的混合多部分邮件
+      let mut mixed_part = MultiPart::mixed().build();
+      mixed_part = mixed_part.multipart(content_multi_part);
+
+      for attachment_part in attachment_parts {
+        mixed_part = mixed_part.singlepart(attachment_part);
+      }
+
+      return Ok(mixed_part);
     }
   }
 
@@ -400,9 +424,10 @@ pub fn add_custom_headers(
 }
 
 /// 发送邮件 (同步)
-pub fn send_email_sync(
+pub async fn send_email_sync(
   config: &super::SendEmailConfig,
   input_data: &ExecutionData,
+  binary_data_manager: &BinaryDataManager,
 ) -> Result<SendEmailResult, NodeExecutionError> {
   info!("开始发送邮件到: {}", config.to_emails);
 
@@ -410,7 +435,7 @@ pub fn send_email_sync(
   let transport = create_smtp_transport(&config.smtp_config)?;
 
   // 构建邮件消息
-  let mut message = build_email_message(config, input_data)?;
+  let mut message = build_email_message(config, input_data, binary_data_manager).await?;
 
   // 设置优先级
   if let Some(priority) = &config.priority {
@@ -457,6 +482,7 @@ pub fn send_email_sync(
 pub async fn send_email_async(
   config: &super::SendEmailConfig,
   input_data: &ExecutionData,
+  binary_data_manager: BinaryDataManager,
 ) -> Result<SendEmailResult, NodeExecutionError> {
   info!("开始异步发送邮件到: {}", config.to_emails);
 
@@ -464,7 +490,7 @@ pub async fn send_email_async(
   let transport = create_async_smtp_transport(&config.smtp_config).await?;
 
   // 构建邮件消息
-  let mut message = build_email_message(config, input_data)?;
+  let mut message = build_email_message(config, input_data, &binary_data_manager).await?;
 
   // 设置优先级
   if let Some(priority) = &config.priority {

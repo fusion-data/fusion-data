@@ -57,7 +57,7 @@ impl TryFrom<NodeDefinitionBuilder> for LlmChatModelV1 {
             .display_name("模型响应")
             .build(),
           OutputPortConfig::builder()
-            .kind(ConnectionKind::AiLanguageModel)
+            .kind(ConnectionKind::AiModel)
             .display_name("模型实例")
             .build(),
           OutputPortConfig::builder()
@@ -159,7 +159,7 @@ impl NodeExecutable for LlmChatModelV1 {
     Ok(make_execution_data_map(vec![
       ("main", ExecutionDataItems::Items(vec![ExecutionData::new_json(response.clone(), None)])),
       (
-        "ai_language_model",
+        "ai_model",
         ExecutionDataItems::Items(vec![ExecutionData::new_json(
           json!({
               "client": self.serialize_model_client(&model_client),
@@ -424,7 +424,7 @@ fn make_execution_data_map(data: Vec<(&str, ExecutionDataItems)>) -> ExecutionDa
       "error" => ConnectionKind::Error,
       "ai_agent" => ConnectionKind::AiAgent,
       "ai_tool" => ConnectionKind::AiTool,
-      "ai_language_model" => ConnectionKind::AiLanguageModel,
+      "ai_model" => ConnectionKind::AiModel,
       "ai_output_parser" => ConnectionKind::AiOutputParser,
       "ai_memory" => ConnectionKind::AiMemory,
       "ai_document" => ConnectionKind::AiDocument,

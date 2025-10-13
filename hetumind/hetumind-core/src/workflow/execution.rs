@@ -8,6 +8,7 @@ use typed_builder::TypedBuilder;
 use uuid::Uuid;
 
 use crate::{
+  binary_storage::BinaryDataManager,
   expression::ExpressionEvaluator,
   types::{BinaryFileKind, JsonValue},
   user::UserId,
@@ -19,7 +20,7 @@ use super::{
   WorkflowNode,
 };
 
-#[derive(Debug, TypedBuilder)]
+#[derive(TypedBuilder)]
 pub struct NodeExecutionContext {
   /// 执行ID
   pub execution_id: ExecutionId,
@@ -40,6 +41,8 @@ pub struct NodeExecutionContext {
   /// 引擎响应（用于子节点执行）
   #[builder(default)]
   pub engine_response: Option<EngineResponse>,
+  /// 二进制数据管理器（可选，用于处理附件等二进制数据）
+  pub binary_data_manager: BinaryDataManager,
 }
 
 impl NodeExecutionContext {
@@ -116,7 +119,7 @@ impl NodeExecutionContext {
       "main" => ConnectionKind::Main,
       "ai_agent" => ConnectionKind::AiAgent,
       "ai_tool" => ConnectionKind::AiTool,
-      "ai_language_model" => ConnectionKind::AiLanguageModel,
+      "ai_model" => ConnectionKind::AiModel,
       "ai_memory" => ConnectionKind::AiMemory,
       "error" => ConnectionKind::Error,
       _ => return Err(NodeExecutionError::InvalidInput(format!("Unknown port: {}", port_name))),
@@ -156,8 +159,10 @@ impl NodeExecutionContext {
 pub struct ExecutionDataInner {
   /// 数据内容
   pub json: JsonValue,
+
   /// 二进制数据引用
   pub binary: Option<BinaryDataReference>,
+
   /// 来源信息。保留了数据项在原始批次中的索引。在循环、合并等操作中，这个索引可以用来保持数据的对应关系。
   pub source: Option<DataSource>,
 }

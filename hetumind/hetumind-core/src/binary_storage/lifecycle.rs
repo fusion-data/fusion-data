@@ -14,7 +14,7 @@ use crate::binary_storage::{BasicMetricsCollector, BinaryDataManager, BinaryData
 /// 负责跟踪二进制数据的引用情况，并在适当的时候清理无引用的数据。
 pub struct BinaryDataLifecycleManager {
   /// 二进制数据管理器
-  data_manager: Arc<BinaryDataManager>,
+  data_manager: BinaryDataManager,
   /// 引用计数
   reference_counts: Arc<RwLock<HashMap<String, usize>>>,
   /// 创建时间记录
@@ -62,7 +62,7 @@ impl BinaryDataLifecycleManager {
   /// # 参数
   /// - `data_manager`: 二进制数据管理器
   /// - `cleanup_config`: 清理配置
-  pub fn new(data_manager: Arc<BinaryDataManager>, cleanup_config: LifecycleCleanupConfig) -> Self {
+  pub fn new(data_manager: BinaryDataManager, cleanup_config: LifecycleCleanupConfig) -> Self {
     Self {
       data_manager,
       reference_counts: Arc::new(RwLock::new(HashMap::default())),
@@ -78,7 +78,7 @@ impl BinaryDataLifecycleManager {
   ///
   /// # 参数
   /// - `data_manager`: 二进制数据管理器
-  pub fn with_default_config(data_manager: Arc<BinaryDataManager>) -> Self {
+  pub fn with_default_config(data_manager: BinaryDataManager) -> Self {
     Self::new(data_manager, LifecycleCleanupConfig::default())
   }
 

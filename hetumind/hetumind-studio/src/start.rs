@@ -6,7 +6,10 @@ use fusion_db::DbPlugin;
 
 use crate::{
   endpoint::init_web,
-  infra::{db::execution::ExecutionStorePlugin, queue::QueueProviderPlugin, security::EncryptionKeyManager},
+  infra::{
+    binary_storage::BinaryDataManagerPlugin, db::execution::ExecutionStorePlugin, queue::QueueProviderPlugin,
+    security::EncryptionKeyManager,
+  },
   runtime::workflow::WorkflowEnginePlugin,
   utils::NodeRegistryPlugin,
 };
@@ -24,6 +27,7 @@ where
     .add_plugin(NodeRegistryPlugin) // NodeRegistry
     .add_plugin(ExecutionStorePlugin) // ExecutionStoreService
     .add_plugin(QueueProviderPlugin) // QueueProvider
+    .add_plugin(BinaryDataManagerPlugin) // BinaryDataManager
     .add_plugin(WorkflowEnginePlugin); // WorkflowEngineService
 
   app.add_component(EncryptionKeyManager::new());

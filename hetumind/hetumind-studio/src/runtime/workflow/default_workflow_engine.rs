@@ -1,22 +1,18 @@
 use std::sync::Arc;
-use std::time::Duration;
 
 use async_trait::async_trait;
 use fusion_common::ahash::HashMap;
 use fusion_common::time::now;
-use futures::future::join_all;
-use tokio::sync::{RwLock, Semaphore};
-use tokio::time::timeout;
+use fusion_core::application::Application;
 
 use hetumind_core::{
   expression::ExpressionEvaluator,
   workflow::{
-    ConnectionKind, EngineAction, EngineRequest, EngineResponse, EngineResult, ErrorTrace, ExecuteNodeAction,
-    ExecutionContext, ExecutionData, ExecutionDataItems, ExecutionDataMap, ExecutionGraph, ExecutionId,
-    ExecutionMetrics, ExecutionPlan, ExecutionPlanner, ExecutionResult, ExecutionStatus, ExecutionTrace,
-    GetConnectionDataAction, NodeExecutionContext, NodeExecutionResult, NodeExecutionStatus, NodeName, NodeRegistry,
-    NodeTrace, NodesExecutionMap, WorkflowEngine, WorkflowEngineSetting, WorkflowErrorData, WorkflowExecutionError,
-    WorkflowId,
+    ConnectionKind, EngineAction, EngineRequest, EngineResponse, EngineResult, ExecuteNodeAction, ExecutionContext,
+    ExecutionData, ExecutionDataItems, ExecutionDataMap, ExecutionGraph, ExecutionId, ExecutionMetrics,
+    ExecutionPlanner, ExecutionResult, ExecutionStatus, ExecutionTrace, GetConnectionDataAction, NodeExecutionContext,
+    NodeExecutionResult, NodeExecutionStatus, NodeName, NodeRegistry, NodesExecutionMap, TriggerType, WorkflowEngine,
+    WorkflowEngineSetting, WorkflowExecutionError, WorkflowTriggerData,
   },
 };
 
@@ -135,8 +131,7 @@ impl DefaultWorkflowEngine {
 
     // 创建临时执行数据
     let mut input_data = ExecutionDataMap::default();
-    let mut execution_data_vec = Vec::new();
-    execution_data_vec.push(ExecutionData::new_json(node_action.input.clone(), None));
+    let execution_data_vec = vec![ExecutionData::new_json(node_action.input.clone(), None)];
     input_data.insert(node_action.connection_type, vec![ExecutionDataItems::Items(execution_data_vec)]);
 
     // 查找节点执行器
@@ -164,6 +159,7 @@ impl DefaultWorkflowEngine {
       .user_id(Some(context.ctx().uid()))
       .env_vars(std::env::vars().collect())
       .expression_evaluator(ExpressionEvaluator::new())
+      .binary_data_manager(Application::global().component())
       .build();
 
     // 执行节点
@@ -211,6 +207,7 @@ fn make_node_context(
     .env_vars(std::env::vars().collect())
     .expression_evaluator(ExpressionEvaluator::new())
     .engine_response(engine_response)
+    .binary_data_manager(Application::global().component())
     .build()
 }
 
@@ -236,27 +233,41 @@ fn collect_parents_results(
 // TODO: 若存在有多个开始节点的情况，需要考虑如何处理？
 #[async_trait]
 impl WorkflowEngine for DefaultWorkflowEngine {
-  async fn execute_error_workflow(
-    &self,
-    error_data: WorkflowErrorData,
-    error_workflow_id: Option<WorkflowId>,
-  ) -> Result<ExecutionResult, WorkflowExecutionError> {
-    todo!()
-  }
-
   async fn execute_workflow(
     &self,
-    trigger_data: (NodeName, ExecutionDataMap),
+    trigger_data: WorkflowTriggerData,
     context: &ExecutionContext,
   ) -> Result<ExecutionResult, WorkflowExecutionError> {
+    // 统一的工作流执行路径
     let graph = ExecutionGraph::new(&context.workflow());
 
     if graph.has_cycles() {
       return Err(WorkflowExecutionError::CircularDependency);
     }
 
-    // 执行支持引擎请求的工作流
-    self.execute_with_engine_requests(trigger_data, context, &graph).await
+    // 根据触发类型准备执行数据
+    let (node_name, execution_data) = match trigger_data.trigger_type {
+      TriggerType::Normal { node_name, execution_data } => {
+        // 正常工作流执行
+        (node_name, execution_data)
+      }
+      TriggerType::Error { error_data, error_workflow_id: _ } => {
+        // 错误工作流执行：将 WorkflowErrorData 转换为 ExecutionData
+        let error_execution_data =
+          ExecutionData::try_from(error_data.as_ref()).map_err(|e| WorkflowExecutionError::InternalError {
+            message: format!("Failed to convert WorkflowErrorData to ExecutionData: {}", e),
+          })?;
+        let mut execution_data_map = HashMap::default();
+        execution_data_map.insert(ConnectionKind::Main, vec![ExecutionDataItems::Items(vec![error_execution_data])]);
+
+        // 使用默认的起始节点名称，或者可以从错误数据中推断
+        let start_node = NodeName::from("start");
+        (start_node, execution_data_map)
+      }
+    };
+
+    // 使用统一的执行路径
+    self.execute_with_engine_requests((node_name, execution_data), context, &graph).await
   }
 
   async fn pause_execution(&self, execution_id: &ExecutionId) -> Result<(), WorkflowExecutionError> {
@@ -341,20 +352,6 @@ impl WorkflowEngine for DefaultWorkflowEngine {
     } else {
       Ok(None)
     }
-  }
-
-  async fn set_parallel_execution(&self, enabled: bool) -> Result<(), WorkflowExecutionError> {
-    // 由于配置是只读的，这里返回错误
-    Err(WorkflowExecutionError::InvalidWorkflowStructure(
-      "Dynamic parallel execution configuration not supported".to_string(),
-    ))
-  }
-
-  async fn set_node_caching(&self, enabled: bool) -> Result<(), WorkflowExecutionError> {
-    // 由于配置是只读的，这里返回错误
-    Err(WorkflowExecutionError::InvalidWorkflowStructure(
-      "Dynamic node caching configuration not supported".to_string(),
-    ))
   }
 }
 

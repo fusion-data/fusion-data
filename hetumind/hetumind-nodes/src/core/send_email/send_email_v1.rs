@@ -246,7 +246,7 @@ impl SendEmailV1 {
           let _permit = semaphore.acquire().await.unwrap();
           log::debug!("开始异步发送邮件项: {}", index);
 
-          match send_email_async(&config, &input_item).await {
+          match send_email_async(&config, &input_item, context.binary_data_manager.clone()).await {
             Ok(result) => {
               log::debug!("异步发送邮件项 {} 完成: {}", index, result.success);
               (index, result)
@@ -314,7 +314,7 @@ impl SendEmailV1 {
           Ok(config) => {
             let continue_on_fail = config.continue_on_fail.unwrap_or(true);
 
-            match send_email_sync(&config, input_item) {
+            match send_email_sync(&config, input_item, &context.binary_data_manager).await {
               Ok(result) => {
                 log::debug!("同步发送邮件项 {} 完成: {}", index, result.success);
 
@@ -435,7 +435,10 @@ impl SendEmailV1 {
 
         let result_data = hetumind_core::workflow::ExecutionData::new_json(result_json, None);
 
-        Ok(make_execution_data_map(vec![(ConnectionKind::Main, vec![ExecutionDataItems::new_items(vec![result_data])])]))
+        Ok(make_execution_data_map(vec![(
+          ConnectionKind::Main,
+          vec![ExecutionDataItems::new_items(vec![result_data])],
+        )]))
       }
       Err(e) => {
         let error_json = json!({

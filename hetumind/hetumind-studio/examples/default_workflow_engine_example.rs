@@ -13,7 +13,7 @@ use async_trait::async_trait;
 use fusion_common::ahash::HashMap;
 use fusion_common::ctx::{Ctx, CtxPayload};
 use fusion_common::time::now;
-use hetumind_core::workflow::{Execution, PinData, WorkflowExecutionError, WorkflowMeta, WorkflowNode, WorkflowStatus};
+use hetumind_core::workflow::{Execution, PinData, WorkflowExecutionError, WorkflowMeta, WorkflowNode, WorkflowStatus, WorkflowTriggerData};
 use hetumind_core::{
   types::JsonValue,
   version::Version,
@@ -258,7 +258,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
   let mut trigger_data_map = ExecutionDataMap::default();
   trigger_data_map.insert(ConnectionKind::Main, vec![ExecutionDataItems::Items(vec![initial_data])]);
 
-  let trigger_data = (trigger_node_name, trigger_data_map);
+  let trigger_data = WorkflowTriggerData::normal(trigger_node_name, trigger_data_map);
   println!("✅ Prepared trigger data");
 
   // 9. Execute the workflow

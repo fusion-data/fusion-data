@@ -23,7 +23,6 @@ use serde::{Deserialize, Serialize};
 mod send_email_v1;
 mod utils;
 
-pub use utils::test_smtp_connection;
 use send_email_v1::SendEmailV1;
 
 use crate::constants::SEND_EMAIL_NODE_KIND;

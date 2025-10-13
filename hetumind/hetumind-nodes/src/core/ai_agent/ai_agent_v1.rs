@@ -51,7 +51,7 @@ impl TryFrom<NodeDefinitionBuilder> for AiAgentV1 {
           .required(true)
           .build(),
         InputPortConfig::builder()
-          .kind(ConnectionKind::AiLanguageModel)
+          .kind(ConnectionKind::AiModel)
           .display_name("Large Language Model")
           .required(true)
           .max_connections(1)
@@ -183,7 +183,7 @@ impl AiAgentV1 {
   async fn get_llm_instance(&self, context: &NodeExecutionContext) -> Result<ModelInstance, NodeExecutionError> {
     // 通过优化的连接类型获取 LLM 实例
     let connection_data = context
-      .get_connection_data_optimized(ConnectionKind::AiLanguageModel, 0)
+      .get_connection_data_optimized(ConnectionKind::AiModel, 0)
       .await?
       .ok_or_else(|| NodeExecutionError::ConnectionError("No LLM model connected".to_string()))?;
 

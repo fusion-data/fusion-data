@@ -79,7 +79,7 @@ impl BinaryDataManagerFactory {
 
     // 创建数据管理器
     let cache_limit = cache_limit.unwrap_or(100 * 1024 * 1024); // 默认100MB
-    let data_manager = Arc::new(BinaryDataManager::new(storage, cache_limit)?);
+    let data_manager = BinaryDataManager::new(storage, cache_limit)?;
 
     // 创建生命周期管理器
     let lifecycle_config = lifecycle_config.unwrap_or_default();

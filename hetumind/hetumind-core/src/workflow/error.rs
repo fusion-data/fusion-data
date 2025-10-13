@@ -1,3 +1,4 @@
+use chrono::{DateTime, FixedOffset};
 #[cfg(feature = "with-db")]
 use fusionsql::SqlError;
 use serde::{Deserialize, Serialize};
@@ -9,7 +10,7 @@ use crate::{
   workflow::{ExecutionId, ExecutionMode, NodeDefinitionBuilderError},
 };
 
-use super::{ConnectionIndex, ConnectionKind, NodeKind, NodeName, WorkflowId};
+use super::{ConnectionIndex, ConnectionKind, ExecutionData, NodeKind, NodeName, WorkflowId};
 
 #[derive(Debug, Error, Serialize, Deserialize)]
 #[serde(tag = "type")]
@@ -78,6 +79,9 @@ impl From<serde_json::Error> for ValidationError {
 
 #[derive(Debug, Error)]
 pub enum WorkflowExecutionError {
+  #[error("内部错误: {message}")]
+  InternalError { message: String },
+
   #[error("工作流未找到: {workflow_id}")]
   WorkflowNotFound { workflow_id: WorkflowId },
 
@@ -187,6 +191,41 @@ pub struct WorkflowErrorData {
   pub trigger: Option<TriggerErrorInfo>,
 }
 
+impl TryFrom<WorkflowErrorData> for ExecutionData {
+  type Error = serde_json::Error;
+
+  fn try_from(value: WorkflowErrorData) -> Result<Self, Self::Error> {
+    let error_json = serde_json::to_value(value)?;
+    Ok(ExecutionData::new_json(error_json, None))
+  }
+}
+
+impl TryFrom<&WorkflowErrorData> for ExecutionData {
+  type Error = serde_json::Error;
+
+  fn try_from(value: &WorkflowErrorData) -> Result<Self, Self::Error> {
+    let error_json = serde_json::to_value(value)?;
+    Ok(ExecutionData::new_json(error_json, None))
+  }
+}
+impl TryFrom<ExecutionData> for WorkflowErrorData {
+  type Error = serde_json::Error;
+
+  fn try_from(execution_data: ExecutionData) -> Result<Self, Self::Error> {
+    let error_json = execution_data.json().clone();
+    serde_json::from_value(error_json)
+  }
+}
+
+impl TryFrom<&ExecutionData> for WorkflowErrorData {
+  type Error = serde_json::Error;
+
+  fn try_from(execution_data: &ExecutionData) -> Result<Self, Self::Error> {
+    let error_json = execution_data.json().clone();
+    serde_json::from_value(error_json)
+  }
+}
+
 /// 错误来源工作流信息
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WorkflowErrorSource {
@@ -219,5 +258,5 @@ pub struct ErrorInfo {
   pub stack: Option<String>,
   pub name: Option<String>,
   pub description: Option<String>,
-  pub timestamp: Option<chrono::DateTime<chrono::Utc>>,
+  pub timestamp: Option<DateTime<FixedOffset>>,
 }

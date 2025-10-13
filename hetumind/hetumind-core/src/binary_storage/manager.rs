@@ -15,6 +15,7 @@ use crate::workflow::BinaryDataReference;
 /// 二进制数据管理器
 ///
 /// 负责管理二进制数据的存储、检索和缓存。
+#[derive(Clone)]
 pub struct BinaryDataManager {
   /// 存储实现
   storage: Arc<dyn BinaryDataStorage>,

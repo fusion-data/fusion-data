@@ -20,7 +20,7 @@ use hetumind_core::workflow::{
   Connection, ConnectionKind, Execution, ExecutionContext, ExecutionData, ExecutionDataItems, ExecutionDataMap,
   ExecutionId, ExecutionStatus, NodeExecutionStatus, NodeKind, NodeName, NodeRegistry, ParameterMap, PinData, Workflow,
   WorkflowEngine, WorkflowEngineSetting, WorkflowExecutionError, WorkflowId, WorkflowMeta, WorkflowNode,
-  WorkflowSettings, WorkflowStatus,
+  WorkflowSettings, WorkflowStatus, WorkflowTriggerData,
 };
 use hetumind_nodes::constants::{
   EDIT_FIELDS_NODE_KIND, IF_NODE_KIND, MANUAL_TRIGGER_NODE_KIND, READ_WRITE_FILES_NODE_KIND,
@@ -359,7 +359,7 @@ async fn test_integration_workflow() -> Result<(), Box<dyn std::error::Error>> {
   let mut trigger_data_map = ExecutionDataMap::default();
   trigger_data_map.insert(ConnectionKind::Main, vec![ExecutionDataItems::Items(vec![initial_data])]);
 
-  let trigger_data = (trigger_node_name, trigger_data_map);
+  let trigger_data = WorkflowTriggerData::normal(trigger_node_name, trigger_data_map);
   println!("✅ Prepared trigger data");
 
   // 6. Execute the workflow
@@ -533,7 +533,7 @@ async fn test_integration_workflow_false_branch() -> Result<(), Box<dyn std::err
   let mut trigger_data_map = ExecutionDataMap::default();
   trigger_data_map.insert(ConnectionKind::Main, vec![ExecutionDataItems::Items(vec![initial_data])]);
 
-  let trigger_data = (trigger_node_name, trigger_data_map);
+  let trigger_data = WorkflowTriggerData::normal(trigger_node_name, trigger_data_map);
 
   let result = workflow_engine.execute_workflow(trigger_data, &execution_context).await?;
 

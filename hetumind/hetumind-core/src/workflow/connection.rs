@@ -32,8 +32,11 @@ pub enum ConnectionKind {
   AiTool = 111,
 
   // AI 模型和解析连接
-  AiLanguageModel = 121,
+  /// 语言模型
+  AiModel = 121,
+  /// 输出解析器
   AiOutputParser = 122,
+  /// 记忆模块
   AiMemory = 123,
 
   // AI 数据处理连接

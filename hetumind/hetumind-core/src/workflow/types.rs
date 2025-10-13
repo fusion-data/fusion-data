@@ -9,7 +9,7 @@ use uuid::Uuid;
 
 use crate::{generate_uuid_newtype, types::JsonValue};
 
-use super::ValidationError;
+use super::{ExecutionDataMap, NodeName, ValidationError, WorkflowErrorData};
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, derive_more::From, derive_more::Into)]
 #[serde(transparent)]
@@ -293,6 +293,66 @@ pub struct NodePropertyAction {
 
   /// 目标
   pub target: Option<String>,
+}
+
+/// 工作流触发类型
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "type")]
+pub enum TriggerType {
+  /// 普通触发，包含节点名称和执行数据
+  Normal { node_name: NodeName, execution_data: ExecutionDataMap },
+  /// 错误触发，包含错误数据和可选的错误工作流ID
+  Error { error_data: Box<WorkflowErrorData>, error_workflow_id: Option<WorkflowId> },
+}
+
+/// 统一的工作流触发数据结构
+#[derive(Debug, Clone, Serialize, Deserialize, TypedBuilder)]
+pub struct WorkflowTriggerData {
+  /// 触发类型
+  pub trigger_type: TriggerType,
+}
+
+impl WorkflowTriggerData {
+  /// 创建正常触发的工作流数据
+  pub fn normal(node_name: NodeName, execution_data: ExecutionDataMap) -> Self {
+    Self { trigger_type: TriggerType::Normal { node_name, execution_data } }
+  }
+
+  /// 创建错误触发的工作流数据
+  pub fn error(error_data: WorkflowErrorData, error_workflow_id: Option<WorkflowId>) -> Self {
+    Self { trigger_type: TriggerType::Error { error_data: Box::new(error_data), error_workflow_id } }
+  }
+
+  /// 从旧的元组格式转换（向后兼容）
+  pub fn from_tuple(trigger_data: (NodeName, ExecutionDataMap)) -> Self {
+    Self::normal(trigger_data.0, trigger_data.1)
+  }
+
+  /// 转换为旧的元组格式（向后兼容）
+  pub fn to_tuple(&self) -> Option<(NodeName, ExecutionDataMap)> {
+    match &self.trigger_type {
+      TriggerType::Normal { node_name, execution_data } => Some((node_name.clone(), execution_data.clone())),
+      TriggerType::Error { .. } => None, // 错误类型无法转换为元组格式
+    }
+  }
+
+  /// 获取错误数据（如果是错误触发）
+  pub fn get_error_data(&self) -> Option<(&WorkflowErrorData, Option<&WorkflowId>)> {
+    match &self.trigger_type {
+      TriggerType::Error { error_data, error_workflow_id } => Some((error_data, error_workflow_id.as_ref())),
+      TriggerType::Normal { .. } => None,
+    }
+  }
+
+  /// 检查是否为正常触发
+  pub fn is_normal(&self) -> bool {
+    matches!(self.trigger_type, TriggerType::Normal { .. })
+  }
+
+  /// 检查是否为错误触发
+  pub fn is_error(&self) -> bool {
+    matches!(self.trigger_type, TriggerType::Error { .. })
+  }
 }
 
 /// 按钮配置
