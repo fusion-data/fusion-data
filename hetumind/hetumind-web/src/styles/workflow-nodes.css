@@ -1,0 +1,250 @@
+/* 工作流节点样式 */
+.workflow-node {
+  position: relative;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-primary);
+  border-radius: 8px;
+  padding: 12px 16px;
+  min-width: 200px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid var(--color-primary);
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.workflow-node:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-color: var(--color-primary);
+}
+
+.workflow-node.selected {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-color: var(--color-primary);
+}
+
+/* 节点头部 */
+.node-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.node-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.node-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.node-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 节点状态指示器 */
+.node-status {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.node-status-running {
+  background: #1890ff;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.node-status-success {
+  background: #52c41a;
+}
+
+.node-status-error {
+  background: #ff4d4f;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* 节点操作按钮 */
+.node-actions {
+  display: flex;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.workflow-node:hover .node-actions {
+  opacity: 1;
+}
+
+.node-action-btn {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.node-action-btn:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.node-action-delete:hover {
+  background: #fff2f0;
+  color: #ff4d4f;
+}
+
+/* 节点描述 */
+.node-description {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  margin-bottom: 8px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 节点配置 */
+.node-config {
+  background: var(--bg-secondary);
+  border-radius: 4px;
+  padding: 8px;
+  font-size: 11px;
+}
+
+.config-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+  color: var(--text-secondary);
+}
+
+.config-item:last-child {
+  margin-bottom: 0;
+}
+
+.config-label {
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.config-value {
+  color: var(--text-primary);
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  background: var(--bg-primary);
+  padding: 2px 4px;
+  border-radius: 2px;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* React Flow 自定义样式 */
+.react-flow__handle {
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--bg-primary);
+  background: var(--color-primary);
+}
+
+.react-flow__handle:hover {
+  background: var(--color-primary);
+  transform: scale(1.2);
+}
+
+.react-flow__edge-path {
+  stroke: var(--color-primary);
+  stroke-width: 2;
+}
+
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: var(--color-primary);
+  stroke-width: 3;
+}
+
+.react-flow__controls {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: 6px;
+}
+
+.react-flow__controls button {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-primary);
+  color: var(--text-primary);
+}
+
+.react-flow__controls button:hover {
+  background: var(--bg-secondary);
+}
+
+.react-flow__minimap {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+}
+
+.react-flow__background {
+  background: var(--bg-primary);
+}
+
+.react-flow__background-pattern-dots {
+  background-color: var(--border-secondary);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .workflow-node {
+    min-width: 160px;
+    padding: 10px 12px;
+  }
+
+  .node-title {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .node-label {
+    font-size: 12px;
+  }
+
+  .node-actions {
+    opacity: 1;
+  }
+
+  .node-description {
+    font-size: 11px;
+  }
+}

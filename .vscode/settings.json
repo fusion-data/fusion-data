@@ -135,6 +135,7 @@
     "varchar",
     "wechat",
     "weibo",
+    "xyflow",
     "zeroize"
   ],
   "SQL-Formatter-VSCode.indentStyle": "standard",

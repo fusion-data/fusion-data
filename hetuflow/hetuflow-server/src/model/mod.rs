@@ -14,7 +14,7 @@ use fusion_common::time::now_epoch_millis;
 use mea::{mpsc, rwlock::RwLock};
 use serde::{Deserialize, Serialize};
 
-use hetuflow_core::{models::AgentStatistics, protocol::CommandMessage};
+use hetuflow_core::protocol::CommandMessage;
 
 use crate::connection::GatewayError;
 
@@ -71,9 +71,7 @@ pub struct AgentConnInfo {
   /// Agent 地址
   pub address: String,
   /// 最后心跳时间（毫秒）
-  last_heartbeat_ms: AtomicI64,
-  /// 统计信息
-  stats: AgentStatistics,
+  last_heartbeat_ms: i64,
 }
 
 /// Agent 连接信息
@@ -84,8 +82,6 @@ pub struct AgentConnection {
   pub address: String,
   /// 最后心跳时间（毫秒）
   last_heartbeat_ms: AtomicI64,
-  /// 统计信息
-  stats: Arc<RwLock<AgentStatistics>>,
   // 当离线时，sender 为 None
   pub sender: Option<mpsc::UnboundedSender<CommandMessage>>,
 }
@@ -96,13 +92,12 @@ impl AgentConnection {
       agent_id,
       address,
       last_heartbeat_ms: AtomicI64::new(0),
-      stats: Arc::new(RwLock::new(AgentStatistics::default())),
       sender: Some(sender),
     }
   }
 
   pub async fn is_online(&self) -> bool {
-    self.sender.is_some() && self.stats.read().await.consecutive_failures == 0
+    self.sender.is_some()
   }
 
   /// 发送消息给 Agent
@@ -123,38 +118,6 @@ impl AgentConnection {
 
   pub fn set_last_heartbeat_ms(&self, ms: i64) {
     self.last_heartbeat_ms.store(ms, Ordering::Relaxed);
-  }
-
-  pub async fn stats(&self) -> AgentStatistics {
-    self.stats.read().await.clone()
-  }
-
-  pub async fn reset_consecutive_failures(&self) {
-    let mut stats = self.stats.write().await;
-    stats.consecutive_failures = 0;
-  }
-
-  pub async fn update_consecutive_failures(&self) {
-    let mut stats = self.stats.write().await;
-    stats.consecutive_failures += 1;
-    stats.last_failure_ms = now_epoch_millis();
-  }
-
-  pub async fn update_stats(&self, success: bool, response_time_ms: i64) {
-    let mut stats = self.stats.write().await;
-    stats.total_tasks += 1;
-    if success {
-      stats.success_tasks += 1;
-      stats.consecutive_failures = 0;
-    } else {
-      stats.failure_tasks += 1;
-      stats.consecutive_failures += 1;
-      stats.last_failure_ms = now_epoch_millis();
-    }
-
-    // 更新平均响应时间（简单移动平均）
-    let total = stats.total_tasks as f64;
-    stats.avg_response_ms = (stats.avg_response_ms * (total - 1.0) + response_time_ms as f64) / total;
   }
 }
 

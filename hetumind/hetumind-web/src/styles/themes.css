@@ -1,0 +1,169 @@
+/* 主题颜色变量 */
+:root {
+  /* 基础颜色变量 - 浅色主题 */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f5f5f5;
+  --bg-tertiary: #fafafa;
+  --bg-canvas: #fafafa;
+
+  --text-primary: #000000;
+  --text-secondary: rgba(0, 0, 0, 0.85);
+  --text-tertiary: rgba(0, 0, 0, 0.45);
+  --text-disabled: rgba(0, 0, 0, 0.25);
+
+  --border-primary: #d9d9d9;
+  --border-secondary: #f0f0f0;
+  --border-canvas: #e8e8e8;
+
+  --shadow-1: 0 2px 8px rgba(0, 0, 0, 0.15);
+  --shadow-2: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --shadow-3: 0 6px 16px rgba(0, 0, 0, 0.15);
+
+  /* 工作流画布颜色 */
+  --canvas-bg: #fafafa;
+  --canvas-grid: #e8e8e8;
+  --node-bg: #ffffff;
+  --node-border: #d9d9d9;
+  --node-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --connection-stroke: #1890ff;
+  --connection-stroke-selected: #ff7875;
+
+  /* 主题颜色方案 - 默认蓝色 */
+  --color-primary: #1890ff;
+  --color-primary-hover: #40a9ff;
+  --color-primary-active: #096dd9;
+  --color-primary-bg: #e6f7ff;
+  --color-primary-bg-hover: #bae7ff;
+}
+
+/* 深色主题 */
+[data-theme='dark'] {
+  --bg-primary: #141414;
+  --bg-secondary: #000000;
+  --bg-tertiary: #1f1f1f;
+  --bg-canvas: #000000;
+
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.85);
+  --text-tertiary: rgba(255, 255, 255, 0.65);
+  --text-disabled: rgba(255, 255, 255, 0.45);
+
+  --border-primary: #303030;
+  --border-secondary: #434343;
+  --border-canvas: #303030;
+
+  --shadow-1: 0 2px 8px rgba(0, 0, 0, 0.45);
+  --shadow-2: 0 4px 12px rgba(0, 0, 0, 0.45);
+  --shadow-3: 0 6px 16px rgba(0, 0, 0, 0.45);
+
+  /* 工作流画布颜色 */
+  --canvas-bg: #000000;
+  --canvas-grid: #303030;
+  --node-bg: #1f1f1f;
+  --node-border: #434343;
+  --node-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  --connection-stroke: #1890ff;
+  --connection-stroke-selected: #ff7875;
+
+  /* 主题颜色方案 - 默认蓝色（深色模式） */
+  --color-primary: #1890ff;
+  --color-primary-hover: #40a9ff;
+  --color-primary-active: #096dd9;
+  --color-primary-bg: rgba(24, 144, 255, 0.1);
+  --color-primary-bg-hover: rgba(24, 144, 255, 0.2);
+}
+
+/* 主题颜色方案 */
+[data-color-scheme='blue'] {
+  --color-primary: #1890ff;
+  --color-primary-hover: #40a9ff;
+  --color-primary-active: #096dd9;
+  --color-primary-bg: #e6f7ff;
+  --color-primary-bg-hover: #bae7ff;
+}
+
+[data-color-scheme='purple'] {
+  --color-primary: #722ed1;
+  --color-primary-hover: #9254de;
+  --color-primary-active: #531dab;
+  --color-primary-bg: #f9f0ff;
+  --color-primary-bg-hover: #efdbff;
+}
+
+[data-color-scheme='green'] {
+  --color-primary: #52c41a;
+  --color-primary-hover: #73d13d;
+  --color-primary-active: #389e0d;
+  --color-primary-bg: #f6ffed;
+  --color-primary-bg-hover: #d9f7be;
+}
+
+[data-color-scheme='orange'] {
+  --color-primary: #fa8c16;
+  --color-primary-hover: #ffa940;
+  --color-primary-active: #d46b08;
+  --color-primary-bg: #fff7e6;
+  --color-primary-bg-hover: #ffe7ba;
+}
+
+[data-color-scheme='blue'][data-theme='dark'] {
+  --color-primary: #1890ff;
+  --color-primary-hover: #40a9ff;
+  --color-primary-active: #096dd9;
+  --color-primary-bg: rgba(24, 144, 255, 0.1);
+  --color-primary-bg-hover: rgba(24, 144, 255, 0.2);
+}
+
+[data-color-scheme='purple'][data-theme='dark'] {
+  --color-primary: #722ed1;
+  --color-primary-hover: #9254de;
+  --color-primary-active: #531dab;
+  --color-primary-bg: rgba(114, 46, 209, 0.1);
+  --color-primary-bg-hover: rgba(114, 46, 209, 0.2);
+}
+
+[data-color-scheme='green'][data-theme='dark'] {
+  --color-primary: #52c41a;
+  --color-primary-hover: #73d13d;
+  --color-primary-active: #389e0d;
+  --color-primary-bg: rgba(82, 196, 26, 0.1);
+  --color-primary-bg-hover: rgba(82, 196, 26, 0.2);
+}
+
+[data-color-scheme='orange'][data-theme='dark'] {
+  --color-primary: #fa8c16;
+  --color-primary-hover: #ffa940;
+  --color-primary-active: #d46b08;
+  --color-primary-bg: rgba(250, 140, 22, 0.1);
+  --color-primary-bg-hover: rgba(250, 140, 22, 0.2);
+}
+
+/* 工作流画布特定样式 */
+.workflow-canvas {
+  background-color: var(--canvas-bg);
+  border: 1px solid var(--border-canvas);
+}
+
+.workflow-node {
+  background-color: var(--node-bg);
+  border: 1px solid var(--node-border);
+  box-shadow: var(--node-shadow);
+}
+
+.workflow-node.selected {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary-bg);
+}
+
+.workflow-edge {
+  stroke: var(--connection-stroke);
+}
+
+.workflow-edge.selected {
+  stroke: var(--connection-stroke-selected);
+}
+
+/* 主题切换动画 */
+* {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+}
