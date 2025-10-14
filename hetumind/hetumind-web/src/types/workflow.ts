@@ -1,4 +1,4 @@
-import { Viewport } from 'reactflow';
+import { Viewport } from '@xyflow/react';
 
 export interface WorkflowNode {
   id: string;

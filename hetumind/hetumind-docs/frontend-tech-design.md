@@ -31,6 +31,9 @@
   "状态管理": "Zustand (轻量级状态管理)",
   "拖拽系统": "@dnd-kit/core + @dnd-kit/sortable",
   "可视化引擎": "React Flow (工作流画布)",
+  // 迁移：使用 React Flow 12（@xyflow/react）
+  // 详见迁移指南 https://reactflow.dev/learn/troubleshooting/migrate-to-v12
+  "可视化引擎": "React Flow 12 (@xyflow/react)",
   "代码编辑器": "@monaco-editor/react",
   "样式方案": "CSS Modules + CSS Variables",
   "开发工具": "ESLint + Prettier + TypeScript",
@@ -56,7 +59,7 @@
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-router-dom": "^7.9.3",
-    "reactflow": "^11.11.4",
+    "@xyflow/react": "^12.8.6",
     "zustand": "^5.0.2",
     "immer": "^10.1.1",
     "uuid": "^13.0.0",
@@ -213,7 +216,8 @@ const WorkflowEditor: React.FC = () => {
 ```typescript
 // WorkflowCanvas.tsx
 import React, { useCallback, useMemo } from 'react';
-import ReactFlow, {
+import {
+  ReactFlow,
   Node,
   Edge,
   addEdge,
@@ -225,7 +229,8 @@ import ReactFlow, {
   Connection,
   NodeChange,
   EdgeChange,
-} from 'reactflow';
+} from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
 
 interface WorkflowCanvasProps {
   workflowId: string;
@@ -502,7 +507,7 @@ const CanvasDropZone: React.FC = () => {
 // Canvas/DropZoneWithOverlay.tsx
 import { DndContext, DragOverlay, useDroppable } from '@dnd-kit/core';
 import { useRef, useState } from 'react';
-import { useReactFlow } from 'reactflow';
+import { useReactFlow } from '@xyflow/react';
 
 /* 函数级注释：通过 DragOverlay 与 React Flow 的 project 完成屏幕坐标到画布坐标映射 */
 const CanvasDropZoneWithOverlay: React.FC = () => {
@@ -2571,6 +2576,7 @@ export default defineConfig({
           antd: ['antd', '@ant-design/icons'],
           monaco: ['@monaco-editor/react'],
           dnd: ['@dnd-kit/core', '@dnd-kit/sortable'],
+          xyflow: ['@xyflow/react'],
         },
       },
     },
