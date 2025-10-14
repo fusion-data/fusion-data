@@ -1,3 +1,4 @@
 packages:
   - "packages/*"
   - "hetuflow/hetuflow-web"
+  - "hetumind/hetumind-web"

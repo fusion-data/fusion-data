@@ -50,15 +50,17 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@monaco-editor/react": "^4.6.0",
+    "@tanstack/react-query": "^5.62.3",
     "@fusion-data/fusion-core": "workspace:*",
+    "@fusion-data/modelsql": "workspace:*",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "react-router-dom": "^7.9.3",
     "reactflow": "^11.11.4",
     "zustand": "^5.0.2",
     "immer": "^10.1.1",
     "uuid": "^13.0.0",
     "dayjs": "^1.11.18",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1",
-    "react-router-dom": "^7.9.3",
     "antd": "^5.27.4"
   }
 }
@@ -2597,9 +2599,9 @@ export default defineConfig({
 
 **第一阶段：基础框架搭建**
 
-- [x] 项目初始化和基础配置
-- [x] 主题系统实现
-- [x] 布局组件开发
+- [ ] 项目初始化和基础配置
+- [ ] 主题系统实现
+- [ ] 布局组件开发
 - [ ] 路由系统配置
 - [ ] 状态管理设置
 
