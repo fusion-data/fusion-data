@@ -39,11 +39,8 @@ impl ConnectionManager {
 
   /// 连接丢失：发送消息失败，但未触发 remove 连接操作
   async fn lost_connection(&self, agent_id: &str) -> Result<(), GatewayError> {
-    // 更新可靠性统计
-    let connections = self.connections.read().await;
-    if let Some(agent) = connections.get(agent_id) {
-      agent.update_consecutive_failures().await;
-    }
+    // 连接丢失时，仅记录日志，不再更新本地统计信息
+    info!("Agent {} connection lost", agent_id);
     Ok(())
   }
 
@@ -60,8 +57,7 @@ impl ConnectionManager {
     let connections = self.connections.write().await;
     if let Some(agent) = connections.get(agent_id) {
       agent.set_last_heartbeat_ms(timestamp);
-      // 心跳成功，重置连续失败计数
-      agent.reset_consecutive_failures().await;
+      // 心跳成功，不再更新本地统计信息
     }
     Ok(())
   }
@@ -189,7 +185,10 @@ impl ConnectionManager {
     Ok(())
   }
 
+  /// 获取在线 Agent 数量（从数据库获取）
   pub async fn get_online_count(&self) -> Result<u32, GatewayError> {
+    // 注意：这里需要 ModelManager，但 ConnectionManager 没有直接访问权限
+    // 暂时保持内存计数，后续在调用方处理
     let conns = self.connections.read().await;
     Ok(conns.len() as u32)
   }

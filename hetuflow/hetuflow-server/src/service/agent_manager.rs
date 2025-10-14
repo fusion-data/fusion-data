@@ -248,8 +248,9 @@ impl AgentEventRunner {
       0
     };
 
-    if let Some(agent) = self.connection_manager.get_agent(agent_id).await? {
-      agent.update_stats(success, response_time_ms).await;
+    // 更新数据库中的统计信息
+    if let Err(e) = AgentBmc::update_task_stats(&mm, agent_id, success, response_time_ms).await {
+      warn!("Failed to update agent task stats in database: {}", e);
     }
 
     mm.dbx().commit_txn().await?;

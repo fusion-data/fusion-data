@@ -171,7 +171,12 @@ impl ServerApplication {
     let db = mm.dbx().db_postgres()?;
     let db_size = db.db().size();
 
-    let agent_size = self.connection_manager.get_online_count().await?;
+    // 从数据库获取在线 Agent 数量，而不是从内存连接管理器
+    use crate::infra::bmc::AgentBmc;
+    use hetuflow_core::types::AgentStatus;
+    let online_agents = AgentBmc::find_online_agents(&mm).await
+      .map_err(|e| DataError::internal(500, "Failed to get online agents", Some(Box::new(e))))?;
+    let agent_size = online_agents.len() as u32;
 
     let body = SystemStatus::new(db_size, agent_size);
     Ok(body)

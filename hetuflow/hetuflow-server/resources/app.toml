@@ -26,6 +26,7 @@ log_targets = [
 
 [fusion.db]
 enable = true
+# 使用 `psql -h localhost -U fusiondata -d fusiondata` 可以直接访问数据库
 url = "postgres://fusiondata:2025.Fusiondata@localhost:5432/fusiondata"
 
 [fusion.web]
