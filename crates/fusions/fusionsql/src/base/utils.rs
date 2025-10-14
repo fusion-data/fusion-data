@@ -1,7 +1,7 @@
 use chrono::{DateTime, Utc};
 use fusion_common::ctx::Ctx;
 use fusion_common::page::Page;
-use sea_query::{DeleteStatement, InsertStatement, IntoIden, SelectStatement, UpdateStatement, WithQuery};
+use sea_query::{DeleteStatement, Expr, InsertStatement, IntoIden, SelectStatement, UpdateStatement, WithQuery};
 #[cfg(any(feature = "with-postgres", feature = "with-sqlite"))]
 use sea_query_binder::{SqlxBinder, SqlxValues};
 
@@ -195,5 +195,32 @@ where
     })
   } else {
     Ok(return_n)
+  }
+}
+
+pub fn fill_update_statement<MC>(stmt: &mut UpdateStatement)
+where
+  MC: DbBmc,
+{
+  if MC::_use_logical_deletion() {
+    stmt.and_where(Expr::col(CommonIden::LogicalDeletion).is_null());
+  }
+}
+
+pub fn fill_select_statement<MC>(stmt: &mut SelectStatement)
+where
+  MC: DbBmc,
+{
+  if MC::_use_logical_deletion() {
+    stmt.and_where(Expr::col(CommonIden::LogicalDeletion).is_null());
+  }
+}
+
+pub fn fill_delete_statement<MC>(stmt: &mut DeleteStatement)
+where
+  MC: DbBmc,
+{
+  if MC::_use_logical_deletion() {
+    stmt.and_where(Expr::col(CommonIden::LogicalDeletion).is_null());
   }
 }

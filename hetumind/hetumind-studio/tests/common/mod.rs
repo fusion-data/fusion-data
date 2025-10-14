@@ -1,25 +1,19 @@
 //! tests/common/mod.rs
-#![allow(dead_code)]
 
 use axum::Router;
 use axum_test::TestServer;
 use config::File;
 use fusion_core::{DataError, application::Application};
-use fusion_db::DbPlugin;
-use hetumind_core::workflow::{ErrorHandlingStrategy, ExecutionMode, WorkflowId, WorkflowStatus};
-use hetumind_studio::{
-  endpoint,
-  infra::{db::execution::ExecutionStorePlugin, queue::QueueProviderPlugin},
-  runtime::workflow::WorkflowEnginePlugin,
-  utils::NodeRegistryPlugin,
-};
 use fusionsql::{ModelManager, store::DbxPostgres};
 use once_cell::sync::Lazy;
 use serde_json::json;
-use sqlx::{Connection, Executor, PgConnection};
+use sqlx::Executor;
 use tokio::sync::OnceCell;
 
-// 使用 std::sync::Once 确保只初始化一次
+use hetumind_core::workflow::{ErrorHandlingStrategy, ExecutionMode, WorkflowId, WorkflowStatus};
+use hetumind_studio::{endpoint, start::app_builder};
+
+// 确保只初始化一次
 static ONCE: Lazy<OnceCell<Application>> = Lazy::new(OnceCell::new);
 
 pub async fn get_server() -> TestServer {
@@ -51,25 +45,12 @@ pub struct TestContext {
 
 impl TestContext {
   pub async fn setup() -> Self {
-    // 使用 std::sync::Once 确保只运行一次全局设置
-    ONCE.get_or_init(|| async { init_application().await.unwrap() }).await;
+    ONCE
+      .get_or_init(|| async { app_builder(Some(File::with_name("resources/test-app.toml"))).run().await.unwrap() })
+      .await;
 
     let application = Application::global();
     let mm = application.component::<ModelManager>();
-
-    // 运行数据库迁移
-    mm.dbx()
-      .use_postgres(|dbx| async move {
-        sqlx::migrate::Migrator::new(std::path::Path::new("scripts/migrations"))
-          .await
-          .unwrap()
-          .run(dbx.db())
-          .await
-          .unwrap();
-        Ok(())
-      })
-      .await
-      .unwrap();
 
     let router = endpoint::api::routes().with_state(application);
     let dbx = mm.dbx().db_postgres().unwrap().clone();
@@ -78,27 +59,7 @@ impl TestContext {
   }
 }
 
-async fn init_application() -> Result<Application, DataError> {
-  Application::builder()
-    .add_config_source(File::with_name("resources/test-app.toml"))
-    .add_plugin(DbPlugin) // ModelManager
-    .add_plugin(NodeRegistryPlugin) // NodeRegistry
-    .add_plugin(ExecutionStorePlugin) // ExecutionStoreService
-    .add_plugin(QueueProviderPlugin) // QueueProvider
-    .add_plugin(WorkflowEnginePlugin) // WorkflowEngineService
-    .build()
-    .await
-}
-
-async fn create_test_database() {
-  // We need to set up the database for the tests.
-  // We will create a new database for each test run.
-  let db_url = "postgresql://fusiondata:2025.Fusiondata@localhost:5432/template1";
-  let mut conn = PgConnection::connect(db_url).await.unwrap();
-  conn.execute("drop database if exists fusiondata_test;").await.unwrap();
-  conn.execute("create database fusiondata_test owner=fusiondata;").await.unwrap();
-}
-
+#[allow(dead_code)]
 pub fn create_test_workflow_json() -> (WorkflowId, serde_json::Value) {
   let id = WorkflowId::now_v7();
   let workflow_json = json!({
@@ -127,4 +88,4 @@ pub fn create_test_workflow_json() -> (WorkflowId, serde_json::Value) {
   (id, workflow_json)
 }
 
-pub const ADMIN_TOKEN: &str = "eyJ0eXAiOiJKV1QiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiYWxnIjoiZGlyIn0..DgILOqv5oLrhjyZ_czY3SQ.0VtJ2ukXRcZ9XiJzB0rF99q2KM-AmZPe1HeFOHlHcwo.1rFXa0FUUBQX2y5xaTcm7A";
+pub const ADMIN_TOKEN: &str = "eyJ0eXAiOiJKV1QiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiYWxnIjoiZGlyIn0..03gYECTkpz9mT4yBeslZkw.hzfsYCVvvJYIC8JqQxu3w6MI2puqekcMJ0C6Q0G3FJ9lW9nCaRmUx8im7DGx8Zki.wdKF4I1iMTCFggcA7qjmug";

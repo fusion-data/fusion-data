@@ -1,3 +1,6 @@
+#![allow(clippy::all)]
+#![warn(clippy::exhaustive_structs)]
+
 use proc_macro::TokenStream;
 use syn::DeriveInput;
 

@@ -26,6 +26,7 @@ impl<'a> ApiService for GatewayApi<'a> {
 }
 
 impl<'a> GatewayApi<'a> {
+  /// Creates a new instance of the GatewayApi
   pub fn new(client: &'a crate::HetuflowClient) -> Self {
     Self { client }
   }
@@ -59,7 +60,6 @@ impl<'a> GatewayApi<'a> {
 
     #[cfg(target_arch = "wasm32")]
     {
-      use gloo_net::http::Response;
       if response.ok() {
         response.json::<T>().await.map_err(|e| SdkError::from(e))
       } else {

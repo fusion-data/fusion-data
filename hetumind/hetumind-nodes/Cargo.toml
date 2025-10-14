@@ -13,29 +13,51 @@ publish = true
 workspace = true
 
 [dependencies]
-fusion-common = { workspace = true }
-fusion-core = { workspace = true }
+fusion-common = { workspace = true, features = ["with-uuid"] }
+fusion-core = { workspace = true, features = ["with-uuid"] }
+fusion-ai = { workspace = true }
 hetumind-core = { workspace = true }
 hetumind-context = { workspace = true }
+rig-core = { workspace = true }
 
-# 网络请求
+# network
 reqwest = { workspace = true }
 
-# 异步支持
+# async & concurrency
 async-trait = { workspace = true }
 tokio = { workspace = true }
 
-# 序列化
+# ser & deser
 serde = { workspace = true }
 serde_json = { workspace = true }
+serde_json_path = { workspace = true }
 
-# 错误处理
+# misc
 thiserror = { workspace = true }
-
-# 日志
 log = { workspace = true }
-
-# 其他工具
 ahash = { workspace = true }
 uuid = { workspace = true }
 regex = { workspace = true }
+croner = { workspace = true }
+duration-str = { workspace = true }
+chrono = { workspace = true }
+opendal = { workspace = true }
+once_cell = "1.19"
+rand = { workspace = true }
+
+# file processing
+mime_guess = { workspace = true }
+content_inspector = { workspace = true }
+glob = { workspace = true }
+
+# image processing
+image = "0.25"
+imageproc = "0.25"
+rusttype = "0.9"
+base64 = "0.22"
+
+# email processing
+lettre = { version = "0.11", default-features = false, features = ["tokio1", "rustls-tls", "tokio1-rustls", "builder", "smtp-transport"] }
+
+# async utilities
+futures = "0.3"

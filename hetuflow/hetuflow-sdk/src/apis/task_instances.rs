@@ -1,12 +1,11 @@
 //! Task Instances API implementation
-
 use crate::{
   apis::ApiService,
   error::{SdkError, SdkResult},
   platform::Response,
 };
-use hetuflow_core::models::{SchedTaskInstance, TaskInstanceForCreate, TaskInstanceForQuery, TaskInstanceForUpdate};
 use fusion_common::page::PageResult;
+use hetuflow_core::models::{SchedTaskInstance, TaskInstanceForCreate, TaskInstanceForQuery, TaskInstanceForUpdate};
 use serde::de::DeserializeOwned;
 use uuid::Uuid;
 
@@ -27,30 +26,36 @@ impl<'a> ApiService for TaskInstancesApi<'a> {
 }
 
 impl<'a> TaskInstancesApi<'a> {
+  /// Create a new task instance
   pub fn new(client: &'a crate::HetuflowClient) -> Self {
     Self { client }
   }
 
+  /// Query task instances
   pub async fn query(&self, query: TaskInstanceForQuery) -> SdkResult<PageResult<SchedTaskInstance>> {
     let response = self.client.post("task-instances/page", &query).await?;
     Self::handle_response(response).await
   }
 
+  /// Create a new task instance
   pub async fn create(&self, instance: TaskInstanceForCreate) -> SdkResult<Uuid> {
     let response = self.client.post("task-instances/item", &instance).await?;
     Self::handle_response(response).await
   }
 
+  /// Get a task instance by ID
   pub async fn get(&self, id: &Uuid) -> SdkResult<Option<SchedTaskInstance>> {
     let response = self.client.get(&format!("task-instances/item/{}", id)).await?;
     Self::handle_response(response).await
   }
 
+  /// Update a task instance
   pub async fn update(&self, id: &Uuid, update: TaskInstanceForUpdate) -> SdkResult<()> {
-    let response = self.client.post("task-instances/item/update", &update).await?;
+    let response = self.client.post(&format!("task-instances/item/{}/update", id), &update).await?;
     Self::handle_response(response).await
   }
 
+  /// Delete a task instance
   pub async fn delete(&self, id: &Uuid) -> SdkResult<()> {
     let response = self.client.delete(&format!("task-instances/item/{}", id)).await?;
     Self::handle_response(response).await
@@ -74,7 +79,6 @@ impl<'a> TaskInstancesApi<'a> {
 
     #[cfg(target_arch = "wasm32")]
     {
-      use gloo_net::http::Response;
       if response.ok() {
         response.json::<T>().await.map_err(|e| SdkError::from(e))
       } else {

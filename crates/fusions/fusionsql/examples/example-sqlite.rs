@@ -1,13 +1,12 @@
 use anyhow::{Result, anyhow};
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, FixedOffset};
 use fusion_common::ctx::Ctx;
+use fusion_common::page::{Page, PageResult};
 use fusionsql::base::DbBmc;
 use fusionsql::store::Dbx;
 use fusionsql::{DbConfig, ModelManager, generate_sqlite_bmc_common, generate_sqlite_bmc_filter};
 use fusionsql::{
   field::{FieldMask, Fields},
-  filter::Page,
-  page::PageResult,
   sqlite::SqliteRowType,
 };
 use fusionsql_macros::FilterNodes;
@@ -124,7 +123,7 @@ impl SqliteModel {
 #[tokio::main]
 async fn main() -> Result<()> {
   // 初始化日志
-  logforth::stdout().apply();
+  logforth::starter_log::stdout().apply();
 
   // 获取当前目录的绝对路径
   let current_dir = env::current_dir()?;

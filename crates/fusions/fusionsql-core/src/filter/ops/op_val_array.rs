@@ -1,111 +1,112 @@
+use serde::{Deserialize, Serialize};
+
 use crate::filter::OpVal;
 
 macro_rules! impl_array_op_val {
-  ($(($ovs:ident, $ov:ident, $nt:ty, $vr:expr)),+) => {
+  ($(($ovs:ident, $nt:ty, $vr:expr)),+) => {
 		$(
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
+pub struct $ovs {
+  pub eq: Option<$nt>,
+  pub not: Option<$nt>,
+  pub contains: Option<$nt>,
+  pub contained: Option<$nt>,
+}
 
- #[derive(Debug, Clone)]
- #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
- pub struct $ovs(pub Vec<$ov>);
-
- impl $ovs {
-	pub fn eq(vs: $nt) -> Self
- {
-		Self(vec![$ov::Eq(vs)])
+impl $ovs {
+	pub fn eq(vs: $nt) -> Self {
+		Self { eq: Some(vs), ..Default::default() }
 	}
 
-	pub fn not(vs: $nt) -> Self
- {
-		Self(vec![$ov::Not(vs)])
+	pub fn not(vs: $nt) -> Self {
+		Self { not: Some(vs), ..Default::default() }
 	}
 
-	pub fn contains(vs: $nt) -> Self
-	{
-		Self(vec![$ov::Contains(vs)])
+	pub fn contains(vs: $nt) -> Self {
+		Self { contains: Some(vs), ..Default::default() }
 	}
 
-	pub fn contained(vs: $nt) -> Self
-	{
-		Self(vec![$ov::Contained(vs)])
+	pub fn contained(vs: $nt) -> Self {
+		Self { contained: Some(vs), ..Default::default() }
 	}
 
- }
-
- #[derive(Debug, Clone)]
- #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
- pub enum $ov {
-	Eq($nt),
-	Not($nt),
-	Contains($nt),
-	Contained($nt),
- }
-
- // region:    --- Simple value to Eq e.g., OpValUint64
- impl From<$nt> for $ov {
-	fn from(vs: $nt) -> Self {
-		$ov::Eq(vs)
+	pub fn with_eq(mut self, vs: $nt) -> Self {
+		self.eq = Some(vs);
+		self
 	}
- }
 
- impl From<&$nt> for $ov {
-	fn from(vs: &$nt) -> Self {
-		$ov::Eq(vs.clone())
+	pub fn with_not(mut self, vs: $nt) -> Self {
+		self.not = Some(vs);
+		self
 	}
- }
- // endregion: --- Simple value to Eq e.g., OpValUint64
 
- // region:    --- Simple value to Eq e.g., OpValUint64
- impl From<$nt> for $ovs {
-	fn from(val: $nt) -> Self {
-		$ovs(vec![$ov::from(val)])
+	pub fn with_contains(mut self, vs: $nt) -> Self {
+		self.contains = Some(vs);
+		self
 	}
- }
 
- impl From<&$nt> for $ovs {
-	fn from(vs: &$nt) -> Self {
-		$ovs(vec![$ov::from(vs.clone())])
+	pub fn with_contained(mut self, vs: $nt) -> Self {
+		self.contained = Some(vs);
+		self
 	}
- }
- // endregion: --- Simple value to Eq e.g., OpValUint64
+}
 
- // region:    --- e.g., OpValUint64 to OpVal
- impl From<$ov> for OpVal {
-	fn from(val: $ov) -> Self {
-		$vr(val)
-	}
- }
- // endregion: --- e.g., OpValUint64 to OpVal
+// region:    --- Simple value to Eq e.g., OpValUint64
+impl From<$nt> for $ovs {
+  fn from(val: $nt) -> Self {
+  	$ovs::eq(val)
+  }
+}
 
- // region:    --- Primitive to OpVal::Int(IntOpVal::Eq)
- impl From<$nt> for OpVal {
-	fn from(vs: $nt) -> Self {
-		$ov::Eq(vs).into()
-	}
- }
+impl From<&$nt> for $ovs {
+  fn from(vs: &$nt) -> Self {
+  	$ovs::eq(vs.clone())
+  }
+}
+// endregion: --- Simple value to Eq e.g., OpValUint64
 
- impl From<&$nt> for OpVal {
-	fn from(vs: &$nt) -> Self {
-		$ov::Eq(vs.clone()).into()
-	}
- }
+// region:    --- e.g., OpValUint64 to OpVal
+impl From<$ovs> for OpVal {
+  fn from(val: $ovs) -> Self {
+  	$vr(Box::new(val))
+  }
+}
+// endregion: --- e.g., OpValUint64 to OpVal
+
+// region:    --- Primitive to OpVal::Int(IntOpVal::Eq)
+impl From<$nt> for OpVal {
+fn from(vs: $nt) -> Self {
+	$ovs::eq(vs).into()
+}
+}
+
+impl From<&$nt> for OpVal {
+fn from(vs: &$nt) -> Self {
+	$ovs::eq(vs.clone()).into()
+}
+}
  // endregion: --- Primitive to OpVal::Int(IntOpVal::Eq)
 		)+
 	};
 }
 
 impl_array_op_val!(
-  (OpValArrayInt64, OpValArrayInt64, Vec<i64>, OpVal::ArrayInt64),
-  (OpValArrayInt32, OpValArrayInt32, Vec<i32>, OpVal::ArrayInt32),
-  (OpValArrayFloat64, OpValArrayFloat64, Vec<f64>, OpVal::ArrayFloat64),
-  (OpValArrayString, OpValArrayString, Vec<String>, OpVal::ArrayString)
+  (OpValArrayInt64, Vec<i64>, OpVal::ArrayInt64),
+  (OpValArrayInt32, Vec<i32>, OpVal::ArrayInt32),
+  (OpValArrayFloat64, Vec<f64>, OpVal::ArrayFloat64),
+  (OpValArrayFloat32, Vec<f32>, OpVal::ArrayFloat32),
+  (OpValArrayString, Vec<String>, OpVal::ArrayString)
 );
 
 #[cfg(feature = "with-sea-query")]
 mod with_sea_query {
-  use super::*;
-  use crate::filter::{FilterNodeOptions, SeaResult};
   use sea_query::extension::postgres::PgBinOper;
   use sea_query::{BinOper, ColumnRef, ConditionExpression, SimpleExpr};
+
+  use crate::filter::{FilterNodeOptions, ForSeaCondition, SeaResult};
+
+  use super::*;
 
   fn binary_fn<T>(col: &ColumnRef, op: BinOper, expr: T) -> ConditionExpression
   where
@@ -117,21 +118,29 @@ mod with_sea_query {
   macro_rules! impl_into_sea_op_val {
 		($($ov:ident),+) => {
 			$(
-	impl $ov {
-		pub fn into_sea_cond_expr(self, col: &ColumnRef, _node_options: &FilterNodeOptions) -> SeaResult<ConditionExpression>  {
-			let cond = match self {
-				$ov::Eq(arr) => binary_fn(col, BinOper::Equal, arr),
-				$ov::Not(arr) => binary_fn(col, BinOper::NotEqual, arr),
-				$ov::Contains(arr) => binary_fn(col, BinOper::PgOperator(PgBinOper::Contains), arr),
-				$ov::Contained(arr) => binary_fn(col, BinOper::PgOperator(PgBinOper::Contained), arr),
-			};
+  	impl $ov {
+  		pub fn to_condition_expressions(self, col: &ColumnRef, _node_options: &FilterNodeOptions, _for_sea_condition: Option<&ForSeaCondition>) -> SeaResult<Vec<ConditionExpression>>  {
+  		  let mut cond_exprs = Vec::new();
 
-			Ok(cond)
-		}
-	}
+  			if let Some(arr) = self.eq {
+  				cond_exprs.push(binary_fn(col, BinOper::Equal, arr));
+  			}
+  			if let Some(arr) = self.not {
+  				cond_exprs.push(binary_fn(col, BinOper::NotEqual, arr));
+  			}
+  			if let Some(arr) = self.contains {
+  				cond_exprs.push(binary_fn(col, BinOper::PgOperator(PgBinOper::Contains), arr));
+  			}
+  			if let Some(arr) = self.contained {
+  				cond_exprs.push(binary_fn(col, BinOper::PgOperator(PgBinOper::Contained), arr));
+  			}
+
+  			Ok(cond_exprs)
+  		}
+  	}
 			)+
 		};
 	}
 
-  impl_into_sea_op_val!(OpValArrayInt64, OpValArrayInt32, OpValArrayFloat64, OpValArrayString);
+  impl_into_sea_op_val!(OpValArrayInt32, OpValArrayInt64, OpValArrayFloat32, OpValArrayFloat64, OpValArrayString);
 }

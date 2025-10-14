@@ -6,7 +6,7 @@ use fusion_core::concurrent::{ServiceTask, TaskServiceHandle};
 use fusion_core::timer::{Timer, TimerPlugin};
 use log::info;
 use mea::mutex::Mutex;
-use mea::shutdown::{ShutdownRecv, ShutdownSend};
+use mea::shutdown::ShutdownRecv;
 
 use crate::connection::{ConnectionManager, WsRunner};
 use crate::executor::{ProcessEventRunner, TaskExecuteRunner};
@@ -20,7 +20,6 @@ pub struct AgentApplication {
   pub setting: Arc<HetuflowAgentSetting>,
   connection_manager: Arc<ConnectionManager>,
   process_manager: Arc<ProcessManager>,
-  shutdown: Arc<Mutex<Option<(ShutdownSend, ShutdownRecv)>>>,
   handles: Arc<Mutex<Vec<TaskServiceHandle>>>,
 }
 
@@ -43,18 +42,10 @@ impl AgentApplication {
     let setting: Arc<HetuflowAgentSetting> = Arc::new(HetuflowAgentSetting::load(application.config_registry())?);
     info!("Creating AgentApplication with agent_id: {}", setting.agent_id);
 
-    let (shutdown_tx, shutdown_rx) = mea::shutdown::new_pair();
-
     let connection_manager = Arc::new(ConnectionManager::new());
     let process_manager = Arc::new(ProcessManager::new(setting.process.clone(), connection_manager.clone()));
 
-    Ok(Self {
-      setting,
-      connection_manager,
-      process_manager,
-      shutdown: Arc::new(Mutex::new(Some((shutdown_tx, shutdown_rx)))),
-      handles: Arc::new(Mutex::new(Vec::new())),
-    })
+    Ok(Self { setting, connection_manager, process_manager, handles: Arc::new(Mutex::new(Vec::new())) })
   }
 
   /// 获取 Agent ID
@@ -115,22 +106,15 @@ impl AgentApplication {
   }
 
   pub async fn shutdown_recv(&self) -> ShutdownRecv {
-    let guard = self.shutdown.lock().await;
-    guard.as_ref().unwrap().1.clone()
+    Application::global().get_shutdown_recv().await
   }
 
   /// 停止应用程序
   pub async fn shutdown(self) -> Result<(), DataError> {
     info!("AgentApplication shutdown begging, agent_id: {}", self.setting.agent_id);
 
-    // 取出 ShutdownSend
-    let shutdown_tx = match self.shutdown.lock().await.take() {
-      Some((tx, _)) => tx, // discard ShutdownRecv
-      None => return Err(DataError::server_error("AgentApplication is not running")),
-    };
-
     // 发送关闭信号
-    shutdown_tx.shutdown();
+    Application::shutdown().await;
 
     self.process_manager.kill_all_processes().await?;
 
@@ -138,7 +122,7 @@ impl AgentApplication {
     drop(self.process_manager);
 
     // 等待各组件停止完成
-    shutdown_tx.await_shutdown().await;
+    Application::await_shutdown().await;
 
     // 等待所有任务完成
     let mut handles_guard = self.handles.lock().await;

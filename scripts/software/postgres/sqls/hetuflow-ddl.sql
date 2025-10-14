@@ -41,7 +41,7 @@ create index if not exists idx_sched_agent_last_heartbeat on sched_agent (last_h
 -- 作业定义表 (sched_job)
 create table sched_job (
   id uuid primary key,
-  namespace_id varchar(40) not null, -- namespace_id 由 fusion-iam 管理
+  namespace_id varchar(40) not null, -- namespace_id 由 jieyuan 管理
   name varchar(255) not null,
   description text,
   -- 运行作业时添加的自定义环境变量
@@ -52,7 +52,7 @@ create table sched_job (
   created_at timestamptz not null default now(),
   updated_by bigint,
   updated_at timestamptz,
-  deleted_at timestamptz
+  logical_deletion timestamptz
 );
 
 -- 调度策略表 (sched_schedule)

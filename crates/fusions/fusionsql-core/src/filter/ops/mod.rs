@@ -1,6 +1,6 @@
 use super::*;
 
-// pub mod op_val_array;
+pub mod op_val_array;
 pub mod op_val_bool;
 pub mod op_val_datetime;
 pub mod op_val_nums;
@@ -27,15 +27,15 @@ pub trait OpValTrait: Clone {
 pub enum OpVal {
   Bool(OpValBool),
   Int64(OpValInt64),
-  // ArrayInt64(Box<OpValArrayInt64>),
+  ArrayInt64(Box<OpValArrayInt64>),
   Int32(OpValInt32),
-  // ArrayInt32(Box<OpValArrayInt32>),
+  ArrayInt32(Box<OpValArrayInt32>),
   Float64(OpValFloat64),
-  // ArrayFloat64(Box<OpValArrayFloat64>),
+  ArrayFloat64(Box<OpValArrayFloat64>),
   Float32(OpValFloat32),
-  // ArrayFloat32(Box<OpValArrayFloat32>),
+  ArrayFloat32(Box<OpValArrayFloat32>),
   String(Box<OpValString>),
-  // ArrayString(Box<OpValArrayString>),
+  ArrayString(Box<OpValArrayString>),
   DateTime(OpValDateTime),
   #[cfg(feature = "with-uuid")]
   Uuid(OpValUuid),
@@ -61,10 +61,15 @@ mod with_sea_query {
       match self {
         Self::DateTime(op_vals) => op_vals.to_condition_expressions(col, node_options, for_sea_condition),
         Self::String(op_vals) => op_vals.to_condition_expressions(col, node_options, for_sea_condition),
+        Self::ArrayString(op_vals) => op_vals.to_condition_expressions(col, node_options, for_sea_condition),
         Self::Int32(op_vals) => op_vals.to_condition_expressions(col, node_options, for_sea_condition),
+        Self::ArrayInt32(op_vals) => op_vals.to_condition_expressions(col, node_options, for_sea_condition),
         Self::Int64(op_vals) => op_vals.to_condition_expressions(col, node_options, for_sea_condition),
-        Self::Float64(op_vals) => op_vals.to_condition_expressions(col, node_options, for_sea_condition),
+        Self::ArrayInt64(op_vals) => op_vals.to_condition_expressions(col, node_options, for_sea_condition),
         Self::Float32(op_vals) => op_vals.to_condition_expressions(col, node_options, for_sea_condition),
+        Self::ArrayFloat32(op_vals) => op_vals.to_condition_expressions(col, node_options, for_sea_condition),
+        Self::Float64(op_vals) => op_vals.to_condition_expressions(col, node_options, for_sea_condition),
+        Self::ArrayFloat64(op_vals) => op_vals.to_condition_expressions(col, node_options, for_sea_condition),
         #[cfg(feature = "with-uuid")]
         Self::Uuid(op_vals) => op_vals.to_condition_expressions(col, node_options, for_sea_condition),
         Self::Bool(op_vals) => op_vals.to_condition_expressions(col, node_options, for_sea_condition),

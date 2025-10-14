@@ -13,7 +13,7 @@ with_line_number = true
 with_span_events = []
 time_format = "%Y-%m-%d %H:%M:%S%.3f"
 log_level = "info"
-log_writer = "both"
+log_writers = ["stdout", "file"]
 log_dir = "./runs/logs/server/"
 log_targets = [
   "info",

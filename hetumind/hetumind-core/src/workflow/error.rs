@@ -1,11 +1,16 @@
+use chrono::{DateTime, FixedOffset};
 #[cfg(feature = "with-db")]
 use fusionsql::SqlError;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
+use typed_builder::TypedBuilder;
 
-use crate::{types::JsonValue, workflow::NodeDefinitionBuilderError};
+use crate::{
+  types::JsonValue,
+  workflow::{ExecutionId, ExecutionMode},
+};
 
-use super::{ConnectionIndex, ConnectionKind, NodeKind, NodeName, WorkflowId};
+use super::{ConnectionIndex, ConnectionKind, ExecutionData, NodeKind, NodeName, WorkflowId};
 
 #[derive(Debug, Error, Serialize, Deserialize)]
 #[serde(tag = "type")]
@@ -74,6 +79,9 @@ impl From<serde_json::Error> for ValidationError {
 
 #[derive(Debug, Error)]
 pub enum WorkflowExecutionError {
+  #[error("内部错误: {message}")]
+  InternalError { message: String },
+
   #[error("工作流未找到: {workflow_id}")]
   WorkflowNotFound { workflow_id: WorkflowId },
 
@@ -91,6 +99,15 @@ pub enum WorkflowExecutionError {
 
   #[error("资源不足")]
   ResourceExhausted,
+
+  #[error("工作流结构无效: {0}")]
+  InvalidWorkflowStructure(String),
+
+  #[error("节点执行超时: {node_name}, timeout_seconds: {timeout_seconds}")]
+  NodeTimeout { node_name: NodeName, timeout_seconds: u64 },
+
+  #[error("执行限制超过")]
+  ExecutionLimitExceeded,
 
   #[cfg(feature = "with-db")]
   #[error("存储错误: {0}")]
@@ -117,8 +134,8 @@ pub enum NodeExecutionError {
   #[error("超时错误")]
   Timeout,
 
-  #[error("节点执行失败: {node_name}")]
-  ExecutionFailed { node_name: NodeName },
+  #[error("节点执行失败: {node_name}, {message:?}")]
+  ExecutionFailed { node_name: NodeName, message: Option<String> },
 
   #[error("当前节点不存在，workflow_id:{workflow_id}, node_name:{node_name}")]
   NodeNotFound { workflow_id: WorkflowId, node_name: NodeName },
@@ -128,6 +145,15 @@ pub enum NodeExecutionError {
 
   #[error("资源不足")]
   ResourceExhausted,
+
+  #[error("输入数据无效: {0}")]
+  InvalidInput(String),
+
+  #[error("配置错误: {0}")]
+  ConfigurationError(String),
+
+  #[error("连接错误: {0}")]
+  ConnectionError(String),
 }
 
 #[derive(Debug, Error)]
@@ -150,6 +176,87 @@ pub enum RegistrationError {
   #[error("节点类型已存在: {node_kind}")]
   NodeKindAlreadyExists { node_kind: NodeKind },
 
-  #[error(transparent)]
-  NodeDefinitionBuilderError(#[from] NodeDefinitionBuilderError),
+  #[error("节点定义错误: {0}")]
+  NodeDefinitionError(String),
+}
+
+// 错误工作流触发数据结构
+#[derive(Debug, Clone, Serialize, Deserialize, TypedBuilder)]
+pub struct WorkflowErrorData {
+  /// 错误来源工作流信息
+  pub workflow: WorkflowErrorSource,
+  /// 执行错误信息（如果有执行上下文）
+  pub execution: Option<ExecutionErrorInfo>,
+  /// 触发器错误信息（如果没有执行上下文）
+  pub trigger: Option<TriggerErrorInfo>,
+}
+
+impl TryFrom<WorkflowErrorData> for ExecutionData {
+  type Error = serde_json::Error;
+
+  fn try_from(value: WorkflowErrorData) -> Result<Self, Self::Error> {
+    let error_json = serde_json::to_value(value)?;
+    Ok(ExecutionData::new_json(error_json, None))
+  }
+}
+
+impl TryFrom<&WorkflowErrorData> for ExecutionData {
+  type Error = serde_json::Error;
+
+  fn try_from(value: &WorkflowErrorData) -> Result<Self, Self::Error> {
+    let error_json = serde_json::to_value(value)?;
+    Ok(ExecutionData::new_json(error_json, None))
+  }
+}
+impl TryFrom<ExecutionData> for WorkflowErrorData {
+  type Error = serde_json::Error;
+
+  fn try_from(execution_data: ExecutionData) -> Result<Self, Self::Error> {
+    let error_json = execution_data.json().clone();
+    serde_json::from_value(error_json)
+  }
+}
+
+impl TryFrom<&ExecutionData> for WorkflowErrorData {
+  type Error = serde_json::Error;
+
+  fn try_from(execution_data: &ExecutionData) -> Result<Self, Self::Error> {
+    let error_json = execution_data.json().clone();
+    serde_json::from_value(error_json)
+  }
+}
+
+/// 错误来源工作流信息
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WorkflowErrorSource {
+  pub id: WorkflowId,
+  pub name: String,
+}
+
+/// 执行错误信息
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ExecutionErrorInfo {
+  pub id: ExecutionId,
+  pub url: Option<String>,
+  pub retry_of: Option<String>,
+  pub error: ErrorInfo,
+  pub last_node_executed: NodeName,
+  pub mode: ExecutionMode,
+}
+
+/// 触发器错误信息
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TriggerErrorInfo {
+  pub error: ErrorInfo,
+  pub mode: ExecutionMode,
+}
+
+/// 标准化错误信息结构
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ErrorInfo {
+  pub message: String,
+  pub stack: Option<String>,
+  pub name: Option<String>,
+  pub description: Option<String>,
+  pub timestamp: Option<DateTime<FixedOffset>>,
 }

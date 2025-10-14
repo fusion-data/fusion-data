@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
 
 use fusion_common::helper::{default_bool_true, default_usize_0, is_true};
-use serde_repr::{Deserialize_repr, Serialize_repr};
 use typed_builder::TypedBuilder;
 
 use super::NodeName;
@@ -10,10 +9,9 @@ use super::NodeName;
 pub type ConnectionIndex = usize;
 
 /// 节点连接类型 - 使用枚举确保类型安全
-#[derive(
-  Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize_repr, Deserialize_repr, strum::Display, strum::AsRefStr,
-)]
-#[repr(i32)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, strum::Display, strum::AsRefStr)]
+#[serde(rename_all = "snake_case")]
+#[strum(serialize_all = "snake_case")]
 pub enum ConnectionKind {
   /// 传统工作流的主要数据流
   /// - 特点：最常用的连接类型，用于节点间传递业务数据
@@ -34,8 +32,11 @@ pub enum ConnectionKind {
   AiTool = 111,
 
   // AI 模型和解析连接
-  AiLanguageModel = 121,
+  /// 语言模型
+  AiModel = 121,
+  /// 输出解析器
   AiOutputParser = 122,
+  /// 记忆模块
   AiMemory = 123,
 
   // AI 数据处理连接

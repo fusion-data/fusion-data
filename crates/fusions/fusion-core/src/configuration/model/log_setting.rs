@@ -21,7 +21,7 @@ pub struct LogSetting {
   pub time_format: String,
   pub log_level: LogLevel,
   pub log_targets: Vec<String>,
-  pub log_writer: LogWriterType,
+  pub log_writers: Vec<LogWriterType>,
 
   /// 目录输出目录
   #[serde(default = "default_log_dir")]
@@ -61,21 +61,19 @@ impl Default for OtelConfig {
 }
 
 #[derive(Debug, Clone, Default, Serialize, PartialEq, Eq)]
-#[allow(non_camel_case_types)]
 pub enum LogWriterType {
   #[default]
   Stdout,
   File,
-  Both,
 }
 
 impl LogWriterType {
   pub fn is_stdout(&self) -> bool {
-    matches!(self, LogWriterType::Stdout | LogWriterType::Both)
+    self == &LogWriterType::Stdout
   }
 
   pub fn is_file(&self) -> bool {
-    matches!(self, LogWriterType::File | LogWriterType::Both)
+    self == &LogWriterType::File
   }
 }
 
@@ -171,8 +169,6 @@ impl<'de> Deserialize<'de> for LogWriterType {
           LogWriterType::Stdout
         } else if v.eq_ignore_ascii_case("file") {
           LogWriterType::File
-        } else if v.eq_ignore_ascii_case("both") {
-          LogWriterType::Both
         } else {
           return Err(serde::de::Error::invalid_value(Unexpected::Str(v), &MSG));
         };

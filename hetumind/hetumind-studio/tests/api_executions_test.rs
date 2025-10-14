@@ -12,6 +12,7 @@ mod common;
 
 /// cargo test -p hetumind --test api_executions_test -- --nocapture --ignored test_execute_and_query_execution
 #[tokio::test]
+#[ignore]
 async fn test_execute_and_query_execution() {
   let server = get_server().await;
 

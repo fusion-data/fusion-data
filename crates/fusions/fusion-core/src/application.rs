@@ -9,6 +9,10 @@ use std::{
 use config::Config;
 use dashmap::DashMap;
 use log::{debug, info};
+use mea::{
+  mutex::Mutex,
+  shutdown::{ShutdownRecv, ShutdownSend},
+};
 use serde::de::DeserializeOwned;
 
 use fusion_common::time::OffsetDateTime;
@@ -28,6 +32,7 @@ pub(crate) struct ApplicationInner {
   config_registry: FusionConfigRegistry,
   components: Registry<DynComponentArc>,
   start_time: OffsetDateTime,
+  pub(crate) shutdown: Mutex<Option<(ShutdownSend, ShutdownRecv)>>,
 }
 
 /// Application, clone is cheap.
@@ -56,6 +61,34 @@ impl Application {
         panic!("Global application was already set to {}", old)
       }
     }
+  }
+
+  pub async fn shutdown() {
+    let app = Self::global();
+    if let Some((shutdown_tx, _)) = app.0.shutdown.lock().await.as_ref() {
+      shutdown_tx.shutdown();
+    }
+  }
+
+  pub async fn await_shutdown() -> bool {
+    let app = Self::global();
+    if let Some((shutdown_tx, shutdown_rx)) = app.0.shutdown.lock().await.take() {
+      drop(shutdown_rx);
+      shutdown_tx.await_shutdown().await;
+      true
+    } else {
+      false
+    }
+  }
+
+  pub async fn is_shutdown(&self) -> bool {
+    self.0.shutdown.lock().await.is_none()
+  }
+
+  pub async fn get_shutdown_recv(&self) -> ShutdownRecv {
+    let maybe = self.0.shutdown.lock().await;
+    let tuple = maybe.as_ref().unwrap();
+    tuple.1.clone()
   }
 
   pub fn config_registry(&self) -> &FusionConfigRegistry {
@@ -352,7 +385,13 @@ impl ApplicationBuilder {
     let components = std::mem::take(&mut self.components);
     let configuration_state = std::mem::take(&mut self.config_registry);
     let init_time = configuration_state.fusion_config().app().time_now();
-    Application(Arc::new(ApplicationInner { config_registry: configuration_state, components, start_time: init_time }))
+    let shutdown = Mutex::new(Some(mea::shutdown::new_pair()));
+    Application(Arc::new(ApplicationInner {
+      config_registry: configuration_state,
+      components,
+      start_time: init_time,
+      shutdown,
+    }))
   }
 }
 

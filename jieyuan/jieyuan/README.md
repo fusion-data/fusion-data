@@ -6,9 +6,11 @@
 cargo run -p fusion-iam
 ```
 
+## HTTP (curl)
+
 ## grpc
 
-Enter `backend` directory:
+Enter `jieyuan/jieyuan` directory:
 
 ```sh
 grpcurl -plaintext localhost:58010 describe

@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use fusion_core::{application::ApplicationBuilder, configuration::ConfigRegistry, plugin::Plugin};
-use hetumind_core::workflow::{ExecutionConfig, NodeRegistry};
+use hetumind_core::workflow::{NodeRegistry, WorkflowEngineSetting};
 
 use crate::{
   infra::db::execution::{ExecutionStorePlugin, ExecutionStoreService},
@@ -17,10 +17,10 @@ impl Plugin for WorkflowEnginePlugin {
   async fn build(&self, app: &mut ApplicationBuilder) {
     let execution_store: ExecutionStoreService = app.component();
     let node_registry: NodeRegistry = app.component();
-    let config: ExecutionConfig = app.get_config_by_path("workflow.engine").unwrap();
+    let setting: WorkflowEngineSetting = app.get_config_by_path("hetumind.workflow.engine").unwrap();
 
     let workflow_engine: WorkflowEngineService =
-      Arc::new(DefaultWorkflowEngine::new(node_registry, execution_store, config));
+      Arc::new(DefaultWorkflowEngine::new(node_registry, execution_store, setting));
     app.add_component(workflow_engine);
   }
 

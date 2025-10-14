@@ -23,7 +23,7 @@ fn main() {
     time_format: "%Y-%m-%d %H:%M:%S%.3f".to_string(),
     log_level: Level::Debug.into(),
     log_targets: vec![],
-    log_writer: LogWriterType::Both, // 同时输出到控制台和文件
+    log_writers: vec![LogWriterType::Stdout, LogWriterType::File], // 同时输出到控制台和文件
     log_dir: "./target/demo_logs/".to_string(),
     log_name: Some("demo".to_string()),
     otel: Default::default(),

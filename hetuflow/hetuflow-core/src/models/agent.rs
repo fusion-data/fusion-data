@@ -1,11 +1,11 @@
 use chrono::{DateTime, FixedOffset};
 use fusion_common::ahash::HashMap;
 use fusion_common::page::Page;
-use garde::Validate;
 use fusionsql_core::{
   field::FieldMask,
   filter::{OpValDateTime, OpValInt32, OpValString},
 };
+use garde::Validate;
 use serde::{Deserialize, Serialize};
 
 use crate::types::{AgentStatus, Labels};

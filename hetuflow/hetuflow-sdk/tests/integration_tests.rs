@@ -5,6 +5,7 @@ use hetuflow_core::models::{
   AgentCapabilities, AgentFilter, AgentForCreate, AgentForQuery, ExecuteCommand, JobForCreate, TaskConfig,
 };
 use hetuflow_core::types::{AgentStatus, JobStatus};
+use hetuflow_core::utils::defaults::default_namespace_id;
 use hetuflow_sdk::{Config, HetuflowClient};
 
 #[tokio::test]
@@ -63,7 +64,7 @@ fn test_model_creation() {
 
   let _job_create = JobForCreate {
     id: None,
-    namespace_id: Some("default".to_string()),
+    namespace_id: default_namespace_id(),
     name: "test-job".to_string(),
     description: Some("Test job".to_string()),
     environment: Some(serde_json::json!({"ENV": "test"})),

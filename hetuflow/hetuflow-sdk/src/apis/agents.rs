@@ -92,8 +92,6 @@ impl<'a> AgentsApi<'a> {
   async fn handle_response<T: DeserializeOwned>(response: Response) -> SdkResult<T> {
     #[cfg(not(target_arch = "wasm32"))]
     {
-      let status = response.status().as_u16();
-
       if response.status().is_success() {
         let text = response
           .text()
@@ -111,8 +109,6 @@ impl<'a> AgentsApi<'a> {
 
     #[cfg(target_arch = "wasm32")]
     {
-      use gloo_net::http::Response;
-
       if response.ok() {
         response.json::<T>().await.map_err(|e| SdkError::from(e))
       } else {

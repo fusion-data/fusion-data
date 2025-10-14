@@ -1,7 +1,7 @@
 use fusion_common::time::OffsetDateTime;
 use fusion_core::DataError;
-use hetumind_core::workflow::{Workflow, WorkflowId, WorkflowStatus};
 use fusionsql::{field::Fields, postgres::PgRowType};
+use hetumind_core::workflow::{Workflow, WorkflowId, WorkflowStatus};
 use sea_query::enum_def;
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
@@ -16,13 +16,18 @@ pub struct WorkflowEntity {
   pub version_id: Option<WorkflowId>,
   pub settings: serde_json::Value,
   pub meta: serde_json::Value,
+
   /// Vec<WorkflowNode>
   pub nodes: serde_json::Value,
+
   /// Vec<Connection>
   pub connections: serde_json::Value,
+
   /// [PinData]
   pub pin_data: serde_json::Value,
+
   pub static_data: Option<serde_json::Value>,
+
   pub parent_folder_id: Option<String>,
   pub trigger_count: i64,
   pub is_archived: bool,

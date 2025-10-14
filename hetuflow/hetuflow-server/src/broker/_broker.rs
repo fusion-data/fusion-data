@@ -2,10 +2,10 @@ use std::sync::Arc;
 
 use fusion_core::{DataError, application::Application, configuration::ConfigRegistry};
 use fusion_web::config::WebConfig;
+use fusionsql::ModelManager;
 use hetuflow_core::{models::ServerForRegister, types::ServerStatus};
 use log::{error, info};
 use mea::shutdown::ShutdownRecv;
-use fusionsql::ModelManager;
 use tokio::task::JoinHandle;
 
 use crate::{

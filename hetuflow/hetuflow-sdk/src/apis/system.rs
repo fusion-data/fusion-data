@@ -25,6 +25,7 @@ impl<'a> ApiService for SystemApi<'a> {
 }
 
 impl<'a> SystemApi<'a> {
+  /// Create a new system API client
   pub fn new(client: &'a crate::HetuflowClient) -> Self {
     Self { client }
   }
@@ -59,7 +60,6 @@ impl<'a> SystemApi<'a> {
 
     #[cfg(target_arch = "wasm32")]
     {
-      use gloo_net::http::Response;
       if response.ok() {
         response.json::<T>().await.map_err(|e| SdkError::from(e))
       } else {

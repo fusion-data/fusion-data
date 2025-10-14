@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::fmt;
 
+/// Sdk Result type
 pub type SdkResult<T> = Result<T, SdkError>;
 
 /// SDK error types
@@ -13,7 +14,12 @@ pub enum SdkError {
   /// Configuration error
   ConfigError(String),
   /// API error response
-  ApiError { status: u16, message: String },
+  ApiError {
+    /// HTTP status code
+    status: u16,
+    /// Error message
+    message: String,
+  },
   /// Network error
   NetworkError(String),
   /// Authentication error

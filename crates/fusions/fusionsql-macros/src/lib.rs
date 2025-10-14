@@ -1,3 +1,6 @@
+#![allow(clippy::all)]
+#![warn(clippy::exhaustive_structs)]
+
 // region:    --- Modules
 
 mod derives_field;

@@ -13,7 +13,7 @@ publish = true
 workspace = true
 
 [features]
-with-openapi = ["dep:utoipa"]
+with-openapi = ["dep:utoipa", "fusion-common/with-openapi"]
 with-db = ["dep:sqlx", "dep:fusionsql", "dep:sea-query"]
 
 [dependencies]

@@ -2,8 +2,6 @@ use std::ops::Deref;
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use derive_builder::Builder;
-use fusion_common::helper::default_bool_false;
 use serde::{Deserialize, Serialize};
 use typed_builder::TypedBuilder;
 
@@ -53,7 +51,7 @@ impl std::fmt::Display for NodeName {
   }
 }
 
-/// 节点类型，用于唯一标识一个节点，相同类型的不同版本节点使用相同的 NodeKind
+/// Node type, used to uniquely identify a node. Different versions of the same type of node use the same NodeKind.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, derive_more::Into)]
 #[serde(transparent)]
 #[cfg_attr(feature = "with-db", derive(sqlx::Type), sqlx(transparent))]
@@ -96,7 +94,7 @@ impl std::fmt::Display for NodeKind {
   }
 }
 
-/// 节点属性类型（元数据）
+/// Node property type (metadata)
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum NodePropertyKind {
@@ -125,7 +123,7 @@ pub enum NodePropertyKind {
   WorkflowSelector,
 }
 
-// 节点属性类型选项 - 主结构体
+// Node property type options - main structure
 #[derive(Debug, Clone, Serialize, Deserialize, TypedBuilder)]
 pub struct NodePropertyKindOptions {
   /// 按钮配置 (支持: [NodePropertyKind::Button])
@@ -264,7 +262,7 @@ pub struct NodePropertyRouting {
 
 /// 节点属性定义（元数据）
 #[derive(Debug, Clone, Default, Serialize, Deserialize, TypedBuilder)]
-pub struct NodeProperties {
+pub struct NodeProperty {
   /// 显示名称
   #[builder(setter(into))]
   pub display_name: String,
@@ -282,7 +280,7 @@ pub struct NodeProperties {
   pub kind_options: Option<NodePropertyKindOptions>,
 
   /// 是否必填
-  #[builder(default = true)]
+  #[builder(default = false)]
   pub required: bool,
 
   /// 参数的默认值
@@ -307,7 +305,7 @@ pub struct NodeProperties {
 
   /// 选项
   #[builder(default, setter(strip_option))]
-  pub options: Option<Vec<Box<NodeProperties>>>,
+  pub options: Option<Vec<Box<NodeProperty>>>,
 
   /// 输入框占位符文本
   #[builder(default, setter(into, strip_option))]
@@ -353,13 +351,17 @@ pub struct NodeProperties {
   #[builder(default, setter(strip_option))]
   pub ignore_validation_during_execution: Option<bool>,
 
+  /// 是否是密码类型？
+  #[builder(default, setter(strip_option))]
+  pub password: Option<bool>,
+
   /// 扩展属性
   #[serde(default, skip_serializing_if = "serde_json::Map::is_empty")]
   #[builder(default)]
   additional_properties: serde_json::Map<String, JsonValue>,
 }
 
-impl NodeProperties {
+impl NodeProperty {
   pub fn new_option(
     display_name: impl Into<String>,
     name: impl Into<String>,
@@ -368,70 +370,149 @@ impl NodeProperties {
   ) -> Self {
     Self::builder().display_name(display_name).name(name).value(value).kind(kind).build()
   }
+
+  pub fn new_option_value(value: JsonValue, kind: NodePropertyKind) -> Self {
+    let name = serde_json::to_string(&value).unwrap();
+    Self::new_option(&name, &name, value, kind)
+  }
 }
 
 /// Node 定义
-#[derive(Debug, Clone, Serialize, Deserialize, Builder)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NodeDefinition {
   /// 唯一标识一种类型的节点，可以存在多个不同的版本。PK
-  #[builder(setter(into))]
   pub kind: NodeKind,
 
   /// 版本号
-  #[builder(setter(into))]
   pub version: Version,
 
   /// 节点分组
-  #[builder(setter(into))]
   pub groups: Vec<NodeGroupKind>,
 
   /// 显示名称
-  #[builder(setter(into))]
   pub display_name: String,
 
   /// 节点描述
-  #[builder(default, setter(into, strip_option))]
   pub description: Option<String>,
 
   /// 输入端口定义。与 node 的 outputs 对应。
-  #[builder(default, setter(into))]
   pub inputs: Vec<InputPortConfig>,
 
   /// 输出端口定义。
-  #[builder(default, setter(into))]
   pub outputs: Vec<OutputPortConfig>,
 
   /// 属性定义
-  #[builder(default, setter(into))]
-  pub properties: Vec<NodeProperties>,
+  pub properties: Vec<NodeProperty>,
 
   /// 官方文档URL
-  #[builder(default, setter(into, strip_option))]
   pub document_url: Option<String>,
 
   /// 子标题
-  #[builder(default, setter(into, strip_option))]
   pub sub_title: Option<String>,
 
   /// 是否隐藏
-  #[builder(default = default_bool_false())]
   pub hidden: bool,
 
+  /// 当个工作流中允许最多允许配置多少个此类型的节点，默认不限制
+  pub max_nodes: Option<u32>,
+
   /// 节点图标。（支持 FontAwesome 图标或文件图标）或自定义图标URL
-  #[builder(default, setter(into, strip_option))]
   pub icon: Option<String>,
 
   /// 图标颜色
-  #[builder(default, setter(into, strip_option))]
   pub icon_color: Option<IconColor>,
 
   /// 自定义图标URL
-  #[builder(default, setter(into, strip_option))]
   pub icon_url: Option<String>,
 
   /// 徽章图标URL
-  #[builder(default, setter(into, strip_option))]
   pub badge_icon_url: Option<String>,
+}
+
+impl NodeDefinition {
+  /// Create a new NodeDefinition with required fields
+  pub fn new(kind: impl Into<NodeKind>, version: impl Into<Version>, display_name: impl Into<String>) -> Self {
+    Self {
+      kind: kind.into(),
+      version: version.into(),
+      groups: Vec::new(),
+      display_name: display_name.into(),
+      description: None,
+      inputs: Vec::new(),
+      outputs: Vec::new(),
+      properties: Vec::new(),
+      document_url: None,
+      sub_title: None,
+      hidden: false,
+      max_nodes: None,
+      icon: None,
+      icon_color: None,
+      icon_url: None,
+      badge_icon_url: None,
+    }
+  }
+
+  // Methods for Option<T> fields
+  pub fn with_description(mut self, description: impl Into<String>) -> Self {
+    self.description = Some(description.into());
+    self
+  }
+
+  pub fn with_document_url(mut self, document_url: impl Into<String>) -> Self {
+    self.document_url = Some(document_url.into());
+    self
+  }
+
+  pub fn with_sub_title(mut self, sub_title: impl Into<String>) -> Self {
+    self.sub_title = Some(sub_title.into());
+    self
+  }
+
+  pub fn with_max_nodes(mut self, max_nodes: u32) -> Self {
+    self.max_nodes = Some(max_nodes);
+    self
+  }
+
+  pub fn with_icon(mut self, icon: impl Into<String>) -> Self {
+    self.icon = Some(icon.into());
+    self
+  }
+
+  pub fn with_icon_color(mut self, icon_color: impl Into<IconColor>) -> Self {
+    self.icon_color = Some(icon_color.into());
+    self
+  }
+
+  pub fn with_icon_url(mut self, icon_url: impl Into<String>) -> Self {
+    self.icon_url = Some(icon_url.into());
+    self
+  }
+
+  pub fn with_badge_icon_url(mut self, badge_icon_url: impl Into<String>) -> Self {
+    self.badge_icon_url = Some(badge_icon_url.into());
+    self
+  }
+
+  // Methods for Vec<T> fields
+  pub fn add_input(mut self, input: InputPortConfig) -> Self {
+    self.inputs.push(input);
+    self
+  }
+
+  pub fn add_output(mut self, output: OutputPortConfig) -> Self {
+    self.outputs.push(output);
+    self
+  }
+
+  pub fn add_property(mut self, property: NodeProperty) -> Self {
+    self.properties.push(property);
+    self
+  }
+
+  pub fn add_group(mut self, group: NodeGroupKind) -> Self {
+    self.groups.push(group);
+    self
+  }
 }
 
 #[cfg(feature = "with-db")]
@@ -459,20 +540,21 @@ pub trait Node {
 
 #[async_trait]
 pub trait NodeExecutable {
-  /// 初始化节点。可用于实现节点初始化逻辑，如加载配置、初始化资源等。
+  /// Initialize the node. This can be used to implement node initialization logic, such as loading configuration, initializing resources, etc.
   async fn init(&mut self, _context: &NodeExecutionContext) -> Result<(), NodeExecutionError> {
     Ok(())
   }
 
-  /// 执行节点
+  /// Execute the node
   ///
   /// Returns:
-  /// - 成功返回多个输出端口的数据，第 1 个输出端口从 0 开始
-  /// - 失败返回错误
+  /// - On success, returns data for multiple output ports, with the first output port starting from 0
+  /// - On failure, returns an error
   async fn execute(&self, context: &NodeExecutionContext) -> Result<ExecutionDataMap, NodeExecutionError>;
 
-  /// 获取节点定义
+  /// Get Node definition
   fn definition(&self) -> Arc<NodeDefinition>;
 }
 
+/// Node Executor Type
 pub type NodeExecutor = Arc<dyn NodeExecutable + Send + Sync>;

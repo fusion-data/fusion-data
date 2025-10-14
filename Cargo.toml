@@ -6,7 +6,7 @@ members = [
   "hetuflow/hetuflow-core",
   "hetuflow/hetuflow-server",
   "hetuflow/hetuflow-agent",
-  "hetuflow/hetuflow-sdk",
+  # "hetuflow/hetuflow-sdk",
   "hetuflow/hetuflow-test",
   "hetuflow/hetuflow-docs",
   "hetumind/hetumind-core",
@@ -71,6 +71,7 @@ fusionsql = { version = "0.1.1", path = "crates/fusions/fusionsql" }
 fusion-db = { version = "0.1.1", path = "crates/fusions/fusion-db" }
 fusion-web = { version = "0.1.1", path = "crates/fusions/fusion-web" }
 fusion-grpc = { version = "0.1.1", path = "crates/fusions/fusion-grpc" }
+fusion-ai = { version = "0.1.1", path = "crates/fusions/fusion-ai" }
 fusions = { version = "0.1.1", path = "crates/fusions/fusions" }
 jieyuan-core = { version = "0.1.1", path = "jieyuan/jieyuan-core" }
 hetuflow-core = { version = "0.1.1", path = "hetuflow/hetuflow-core" }
@@ -87,8 +88,14 @@ tikv-jemallocator = "0.6"
 qrcode-rs = { version = "0.1" }
 image = { version = "0.25" }
 # -- Misc
+mime_guess = "2.0"
+content_inspector = "0.2"
+glob = "0.3"
+# -- Graph algorithms
+petgraph = "0.8"
+# -- System utilities
+num_cpus = "1"
 semver = { version = "1.0", features = ["serde"] }
-getrandom = { version = "0.3", default-features = false }
 windows-sys = { version = "0.61", features = [
   "Win32_Security",
   "Win32_System_Threading",
@@ -158,6 +165,7 @@ argon2 = { version = "0.5", default-features = false, features = [
   "alloc",
   "password-hash",
 ] }
+openssl = "0.10"
 # A non-cryptographic hash function using AES-NI for high performance, provides AHashMap and AHashSet
 # 胜在小键值（如 HashMap 键）的极低延迟
 ahash = { version = "0.8", features = ["runtime-rng", "serde", "getrandom"] }
@@ -218,11 +226,9 @@ serde_with = { version = "3.15", features = ["chrono_0_4"] }
 serde_json = { version = "1.0" }
 tsify = { version = "0.5", features = ["js"] }
 sonic-rs = { version = "0.5" }
-
 json-five = { version = "0.3" }
 serde_repr = "0.1"
-jsonpath-rust = { version = "1.0" }
-json-patch = { version = "4" }
+serde_json_path = { version = "0.7" }
 nom = "8.0"
 # -- Web
 url = "2.5"
@@ -232,6 +238,27 @@ headers = "0.4"
 mime = "0.3"
 http = "1"
 http-body-util = "0.1"
+# -- WASM
+js-sys = { version = "0.3" }
+wasm-bindgen = { version = "0.2", features = ["serde-serialize"] }
+wasm-bindgen-futures = { version = "0.4" }
+getrandom = { version = "0.3", default-features = false }
+rand_wasm = { version = "0.9", package = "rand" }
+web-sys = { version = "0.3", features = [
+  "Headers",
+  "Request",
+  "RequestInit",
+  "Response",
+  "Window",
+  "console",
+  "AbortController",
+  "AbortSignal",
+] }
+gloo-net = { version = "0.6", features = ["http", "json"] }
+gloo-timers = { version = "0.3", features = ["futures"] }
+console_error_panic_hook = { version = "0.1" }
+serde-wasm-bindgen = { version = "0.6" }
+wee_alloc = { version = "0.4" }
 # async http client
 reqwest = { version = "0.12", features = [
   # "rustls-tls-webpki-roots",
@@ -270,7 +297,6 @@ utoipa = { version = "5.4", features = [
   "axum_extras",
   "chrono",
   "decimal",
-  "uuid",
   "rc_schema",
 ] }
 utoipa-axum = "0.2"
@@ -303,6 +329,8 @@ minijinja = { version = "2.5" }
 polars = "0.51"
 # An Excel/OpenDocument Spreadsheets reader and deserializer in pure rust
 calamine = "0.31"
+# This written in pure Rust to read and write xlsx file.
+umya-spreadsheet = "2.3"
 # -- Redis & Valkey client
 fred = { version = "10" }
 # -- cloud storage access

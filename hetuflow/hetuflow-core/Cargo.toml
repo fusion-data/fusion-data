@@ -13,7 +13,13 @@ publish = true
 workspace = true
 
 [features]
-with-db = ["fusionsql", "sqlx", "sea-query", "fusionsql-core/with-sea-query"]
+with-db = [
+  "fusionsql",
+  "sqlx",
+  "sqlx/postgres",
+  "sea-query",
+  "fusionsql-core/with-sea-query",
+]
 with-cli = ["clap"]
 with-openapi = [
   "utoipa",
@@ -22,15 +28,7 @@ with-openapi = [
   "fusionsql-core/with-openapi",
 ]
 # WASM compatibility features
-with-wasm = [
-  "fusion-common/with-wasm",
-  "tsify",
-  "uuid/js",
-  "wasm-bindgen",
-  "js-sys",
-  "gloo-timers",
-  "web-sys",
-]
+with-wasm = ["fusion-common/with-wasm", "uuid/js"]
 
 [dependencies]
 fusion-common = { workspace = true, features = ["with-uuid"] }
@@ -59,14 +57,13 @@ config = { workspace = true }
 toml = { workspace = true }
 utoipa = { workspace = true, optional = true }
 
+[target.'cfg(target_arch = "wasm32")'.dependencies]
 # WASM dependencies
-wasm-bindgen = { version = "0.2", features = [
-  "serde-serialize",
-], optional = true }
-js-sys = { version = "0.3", optional = true }
-gloo-timers = { version = "0.3", features = ["futures"], optional = true }
-web-sys = { version = "0.3", optional = true }
-tsify = { workspace = true, optional = true }
+wasm-bindgen = { workspace = true, features = ["serde-serialize"] }
+js-sys = { workspace = true }
+gloo-timers = { workspace = true, features = ["futures"] }
+web-sys = { workspace = true }
+tsify = { workspace = true }
 
 [dev-dependencies]
 tokio-test = { workspace = true }

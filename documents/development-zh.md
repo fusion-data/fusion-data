@@ -5,9 +5,9 @@
 ## 1. 基础环境要求
 
 - **Rust**：使用 [rustup](https://www.rust-lang.org/tools/install)，建议使用 [rsproxy](https://rsproxy.cn/)
-  以加速在车内访问。版本需 ≥ 1.87（见 `Cargo.toml`）。
+  以加速在车内访问。版本需 ≥ 1.90（见 `Cargo.toml`）。
 - **Node.js**：官网[下载](https://nodejs.org/zh-cn/download)，建议使用 [nvm](https://github.com/nvm-sh/nvm)
-  管理，推荐版本 ≥ 18。
+  管理，推荐版本 ≥ 22。
 - **pnpm**：推荐使用 [pnpm](https://pnpm.io/zh/installation) 作为 Node 包管理器。
 - **Docker & Docker Compose**：用于本地数据库及相关服务的启动。
 
@@ -24,7 +24,7 @@ cargo build
 
 ```shell
 cargo fmt
-cargo clippy --workspace --all-targets --all-features -- -D
+cargo clippy --workspace --all-targets --all-features --no-deps -- -D warnings
 ```
 
 ### 如需运行测试：
@@ -42,6 +42,9 @@ cargo test
 如： `hetumind` 包主要是一个库（即 `src/lib.rs` 是主要入口），您可以使用以下命令：
 
 ```shell
+cargo test --features=with-db -p hetumind-core -- --nocapture
+cargo test -p hetumind-nodes -- --nocapture
+
 cargo test -p hetumind-studio --lib
 ```
 

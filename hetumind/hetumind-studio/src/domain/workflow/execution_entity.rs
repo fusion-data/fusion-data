@@ -1,10 +1,10 @@
 use fusion_common::time::OffsetDateTime;
 use fusion_core::DataError;
+use fusionsql::{field::Fields, postgres::PgRowType};
 use hetumind_core::{
   user::UserId,
   workflow::{Execution, ExecutionId, ExecutionMode, ExecutionStatus, WorkflowId},
 };
-use fusionsql::{field::Fields, postgres::PgRowType};
 use sea_query::enum_def;
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
@@ -34,7 +34,7 @@ pub struct ExecutionEntity {
   pub retry_of: Option<ExecutionId>,
   /// 重试成功执行 ID
   pub retry_success_id: Option<ExecutionId>,
-  pub deleted_at: Option<OffsetDateTime>,
+  pub logical_deletion: Option<OffsetDateTime>,
   pub created_at: OffsetDateTime,
   pub created_by: UserId,
   pub updated_at: Option<OffsetDateTime>,

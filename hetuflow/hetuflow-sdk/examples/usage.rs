@@ -3,6 +3,7 @@
 use fusion_common::page::Page;
 use hetuflow_core::models::{AgentForQuery, JobForCreate, JobForQuery, TaskForQuery};
 use hetuflow_core::types::JobStatus;
+use hetuflow_core::utils::defaults::default_namespace_id;
 use hetuflow_sdk::HetuflowClient;
 
 #[tokio::main]
@@ -26,8 +27,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
   // Example 3: List all agents
   println!("\n=== Listing Agents ===");
-  let mut query = AgentForQuery::default();
-  query.page.limit = Some(10);
+  let query = AgentForQuery { page: Page { limit: Some(10), ..Default::default() }, ..Default::default() };
 
   match client.agents().query(query).await {
     Ok(result) => {
@@ -49,8 +49,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
   // Example 4: Query jobs with pagination
   println!("\n=== Querying Jobs ===");
-  let mut job_query = JobForQuery::default();
-  job_query.page = Page { page: Some(1), limit: Some(10), offset: Some(0), order_bys: None };
+  let job_query = JobForQuery {
+    page: Page { page: Some(1), limit: Some(10), offset: Some(0), order_bys: None },
+    ..Default::default()
+  };
   let current_page = job_query.page.page; // Store page info before moving
 
   match client.jobs().query(job_query).await {
@@ -62,7 +64,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
   println!("\n=== Creating Job ===");
   let create_job = JobForCreate {
     id: None,
-    namespace_id: Some("default".to_string()),
+    namespace_id: default_namespace_id(),
     name: "example-job".to_string(),
     description: Some("Example job created via SDK".to_string()),
     environment: Some(serde_json::json!({
@@ -89,8 +91,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
   // Example 6: Find tasks by status
   println!("\n=== Finding Failed Tasks ===");
-  let mut task_query = TaskForQuery::default();
-  task_query.page = Page { page: Some(1), limit: Some(50), offset: Some(0), order_bys: None };
+  let task_query = TaskForQuery {
+    page: Page { page: Some(1), limit: Some(50), offset: Some(0), order_bys: None },
+    ..Default::default()
+  };
 
   match client.tasks().query(task_query).await {
     Ok(result) => {

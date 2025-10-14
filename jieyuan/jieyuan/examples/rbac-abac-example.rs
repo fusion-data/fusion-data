@@ -70,10 +70,10 @@ impl Database {
 fn check_rbac(db: &Database, user_id: i64, resource: &str, action: &str) -> bool {
   if let Some(user) = db.users.get(&user_id) {
     for role_id in &user.roles {
-      if let Some(role) = db.roles.get(role_id) {
-        if role.permissions.contains(&format!("{}:{}", resource, action)) {
-          return true;
-        }
+      if let Some(role) = db.roles.get(role_id)
+        && role.permissions.contains(&format!("{}:{}", resource, action))
+      {
+        return true;
       }
     }
   }
@@ -101,10 +101,11 @@ fn evaluate_abac_condition(condition: &Value, attributes: &HashMap<String, Value
 
 fn check_abac(db: &Database, request: &AccessRequest) -> bool {
   for policy in &db.policies {
-    if policy.resource == request.resource && policy.action == request.action {
-      if evaluate_abac_condition(&policy.condition, &request.attributes) {
-        return policy.effect == "allow";
-      }
+    if policy.resource == request.resource
+      && policy.action == request.action
+      && evaluate_abac_condition(&policy.condition, &request.attributes)
+    {
+      return policy.effect == "allow";
     }
   }
   false

@@ -1,14 +1,19 @@
+use axum::extract::FromRequestParts;
 use fusion_common::regex;
-use fusion_core::{DataError, Result};
+use fusion_core::{DataError, Result, application::Application, security::pwd::generate_pwd};
+use fusion_web::WebError;
 use fusionsql::{ModelManager, filter::OpValInt64, page::PageResult};
 
 use jieyuan_core::model::{
-  User, UserCredential, UserFilter, UserForCreate, UserForPage, UserForUpdate, UserRoleForCreate,
+  User, UserCredential, UserCredentialForInsert, UserFilter, UserForCreate, UserForPage, UserForUpdate,
+  UserRoleForCreate,
 };
+
+use crate::utils::model_manager_from_parts;
 
 use super::{UserBmc, UserCredentialBmc, UserRoleBmc};
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct UserSvc {
   mm: ModelManager,
 }
@@ -20,7 +25,23 @@ impl UserSvc {
   }
 
   pub async fn create(&self, input: UserForCreate) -> Result<i64> {
-    let id = UserBmc::create(&self.mm, Self::validate_and_init(input)?).await?;
+    let mm = self.mm.get_txn_clone();
+    mm.dbx().begin_txn().await?;
+
+    let encrypted_pwd = if let Some(password) = input.password.as_deref() {
+      if password.len() < 6 {
+        return Err(DataError::bad_request("Password length cannot be less than 6 characters."));
+      }
+      generate_pwd(password).await?
+    } else {
+      let setting = Application::global().fusion_config();
+      generate_pwd(setting.security().pwd().default_pwd()).await?
+    };
+
+    let id = UserBmc::create(&mm, Self::validate_and_init(input)?).await?;
+    UserCredentialBmc::insert(&mm, UserCredentialForInsert { id, encrypted_pwd }).await?;
+
+    mm.dbx().commit_txn().await?;
     Ok(id)
   }
 
@@ -80,8 +101,7 @@ impl UserSvc {
       return Err(DataError::bad_request("At least one 'email' or 'phone' is required"));
     };
 
-    let has_name = input.name.as_deref().is_some_and(|n| !n.is_empty());
-    if !has_name {
+    if input.name.as_deref().is_none_or(|n| n.is_empty()) {
       input.name = match input.email.as_deref() {
         Some(email) => email.split('@').next().map(ToString::to_string),
         None => input.phone.clone(),
@@ -89,5 +109,17 @@ impl UserSvc {
     }
 
     Ok(input)
+  }
+}
+
+impl FromRequestParts<Application> for UserSvc {
+  type Rejection = WebError;
+
+  async fn from_request_parts(
+    parts: &mut axum::http::request::Parts,
+    state: &Application,
+  ) -> core::result::Result<Self, Self::Rejection> {
+    let mm = model_manager_from_parts(parts, state)?;
+    Ok(Self::new(mm))
   }
 }

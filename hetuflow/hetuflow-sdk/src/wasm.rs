@@ -10,7 +10,6 @@ use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::future_to_promise;
 
-use crate::apis::AgentsApi;
 use crate::{Config, HetuflowClient};
 
 /// Serialization utilities for WASM interop
@@ -29,6 +28,7 @@ mod serialization {
   }
 
   /// Convert a JsValue to JSON string
+  #[allow(dead_code)]
   pub fn to_json_string(value: &JsValue) -> Result<String, JsError> {
     match js_sys::JSON::stringify(value) {
       Ok(stringified) => match stringified.as_string() {
@@ -40,6 +40,7 @@ mod serialization {
   }
 
   /// Convert JSON string to JsValue
+  #[allow(dead_code)]
   pub fn from_json_string(json: &str) -> Result<JsValue, JsError> {
     match js_sys::JSON::parse(json) {
       Ok(value) => Ok(value),
@@ -294,6 +295,7 @@ macro_rules! declare_api_wrapper {
     #[wasm_bindgen]
     pub struct $name {
       // Store the client directly without lifetime parameters
+      #[allow(dead_code)]
       client: HetuflowClient,
     }
 
@@ -397,6 +399,7 @@ macro_rules! declare_api_wrapper {
 /// API for managing agents in the Hetuflow system
 pub struct WasmAgentsApi {
   // Store the client directly without lifetime parameters
+  #[allow(dead_code)]
   client: HetuflowClient,
 }
 

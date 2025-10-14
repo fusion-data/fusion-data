@@ -126,7 +126,7 @@ pub struct ExecutionForUpdate {
   pub retry_of: Option<ExecutionId>,
   pub retry_success_id: Option<ExecutionId>,
   pub started_at: Option<OffsetDateTime>,
-  pub deleted_at: Option<OffsetDateTime>,
+  pub logical_deletion: Option<OffsetDateTime>,
   #[cfg_attr(feature = "fusionsql", field(skip))]
   pub field_mask: Option<FieldMask>,
 }
@@ -140,7 +140,7 @@ impl From<Execution> for ExecutionForUpdate {
       retry_of: None,
       retry_success_id: None,
       started_at: execution.started_at,
-      deleted_at: None,
+      logical_deletion: None,
       field_mask: None,
     }
   }

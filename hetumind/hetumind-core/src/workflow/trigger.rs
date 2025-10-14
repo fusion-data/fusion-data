@@ -18,6 +18,8 @@ pub enum TriggerKind {
   Poll = 4,
   /// 文件监听
   FileWatch = 5,
+  /// 错误触发
+  Error = 6,
 }
 
 pub struct TriggerContext {

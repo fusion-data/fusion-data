@@ -32,7 +32,7 @@ impl ExecutionGraph {
 
     // 根据连接关系构建图
     for (source_id, kind_connections) in &workflow.connections {
-      for (_kind, connections) in kind_connections {
+      for connections in kind_connections.values() {
         for connection in connections {
           let target_id = connection.node_name();
 

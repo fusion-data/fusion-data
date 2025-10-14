@@ -1,5 +1,5 @@
 use fusion_common::page::Page;
-use fusion_common::time::OffsetDateTime;
+use fusion_common::time::{DateTime, FixedOffset};
 use fusionsql_core::filter::{OpValDateTime, OpValInt32, OpValInt64, OpValString};
 use serde::{Deserialize, Serialize};
 
@@ -10,17 +10,17 @@ use serde::{Deserialize, Serialize};
 #[repr(i32)]
 pub enum UserStatus {
   #[default]
-  Unspecified = 0,
+  Unactive = 1,
   Disabled = 99,
-  Enabled = 100,
+  Actived = 100,
 }
 
 impl From<i32> for UserStatus {
   fn from(value: i32) -> Self {
     match value {
       99 => UserStatus::Disabled,
-      100 => UserStatus::Enabled,
-      _ => UserStatus::Unspecified,
+      100 => UserStatus::Actived,
+      _ => UserStatus::Unactive,
     }
   }
 }
@@ -58,14 +58,12 @@ pub struct User {
   pub status: UserStatus,
   pub gender: Gender,
   pub created_by: i64,
-  #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
-  pub created_at: OffsetDateTime,
+  pub created_at: DateTime<FixedOffset>,
   pub updated_by: Option<i64>,
-  #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
-  pub updated_at: Option<OffsetDateTime>,
+  pub updated_at: Option<DateTime<FixedOffset>>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-db", derive(fusionsql::field::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct UserForCreate {
@@ -73,6 +71,8 @@ pub struct UserForCreate {
   pub phone: Option<String>,
   pub name: Option<String>,
   pub status: Option<UserStatus>,
+  #[field(skip)]
+  pub password: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -108,12 +108,10 @@ pub struct UserFilter {
 
   pub created_by: Option<OpValInt64>,
 
-  #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
   pub created_at: Option<OpValDateTime>,
 
   pub updated_by: Option<OpValInt64>,
 
-  #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
   pub updated_at: Option<OpValDateTime>,
 }
 
@@ -123,15 +121,13 @@ pub struct UserCredential {
   pub id: i64,
   pub encrypted_pwd: String,
   pub created_by: i64,
-  #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
-  pub created_at: OffsetDateTime,
+  pub created_at: DateTime<FixedOffset>,
   pub updated_by: Option<i64>,
-  #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
-  pub updated_at: Option<OffsetDateTime>,
+  pub updated_at: Option<DateTime<FixedOffset>>,
 }
 
 #[cfg_attr(feature = "with-db", derive(fusionsql::field::Fields))]
-pub struct UserCredentialForCreate {
+pub struct UserCredentialForInsert {
   pub id: i64,
   pub encrypted_pwd: String,
 }

@@ -3,7 +3,7 @@ use std::sync::Arc;
 use ahash::HashMap;
 use hetumind_core::{
   user::UserId,
-  workflow::{ExecutionConfig, NodeExecutionError, WorkflowExecutionError},
+  workflow::{NodeExecutionError, WorkflowEngineSetting, WorkflowExecutionError},
 };
 use tokio::sync::{Semaphore, SemaphorePermit};
 
@@ -21,9 +21,9 @@ pub struct ConcurrencyController {
 }
 
 impl ConcurrencyController {
-  pub fn new(config: ExecutionConfig) -> Self {
+  pub fn new(config: WorkflowEngineSetting) -> Self {
     Self {
-      execution_semaphore: Arc::new(Semaphore::new(config.max_concurrent_executions as usize)),
+      execution_semaphore: Arc::new(Semaphore::new(config.max_concurrent_executions())),
       node_type_limits: HashMap::default(),
       user_limits: HashMap::default(),
       resource_monitor: Arc::new(ResourceMonitor::new()),

@@ -54,42 +54,42 @@ impl HetuflowClient {
   }
 
   /// Get access to the Jobs API
-  pub fn jobs(&self) -> crate::apis::JobsApi {
+  pub fn jobs(&'_ self) -> crate::apis::JobsApi<'_> {
     crate::apis::JobsApi::new(self)
   }
 
   /// Get access to the Tasks API
-  pub fn tasks(&self) -> crate::apis::TasksApi {
+  pub fn tasks(&'_ self) -> crate::apis::TasksApi<'_> {
     crate::apis::TasksApi::new(self)
   }
 
   /// Get access to the Schedules API
-  pub fn schedules(&self) -> crate::apis::SchedulesApi {
+  pub fn schedules(&'_ self) -> crate::apis::SchedulesApi<'_> {
     crate::apis::SchedulesApi::new(self)
   }
 
   /// Get access to the Task Instances API
-  pub fn task_instances(&self) -> crate::apis::TaskInstancesApi {
+  pub fn task_instances(&'_ self) -> crate::apis::TaskInstancesApi<'_> {
     crate::apis::TaskInstancesApi::new(self)
   }
 
   /// Get access to the Servers API
-  pub fn servers(&self) -> crate::apis::ServersApi {
+  pub fn servers(&'_ self) -> crate::apis::ServersApi<'_> {
     crate::apis::ServersApi::new(self)
   }
 
   /// Get access to the System API
-  pub fn system(&self) -> crate::apis::SystemApi {
+  pub fn system(&'_ self) -> crate::apis::SystemApi<'_> {
     crate::apis::SystemApi::new(self)
   }
 
   /// Get access to the Gateway API
-  pub fn gateway(&self) -> crate::apis::GatewayApi {
+  pub fn gateway(&'_ self) -> crate::apis::GatewayApi<'_> {
     crate::apis::GatewayApi::new(self)
   }
 
   /// Get access to the Auth API
-  pub fn auth(&self) -> crate::apis::AuthApi {
+  pub fn auth(&'_ self) -> crate::apis::AuthApi<'_> {
     crate::apis::AuthApi::new(self)
   }
 }
@@ -203,7 +203,6 @@ impl ApiService for HetuflowClient {
     #[cfg(target_arch = "wasm32")]
     {
       use gloo_net::http::{Method, Request, RequestBuilder};
-      use web_sys::AbortSignal;
       use web_sys::{AbortController, RequestCredentials, RequestMode};
 
       // Create abort controller for timeout handling

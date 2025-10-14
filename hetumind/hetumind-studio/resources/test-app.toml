@@ -12,7 +12,7 @@ server_addr = "0.0.0.0:50000"
 
 [fusion.log]
 enable = true
-log_writer = "stdout"
+log_writers = ["stdout"]
 
 [fusion.db]
 enable = true

@@ -1,9 +1,9 @@
 use fusion_common::time::OffsetDateTime;
+use fusionsql::{field::Fields, postgres::PgRowType};
 use hetumind_core::{
   task::{TaskPriority, TaskStatus},
   workflow::{ExecutionId, WorkflowId},
 };
-use fusionsql::{field::Fields, postgres::PgRowType};
 use sea_query::enum_def;
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;

@@ -14,6 +14,7 @@ pub struct PortInputFilter {
 /// 节点输入连接
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TypedBuilder)]
 pub struct InputPortConfig {
+  #[builder(setter(into))]
   pub kind: ConnectionKind,
 
   /// 显示名称。在UI渲染时，系统会根据以下逻辑确定显示的标签

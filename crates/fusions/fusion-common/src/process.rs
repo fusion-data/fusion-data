@@ -25,7 +25,7 @@ pub fn send_sigterm_to_self() {
 }
 
 /// 检查是否为僵尸进程
-pub fn is_zombie_process(pid: u32) -> bool {
+pub fn is_zombie_process(#[allow(unused_variables)] pid: u32) -> bool {
   #[cfg(unix)]
   {
     use std::fs;

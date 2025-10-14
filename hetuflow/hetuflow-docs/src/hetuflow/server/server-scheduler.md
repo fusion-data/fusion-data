@@ -646,7 +646,7 @@ impl TaskPoller {
             FROM sched_task t
             WHERE t.status = $3
               AND t.scheduled_at <= NOW()
-              AND t.deleted_at IS NULL
+              AND t.logical_deletion IS NULL
             ORDER BY t.priority DESC, t.scheduled_at ASC
             LIMIT $1
             FOR UPDATE SKIP LOCKED

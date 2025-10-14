@@ -11,8 +11,10 @@ publish = false
 [lints]
 workspace = true
 
-[features]
-with-redis = []
+[[bin]]
+name = "hetumind-studio"
+path = "bin/hetumind-studio.rs"
+
 
 [dependencies]
 # -- hetumind
@@ -33,6 +35,13 @@ chrono = { workspace = true }
 config = { workspace = true }
 log = { workspace = true }
 logforth = { workspace = true }
+opendal = { workspace = true, features = [
+  "services-redis",
+  "services-oss",
+  "services-obs",
+  "services-s3",
+  "services-fs",
+] }
 
 # -- db
 fusion-db = { workspace = true, features = ["with-postgres", "with-uuid"] }
@@ -74,6 +83,8 @@ tokio = { workspace = true }
 futures = { workspace = true }
 async-stream = { workspace = true }
 mea = { workspace = true }
+num_cpus = { workspace = true }
+rand = { workspace = true }
 
 # -- tracing
 metrics = { workspace = true }
@@ -87,10 +98,17 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 serde_repr = { workspace = true }
 
+# -- security & config
+josekit = { workspace = true }
+openssl = { workspace = true }
+toml = { workspace = true }
+dirs = { workspace = true }
+zeroize = { workspace = true }
+
 [dev-dependencies]
 anyhow = { workspace = true }
 axum-test = { workspace = true }
-json-patch = { workspace = true }
+json-patch = { version = "4" }
 insta = { workspace = true }
 once_cell = { workspace = true }
 test-context = { workspace = true }

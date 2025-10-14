@@ -12,7 +12,7 @@ server_addr = "0.0.0.0:8888"
 
 [fusion.log]
 enable = true
-log_writer = "both"
+log_writers = ["stdout", "file"]
 
 # [fusion.log.otel]
 # exporter_otlp_endpoint = "http://localhost:4317"

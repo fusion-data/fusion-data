@@ -305,14 +305,14 @@ impl From<fusionsql::SqlError> for DataError {
         // Convert to a compatible error that implements Send + Sync
         let error_msg = e.to_string();
         let compatible_error: Box<dyn std::error::Error + Send + Sync + 'static> =
-          Box::new(std::io::Error::new(std::io::ErrorKind::Other, error_msg));
+          Box::new(std::io::Error::other(error_msg));
         DataError::internal(500, "Dbx Error", Some(compatible_error))
       }
       fusionsql::SqlError::Sqlx(e) => {
         // Convert to a compatible error that implements Send + Sync
         let error_msg = e.to_string();
         let compatible_error: Box<dyn std::error::Error + Send + Sync + 'static> =
-          Box::new(std::io::Error::new(std::io::ErrorKind::Other, error_msg));
+          Box::new(std::io::Error::other(error_msg));
         DataError::internal(500, "Sqlx Error", Some(compatible_error))
       }
     }

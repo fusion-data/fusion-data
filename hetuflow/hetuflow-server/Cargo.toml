@@ -36,7 +36,6 @@ sqlx = { workspace = true, features = [
   "macros",
 ] }
 sea-query = { workspace = true }
-sea-query-binder = { workspace = true }
 async-trait = { workspace = true }
 tokio = { workspace = true }
 mea = { workspace = true }

@@ -7,7 +7,11 @@ use tokio::sync::RwLock;
 pub struct MetricsCollector {
   metrics: Arc<RwLock<ExecutionMetrics>>,
 }
-
+impl Default for MetricsCollector {
+  fn default() -> Self {
+    Self::new()
+  }
+}
 impl MetricsCollector {
   pub fn new() -> Self {
     Self { metrics: Arc::new(RwLock::new(ExecutionMetrics::default())) }
