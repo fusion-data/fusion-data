@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Layout } from 'antd';
 import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
-import Header from './Header';
 
 const { Content } = Layout;
 
@@ -13,8 +12,14 @@ const MainLayout: React.FC = () => {
     <Layout style={{ minHeight: '100vh' }}>
       <Sidebar collapsed={collapsed} onCollapse={setCollapsed} />
       <Layout>
-        <Header collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
-        <Content style={{ margin: '16px', background: 'var(--bg-primary)' }}>
+        <Content style={{
+          margin: '16px',
+          background: 'var(--bg-primary)',
+          padding: '16px',
+          borderRadius: '8px',
+          height: 'calc(100vh - 32px)',
+          overflow: 'auto'
+        }}>
           <Outlet />
         </Content>
       </Layout>
