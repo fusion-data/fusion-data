@@ -3,8 +3,8 @@ set
 
 -- 用户表
 create table if not exists user_entity (
-  -- 用户ID，由程序端使用 uuid v7 生成
-  id bigserial constraint user_pk primary key,
+  -- 用户ID，使用 jieyuan.iam_user.id（由程序端显式指定）
+  id bigint constraint user_pk primary key,
   -- 用户邮箱，全局唯一，登录凭证
   email varchar(255) not null,
   -- 手机号，全局唯一，登录凭证，可选。存储为完整格式（含国家/地区码），如 +8613800138000
@@ -23,6 +23,8 @@ create table if not exists user_entity (
   mfa_enabled boolean default false not null,
   mfa_secret text,
   mfa_recovery_codes text,
+  -- 多租户字段
+  tenant_id bigint not null,
   -- 用户角色
   -- role text not null,
   created_at timestamptz not null,
@@ -144,6 +146,7 @@ create table if not exists project (
   name varchar(255) not null,
   kind uuid not null,
   icon jsonb,
+  tenant_id bigint not null,
   created_at timestamptz not null,
   created_by bigint not null,
   updated_at timestamptz,
@@ -212,6 +215,8 @@ create index if not exists project_relation_idx_user_id on project_relation (use
 
 create index if not exists project_relation_idx_project_id on project_relation (project_id);
 
+create index if not exists project_idx_tenant_id on project (tenant_id);
+
 create table if not exists variables (
   id uuid constraint variables_pk primary key,
   key varchar(50) not null unique,
@@ -243,6 +248,7 @@ create table if not exists workflow_entity (
   meta jsonb not null,
   parent_folder_id uuid constraint fk_workflow_parent_folder references folder on delete cascade,
   is_archived boolean default false not null,
+  tenant_id bigint not null,
   created_at timestamptz not null,
   created_by bigint not null,
   updated_at timestamptz,
@@ -250,6 +256,8 @@ create table if not exists workflow_entity (
 );
 
 create index if not exists workflow_entity_idx_name on workflow_entity (name);
+
+create index if not exists workflow_entity_idx_tenant_id on workflow_entity (tenant_id);
 
 create table if not exists workflow_tag (
   workflow_id uuid not null constraint fk_workflow_tag_workflow_id references workflow_entity on delete cascade,
@@ -277,6 +285,7 @@ create table if not exists execution_entity (
   wait_till timestamptz,
   status varchar not null,
   logical_deletion timestamptz,
+  tenant_id bigint not null,
   created_at timestamptz not null,
   created_by bigint not null,
   updated_at timestamptz,
@@ -314,6 +323,10 @@ where
   );
 
 create index if not exists execution_entity_idx_logical_deletion on execution_entity (logical_deletion);
+
+create index if not exists execution_entity_idx_tenant_id on execution_entity (tenant_id);
+
+create index if not exists execution_entity_idx_tenant_status on execution_entity (tenant_id, status);
 
 create table if not exists execution_annotation (
   id uuid constraint execution_annotation_pk primary key,

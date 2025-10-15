@@ -68,6 +68,13 @@ utoipa-swagger-ui = { workspace = true }
 qrcode-rs = { workspace = true }
 image = { workspace = true }
 
+# -- OAuth & HTTP client
+reqwest = { workspace = true, features = ["json"] }
+urlencoding = { workspace = true }
+base64ct = { workspace = true }
+rand = { workspace = true }
+sha2 = { workspace = true }
+
 [dev-dependencies]
 pretty_assertions.workspace = true
 hyper = { workspace = true }

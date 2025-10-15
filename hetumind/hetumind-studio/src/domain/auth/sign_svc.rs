@@ -4,62 +4,31 @@ use fusion_core::{
   DataError,
   application::Application,
   configuration::KeyConf,
-  security::pwd::{generate_pwd, verify_pwd},
 };
 use fusion_web::WebError;
-use fusionsql::{ModelManager, filter::OpValString};
-use hetumind_context::utils::{make_refresh_token, make_token, verify_token};
+use hetumind_context::utils::{make_token, verify_token};
 use hetumind_core::credential::TokenType;
 use http::request::Parts;
 use log::info;
 
-use super::{
-  InvalidAuthTokenBmc, RefreshTokenRequest, RefreshTokenResponse, SigninRequest, SigninResponse, SignoutRequest,
-  SignupRequest,
-};
-use crate::domain::user::{UserBmc, UserFilter, UserForCreate, UserStatus};
+use super::{InvalidAuthTokenBmc, RefreshTokenRequest, RefreshTokenResponse, SignoutRequest};
+use crate::domain::user::{UserBmc, UserStatus};
 
 #[derive(Clone)]
 pub struct SignSvc {
-  mm: ModelManager,
+  mm: fusionsql::ModelManager,
   application: Application,
 }
 
 impl SignSvc {
-  pub async fn signin(&self, signin_req: SigninRequest) -> Result<SigninResponse, DataError> {
-    let email = signin_req.as_email();
-    let phone = signin_req.as_phone();
-
-    let filter = if let Some(email) = email {
-      UserFilter { email: Some(OpValString::eq(email)), ..Default::default() }
-    } else if let Some(phone) = phone {
-      UserFilter { phone: Some(OpValString::eq(phone)), ..Default::default() }
-    } else {
-      return Err(DataError::unauthorized("Parameter account must be email or phone"));
-    };
-
-    let user = UserBmc::find_unique(&self.mm, vec![filter])
-      .await?
-      .ok_or(DataError::unauthorized("User not found"))?;
-
-    let password = user.password.ok_or_else(|| DataError::unauthorized("User password not set"))?;
-    verify_pwd(&signin_req.password, &password).await?;
-
-    let access_token = make_token(user.id.to_string(), self.application.fusion_config().security().pwd())?;
-    let refresh_token = make_refresh_token(user.id.to_string(), self.application.fusion_config().security().pwd())?;
-    let expires_in = self.application.fusion_config().security().pwd().expires_in();
-
-    Ok(SigninResponse { access_token, refresh_token, token_type: TokenType::Bearer, expires_in })
-  }
-
-  pub async fn signup(&self, signup_req: SignupRequest) -> Result<(), DataError> {
-    let password = generate_pwd(&signup_req.password).await?;
-    let entity_c =
-      UserForCreate { email: signup_req.email, phone: None, name: None, password, status: UserStatus::Enabled };
-
-    let user_id = UserBmc::create(&self.mm, entity_c).await?;
-    info!("User signup success: {}", user_id);
-    Ok(())
+  /// 验证来自 Jieyuan 的令牌并返回本地令牌（用于代理模式）
+  pub async fn verify_and_proxy_token(&self, jieyuan_token: &str) -> Result<super::SigninResponse, DataError> {
+    // TODO: 实现 Jieyuan 令牌验证逻辑，可能需要调用 Jieyuan 的验证端点或使用 JWKS
+    // 这里暂时返回未实现错误，在真实实现中需要：
+    // 1. 验证 Jieyuan 令牌签名
+    // 2. 解析令牌获取用户信息
+    // 3. 确保用户在本地存在
+    Err(DataError::unauthorized("Jieyuan token verification not yet implemented"))
   }
 
   /// 刷新访问令牌
@@ -85,7 +54,7 @@ impl SignSvc {
 
     // 生成新的访问令牌
     let access_token = make_token(user.id.to_string(), self.application.fusion_config().security().pwd())?;
-    let expires_in = self.application.fusion_config().security().pwd().expires_at().timestamp() - now_utc().timestamp();
+    let expires_in = self.application.fusion_config().security().pwd().expires_in();
 
     Ok(RefreshTokenResponse { access_token, token_type: TokenType::Bearer, expires_in })
   }
@@ -116,6 +85,9 @@ impl FromRequestParts<Application> for SignSvc {
   type Rejection = WebError;
 
   async fn from_request_parts(_parts: &mut Parts, state: &Application) -> Result<Self, Self::Rejection> {
-    Ok(SignSvc { mm: state.component(), application: state.clone() })
+    Ok(SignSvc {
+      mm: state.component(),
+      application: state.clone()
+    })
   }
 }

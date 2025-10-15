@@ -98,6 +98,9 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 serde_repr = { workspace = true }
 
+# -- encoding
+urlencoding = { workspace = true }
+
 # -- security & config
 josekit = { workspace = true }
 openssl = { workspace = true }

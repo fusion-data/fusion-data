@@ -1,6 +1,12 @@
-use fusionsql::{base::DbBmc, generate_pg_bmc_common, generate_pg_bmc_filter};
+use fusionsql::{
+  ModelManager, SqlError,
+  base::{DbBmc, pg_page},
+  generate_pg_bmc_common, generate_pg_bmc_filter,
+};
 
-use jieyuan_core::model::{TABLE_USER, User, UserFilter, UserForCreate, UserForUpdate};
+use jieyuan_core::model::{
+  TABLE_USER, User, UserChangeQueryReq, UserChangeQueryResp, UserFilter, UserForCreate, UserForUpdate,
+};
 
 pub struct UserBmc;
 impl DbBmc for UserBmc {
@@ -22,3 +28,10 @@ generate_pg_bmc_filter!(
   Entity: User,
   Filter: UserFilter,
 );
+
+impl UserBmc {
+  pub async fn query_user_changes(mm: &ModelManager, req: UserChangeQueryReq) -> Result<UserChangeQueryResp, SqlError> {
+    let paged = pg_page::<Self, _, _>(mm, req.filters, req.page).await?;
+    Ok(UserChangeQueryResp { page: paged.page, result: paged.result })
+  }
+}

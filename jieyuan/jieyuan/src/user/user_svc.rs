@@ -46,7 +46,7 @@ impl UserSvc {
   }
 
   pub async fn page(&self, req: UserForPage) -> Result<PageResult<User>> {
-    let page = UserBmc::page(&self.mm, req.filter, req.page).await?;
+    let page = UserBmc::page(&self.mm, req.filters, req.page).await?;
     Ok(page)
   }
 

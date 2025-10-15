@@ -29,3 +29,12 @@ traces_sample = "always_on"
 [fusion.db]
 enable = true
 url = "postgres://fusiondata:2025.Fusiondata@localhost:5432/fusiondata"
+
+[jieyuan.auth_provider.wechat]
+client_id = ""
+client_secret = ""
+authorize_url = ""
+redirect_uri = ""
+token_url = ""
+user_info_url = ""
+scope = ""

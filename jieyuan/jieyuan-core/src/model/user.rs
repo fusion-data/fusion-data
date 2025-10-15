@@ -87,7 +87,7 @@ pub struct UserForUpdate {
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct UserForPage {
   pub page: Page,
-  pub filter: Vec<UserFilter>,
+  pub filters: Vec<UserFilter>,
 }
 
 #[derive(Debug, Default, Deserialize)]
