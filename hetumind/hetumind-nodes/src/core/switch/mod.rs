@@ -138,7 +138,7 @@ impl SwitchNode {
   }
 
   fn base() -> NodeDefinition {
-    NodeDefinition::new(SWITCH_NODE_KIND, Version::new(1, 0, 0), "Switch")
+    NodeDefinition::new(SWITCH_NODE_KIND, "Switch")
       .add_group(NodeGroupKind::Transform)
       .add_group(NodeGroupKind::Input)
       .add_group(NodeGroupKind::Output)

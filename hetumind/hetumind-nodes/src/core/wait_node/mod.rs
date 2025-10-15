@@ -525,7 +525,7 @@ impl WaitNode {
   }
 
   fn base() -> NodeDefinition {
-    NodeDefinition::new(WAIT_NODE_KIND, Version::new(1, 0, 0), "Wait")
+    NodeDefinition::new(WAIT_NODE_KIND, "Wait")
       .add_group(NodeGroupKind::Transform)
       .add_group(NodeGroupKind::Input)
       .with_description("在工作流执行过程中添加等待机制。支持时间间隔、特定时间、Webhook 触发和表单提交等待。")

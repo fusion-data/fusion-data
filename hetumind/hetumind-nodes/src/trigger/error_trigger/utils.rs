@@ -8,7 +8,7 @@ use serde_json::json;
 use crate::constants::ERROR_TRIGGER_NODE_KIND;
 
 pub fn create_base() -> NodeDefinition {
-  NodeDefinition::new(ERROR_TRIGGER_NODE_KIND, Version::new(1, 0, 0), "Error Trigger")
+  NodeDefinition::new(ERROR_TRIGGER_NODE_KIND, "Error Trigger")
     .add_group(NodeGroupKind::Trigger)
     .with_description("Triggers workflow when other workflows encounter errors")
     .with_max_nodes(1)

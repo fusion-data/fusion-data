@@ -431,10 +431,10 @@ pub struct NodeDefinition {
 
 impl NodeDefinition {
   /// Create a new NodeDefinition with required fields
-  pub fn new(kind: impl Into<NodeKind>, version: impl Into<Version>, display_name: impl Into<String>) -> Self {
+  pub fn new(kind: impl Into<NodeKind>, display_name: impl Into<String>) -> Self {
     Self {
       kind: kind.into(),
-      version: version.into(),
+      version: Version::new(1, 0, 0),
       groups: Vec::new(),
       display_name: display_name.into(),
       description: None,
@@ -450,6 +450,11 @@ impl NodeDefinition {
       icon_url: None,
       badge_icon_url: None,
     }
+  }
+
+  pub fn with_version(mut self, version: impl Into<Version>) -> Self {
+    self.version = version.into();
+    self
   }
 
   // Methods for Option<T> fields

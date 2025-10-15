@@ -1,10 +1,13 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use hetumind_core::workflow::{
-  ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition, NodeExecutable,
-  NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig, RegistrationError,
-  make_execution_data_map,
+use hetumind_core::{
+  version::Version,
+  workflow::{
+    ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition,
+    NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig,
+    RegistrationError, make_execution_data_map,
+  },
 };
 use serde_json::json;
 
@@ -119,6 +122,7 @@ impl TryFrom<NodeDefinition> for NoOpV1 {
 
   fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
     let definition = base
+      .with_version(Version::new(1, 0, 0))
       .add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build())
       .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build())
       .add_property(

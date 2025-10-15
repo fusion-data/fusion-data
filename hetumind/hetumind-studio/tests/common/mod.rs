@@ -3,7 +3,7 @@
 use axum::Router;
 use axum_test::TestServer;
 use config::File;
-use fusion_core::{DataError, application::Application};
+use fusion_core::application::Application;
 use fusionsql::{ModelManager, store::DbxPostgres};
 use once_cell::sync::Lazy;
 use serde_json::json;

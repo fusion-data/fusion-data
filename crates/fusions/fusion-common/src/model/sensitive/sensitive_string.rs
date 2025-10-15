@@ -58,6 +58,10 @@ impl SensitiveString {
   pub fn c(&self) -> char {
     self.c
   }
+
+  pub fn as_str(&self) -> &str {
+    &self.underlying
+  }
 }
 
 impl fmt::Debug for SensitiveString {
@@ -69,6 +73,19 @@ impl fmt::Debug for SensitiveString {
 impl fmt::Display for SensitiveString {
   fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
     f.write_str(&self.to_sensitive())
+  }
+}
+
+impl From<String> for SensitiveString {
+  fn from(underlying: String) -> Self {
+    let sensitive_len = underlying.len() / 2;
+    Self::new(underlying, sensitive_len, '*')
+  }
+}
+
+impl From<&str> for SensitiveString {
+  fn from(underlying: &str) -> Self {
+    Self::from(underlying.to_string())
   }
 }
 
@@ -149,5 +166,56 @@ impl<'de> Deserialize<'de> for SensitiveString {
       }
     }
     deserializer.deserialize_string(SensitiveStringVisitor)
+  }
+}
+
+#[cfg(feature = "with-db")]
+mod _db {
+  use sea_query::Value;
+  use sqlx::{Database, Decode, Type};
+
+  use super::SensitiveString;
+
+  impl<DB: Database> Type<DB> for SensitiveString
+  where
+    String: Type<DB>,
+  {
+    fn type_info() -> <DB as Database>::TypeInfo {
+      <String as Type<DB>>::type_info()
+    }
+  }
+
+  // `'r` is the lifetime of the `Row` being decoded
+  impl<'r, DB: Database> Decode<'r, DB> for SensitiveString
+  where
+    // we want to delegate some of the work to string decoding so let's make sure strings
+    // are supported by the database
+    &'r str: Decode<'r, DB>,
+  {
+    fn decode(
+      value: <DB as Database>::ValueRef<'r>,
+    ) -> Result<SensitiveString, Box<dyn core::error::Error + 'static + Send + Sync>> {
+      // the interface of ValueRef is largely unstable at the moment
+      // so this is not directly implementable
+
+      // however, you can delegate to a type that matches the format of the type you want
+      // to decode (such as a UTF-8 string)
+
+      let value = <&str as Decode<DB>>::decode(value)?;
+
+      Ok(SensitiveString::new(value.to_string(), value.len() / 2, '*'))
+    }
+  }
+
+  impl From<SensitiveString> for sea_query::Value {
+    fn from(s: SensitiveString) -> Self {
+      Value::String(Some(Box::new(s.underlying)))
+    }
+  }
+
+  impl sea_query::Nullable for SensitiveString {
+    fn null() -> sea_query::Value {
+      sea_query::Value::String(None)
+    }
   }
 }

@@ -1,5 +1,5 @@
 use axum::body::Body;
-use fusion_core::{DataError, application::Application};
+use fusion_core::application::Application;
 use http::{Request, Response, StatusCode, header::CONTENT_TYPE};
 use tower_http::auth::AsyncAuthorizeRequest;
 
@@ -34,14 +34,14 @@ impl AsyncAuthorizeRequest<Body> for WebAuth {
     if !self.includes.is_empty() && !self.includes.iter().any(|include| path.starts_with(include)) {
       let path = path.to_string();
       return Box::pin(async move {
-        Err(data_error_2_body(DataError::unauthorized(format!("Url path `{}` is not in includes", path))))
+        Err(web_error_2_body(WebError::new_with_code(401, format!("Url path `{}` is not in includes", path))))
       });
     }
 
     if !self.excludes.is_empty() && self.excludes.iter().any(|exclude| path.starts_with(exclude)) {
       let path = path.to_string();
       return Box::pin(async move {
-        Err(data_error_2_body(DataError::unauthorized(format!("Url path `{}` is in excludes", path))))
+        Err(web_error_2_body(WebError::new_with_code(401, format!("Url path `{}` is in excludes", path))))
       });
     }
 
@@ -50,16 +50,15 @@ impl AsyncAuthorizeRequest<Body> for WebAuth {
       let app = Application::global();
       let fusion_config = app.fusion_config();
       let sc = fusion_config.security();
-      let ctx = extract_ctx(&parts, sc).map_err(data_error_2_body)?;
+      let ctx = extract_ctx(&parts, sc).map_err(web_error_2_body)?;
       parts.extensions.insert(ctx);
       Ok(Request::from_parts(parts, body))
     })
   }
 }
 
-fn data_error_2_body(e: DataError) -> Response<Body> {
-  let err = WebError::from(e);
-  let body = serde_json::to_vec(&err).unwrap();
+fn web_error_2_body(e: WebError) -> Response<Body> {
+  let body = serde_json::to_vec(&e).unwrap();
   Response::builder()
     .status(StatusCode::UNAUTHORIZED)
     .header(CONTENT_TYPE, "application/json; charset=utf-8")

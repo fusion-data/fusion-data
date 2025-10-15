@@ -162,7 +162,7 @@ impl AggregateNode {
   }
 
   fn base() -> NodeDefinition {
-    NodeDefinition::new(AGGREGATE_NODE_KIND, Version::new(1, 0, 0), "Aggregate")
+    NodeDefinition::new(AGGREGATE_NODE_KIND, "Aggregate")
       .add_group(NodeGroupKind::Transform)
       .with_description("Combine a field from many items into a list in a single item")
       .with_icon("object-group")

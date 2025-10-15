@@ -103,7 +103,7 @@ impl LoopOverItemsNode {
   }
 
   fn base() -> NodeDefinition {
-    NodeDefinition::new(LOOP_OVER_ITEMS_NODE_KIND, Version::new(1, 0, 0), "Loop Over Items")
+    NodeDefinition::new(LOOP_OVER_ITEMS_NODE_KIND, "Loop Over Items")
       .add_group(NodeGroupKind::Transform)
       .add_group(NodeGroupKind::Input)
       .add_group(NodeGroupKind::Output)

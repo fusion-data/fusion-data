@@ -400,7 +400,7 @@ impl SummarizeNode {
   }
 
   fn base() -> NodeDefinition {
-    NodeDefinition::new(SUMMARIZE_NODE_KIND, Version::new(1, 0, 0), "Summarize")
+    NodeDefinition::new(SUMMARIZE_NODE_KIND, "Summarize")
       .add_group(NodeGroupKind::Transform)
       .add_group(NodeGroupKind::Input)
       .with_description("对数据进行聚合计算和统计。支持多种聚合操作、分组和输出格式。")

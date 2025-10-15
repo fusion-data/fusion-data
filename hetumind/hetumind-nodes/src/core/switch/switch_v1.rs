@@ -33,6 +33,7 @@ use super::{
 /// - Rules 模式：基于规则数量和 fallback 配置
 /// - Expression 模式：基于 numberOutputs 参数
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct SwitchV1 {
   pub definition: Arc<NodeDefinition>,
 }
@@ -69,6 +70,7 @@ impl SwitchV1 {
   }
 
   /// 处理 Rules 模式
+  #[allow(unused_variables)]
   async fn process_rules_mode(
     &self,
     _context: &NodeExecutionContext,
@@ -118,6 +120,7 @@ impl SwitchV1 {
   }
 
   /// 处理 Expression 模式
+  #[allow(unused_variables)]
   async fn process_expression_mode(
     &self,
     _context: &NodeExecutionContext,
@@ -154,6 +157,7 @@ impl SwitchV1 {
 
 #[async_trait]
 impl NodeExecutable for SwitchV1 {
+  #[allow(unused_variables)]
   fn definition(&self) -> Arc<NodeDefinition> {
     self.definition.clone()
   }
@@ -270,6 +274,7 @@ impl TryFrom<NodeDefinition> for SwitchV1 {
 
   fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
     let definition = base
+      .with_version(Version::new(1, 0, 0))
       .add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build())
       .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output 0").build())
       .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output 1").build())

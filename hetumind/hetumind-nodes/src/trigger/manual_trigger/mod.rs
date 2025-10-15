@@ -34,7 +34,7 @@ impl TryFrom<NodeDefinition> for ManualTriggerNodeV1 {
 }
 
 pub fn create_base() -> NodeDefinition {
-  NodeDefinition::new(MANUAL_TRIGGER_NODE_KIND, Version::new(1, 0, 0), "Manual Trigger")
+  NodeDefinition::new(MANUAL_TRIGGER_NODE_KIND, "Manual Trigger")
     .add_group(NodeGroupKind::Trigger)
     .with_description("手动触发工作流执行，支持执行模式和启用状态配置")
     .add_property(

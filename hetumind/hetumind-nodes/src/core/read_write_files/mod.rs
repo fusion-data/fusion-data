@@ -49,7 +49,7 @@ impl ReadWriteFilesNode {
   }
 
   fn base() -> NodeDefinition {
-    NodeDefinition::new(READ_WRITE_FILES_NODE_KIND, Version::new(1, 0, 0), "Read/Write Files")
+    NodeDefinition::new(READ_WRITE_FILES_NODE_KIND, "Read/Write Files")
       .add_group(NodeGroupKind::Input)
       .add_group(NodeGroupKind::Output)
       .with_description("从磁盘读取文件或将文件写入磁盘。支持多种文件格式和操作模式。")

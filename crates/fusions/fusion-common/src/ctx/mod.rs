@@ -66,6 +66,16 @@ impl CtxPayload {
     self.payload.insert(key.to_string(), Value::Bool(value));
   }
 
+  pub fn set_strings<I, S>(&mut self, key: &str, value: I)
+  where
+    I: IntoIterator<Item = S>,
+    S: Into<String>,
+  {
+    self
+      .payload
+      .insert(key.to_string(), Value::Array(value.into_iter().map(|s| Value::String(s.into())).collect()));
+  }
+
   pub fn get_subject(&self) -> Option<&str> {
     self.get_str(Ctx::SUB)
   }
@@ -88,6 +98,14 @@ impl CtxPayload {
 
   pub fn get_i32(&self, key: &str) -> Option<i32> {
     self.payload.get(key).and_then(|s| s.as_i64()).map(|v| v as i32)
+  }
+
+  pub fn get_strings(&self, key: &str) -> Option<Vec<&str>> {
+    self
+      .payload
+      .get(key)
+      .and_then(|s| s.as_array())
+      .map(|v| v.iter().filter_map(|s| s.as_str()).map(|s| s.trim()).collect())
   }
 
   pub fn get_system_time(&self, key: &str) -> Option<SystemTime> {
@@ -186,6 +204,10 @@ impl Ctx {
 
   pub fn expires_at(&self) -> Option<SystemTime> {
     self.payload.get_system_time(Self::EXP)
+  }
+
+  pub fn payload(&self) -> &CtxPayload {
+    &self.payload
   }
 }
 

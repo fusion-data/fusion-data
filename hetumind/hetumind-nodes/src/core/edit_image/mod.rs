@@ -334,7 +334,7 @@ impl EditImageNode {
   }
 
   fn base() -> NodeDefinition {
-    NodeDefinition::new(EDIT_IMAGE_NODE_KIND, Version::new(1, 0, 0), "Edit Image")
+    NodeDefinition::new(EDIT_IMAGE_NODE_KIND, "Edit Image")
       .add_group(NodeGroupKind::Transform)
       .add_group(NodeGroupKind::Input)
       .add_group(NodeGroupKind::Output)

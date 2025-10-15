@@ -69,7 +69,7 @@ impl WebhookTriggerNode {
 }
 
 fn create_base() -> NodeDefinition {
-  NodeDefinition::new(WEBHOOK_TRIGGER_NODE_KIND, Version::new(1, 0, 0), "Webhook Trigger")
+  NodeDefinition::new(WEBHOOK_TRIGGER_NODE_KIND, "Webhook Trigger")
     .add_group(NodeGroupKind::Trigger)
     .with_description("Triggers workflow when HTTP request is received")
     .add_property(

@@ -149,7 +149,7 @@ impl ChatTriggerNode {
 }
 
 fn create_base() -> NodeDefinition {
-  NodeDefinition::new(CHAT_TRIGGER_NODE_KIND, Version::new(1, 0, 0), "Chat Trigger")
+  NodeDefinition::new(CHAT_TRIGGER_NODE_KIND, "Chat Trigger")
     .add_group(NodeGroupKind::Trigger)
     .with_description("Use the Chat Trigger node when building AI workflows for chatbots and other chat interfaces.")
     .add_property(

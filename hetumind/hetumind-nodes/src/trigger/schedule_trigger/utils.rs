@@ -8,7 +8,7 @@ use serde_json::json;
 use crate::constants::SCHEDULE_TRIGGER_NODE_KIND;
 
 pub fn create_base() -> NodeDefinition {
-  NodeDefinition::new(SCHEDULE_TRIGGER_NODE_KIND, Version::new(1, 0, 0), "Schedule Trigger")
+  NodeDefinition::new(SCHEDULE_TRIGGER_NODE_KIND, "Schedule Trigger")
     .add_group(NodeGroupKind::Trigger)
     .with_description("Triggers workflow execution on a scheduled basis")
     .add_property(

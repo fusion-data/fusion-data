@@ -18,12 +18,14 @@ use super::{
 };
 
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct SplitOutV1 {
   pub definition: Arc<NodeDefinition>,
 }
 
 impl SplitOutV1 {
   /// 执行数据拆分
+  #[allow(unused_variables)]
   async fn execute_split_out(
     &self,
     context: &NodeExecutionContext,
@@ -207,6 +209,7 @@ impl SplitOutV1 {
   }
 
   /// 包含二进制数据
+  #[allow(unused_variables)]
   fn include_binary_data(
     &self,
     _new_item: &mut JsonValue,
@@ -222,6 +225,7 @@ impl SplitOutV1 {
   }
 
   /// 生成执行提示
+  #[allow(unused_variables)]
   fn generate_execution_hints(&self, tracker: &utils::MissingFieldsTracker) -> Result<(), NodeExecutionError> {
     let missing_fields = tracker.get_completely_missing_fields();
 
@@ -261,6 +265,7 @@ impl SplitOutV1 {
 /// - 工作流数据预处理
 #[async_trait]
 impl NodeExecutable for SplitOutV1 {
+  #[allow(unused_variables)]
   fn definition(&self) -> Arc<NodeDefinition> {
     self.definition.clone()
   }
@@ -363,8 +368,9 @@ impl SplitOutV1 {
 impl TryFrom<NodeDefinition> for SplitOutV1 {
   type Error = RegistrationError;
 
-  fn try_from(mut base: NodeDefinition) -> Result<Self, Self::Error> {
+  fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
     let definition = base
+      .with_version(Version::new(1, 0, 0))
       .add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build())
       .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build())
       .add_property(

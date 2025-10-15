@@ -161,7 +161,7 @@ impl SplitOutNode {
 
   /// 创建基础节点定义构建器
   fn base() -> NodeDefinition {
-    NodeDefinition::new(SPLIT_OUT_NODE_KIND, Version::new(1, 0, 0), "Split Out")
+    NodeDefinition::new(SPLIT_OUT_NODE_KIND, "Split Out")
       .add_group(NodeGroupKind::Transform)
       .with_description("Turn a list inside item(s) into separate items")
       .with_icon("file-split")

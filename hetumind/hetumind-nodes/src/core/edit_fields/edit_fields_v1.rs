@@ -1,10 +1,13 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use hetumind_core::workflow::{
-  ConnectionKind, DataSource, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition,
-  NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig,
-  RegistrationError, make_execution_data_map,
+use hetumind_core::{
+  version::Version,
+  workflow::{
+    ConnectionKind, DataSource, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition,
+    NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig,
+    RegistrationError, make_execution_data_map,
+  },
 };
 use serde_json::json;
 
@@ -241,6 +244,7 @@ impl TryFrom<NodeDefinition> for EditFieldsV1 {
 
   fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
     let definition = base
+      .with_version(Version::new(1, 0, 0))
       .add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build())
       .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build())
       .add_property(
@@ -451,7 +455,8 @@ mod tests {
 
   #[test]
   fn test_parse_manual_config() {
-    let builder = NodeDefinition::new(EDIT_FIELDS_NODE_KIND, Version::new(1, 0, 0), "Edit Fields")
+    let builder = NodeDefinition::new(EDIT_FIELDS_NODE_KIND, "Edit Fields")
+      .with_version(Version::new(1, 0, 0))
       .with_description("Test node")
       .with_icon("edit")
       .add_group(NodeGroupKind::Transform)
@@ -481,7 +486,8 @@ mod tests {
 
   #[test]
   fn test_parse_json_config() {
-    let builder = NodeDefinition::new(EDIT_FIELDS_NODE_KIND, Version::new(1, 0, 0), "Edit Fields")
+    let builder = NodeDefinition::new(EDIT_FIELDS_NODE_KIND, "Edit Fields")
+      .with_version(Version::new(1, 0, 0))
       .add_group(NodeGroupKind::Transform)
       .add_group(NodeGroupKind::Input)
       .add_group(NodeGroupKind::Output)

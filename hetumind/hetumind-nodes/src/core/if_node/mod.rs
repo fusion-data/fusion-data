@@ -9,8 +9,7 @@ use hetumind_core::{
   types::{DataType, JsonValue},
   version::Version,
   workflow::{
-    Node, NodeDefinition, NodeExecutionError, NodeExecutor, NodeGroupKind, NodeKind, RegistrationError,
-    ValidationError,
+    Node, NodeDefinition, NodeExecutionError, NodeExecutor, NodeGroupKind, NodeKind, RegistrationError, ValidationError,
   },
 };
 use serde::{Deserialize, Serialize};
@@ -361,7 +360,7 @@ impl IfNode {
   }
 
   fn base() -> NodeDefinition {
-    NodeDefinition::new(IF_NODE_KIND, Version::new(1, 0, 0), "If")
+    NodeDefinition::new(IF_NODE_KIND, "If")
       .add_group(NodeGroupKind::Transform)
       .add_group(NodeGroupKind::Input)
       .add_group(NodeGroupKind::Output)

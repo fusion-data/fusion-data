@@ -255,7 +255,7 @@ impl EmailTriggerV1 {
 impl EmailTriggerV1 {
   /// 创建基础的节点定义
   pub fn create_base() -> NodeDefinition {
-    NodeDefinition::new(EMAIL_TRIGGER_NODE_KIND, Version::new(1, 0, 0), "Email Trigger")
+    NodeDefinition::new(EMAIL_TRIGGER_NODE_KIND, "Email Trigger")
       .add_group(NodeGroupKind::Trigger)
       .with_description("Triggers workflow when new emails are received via IMAP")
       .add_property(

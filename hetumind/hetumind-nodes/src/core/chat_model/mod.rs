@@ -4,25 +4,25 @@ use hetumind_core::{
 };
 use std::sync::Arc;
 
-pub mod llm_chat_model_v1;
+pub mod chat_model_v1;
 pub mod parameters;
 
-use llm_chat_model_v1::LlmChatModelV1;
+use chat_model_v1::ChatModelV1;
 
-pub struct LlmChatModelNode {
+pub struct ChatModelNode {
   default_version: Version,
   executors: Vec<NodeExecutor>,
 }
 
-impl LlmChatModelNode {
+impl ChatModelNode {
   pub fn new() -> Result<Self, RegistrationError> {
-    let executors: Vec<NodeExecutor> = vec![Arc::new(LlmChatModelV1::new()?)];
+    let executors: Vec<NodeExecutor> = vec![Arc::new(ChatModelV1::new()?)];
     let default_version = executors.iter().map(|node| node.definition().version.clone()).max().unwrap();
     Ok(Self { default_version, executors })
   }
 }
 
-impl Node for LlmChatModelNode {
+impl Node for ChatModelNode {
   fn default_version(&self) -> &Version {
     &self.default_version
   }
@@ -37,7 +37,7 @@ impl Node for LlmChatModelNode {
 }
 
 pub fn register_nodes(node_registry: &NodeRegistry) -> Result<(), RegistrationError> {
-  let llm_node = Arc::new(LlmChatModelNode::new()?);
+  let llm_node = Arc::new(ChatModelNode::new()?);
   node_registry.register_node(llm_node)?;
   Ok(())
 }

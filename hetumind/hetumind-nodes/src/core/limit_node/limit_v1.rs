@@ -137,8 +137,9 @@ impl NodeExecutable for LimitV1 {
 impl TryFrom<NodeDefinition> for LimitV1 {
   type Error = RegistrationError;
 
-  fn try_from(mut base: NodeDefinition) -> Result<Self, Self::Error> {
+  fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
     let definition = base
+      .with_version(Version::new(1, 0, 0))
       .add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build())
       .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build())
       .add_property(

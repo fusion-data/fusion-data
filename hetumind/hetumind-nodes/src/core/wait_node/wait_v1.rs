@@ -39,12 +39,14 @@ use super::{
 /// - Webhook 和 Form 模式：输出包含触发数据的 JSON
 /// - 时间等待模式：原样输出输入数据
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct WaitV1 {
   pub definition: Arc<NodeDefinition>,
 }
 
 #[async_trait]
 impl NodeExecutable for WaitV1 {
+  #[allow(unused_variables)]
   fn definition(&self) -> Arc<NodeDefinition> {
     self.definition.clone()
   }
@@ -347,6 +349,7 @@ impl TryFrom<NodeDefinition> for WaitV1 {
 
   fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
     let definition = base
+      .with_version(Version::new(1, 0, 0))
       .add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build())
       .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build())
       .add_property(

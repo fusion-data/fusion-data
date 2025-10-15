@@ -1,5 +1,5 @@
 use axum::extract::FromRequestParts;
-use fusion_common::time::{OffsetDateTime, now_utc};
+use fusion_common::time::now_utc;
 use fusion_core::{
   DataError,
   application::Application,
@@ -8,13 +8,16 @@ use fusion_core::{
 };
 use fusion_web::WebError;
 use fusionsql::{ModelManager, filter::OpValString};
-use hetumind_context::utils::{make_token, make_refresh_token, verify_token};
+use hetumind_context::utils::{make_refresh_token, make_token, verify_token};
 use hetumind_core::credential::TokenType;
 use http::request::Parts;
 use log::info;
 
+use super::{
+  InvalidAuthTokenBmc, RefreshTokenRequest, RefreshTokenResponse, SigninRequest, SigninResponse, SignoutRequest,
+  SignupRequest,
+};
 use crate::domain::user::{UserBmc, UserFilter, UserForCreate, UserStatus};
-use super::{InvalidAuthTokenBmc, SigninRequest, SigninResponse, SignupRequest, RefreshTokenRequest, RefreshTokenResponse, SignoutRequest};
 
 #[derive(Clone)]
 pub struct SignSvc {
@@ -44,14 +47,9 @@ impl SignSvc {
 
     let access_token = make_token(user.id.to_string(), self.application.fusion_config().security().pwd())?;
     let refresh_token = make_refresh_token(user.id.to_string(), self.application.fusion_config().security().pwd())?;
-    let expires_in = self.application.fusion_config().security().pwd().expires_at().timestamp() - now_utc().timestamp();
+    let expires_in = self.application.fusion_config().security().pwd().expires_in();
 
-    Ok(SigninResponse {
-      access_token,
-      refresh_token,
-      token_type: TokenType::Bearer,
-      expires_in,
-    })
+    Ok(SigninResponse { access_token, refresh_token, token_type: TokenType::Bearer, expires_in })
   }
 
   pub async fn signup(&self, signup_req: SignupRequest) -> Result<(), DataError> {
@@ -68,14 +66,18 @@ impl SignSvc {
   pub async fn refresh_token(&self, refresh_req: RefreshTokenRequest) -> Result<RefreshTokenResponse, DataError> {
     // 验证刷新令牌
     let payload = verify_token(&refresh_req.refresh_token, self.application.fusion_config().security().pwd())?;
-    let user_id = payload.get_subject().ok_or_else(|| DataError::unauthorized("Invalid refresh token: missing user id"))?;
+    let user_id = payload
+      .get_subject()
+      .ok_or_else(|| DataError::unauthorized("Invalid refresh token: missing user id"))?;
 
     // 验证用户是否存在且状态正常
-    let user = UserBmc::get_by_id(&self.mm, user_id.parse::<i64>()
-      .map_err(|_| DataError::unauthorized("Invalid user id in token"))?)
-      .await
-      .map_err(DataError::from)?
-      .ok_or(DataError::unauthorized("User not found"))?;
+    let user = UserBmc::get_by_id(
+      &self.mm,
+      user_id.parse::<i64>().map_err(|_| DataError::unauthorized("Invalid user id in token"))?,
+    )
+    .await
+    .map_err(DataError::from)?
+    .ok_or(DataError::unauthorized("User not found"))?;
 
     if user.status != UserStatus::Enabled {
       return Err(DataError::unauthorized("User account is disabled"));
@@ -85,11 +87,7 @@ impl SignSvc {
     let access_token = make_token(user.id.to_string(), self.application.fusion_config().security().pwd())?;
     let expires_in = self.application.fusion_config().security().pwd().expires_at().timestamp() - now_utc().timestamp();
 
-    Ok(RefreshTokenResponse {
-      access_token,
-      token_type: TokenType::Bearer,
-      expires_in,
-    })
+    Ok(RefreshTokenResponse { access_token, token_type: TokenType::Bearer, expires_in })
   }
 
   /// 登出并加入令牌黑名单

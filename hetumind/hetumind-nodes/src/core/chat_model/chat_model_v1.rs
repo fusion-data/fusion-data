@@ -13,27 +13,30 @@ use hetumind_core::{
 use rig::providers::{anthropic::Client as AnthropicClient, openai::Client as OpenAIClient};
 use serde_json::json;
 
+use crate::constants::CHAT_MODEL_NODE_KIND;
+
 use super::parameters::{
   AnthropicModel, LlmConfig, LocalModel, ModelCapabilities, ModelClient, OpenAIModel, StreamingResponse, UsageStats,
 };
 
 #[derive(Debug)]
-pub struct LlmChatModelV1 {
+pub struct ChatModelV1 {
   pub definition: Arc<NodeDefinition>,
 }
 
-impl LlmChatModelV1 {
+impl ChatModelV1 {
   pub fn new() -> Result<Self, RegistrationError> {
-    let base = NodeDefinition::new("placeholder", Version::new(1, 0, 0), "placeholder");
+    let base = NodeDefinition::new(CHAT_MODEL_NODE_KIND, "LLM Chat Model");
     Self::try_from(base)
   }
 }
 
-impl TryFrom<NodeDefinition> for LlmChatModelV1 {
+impl TryFrom<NodeDefinition> for ChatModelV1 {
   type Error = RegistrationError;
 
   fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
     let definition = base
+      .with_version(Version::new(1, 0, 0))
       .with_description("LLM 聊天模型节点，支持多种模型提供者")
       .add_group(NodeGroupKind::Transform)
       .with_icon("🧠")
@@ -119,7 +122,7 @@ impl TryFrom<NodeDefinition> for LlmChatModelV1 {
 }
 
 #[async_trait]
-impl NodeExecutable for LlmChatModelV1 {
+impl NodeExecutable for ChatModelV1 {
   async fn execute(&self, context: &NodeExecutionContext) -> Result<ExecutionDataMap, NodeExecutionError> {
     // 1. 获取输入数据和配置
     let input_data = context.get_input_data("main")?;
@@ -158,7 +161,7 @@ impl NodeExecutable for LlmChatModelV1 {
   }
 }
 
-impl LlmChatModelV1 {
+impl ChatModelV1 {
   async fn create_model_client(&self, config: &LlmConfig) -> Result<ModelClient, NodeExecutionError> {
     match config.provider.as_str() {
       "openai" => {

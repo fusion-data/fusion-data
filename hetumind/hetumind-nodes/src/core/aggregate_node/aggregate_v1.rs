@@ -5,8 +5,8 @@ use hetumind_core::{
   version::Version,
   workflow::{
     ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition,
-    NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind,
-    NodePropertyKindOptions, OutputPortConfig, RegistrationError, ValidationError, make_execution_data_map,
+    NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, NodePropertyKindOptions,
+    OutputPortConfig, RegistrationError, ValidationError, make_execution_data_map,
   },
 };
 use serde_json::{Value, json};
@@ -26,6 +26,7 @@ pub struct AggregateV1 {
 
 impl AggregateV1 {
   /// 执行 Individual Fields 聚合模式
+  #[allow(unused_variables)]
   async fn execute_individual_fields(
     &self,
     context: &NodeExecutionContext,
@@ -92,6 +93,7 @@ impl AggregateV1 {
   }
 
   /// 执行 All Item Data 聚合模式
+  #[allow(unused_variables)]
   async fn execute_all_item_data(
     &self,
     context: &NodeExecutionContext,
@@ -288,6 +290,7 @@ impl TryFrom<NodeDefinition> for AggregateV1 {
 
   fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
     let definition = base
+      .with_version(Version::new(1, 0, 0))
       .add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build())
       .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build())
       .add_property(

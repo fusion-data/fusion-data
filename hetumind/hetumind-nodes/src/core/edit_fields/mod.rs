@@ -382,7 +382,7 @@ impl EditFieldsNode {
   }
 
   fn base() -> NodeDefinition {
-    NodeDefinition::new(EDIT_FIELDS_NODE_KIND, Version::new(1, 0, 0), "Edit Fields")
+    NodeDefinition::new(EDIT_FIELDS_NODE_KIND, "Edit Fields")
       .add_group(NodeGroupKind::Transform)
       .add_group(NodeGroupKind::Input)
       .add_group(NodeGroupKind::Output)

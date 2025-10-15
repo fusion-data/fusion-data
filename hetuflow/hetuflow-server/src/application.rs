@@ -11,6 +11,7 @@ use fusionsql::ModelManager;
 use log::{error, info};
 use mea::{mutex::Mutex, shutdown::ShutdownRecv};
 
+use crate::infra::bmc::AgentBmc;
 use crate::{
   broker::Broker,
   connection::{ConnectionManager, MessageHandler},
@@ -172,9 +173,8 @@ impl ServerApplication {
     let db_size = db.db().size();
 
     // 从数据库获取在线 Agent 数量，而不是从内存连接管理器
-    use crate::infra::bmc::AgentBmc;
-    use hetuflow_core::types::AgentStatus;
-    let online_agents = AgentBmc::find_online_agents(&mm).await
+    let online_agents = AgentBmc::find_online_agents(&mm)
+      .await
       .map_err(|e| DataError::internal(500, "Failed to get online agents", Some(Box::new(e))))?;
     let agent_size = online_agents.len() as u32;
 

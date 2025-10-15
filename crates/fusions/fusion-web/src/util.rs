@@ -6,7 +6,6 @@ use axum::http::StatusCode;
 use axum::http::request::Parts;
 use fusion_common::ctx::Ctx;
 use fusion_common::model::IdI64Result;
-use fusion_core::DataError;
 use fusion_core::configuration::SecuritySetting;
 use fusion_core::log::get_trace_id;
 use fusion_core::security::{AccessToken, SecurityUtils};
@@ -52,7 +51,7 @@ pub fn unauthorized_app_error(msg: impl Into<String>) -> (StatusCode, Json<WebEr
 }
 
 /// 从 Http Request Parts 中获取 [Ctx]
-pub fn extract_ctx(parts: &Parts, sc: &SecuritySetting) -> Result<Ctx, DataError> {
+pub fn extract_ctx(parts: &Parts, sc: &SecuritySetting) -> Result<Ctx, WebError> {
   let req_time = SystemTime::now();
 
   let token = if let Some(Authorization(bearer)) = parts.headers.typed_get::<Authorization<Bearer>>() {
@@ -60,13 +59,14 @@ pub fn extract_ctx(parts: &Parts, sc: &SecuritySetting) -> Result<Ctx, DataError
   } else if let Ok(at) = Query::<AccessToken>::try_from_uri(&parts.uri) {
     at.0.access_token
   } else {
-    return Err(DataError::unauthorized("Missing token"));
+    return Err(WebError::new_with_code(401, "Missing token"));
   };
 
   let (payload, _) =
-    SecurityUtils::decrypt_jwt(sc.pwd(), &token).map_err(|_e| DataError::unauthorized("Failed decode jwt"))?;
+    SecurityUtils::decrypt_jwt(sc.pwd(), &token).map_err(|_e| WebError::new_with_code(401, "Failed decode jwt"))?;
 
-  let ctx = Ctx::try_new(payload, Some(req_time), get_trace_id())?;
+  let ctx =
+    Ctx::try_new(payload, Some(req_time), get_trace_id()).map_err(|e| WebError::new_with_code(401, e.to_string()))?;
   Ok(ctx)
 }
 

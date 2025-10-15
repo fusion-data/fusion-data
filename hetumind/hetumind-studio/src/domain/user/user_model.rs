@@ -1,7 +1,6 @@
-use std::fmt::{self, Debug};
-
+use chrono::{DateTime, FixedOffset};
+use fusion_common::model::sensitive::SensitiveString;
 use fusion_common::page::Page;
-use fusion_common::time::OffsetDateTime;
 use fusionsql::generate_enum_i32_to_sea_query_value;
 use fusionsql::{
   field::{FieldMask, Fields},
@@ -25,7 +24,7 @@ generate_enum_i32_to_sea_query_value!(
   Enum: UserStatus,
 );
 
-#[derive(Serialize, FromRow, Fields)]
+#[derive(Debug, Serialize, FromRow, Fields)]
 #[enum_def(table_name = "user_entity")]
 pub struct UserEntity {
   pub id: i64,
@@ -33,7 +32,7 @@ pub struct UserEntity {
   pub phone: Option<String>,
   pub name: Option<String>,
   #[serde(skip_serializing)]
-  pub password: Option<String>,
+  pub password: Option<SensitiveString>,
   pub personalization_answers: Option<serde_json::Value>,
   pub settings: Option<serde_json::Value>,
   pub status: UserStatus,
@@ -41,35 +40,12 @@ pub struct UserEntity {
   pub mfa_secret: Option<String>,
   pub mfa_recovery_codes: Option<String>,
   // pub role: String,
-  pub created_at: OffsetDateTime,
+  pub created_at: DateTime<FixedOffset>,
   pub created_by: i64,
-  pub updated_at: Option<OffsetDateTime>,
+  pub updated_at: Option<DateTime<FixedOffset>>,
   pub updated_by: Option<i64>,
 }
 impl PgRowType for UserEntity {}
-
-impl Debug for UserEntity {
-  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-    write!(
-      f,
-      "UserEntity {{ id: {}, email: {}, phone: {:?}, name: {:?}, password: <hidden>, personalization_answers: {:?}, settings: {:?}, status: {:?}, mfa_enabled: {:?}, mfa_secret: {:?}, mfa_recovery_codes: {:?}, created_at: {:?}, created_by: {}, updated_at: {:?}, updated_by: {:?} }}",
-      self.id,
-      self.email,
-      self.phone,
-      self.name,
-      self.personalization_answers,
-      self.settings,
-      self.status,
-      self.mfa_enabled,
-      self.mfa_secret,
-      self.mfa_recovery_codes,
-      self.created_at,
-      self.created_by,
-      self.updated_at,
-      self.updated_by
-    )
-  }
-}
 
 #[derive(Debug, Deserialize, Fields)]
 pub struct UserForCreate {
@@ -134,7 +110,7 @@ mod tests {
       email: "test@test.com".to_string(),
       phone: Some("12345678901".to_string()),
       name: Some("test".to_string()),
-      password: Some("123456".to_string()),
+      password: Some(SensitiveString::new("12345678", 4, '*')),
       personalization_answers: Some(serde_json::json!({})),
       settings: Some(serde_json::json!({})),
       status: UserStatus::Enabled,

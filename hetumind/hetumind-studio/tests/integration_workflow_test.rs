@@ -7,13 +7,14 @@
 //! - Data transformation with EditFieldsNode
 //! - File I/O operations with ReadWriteFilesNode
 //! - Complete workflow execution with DefaultWorkflowEngine
+//! Run this test
+//! ```shell
+//! cargo test -p hetumind-studio --test integration_workflow_test -- --nocapture
+//! ```
 
 mod common;
 
 use common::TestContext;
-use fusion_core::application::Application;
-use hetumind_studio::runtime::workflow::WorkflowEngineService;
-use uuid::Uuid;
 
 use std::fs;
 use std::path::PathBuf;
@@ -23,10 +24,11 @@ use async_trait::async_trait;
 use fusion_common::ahash::HashMap;
 use fusion_common::ctx::{Ctx, CtxPayload};
 use fusion_common::time::now;
+use fusion_core::application::Application;
 use hetumind_core::workflow::{
   Connection, ConnectionKind, Execution, ExecutionContext, ExecutionData, ExecutionDataItems, ExecutionDataMap,
   ExecutionId, ExecutionStatus, NodeExecutionStatus, NodeKind, NodeName, NodeRegistry, ParameterMap, PinData, Workflow,
-  WorkflowEngine, WorkflowExecutionError, WorkflowId, WorkflowMeta, WorkflowNode, WorkflowSettings, WorkflowStatus,
+  WorkflowExecutionError, WorkflowId, WorkflowMeta, WorkflowNode, WorkflowSettings, WorkflowStatus,
   WorkflowTriggerData,
 };
 use hetumind_nodes::constants::{
@@ -34,13 +36,14 @@ use hetumind_nodes::constants::{
 };
 use hetumind_nodes::core::{EditFieldsNode, IfNode, ReadWriteFilesNode};
 use hetumind_nodes::trigger::ManualTriggerNode;
+use hetumind_studio::runtime::workflow::WorkflowEngineService;
 use hetumind_studio::runtime::{
   checkpoint::{CheckpointError, ExecutionCheckpoint},
   execution::ExecutionStore,
-  workflow::DefaultWorkflowEngine,
 };
 use mea::rwlock::RwLock;
 use serde_json::json;
+use uuid::Uuid;
 
 // Mock ExecutionStore for testing
 #[derive(Default)]

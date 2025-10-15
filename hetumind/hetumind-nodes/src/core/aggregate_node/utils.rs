@@ -10,6 +10,7 @@ use serde_json::Value;
 use std::collections::HashMap;
 
 /// 准备字段数组，将字符串或数组转换为标准化的字段列表
+#[allow(unused_variables)]
 pub fn prepare_fields_array(fields: &str, field_name: &str) -> Vec<String> {
   if fields.trim().is_empty() {
     return vec![];
@@ -68,11 +69,12 @@ fn get_nested_value(data: &JsonValue, path: &str) -> Option<Value> {
 }
 
 /// 从字段路径提取简单字段名
+#[allow(dead_code)]
 pub fn extract_field_name(field_path: &str, disable_dot_notation: bool) -> String {
   if disable_dot_notation {
     field_path.to_string()
   } else {
-    field_path.split('.').last().unwrap_or(field_path).to_string()
+    field_path.split('.').next_back().unwrap_or(field_path).to_string()
   }
 }
 
@@ -117,6 +119,7 @@ impl BinaryUniqueChecker {
 }
 
 /// 将二进制数据添加到执行数据项
+#[allow(unused_variables)]
 pub fn add_binaries_to_item(
   new_item: &mut ExecutionData,
   items: &[ExecutionData],
@@ -127,10 +130,10 @@ pub fn add_binaries_to_item(
   for item in items {
     if let Some(binary_data) = item.binary() {
       // 检查唯一性（如果需要）
-      if let Some(checker) = &mut unique_checker {
-        if !checker.is_unique(binary_data) {
-          continue;
-        }
+      if let Some(checker) = &mut unique_checker
+        && !checker.is_unique(binary_data)
+      {
+        continue;
       }
 
       // 创建新的二进制数据引用，添加前缀避免键名冲突
@@ -158,7 +161,7 @@ impl FieldExistenceTracker {
 
   /// 记录字段是否存在
   pub fn record_field_existence(&mut self, field: &str, exists: bool) {
-    self.not_found_fields.entry(field.to_string()).or_insert_with(Vec::new).push(exists);
+    self.not_found_fields.entry(field.to_string()).or_default().push(exists);
   }
 
   /// 获取完全不存在的字段列表

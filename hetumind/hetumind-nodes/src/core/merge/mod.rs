@@ -79,7 +79,7 @@ impl MergeNode {
   }
 
   fn base() -> NodeDefinition {
-    NodeDefinition::new(MERGE_NODE_KIND, Version::new(1, 0, 0), "Merge")
+    NodeDefinition::new(MERGE_NODE_KIND, "Merge")
       .add_group(NodeGroupKind::Transform)
       .add_group(NodeGroupKind::Input)
       .add_group(NodeGroupKind::Output)

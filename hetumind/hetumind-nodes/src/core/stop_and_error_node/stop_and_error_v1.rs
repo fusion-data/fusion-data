@@ -36,12 +36,14 @@ use super::{
 /// # 输出
 /// - 无输出端口，总是抛出错误
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct StopAndErrorV1 {
   pub definition: Arc<NodeDefinition>,
 }
 
 #[async_trait]
 impl NodeExecutable for StopAndErrorV1 {
+  #[allow(unused_variables)]
   fn definition(&self) -> Arc<NodeDefinition> {
     self.definition.clone()
   }
@@ -56,7 +58,7 @@ impl NodeExecutable for StopAndErrorV1 {
     );
 
     // 获取输入数据（仅用于验证和上下文）
-    let input_items = if let Some(input_collection) = context.get_input_items(ConnectionKind::Main, 0)
+    let _input_items = if let Some(input_collection) = context.get_input_items(ConnectionKind::Main, 0)
       && let ExecutionDataItems::Items(input_data) = input_collection
     {
       log::info!("Stop And Error 节点接收到 {} 个输入项", input_data.len());
@@ -128,8 +130,9 @@ impl NodeExecutable for StopAndErrorV1 {
 impl TryFrom<NodeDefinition> for StopAndErrorV1 {
   type Error = RegistrationError;
 
-  fn try_from(mut base: NodeDefinition) -> Result<Self, Self::Error> {
+  fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
     let definition = base
+      .with_version(Version::new(1, 0, 0))
       .add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build())
       .add_property(
         NodeProperty::builder()

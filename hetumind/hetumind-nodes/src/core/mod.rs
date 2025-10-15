@@ -4,13 +4,13 @@ use hetumind_core::workflow::{NodeRegistry, RegistrationError};
 
 mod aggregate_node;
 mod ai_agent;
+mod chat_model;
 mod compare_datasets;
 mod connection_manager;
 mod edit_fields;
 mod edit_image;
 mod if_node;
 mod limit_node;
-mod llm_chat_model;
 mod loop_over_items;
 mod merge;
 mod no_op_node;
@@ -90,7 +90,7 @@ pub fn register_nodes(node_registry: &NodeRegistry) -> Result<(), RegistrationEr
 
   // Register AI nodes
   ai_agent::register_nodes(node_registry)?;
-  llm_chat_model::register_nodes(node_registry)?;
+  chat_model::register_nodes(node_registry)?;
 
   Ok(())
 }

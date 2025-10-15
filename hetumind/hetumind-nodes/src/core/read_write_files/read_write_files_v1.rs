@@ -10,13 +10,11 @@ use hetumind_core::{
   version::Version,
   workflow::{
     ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition,
-    NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeGroupKind, NodeProperty, NodePropertyKind,
-    OutputPortConfig, RegistrationError,
+    NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig,
+    RegistrationError,
   },
 };
 use serde_json::json;
-
-use crate::constants::READ_WRITE_FILES_NODE_KIND;
 
 use super::utils::{FileReader, FileWriter};
 
@@ -278,6 +276,7 @@ impl TryFrom<NodeDefinition> for ReadWriteFilesV1 {
 
   fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
     let definition = base
+      .with_version(Version::new(1, 0, 0))
       .add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build())
       .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build())
       .add_property(

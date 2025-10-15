@@ -188,7 +188,7 @@ impl NodeExecutable for HttpRequestV1 {
 
 /// Create node definition
 pub(super) fn create_definition() -> Result<NodeDefinition, RegistrationError> {
-  let mut definition = NodeDefinition::new(HTTP_REQUEST_NODE_KIND, Version::new(1, 0, 0), "HTTP Request")
+  let mut definition = NodeDefinition::new(HTTP_REQUEST_NODE_KIND, "HTTP Request")
     .add_group(NodeGroupKind::Input)
     .add_group(NodeGroupKind::Output)
     .with_description("发送HTTP请求并获取响应数据。支持GET、POST、PUT、DELETE等方法。")

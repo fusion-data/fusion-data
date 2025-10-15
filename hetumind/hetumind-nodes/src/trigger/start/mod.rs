@@ -65,7 +65,7 @@ impl StartNode {
 }
 
 fn create_base() -> NodeDefinition {
-  NodeDefinition::new(START_TRIGGER_NODE_KIND, Version::new(1, 0, 0), "Start")
+  NodeDefinition::new(START_TRIGGER_NODE_KIND, "Start")
     .add_group(NodeGroupKind::Trigger)
     .with_description("The entry point of the workflow.")
 }

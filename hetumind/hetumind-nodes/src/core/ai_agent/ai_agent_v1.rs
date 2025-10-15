@@ -21,14 +21,16 @@ use crate::{constants::AI_AGENT_NODE_KIND, core::ai_agent::parameters::ToolExecu
 
 use super::parameters::{AiAgentConfig, ModelInstance, ToolCallRequest, ToolCallResult};
 
+#[allow(dead_code)]
 pub struct AiAgentV1 {
   pub definition: Arc<NodeDefinition>,
+  #[allow(dead_code)]
   tool_manager: Arc<tokio::sync::RwLock<ToolManager>>,
 }
 
 impl AiAgentV1 {
   pub fn new() -> Result<Self, RegistrationError> {
-    let base = NodeDefinition::new(AI_AGENT_NODE_KIND, Version::new(1, 0, 0), "AI Agent");
+    let base = NodeDefinition::new(AI_AGENT_NODE_KIND, "AI Agent");
     Self::try_from(base)
   }
 }
@@ -38,6 +40,7 @@ impl TryFrom<NodeDefinition> for AiAgentV1 {
 
   fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
     let definition = base
+      .with_version(Version::new(1, 0, 0))
       .with_description("AI Agent 节点，支持工具调用和记忆功能")
       .with_icon("🤖")
       // 输入端口
@@ -199,6 +202,7 @@ impl AiAgentV1 {
     Ok(tools)
   }
 
+  #[allow(unused_variables)]
   async fn create_agent(
     &self,
     llm_instance: ModelInstance,
@@ -246,6 +250,7 @@ impl AiAgentV1 {
     }
   }
 
+  #[allow(unused_variables)]
   fn parse_tool_calls(&self, result: &str) -> Option<Vec<ToolCallRequest>> {
     // 解析工具调用（这里需要实现实际的解析逻辑）
     // 目前返回空列表，表示没有工具调用
@@ -412,12 +417,14 @@ impl AiAgentV1 {
   }
 
   /// 将工具定义转换为 rig-core 格式（暂时不实现）
+  #[allow(dead_code)]
   async fn convert_to_rig_tool(&self, _tool: JsonValue) -> Result<String, NodeExecutionError> {
     // TODO: 暂时不实现工具转换，直接返回工具名称
     Ok("tool_conversion_not_implemented".to_string())
   }
 
   /// 流式执行Agent
+  #[allow(unused_variables)]
   async fn execute_agent_streaming(
     &self,
     agent: &Box<dyn std::any::Any + Send + Sync>,
