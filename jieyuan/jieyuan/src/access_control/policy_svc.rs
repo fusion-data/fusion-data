@@ -1,7 +1,7 @@
 use fusion_core::Result;
 use fusionsql::{ModelManager, page::PageResult};
 
-use jieyuan_core::model::{Policy, PolicyForCreate, PolicyForPage, PolicyForUpdate};
+use jieyuan_core::model::{PolicyEntity, PolicyForCreate, PolicyForPage, PolicyForUpdate};
 
 use super::PolicyBmc;
 
@@ -20,12 +20,12 @@ impl PolicySvc {
     Ok(id)
   }
 
-  pub async fn find_option_by_id(&self, id: i64) -> Result<Option<Policy>> {
+  pub async fn find_option_by_id(&self, id: i64) -> Result<Option<PolicyEntity>> {
     let policy = PolicyBmc::find_by_id(&self.mm, id).await.ok();
     Ok(policy)
   }
 
-  pub async fn find_by_id(&self, id: i64) -> Result<Policy> {
+  pub async fn find_by_id(&self, id: i64) -> Result<PolicyEntity> {
     let policy = PolicyBmc::find_by_id(&self.mm, id).await?;
     Ok(policy)
   }
@@ -40,7 +40,7 @@ impl PolicySvc {
     Ok(())
   }
 
-  pub async fn page(&self, req: PolicyForPage) -> Result<PageResult<Policy>> {
+  pub async fn page(&self, req: PolicyForPage) -> Result<PageResult<PolicyEntity>> {
     let page = PolicyBmc::page(&self.mm, req.filter, req.page).await?;
     Ok(page)
   }

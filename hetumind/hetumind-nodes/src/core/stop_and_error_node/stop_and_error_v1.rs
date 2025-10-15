@@ -133,16 +133,15 @@ impl TryFrom<NodeDefinition> for StopAndErrorV1 {
   fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
     let definition = base
       .with_version(Version::new(1, 0, 0))
-      .add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build())
+      .add_input(InputPortConfig::new(ConnectionKind::Main, "Input"))
       .add_property(
-        NodeProperty::builder()
-          .display_name("错误类型")
-          .name("error_type")
-          .kind(NodePropertyKind::Options)
-          .required(true)
-          .description("选择错误类型")
-          .value(json!(ErrorType::ErrorMessage))
-          .options(vec![
+        NodeProperty::new(NodePropertyKind::Options)
+          .with_display_name("错误类型")
+          .with_name("error_type")
+          .with_required(true)
+          .with_description("选择错误类型")
+          .with_value(json!(ErrorType::ErrorMessage))
+          .with_options(vec![
             Box::new(NodeProperty::new_option(
               "错误消息",
               "error_message",
@@ -155,28 +154,23 @@ impl TryFrom<NodeDefinition> for StopAndErrorV1 {
               json!(ErrorType::ErrorObject),
               NodePropertyKind::String,
             )),
-          ])
-          .build(),
+          ]),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("错误消息")
-          .name("error_message")
-          .kind(NodePropertyKind::String)
-          .required(false)
-          .description("要抛出的错误消息（当错误类型为「错误消息」时使用）")
-          .placeholder("输入错误消息...")
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("错误消息")
+          .with_name("error_message")
+          .with_required(false)
+          .with_description("要抛出的错误消息（当错误类型为「错误消息」时使用）")
+          .with_placeholder("输入错误消息..."),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("错误对象")
-          .name("error_object")
-          .kind(NodePropertyKind::Json)
-          .required(false)
-          .description("结构化错误对象（当错误类型为「错误对象」时使用）")
-          .placeholder("输入 JSON 格式的错误对象...")
-          .build(),
+        NodeProperty::new(NodePropertyKind::Json)
+          .with_display_name("错误对象")
+          .with_name("error_object")
+          .with_required(false)
+          .with_description("结构化错误对象（当错误类型为「错误对象」时使用）")
+          .with_placeholder("输入 JSON 格式的错误对象..."),
       );
     Ok(Self { definition: Arc::new(definition) })
   }

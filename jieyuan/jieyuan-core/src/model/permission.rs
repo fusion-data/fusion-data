@@ -1,5 +1,5 @@
 use fusion_common::page::Page;
-use fusion_common::time::OffsetDateTime;
+use fusion_common::time::{DateTime, FixedOffset};
 use fusionsql_core::filter::{OpValInt64, OpValString};
 use serde::{Deserialize, Serialize};
 
@@ -19,11 +19,9 @@ pub struct Permission {
   pub resource: String,
   pub action: String,
   pub created_by: i64,
-  #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
-  pub created_at: OffsetDateTime,
+  pub created_at: DateTime<FixedOffset>,
   pub updated_by: Option<i64>,
-  #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
-  pub updated_at: Option<OffsetDateTime>,
+  pub updated_at: Option<DateTime<FixedOffset>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

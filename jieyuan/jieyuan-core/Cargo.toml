@@ -21,6 +21,7 @@ with-db = [
   "fusion-common/with-db",
 ]
 with-web = [
+  "with-openapi",
   "dep:fusion-core",
   "dep:fusion-web",
   "dep:axum",
@@ -48,3 +49,5 @@ tower-http = { workspace = true, optional = true }
 futures = { workspace = true, optional = true }
 log = { workspace = true }
 http = { workspace = true, optional = true }
+chrono = { workspace = true }
+semver = { workspace = true }

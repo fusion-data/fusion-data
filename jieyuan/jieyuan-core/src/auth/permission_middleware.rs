@@ -5,14 +5,12 @@ use http::{Request, Response, StatusCode};
 use log::{debug, warn};
 use tower_http::auth::AsyncAuthorizeRequest;
 
-#[cfg(feature = "with-web")]
 /// 权限检查中间件
 #[derive(Clone)]
 pub struct PermissionMiddleware {
   permissions: Vec<String>,
 }
 
-#[cfg(feature = "with-web")]
 impl PermissionMiddleware {
   pub fn new<I, S>(permissions: I) -> Self
   where
@@ -23,7 +21,6 @@ impl PermissionMiddleware {
   }
 }
 
-#[cfg(feature = "with-web")]
 impl AsyncAuthorizeRequest<Body> for PermissionMiddleware {
   type RequestBody = Body;
   type ResponseBody = Body;
@@ -61,7 +58,6 @@ impl AsyncAuthorizeRequest<Body> for PermissionMiddleware {
   }
 }
 
-#[cfg(feature = "with-web")]
 /// 创建权限检查中间件层
 pub fn permission_middleware_layer(
   permissions: &[&str],

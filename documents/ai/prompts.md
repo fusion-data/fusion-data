@@ -50,3 +50,93 @@
 - 完成 SQL DDL 文件更新后暂停，由我手动执行 SQL 语句后再通知你继续执行后续任务
 - 若有任何疑问或需要澄清的地方，请输出疑问或方案让我审核！
 ```
+
+### 示例 2
+
+```markdown
+任务： 为 @hetumind/hetumind-core/src/workflow/*.rs 中的所有 struct 添加构造函数和修改方法
+
+## 构造函数规则
+
+生成 pub fn new(...) -> Self 函数，规则如下：
+- 参数： 非Option、非bool、非容器类型（Vec/HashMap/HashSet）的字段
+- 限制： 最多5个参数，超过则不生成 new 但生成修改方法
+- 初始化： 其他字段使用 Default::default()
+- 报告： 执行后打印参数超过5个的 struct 名称
+
+## 修改方法规则
+
+### 基本类型方法
+
+// T 或 Option<T> 类型
+pub fn with_field_name(mut self, field_name: impl Into<String>) -> Self
+// Option<T> 参数类型不包裹 Option
+
+// 数值、bool、enum 类型直接使用原始类型，不用 impl Into<T>
+
+### 容器类型方法
+
+#### Vec 类型：
+pub fn with_options<I, V>(mut self, options: I) -> Self
+where
+  I: IntoIterator<Item = V>,
+  V: Into<Box<NodeProperty>>,
+{
+  self.options = Some(options.into_iter().map(|v| v.into()).collect());
+  self
+}
+
+pub fn add_option(mut self, option: impl Into<Box<NodeProperty>>) -> Self {
+  self.options.get_or_insert_with(Vec::new).push(option.into());
+  self
+}
+
+#### HashMap 类型：
+pub fn with_routing<I, K, V>(mut self, routing: I) -> Self
+where
+  I: IntoIterator<Item = (K, V)>,
+  K: Into<String>,
+  V: Into<JsonValue>,
+{
+  self.routing = Some(routing.into_iter().map(|(k, v)| (k.into(), v.into())).collect());
+  self
+}
+
+pub fn add_routing(mut self, key: impl Into<String>, value: impl Into<JsonValue>) -> Self {
+  self.routing.get_or_insert_with(HashMap::default).insert(key.into(), value.into());
+  self
+}
+
+## 特殊处理
+
+- 包裹类型： Box<T>、Arc<T> 等在方法参数中保持包裹类型
+- 已有方法： 检查避免重复生成已存在的 new、with_xxx、add_xxx 方法
+- newtype 类型的 struct 不需要添加修改方法
+```
+
+### 提示词 3
+
+```markdown
+任务： 重构 @hetumind/hetumind-nodes/src/ 中所有使用 TypedBuilder 的代码
+
+重构规则
+
+1. 识别目标代码：查找所有使用 ::builder() 方法的代码
+2. 替换构造方式：
+  - 将 Xxxx::builder().field(value).build() 替换为 Xxxx::new(...).with_field(value)
+  - 使用 new() 函数的必需参数
+  - 保留所有 with_xxx() 和 add_xxx() 调用
+3. 保持功能不变：确保重构后的代码行为完全一致
+
+执行步骤
+
+1. 扫描 hetumind-nodes/src/ 目录，识别所有使用 TypedBuilder 的文件
+2. 分析每个使用场景，确定对应的 new() 函数参数
+3. 逐个文件进行重构替换
+4. 编译验证确保无错误
+
+输出要求
+
+- 列出所有修改的文件和位置
+- 报告编译结果
+```

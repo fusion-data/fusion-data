@@ -277,59 +277,51 @@ impl TryFrom<NodeDefinition> for ReadWriteFilesV1 {
   fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
     let definition = base
       .with_version(Version::new(1, 0, 0))
-      .add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build())
-      .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build())
+      .add_input(InputPortConfig::new(ConnectionKind::Main, "Input"))
+      .add_output(OutputPortConfig::new(ConnectionKind::Main, "Output"))
       .add_property(
         // 操作类型选择
-        NodeProperty::builder()
-          .display_name("操作类型")
-          .name("operation")
-          .kind(NodePropertyKind::Options)
-          .required(true)
-          .description("选择要执行的操作类型")
-          .value(json!("read"))
-          .options(vec![
+        NodeProperty::new(NodePropertyKind::Options)
+          .with_display_name("操作类型")
+          .with_name("operation")
+          .with_required(true)
+          .with_description("选择要执行的操作类型")
+          .with_value(json!("read"))
+          .with_options(vec![
             Box::new(NodeProperty::new_option("读取文件", "read", json!("read"), NodePropertyKind::Options)),
             Box::new(NodeProperty::new_option("写入文件", "write", json!("write"), NodePropertyKind::Options)),
-          ])
-          .build(),
+          ]),
       )
       .add_property(
         // 读操作参数
-        NodeProperty::builder()
-          .display_name("文件选择器")
-          .name("file_selector")
-          .kind(NodePropertyKind::String)
-          .required(false)
-          .description("用于匹配文件的 glob 模式，支持通配符如 * 和 **")
-          .placeholder("/path/to/files/*.txt")
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("文件选择器")
+          .with_name("file_selector")
+          .with_required(false)
+          .with_description("用于匹配文件的 glob 模式，支持通配符如 * 和 **")
+          .with_placeholder("/path/to/files/*.txt"),
       )
       .add_property(
         // 写操作参数
-        NodeProperty::builder()
-          .display_name("文件路径")
-          .name("file_path")
-          .kind(NodePropertyKind::String)
-          .required(false)
-          .description("要写入的文件路径")
-          .placeholder("/path/to/output/file.txt")
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("文件路径")
+          .with_name("file_path")
+          .with_required(false)
+          .with_description("要写入的文件路径")
+          .with_placeholder("/path/to/output/file.txt"),
       )
       .add_property(
         // 选项参数
-        NodeProperty::builder()
-          .display_name("选项")
-          .name("options")
-          .kind(NodePropertyKind::Collection)
-          .required(false)
-          .placeholder("添加选项")
-          .options(vec![
+        NodeProperty::new(NodePropertyKind::Collection)
+          .with_display_name("选项")
+          .with_name("options")
+          .with_required(false)
+          .with_placeholder("添加选项")
+          .with_options(vec![
             Box::new(NodeProperty::new_option("继续执行", "continue_on_fail", json!(false), NodePropertyKind::Boolean)),
             Box::new(NodeProperty::new_option("追加模式", "append", json!(false), NodePropertyKind::Boolean)),
             Box::new(NodeProperty::new_option("文件名", "file_name", json!(""), NodePropertyKind::String)),
-          ])
-          .build(),
+          ]),
       );
     Ok(Self { definition: Arc::new(definition) })
   }

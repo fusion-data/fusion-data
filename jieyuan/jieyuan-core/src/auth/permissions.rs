@@ -1,6 +1,6 @@
 //! 权限常量与枚举（统一跨应用的资源动作定义）
 //! 用法：
-//! - 资源层权限判定（字符串常量）：permissions::WORKFLOW_WRITE
+//! - 资源层权限判定（字符串常量）：permissions::ResourceAction::WorkflowWrite
 //! - 服务内部强类型：ResourceAction::WorkflowWrite.as_str()
 use strum::AsRefStr;
 

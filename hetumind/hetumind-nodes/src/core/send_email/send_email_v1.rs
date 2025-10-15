@@ -494,38 +494,33 @@ impl TryFrom<NodeDefinition> for SendEmailV1 {
   fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
     let definition = base
       .with_version(Version::new(1, 0, 0))
-      .add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build())
-      .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build())
+      .add_input(InputPortConfig::new(ConnectionKind::Main, "Input"))
+      .add_output(OutputPortConfig::new(ConnectionKind::Main, "Output"))
       .add_property(
         // SMTP 配置
-        NodeProperty::builder()
-          .display_name("SMTP Host".to_string())
-          .name("smtp_host")
-          .required(true)
-          .description("SMTP server hostname (e.g., smtp.gmail.com)".to_string())
-          .kind(NodePropertyKind::String)
-          .placeholder("smtp.gmail.com".to_string())
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("SMTP Host")
+          .with_name("smtp_host")
+          .with_required(true)
+          .with_description("SMTP server hostname (e.g., smtp.gmail.com)")
+          .with_placeholder("smtp.gmail.com"),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("SMTP Port".to_string())
-          .name("smtp_port")
-          .required(true)
-          .description("SMTP server port (e.g., 587 for STARTTLS, 465 for SSL)".to_string())
-          .kind(NodePropertyKind::Number)
-          .value(json!(587))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Number)
+          .with_display_name("SMTP Port")
+          .with_name("smtp_port")
+          .with_required(true)
+          .with_description("SMTP server port (e.g., 587 for STARTTLS, 465 for SSL)")
+          .with_value(json!(587)),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("SMTP Security".to_string())
-          .name("smtp_security")
-          .required(true)
-          .description("Connection security type".to_string())
-          .kind(NodePropertyKind::Options)
-          .value(json!(SmtpSecurity::Starttls))
-          .options(vec![
+        NodeProperty::new(NodePropertyKind::Options)
+          .with_display_name("SMTP Security")
+          .with_name("smtp_security")
+          .with_required(true)
+          .with_description("Connection security type")
+          .with_value(json!(SmtpSecurity::Starttls))
+          .with_options(vec![
             Box::new(NodeProperty::new_option(
               "STARTTLS",
               "starttls",
@@ -534,111 +529,91 @@ impl TryFrom<NodeDefinition> for SendEmailV1 {
             )),
             Box::new(NodeProperty::new_option("SSL/TLS", "ssl", json!(SmtpSecurity::Ssl), NodePropertyKind::String)),
             Box::new(NodeProperty::new_option("None", "none", json!(SmtpSecurity::None), NodePropertyKind::String)),
-          ])
-          .build(),
+          ]),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("SMTP Username".to_string())
-          .name("smtp_username")
-          .required(true)
-          .description("SMTP authentication username".to_string())
-          .kind(NodePropertyKind::String)
-          .placeholder("your-email@gmail.com".to_string())
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("SMTP Username")
+          .with_name("smtp_username")
+          .with_required(true)
+          .with_description("SMTP authentication username")
+          .with_placeholder("your-email@gmail.com"),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("SMTP Password".to_string())
-          .name("smtp_password")
-          .required(true)
-          .description("SMTP authentication password or app password".to_string())
-          .kind(NodePropertyKind::String)
-          .password(true)
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("SMTP Password")
+          .with_name("smtp_password")
+          .with_required(true)
+          .with_description("SMTP authentication password or app password")
+          .with_password(true),
       )
       .add_property(
         // 发件人配置
-        NodeProperty::builder()
-          .display_name("From Email".to_string())
-          .name("from_email")
-          .required(true)
-          .description("Sender email address".to_string())
-          .kind(NodePropertyKind::String)
-          .placeholder("sender@example.com".to_string())
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("From Email")
+          .with_name("from_email")
+          .with_required(true)
+          .with_description("Sender email address")
+          .with_placeholder("sender@example.com"),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("From Name".to_string())
-          .name("from_name")
-          .required(false)
-          .description("Sender display name (optional)".to_string())
-          .kind(NodePropertyKind::String)
-          .placeholder("Your Name".to_string())
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("From Name")
+          .with_name("from_name")
+          .with_required(false)
+          .with_description("Sender display name (optional)")
+          .with_placeholder("Your Name"),
       )
       .add_property(
         // 收件人配置
-        NodeProperty::builder()
-          .display_name("To Emails".to_string())
-          .name("to_emails")
-          .required(true)
-          .description("Recipient email addresses (comma-separated)".to_string())
-          .kind(NodePropertyKind::String)
-          .placeholder("recipient1@example.com, recipient2@example.com".to_string())
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("To Emails")
+          .with_name("to_emails")
+          .with_required(true)
+          .with_description("Recipient email addresses (comma-separated)")
+          .with_placeholder("recipient1@example.com, recipient2@example.com"),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("CC Emails".to_string())
-          .name("cc_emails")
-          .required(false)
-          .description("CC recipient email addresses (comma-separated, optional)".to_string())
-          .kind(NodePropertyKind::String)
-          .placeholder("cc1@example.com, cc2@example.com".to_string())
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("CC Emails")
+          .with_name("cc_emails")
+          .with_required(false)
+          .with_description("CC recipient email addresses (comma-separated, optional)")
+          .with_placeholder("cc1@example.com, cc2@example.com"),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("BCC Emails".to_string())
-          .name("bcc_emails")
-          .required(false)
-          .description("BCC recipient email addresses (comma-separated, optional)".to_string())
-          .kind(NodePropertyKind::String)
-          .placeholder("bcc1@example.com, bcc2@example.com".to_string())
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("BCC Emails")
+          .with_name("bcc_emails")
+          .with_required(false)
+          .with_description("BCC recipient email addresses (comma-separated, optional)")
+          .with_placeholder("bcc1@example.com, bcc2@example.com"),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Reply To".to_string())
-          .name("reply_to")
-          .required(false)
-          .description("Reply-to email address (optional)".to_string())
-          .kind(NodePropertyKind::String)
-          .placeholder("reply@example.com".to_string())
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("Reply To")
+          .with_name("reply_to")
+          .with_required(false)
+          .with_description("Reply-to email address (optional)")
+          .with_placeholder("reply@example.com"),
       )
       .add_property(
         // 邮件内容配置
-        NodeProperty::builder()
-          .display_name("Subject".to_string())
-          .name("subject")
-          .required(true)
-          .description("Email subject line".to_string())
-          .kind(NodePropertyKind::String)
-          .placeholder("Your Subject Here".to_string())
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("Subject")
+          .with_name("subject")
+          .with_required(true)
+          .with_description("Email subject line")
+          .with_placeholder("Your Subject Here"),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Email Format".to_string())
-          .name("email_format")
-          .required(true)
-          .description("Email content format".to_string())
-          .kind(NodePropertyKind::Options)
-          .value(json!(EmailFormat::Both))
-          .options(vec![
+        NodeProperty::new(NodePropertyKind::Options)
+          .with_display_name("Email Format")
+          .with_name("email_format")
+          .with_required(true)
+          .with_description("Email content format")
+          .with_value(json!(EmailFormat::Both))
+          .with_options(vec![
             Box::new(NodeProperty::new_option("Text Only", "text", json!(EmailFormat::Text), NodePropertyKind::String)),
             Box::new(NodeProperty::new_option("HTML Only", "html", json!(EmailFormat::Html), NodePropertyKind::String)),
             Box::new(NodeProperty::new_option(
@@ -647,50 +622,42 @@ impl TryFrom<NodeDefinition> for SendEmailV1 {
               json!(EmailFormat::Both),
               NodePropertyKind::String,
             )),
-          ])
-          .build(),
+          ]),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Text Content".to_string())
-          .name("text_content")
-          .required(false)
-          .description("Plain text email content (required for Text or Both format)".to_string())
-          .kind(NodePropertyKind::String)
-          .placeholder("Hello, this is the plain text version of the email.".to_string())
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("Text Content")
+          .with_name("text_content")
+          .with_required(false)
+          .with_description("Plain text email content (required for Text or Both format)")
+          .with_placeholder("Hello, this is the plain text version of the email."),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("HTML Content".to_string())
-          .name("html_content")
-          .required(false)
-          .description("HTML email content (required for HTML or Both format)".to_string())
-          .kind(NodePropertyKind::String)
-          .placeholder("<h1>Hello</h1><p>This is the <strong>HTML</strong> version of the email.</p>".to_string())
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("HTML Content")
+          .with_name("html_content")
+          .with_required(false)
+          .with_description("HTML email content (required for HTML or Both format)")
+          .with_placeholder("<h1>Hello</h1><p>This is the <strong>HTML</strong> version of the email.</p>"),
       )
       .add_property(
         // 附件配置
-        NodeProperty::builder()
-          .display_name("Attachment Fields".to_string())
-          .name("attachment_fields")
-          .required(false)
-          .description("Binary field names from input data to attach as files".to_string())
-          .kind(NodePropertyKind::String)
-          .placeholder("attachment1, attachment2".to_string())
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("Attachment Fields")
+          .with_name("attachment_fields")
+          .with_required(false)
+          .with_description("Binary field names from input data to attach as files")
+          .with_placeholder("attachment1, attachment2"),
       )
       .add_property(
         // 选项配置
-        NodeProperty::builder()
-          .display_name("Priority".to_string())
-          .name("priority")
-          .required(false)
-          .description("Email priority level".to_string())
-          .kind(NodePropertyKind::Options)
-          .value(json!(EmailPriority::Normal))
-          .options(vec![
+        NodeProperty::new(NodePropertyKind::Options)
+          .with_display_name("Priority")
+          .with_name("priority")
+          .with_required(false)
+          .with_description("Email priority level")
+          .with_value(json!(EmailPriority::Normal))
+          .with_options(vec![
             Box::new(NodeProperty::new_option("Low", "low", json!(EmailPriority::Low), NodePropertyKind::String)),
             Box::new(NodeProperty::new_option(
               "Normal",
@@ -699,89 +666,72 @@ impl TryFrom<NodeDefinition> for SendEmailV1 {
               NodePropertyKind::String,
             )),
             Box::new(NodeProperty::new_option("High", "high", json!(EmailPriority::High), NodePropertyKind::String)),
-          ])
-          .build(),
+          ]),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Continue on Fail".to_string())
-          .name("continue_on_fail")
-          .required(false)
-          .description("Continue workflow execution even if email sending fails".to_string())
-          .kind(NodePropertyKind::Boolean)
-          .value(json!(true))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Boolean)
+          .with_display_name("Continue on Fail")
+          .with_name("continue_on_fail")
+          .with_required(false)
+          .with_description("Continue workflow execution even if email sending fails")
+          .with_value(json!(true)),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Append Attribution".to_string())
-          .name("append_attribution")
-          .required(false)
-          .description("Add attribution header to identify the email was sent by HetuMind".to_string())
-          .kind(NodePropertyKind::Boolean)
-          .value(json!(false))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Boolean)
+          .with_display_name("Append Attribution")
+          .with_name("append_attribution")
+          .with_required(false)
+          .with_description("Add attribution header to identify the email was sent by HetuMind")
+          .with_value(json!(false)),
       )
       .add_property(
         // 高级配置
-        NodeProperty::builder()
-          .display_name("Connection Timeout".to_string())
-          .name("connection_timeout")
-          .required(false)
-          .description("SMTP connection timeout in seconds".to_string())
-          .kind(NodePropertyKind::Number)
-          .value(json!(30))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Number)
+          .with_display_name("Connection Timeout")
+          .with_name("connection_timeout")
+          .with_required(false)
+          .with_description("SMTP connection timeout in seconds")
+          .with_value(json!(30)),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Allow Unauthorized Certs".to_string())
-          .name("allow_unauthorized_certs")
-          .required(false)
-          .description("Allow unauthorized SSL certificates (for testing only)".to_string())
-          .kind(NodePropertyKind::Boolean)
-          .value(json!(false))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Boolean)
+          .with_display_name("Allow Unauthorized Certs")
+          .with_name("allow_unauthorized_certs")
+          .with_required(false)
+          .with_description("Allow unauthorized SSL certificates (for testing only)")
+          .with_value(json!(false)),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Use Async Sending".to_string())
-          .name("use_async")
-          .required(false)
-          .description("Use async sending for multiple emails (improves performance)".to_string())
-          .kind(NodePropertyKind::Boolean)
-          .value(json!(false))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Boolean)
+          .with_display_name("Use Async Sending")
+          .with_name("use_async")
+          .with_required(false)
+          .with_description("Use async sending for multiple emails (improves performance)")
+          .with_value(json!(false)),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Max Concurrent".to_string())
-          .name("max_concurrent")
-          .required(false)
-          .description("Maximum concurrent connections when using async sending".to_string())
-          .kind(NodePropertyKind::Number)
-          .value(json!(5))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Number)
+          .with_display_name("Max Concurrent")
+          .with_name("max_concurrent")
+          .with_required(false)
+          .with_description("Maximum concurrent connections when using async sending")
+          .with_value(json!(5)),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Custom Headers".to_string())
-          .name("custom_headers")
-          .required(false)
-          .description("Custom email headers as JSON object".to_string())
-          .kind(NodePropertyKind::String)
-          .placeholder(r#"{"X-Custom-Header": "value"}"#.to_string())
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("Custom Headers")
+          .with_name("custom_headers")
+          .with_required(false)
+          .with_description("Custom email headers as JSON object")
+          .with_placeholder(r#"{"X-Custom-Header": "value"}"#),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Test Connection Only".to_string())
-          .name("test_connection_only")
-          .required(false)
-          .description("Only test SMTP connection without sending emails".to_string())
-          .kind(NodePropertyKind::Boolean)
-          .value(json!(false))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Boolean)
+          .with_display_name("Test Connection Only")
+          .with_name("test_connection_only")
+          .with_required(false)
+          .with_description("Only test SMTP connection without sending emails")
+          .with_value(json!(false)),
       );
     Ok(Self { definition: Arc::new(definition) })
   }

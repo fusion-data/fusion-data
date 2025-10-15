@@ -1,4 +1,4 @@
-use fusion_common::time::OffsetDateTime;
+use chrono::{DateTime, FixedOffset};
 use fusionsql_core::filter::{OpValInt32, OpValString};
 use serde::{Deserialize, Serialize};
 
@@ -34,11 +34,9 @@ pub struct Role {
   pub description: Option<String>,
   pub status: RoleStatus,
   pub created_by: i64,
-  #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
-  pub created_at: OffsetDateTime,
+  pub created_at: DateTime<FixedOffset>,
   pub updated_by: Option<i64>,
-  #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
-  pub updated_at: Option<OffsetDateTime>,
+  pub updated_at: Option<DateTime<FixedOffset>>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

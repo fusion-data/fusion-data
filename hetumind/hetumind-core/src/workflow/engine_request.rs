@@ -29,6 +29,58 @@ pub struct ExecuteNodeAction {
   pub metadata: HashMap<String, JsonValue>,
 }
 
+impl ExecuteNodeAction {
+  pub fn new(
+    node_name: impl Into<String>,
+    input: JsonValue,
+    connection_type: ConnectionKind,
+    action_id: Uuid,
+  ) -> Self {
+    Self {
+      node_name: node_name.into(),
+      input,
+      connection_type,
+      action_id,
+      metadata: HashMap::default(),
+    }
+  }
+
+  pub fn with_node_name(mut self, node_name: impl Into<String>) -> Self {
+    self.node_name = node_name.into();
+    self
+  }
+
+  pub fn with_input(mut self, input: JsonValue) -> Self {
+    self.input = input;
+    self
+  }
+
+  pub fn with_connection_type(mut self, connection_type: ConnectionKind) -> Self {
+    self.connection_type = connection_type;
+    self
+  }
+
+  pub fn with_action_id(mut self, action_id: Uuid) -> Self {
+    self.action_id = action_id;
+    self
+  }
+
+  pub fn with_metadata<I, K, V>(mut self, metadata: I) -> Self
+  where
+    I: IntoIterator<Item = (K, V)>,
+    K: Into<String>,
+    V: Into<JsonValue>,
+  {
+    self.metadata = metadata.into_iter().map(|(k, v)| (k.into(), v.into())).collect();
+    self
+  }
+
+  pub fn add_metadata(mut self, key: impl Into<String>, value: impl Into<JsonValue>) -> Self {
+    self.metadata.insert(key.into(), value.into());
+    self
+  }
+}
+
 /// 获取连接数据动作
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GetConnectionDataAction {
@@ -40,6 +92,47 @@ pub struct GetConnectionDataAction {
   pub action_id: Uuid,
   /// 动作元数据
   pub metadata: HashMap<String, JsonValue>,
+}
+
+impl GetConnectionDataAction {
+  pub fn new(connection_type: ConnectionKind, connection_index: usize, action_id: Uuid) -> Self {
+    Self {
+      connection_type,
+      connection_index,
+      action_id,
+      metadata: HashMap::default(),
+    }
+  }
+
+  pub fn with_connection_type(mut self, connection_type: ConnectionKind) -> Self {
+    self.connection_type = connection_type;
+    self
+  }
+
+  pub fn with_connection_index(mut self, connection_index: usize) -> Self {
+    self.connection_index = connection_index;
+    self
+  }
+
+  pub fn with_action_id(mut self, action_id: Uuid) -> Self {
+    self.action_id = action_id;
+    self
+  }
+
+  pub fn with_metadata<I, K, V>(mut self, metadata: I) -> Self
+  where
+    I: IntoIterator<Item = (K, V)>,
+    K: Into<String>,
+    V: Into<JsonValue>,
+  {
+    self.metadata = metadata.into_iter().map(|(k, v)| (k.into(), v.into())).collect();
+    self
+  }
+
+  pub fn add_metadata(mut self, key: impl Into<String>, value: impl Into<JsonValue>) -> Self {
+    self.metadata.insert(key.into(), value.into());
+    self
+  }
 }
 
 /// 引擎响应结构
@@ -64,6 +157,37 @@ pub struct EngineResult {
   pub status: NodeExecutionStatus,
   /// 错误信息（如果有）
   pub error: Option<String>,
+}
+
+impl EngineResult {
+  pub fn new(action: EngineAction, data: ExecutionDataMap, status: NodeExecutionStatus) -> Self {
+    Self {
+      action,
+      data,
+      status,
+      error: None,
+    }
+  }
+
+  pub fn with_action(mut self, action: EngineAction) -> Self {
+    self.action = action;
+    self
+  }
+
+  pub fn with_data(mut self, data: ExecutionDataMap) -> Self {
+    self.data = data;
+    self
+  }
+
+  pub fn with_status(mut self, status: NodeExecutionStatus) -> Self {
+    self.status = status;
+    self
+  }
+
+  pub fn with_error(mut self, error: impl Into<String>) -> Self {
+    self.error = Some(error.into());
+    self
+  }
 }
 
 /// 引擎请求结构

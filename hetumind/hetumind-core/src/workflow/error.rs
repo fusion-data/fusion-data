@@ -3,7 +3,6 @@ use chrono::{DateTime, FixedOffset};
 use fusionsql::SqlError;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
-use typed_builder::TypedBuilder;
 
 use crate::{
   types::JsonValue,
@@ -181,7 +180,7 @@ pub enum RegistrationError {
 }
 
 // 错误工作流触发数据结构
-#[derive(Debug, Clone, Serialize, Deserialize, TypedBuilder)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WorkflowErrorData {
   /// 错误来源工作流信息
   pub workflow: WorkflowErrorSource,
@@ -189,6 +188,26 @@ pub struct WorkflowErrorData {
   pub execution: Option<ExecutionErrorInfo>,
   /// 触发器错误信息（如果没有执行上下文）
   pub trigger: Option<TriggerErrorInfo>,
+}
+
+impl WorkflowErrorData {
+  pub fn new(workflow: WorkflowErrorSource) -> Self {
+    Self {
+      workflow,
+      execution: None,
+      trigger: None,
+    }
+  }
+
+  pub fn with_execution(mut self, execution: ExecutionErrorInfo) -> Self {
+    self.execution = Some(execution);
+    self
+  }
+
+  pub fn with_trigger(mut self, trigger: TriggerErrorInfo) -> Self {
+    self.trigger = Some(trigger);
+    self
+  }
 }
 
 impl TryFrom<WorkflowErrorData> for ExecutionData {

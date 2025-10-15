@@ -7,7 +7,7 @@ use fusion_web::{WebResult, ok_json};
 use fusionsql::{ModelManager, page::PageResult};
 use utoipa_axum::router::OpenApiRouter;
 
-use jieyuan_core::model::{Policy, PolicyForCreate, PolicyForPage, PolicyForUpdate};
+use jieyuan_core::model::{PolicyEntity, PolicyForCreate, PolicyForPage, PolicyForUpdate};
 
 use crate::access_control::PolicySvc;
 
@@ -46,12 +46,12 @@ async fn create_policy(State(app): State<Application>, Json(req): Json<PolicyFor
     ("id" = i64, Path, description = "策略ID")
   ),
   responses(
-    (status = 200, description = "获取成功", body = Option<Policy>),
+    (status = 200, description = "获取成功", body = Option<PolicyEntity>),
     (status = 404, description = "策略不存在")
   ),
   tag = "策略管理"
 )]
-async fn get_policy(State(app): State<Application>, Path(id): Path<i64>) -> WebResult<Option<Policy>> {
+async fn get_policy(State(app): State<Application>, Path(id): Path<i64>) -> WebResult<Option<PolicyEntity>> {
   let mm = app.get_component::<ModelManager>().unwrap();
   let policy_svc = PolicySvc::new(mm);
   let policy = policy_svc.find_option_by_id(id).await?;
@@ -109,7 +109,7 @@ async fn delete_policy(State(app): State<Application>, Path(id): Path<i64>) -> W
   path = "/page",
   request_body = PolicyForPage,
   responses(
-    (status = 200, description = "查询成功", body = fusionsql::page::PageResult<Policy>),
+    (status = 200, description = "查询成功", body = fusionsql::page::PageResult<PolicyEntity>),
     (status = 400, description = "请求参数错误")
   ),
   tag = "策略管理"
@@ -117,7 +117,7 @@ async fn delete_policy(State(app): State<Application>, Path(id): Path<i64>) -> W
 async fn list_policies(
   State(app): State<Application>,
   Json(req): Json<PolicyForPage>,
-) -> WebResult<PageResult<Policy>> {
+) -> WebResult<PageResult<PolicyEntity>> {
   let mm = app.get_component::<ModelManager>().unwrap();
   let policy_svc = PolicySvc::new(mm);
   let result = policy_svc.page(req).await?;

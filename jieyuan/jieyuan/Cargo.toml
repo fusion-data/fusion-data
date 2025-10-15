@@ -34,6 +34,7 @@ derive-getters = { workspace = true }
 typed-builder = { workspace = true }
 enum-iterator = { workspace = true }
 uuid = { workspace = true }
+semver = { workspace = true }
 
 # -- tokio & async
 tokio = { workspace = true }

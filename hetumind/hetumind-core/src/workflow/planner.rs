@@ -320,22 +320,10 @@ mod tests {
 
     // 创建节点
     let nodes = vec![
-      WorkflowNode::builder()
-        .kind(NodeKind::from("test::TestNode".to_string()))
-        .name("node_A".into())
-        .build(),
-      WorkflowNode::builder()
-        .kind(NodeKind::from("test::TestNode".to_string()))
-        .name("node_B".into())
-        .build(),
-      WorkflowNode::builder()
-        .kind(NodeKind::from("test::TestNode".to_string()))
-        .name("node_C".into())
-        .build(),
-      WorkflowNode::builder()
-        .kind(NodeKind::from("test::TestNode".to_string()))
-        .name("node_D".into())
-        .build(),
+      WorkflowNode::new(NodeKind::new("test::TestNode"), "node_A"),
+      WorkflowNode::new(NodeKind::new("test::TestNode"), "node_B"),
+      WorkflowNode::new(NodeKind::new("test::TestNode"), "node_C"),
+      WorkflowNode::new(NodeKind::from("test::TestNode"), "node_D"),
     ];
 
     // 创建连接关系
@@ -363,12 +351,7 @@ mod tests {
     connections.insert("node_C".into(), main_connections_c);
 
     // 创建工作流
-    let workflow = Workflow::builder()
-      .id(WorkflowId::now_v7())
-      .name("Test Workflow")
-      .nodes(nodes)
-      .connections(connections)
-      .build();
+    let workflow = Workflow::new(WorkflowId::now_v7(), "Test Workflow").with_nodes(nodes).with_connections(connections);
 
     // 构建执行图
     ExecutionGraph::new(&workflow)

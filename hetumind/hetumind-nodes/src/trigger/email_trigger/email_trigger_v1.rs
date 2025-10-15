@@ -5,10 +5,12 @@ use hetumind_core::types::JsonValue;
 use hetumind_core::version::Version;
 use hetumind_core::workflow::{
   ConnectionKind, ExecutionDataItems, ExecutionDataMap, NodeDefinition, NodeExecutable, NodeExecutionContext,
-  NodeExecutionError, NodeGroupKind, NodeProperty, RegistrationError, make_execution_data_map,
+  NodeExecutionError, NodeGroupKind, NodeProperty, NodePropertyKind, RegistrationError, make_execution_data_map,
 };
 
 use crate::constants::EMAIL_TRIGGER_NODE_KIND;
+
+use serde_json::json;
 
 use super::{EmailProcessingConfig, EmailReadFormat, EmailTriggerConfig, ImapAuthentication, ImapSecurity};
 
@@ -259,329 +261,277 @@ impl EmailTriggerV1 {
       .add_group(NodeGroupKind::Trigger)
       .with_description("Triggers workflow when new emails are received via IMAP")
       .add_property(
-        NodeProperty::builder()
-          .display_name("IMAP Host")
-          .name("imap_host")
-          .kind(hetumind_core::workflow::NodePropertyKind::String)
-          .required(true)
-          .description("IMAP server hostname (e.g., imap.gmail.com)")
-          .hint("e.g., imap.gmail.com")
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("IMAP Host")
+          .with_name("imap_host")
+          .with_required(true)
+          .with_description("IMAP server hostname (e.g., imap.gmail.com)")
+          .with_hint("e.g., imap.gmail.com"),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("IMAP Port")
-          .name("imap_port")
-          .kind(hetumind_core::workflow::NodePropertyKind::Number)
-          .required(true)
-          .description("IMAP server port number")
-          .value(JsonValue::Number(serde_json::Number::from(993)))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Number)
+          .with_display_name("IMAP Port")
+          .with_name("imap_port")
+          .with_required(true)
+          .with_description("IMAP server port number")
+          .with_value(json!(993)),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Security")
-          .name("imap_security")
-          .kind(hetumind_core::workflow::NodePropertyKind::Options)
-          .options(vec![
+        NodeProperty::new(NodePropertyKind::Options)
+          .with_display_name("Security")
+          .with_name("imap_security")
+          .with_options(vec![
             Box::new(NodeProperty::new_option(
               "SSL/TLS",
               "ssl",
-              JsonValue::String("ssl".to_string()),
-              hetumind_core::workflow::NodePropertyKind::String,
+              json!("ssl"),
+              NodePropertyKind::String,
             )),
             Box::new(NodeProperty::new_option(
               "STARTTLS",
               "starttls",
-              JsonValue::String("starttls".to_string()),
-              hetumind_core::workflow::NodePropertyKind::String,
+              json!("starttls"),
+              NodePropertyKind::String,
             )),
             Box::new(NodeProperty::new_option(
               "None",
               "none",
-              JsonValue::String("none".to_string()),
-              hetumind_core::workflow::NodePropertyKind::String,
+              json!("none"),
+              NodePropertyKind::String,
             )),
           ])
-          .required(true)
-          .description("Connection security mode")
-          .value(JsonValue::String("ssl".to_string()))
-          .build(),
+          .with_required(true)
+          .with_description("Connection security mode")
+          .with_value(json!("ssl")),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Authentication")
-          .name("imap_authentication")
-          .kind(hetumind_core::workflow::NodePropertyKind::Options)
-          .options(vec![
+        NodeProperty::new(NodePropertyKind::Options)
+          .with_display_name("Authentication")
+          .with_name("imap_authentication")
+          .with_options(vec![
             Box::new(NodeProperty::new_option(
               "Normal",
               "normal",
-              JsonValue::String("normal".to_string()),
-              hetumind_core::workflow::NodePropertyKind::String,
+              json!("normal"),
+              NodePropertyKind::String,
             )),
             Box::new(NodeProperty::new_option(
               "OAuth 2.0",
               "oauth",
-              JsonValue::String("oauth".to_string()),
-              hetumind_core::workflow::NodePropertyKind::String,
+              json!("oauth"),
+              NodePropertyKind::String,
             )),
             Box::new(NodeProperty::new_option(
               "CRAM-MD5",
               "cram_md5",
-              JsonValue::String("cram_md5".to_string()),
-              hetumind_core::workflow::NodePropertyKind::String,
+              json!("cram_md5"),
+              NodePropertyKind::String,
             )),
             Box::new(NodeProperty::new_option(
               "Digest MD5",
               "digest_md5",
-              JsonValue::String("digest_md5".to_string()),
-              hetumind_core::workflow::NodePropertyKind::String,
+              json!("digest_md5"),
+              NodePropertyKind::String,
             )),
           ])
-          .required(true)
-          .description("IMAP authentication method")
-          .value(JsonValue::String("normal".to_string()))
-          .build(),
+          .with_required(true)
+          .with_description("IMAP authentication method")
+          .with_value(json!("normal")),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Username")
-          .name("imap_username")
-          .kind(hetumind_core::workflow::NodePropertyKind::String)
-          .required(true)
-          .description("IMAP username")
-          .hint("e.g., your-email@gmail.com")
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("Username")
+          .with_name("imap_username")
+          .with_required(true)
+          .with_description("IMAP username")
+          .with_hint("e.g., your-email@gmail.com"),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Password")
-          .name("imap_password")
-          .kind(hetumind_core::workflow::NodePropertyKind::String)
-          .required(true)
-          .description("IMAP password or access token")
-          .hint("Use app-specific password for Gmail")
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("Password")
+          .with_name("imap_password")
+          .with_required(true)
+          .with_description("IMAP password or access token")
+          .with_hint("Use app-specific password for Gmail"),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Mailbox")
-          .name("imap_mailbox")
-          .kind(hetumind_core::workflow::NodePropertyKind::String)
-          .required(false)
-          .description("Mailbox name (default: INBOX)")
-          .value(JsonValue::String("INBOX".to_string()))
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("Mailbox")
+          .with_name("imap_mailbox")
+          .with_required(false)
+          .with_description("Mailbox name (default: INBOX)")
+          .with_value(json!("INBOX")),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Connection Timeout (seconds)")
-          .name("connection_timeout")
-          .kind(hetumind_core::workflow::NodePropertyKind::Number)
-          .required(false)
-          .description("Connection timeout in seconds")
-          .value(JsonValue::Number(serde_json::Number::from(30)))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Number)
+          .with_display_name("Connection Timeout (seconds)")
+          .with_name("connection_timeout")
+          .with_required(false)
+          .with_description("Connection timeout in seconds")
+          .with_value(json!(30)),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Read Timeout (seconds)")
-          .name("read_timeout")
-          .kind(hetumind_core::workflow::NodePropertyKind::Number)
-          .required(false)
-          .description("Read timeout in seconds")
-          .value(JsonValue::Number(serde_json::Number::from(60)))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Number)
+          .with_display_name("Read Timeout (seconds)")
+          .with_name("read_timeout")
+          .with_required(false)
+          .with_description("Read timeout in seconds")
+          .with_value(json!(60)),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Email Read Format")
-          .name("email_read_format")
-          .kind(hetumind_core::workflow::NodePropertyKind::Options)
-          .options(vec![
+        NodeProperty::new(NodePropertyKind::Options)
+          .with_display_name("Email Read Format")
+          .with_name("email_read_format")
+          .with_options(vec![
             Box::new(NodeProperty::new_option(
               "Raw",
               "raw",
-              JsonValue::String("raw".to_string()),
-              hetumind_core::workflow::NodePropertyKind::String,
+              json!("raw"),
+              NodePropertyKind::String,
             )),
             Box::new(NodeProperty::new_option(
               "Resolved",
               "resolved",
-              JsonValue::String("resolved".to_string()),
-              hetumind_core::workflow::NodePropertyKind::String,
+              json!("resolved"),
+              NodePropertyKind::String,
             )),
             Box::new(NodeProperty::new_option(
               "Simple",
               "simple",
-              JsonValue::String("simple".to_string()),
-              hetumind_core::workflow::NodePropertyKind::String,
+              json!("simple"),
+              NodePropertyKind::String,
             )),
           ])
-          .required(true)
-          .description("Email output format")
-          .value(JsonValue::String("resolved".to_string()))
-          .build(),
+          .with_required(true)
+          .with_description("Email output format")
+          .with_value(json!("resolved")),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Max Emails per Poll")
-          .name("max_emails")
-          .kind(hetumind_core::workflow::NodePropertyKind::Number)
-          .required(false)
-          .description("Maximum number of emails to process per poll")
-          .value(JsonValue::Number(serde_json::Number::from(50)))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Number)
+          .with_display_name("Max Emails per Poll")
+          .with_name("max_emails")
+          .with_required(false)
+          .with_description("Maximum number of emails to process per poll")
+          .with_value(json!(50)),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Mark as Read")
-          .name("mark_as_read")
-          .kind(hetumind_core::workflow::NodePropertyKind::Boolean)
-          .required(false)
-          .description("Mark processed emails as read")
-          .value(JsonValue::Bool(true))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Boolean)
+          .with_display_name("Mark as Read")
+          .with_name("mark_as_read")
+          .with_required(false)
+          .with_description("Mark processed emails as read")
+          .with_value(json!(true)),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Delete After Read")
-          .name("delete_after_read")
-          .kind(hetumind_core::workflow::NodePropertyKind::Boolean)
-          .required(false)
-          .description("Delete emails after processing")
-          .value(JsonValue::Bool(false))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Boolean)
+          .with_display_name("Delete After Read")
+          .with_name("delete_after_read")
+          .with_required(false)
+          .with_description("Delete emails after processing")
+          .with_value(json!(false)),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Enable Filter")
-          .name("enable_filter")
-          .kind(hetumind_core::workflow::NodePropertyKind::Boolean)
-          .required(false)
-          .description("Enable email filtering")
-          .value(JsonValue::Bool(false))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Boolean)
+          .with_display_name("Enable Filter")
+          .with_name("enable_filter")
+          .with_required(false)
+          .with_description("Enable email filtering")
+          .with_value(json!(false)),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("From Filter")
-          .name("from_filter")
-          .kind(hetumind_core::workflow::NodePropertyKind::String)
-          .required(false)
-          .description("Filter by sender (supports wildcards)")
-          .hint("e.g., noreply@*.com, support@company.com")
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("From Filter")
+          .with_name("from_filter")
+          .with_required(false)
+          .with_description("Filter by sender (supports wildcards)")
+          .with_hint("e.g., noreply@*.com, support@company.com"),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("To Filter")
-          .name("to_filter")
-          .kind(hetumind_core::workflow::NodePropertyKind::String)
-          .required(false)
-          .description("Filter by recipient (supports wildcards)")
-          .hint("e.g., support@*.com")
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("To Filter")
+          .with_name("to_filter")
+          .with_required(false)
+          .with_description("Filter by recipient (supports wildcards)")
+          .with_hint("e.g., support@*.com"),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Subject Filter")
-          .name("subject_filter")
-          .kind(hetumind_core::workflow::NodePropertyKind::String)
-          .required(false)
-          .description("Filter by subject (supports wildcards)")
-          .hint("e.g., *Invoice*, *Alert*")
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("Subject Filter")
+          .with_name("subject_filter")
+          .with_required(false)
+          .with_description("Filter by subject (supports wildcards)")
+          .with_hint("e.g., *Invoice*, *Alert*"),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Content Filter")
-          .name("content_filter")
-          .kind(hetumind_core::workflow::NodePropertyKind::String)
-          .required(false)
-          .description("Filter by content keywords")
-          .hint("e.g., urgent, important")
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("Content Filter")
+          .with_name("content_filter")
+          .with_required(false)
+          .with_description("Filter by content keywords")
+          .with_hint("e.g., urgent, important"),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Read Only Unread")
-          .name("read_only_unread")
-          .kind(hetumind_core::workflow::NodePropertyKind::Boolean)
-          .required(false)
-          .description("Only process unread emails")
-          .value(JsonValue::Bool(true))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Boolean)
+          .with_display_name("Read Only Unread")
+          .with_name("read_only_unread")
+          .with_required(false)
+          .with_description("Only process unread emails")
+          .with_value(json!(true)),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Has Attachments")
-          .name("has_attachments_filter")
-          .kind(hetumind_core::workflow::NodePropertyKind::Boolean)
-          .required(false)
-          .description("Filter emails with attachments")
-          .build(),
+        NodeProperty::new(NodePropertyKind::Boolean)
+          .with_display_name("Has Attachments")
+          .with_name("has_attachments_filter")
+          .with_required(false)
+          .with_description("Filter emails with attachments"),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Download Attachments")
-          .name("download_attachments")
-          .kind(hetumind_core::workflow::NodePropertyKind::Boolean)
-          .required(false)
-          .description("Download email attachments")
-          .value(JsonValue::Bool(true))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Boolean)
+          .with_display_name("Download Attachments")
+          .with_name("download_attachments")
+          .with_required(false)
+          .with_description("Download email attachments")
+          .with_value(json!(true)),
       )
       .add_property(
-        NodeProperty::builder()
-        .display_name("Max Attachment Size (bytes)")
-        .name("max_attachment_size")
-        .kind(hetumind_core::workflow::NodePropertyKind::Number)
-        .required(false)
-        .description("Maximum attachment size in bytes")
-        .value(JsonValue::Number(serde_json::Number::from(10485760))) // 10MB
-        .build(),
+        NodeProperty::new(NodePropertyKind::Number)
+        .with_display_name("Max Attachment Size (bytes)")
+        .with_name("max_attachment_size")
+        .with_required(false)
+        .with_description("Maximum attachment size in bytes")
+        .with_value(json!(10485760)), // 10MB
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Allowed File Types")
-          .name("allowed_file_types")
-          .kind(hetumind_core::workflow::NodePropertyKind::String)
-          .required(false)
-          .description("Comma-separated list of allowed file extensions")
-          .hint("e.g., pdf,doc,jpg,png")
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("Allowed File Types")
+          .with_name("allowed_file_types")
+          .with_required(false)
+          .with_description("Comma-separated list of allowed file extensions")
+          .with_hint("e.g., pdf,doc,jpg,png"),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Forbidden File Types")
-          .name("forbidden_file_types")
-          .kind(hetumind_core::workflow::NodePropertyKind::String)
-          .required(false)
-          .description("Comma-separated list of forbidden file extensions")
-          .hint("e.g., exe,bat,scr")
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("Forbidden File Types")
+          .with_name("forbidden_file_types")
+          .with_required(false)
+          .with_description("Comma-separated list of forbidden file extensions")
+          .with_hint("e.g., exe,bat,scr"),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Poll Interval (seconds)")
-          .name("poll_interval")
-          .kind(hetumind_core::workflow::NodePropertyKind::Number)
-          .required(true)
-          .description("How often to check for new emails")
-          .value(JsonValue::Number(serde_json::Number::from(60)))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Number)
+          .with_display_name("Poll Interval (seconds)")
+          .with_name("poll_interval")
+          .with_required(true)
+          .with_description("How often to check for new emails")
+          .with_value(json!(60)),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Enabled")
-          .name("enabled")
-          .kind(hetumind_core::workflow::NodePropertyKind::Boolean)
-          .required(false)
-          .description("Enable or disable the trigger")
-          .value(JsonValue::Bool(true))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Boolean)
+          .with_display_name("Enabled")
+          .with_name("enabled")
+          .with_required(false)
+          .with_description("Enable or disable the trigger")
+          .with_value(json!(true)),
       )
   }
 }

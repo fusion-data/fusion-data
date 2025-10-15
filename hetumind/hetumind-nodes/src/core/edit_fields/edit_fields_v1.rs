@@ -245,74 +245,63 @@ impl TryFrom<NodeDefinition> for EditFieldsV1 {
   fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
     let definition = base
       .with_version(Version::new(1, 0, 0))
-      .add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build())
-      .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build())
+      .add_input(InputPortConfig::new(ConnectionKind::Main, "Input"))
+      .add_output(OutputPortConfig::new(ConnectionKind::Main, "Output"))
       .add_property(
         // 操作模式
-        NodeProperty::builder()
-          .display_name("Operation Mode".to_string())
-          .name("mode")
-          .kind(NodePropertyKind::Options)
-          .required(true)
-          .description("Select the operation mode for field editing".to_string())
-          .value(json!("manual"))
-          .options(vec![
+        NodeProperty::new(NodePropertyKind::Options)
+          .with_display_name("Operation Mode")
+          .with_name("mode")
+          .with_required(true)
+          .with_description("Select the operation mode for field editing")
+          .with_value(json!("manual"))
+          .with_options(vec![
             Box::new(NodeProperty::new_option("Manual Mapping", "manual", json!("manual"), NodePropertyKind::String)),
             Box::new(NodeProperty::new_option("JSON", "json", json!("json"), NodePropertyKind::String)),
-          ])
-          .build(),
+          ]),
       )
       .add_property(
         // 手动映射模式配置
-        NodeProperty::builder()
-          .display_name("Field Operations".to_string())
-          .name("fields")
-          .kind(NodePropertyKind::Collection)
-          .required(false)
-          .description("Field operations to apply (Manual Mapping mode)".to_string())
-          .value(json!([]))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Collection)
+          .with_display_name("Field Operations")
+          .with_name("fields")
+          .with_required(false)
+          .with_description("Field operations to apply (Manual Mapping mode)")
+          .with_value(json!([])),
       )
       .add_property(
         // JSON 模式配置
-        NodeProperty::builder()
-          .display_name("JSON Output Template".to_string())
-          .name("json_output")
-          .kind(NodePropertyKind::String)
-          .required(false)
-          .description("JSON template for output (JSON mode)".to_string())
-          .value(json!("{}"))
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("JSON Output Template")
+          .with_name("json_output")
+          .with_required(false)
+          .with_description("JSON template for output (JSON mode)")
+          .with_value(json!("{}")),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Use Expressions".to_string())
-          .name("use_expressions")
-          .kind(NodePropertyKind::Boolean)
-          .required(false)
-          .description("Enable expression support in JSON template".to_string())
-          .value(json!(true))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Boolean)
+          .with_display_name("Use Expressions")
+          .with_name("use_expressions")
+          .with_required(false)
+          .with_description("Enable expression support in JSON template")
+          .with_value(json!(true)),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Validate JSON".to_string())
-          .name("validate_json")
-          .kind(NodePropertyKind::Boolean)
-          .required(false)
-          .description("Validate JSON format before processing".to_string())
-          .value(json!(true))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Boolean)
+          .with_display_name("Validate JSON")
+          .with_name("validate_json")
+          .with_required(false)
+          .with_description("Validate JSON format before processing")
+          .with_value(json!(true)),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("JSON Error Handling".to_string())
-          .name("error_handling")
-          .kind(NodePropertyKind::Options)
-          .required(false)
-          .description("How to handle JSON errors".to_string())
-          .value(json!("stop_execution"))
-          .options(vec![
+        NodeProperty::new(NodePropertyKind::Options)
+          .with_display_name("JSON Error Handling")
+          .with_name("error_handling")
+          .with_required(false)
+          .with_description("How to handle JSON errors")
+          .with_value(json!("stop_execution"))
+          .with_options(vec![
             Box::new(NodeProperty::new_option(
               "Stop Execution",
               "stop_execution",
@@ -332,111 +321,92 @@ impl TryFrom<NodeDefinition> for EditFieldsV1 {
               NodePropertyKind::String,
             )),
             Box::new(NodeProperty::new_option("Skip Item", "skip_item", json!("skip_item"), NodePropertyKind::String)),
-          ])
-          .build(),
+          ]),
       )
       .add_property(
         // 输出控制
-        NodeProperty::builder()
-          .display_name("Include Mode".to_string())
-          .name("include_mode")
-          .kind(NodePropertyKind::Options)
-          .required(false)
-          .description("Which input fields to include in output".to_string())
-          .value(json!("all"))
-          .options(vec![
+        NodeProperty::new(NodePropertyKind::Options)
+          .with_display_name("Include Mode")
+          .with_name("include_mode")
+          .with_required(false)
+          .with_description("Which input fields to include in output")
+          .with_value(json!("all"))
+          .with_options(vec![
             Box::new(NodeProperty::new_option("All", "all", json!("all"), NodePropertyKind::String)),
             Box::new(NodeProperty::new_option("None", "none", json!("none"), NodePropertyKind::String)),
             Box::new(NodeProperty::new_option("Selected", "selected", json!("selected"), NodePropertyKind::String)),
             Box::new(NodeProperty::new_option("Except", "except", json!("except"), NodePropertyKind::String)),
-          ])
-          .build(),
+          ]),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Selected Fields".to_string())
-          .name("selected_fields")
-          .kind(NodePropertyKind::String)
-          .required(false)
-          .description("Fields to include or exclude".to_string())
-          .value(json!([]))
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("Selected Fields")
+          .with_name("selected_fields")
+          .with_required(false)
+          .with_description("Fields to include or exclude")
+          .with_value(json!([])),
       )
       .add_property(
         // 高级选项
-        NodeProperty::builder()
-          .display_name("Enable Dot Notation".to_string())
-          .name("dot_notation")
-          .kind(NodePropertyKind::Boolean)
-          .required(false)
-          .description("Enable dot notation for nested field access".to_string())
-          .value(json!(true))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Boolean)
+          .with_display_name("Enable Dot Notation")
+          .with_name("dot_notation")
+          .with_required(false)
+          .with_description("Enable dot notation for nested field access")
+          .with_value(json!(true)),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Ignore Conversion Errors".to_string())
-          .name("ignore_conversion_errors")
-          .kind(NodePropertyKind::Boolean)
-          .required(false)
-          .description("Ignore type conversion errors and continue processing".to_string())
-          .value(json!(false))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Boolean)
+          .with_display_name("Ignore Conversion Errors")
+          .with_name("ignore_conversion_errors")
+          .with_required(false)
+          .with_description("Ignore type conversion errors and continue processing")
+          .with_value(json!(false)),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Binary Data Mode".to_string())
-          .name("binary_data_mode")
-          .kind(NodePropertyKind::Options)
-          .required(false)
-          .description("How to handle binary data".to_string())
-          .value(json!("auto"))
-          .options(vec![
+        NodeProperty::new(NodePropertyKind::Options)
+          .with_display_name("Binary Data Mode")
+          .with_name("binary_data_mode")
+          .with_required(false)
+          .with_description("How to handle binary data")
+          .with_value(json!("auto"))
+          .with_options(vec![
             Box::new(NodeProperty::new_option("Include", "include", json!("include"), NodePropertyKind::String)),
             Box::new(NodeProperty::new_option("Strip", "strip", json!("strip"), NodePropertyKind::String)),
             Box::new(NodeProperty::new_option("Auto", "auto", json!("auto"), NodePropertyKind::String)),
-          ])
-          .build(),
+          ]),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Keep Original Type".to_string())
-          .name("keep_original_type")
-          .kind(NodePropertyKind::Boolean)
-          .required(false)
-          .description("Try to preserve original data types".to_string())
-          .value(json!(false))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Boolean)
+          .with_display_name("Keep Original Type")
+          .with_name("keep_original_type")
+          .with_required(false)
+          .with_description("Try to preserve original data types")
+          .with_value(json!(false)),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Duplicate Item".to_string())
-          .name("duplicate_item")
-          .kind(NodePropertyKind::Boolean)
-          .required(false)
-          .description("Duplicate output items for testing".to_string())
-          .value(json!(false))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Boolean)
+          .with_display_name("Duplicate Item")
+          .with_name("duplicate_item")
+          .with_required(false)
+          .with_description("Duplicate output items for testing")
+          .with_value(json!(false)),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Duplicate Count".to_string())
-          .name("duplicate_count")
-          .kind(NodePropertyKind::Number)
-          .required(false)
-          .description("Number of times to duplicate each item".to_string())
-          .value(json!(0))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Number)
+          .with_display_name("Duplicate Count")
+          .with_name("duplicate_count")
+          .with_required(false)
+          .with_description("Number of times to duplicate each item")
+          .with_value(json!(0)),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Debug Mode".to_string())
-          .name("debug_mode")
-          .kind(NodePropertyKind::Boolean)
-          .required(false)
-          .description("Enable debug mode with detailed logging".to_string())
-          .value(json!(false))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Boolean)
+          .with_display_name("Debug Mode")
+          .with_name("debug_mode")
+          .with_required(false)
+          .with_description("Enable debug mode with detailed logging")
+          .with_value(json!(false)),
       );
 
     Ok(Self { definition: Arc::new(definition) })
@@ -471,12 +441,9 @@ mod tests {
     param_map.insert("include_mode".to_string(), json!("all"));
 
     // 模拟节点参数
-    let node = WorkflowNode::builder()
-      .kind(NodeKind::from(EDIT_FIELDS_NODE_KIND))
-      .name("test_node".into())
-      .display_name("Test Node")
-      .parameters(ParameterMap::from(param_map))
-      .build();
+    let node = WorkflowNode::new(NodeKind::from(EDIT_FIELDS_NODE_KIND), "test_node")
+      .with_display_name("Test Node")
+      .with_parameters(ParameterMap::from(param_map));
 
     let config = v1.parse_node_config(&node).unwrap();
     assert_eq!(config.mode, OperationMode::Manual);
@@ -504,12 +471,9 @@ mod tests {
     param_map.insert("error_handling".to_string(), json!("stop_execution"));
 
     // 模拟节点参数
-    let node = WorkflowNode::builder()
-      .kind(NodeKind::from(EDIT_FIELDS_NODE_KIND))
-      .name("test_node".into())
-      .display_name("Test Node")
-      .parameters(ParameterMap::from(param_map))
-      .build();
+    let node = WorkflowNode::new(NodeKind::from(EDIT_FIELDS_NODE_KIND), "test_node")
+      .with_display_name("Test Node")
+      .with_parameters(ParameterMap::from(param_map));
 
     let config = v1.parse_node_config(&node).unwrap();
     assert_eq!(config.mode, OperationMode::Json);

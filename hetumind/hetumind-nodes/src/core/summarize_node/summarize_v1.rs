@@ -160,40 +160,35 @@ impl TryFrom<NodeDefinition> for SummarizeV1 {
   fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
     let definition = base
       .with_version(Version::new(1, 0, 0))
-      .add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build())
-      .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build())
+      .add_input(InputPortConfig::new(ConnectionKind::Main, "Input"))
+      .add_output(OutputPortConfig::new(ConnectionKind::Main, "Output"))
       .add_property(
         // 聚合字段配置
-        NodeProperty::builder()
-          .display_name("聚合字段")
-          .name("aggregate_fields")
-          .kind(NodePropertyKind::FixedCollection)
-          .required(true)
-          .description("要聚合的字段配置列表")
-          .placeholder("添加聚合字段...")
-          .build(),
+        NodeProperty::new(NodePropertyKind::FixedCollection)
+          .with_display_name("聚合字段")
+          .with_name("aggregate_fields")
+          .with_required(true)
+          .with_description("要聚合的字段配置列表")
+          .with_placeholder("添加聚合字段..."),
       )
       .add_property(
         // 分组配置
-        NodeProperty::builder()
-          .display_name("分组配置")
-          .name("group_by")
-          .kind(NodePropertyKind::Json)
-          .required(false)
-          .description("按字段分组进行聚合")
-          .placeholder("配置分组...")
-          .build(),
+        NodeProperty::new(NodePropertyKind::Json)
+          .with_display_name("分组配置")
+          .with_name("group_by")
+          .with_required(false)
+          .with_description("按字段分组进行聚合")
+          .with_placeholder("配置分组..."),
       )
       .add_property(
         // 输出格式
-        NodeProperty::builder()
-          .display_name("输出格式")
-          .name("output_format")
-          .kind(NodePropertyKind::Options)
-          .required(false)
-          .description("选择输出数据的格式")
-          .value(json!(OutputFormat::Json))
-          .options(vec![
+        NodeProperty::new(NodePropertyKind::Options)
+          .with_display_name("输出格式")
+          .with_name("output_format")
+          .with_required(false)
+          .with_description("选择输出数据的格式")
+          .with_value(json!(OutputFormat::Json))
+          .with_options(vec![
             Box::new(NodeProperty::new_option("JSON", "json", json!(OutputFormat::Json), NodePropertyKind::String)),
             Box::new(NodeProperty::new_option(
               "键值对数组",
@@ -207,19 +202,17 @@ impl TryFrom<NodeDefinition> for SummarizeV1 {
               json!(OutputFormat::TableFormat),
               NodePropertyKind::String,
             )),
-          ])
-          .build(),
+          ]),
       )
       .add_property(
         // 序列化风格
-        NodeProperty::builder()
-          .display_name("序列化风格")
-          .name("serialization_style")
-          .kind(NodePropertyKind::Options)
-          .required(false)
-          .description("字段名的序列化风格")
-          .value(json!(SerializationStyle::SnakeCase))
-          .options(vec![
+        NodeProperty::new(NodePropertyKind::Options)
+          .with_display_name("序列化风格")
+          .with_name("serialization_style")
+          .with_required(false)
+          .with_description("字段名的序列化风格")
+          .with_value(json!(SerializationStyle::SnakeCase))
+          .with_options(vec![
             Box::new(NodeProperty::new_option(
               "snake_case",
               "snake_case",
@@ -244,40 +237,34 @@ impl TryFrom<NodeDefinition> for SummarizeV1 {
               json!(SerializationStyle::KebabCase),
               NodePropertyKind::String,
             )),
-          ])
-          .build(),
+          ]),
       )
       .add_property(
         // 高级选项
-        NodeProperty::builder()
-          .display_name("高级选项")
-          .name("advanced_options")
-          .kind(NodePropertyKind::String)
-          .required(false)
-          .description("高级配置选项")
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("高级选项")
+          .with_name("advanced_options")
+          .with_required(false)
+          .with_description("高级配置选项"),
       )
       .add_property(
         // 包含元数据
-        NodeProperty::builder()
-          .display_name("包含元数据")
-          .name("include_metadata")
-          .kind(NodePropertyKind::Boolean)
-          .required(false)
-          .description("是否在输出中包含聚合元数据")
-          .value(json!(false))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Boolean)
+          .with_display_name("包含元数据")
+          .with_name("include_metadata")
+          .with_required(false)
+          .with_description("是否在输出中包含聚合元数据")
+          .with_value(json!(false)),
       )
       .add_property(
         // 错误处理
-        NodeProperty::builder()
-          .display_name("错误处理")
-          .name("error_handling")
-          .kind(NodePropertyKind::Options)
-          .required(false)
-          .description("遇到错误时的处理策略")
-          .value(json!(ErrorHandlingStrategy::SkipError))
-          .options(vec![
+        NodeProperty::new(NodePropertyKind::Options)
+          .with_display_name("错误处理")
+          .with_name("error_handling")
+          .with_required(false)
+          .with_description("遇到错误时的处理策略")
+          .with_value(json!(ErrorHandlingStrategy::SkipError))
+          .with_options(vec![
             Box::new(NodeProperty::new_option(
               "跳过错误值",
               "skip_error",
@@ -302,28 +289,23 @@ impl TryFrom<NodeDefinition> for SummarizeV1 {
               json!(ErrorHandlingStrategy::LogAndContinue),
               NodePropertyKind::String,
             )),
-          ])
-          .build(),
+          ]),
       )
       .add_property(
         // 聚合字段详细配置（用于 FixedCollection）
-        NodeProperty::builder()
-          .display_name("字段配置")
-          .name("field_config")
-          .kind(NodePropertyKind::String)
-          .required(false)
-          .description("聚合字段的详细配置")
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("字段配置")
+          .with_name("field_config")
+          .with_required(false)
+          .with_description("聚合字段的详细配置"),
       )
       .add_property(
         // 分组字段详细配置
-        NodeProperty::builder()
-          .display_name("分组字段配置")
-          .name("group_field_config")
-          .kind(NodePropertyKind::String)
-          .required(false)
-          .description("分组字段的详细配置")
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("分组字段配置")
+          .with_name("group_field_config")
+          .with_required(false)
+          .with_description("分组字段的详细配置"),
       );
     Ok(Self { definition: Arc::new(definition) })
   }

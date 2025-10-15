@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
 
 use fusion_common::helper::{default_bool_true, default_usize_0, is_true};
-use typed_builder::TypedBuilder;
 
 use super::NodeName;
 
@@ -63,39 +62,76 @@ pub struct ConnectionCondition {
   pub description: Option<String>,
 }
 
+impl ConnectionCondition {
+  pub fn new(expression: impl Into<String>) -> Self {
+    Self {
+      expression: expression.into(),
+      description: None,
+    }
+  }
+
+  pub fn with_expression(mut self, expression: impl Into<String>) -> Self {
+    self.expression = expression.into();
+    self
+  }
+
+  pub fn with_description(mut self, description: impl Into<String>) -> Self {
+    self.description = Some(description.into());
+    self
+  }
+}
+
 /// 单个连接定义
-#[derive(Debug, Clone, Serialize, Deserialize, TypedBuilder)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Connection {
   /// 节点ID
-  #[builder(setter(into))]
-  node_name: NodeName,
+  pub node_name: NodeName,
 
   /// 端口类型
-  kind: ConnectionKind,
+  pub kind: ConnectionKind,
 
   /// 端口索引
   #[serde(default = "default_usize_0")]
-  index: ConnectionIndex,
+  pub index: ConnectionIndex,
 
   /// 连接条件 (可选，用于条件连接)
   #[serde(skip_serializing_if = "Option::is_none")]
-  #[builder(default, setter(strip_option))]
-  condition: Option<ConnectionCondition>,
+  pub condition: Option<ConnectionCondition>,
 
   /// 连接权重 (用于加权合并)
   #[serde(skip_serializing_if = "Option::is_none")]
-  #[builder(default, setter(strip_option))]
-  weight: Option<i32>,
+  pub weight: Option<i32>,
 
   /// 是否启用
   #[serde(default = "default_bool_true", skip_serializing_if = "is_true")]
-  #[builder(default = true)]
-  enabled: bool,
+  pub enabled: bool,
 }
 
 impl Connection {
   pub fn new(node_name: impl Into<NodeName>, kind: ConnectionKind, index: ConnectionIndex) -> Self {
-    Self::builder().node_name(node_name).kind(kind).index(index).build()
+    Self {
+      node_name: node_name.into(),
+      kind,
+      index,
+      condition: None,
+      weight: None,
+      enabled: true,
+    }
+  }
+
+  pub fn with_condition(mut self, condition: ConnectionCondition) -> Self {
+    self.condition = Some(condition);
+    self
+  }
+
+  pub fn with_weight(mut self, weight: i32) -> Self {
+    self.weight = Some(weight);
+    self
+  }
+
+  pub fn with_enabled(mut self, enabled: bool) -> Self {
+    self.enabled = enabled;
+    self
   }
 
   pub fn node_name(&self) -> &NodeName {

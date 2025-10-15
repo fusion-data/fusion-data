@@ -1,6 +1,5 @@
 use fusion_common::helper::{default_bool_true, default_u32_1};
 use serde::{Deserialize, Serialize};
-use typed_builder::TypedBuilder;
 
 use super::{ConnectionKind, NodeName};
 
@@ -11,50 +10,157 @@ pub struct PortInputFilter {
   excludes: Vec<NodeName>,
 }
 
+impl PortInputFilter {
+  pub fn new() -> Self {
+    Self {
+      includes: Vec::default(),
+      excludes: Vec::default(),
+    }
+  }
+
+  pub fn with_includes<I, V>(mut self, includes: I) -> Self
+  where
+    I: IntoIterator<Item = V>,
+    V: Into<NodeName>,
+  {
+    self.includes = includes.into_iter().map(|v| v.into()).collect();
+    self
+  }
+
+  pub fn add_include(mut self, include: impl Into<NodeName>) -> Self {
+    self.includes.push(include.into());
+    self
+  }
+
+  pub fn with_excludes<I, V>(mut self, excludes: I) -> Self
+  where
+    I: IntoIterator<Item = V>,
+    V: Into<NodeName>,
+  {
+    self.excludes = excludes.into_iter().map(|v| v.into()).collect();
+    self
+  }
+
+  pub fn add_exclude(mut self, exclude: impl Into<NodeName>) -> Self {
+    self.excludes.push(exclude.into());
+    self
+  }
+}
+
 /// 节点输入连接
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TypedBuilder)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct InputPortConfig {
-  #[builder(setter(into))]
   pub kind: ConnectionKind,
 
   /// 显示名称。在UI渲染时，系统会根据以下逻辑确定显示的标签
-  #[builder(setter(into))]
   pub display_name: String,
 
   #[serde(default = "default_bool_true")]
-  #[builder(default = true)]
   pub required: bool,
 
-  #[builder(default, setter(strip_option))]
   pub filter: Option<PortInputFilter>,
 
   #[serde(default = "default_u32_1")]
-  #[builder(default = 1)]
   pub max_connections: u32,
 
-  #[builder(default, setter(into, strip_option))]
   pub category: Option<String>,
 }
 
+impl InputPortConfig {
+  pub fn new(kind: ConnectionKind, display_name: impl Into<String>) -> Self {
+    Self {
+      kind,
+      display_name: display_name.into(),
+      required: true,
+      filter: None,
+      max_connections: 1,
+      category: None,
+    }
+  }
+
+  pub fn with_kind(mut self, kind: ConnectionKind) -> Self {
+    self.kind = kind;
+    self
+  }
+
+  pub fn with_display_name(mut self, display_name: impl Into<String>) -> Self {
+    self.display_name = display_name.into();
+    self
+  }
+
+  pub fn with_required(mut self, required: bool) -> Self {
+    self.required = required;
+    self
+  }
+
+  pub fn with_filter(mut self, filter: impl Into<PortInputFilter>) -> Self {
+    self.filter = Some(filter.into());
+    self
+  }
+
+  pub fn with_max_connections(mut self, max_connections: u32) -> Self {
+    self.max_connections = max_connections;
+    self
+  }
+
+  pub fn with_category(mut self, category: impl Into<String>) -> Self {
+    self.category = Some(category.into());
+    self
+  }
+}
+
 /// 节点输出配置
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, TypedBuilder)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct OutputPortConfig {
   pub kind: ConnectionKind,
 
   /// 显示名称。在UI渲染时，系统会根据以下逻辑确定显示的标签
-  #[builder(setter(into))]
   pub display_name: String,
 
   #[serde(default = "default_bool_true")]
-  #[builder(default = true)]
   pub required: bool,
 
   #[serde(default = "default_u32_1")]
-  #[builder(default = 1)]
   pub max_connections: u32,
 
-  #[builder(default, setter(into, strip_option))]
   pub category: Option<String>,
+}
+
+impl OutputPortConfig {
+  pub fn new(kind: ConnectionKind, display_name: impl Into<String>) -> Self {
+    Self {
+      kind,
+      display_name: display_name.into(),
+      required: true,
+      max_connections: 1,
+      category: None,
+    }
+  }
+
+  pub fn with_kind(mut self, kind: ConnectionKind) -> Self {
+    self.kind = kind;
+    self
+  }
+
+  pub fn with_display_name(mut self, display_name: impl Into<String>) -> Self {
+    self.display_name = display_name.into();
+    self
+  }
+
+  pub fn with_required(mut self, required: bool) -> Self {
+    self.required = required;
+    self
+  }
+
+  pub fn with_max_connections(mut self, max_connections: u32) -> Self {
+    self.max_connections = max_connections;
+    self
+  }
+
+  pub fn with_category(mut self, category: impl Into<String>) -> Self {
+    self.category = Some(category.into());
+    self
+  }
 }
 
 // /// 节点输出端口配置

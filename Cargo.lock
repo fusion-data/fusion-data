@@ -2704,7 +2704,6 @@ dependencies = [
  "content_inspector",
  "croner",
  "dashmap",
- "derive_builder",
  "derive_more",
  "dotenvy",
  "duration-str",
@@ -2728,7 +2727,6 @@ dependencies = [
  "strum",
  "thiserror 2.0.17",
  "tokio",
- "typed-builder",
  "uuid",
 ]
 
@@ -3446,6 +3444,7 @@ dependencies = [
  "rust_decimal",
  "sea-query",
  "sea-query-binder",
+ "semver",
  "serde",
  "serde_json",
  "serde_repr",
@@ -3467,6 +3466,7 @@ name = "jieyuan-core"
 version = "0.1.1"
 dependencies = [
  "axum",
+ "chrono",
  "fusion-common",
  "fusion-core",
  "fusion-web",
@@ -3476,6 +3476,7 @@ dependencies = [
  "http",
  "log",
  "sea-query",
+ "semver",
  "serde",
  "serde_json",
  "serde_repr",

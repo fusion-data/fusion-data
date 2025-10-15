@@ -197,18 +197,23 @@ fn make_node_context(
   parents_results: ExecutionDataMap,
   engine_response: Option<EngineResponse>,
 ) -> NodeExecutionContext {
-  NodeExecutionContext::builder()
-    .execution_id(context.execution_id().clone())
-    .workflow(context.workflow())
-    .current_node_name(node_name.clone())
-    .input_data(parents_results)
-    .started_at(now())
-    .user_id(Some(context.ctx().uid()))
-    .env_vars(std::env::vars().collect())
-    .expression_evaluator(ExpressionEvaluator::new())
-    .engine_response(engine_response)
-    .binary_data_manager(Application::global().component())
-    .build()
+  let mut node_context = NodeExecutionContext::new(
+    context.execution_id().clone(),
+    context.workflow(),
+    node_name.clone(),
+    parents_results,
+    Application::global().component(),
+  )
+  .with_started_at(now())
+  .with_user_id(context.ctx().uid())
+  .with_env_vars(std::env::vars().collect())
+  .with_expression_evaluator(ExpressionEvaluator::new());
+
+  if let Some(response) = engine_response {
+    node_context = node_context.with_engine_response(response);
+  }
+
+  node_context
 }
 
 fn collect_parents_results(

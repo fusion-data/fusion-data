@@ -350,18 +350,17 @@ impl TryFrom<NodeDefinition> for WaitV1 {
   fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
     let definition = base
       .with_version(Version::new(1, 0, 0))
-      .add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build())
-      .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build())
+      .add_input(InputPortConfig::new(ConnectionKind::Main, "Input"))
+      .add_output(OutputPortConfig::new(ConnectionKind::Main, "Output"))
       .add_property(
         // 等待模式配置
-        NodeProperty::builder()
-          .display_name("等待模式")
-          .name("wait_mode")
-          .kind(NodePropertyKind::Options)
-          .required(true)
-          .description("选择等待的类型")
-          .value(json!(WaitMode::TimeInterval))
-          .options(vec![
+        NodeProperty::new(NodePropertyKind::Options)
+          .with_display_name("等待模式")
+          .with_name("wait_mode")
+          .with_required(true)
+          .with_description("选择等待的类型")
+          .with_value(json!(WaitMode::TimeInterval))
+          .with_options(vec![
             Box::new(NodeProperty::new_option(
               "时间间隔",
               "time_interval",
@@ -381,74 +380,64 @@ impl TryFrom<NodeDefinition> for WaitV1 {
               NodePropertyKind::String,
             )),
             Box::new(NodeProperty::new_option("表单提交", "form", json!(WaitMode::Form), NodePropertyKind::String)),
-          ])
-          .build(),
+          ]),
       )
       .add_property(
         // 时间间隔配置
-        NodeProperty::builder()
-          .display_name("等待时间")
-          .name("time_amount")
-          .kind(NodePropertyKind::Number)
-          .required(false)
-          .description("等待的时间数量")
-          .placeholder("输入等待时间...")
-          .build(),
+        NodeProperty::new(NodePropertyKind::Number)
+          .with_display_name("等待时间")
+          .with_name("time_amount")
+          .with_required(false)
+          .with_description("等待的时间数量")
+          .with_placeholder("输入等待时间..."),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("时间单位")
-          .name("time_unit")
-          .kind(NodePropertyKind::Options)
-          .required(false)
-          .description("选择时间单位")
-          .value(json!(TimeUnit::Minutes))
-          .options(vec![
+        NodeProperty::new(NodePropertyKind::Options)
+          .with_display_name("时间单位")
+          .with_name("time_unit")
+          .with_required(false)
+          .with_description("选择时间单位")
+          .with_value(json!(TimeUnit::Minutes))
+          .with_options(vec![
             Box::new(NodeProperty::new_option("秒", "seconds", json!(TimeUnit::Seconds), NodePropertyKind::String)),
             Box::new(NodeProperty::new_option("分钟", "minutes", json!(TimeUnit::Minutes), NodePropertyKind::String)),
             Box::new(NodeProperty::new_option("小时", "hours", json!(TimeUnit::Hours), NodePropertyKind::String)),
             Box::new(NodeProperty::new_option("天", "days", json!(TimeUnit::Days), NodePropertyKind::String)),
-          ])
-          .build(),
+          ]),
       )
       .add_property(
         // 特定时间配置
-        NodeProperty::builder()
-          .display_name("特定时间")
-          .name("specific_date_time")
-          .kind(NodePropertyKind::String)
-          .required(false)
-          .description("等待到指定的日期和时间 (RFC3339 格式)")
-          .placeholder("2024-12-31T23:59:59Z")
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("特定时间")
+          .with_name("specific_date_time")
+          .with_required(false)
+          .with_description("等待到指定的日期和时间 (RFC3339 格式)")
+          .with_placeholder("2024-12-31T23:59:59Z"),
       )
       .add_property(
         // Webhook 配置
-        NodeProperty::builder()
-          .display_name("Webhook HTTP 方法")
-          .name("webhook_http_method")
-          .kind(NodePropertyKind::Options)
-          .required(false)
-          .description("Webhook 请求的 HTTP 方法")
-          .value(json!(HttpMethod::Post))
-          .options(vec![
+        NodeProperty::new(NodePropertyKind::Options)
+          .with_display_name("Webhook HTTP 方法")
+          .with_name("webhook_http_method")
+          .with_required(false)
+          .with_description("Webhook 请求的 HTTP 方法")
+          .with_value(json!(HttpMethod::Post))
+          .with_options(vec![
             Box::new(NodeProperty::new_option("GET", "get", json!(HttpMethod::Get), NodePropertyKind::String)),
             Box::new(NodeProperty::new_option("POST", "post", json!(HttpMethod::Post), NodePropertyKind::String)),
             Box::new(NodeProperty::new_option("PUT", "put", json!(HttpMethod::Put), NodePropertyKind::String)),
             Box::new(NodeProperty::new_option("PATCH", "patch", json!(HttpMethod::Patch), NodePropertyKind::String)),
             Box::new(NodeProperty::new_option("DELETE", "delete", json!(HttpMethod::Delete), NodePropertyKind::String)),
-          ])
-          .build(),
+          ]),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Webhook 响应模式")
-          .name("webhook_response_mode")
-          .kind(NodePropertyKind::Options)
-          .required(false)
-          .description("Webhook 响应的模式")
-          .value(json!(ResponseMode::OnReceived))
-          .options(vec![
+        NodeProperty::new(NodePropertyKind::Options)
+          .with_display_name("Webhook 响应模式")
+          .with_name("webhook_response_mode")
+          .with_required(false)
+          .with_description("Webhook 响应的模式")
+          .with_value(json!(ResponseMode::OnReceived))
+          .with_options(vec![
             Box::new(NodeProperty::new_option(
               "接收到响应时立即响应",
               "on_received",
@@ -462,70 +451,57 @@ impl TryFrom<NodeDefinition> for WaitV1 {
               NodePropertyKind::String,
             )),
             Box::new(NodeProperty::new_option("不响应", "never", json!(ResponseMode::Never), NodePropertyKind::String)),
-          ])
-          .build(),
+          ]),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Webhook 后缀")
-          .name("webhook_suffix")
-          .kind(NodePropertyKind::String)
-          .required(false)
-          .description("Webhook URL 的后缀")
-          .placeholder("webhook-suffix")
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("Webhook 后缀")
+          .with_name("webhook_suffix")
+          .with_required(false)
+          .with_description("Webhook URL 的后缀")
+          .with_placeholder("webhook-suffix"),
       )
       .add_property(
         // 表单配置
-        NodeProperty::builder()
-          .display_name("表单标题")
-          .name("form_title")
-          .kind(NodePropertyKind::String)
-          .required(false)
-          .description("表单的标题")
-          .placeholder("请填写表单标题")
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("表单标题")
+          .with_name("form_title")
+          .with_required(false)
+          .with_description("表单的标题")
+          .with_placeholder("请填写表单标题"),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("表单描述")
-          .name("form_description")
-          .kind(NodePropertyKind::String)
-          .required(false)
-          .description("表单的描述信息")
-          .placeholder("请填写以下信息")
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("表单描述")
+          .with_name("form_description")
+          .with_required(false)
+          .with_description("表单的描述信息")
+          .with_placeholder("请填写以下信息"),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("重定向 URL")
-          .name("form_redirect_url")
-          .kind(NodePropertyKind::String)
-          .required(false)
-          .description("表单提交后重定向的 URL")
-          .placeholder("https://example.com/success")
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("重定向 URL")
+          .with_name("form_redirect_url")
+          .with_required(false)
+          .with_description("表单提交后重定向的 URL")
+          .with_placeholder("https://example.com/success"),
       )
       .add_property(
         // 时间限制配置
-        NodeProperty::builder()
-          .display_name("启用时间限制")
-          .name("webhook_limit_wait_time")
-          .kind(NodePropertyKind::Boolean)
-          .required(false)
-          .description("是否限制 Webhook 等待的时间")
-          .value(json!(false))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Boolean)
+          .with_display_name("启用时间限制")
+          .with_name("webhook_limit_wait_time")
+          .with_required(false)
+          .with_description("是否限制 Webhook 等待的时间")
+          .with_value(json!(false)),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("启用时间限制")
-          .name("form_limit_wait_time")
-          .kind(NodePropertyKind::Boolean)
-          .required(false)
-          .description("是否限制表单等待的时间")
-          .value(json!(false))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Boolean)
+          .with_display_name("启用时间限制")
+          .with_name("form_limit_wait_time")
+          .with_required(false)
+          .with_description("是否限制表单等待的时间")
+          .with_value(json!(false)),
       );
     Ok(Self { definition: Arc::new(definition) })
   }

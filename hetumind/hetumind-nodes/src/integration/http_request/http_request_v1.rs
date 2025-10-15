@@ -196,84 +196,68 @@ pub(super) fn create_definition() -> Result<NodeDefinition, RegistrationError> {
 
   // Add input port
   definition =
-    definition.add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build());
+    definition.add_input(InputPortConfig::new(ConnectionKind::Main, "Input"));
 
   // Add output port
   definition =
-    definition.add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build());
+    definition.add_output(OutputPortConfig::new(ConnectionKind::Main, "Output"));
 
   // Add properties
   definition = definition.add_property(
-    NodeProperty::builder()
-      .name("url".to_string())
-      .kind(NodePropertyKind::String)
-      .required(true)
-      .display_name("URL")
-      .description("请求的目标URL地址")
-      .placeholder("https://api.example.com")
-      .build(),
+    NodeProperty::new(NodePropertyKind::String)
+      .with_name("url")
+      .with_display_name("URL")
+      .with_required(true)
+      .with_description("请求的目标URL地址")
+      .with_placeholder("https://api.example.com"),
   );
 
   definition = definition.add_property(
-    NodeProperty::builder()
-      .name("method".to_string())
-      .kind(NodePropertyKind::Options)
-      .required(true)
-      .display_name("Method")
-      .description("HTTP请求方法")
-      .value(json!(HttpMethod::Get))
-      .options(
+    NodeProperty::new(NodePropertyKind::Options)
+      .with_name("method")
+      .with_display_name("Method")
+      .with_required(true)
+      .with_description("HTTP请求方法")
+      .with_value(json!(HttpMethod::Get))
+      .with_options(
         HttpMethod::ALL
           .iter()
           .map(|m| Box::new(NodeProperty::new_option(m.as_ref(), m.as_ref(), json!(m), NodePropertyKind::Options)))
-          .collect(),
-      )
-      .build(),
+          .collect::<Vec<_>>(),
+      ),
   );
 
   definition = definition.add_property(
-    NodeProperty::builder()
-      .name("headers".to_string())
-      .kind(NodePropertyKind::String)
-      .required(false)
-      .display_name("Headers")
-      .description("HTTP请求头，JSON格式")
-      .placeholder("{\"Content-Type\": \"application/json\"}")
-      .build(),
+    NodeProperty::new(NodePropertyKind::String)
+      .with_name("headers")
+      .with_display_name("Headers")
+      .with_description("HTTP请求头，JSON格式")
+      .with_placeholder("{\"Content-Type\": \"application/json\"}"),
   );
 
   definition = definition.add_property(
-    NodeProperty::builder()
-      .name("body".to_string())
-      .kind(NodePropertyKind::String)
-      .required(false)
-      .display_name("Body")
-      .description("请求体内容，支持JSON格式")
-      .placeholder("{\"key\": \"value\"}")
-      .build(),
+    NodeProperty::new(NodePropertyKind::String)
+      .with_name("body")
+      .with_display_name("Body")
+      .with_description("请求体内容，支持JSON格式")
+      .with_placeholder("{\"key\": \"value\"}"),
   );
 
   definition = definition.add_property(
-    NodeProperty::builder()
-      .name("timeout".to_string())
-      .kind(NodePropertyKind::Number)
-      .required(false)
-      .display_name("Timeout")
-      .description("请求超时时间（秒），范围1-300")
-      .value(json!(30))
-      .placeholder("30")
-      .build(),
+    NodeProperty::new(NodePropertyKind::Number)
+      .with_name("timeout")
+      .with_display_name("Timeout")
+      .with_description("请求超时时间（秒），范围1-300")
+      .with_value(json!(30))
+      .with_placeholder("30"),
   );
 
   definition = definition.add_property(
-    NodeProperty::builder()
-      .name("follow_redirects".to_string())
-      .kind(NodePropertyKind::Boolean)
-      .required(false)
-      .display_name("Follow Redirects")
-      .description("是否跟随重定向")
-      .value(json!(true))
-      .build(),
+    NodeProperty::new(NodePropertyKind::Boolean)
+      .with_name("follow_redirects")
+      .with_display_name("Follow Redirects")
+      .with_description("是否跟随重定向")
+      .with_value(json!(true)),
   );
 
   Ok(definition)

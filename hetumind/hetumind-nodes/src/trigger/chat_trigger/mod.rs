@@ -12,11 +12,12 @@ use hetumind_core::types::JsonValue;
 use hetumind_core::version::Version;
 use hetumind_core::workflow::{
   ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, Node, NodeDefinition, NodeExecutable,
-  NodeExecutionContext, NodeExecutionError, NodeExecutor, NodeGroupKind, NodeKind, NodeProperty, RegistrationError,
-  make_execution_data_map,
+  NodeExecutionContext, NodeExecutionError, NodeExecutor, NodeGroupKind, NodeKind, NodeProperty, NodePropertyKind,
+  RegistrationError, make_execution_data_map,
 };
 
 use crate::constants::CHAT_TRIGGERN_NODE_KIND as CHAT_TRIGGER_NODE_KIND;
+use serde_json::json;
 
 // 聊天消息结构
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -98,9 +99,9 @@ impl NodeExecutable for ChatTriggerNodeV1 {
       content: "Hello from chat trigger".to_string(), // 实际应从请求中获取
       timestamp,
       session_data: [
-        ("chatInterface".to_string(), JsonValue::String(chat_interface.clone())),
-        ("sessionTimeout".to_string(), JsonValue::Number(serde_json::Number::from(session_timeout))),
-        ("responseFormat".to_string(), JsonValue::String(response_format.clone())),
+        ("chatInterface".to_string(), json!(chat_interface)),
+        ("sessionTimeout".to_string(), json!(session_timeout)),
+        ("responseFormat".to_string(), json!(response_format)),
       ]
       .into_iter()
       .collect(),
@@ -153,157 +154,139 @@ fn create_base() -> NodeDefinition {
     .add_group(NodeGroupKind::Trigger)
     .with_description("Use the Chat Trigger node when building AI workflows for chatbots and other chat interfaces.")
     .add_property(
-      NodeProperty::builder()
-        .display_name("Chat Interface")
-        .name("chatInterface")
-        .kind(hetumind_core::workflow::NodePropertyKind::Options)
-        .options(vec![
+      NodeProperty::new(NodePropertyKind::Options)
+        .with_display_name("Chat Interface")
+        .with_name("chatInterface")
+        .with_options(vec![
           Box::new(NodeProperty::new_option(
             "Web",
             "web",
-            JsonValue::String("web".to_string()),
-            hetumind_core::workflow::NodePropertyKind::String,
+            json!("web"),
+            NodePropertyKind::String,
           )),
           Box::new(NodeProperty::new_option(
             "Embedded",
             "embedded",
-            JsonValue::String("embedded".to_string()),
-            hetumind_core::workflow::NodePropertyKind::String,
+            json!("embedded"),
+            NodePropertyKind::String,
           )),
           Box::new(NodeProperty::new_option(
             "API",
             "api",
-            JsonValue::String("api".to_string()),
-            hetumind_core::workflow::NodePropertyKind::String,
+            json!("api"),
+            NodePropertyKind::String,
           )),
           Box::new(NodeProperty::new_option(
             "Custom",
             "custom",
-            JsonValue::String("custom".to_string()),
-            hetumind_core::workflow::NodePropertyKind::String,
+            json!("custom"),
+            NodePropertyKind::String,
           )),
         ])
-        .required(true)
-        .description("The type of chat interface to use")
-        .build(),
+        .with_required(true)
+        .with_description("The type of chat interface to use"),
     )
     .add_property(
-      NodeProperty::builder()
-        .display_name("Session Timeout (minutes)")
-        .name("sessionTimeout")
-        .kind(hetumind_core::workflow::NodePropertyKind::Number)
-        .required(false)
-        .description("Session timeout in minutes")
-        .value(JsonValue::Number(serde_json::Number::from(30)))
-        .build(),
+      NodeProperty::new(NodePropertyKind::Number)
+        .with_display_name("Session Timeout (minutes)")
+        .with_name("sessionTimeout")
+        .with_required(false)
+        .with_description("Session timeout in minutes")
+        .with_value(json!(30)),
     )
     .add_property(
-      NodeProperty::builder()
-        .display_name("Max Session Length")
-        .name("maxSessionLength")
-        .kind(hetumind_core::workflow::NodePropertyKind::Number)
-        .required(false)
-        .description("Maximum number of messages in a session")
-        .value(JsonValue::Number(serde_json::Number::from(50)))
-        .build(),
+      NodeProperty::new(NodePropertyKind::Number)
+        .with_display_name("Max Session Length")
+        .with_name("maxSessionLength")
+        .with_required(false)
+        .with_description("Maximum number of messages in a session")
+        .with_value(json!(50)),
     )
     .add_property(
-      NodeProperty::builder()
-        .display_name("Persist Session")
-        .name("persistSession")
-        .kind(hetumind_core::workflow::NodePropertyKind::Boolean)
-        .required(false)
-        .description("Whether to persist session data")
-        .value(JsonValue::Bool(true))
-        .build(),
+      NodeProperty::new(NodePropertyKind::Boolean)
+        .with_display_name("Persist Session")
+        .with_name("persistSession")
+        .with_required(false)
+        .with_description("Whether to persist session data")
+        .with_value(json!(true)),
     )
     .add_property(
-      NodeProperty::builder()
-        .display_name("Response Format")
-        .name("responseFormat")
-        .kind(hetumind_core::workflow::NodePropertyKind::Options)
-        .options(vec![
+      NodeProperty::new(NodePropertyKind::Options)
+        .with_display_name("Response Format")
+        .with_name("responseFormat")
+        .with_options(vec![
           Box::new(NodeProperty::new_option(
             "JSON",
             "json",
-            JsonValue::String("json".to_string()),
-            hetumind_core::workflow::NodePropertyKind::String,
+            json!("json"),
+            NodePropertyKind::String,
           )),
           Box::new(NodeProperty::new_option(
             "Text",
             "text",
-            JsonValue::String("text".to_string()),
-            hetumind_core::workflow::NodePropertyKind::String,
+            json!("text"),
+            NodePropertyKind::String,
           )),
           Box::new(NodeProperty::new_option(
             "Markdown",
             "markdown",
-            JsonValue::String("markdown".to_string()),
-            hetumind_core::workflow::NodePropertyKind::String,
+            json!("markdown"),
+            NodePropertyKind::String,
           )),
         ])
-        .required(true)
-        .description("Format of the response")
-        .build(),
+        .with_required(true)
+        .with_description("Format of the response"),
     )
     .add_property(
-      NodeProperty::builder()
-        .display_name("Immediate Response")
-        .name("immediateResponse")
-        .kind(hetumind_core::workflow::NodePropertyKind::Boolean)
-        .required(false)
-        .description("Whether to send an immediate response")
-        .value(JsonValue::Bool(false))
-        .build(),
+      NodeProperty::new(NodePropertyKind::Boolean)
+        .with_display_name("Immediate Response")
+        .with_name("immediateResponse")
+        .with_required(false)
+        .with_description("Whether to send an immediate response")
+        .with_value(json!(false)),
     )
     .add_property(
-      NodeProperty::builder()
-        .display_name("Response Template")
-        .name("responseTemplate")
-        .kind(hetumind_core::workflow::NodePropertyKind::String)
-        .required(false)
-        .description("Template for immediate responses")
-        .value(JsonValue::String("{\"status\": \"received\", \"chatId\": \"{{chatId}}\"}".to_string()))
-        .build(),
+      NodeProperty::new(NodePropertyKind::String)
+        .with_display_name("Response Template")
+        .with_name("responseTemplate")
+        .with_required(false)
+        .with_description("Template for immediate responses")
+        .with_value(json!({"status": "received", "chatId": "{{chatId}}"})),
     )
     .add_property(
-      NodeProperty::builder()
-        .display_name("Authentication")
-        .name("authentication")
-        .kind(hetumind_core::workflow::NodePropertyKind::Options)
-        .options(vec![
+      NodeProperty::new(NodePropertyKind::Options)
+        .with_display_name("Authentication")
+        .with_name("authentication")
+        .with_options(vec![
           Box::new(NodeProperty::new_option(
             "None",
             "none",
-            JsonValue::String("none".to_string()),
-            hetumind_core::workflow::NodePropertyKind::String,
+            json!("none"),
+            NodePropertyKind::String,
           )),
           Box::new(NodeProperty::new_option(
             "API Key",
             "api_key",
-            JsonValue::String("api_key".to_string()),
-            hetumind_core::workflow::NodePropertyKind::String,
+            json!("api_key"),
+            NodePropertyKind::String,
           )),
           Box::new(NodeProperty::new_option(
             "Bearer Token",
             "bearer",
-            JsonValue::String("bearer".to_string()),
-            hetumind_core::workflow::NodePropertyKind::String,
+            json!("bearer"),
+            NodePropertyKind::String,
           )),
         ])
-        .required(true)
-        .description("Authentication method for the chat interface")
-        .build(),
+        .with_required(true)
+        .with_description("Authentication method for the chat interface"),
     )
     .add_property(
-      NodeProperty::builder()
-        .display_name("Include Metadata")
-        .name("includeMetadata")
-        .kind(hetumind_core::workflow::NodePropertyKind::Boolean)
-        .required(false)
-        .description("Whether to include metadata in the output")
-        .value(JsonValue::Bool(true))
-        .build(),
+      NodeProperty::new(NodePropertyKind::Boolean)
+        .with_display_name("Include Metadata")
+        .with_name("includeMetadata")
+        .with_required(false)
+        .with_description("Whether to include metadata in the output")
+        .with_value(json!(true)),
     )
 }
 

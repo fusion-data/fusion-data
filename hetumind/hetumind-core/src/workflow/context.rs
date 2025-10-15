@@ -20,6 +20,26 @@ impl ExecutionContext {
     Self { execution_id, workflow, ctx, started_at: now() }
   }
 
+  pub fn with_execution_id(mut self, execution_id: ExecutionId) -> Self {
+    self.execution_id = execution_id;
+    self
+  }
+
+  pub fn with_workflow(mut self, workflow: Arc<Workflow>) -> Self {
+    self.workflow = workflow;
+    self
+  }
+
+  pub fn with_ctx(mut self, ctx: Ctx) -> Self {
+    self.ctx = ctx;
+    self
+  }
+
+  pub fn with_started_at(mut self, started_at: OffsetDateTime) -> Self {
+    self.started_at = started_at;
+    self
+  }
+
   pub fn ctx(&self) -> &Ctx {
     &self.ctx
   }

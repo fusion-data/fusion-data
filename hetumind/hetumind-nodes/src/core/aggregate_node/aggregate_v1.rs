@@ -291,18 +291,17 @@ impl TryFrom<NodeDefinition> for AggregateV1 {
   fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
     let definition = base
       .with_version(Version::new(1, 0, 0))
-      .add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build())
-      .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build())
+      .add_input(InputPortConfig::new(ConnectionKind::Main, "Input"))
+      .add_output(OutputPortConfig::new(ConnectionKind::Main, "Output"))
       .add_property(
         // 聚合模式选择
-        NodeProperty::builder()
-          .display_name("Aggregate".to_string())
-          .name("aggregate")
-          .kind(NodePropertyKind::Options)
-          .required(true)
-          .description("Choose the aggregation mode".to_string())
-          .value(json!("aggregateIndividualFields"))
-          .options(vec![
+        NodeProperty::new(NodePropertyKind::Options)
+          .with_display_name("Aggregate")
+          .with_name("aggregate")
+          .with_required(true)
+          .with_description("Choose the aggregation mode")
+          .with_value(json!("aggregateIndividualFields"))
+          .with_options(vec![
             Box::new(NodeProperty::new_option(
               "Individual Fields",
               "aggregateIndividualFields",
@@ -315,63 +314,82 @@ impl TryFrom<NodeDefinition> for AggregateV1 {
               json!("aggregateAllItemData"),
               NodePropertyKind::String,
             )),
-          ])
-          .build(),
+          ]),
       )
       .add_property(
         // Individual Fields 模式的字段配置
-        NodeProperty::builder()
-          .display_name("Fields To Aggregate".to_string())
-          .name("fields_to_aggregate")
-          .required(false)
-          .description("Fields to aggregate together".to_string())
-          .placeholder("Add Field To Aggregate".to_string())
-          .kind(NodePropertyKind::FixedCollection)
-          .kind_options(NodePropertyKindOptions::builder().multiple_values(true).build())
-          .build(),
+        NodeProperty::new(NodePropertyKind::FixedCollection)
+          .with_display_name("Fields To Aggregate")
+          .with_name("fields_to_aggregate")
+          .with_required(false)
+          .with_description("Fields to aggregate together")
+          .with_placeholder("Add Field To Aggregate")
+          .with_kind_options(hetumind_core::workflow::NodePropertyKindOptions {
+          multiple_values: Some(true),
+          button_config: None,
+          container_class: None,
+          always_open_edit_window: None,
+          code_autocomplete: None,
+          editor: None,
+          editor_is_read_only: None,
+          sql_dialect: None,
+          load_options_depends_on: None,
+          load_options_method: None,
+          load_options: None,
+          max_value: None,
+          min_value: None,
+          multiple_value_button_text: None,
+          number_precision: None,
+          password: None,
+          rows: None,
+          show_alpha: None,
+          sortable: None,
+          expirable: None,
+          resource_mapper: None,
+          filter: None,
+          assignment: None,
+          min_required_fields: None,
+          max_allowed_fields: None,
+          callout_action: None,
+          additional_properties: serde_json::Map::new(),
+        }),
       )
       .add_property(
         // All Item Data 模式的目标字段配置
-        NodeProperty::builder()
-          .display_name("Destination Field Name".to_string())
-          .name("destination_field_name")
-          .required(false)
-          .description("The name of the field to put the aggregated data in".to_string())
-          .placeholder("e.g. items".to_string())
-          .kind(NodePropertyKind::String)
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("Destination Field Name")
+          .with_name("destination_field_name")
+          .with_required(false)
+          .with_description("The name of the field to put the aggregated data in")
+          .with_placeholder("e.g. items"),
       )
       .add_property(
         // 字段排除配置
-        NodeProperty::builder()
-          .display_name("Fields To Exclude".to_string())
-          .name("fields_to_exclude")
-          .required(false)
-          .description("Fields to exclude from aggregation".to_string())
-          .placeholder("e.g. password,secret".to_string())
-          .kind(NodePropertyKind::String)
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("Fields To Exclude")
+          .with_name("fields_to_exclude")
+          .with_required(false)
+          .with_description("Fields to exclude from aggregation")
+          .with_placeholder("e.g. password,secret"),
       )
       .add_property(
         // 字段包含配置
-        NodeProperty::builder()
-          .display_name("Fields To Include".to_string())
-          .name("fields_to_include")
-          .required(false)
-          .description("Fields to include in aggregation (if empty, include all)".to_string())
-          .placeholder("e.g. name,email".to_string())
-          .kind(NodePropertyKind::String)
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("Fields To Include")
+          .with_name("fields_to_include")
+          .with_required(false)
+          .with_description("Fields to include in aggregation (if empty, include all)")
+          .with_placeholder("e.g. name,email"),
       )
       .add_property(
         // 高级选项
-        NodeProperty::builder()
-          .display_name("Options".to_string())
-          .name("options")
-          .required(false)
-          .description("Advanced aggregation options".to_string())
-          .placeholder("Add Option".to_string())
-          .options(vec![
+        NodeProperty::new(NodePropertyKind::Options)
+          .with_display_name("Options")
+          .with_name("options")
+          .with_required(false)
+          .with_description("Advanced aggregation options")
+          .with_placeholder("Add Option")
+          .with_options(vec![
             Box::new(NodeProperty::new_option(
               "Disable Dot Notation",
               "disable_dot_notation",
@@ -392,8 +410,7 @@ impl TryFrom<NodeDefinition> for AggregateV1 {
               json!(false),
               NodePropertyKind::Boolean,
             )),
-          ])
-          .build(),
+          ]),
       );
 
     Ok(Self { definition: Arc::new(definition) })

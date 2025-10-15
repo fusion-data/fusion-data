@@ -1,9 +1,9 @@
 use fusionsql::postgres::PgRowType;
 use sea_query::{Nullable, Value};
 
-use super::{Gender, Permission, Policy, RolePermission, RoleStatus, User, UserCredential, UserRole, UserStatus};
+use super::{Gender, Permission, PolicyEntity, RolePermission, RoleStatus, User, UserCredential, UserRole, UserStatus};
 
-impl PgRowType for Policy {}
+impl PgRowType for PolicyEntity {}
 impl PgRowType for User {}
 impl PgRowType for UserCredential {}
 impl PgRowType for UserRole {}

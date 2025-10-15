@@ -590,20 +590,13 @@ fn test_node_access() {
 fn create_context_test_data() -> ExpressionExecutionContext {
   let workflow = Arc::new(create_workflow_test_data());
   let execution = Arc::new(create_execution_test_data(workflow.id.clone()));
-  ExpressionExecutionContext::builder()
-    .workflow(workflow)
-    .execution(execution)
-    .env(std::env::vars().collect())
-    .build()
+  ExpressionExecutionContext::new(workflow, execution).with_env(std::env::vars().collect())
 }
 
 fn create_workflow_test_data() -> Workflow {
-  Workflow::builder()
-    .id(WorkflowId::from_str("0197c9ef-5c91-7162-bf06-6f8fff516a40").unwrap())
-    .name("Test Workflow")
-    .build()
+  Workflow::new(WorkflowId::from_str("0197c9ef-5c91-7162-bf06-6f8fff516a40").unwrap(), "Test Workflow")
 }
 
 fn create_execution_test_data(workflow_id: WorkflowId) -> Execution {
-  Execution::builder().id(ExecutionId::now_v7()).workflow_id(workflow_id).build()
+  Execution::new(ExecutionId::now_v7(), workflow_id)
 }

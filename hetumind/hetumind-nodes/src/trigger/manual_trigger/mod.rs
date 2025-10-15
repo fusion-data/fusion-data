@@ -38,37 +38,31 @@ pub fn create_base() -> NodeDefinition {
     .add_group(NodeGroupKind::Trigger)
     .with_description("手动触发工作流执行，支持执行模式和启用状态配置")
     .add_property(
-      NodeProperty::builder()
-        .display_name("操作提示")
-        .name("notice")
-        .kind(NodePropertyKind::Notice)
-        .description("这是工作流执行的起点，点击'执行工作流'按钮来触发工作流")
-        .value(json!("点击执行工作流按钮来启动工作流"))
-        .build(),
+      NodeProperty::new(NodePropertyKind::Notice)
+        .with_display_name("操作提示")
+        .with_name("notice")
+        .with_description("这是工作流执行的起点，点击'执行工作流'按钮来触发工作流")
+        .with_value(json!("点击执行工作流按钮来启动工作流")),
     )
     .add_property(
-      NodeProperty::builder()
-        .display_name("执行模式")
-        .name("execution_mode")
-        .kind(NodePropertyKind::Options)
-        .options(vec![
+      NodeProperty::new(NodePropertyKind::Options)
+        .with_display_name("执行模式")
+        .with_name("execution_mode")
+        .with_options(vec![
           Box::new(NodeProperty::new_option("测试模式", "test", json!("test"), NodePropertyKind::String)),
           Box::new(NodeProperty::new_option("生产模式", "production", json!("production"), NodePropertyKind::String)),
         ])
-        .required(true)
-        .description("选择工作流执行模式")
-        .value(json!("test"))
-        .build(),
+        .with_required(true)
+        .with_description("选择工作流执行模式")
+        .with_value(json!("test")),
     )
     .add_property(
-      NodeProperty::builder()
-        .display_name("启用状态")
-        .name("enabled")
-        .kind(NodePropertyKind::Boolean)
-        .required(false)
-        .description("是否启用手动触发功能")
-        .value(json!(true))
-        .build(),
+      NodeProperty::new(NodePropertyKind::Boolean)
+        .with_display_name("启用状态")
+        .with_name("enabled")
+        .with_required(false)
+        .with_description("是否启用手动触发功能")
+        .with_value(json!(true)),
     )
 }
 

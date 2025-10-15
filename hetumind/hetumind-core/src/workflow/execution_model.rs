@@ -7,7 +7,6 @@ use fusionsql_core::{
 };
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
-use typed_builder::TypedBuilder;
 
 use crate::user::UserId;
 
@@ -59,37 +58,83 @@ pub enum ExecutionStatus {
 #[cfg(feature = "with-db")]
 fusionsql::generate_enum_i32_to_sea_query_value!(Enum: ExecutionStatus, Enum: ExecutionMode);
 
-#[derive(Debug, Clone, Serialize, Deserialize, TypedBuilder)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Execution {
   /// 执行唯一标识符
   pub id: ExecutionId,
   /// 所属工作流ID
   pub workflow_id: WorkflowId,
   /// 执行状态
-  #[builder(default)]
+  #[serde(default)]
   pub status: ExecutionStatus,
   /// 开始时间
-  #[builder(default, setter(strip_option))]
   pub started_at: Option<OffsetDateTime>,
   /// 结束时间
-  #[builder(default, setter(strip_option))]
   pub finished_at: Option<OffsetDateTime>,
   /// 执行数据
-  #[builder(default, setter(strip_option))]
   pub data: Option<serde_json::Value>,
   /// 错误信息
-  #[builder(default, setter(strip_option))]
   pub error: Option<String>,
   /// 执行模式
-  #[builder(default)]
+  #[serde(default)]
   pub mode: ExecutionMode,
   /// 触发者ID
-  #[builder(default, setter(strip_option))]
   pub triggered_by: Option<UserId>,
 }
 
+impl Execution {
+  pub fn new(id: ExecutionId, workflow_id: WorkflowId) -> Self {
+    Self {
+      id,
+      workflow_id,
+      status: ExecutionStatus::default(),
+      started_at: None,
+      finished_at: None,
+      data: None,
+      error: None,
+      mode: ExecutionMode::default(),
+      triggered_by: None,
+    }
+  }
+
+  pub fn with_status(mut self, status: ExecutionStatus) -> Self {
+    self.status = status;
+    self
+  }
+
+  pub fn with_started_at(mut self, started_at: OffsetDateTime) -> Self {
+    self.started_at = Some(started_at);
+    self
+  }
+
+  pub fn with_finished_at(mut self, finished_at: OffsetDateTime) -> Self {
+    self.finished_at = Some(finished_at);
+    self
+  }
+
+  pub fn with_data(mut self, data: impl Into<serde_json::Value>) -> Self {
+    self.data = Some(data.into());
+    self
+  }
+
+  pub fn with_error(mut self, error: impl Into<String>) -> Self {
+    self.error = Some(error.into());
+    self
+  }
+
+  pub fn with_mode(mut self, mode: ExecutionMode) -> Self {
+    self.mode = mode;
+    self
+  }
+
+  pub fn with_triggered_by(mut self, triggered_by: UserId) -> Self {
+    self.triggered_by = Some(triggered_by);
+    self
+  }
+}
+
 /// 工作流执行结果
-#[derive(Debug, TypedBuilder)]
+#[derive(Debug)]
 pub struct ExecutionResult {
   /// 执行ID
   pub execution_id: ExecutionId,
@@ -108,6 +153,22 @@ pub struct ExecutionResult {
 }
 
 impl ExecutionResult {
+  pub fn new(
+    execution_id: ExecutionId,
+    status: ExecutionStatus,
+    end_nodes: Vec<NodeName>,
+    duration_ms: u64,
+    nodes_result: HashMap<NodeName, NodeExecutionResult>,
+  ) -> Self {
+    Self {
+      execution_id,
+      status,
+      end_nodes,
+      duration_ms,
+      nodes_result,
+    }
+  }
+
   pub fn is_success(&self) -> bool {
     self.status == ExecutionStatus::Success
   }
