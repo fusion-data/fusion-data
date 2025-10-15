@@ -20,12 +20,31 @@ impl SigninRequest {
 
 #[derive(Serialize)]
 pub struct SigninResponse {
-  pub token: String,
+  pub access_token: String,
+  pub refresh_token: String,
   pub token_type: TokenType,
+  pub expires_in: i64, // seconds
 }
 
 #[derive(Deserialize)]
 pub struct SignupRequest {
   pub email: String,
   pub password: String,
+}
+
+#[derive(Deserialize)]
+pub struct RefreshTokenRequest {
+  pub refresh_token: String,
+}
+
+#[derive(Serialize)]
+pub struct RefreshTokenResponse {
+  pub access_token: String,
+  pub token_type: TokenType,
+  pub expires_in: i64, // seconds
+}
+
+#[derive(Deserialize)]
+pub struct SignoutRequest {
+  pub token: Option<String>, // optional, if not provided, use current authenticated token
 }

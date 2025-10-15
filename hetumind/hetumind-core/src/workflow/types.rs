@@ -127,6 +127,7 @@ impl GetNodeParameterOptions {
 #[derive(
   Debug,
   Clone,
+  Copy,
   PartialEq,
   Eq,
   Hash,
