@@ -150,17 +150,17 @@ impl DefaultWorkflowEngine {
         })?;
 
     // 创建节点执行上下文
-    let node_context = NodeExecutionContext::builder()
-      .execution_id(context.execution_id().clone())
-      .workflow(context.workflow())
-      .current_node_name(node_name.clone())
-      .input_data(input_data)
-      .started_at(now())
-      .user_id(Some(context.ctx().uid()))
-      .env_vars(std::env::vars().collect())
-      .expression_evaluator(ExpressionEvaluator::new())
-      .binary_data_manager(Application::global().component())
-      .build();
+    let node_context = NodeExecutionContext::new(
+      context.execution_id().clone(),
+      context.workflow(),
+      node_name.clone(),
+      input_data,
+      Application::global().component(),
+    )
+    .with_started_at(now())
+    .with_user_id(context.ctx().uid())
+    .with_env_vars(std::env::vars())
+    .with_expression_evaluator(ExpressionEvaluator::new());
 
     // 执行节点
     let output_data = executor.execute(&node_context).await.map_err(|_| {
@@ -206,7 +206,7 @@ fn make_node_context(
   )
   .with_started_at(now())
   .with_user_id(context.ctx().uid())
-  .with_env_vars(std::env::vars().collect())
+  .with_env_vars(std::env::vars())
   .with_expression_evaluator(ExpressionEvaluator::new());
 
   if let Some(response) = engine_response {
@@ -487,15 +487,13 @@ impl DefaultWorkflowEngine {
       ExecutionStatus::Success
     };
 
-    Ok(
-      ExecutionResult::builder()
-        .execution_id(context.execution_id().clone())
-        .status(final_status)
-        .nodes_result(nodes_result)
-        .end_nodes(graph.get_end_nodes())
-        .duration_ms(duration_ms)
-        .build(),
-    )
+    Ok(ExecutionResult::new(
+      context.execution_id().clone(),
+      final_status,
+      graph.get_end_nodes(),
+      duration_ms,
+      nodes_result,
+    ))
   }
 
   /// 并行执行单个节点
@@ -532,13 +530,12 @@ impl DefaultWorkflowEngine {
       }
     };
 
-    let node_execution_result = NodeExecutionResult::builder()
-      .node_name(node_name.clone())
-      .output_data(output_data.clone())
-      .status(status)
-      .duration_ms(duration_ms)
-      .error(error_msg.unwrap_or_default())
-      .build();
+    let mut node_execution_result =
+      NodeExecutionResult::new(node_name.clone(), status, output_data.clone(), duration_ms);
+
+    if let Some(error_msg) = error_msg {
+      node_execution_result = node_execution_result.with_error(error_msg);
+    }
 
     Ok((node_execution_result, output_data))
   }

@@ -1,7 +1,7 @@
 {
-  "name": "@fusion-data/modelsql",
+  "name": "@fusion-data/fusionsql",
   "version": "1.0.0",
-  "description": "Shared utilities for Fusion Data project",
+  "description": "Shared utilities for FusionSQL",
   "type": "module",
   "main": "dist/index.js",
   "module": "dist/index.js",
@@ -30,7 +30,7 @@
     "format:check": "prettier --check ."
   },
   "keywords": [
-    "modelsql"
+    "fusionsql"
   ],
   "license": "Apache-2.0",
   "devDependencies": {
@@ -45,6 +45,7 @@
     "dist"
   ],
   "dependencies": {
-    "dayjs": "^1.11.18"
+    "dayjs": "^1.11.18",
+    "@fusion-data/fusion-core": "workspace:*"
   }
 }

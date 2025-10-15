@@ -1,8 +1,9 @@
 //! 节点执行
 use std::sync::Arc;
 
+use chrono::{DateTime, FixedOffset};
 use fusion_common::ahash::HashMap;
-use fusion_common::time::OffsetDateTime;
+use fusion_common::time::now;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -29,7 +30,7 @@ pub struct NodeExecutionContext {
   /// 输入数据
   pub input_data: ExecutionDataMap,
   /// 执行开始时间
-  pub started_at: OffsetDateTime,
+  pub started_at: DateTime<FixedOffset>,
   /// 用户ID
   pub user_id: Option<UserId>,
   /// 环境变量
@@ -43,6 +44,96 @@ pub struct NodeExecutionContext {
 }
 
 impl NodeExecutionContext {
+  pub fn new(
+    execution_id: ExecutionId,
+    workflow: Arc<Workflow>,
+    current_node_name: impl Into<NodeName>,
+    input_data: ExecutionDataMap,
+    binary_data_manager: BinaryDataManager,
+  ) -> Self {
+    Self {
+      execution_id,
+      workflow,
+      current_node_name: current_node_name.into(),
+      input_data,
+      started_at: now().fixed_offset(),
+      user_id: None,
+      env_vars: HashMap::default(),
+      expression_evaluator: ExpressionEvaluator::new(),
+      engine_response: None,
+      binary_data_manager,
+    }
+  }
+  pub fn with_execution_id(mut self, execution_id: ExecutionId) -> Self {
+    self.execution_id = execution_id;
+    self
+  }
+
+  pub fn with_workflow(mut self, workflow: Arc<Workflow>) -> Self {
+    self.workflow = workflow;
+    self
+  }
+
+  pub fn with_current_node_name(mut self, current_node_name: NodeName) -> Self {
+    self.current_node_name = current_node_name;
+    self
+  }
+
+  pub fn with_input_data<I, K, V>(mut self, input_data: I) -> Self
+  where
+    I: IntoIterator<Item = (K, V)>,
+    K: Into<ConnectionKind>,
+    V: Into<Vec<ExecutionDataItems>>,
+  {
+    self.input_data = input_data.into_iter().map(|(k, v)| (k.into(), v.into())).collect();
+    self
+  }
+
+  pub fn add_input_data(mut self, key: impl Into<ConnectionKind>, value: Vec<ExecutionDataItems>) -> Self {
+    self.input_data.insert(key.into(), value);
+    self
+  }
+
+  pub fn with_started_at(mut self, started_at: DateTime<FixedOffset>) -> Self {
+    self.started_at = started_at;
+    self
+  }
+
+  pub fn with_user_id(mut self, user_id: UserId) -> Self {
+    self.user_id = Some(user_id);
+    self
+  }
+
+  pub fn with_env_vars<I, K, V>(mut self, env_vars: I) -> Self
+  where
+    I: IntoIterator<Item = (K, V)>,
+    K: Into<String>,
+    V: Into<String>,
+  {
+    self.env_vars = env_vars.into_iter().map(|(k, v)| (k.into(), v.into())).collect();
+    self
+  }
+
+  pub fn add_env_var(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
+    self.env_vars.insert(key.into(), value.into());
+    self
+  }
+
+  pub fn with_expression_evaluator(mut self, expression_evaluator: ExpressionEvaluator) -> Self {
+    self.expression_evaluator = expression_evaluator;
+    self
+  }
+
+  pub fn with_engine_response(mut self, engine_response: EngineResponse) -> Self {
+    self.engine_response = Some(engine_response);
+    self
+  }
+
+  pub fn with_binary_data_manager(mut self, binary_data_manager: BinaryDataManager) -> Self {
+    self.binary_data_manager = binary_data_manager;
+    self
+  }
+
   pub fn current_node(&self) -> Result<&WorkflowNode, NodeExecutionError> {
     match self.workflow.nodes.iter().find(|n| n.name == self.current_node_name) {
       Some(node) => Ok(node),
@@ -393,13 +484,7 @@ impl NodeExecutionResult {
     output_data: ExecutionDataMap,
     duration_ms: u64,
   ) -> Self {
-    Self {
-      node_name,
-      status,
-      output_data,
-      error: None,
-      duration_ms,
-    }
+    Self { node_name, status, output_data, error: None, duration_ms }
   }
 
   pub fn with_error(mut self, error: impl Into<String>) -> Self {
@@ -420,9 +505,9 @@ pub struct NodeExecution {
   /// 执行状态
   pub status: NodeExecutionStatus,
   /// 开始时间
-  pub started_at: OffsetDateTime,
+  pub started_at: DateTime<FixedOffset>,
   /// 结束时间
-  pub finished_at: Option<OffsetDateTime>,
+  pub finished_at: Option<DateTime<FixedOffset>>,
   /// 输入数据
   pub input_data: Option<serde_json::Value>,
   /// 输出数据
@@ -441,7 +526,7 @@ impl NodeExecution {
     execution_id: ExecutionId,
     node_name: NodeName,
     status: NodeExecutionStatus,
-    started_at: OffsetDateTime,
+    started_at: DateTime<FixedOffset>,
   ) -> Self {
     Self {
       id,
@@ -478,12 +563,12 @@ impl NodeExecution {
     self
   }
 
-  pub fn with_started_at(mut self, started_at: OffsetDateTime) -> Self {
+  pub fn with_started_at(mut self, started_at: DateTime<FixedOffset>) -> Self {
     self.started_at = started_at;
     self
   }
 
-  pub fn with_finished_at(mut self, finished_at: OffsetDateTime) -> Self {
+  pub fn with_finished_at(mut self, finished_at: DateTime<FixedOffset>) -> Self {
     self.finished_at = Some(finished_at);
     self
   }

@@ -117,11 +117,11 @@ pub fn add_routing(mut self, key: impl Into<String>, value: impl Into<JsonValue>
 ### 提示词 3
 
 ```markdown
-任务： 重构 @hetumind/hetumind-nodes/src/ 中所有使用 TypedBuilder 的代码
+任务： 重构 @hetumind/hetumind-studio/src/ 中所有使用 TypedBuilder 的代码
 
 重构规则
 
-1. 识别目标代码：查找所有使用 ::builder() 方法的代码
+1. 识别目标代码：查找所有使用 `::builder()` 方法的代码
 2. 替换构造方式：
   - 将 Xxxx::builder().field(value).build() 替换为 Xxxx::new(...).with_field(value)
   - 使用 new() 函数的必需参数
@@ -130,7 +130,7 @@ pub fn add_routing(mut self, key: impl Into<String>, value: impl Into<JsonValue>
 
 执行步骤
 
-1. 扫描 hetumind-nodes/src/ 目录，识别所有使用 TypedBuilder 的文件
+1. 扫描 hetumind-nodes/src/ 目录，识别所有使用的 struct 及 new 构造函数和 with_xxx, add_xxx 修改函数
 2. 分析每个使用场景，确定对应的 new() 函数参数
 3. 逐个文件进行重构替换
 4. 编译验证确保无错误
