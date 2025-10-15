@@ -57,7 +57,7 @@ impl AsyncAuthorizeRequest<Body> for WebAuth {
   }
 }
 
-fn web_error_2_body(e: WebError) -> Response<Body> {
+pub fn web_error_2_body(e: WebError) -> Response<Body> {
   let body = serde_json::to_vec(&e).unwrap();
   Response::builder()
     .status(StatusCode::UNAUTHORIZED)

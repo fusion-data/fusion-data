@@ -10,17 +10,17 @@ use serde::{Deserialize, Serialize};
 #[repr(i32)]
 pub enum UserStatus {
   #[default]
-  Unactive = 1,
+  Inactive = 1,
   Disabled = 99,
-  Actived = 100,
+  Active = 100,
 }
 
 impl From<i32> for UserStatus {
   fn from(value: i32) -> Self {
     match value {
       99 => UserStatus::Disabled,
-      100 => UserStatus::Actived,
-      _ => UserStatus::Unactive,
+      100 => UserStatus::Active,
+      _ => UserStatus::Inactive,
     }
   }
 }
@@ -71,7 +71,7 @@ pub struct UserForCreate {
   pub phone: Option<String>,
   pub name: Option<String>,
   pub status: Option<UserStatus>,
-  #[field(skip)]
+  #[cfg_attr(feature = "with-db", field(skip))]
   pub password: Option<String>,
 }
 

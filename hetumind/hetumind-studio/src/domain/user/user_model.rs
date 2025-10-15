@@ -28,6 +28,7 @@ generate_enum_i32_to_sea_query_value!(
 #[enum_def(table_name = "user_entity")]
 pub struct UserEntity {
   pub id: i64,
+  pub tenant_id: i64,
   pub email: String,
   pub phone: Option<String>,
   pub name: Option<String>,
@@ -49,6 +50,7 @@ impl PgRowType for UserEntity {}
 
 #[derive(Debug, Deserialize, Fields)]
 pub struct UserForCreate {
+  pub tenant_id: i64,
   pub email: String,
   pub phone: Option<String>,
   pub name: Option<String>,
@@ -93,78 +95,4 @@ pub struct UserFilter {
 pub struct UserForPage {
   pub page: Page,
   pub filter: UserFilter,
-}
-
-#[cfg(test)]
-mod tests {
-  use fusion_common::time::now;
-  use fusionsql::field::HasSeaFields;
-  use sea_query::ColumnRef;
-
-  use super::*;
-
-  #[test]
-  fn test_user_entity_display() {
-    let user = UserEntity {
-      id: 1,
-      email: "test@test.com".to_string(),
-      phone: Some("12345678901".to_string()),
-      name: Some("test".to_string()),
-      password: Some(SensitiveString::new("12345678", 4, '*')),
-      personalization_answers: Some(serde_json::json!({})),
-      settings: Some(serde_json::json!({})),
-      status: UserStatus::Enabled,
-      mfa_enabled: false,
-      mfa_secret: None,
-      mfa_recovery_codes: None,
-      created_at: now(),
-      created_by: 1,
-      updated_at: None,
-      updated_by: None,
-    };
-    println!("{:?}", user);
-  }
-
-  #[test]
-  fn test_user_for_update() {
-    let mut for_update = UserForUpdate {
-      email: Some("test@test.com".to_string()),
-      phone: Some("12345678901".to_string()),
-      name: None,
-      status: Some(UserStatus::Enabled),
-      update_mask: Default::default(),
-    };
-    let non_empty_fields: Vec<String> = for_update
-      .clone()
-      .not_none_sea_fields()
-      .into_iter()
-      .map(|f| match f.column_ref {
-        ColumnRef::Column(iden) => iden.to_string(),
-        _ => panic!("unexpected column ref"),
-      })
-      .collect::<Vec<_>>();
-    assert_eq!(non_empty_fields, vec!["email", "phone", "status"]);
-
-    let sea_fields_with_mask: Vec<String> = for_update
-      .clone()
-      .sea_fields_with_mask()
-      .into_iter()
-      .map(|f| match f.column_ref {
-        ColumnRef::Column(iden) => iden.to_string(),
-        _ => panic!("unexpected column ref"),
-      })
-      .collect::<Vec<_>>();
-    assert_eq!(sea_fields_with_mask, vec!["email", "phone", "status"]);
-
-    for_update.update_mask = Some(FieldMask::new(vec!["phone".to_string(), "name".to_string()]));
-    let sea_fields_with_mask: Vec<String> = for_update
-      .sea_fields_with_mask()
-      .into_iter()
-      .map(|f| match f.column_ref {
-        ColumnRef::Column(iden) => iden.to_string(),
-        _ => panic!("unexpected column ref"),
-      })
-      .collect::<Vec<_>>();
-    assert_eq!(sea_fields_with_mask, vec!["phone", "name"]);
-  }
 }

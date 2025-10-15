@@ -57,12 +57,9 @@ impl ServerApplication {
     let agent_manager =
       Arc::new(AgentManager::new(application.component(), connection_manager.clone(), setting.clone()));
 
-    let log_svc = LogSvc::new(
-      Arc::new(setting.task_log.clone()),
-      application.get_shutdown_recv().await,
-      connection_manager.clone(),
-    )
-    .await?;
+    let log_svc =
+      LogSvc::new(Arc::new(setting.task_log.clone()), application.shutdown_recv().await, connection_manager.clone())
+        .await?;
 
     let broker = Broker::new(setting.clone(), application.component());
 
@@ -92,7 +89,7 @@ impl ServerApplication {
   }
 
   pub async fn get_shutdown_recv(&self) -> ShutdownRecv {
-    Application::global().get_shutdown_recv().await
+    Application::global().shutdown_recv().await
   }
 
   /// 启动通用服务

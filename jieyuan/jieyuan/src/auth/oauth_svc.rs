@@ -239,7 +239,7 @@ impl OAuthSvc {
         email: user_info.email.clone(),
         phone: user_info.phone.clone(),
         name: Some(user_info.name.clone()),
-        status: Some(UserStatus::Actived),
+        status: Some(UserStatus::Active),
         password: None,
       };
 
@@ -271,5 +271,6 @@ struct OAuthUserInfo {
   name: String,
   email: Option<String>,
   phone: Option<String>,
+  #[allow(dead_code)]
   avatar: Option<String>,
 }

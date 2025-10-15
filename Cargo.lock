@@ -2805,6 +2805,7 @@ dependencies = [
  "hetumind-nodes",
  "http",
  "insta",
+ "jieyuan-core",
  "josekit",
  "json-patch",
  "log",
@@ -3465,15 +3466,22 @@ dependencies = [
 name = "jieyuan-core"
 version = "0.1.1"
 dependencies = [
+ "axum",
  "fusion-common",
+ "fusion-core",
+ "fusion-web",
  "fusionsql",
  "fusionsql-core",
+ "futures",
+ "http",
+ "log",
  "sea-query",
  "serde",
  "serde_json",
  "serde_repr",
  "sqlx",
  "strum",
+ "tower-http",
  "utoipa",
  "uuid",
 ]

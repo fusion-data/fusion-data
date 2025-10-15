@@ -85,7 +85,7 @@ impl Application {
     self.0.shutdown.lock().await.is_none()
   }
 
-  pub async fn get_shutdown_recv(&self) -> ShutdownRecv {
+  pub async fn shutdown_recv(&self) -> ShutdownRecv {
     let maybe = self.0.shutdown.lock().await;
     let tuple = maybe.as_ref().unwrap();
     tuple.1.clone()

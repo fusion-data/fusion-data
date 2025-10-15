@@ -5,6 +5,7 @@ use fusion_core::{
 use fusion_db::DbPlugin;
 
 use crate::{
+  domain::user::UserSyncSvc,
   endpoint::init_web,
   infra::{
     binary_storage::BinaryDataManagerPlugin, db::execution::ExecutionStorePlugin, queue::QueueProviderPlugin,
@@ -37,6 +38,14 @@ where
 
 pub async fn start() -> Result<(), DataError> {
   let app = app_builder::<config::Config>(None).run().await?;
+
+  // 启动用户同步服务
+  let user_sync_svc = UserSyncSvc::new(app.component())?;
+  let shutdown_rx = app.shutdown_recv().await;
+  tokio::spawn(async move {
+    user_sync_svc.start_periodic_sync(shutdown_rx).await?;
+    Ok::<(), DataError>(())
+  });
 
   // 初始化 web
   init_web(app).await

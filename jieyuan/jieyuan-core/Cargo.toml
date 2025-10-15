@@ -14,10 +14,25 @@ workspace = true
 
 [features]
 with-openapi = ["dep:utoipa", "fusion-common/with-openapi"]
-with-db = ["dep:sqlx", "dep:fusionsql", "dep:sea-query", "fusion-common/with-db"]
+with-db = [
+  "dep:sqlx",
+  "dep:fusionsql",
+  "dep:sea-query",
+  "fusion-common/with-db",
+]
+with-web = [
+  "dep:fusion-core",
+  "dep:fusion-web",
+  "dep:axum",
+  "dep:tower-http",
+  "dep:http",
+  "dep:futures",
+]
 
 [dependencies]
 fusion-common = { workspace = true, features = ["with-uuid"] }
+fusion-core = { workspace = true, optional = true }
+fusion-web = { workspace = true, optional = true }
 uuid = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -28,3 +43,8 @@ sqlx = { workspace = true, optional = true }
 sea-query = { workspace = true, optional = true }
 fusionsql = { workspace = true, optional = true }
 fusionsql-core = { workspace = true }
+axum = { workspace = true, optional = true }
+tower-http = { workspace = true, optional = true }
+futures = { workspace = true, optional = true }
+log = { workspace = true }
+http = { workspace = true, optional = true }
