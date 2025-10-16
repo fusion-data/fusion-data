@@ -23,7 +23,8 @@ pub fn routes() -> OpenApiRouter<Application> {
     (status = 200, description = "授权 URL 生成成功", body = OAuthAuthorizeResponse),
     (status = 400, description = "请求参数错误")
   ),
-  tag = "OAuth"
+  tag = "OAuth",
+  security()
 )]
 async fn oauth_authorize(
   State(app): State<Application>,
@@ -45,7 +46,8 @@ async fn oauth_authorize(
     (status = 400, description = "请求参数错误"),
     (status = 401, description = "授权码无效或已过期")
   ),
-  tag = "OAuth"
+  tag = "OAuth",
+  security()
 )]
 async fn oauth_token(
   State(app): State<Application>,

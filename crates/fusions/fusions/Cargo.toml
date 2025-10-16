@@ -15,16 +15,33 @@ workspace = true
 with-db = ["dep:fusion-db", "dep:fusionsql"]
 with-grpc = ["dep:fusion-grpc", "dep:tonic"]
 with-web = ["dep:fusion-web", "dep:axum"]
+with-uuid = [
+  "fusion-common/with-uuid",
+  "fusion-core/with-uuid",
+  "fusionsql/with-uuid",
+  "utoipa/uuid",
+]
+with-ulid = ["dep:ulid", "utoipa/ulid", "fusion-common/with-ulid"]
+with-openapi = [
+  "fusion-common/with-openapi",
+  "fusion-core/with-openapi",
+  "fusionsql/with-openapi",
+  "dep:utoipa",
+]
 
 [dependencies]
 tokio = { workspace = true }
+fusion-common = { workspace = true }
 fusion-core = { workspace = true }
 # -- db & fusionsql
-fusion-db = { workspace = true, optional = true }
 fusionsql = { workspace = true, optional = true }
+fusion-db = { workspace = true, optional = true }
 # -- web & axum
-fusion-web = { workspace = true, optional = true }
 axum = { workspace = true, optional = true }
+fusion-web = { workspace = true, optional = true }
+utoipa = { workspace = true, optional = true }
 # -- grpc & tonic
 fusion-grpc = { workspace = true, optional = true }
 tonic = { workspace = true, optional = true }
+# -- misc
+ulid = { workspace = true, optional = true }

@@ -2,14 +2,18 @@ use axum::Json;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use fusion_core::DataError;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 pub type WebResult<T> = core::result::Result<Json<T>, WebError>;
 
 /// A default error response for most API errors.
-#[derive(Debug, Serialize)]
-#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
+#[derive(Debug, Serialize, Deserialize)]
+#[cfg_attr(
+  feature = "with-openapi",
+  derive(utoipa::ToSchema, utoipa::ToResponse),
+  response(description = "A default error response for most API errors.")
+)]
 pub struct WebError {
   /// A unique error ID.
   // TODO 应从 tracing 中获取
@@ -60,6 +64,26 @@ impl WebError {
   pub fn with_err_msg(mut self, err_msg: impl Into<String>) -> Self {
     self.err_msg = err_msg.into();
     self
+  }
+
+  /// Create a 401 Unauthorized error
+  pub fn unauthorized(err_msg: impl Into<String>) -> Self {
+    Self::new_with_code(401, err_msg)
+  }
+
+  /// Create a 403 Forbidden error
+  pub fn forbidden(err_msg: impl Into<String>) -> Self {
+    Self::new_with_code(403, err_msg)
+  }
+
+  /// Create a 400 Bad Request error
+  pub fn bad_request(err_msg: impl Into<String>) -> Self {
+    Self::new_with_code(400, err_msg)
+  }
+
+  /// Create a 502 Bad Gateway error
+  pub fn bad_gateway(err_msg: impl Into<String>) -> Self {
+    Self::new_with_code(502, err_msg)
   }
 }
 

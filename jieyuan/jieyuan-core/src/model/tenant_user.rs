@@ -22,6 +22,7 @@ impl From<i16> for TenantUserStatus {
   }
 }
 
+#[cfg(feature = "with-db")]
 impl From<TenantUserStatus> for sea_query::Value {
   fn from(status: TenantUserStatus) -> Self {
     (status as i16).into()

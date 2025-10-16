@@ -1,14 +1,13 @@
-use fusion_core::Result;
+use axum::extract::FromRequestParts;
+use fusion_core::{Result, application::Application};
+use fusion_web::WebError;
 use fusionsql::{ModelManager, page::PageResult};
 
-use jieyuan_core::model::{PolicyEffect, PolicyEntity, PolicyForCreate, PolicyForPage, PolicyForUpdate};
-
-use super::{
-  PolicyRepo,
-  auth_ctx::AuthContext,
-  policy_bmc::PolicyBmc,
-  policy_engine::{Decision, PolicyEngine},
+use jieyuan_core::model::{
+  AuthContext, Decision, DecisionEffect, PolicyEngine, PolicyEntity, PolicyForCreate, PolicyForPage, PolicyForUpdate,
 };
+
+use super::{AuthorizationServiceExt, PolicyRepo, policy_bmc::PolicyBmc};
 
 /// 权限服务（Arc 并发友好）
 #[derive(Clone)]
@@ -26,7 +25,7 @@ impl PolicySvc {
   }
 
   /// 函数级注释：执行授权判断
-  pub async fn authorize(&self, ctx: &AuthContext, action: &str, resource: &str) -> Result<Decision> {
+  pub async fn authorize_ext(&self, ctx: &AuthContext, action: &str, resource: &str) -> Result<Decision> {
     // 1) 聚合策略集
     let mut policies = Vec::new();
     policies.extend(self.repo.list_attached_policies_for_user(ctx.principal_tenant_id, ctx.principal_user_id).await?);
@@ -37,23 +36,23 @@ impl PolicySvc {
     let session = self.repo.find_session_policy("current").await?;
 
     // 2) 求值：显式拒绝优先
-    if PolicyEngine::match_any(&policies, ctx, action, resource, PolicyEffect::Deny) {
+    if PolicyEngine::match_any(&policies, ctx, action, resource, DecisionEffect::Deny) {
       return Ok(Decision::Deny);
     }
 
-    let allowed = PolicyEngine::match_any(&policies, ctx, action, resource, PolicyEffect::Allow);
+    let allowed = PolicyEngine::match_any(&policies, ctx, action, resource, DecisionEffect::Allow);
     if !allowed {
       return Ok(Decision::Deny);
     }
 
     // 3) 边界与会话策略裁剪
     if let Some(pb) = boundary
-      && !PolicyEngine::match_policy(&pb, ctx, action, resource, PolicyEffect::Allow)
+      && !PolicyEngine::match_policy(&pb, ctx, action, resource, DecisionEffect::Allow)
     {
       return Ok(Decision::Deny);
     }
     if let Some(sp) = session
-      && !PolicyEngine::match_policy(&sp, ctx, action, resource, PolicyEffect::Allow)
+      && !PolicyEngine::match_policy(&sp, ctx, action, resource, DecisionEffect::Allow)
     {
       return Ok(Decision::Deny);
     }
@@ -91,5 +90,25 @@ impl PolicySvc {
   pub async fn page(&self, req: PolicyForPage) -> Result<PageResult<PolicyEntity>> {
     let page = PolicyBmc::page(&self.mm, req.filter, req.page).await?;
     Ok(page)
+  }
+}
+
+// 为 PolicySvc 实现 FromRequestParts trait，使其可以从请求中提取
+impl FromRequestParts<Application> for PolicySvc {
+  type Rejection = WebError;
+
+  async fn from_request_parts(
+    _parts: &mut axum::http::request::Parts,
+    state: &Application,
+  ) -> core::result::Result<Self, Self::Rejection> {
+    let mm = state.component::<ModelManager>();
+    Ok(PolicySvc::new(mm))
+  }
+}
+
+// 为 PolicySvc 实现 AuthorizationServiceExt trait
+impl AuthorizationServiceExt for PolicySvc {
+  async fn authorize_ext(&self, ctx: &AuthContext, action: &str, resource: &str) -> Result<Decision> {
+    self.authorize_ext(ctx, action, resource).await
   }
 }

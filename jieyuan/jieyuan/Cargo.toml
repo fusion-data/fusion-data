@@ -21,7 +21,7 @@ fusion-common = { workspace = true, features = ["with-uuid", "with-openapi"] }
 fusion-core = { workspace = true, features = ["with-uuid"] }
 
 # -- hetus
-jieyuan-core = { workspace = true, features = ["with-openapi", "with-db"] }
+jieyuan-core = { workspace = true, features = ["with-openapi", "with-db", "with-web"] }
 
 # -- misc
 serde = { workspace = true }
@@ -39,6 +39,7 @@ semver = { workspace = true }
 # -- tokio & async
 tokio = { workspace = true }
 async-stream = { workspace = true }
+async-trait = { workspace = true }
 mea = { workspace = true }
 futures-util = { workspace = true }
 

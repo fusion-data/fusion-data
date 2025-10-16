@@ -3,11 +3,11 @@ use fusion_common::page::Page;
 use fusionsql_core::filter::{OpValInt32, OpValInt64, OpValString};
 use serde::{Deserialize, Serialize};
 
-/// Policy effect type
+/// Policy decision effect type
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 #[serde(rename_all = "snake_case")]
-pub enum PolicyEffect {
+pub enum DecisionEffect {
   Allow,
   Deny,
 }
@@ -19,7 +19,7 @@ pub struct PolicyStatement {
   /// Statement ID (optional)
   pub sid: Option<String>,
   /// Effect of the statement (Allow or Deny)
-  pub effect: PolicyEffect,
+  pub effect: DecisionEffect,
   /// Actions that are permitted or denied
   pub action: Vec<String>,
   /// Resources that the actions apply to

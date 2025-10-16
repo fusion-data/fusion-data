@@ -40,6 +40,7 @@ pub struct ErrorTriggerParameters {
 /// 错误触发模式
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[allow(dead_code)]
 pub enum ErrorTriggerMode {
   /// 监听所有工作流错误
   AllWorkflows,
@@ -52,6 +53,7 @@ pub enum ErrorTriggerMode {
 /// 错误类型分类
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[allow(dead_code)]
 pub enum ErrorType {
   /// 节点执行错误
   NodeExecution,
@@ -72,6 +74,7 @@ pub enum ErrorType {
 /// 错误严重级别
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[allow(dead_code)]
 pub enum ErrorSeverity {
   Low,
   Medium,
@@ -82,6 +85,7 @@ pub enum ErrorSeverity {
 /// 通知方式
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[allow(dead_code)]
 pub enum NotificationMethod {
   /// 邮件通知
   Email,

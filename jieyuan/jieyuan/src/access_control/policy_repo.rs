@@ -1,8 +1,6 @@
 use fusion_core::Result;
 use fusionsql::{ModelManager, SqlError};
-use jieyuan_core::model::{PolicyEntity, TABLE_POLICY, TABLE_POLICY_ATTACHMENT};
-
-use crate::access_control::policy_engine::PolicyEngine;
+use jieyuan_core::model::{PolicyEngine, PolicyEntity, TABLE_POLICY, TABLE_POLICY_ATTACHMENT};
 
 /// 策略仓库（基于 BMC 实现）
 #[derive(Clone)]

@@ -2059,6 +2059,7 @@ name = "fusions"
 version = "0.1.1"
 dependencies = [
  "axum",
+ "fusion-common",
  "fusion-core",
  "fusion-db",
  "fusion-grpc",
@@ -2066,6 +2067,8 @@ dependencies = [
  "fusionsql",
  "tokio",
  "tonic",
+ "ulid",
+ "utoipa",
 ]
 
 [[package]]
@@ -3417,6 +3420,7 @@ name = "jieyuan"
 version = "0.1.1"
 dependencies = [
  "async-stream",
+ "async-trait",
  "axum",
  "axum-extra",
  "base64ct",

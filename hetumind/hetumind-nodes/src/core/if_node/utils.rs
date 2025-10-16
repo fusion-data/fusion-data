@@ -684,7 +684,7 @@ pub fn parse_expression_expression(expression: &str, input_data: &JsonValue) -> 
 }
 
 /// 解析简单表达式 {{ expression }}
-fn parse_simple_expression(expression: &str) -> Option<regex::Captures> {
+fn parse_simple_expression<'a>(expression: &'a str) -> Option<regex::Captures<'a>> {
   let re = Regex::new(r"\{\{\s*([^}]+)\s*\}\}").ok()?;
   re.captures(expression)
 }

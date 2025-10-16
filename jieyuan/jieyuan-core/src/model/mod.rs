@@ -1,10 +1,13 @@
 #[cfg(feature = "with-db")]
 mod _db;
 mod auth;
+pub mod auth_ctx;
+mod iam_api;
 mod page;
 mod permission;
 mod policy;
 mod policy_attachment;
+pub mod policy_engine;
 mod resource;
 mod role;
 mod role_permission;
@@ -15,10 +18,13 @@ mod user;
 mod user_role;
 
 pub use auth::*;
+pub use auth_ctx::*;
+pub use iam_api::*;
 pub use page::*;
 pub use permission::*;
 pub use policy::*;
 pub use policy_attachment::*;
+pub use policy_engine::*;
 pub use resource::*;
 pub use role::*;
 pub use role_permission::*;

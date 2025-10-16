@@ -2,7 +2,7 @@ pub mod api;
 pub mod oauth;
 
 use fusion_core::application::Application;
-use fusion_web::Router;
+use fusion_web::{Router, WebError};
 use utoipa::OpenApi;
 use utoipa_axum::router::OpenApiRouter;
 use utoipa_swagger_ui::SwaggerUi;
@@ -14,6 +14,14 @@ use utoipa_swagger_ui::SwaggerUi;
     title = "JieYuan API",
     version = env!("CARGO_PKG_VERSION"),
     description = "Identity and Access Management API"
+  ),
+  components(
+    responses(
+      WebError
+    )
+  ),
+  security(
+    ("bearer_auth" = [])
   )
 )]
 struct ApiDoc;

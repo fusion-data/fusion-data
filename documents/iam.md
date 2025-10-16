@@ -8,7 +8,7 @@
   - 数据库访问统一使用 BMC 模式（`fusionsql` 宏），并复用当前项目已有模块与错误处理：`fusion-common`、`fusion-core`、`fusion-db`、`fusion-web`、`fusionsql`、`jieyuan-core`。
   - 错误统一复用：`fusion_core::DataError`、`fusionsql::SqlError`、`fusion_web::WebError`。
   - 并发访问：对外服务对象（如 `PolicySvc`）可便宜 `clone`；内部以 `Arc` 持有仓库与缓存（可结合 `ArcSwap`/`DashMap` 后续拓展）。
-  - 统一依赖来自工作区 `Cargo.toml`，不引入未声明的第三方库。
+  - 统一依赖来自工作区 `Cargo.toml`，不引入未声明的第三方库。若需要的库不存在，则终止任务并显示需要的库列表和原因
   - 不设计审计功能；不考虑历史版本兼容与数据库迁移逻辑（系统尚未发布）。
   - 复用 fusion-xxx 库功能，如： fusion-common, fusion-core, fusion-web, fusion-db, fusionsql 等
   - 复用现有的错误处理模式
@@ -186,7 +186,7 @@ pub struct PolicyDocument {
 #[serde(rename_all = "snake_case")]
 pub struct PolicyStatement {
   pub sid: Option<String>,
-  pub effect: PolicyEffect,
+  pub effect: DecisionEffect,
   pub action: Vec<String>,
   pub resource: Vec<String>,
   pub condition: Option<serde_json::Value>,
@@ -194,7 +194,7 @@ pub struct PolicyStatement {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
-pub enum PolicyEffect { Allow, Deny }
+pub enum DecisionEffect { Allow, Deny }
 ```
 
 - 服务与仓库骨架（可编译）：
@@ -235,6 +235,8 @@ impl PolicyRepo {
   }
 }
 
+/// 决策类型（内部服务层使用，与远程 API DecisionEffect 映射）
+/// Decision::Allow ↔ DecisionEffect::allow, Decision::Deny ↔ DecisionEffect::deny
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Decision { Allow, Deny }
 
@@ -251,6 +253,7 @@ impl PolicySvc {
   }
 
   /// 函数级注释：执行授权判断
+  /// 返回 Decision 类型，远程 API 使用 PolicyEffect（snake_case）
   pub fn authorize(&self, ctx: &AuthContext, action: &str, resource: &str) -> Result<Decision> {
     // 1) 聚合策略集
     let mut policies = Vec::new();
@@ -262,25 +265,25 @@ impl PolicySvc {
     let session = self.repo.find_session_policy("current")?;
 
     // 2) 求值：显式拒绝优先
-    if Self::match_any(&policies, ctx, action, resource, PolicyEffect::Deny) { return Ok(Decision::Deny); }
+    if Self::match_any(&policies, ctx, action, resource, DecisionEffect::Deny) { return Ok(Decision::Deny); }
 
-    let allowed = Self::match_any(&policies, ctx, action, resource, PolicyEffect::Allow);
+    let allowed = Self::match_any(&policies, ctx, action, resource, DecisionEffect::Allow);
     if !allowed { return Ok(Decision::Deny); }
 
     // 3) 边界与会话策略裁剪
-    if let Some(pb) = boundary { if !Self::match_policy(&pb, ctx, action, resource, PolicyEffect::Allow) { return Ok(Decision::Deny); } }
-    if let Some(sp) = session { if !Self::match_policy(&sp, ctx, action, resource, PolicyEffect::Allow) { return Ok(Decision::Deny); } }
+    if let Some(pb) = boundary { if !Self::match_policy(&pb, ctx, action, resource, DecisionEffect::Allow) { return Ok(Decision::Deny); } }
+    if let Some(sp) = session { if !Self::match_policy(&sp, ctx, action, resource, DecisionEffect::Allow) { return Ok(Decision::Deny); } }
 
     Ok(Decision::Allow)
   }
 
   /// 函数级注释：匹配任意策略是否命中指定 effect
-  fn match_any(policies: &[PolicyEntity], ctx: &AuthContext, action: &str, resource: &str, effect: PolicyEffect) -> bool {
+  fn match_any(policies: &[PolicyEntity], ctx: &AuthContext, action: &str, resource: &str, effect: DecisionEffect) -> bool {
     policies.iter().any(|p| Self::match_policy(p, ctx, action, resource, effect))
   }
 
   /// 函数级注释：匹配单个策略文档（Action/Resource 通配与 Condition 求值）
-  fn match_policy(_p: &PolicyEntity, _ctx: &AuthContext, _action: &str, _resource: &str, _effect: PolicyEffect) -> bool {
+  fn match_policy(_p: &PolicyEntity, _ctx: &AuthContext, _action: &str, _resource: &str, _effect: DecisionEffect) -> bool {
     // 解析 JSON，匹配 Action/Resource（支持通配），并求值 Condition
     // 条件键映射：如 jr:tenant_id -> ctx.principal_tenant_id 等
     // 具体实现留作后续迭代；当前返回 false 保证可编译
@@ -433,6 +436,7 @@ use fusion_web::WebError;
 use fusion_core::application::Application;
 use crate::access_control::{auth_ctx::build_auth_context, PolicySvc};
 
+// `jieyuan/jieyuan-core/src/web/middleware/authorization_middleware.rs`
 /// 函数级注释：最小授权中间件，将业务层 DataError 映射为 WebError
 pub async fn authz_guard<B>(
   State(policy_svc): State<PolicySvc>,
@@ -462,6 +466,7 @@ use axum::{Router, routing::put, middleware, extract::State};
 use axum::extract::FromRef;
 use axum::http::Request;
 
+// `jieyuan/jieyuan-core/src/web/middleware/authorization_middleware.rs`
 #[derive(Clone)]
 pub struct RouteMeta {
   pub action: &'static str,
@@ -483,17 +488,48 @@ pub fn routes(policy_svc: PolicySvc) -> Router {
     .route_layer(middleware::from_fn(inject_route_meta))
 }
 
-/// 函数级注释：在中间件或端点中读取 RouteMeta，并填充资源模板
+/// 函数级注释：在中间件或端点中读取 RouteMeta，并填充资源模板（仅内置占位符）
 fn render_resource(tpl: &str, ac: &AuthContext) -> String {
   tpl
     .replace("{tenant_id}", &ac.principal_tenant_id.to_string())
     .replace("{user_id}", &ac.principal_user_id.to_string())
+    .replace("{method}", &ac.method)
+    .replace("{path}", &ac.path)
+    .replace("{token_seq}", &ac.token_seq.to_string())
 }
 
 // 在中间件中：
 // let meta = req.extensions().get::<RouteMeta>().ok_or_else(|| WebError::bad_request("missing route meta"))?;
 // let resource = render_resource(meta.resource_tpl, &ac);
 // policy_svc.authorize(&ac, meta.action, &resource)?;
+
+/// 函数级注释：扩展资源模板渲染，支持内置与自定义占位符
+/// 补充了完整的 render_resource_ext 实现，支持 extras 参数注入
+use std::collections::HashMap;
+fn render_resource_ext(tpl: &str, ac: &AuthContext, extras: &HashMap<&str, String>) -> String {
+  let mut s = tpl.to_string();
+  // 内置占位符
+  s = s
+    .replace("{tenant_id}", &ac.principal_tenant_id.to_string())
+    .replace("{user_id}", &ac.principal_user_id.to_string())
+    .replace("{method}", &ac.method)
+    .replace("{path}", &ac.path)
+    .replace("{token_seq}", &ac.token_seq.to_string());
+
+  // 角色（拼接为逗号分隔）
+  if s.contains("{principal_roles}") {
+    let joined = ac.principal_roles.join(",");
+    s = s.replace("{principal_roles}", &joined);
+  }
+
+  // 其它自定义占位符（如 role_id/policy_id/resource_id 等）
+  for (k, v) in extras.iter() {
+    let ph = format!("{{{}}}", k);
+    if s.contains(&ph) { s = s.replace(&ph, v); }
+  }
+
+  s
+}
 ````
 
 规范约束：
@@ -550,37 +586,10 @@ macro_rules! route_with_meta {
 
 #### 模板渲染的扩展占位符支持
 
-为支持更丰富的资源表达，提供扩展模板渲染函数：
+为支持更丰富的资源表达，提供扩展模板渲染函数。完整的 `render_resource_ext` 实现已在前面的章节中提供，支持内置与自定义占位符：
 
-```rust
-use std::collections::HashMap;
-
-/// 函数级注释：扩展资源模板渲染，支持内置与自定义占位符
-pub fn render_resource_ext(tpl: &str, ac: &AuthContext, extras: &HashMap<&str, String>) -> String {
-  let mut s = tpl.to_string();
-  // 内置占位符
-  s = s
-    .replace("{tenant_id}", &ac.principal_tenant_id.to_string())
-    .replace("{user_id}", &ac.principal_user_id.to_string())
-    .replace("{method}", &ac.method)
-    .replace("{path}", &ac.path)
-    .replace("{token_seq}", &ac.token_seq.to_string());
-
-  // 角色（拼接为逗号分隔）
-  if s.contains("{principal_roles}") {
-    let joined = ac.principal_roles.join(",");
-    s = s.replace("{principal_roles}", &joined);
-  }
-
-  // 其它自定义占位符（如 role_id/policy_id/resource_id 等）
-  for (k, v) in extras.iter() {
-    let ph = format!("{{{}}}", k);
-    if s.contains(&ph) { s = s.replace(&ph, v); }
-  }
-
-  s
-}
-```
+- 内置占位符：`{tenant_id}`、`{user_id}`、`{method}`、`{path}`、`{token_seq}`、`{principal_roles}`
+- 自定义占位符：通过 `extras` 参数注入（如 `role_id`、`policy_id`、`resource_id` 等）
 
 推荐约定：
 
@@ -710,7 +719,359 @@ pub async fn attach_policy_to_role(Path((role_id, policy_id)): Path<(i64, i64)>,
 
 - 若端点与资源模板的占位符不一致，应在注册器或中间件中集中完成占位符解析与注入，避免在各个 handler 中分散实现。
 
-````
+---
+
+## 远程授权 API 合约
+
+为满足“jieyuan 作为独立 IAM 微服务，其他项目仅通过远程调用使用”的约束，定义统一的远程授权接口。客户端（hetumind-studio、hetuflow-server）通过该接口完成令牌校验与权限评估，并复用既有数据结构：返回中的 `decision` 使用 `DecisionEffect`（值为 `allow`/`deny`），失败错误信息复用 `fusion_web::WebError`。
+
+### Endpoint
+
+- Method: `POST`
+- Path: `/api/v1/iam/authorize`
+
+### Request Headers
+
+- `Authorization: Bearer <token>`（必填）
+- `Content-Type: application/json`
+
+### Request Body（snake_case）
+
+```json
+{
+  "action": "user:update_password",
+  "resource_tpl": "jr:user:{tenant_id}:{user_id}",
+  "extras": { "user_id": "12345" },
+  "method": "put",
+  "path": "/api/v1/users/12345/password",
+  "request_ip": "203.0.113.3"
+}
+```
+
+- 字段约束与来源说明：
+  - `action`（必填，string）：行为名，格式 `{service}:{verb}`，如 `user:update_password`。
+  - `resource_tpl`（必填，string）：资源模板，支持内置占位符（`{tenant_id}`、`{principal_roles}` 等）与路由参数占位符（通过 `extras` 显式注入）。
+  - `extras`（可选，object<string,string>）：路由参数或业务参数的显式占位符值，如 `{ "user_id": "12345" }`。
+  - `method`（可选，string）：HTTP 方法小写（如 `get`、`post`、`put`、`delete`），可参与策略条件匹配。
+  - `path`（可选，string）：当前请求路径（如 `/api/v1/users/12345/password`），可参与策略条件匹配。
+  - `request_ip`（可选，string）：客户端 IP（字符串表示），可参与策略条件匹配。
+
+### Response（状态码语义与数据结构）
+
+- 200 OK（权限允许）：
+
+  - 语义：令牌有效，权限评估通过。
+  - 结构：包含 `decision` 与 `ctx`，其中 `decision` 复用 `DecisionEffect`（序列化为 `allow`）。
+  - 示例：
+    ```json
+    {
+      "decision": "allow",
+      "ctx": {
+        "tenant_id": 42,
+        "sub": 1001,
+        "principal_roles": ["tenant_admin", "ops"],
+        "is_platform_admin": false,
+        "token_seq": 3,
+        "method": "put",
+        "path": "/api/v1/users/12345/password",
+        "request_ip": "203.0.113.3",
+        "req_time": "2025-01-01T08:00:01+08:00"
+      }
+    }
+    ```
+
+- 403 Forbidden（权限拒绝）：
+
+  - 语义：令牌有效，但策略评估拒绝。
+  - 结构：错误信息复用 `fusion_web::WebError`，并在 `err_detail` 中携带 `decision=deny` 与 `ctx`（便于客户端日志与提示）。
+  - 示例：
+    ```json
+    {
+      "err_code": 403,
+      "err_msg": "policy deny: user:update_password not allowed on jr:user:42:12345",
+      "err_detail": {
+        "decision": "deny",
+        "ctx": {
+          "tenant_id": 42,
+          "sub": 1001,
+          "principal_roles": ["viewer"],
+          "is_platform_admin": false,
+          "token_seq": 3,
+          "method": "put",
+          "path": "/api/v1/users/12345/password",
+          "request_ip": "203.0.113.3",
+          "req_time": "2025-01-01T08:00:01+08:00"
+        }
+      }
+    }
+    ```
+
+- 401 Unauthorized（令牌无效或过期）：
+
+  - 语义：令牌校验失败（签名无效、过期、缺失）。
+  - 结构：错误信息复用 `fusion_web::WebError`；不返回 `ctx`（不可用）。
+  - 示例：
+    ```json
+    {
+      "err_code": 401,
+      "err_msg": "invalid token signature",
+      "err_detail": null
+    }
+    ```
+
+- 字段与类型约束：
+  - `decision`：复用 `DecisionEffect`（`allow`/`deny`，`#[serde(rename_all = "snake_case")]`），仅在 200 返回；403 的 `decision` 存于 `err_detail`。
+  - `ctx`：为 Ctx 的 JSON 视图（CtxPayload），字段示例：`tenant_id`（i64）、`sub`（i64）、`principal_roles`（Vec<String>，角色编码）、`is_platform_admin`（bool）、`token_seq`（i32）、`method`（string）、`path`（string）、`request_ip`（string）、`req_time`（RFC3339 + 固定时区）。
+  - `WebError`：`{ err_code: i32, err_msg: String, err_detail?: Value }`；在 401/403 返回。
+
+### 客户端集成流程清单
+
+#### hetumind-studio（远程令牌校验 + 远程授权）
+
+- 在路由层为受控端点绑定 `RouteMeta { action, resource_tpl }`；将 path 参数解析为 `extras`（如 `{ "user_id": "12345" }`）。
+- 在授权中间件中：
+  - 读取 `Authorization` 头、`RouteMeta.action/resource_tpl`、`method/path/request_ip`；
+  - 调用 jieyuan `POST /api/v1/iam/authorize`；
+  - 响应处理：
+    - 200：`decision=allow`，将 `ctx` 转为本地 `CtxPayload` 并注入请求上下文；继续 handler。
+    - 403：解析 `WebError` 并返回拒绝响应；如需日志，可从 `err_detail.ctx` 读取上下文。
+    - 401：直接返回未授权响应（`WebError`）。
+- 建议：该中间件可替代当前远程 `WebAuth` 提取流程（授权 API 已包含令牌校验与 Ctx 返回），减少一次额外远程调用。
+
+#### hetuflow-server（本地令牌校验或远程授权二选一）
+
+- 若采用远程授权（统一方案）：流程与 hetumind-studio 相同。
+- 若保留本地令牌校验：
+  - 仍在受控路由调用远程授权 API 进行策略评估；
+  - 将 200 返回的 `ctx` 覆盖或合并到本地 Ctx 用于后续业务。
+
+#### 端到端约束与建议
+
+- 角色统一使用“字符串编码”（如 `tenant_admin`），客户端不传数值 ID；策略条件中按编码匹配。
+- 资源模板统一 snake_case，占位符来源显式：内置来自 Ctx，路由参数来自 `extras`。
+- 错误分层统一：客户端端点仅用 `WebError` 响应；业务服务内用 `DataError`；数据库访问层用 `SqlError` 并在仓库层转换。
+- 时区与时间：服务端返回 `req_time` 为固定偏移（`FixedOffset`）；客户端按 `AppSetting.time_offset` 对齐使用。
+
+#### 远程授权中间件伪代码（Axum）
+
+以下为仅文档用的伪代码，展示在 Axum 中通过“远程授权中间件”调用 `POST /api/v1/iam/authorize` 并按统一约定处理 200/403/401 响应。代码片段不用于直接拷贝到生产环境，需按实际工程组织与类型适配。
+
+```rust
+// 文档伪代码：Axum 远程授权中间件
+use axum::{
+  http::{Request, StatusCode},
+  middleware::Next,
+  response::Response,
+  extract::State,
+};
+use fusion_core::application::Application;
+use fusion_web::WebError;
+use serde_json::json;
+
+// 约定：路由层已将 RouteMeta 注入到 req.extensions()
+#[derive(Clone)]
+pub struct RouteMeta { pub action: &'static str, pub resource_tpl: &'static str }
+
+// 约定：路由参数或业务参数 extras 以 HashMap<String, String> 形式注入到 req.extensions()
+type Extras = std::collections::HashMap<String, String>;
+
+/* 函数级注释：远程授权中间件
+   - 读取 Authorization 头与 RouteMeta
+   - 构造授权请求体（snake_case）
+   - 调用远程授权 API 并处理 200/403/401
+   - 在 200 allow 时，将 ctx 注入到请求扩展供后续 handler 使用 */
+pub async fn remote_authz_guard<B>(
+  State(app): State<Application>,
+  mut req: Request<B>,
+  next: Next<B>,
+) -> Result<Response, WebError> {
+  // 1) 读取 Authorization 头
+  let auth = req
+    .headers()
+    .get(axum::http::header::AUTHORIZATION)
+    .and_then(|v| v.to_str().ok())
+    .ok_or_else(|| WebError::unauthorized("missing Authorization header"))?;
+
+  // 2) 读取路由元数据（动作与资源模板）
+  let meta = req
+    .extensions()
+    .get::<RouteMeta>()
+    .ok_or_else(|| WebError::bad_request("missing route meta"))?;
+
+  // 3) 组装请求体（snake_case）
+  let method = req.method().as_str().to_lowercase();
+  let path = req.uri().path().to_string();
+  let request_ip = req
+    .headers()
+    .get("x-forwarded-for")
+    .and_then(|v| v.to_str().ok())
+    .unwrap_or("");
+
+  // 3.1 可选：读取 extras（路由参数或业务参数），约定由上游注入
+  let extras = req
+    .extensions()
+    .get::<Extras>()
+    .cloned()
+    .unwrap_or_default();
+
+  let body = json!({
+    "action": meta.action,
+    "resource_tpl": meta.resource_tpl,
+    "extras": extras,
+    "method": method,
+    "path": path,
+    "request_ip": request_ip,
+  });
+
+  // 4) 远程调用 Jieyuan 授权 API
+  let base = app
+    .fusion_setting()
+    .service()
+    .get("JIEYUAN_BASE_URL")
+    .unwrap_or("http://localhost:50010");
+  let url = format!("{}/api/v1/iam/authorize", base);
+  let client = reqwest::Client::new();
+  let resp = client
+    .post(&url)
+    .header(axum::http::header::AUTHORIZATION, auth)
+    .header(axum::http::header::CONTENT_TYPE, "application/json")
+    .json(&body)
+    .send()
+    .await
+    .map_err(|e| WebError::bad_gateway(format!("authorize request failed: {}", e)))?;
+
+  // 5) 响应处理（200/403/401）
+  let status = resp.status();
+  let bytes = resp
+    .bytes()
+    .await
+    .map_err(|e| WebError::bad_gateway(e.to_string()))?;
+  match status {
+    s if s == StatusCode::OK => {
+      // 约定：{ decision: "allow", ctx: {...} }
+      let json: serde_json::Value = serde_json::from_slice(&bytes)
+        .map_err(|e| WebError::bad_gateway(e.to_string()))?;
+      // 决策防御性检查（decision 复用 PolicyEffect，snake_case）
+      let decision = json
+        .get("decision")
+        .and_then(|v| v.as_str())
+        .unwrap_or("deny");
+      if decision != "allow" {
+        return Err(WebError::forbidden("policy deny (unexpected decision)"));
+      }
+      // 将 ctx 注入请求上下文（伪代码：由应用侧定义 CtxPayload/Ctx 注入方式）
+      if let Some(ctx) = json.get("ctx") {
+        req.extensions_mut().insert(ctx.clone());
+      }
+      Ok(next.run(req).await)
+    }
+    s if s == StatusCode::FORBIDDEN => {
+      // 约定：返回 WebError；err_detail 内含 { decision: "deny", ctx: {...} }
+      let we: fusion_web::WebError = serde_json::from_slice(&bytes)
+        .unwrap_or_else(|_| WebError::forbidden("policy deny"));
+      Err(we)
+    }
+    s if s == StatusCode::UNAUTHORIZED => {
+      let we: fusion_web::WebError = serde_json::from_slice(&bytes)
+        .unwrap_or_else(|_| WebError::unauthorized("invalid token"));
+      Err(we)
+    }
+    _ => Err(WebError::bad_gateway(format!("unexpected status: {}", status))),
+  }
+}
+
+/* 函数级注释：extras 注入器（伪代码）
+   在具体路由注册时，从路径提取或业务上下文收集参数，并以 HashMap<String,String> 注入扩展 */
+pub async fn inject_extras<B>(
+  mut req: Request<B>,
+  next: Next<B>,
+) -> Response {
+  let mut map = std::collections::HashMap::new();
+  // 示例：/api/v1/users/:user_id -> "user_id" = "12345"
+  // 实际项目中通过提取器或路由注册器在进入 handler 前完成解析
+  // map.insert("user_id".to_string(), user_id.to_string());
+  req.extensions_mut().insert(map);
+  next.run(req).await
+}
+
+/* 函数级注释：路由挂载示意（省略 handler 与 RouteMeta 注入细节）
+Router::new()
+  .route("/api/v1/users/:user_id/password", axum::routing::put(update_user))
+  .route_layer(axum::middleware::from_fn(inject_route_meta))
+  .route_layer(axum::middleware::from_fn(inject_extras))
+  .route_layer(axum::middleware::from_fn(remote_authz_guard));
+*/
+```
+
+#### ctx 注入与本地 CtxPayload 构造（示例）
+
+远端授权 200 响应返回 `{ decision: "allow", ctx: {...} }`，其中 `ctx` 为 Ctx 的 JSON 视图（CtxPayload）。客户端需将其安全地映射为本地 `Ctx`/`CtxPayload` 并在 handler 中读取。以下为仅文档用伪代码，说明常见的注入与读取路径。
+
+```rust
+// 文档伪代码：将远端返回的 ctx 映射为本地 CtxPayload 并注入请求上下文
+use axum::http::Request;
+use fusion_web::WebError;
+
+// 约定：在 remote_authz_guard 中，已将远端返回的 ctx 以 serde_json::Value 形式注入到 req.extensions()
+// 可以根据项目类型系统，选择：
+// 1) 直接使用 serde_json::Value 并在读取处进行字段访问；
+// 2) 定义 CtxPayloadView（本地结构体），从 Value 反序列化；
+
+#[derive(serde::Deserialize, serde::Serialize, Clone)]
+#[serde(rename_all = "snake_case")]
+pub struct CtxPayloadView {
+  pub tenant_id: i64,
+  pub sub: i64,
+  pub principal_roles: Vec<String>,
+  pub is_platform_admin: bool,
+  pub token_seq: i32,
+  pub method: String,
+  pub path: String,
+  pub request_ip: String,
+  pub req_time: String, // RFC3339 + FixedOffset，字段名统一 snake_case
+}
+
+// 注入：在 remote_authz_guard 的 200 OK 分支中反序列化并注入本地类型
+pub fn inject_ctx_payload(req: &mut Request<impl Send>) -> Result<(), WebError> {
+  let ctx_val = req
+    .extensions()
+    .get::<serde_json::Value>()
+    .ok_or_else(|| WebError::bad_gateway("missing ctx in extensions"))?;
+
+  let view: CtxPayloadView = serde_json::from_value(ctx_val.clone())
+    .map_err(|e| WebError::bad_gateway(format!("invalid ctx payload: {}", e)))?;
+
+  // 将本地视图类型注入，以便后续 handler 读取
+  req.extensions_mut().insert(view);
+  Ok(())
+}
+
+// 读取：在具体 handler 中读取 CtxPayloadView 并进行业务处理
+pub async fn update_user_handler(mut req: Request<axum::body::Body>) -> Result<axum::response::Response, WebError> {
+  let ctx = req
+    .extensions()
+    .get::<CtxPayloadView>()
+    .ok_or_else(|| WebError::bad_request("missing ctx payload"))?;
+
+  // 示例：根据 ctx 构建授权视图或进行审计
+  let tenant_id = ctx.tenant_id;
+  let principal = ctx.sub;
+  let roles = ctx.principal_roles.clone();
+
+  // ... 业务逻辑 ...
+  Ok(axum::response::Response::new(axum::body::Body::from("ok")))
+}
+
+/* 替代方案：若项目已有 fusion_common::ctx::Ctx / CtxPayload 类型，可在文档示例中将远端 ctx 映射为该类型：
+   - 方案 A：定义 CtxPayloadBuilder，从 CtxPayloadView 构造内部键值表示，再通过 Ctx::from_payload(builder) 构建 Ctx。
+   - 方案 B：直接将 serde_json::Value 存入 Ctx 的 payload（若类型支持），读取处通过投影函数取字段。
+
+   统一约束：
+   - 字段命名统一 snake_case，所有字段均使用 FixedOffset 时区格式；
+   - 时间字段 req_time 统一 RFC3339 + FixedOffset 格式，由客户端按 AppSetting.time_offset 对齐；
+   - 角色使用字符串编码（如 tenant_admin），避免数值 ID 在客户端泄漏。
+*/
+```
 
 ---
 
@@ -726,7 +1087,7 @@ evaluation_cache_ttl_secs = 60
 enable_resource_policies = true
 # 是否启用权限边界（默认 false）
 enable_permission_boundary = false
-````
+```
 
 - 对应 Rust 配置结构：
 

@@ -50,7 +50,7 @@ pub fn unauthorized_app_error(msg: impl Into<String>) -> (StatusCode, Json<WebEr
   (StatusCode::UNAUTHORIZED, Json(WebError::new_with_msg(msg).with_err_code(401)))
 }
 
-/// 从 Http Request Parts 中获取 [Ctx]
+/// 从 Http Request Authorization Header 或 access_token query 中获取 [Ctx]
 pub fn extract_ctx(parts: &Parts, sc: &SecuritySetting) -> Result<Ctx, WebError> {
   let req_time = SystemTime::now();
 

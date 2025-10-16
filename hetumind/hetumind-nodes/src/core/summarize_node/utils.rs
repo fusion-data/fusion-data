@@ -721,7 +721,6 @@ fn convert_to_table_format(data: &[Value], config: &SummarizeConfig) -> Result<V
 #[cfg(test)]
 mod tests {
   use super::*;
-  use hetumind_core::workflow::{ExecutionData, make_execution_data_map};
 
   #[test]
   fn test_field_name_conversion() {

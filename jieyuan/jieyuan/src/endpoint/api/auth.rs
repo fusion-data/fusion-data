@@ -32,7 +32,8 @@ pub fn routes() -> OpenApiRouter<Application> {
     (status = 200, description = "登录成功", body = SigninResponse),
     (status = 401, description = "认证失败")
   ),
-  tag = "认证"
+  tag = "认证",
+  security()
 )]
 async fn signin(State(app): State<Application>, Json(req): Json<SigninRequest>) -> WebResult<SigninResponse> {
   let mm = app.get_component::<ModelManager>().unwrap();
@@ -51,7 +52,8 @@ async fn signin(State(app): State<Application>, Json(req): Json<SigninRequest>) 
     (status = 200, description = "注册成功"),
     (status = 400, description = "请求参数错误")
   ),
-  tag = "认证"
+  tag = "认证",
+  security()
 )]
 async fn signup(State(app): State<Application>, Json(req): Json<SignupReq>) -> WebResult<serde_json::Value> {
   let mm = app.get_component::<ModelManager>().unwrap();
@@ -69,7 +71,10 @@ async fn signup(State(app): State<Application>, Json(req): Json<SignupReq>) -> W
     (status = 200, description = "登出成功"),
     (status = 400, description = "请求参数错误")
   ),
-  tag = "认证"
+  tag = "认证",
+  security(
+    ("bearer_auth" = [])
+  )
 )]
 async fn signout(parts: Parts, State(app): State<Application>) -> WebResult<serde_json::Value> {
   // 从 Authorization 头中提取 token，简化处理
@@ -93,7 +98,8 @@ async fn signout(parts: Parts, State(app): State<Application>) -> WebResult<serd
     (status = 200, description = "刷新成功", body = SigninResponse),
     (status = 401, description = "认证失败")
   ),
-  tag = "认证"
+  tag = "认证",
+  security()
 )]
 async fn refresh_token(State(app): State<Application>, Json(req): Json<RefreshTokenReq>) -> WebResult<SigninResponse> {
   let mm = app.get_component::<ModelManager>().unwrap();
@@ -111,7 +117,10 @@ async fn refresh_token(State(app): State<Application>, Json(req): Json<RefreshTo
     (status = 200, description = "解析成功", body = serde_json::Value),
     (status = 401, description = "认证失败")
   ),
-  tag = "认证"
+  tag = "认证",
+  security(
+    ("bearer_auth" = [])
+  )
 )]
 async fn extract_token(parts: Parts, State(app): State<Application>) -> WebResult<serde_json::Value> {
   let ctx = extract_ctx(&parts, app.fusion_setting().security())?;
@@ -123,12 +132,16 @@ async fn extract_token(parts: Parts, State(app): State<Application>) -> WebResul
 #[utoipa::path(
   post,
   path = "/users/changes",
+  description = "用户变更查询 - 用于事件轮询。需要使用超级管理员权限生成的 token 访问",
   request_body = UserChangeQueryReq,
   responses(
     (status = 200, description = "查询成功", body = UserChangeQueryResp),
     (status = 400, description = "请求参数错误")
   ),
-  tag = "认证"
+  tag = "认证",
+  security(
+    ("bearer_auth" = [])
+  )
 )]
 async fn users_changes(
   State(app): State<Application>,

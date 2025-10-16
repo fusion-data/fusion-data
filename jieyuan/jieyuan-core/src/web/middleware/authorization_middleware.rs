@@ -4,11 +4,10 @@ use axum::{
   middleware::Next,
 };
 use fusion_common::ctx::Ctx;
-use fusion_core::application::Application;
 use fusion_web::WebError;
 
-use crate::access_control::PolicySvc;
-use crate::access_control::auth_ctx::{AuthContext, build_auth_context_with_timezone};
+use crate::model::auth_ctx::{AuthContext, build_auth_context_with_timezone};
+use crate::model::policy_engine::Decision;
 
 /// 路由元数据，用于绑定动作和资源模板
 #[derive(Clone)]
@@ -18,13 +17,16 @@ pub struct RouteMeta {
 }
 
 /// 函数级注释：最小授权中间件，将业务层 DataError 映射为 WebError
-pub async fn authz_guard(
-  State(policy_svc): State<PolicySvc>,
-  State(app): State<Application>,
+pub async fn authz_guard<PS>(
+  State(policy_svc): State<PS>,
+  State(app): State<fusion_core::application::Application>,
   ctx: Ctx,
   req: Request<axum::body::Body>,
   next: Next,
-) -> Result<Response<axum::body::Body>, WebError> {
+) -> Result<Response<axum::body::Body>, WebError>
+where
+  PS: AuthorizationService,
+{
   let ac = build_auth_context_with_timezone(&ctx, *app.fusion_setting().app().time_offset())
     .map_err(|e| WebError::new_with_msg(e.to_string()))?;
 
@@ -65,4 +67,41 @@ pub async fn inject_route_meta(
 ) -> axum::response::Response {
   req.extensions_mut().insert(RouteMeta { action, resource_tpl });
   next.run(req).await
+}
+
+/// 授权服务 trait，用于抽象不同的授权服务实现
+pub trait AuthorizationService {
+  /// 执行授权判断
+  fn authorize(
+    &self,
+    ctx: &AuthContext,
+    action: &str,
+    resource: &str,
+  ) -> impl std::future::Future<Output = Result<Decision, fusion_core::DataError>> + Send;
+}
+
+/// 为 PolicySvc 实现授权服务 trait
+impl<T> AuthorizationService for T
+where
+  T: AuthorizationServiceExt + std::marker::Sync,
+{
+  async fn authorize(
+    &self,
+    ctx: &AuthContext,
+    action: &str,
+    resource: &str,
+  ) -> Result<Decision, fusion_core::DataError> {
+    self.authorize_ext(ctx, action, resource).await
+  }
+}
+
+/// 授权服务扩展 trait，用于具体的授权服务实现
+pub trait AuthorizationServiceExt {
+  /// 执行授权判断（具体实现）
+  fn authorize_ext(
+    &self,
+    ctx: &AuthContext,
+    action: &str,
+    resource: &str,
+  ) -> impl std::future::Future<Output = Result<Decision, fusion_core::DataError>> + Send;
 }

@@ -1,5 +1,5 @@
+use fusion_common::page::Page;
 use fusion_common::time::{DateTime, FixedOffset};
-use fusionsql::page::Page;
 use fusionsql_core::filter::{OpValDateTime, OpValInt32, OpValInt64, OpValString};
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};

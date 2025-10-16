@@ -4,7 +4,7 @@ use serde_json::{Map, Value};
 use std::collections::HashMap;
 
 use super::{MergeConfig, MergeMode};
-use hetumind_core::workflow::{DataSource, ExecutionData, NodeExecutionError, NodeName};
+use hetumind_core::workflow::{ConnectionKind, DataSource, ExecutionData, NodeExecutionError, NodeName};
 
 /// 应用合并操作到数据上
 pub fn merge_data(
@@ -30,11 +30,7 @@ fn merge_append(
   for (index, data) in input_items.iter().enumerate() {
     result.push(ExecutionData::new_json(
       data.json().clone(),
-      Some(DataSource {
-        node_name: current_node_name.clone(),
-        output_port: hetumind_core::workflow::ConnectionKind::Main,
-        output_index: index,
-      }),
+      Some(DataSource { node_name: current_node_name.clone(), output_port: ConnectionKind::Main, output_index: index }),
     ));
   }
 
@@ -73,11 +69,7 @@ fn merge_by_key(
 
     result.push(ExecutionData::new_json(
       merged_json,
-      Some(DataSource {
-        node_name: current_node_name.clone(),
-        output_port: hetumind_core::workflow::ConnectionKind::Main,
-        output_index,
-      }),
+      Some(DataSource { node_name: current_node_name.clone(), output_port: ConnectionKind::Main, output_index }),
     ));
 
     output_index += 1;
@@ -117,11 +109,7 @@ fn merge_by_index(
 
       result.push(ExecutionData::new_json(
         merged_json,
-        Some(DataSource {
-          node_name: current_node_name.clone(),
-          output_port: hetumind_core::workflow::ConnectionKind::Main,
-          output_index,
-        }),
+        Some(DataSource { node_name: current_node_name.clone(), output_port: ConnectionKind::Main, output_index }),
       ));
 
       output_index += 1;
@@ -216,6 +204,7 @@ fn merge_values(value1: &Value, value2: &Value) -> Result<Value, NodeExecutionEr
 
 #[cfg(test)]
 mod tests {
+  use hetumind_core::workflow::ConnectionKind;
   use serde_json::json;
 
   use super::*;
@@ -255,34 +244,29 @@ mod tests {
 
   #[test]
   fn test_merge_by_index() {
-    let input_items = vec![
-      ExecutionData::new_json(json!({"name": "Alice"}), None),
-      ExecutionData::new_json(json!({"age": 25}), None),
-      ExecutionData::new_json(json!({"name": "Bob"}), None),
-    ];
-
     // 设置索引
     let items_with_index = vec![
       ExecutionData::new_json(
-        json!({"name": "Alice"}),
-        Some(DataSource {
-          node_name: "test".into(),
-          output_port: hetumind_core::workflow::ConnectionKind::Main,
-          output_index: 0,
-        }),
+        json!({"name": ["Alice"]}),
+        Some(DataSource { node_name: "test".into(), output_port: ConnectionKind::Main, output_index: 0 }),
+      ),
+      ExecutionData::new_json(
+        json!({"age": 37}),
+        Some(DataSource { node_name: "test".into(), output_port: ConnectionKind::Main, output_index: 1 }),
+      ),
+      ExecutionData::new_json(
+        json!({"name": ["Bob"]}),
+        Some(DataSource { node_name: "test".into(), output_port: ConnectionKind::Main, output_index: 0 }),
       ),
       ExecutionData::new_json(
         json!({"age": 25}),
-        Some(DataSource {
-          node_name: "test".into(),
-          output_port: hetumind_core::workflow::ConnectionKind::Main,
-          output_index: 1,
-        }),
+        Some(DataSource { node_name: "test".into(), output_port: ConnectionKind::Main, output_index: 1 }),
       ),
     ];
 
     let result = merge_by_index(&items_with_index, &"test".into()).unwrap();
     assert_eq!(result.len(), 2);
+    println!("result: {:?}", result);
   }
 
   #[test]
