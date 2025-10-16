@@ -37,7 +37,7 @@ pub struct PolicyDocument {
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(sqlx::FromRow, fusionsql::field::Fields), sea_query::enum_def)]
+#[cfg_attr(feature = "with-db", derive(sqlx::FromRow, fusionsql::Fields), sea_query::enum_def)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct PolicyEntity {
   pub id: i64,
@@ -51,7 +51,7 @@ pub struct PolicyEntity {
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(fusionsql::field::Fields))]
+#[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct PolicyForCreate {
   pub id: i64,
@@ -61,7 +61,7 @@ pub struct PolicyForCreate {
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(fusionsql::field::Fields))]
+#[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct PolicyForUpdate {
   pub description: Option<String>,

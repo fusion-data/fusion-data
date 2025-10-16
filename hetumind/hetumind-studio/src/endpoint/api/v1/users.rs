@@ -6,7 +6,7 @@ use axum::{
 use fusion_core::application::Application;
 use fusion_web::{Router, WebResult, ok_json};
 use fusionsql::page::PageResult;
-use jieyuan_core::auth::permission_middleware::permission_middleware_layer;
+use jieyuan_core::web::middleware::permission_layer;
 use serde::{Deserialize, Serialize};
 
 use crate::domain::user::{UserEntity, UserForPage, UserForUpdate, UserSvc};
@@ -29,12 +29,12 @@ pub fn routes() -> Router<Application> {
     .route(
       "/item/{id}",
       get(get_user_by_id)
-        .layer(permission_middleware_layer(&["user_read"]))
+        .layer(permission_layer(["user_read"]))
         .put(update_user_by_id)
-        .layer(permission_middleware_layer(&["user_update"])),
+        .layer(permission_layer(["user_update"])),
     )
-    .route("/item/{id}/password", put(update_user_password).layer(permission_middleware_layer(&["user_update"])))
-    .route("/query", post(query_user).layer(permission_middleware_layer(&["user_read"])))
+    .route("/item/{id}/password", put(update_user_password).layer(permission_layer(["user_update"])))
+    .route("/query", post(query_user).layer(permission_layer(["user_read"])))
 }
 
 async fn get_user_by_id(user_svc: UserSvc, Path(id): Path<i64>) -> WebResult<Option<UserEntity>> {

@@ -62,9 +62,7 @@ impl SwitchV1 {
       }
       SwitchMode::Expression => {
         let number_outputs = config.number_outputs.unwrap_or(1);
-        (0..number_outputs)
-          .map(|i| OutputPortConfig::new(ConnectionKind::Main, &i.to_string()))
-          .collect()
+        (0..number_outputs).map(|i| OutputPortConfig::new(ConnectionKind::Main, &i.to_string())).collect()
       }
     }
   }
@@ -302,38 +300,38 @@ impl TryFrom<NodeDefinition> for SwitchV1 {
           .with_required(false)
           .with_description("路由规则集合（Rules 模式）")
           .with_placeholder("添加规则...")
-          .with_kind_options(
-            hetumind_core::workflow::NodePropertyKindOptions {
-              filter: Some(hetumind_core::workflow::FilterTypeOptions::new()
-                .with_case_sensitive(json!("={{!$parameter.options.ignoreCase}}"))),
-              button_config: None,
-              container_class: None,
-              always_open_edit_window: None,
-              code_autocomplete: None,
-              editor: None,
-              editor_is_read_only: None,
-              sql_dialect: None,
-              load_options_depends_on: None,
-              load_options_method: None,
-              load_options: None,
-              max_value: None,
-              min_value: None,
-              multiple_values: None,
-              multiple_value_button_text: None,
-              number_precision: None,
-              password: None,
-              rows: None,
-              show_alpha: None,
-              sortable: None,
-              expirable: None,
-              resource_mapper: None,
-              assignment: None,
-              min_required_fields: None,
-              max_allowed_fields: None,
-              callout_action: None,
-              additional_properties: serde_json::Map::new(),
-            }
-          ),
+          .with_kind_options(hetumind_core::workflow::NodePropertyKindOptions {
+            filter: Some(
+              hetumind_core::workflow::FilterTypeOptions::new()
+                .with_case_sensitive(json!("={{!$parameter.options.ignoreCase}}")),
+            ),
+            button_config: None,
+            container_class: None,
+            always_open_edit_window: None,
+            code_autocomplete: None,
+            editor: None,
+            editor_is_read_only: None,
+            sql_dialect: None,
+            load_options_depends_on: None,
+            load_options_method: None,
+            load_options: None,
+            max_value: None,
+            min_value: None,
+            multiple_values: None,
+            multiple_value_button_text: None,
+            number_precision: None,
+            password: None,
+            rows: None,
+            show_alpha: None,
+            sortable: None,
+            expirable: None,
+            resource_mapper: None,
+            assignment: None,
+            min_required_fields: None,
+            max_allowed_fields: None,
+            callout_action: None,
+            additional_properties: serde_json::Map::new(),
+          }),
       )
       .add_property(
         NodeProperty::new(NodePropertyKind::Number)

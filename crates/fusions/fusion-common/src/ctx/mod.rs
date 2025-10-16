@@ -1,3 +1,4 @@
+use serde::Serialize;
 use serde_json::{Map, Value};
 use std::{
   ops::Deref,
@@ -15,18 +16,17 @@ pub enum CtxError {
   Unauthorized(String),
 }
 
-#[derive(Debug, Clone, Default)]
-pub struct CtxPayload {
-  payload: Map<String, Value>,
-}
+#[derive(Debug, Clone, Default, Serialize)]
+#[serde(transparent)]
+pub struct CtxPayload(Map<String, Value>);
 
 impl CtxPayload {
   pub fn new(payload: Map<String, Value>) -> Self {
-    Self { payload }
+    Self(payload)
   }
 
   pub fn into_inner(self) -> Map<String, Value> {
-    self.payload
+    self.0
   }
 
   pub fn set_subject(&mut self, value: impl Into<String>) {
@@ -45,25 +45,25 @@ impl CtxPayload {
   }
 
   pub fn set_string(&mut self, key: &str, value: impl Into<String>) {
-    self.payload.insert(key.to_string(), Value::String(value.into()));
+    self.0.insert(key.to_string(), Value::String(value.into()));
   }
 
   pub fn set_i64(&mut self, key: &str, value: i64) {
-    self.payload.insert(key.to_string(), Value::Number(value.into()));
+    self.0.insert(key.to_string(), Value::Number(value.into()));
   }
 
   pub fn set_i32(&mut self, key: &str, value: i32) {
-    self.payload.insert(key.to_string(), Value::Number(value.into()));
+    self.0.insert(key.to_string(), Value::Number(value.into()));
   }
 
   pub fn set_system_time(&mut self, key: &str, value: impl Into<SystemTime>) {
     self
-      .payload
+      .0
       .insert(key.to_string(), Value::Number(value.into().duration_since(UNIX_EPOCH).unwrap().as_secs().into()));
   }
 
   pub fn set_bool(&mut self, key: &str, value: bool) {
-    self.payload.insert(key.to_string(), Value::Bool(value));
+    self.0.insert(key.to_string(), Value::Bool(value));
   }
 
   pub fn set_strings<I, S>(&mut self, key: &str, value: I)
@@ -72,7 +72,7 @@ impl CtxPayload {
     S: Into<String>,
   {
     self
-      .payload
+      .0
       .insert(key.to_string(), Value::Array(value.into_iter().map(|s| Value::String(s.into())).collect()));
   }
 
@@ -89,20 +89,20 @@ impl CtxPayload {
   }
 
   pub fn get_str(&self, key: &str) -> Option<&str> {
-    self.payload.get(key).and_then(|s| s.as_str())
+    self.0.get(key).and_then(|s| s.as_str())
   }
 
   pub fn get_i64(&self, key: &str) -> Option<i64> {
-    self.payload.get(key).and_then(|s| s.as_i64())
+    self.0.get(key).and_then(|s| s.as_i64())
   }
 
   pub fn get_i32(&self, key: &str) -> Option<i32> {
-    self.payload.get(key).and_then(|s| s.as_i64()).map(|v| v as i32)
+    self.0.get(key).and_then(|s| s.as_i64()).map(|v| v as i32)
   }
 
   pub fn get_strings(&self, key: &str) -> Option<Vec<&str>> {
     self
-      .payload
+      .0
       .get(key)
       .and_then(|s| s.as_array())
       .map(|v| v.iter().filter_map(|s| s.as_str()).map(|s| s.trim()).collect())
@@ -113,7 +113,7 @@ impl CtxPayload {
   }
 
   pub fn get_bool(&self, key: &str) -> Option<bool> {
-    self.payload.get(key).and_then(|s| s.as_bool())
+    self.0.get(key).and_then(|s| s.as_bool())
   }
 }
 
@@ -123,7 +123,7 @@ impl From<Map<String, Value>> for CtxPayload {
   }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct CtxInner {
   payload: CtxPayload,
   req_time: SystemTime,
@@ -131,12 +131,14 @@ pub struct CtxInner {
 }
 
 /// 会话上下文。此处 clone 的成本很低
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize)]
+#[serde(transparent)]
 pub struct Ctx(Arc<CtxInner>);
 
 impl Ctx {
   pub const SUB: &str = "sub";
   pub const EXP: &str = "exp";
+  pub const TENANT_ID: &str = "tenant_id";
 
   pub(crate) fn new(payload: CtxPayload, req_time: SystemTime, req_id: String) -> Self {
     Self(Arc::new(CtxInner { payload, req_time, req_id }))
@@ -179,11 +181,20 @@ impl Ctx {
     Self::new(payload, req_time, "".to_string())
   }
 
+  pub fn get_uid(&self) -> Option<i64> {
+    self.payload.get_i64(Self::SUB)
+  }
+
   pub fn uid(&self) -> i64 {
-    match self.payload.get_str(Self::SUB) {
-      Some(sub) => sub.parse::<i64>().unwrap_or(0),
-      None => 0,
-    }
+    self.get_uid().unwrap_or(0)
+  }
+
+  pub fn get_tenant_id(&self) -> Option<i64> {
+    self.payload.get_i64(Self::TENANT_ID)
+  }
+
+  pub fn tenant_id(&self) -> i64 {
+    self.get_tenant_id().unwrap_or(0)
   }
 
   pub fn req_time(&self) -> &SystemTime {

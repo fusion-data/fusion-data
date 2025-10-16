@@ -25,16 +25,30 @@ impl From<i32> for TokenType {
   }
 }
 
-/// Signin request
+/// Signup request
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
-pub struct SigninRequest {
+pub struct SignupReq {
   pub email: Option<String>,
   pub phone: Option<String>,
   pub password: String,
 }
 
-impl SigninRequest {
+impl SignupReq {
+  pub fn validate(&self) -> Result<(), String> {
+    // 验证密码不为空
+    if self.password.is_empty() {
+      return Err("password is required".to_string());
+    }
+
+    // 验证 email 和 phone 互斥且至少提供一个
+    match (&self.email, &self.phone) {
+      (Some(_), Some(_)) => Err("email and phone cannot be provided simultaneously".to_string()),
+      (None, None) => Err("either email or phone must be provided".to_string()),
+      _ => Ok(()),
+    }
+  }
+
   pub fn into_split(self) -> (UserFilter, String) {
     (
       UserFilter {
@@ -43,6 +57,37 @@ impl SigninRequest {
         ..Default::default()
       },
       self.password,
+    )
+  }
+}
+
+/// Refresh token request
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
+pub struct RefreshTokenReq {
+  pub refresh_token: String,
+}
+
+/// Signin request
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
+pub struct SigninRequest {
+  pub email: Option<String>,
+  pub phone: Option<String>,
+  pub password: String,
+  pub tenant_id: Option<i64>,
+}
+
+impl SigninRequest {
+  pub fn into_split(self) -> (UserFilter, String, Option<i64>) {
+    (
+      UserFilter {
+        email: self.email.map(OpValString::eq),
+        phone: self.phone.map(OpValString::eq),
+        ..Default::default()
+      },
+      self.password,
+      self.tenant_id,
     )
   }
 }
@@ -158,5 +203,41 @@ pub struct UserChangeQueryResp {
 pub struct UserChangeInfo {
   pub id: i64,
   pub status: UserStatus,
+  pub updated_at: String,
+}
+
+/// Tenant user change query request for polling
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
+pub struct TenantUserChangeQueryReq {
+  pub page: Page,
+  pub filters: Vec<TenantUserChangeFilter>,
+}
+
+/// Filter for tenant user changes
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[cfg_attr(feature = "with-db", derive(fusionsql::FilterNodes))]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
+pub struct TenantUserChangeFilter {
+  #[serde(rename = "updated_at")]
+  pub updated_at: Option<OpValDateTime>,
+}
+
+/// Tenant user change query response
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
+pub struct TenantUserChangeQueryResp {
+  pub page: Paged,
+  pub result: Vec<TenantUserChangeInfo>,
+}
+
+/// Tenant user change information
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
+#[cfg_attr(feature = "with-db", derive(sqlx::FromRow, fusionsql::Fields))]
+pub struct TenantUserChangeInfo {
+  pub tenant_id: i64,
+  pub user_id: i64,
+  pub status: i16,
   pub updated_at: String,
 }

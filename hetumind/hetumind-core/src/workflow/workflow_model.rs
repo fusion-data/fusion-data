@@ -300,7 +300,7 @@ impl Workflow {
 }
 
 #[derive(Clone, Deserialize)]
-#[cfg_attr(feature = "fusionsql", derive(fusionsql::field::Fields))]
+#[cfg_attr(feature = "fusionsql", derive(fusionsql::Fields))]
 pub struct WorkflowForCreate {
   pub id: Option<WorkflowId>,
   pub name: String,
@@ -367,7 +367,7 @@ impl TryFrom<WorkflowForCreate> for Workflow {
 }
 
 #[derive(Clone, Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "fusionsql", derive(fusionsql::field::Fields))]
+#[cfg_attr(feature = "fusionsql", derive(fusionsql::Fields))]
 pub struct WorkflowForUpdate {
   pub name: Option<String>,
   pub status: Option<WorkflowStatus>,

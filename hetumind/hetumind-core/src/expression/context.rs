@@ -24,13 +24,7 @@ pub struct ExpressionExecutionContext {
 
 impl ExpressionExecutionContext {
   pub fn new(workflow: Arc<Workflow>, execution: Arc<Execution>) -> Self {
-    Self {
-      workflow,
-      execution,
-      env: HashMap::default(),
-      http_pagination: None,
-      vars: HashMap::default(),
-    }
+    Self { workflow, execution, env: HashMap::default(), http_pagination: None, vars: HashMap::default() }
   }
 
   pub fn with_env(mut self, env: HashMap<String, String>) -> Self {
@@ -68,4 +62,3 @@ pub struct HttpPagination {
   pub per_page: i32,
   pub has_next: bool,
 }
-

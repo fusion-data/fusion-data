@@ -30,19 +30,8 @@ pub struct ExecuteNodeAction {
 }
 
 impl ExecuteNodeAction {
-  pub fn new(
-    node_name: impl Into<String>,
-    input: JsonValue,
-    connection_type: ConnectionKind,
-    action_id: Uuid,
-  ) -> Self {
-    Self {
-      node_name: node_name.into(),
-      input,
-      connection_type,
-      action_id,
-      metadata: HashMap::default(),
-    }
+  pub fn new(node_name: impl Into<String>, input: JsonValue, connection_type: ConnectionKind, action_id: Uuid) -> Self {
+    Self { node_name: node_name.into(), input, connection_type, action_id, metadata: HashMap::default() }
   }
 
   pub fn with_node_name(mut self, node_name: impl Into<String>) -> Self {
@@ -96,12 +85,7 @@ pub struct GetConnectionDataAction {
 
 impl GetConnectionDataAction {
   pub fn new(connection_type: ConnectionKind, connection_index: usize, action_id: Uuid) -> Self {
-    Self {
-      connection_type,
-      connection_index,
-      action_id,
-      metadata: HashMap::default(),
-    }
+    Self { connection_type, connection_index, action_id, metadata: HashMap::default() }
   }
 
   pub fn with_connection_type(mut self, connection_type: ConnectionKind) -> Self {
@@ -161,12 +145,7 @@ pub struct EngineResult {
 
 impl EngineResult {
   pub fn new(action: EngineAction, data: ExecutionDataMap, status: NodeExecutionStatus) -> Self {
-    Self {
-      action,
-      data,
-      status,
-      error: None,
-    }
+    Self { action, data, status, error: None }
   }
 
   pub fn with_action(mut self, action: EngineAction) -> Self {

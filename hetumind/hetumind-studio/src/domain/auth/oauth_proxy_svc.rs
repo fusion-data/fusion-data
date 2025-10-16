@@ -46,8 +46,7 @@ impl FromRequestParts<Application> for OAuthProxySvc {
   type Rejection = WebError;
 
   async fn from_request_parts(_parts: &mut Parts, _state: &Application) -> Result<Self, Self::Rejection> {
-    let jieyuan_base_url = std::env::var("JIEYUAN_BASE_URL")
-      .unwrap_or_else(|_| "http://localhost:50010".to_string());
+    let jieyuan_base_url = std::env::var("JIEYUAN_BASE_URL").unwrap_or_else(|_| "http://localhost:50010".to_string());
 
     Ok(OAuthProxySvc::new(jieyuan_base_url))
   }

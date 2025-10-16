@@ -6,6 +6,7 @@
 
 ```
 psql -h localhost -U fusiondata -d fusiondata -f scripts/software/postgres/sqls/jieyuan-ddl.sql
+psql -h localhost -U fusiondata -d fusiondata -f scripts/software/postgres/sqls/jieyuan-dml.sql
 ```
 
 ## 清除脚本

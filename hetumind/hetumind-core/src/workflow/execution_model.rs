@@ -160,13 +160,7 @@ impl ExecutionResult {
     duration_ms: u64,
     nodes_result: HashMap<NodeName, NodeExecutionResult>,
   ) -> Self {
-    Self {
-      execution_id,
-      status,
-      end_nodes,
-      duration_ms,
-      nodes_result,
-    }
+    Self { execution_id, status, end_nodes, duration_ms, nodes_result }
   }
 
   pub fn is_success(&self) -> bool {
@@ -179,7 +173,7 @@ impl ExecutionResult {
 }
 
 #[derive(Deserialize)]
-#[cfg_attr(feature = "fusionsql", derive(fusionsql::field::Fields))]
+#[cfg_attr(feature = "fusionsql", derive(fusionsql::Fields))]
 pub struct ExecutionForUpdate {
   pub status: Option<ExecutionStatus>,
   pub finished_at: Option<OffsetDateTime>,

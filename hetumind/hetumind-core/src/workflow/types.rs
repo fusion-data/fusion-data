@@ -110,12 +110,7 @@ pub struct GetNodeParameterOptions {
 
 impl GetNodeParameterOptions {
   pub fn new() -> Self {
-    Self {
-      ensure_type: None,
-      extract_value: None,
-      raw_expressions: None,
-      skip_validation: None,
-    }
+    Self { ensure_type: None, extract_value: None, raw_expressions: None, skip_validation: None }
   }
 
   pub fn extract_value(&self) -> bool {
@@ -305,11 +300,7 @@ pub struct DisplayOptions {
 
 impl DisplayOptions {
   pub fn new() -> Self {
-    Self {
-      hide: None,
-      show: None,
-      hide_on_cloud: None,
-    }
+    Self { hide: None, show: None, hide_on_cloud: None }
   }
 
   // Builder methods
@@ -324,7 +315,10 @@ impl DisplayOptions {
   }
 
   pub fn add_hide(mut self, key: impl Into<String>, values: Vec<impl Into<JsonValue>>) -> Self {
-    self.hide.get_or_insert_with(HashMap::default).insert(key.into(), values.into_iter().map(|v| v.into()).collect());
+    self
+      .hide
+      .get_or_insert_with(HashMap::default)
+      .insert(key.into(), values.into_iter().map(|v| v.into()).collect());
     self
   }
 
@@ -351,11 +345,7 @@ pub struct ShowOptions {
 
 impl ShowOptions {
   pub fn new() -> Self {
-    Self {
-      version: None,
-      tool: None,
-      other: HashMap::default(),
-    }
+    Self { version: None, tool: None, other: HashMap::default() }
   }
 
   // Builder methods
@@ -417,11 +407,7 @@ pub struct NodePropertyAction {
 
 impl NodePropertyAction {
   pub fn new(kind: ButtonActionKind) -> Self {
-    Self {
-      kind,
-      handler: None,
-      target: None,
-    }
+    Self { kind, handler: None, target: None }
   }
 
   // Builder methods
@@ -518,12 +504,7 @@ pub struct ButtonConfig {
 
 impl ButtonConfig {
   pub fn new(action: NodePropertyAction) -> Self {
-    Self {
-      action,
-      label: None,
-      has_input_field: None,
-      input_field_max_length: None,
-    }
+    Self { action, label: None, has_input_field: None, input_field_max_length: None }
   }
 
   // Builder methods
@@ -585,10 +566,7 @@ pub struct CalloutAction {
 
 impl CalloutAction {
   pub fn new(action_kind: CalloutActionKind, label: impl Into<String>) -> Self {
-    Self {
-      action_kind,
-      label: label.into(),
-    }
+    Self { action_kind, label: label.into() }
   }
 
   // Builder methods
@@ -612,10 +590,7 @@ pub struct ResourceMapperFieldWords {
 
 impl ResourceMapperFieldWords {
   pub fn new(singular: impl Into<String>, plural: impl Into<String>) -> Self {
-    Self {
-      singular: singular.into(),
-      plural: plural.into(),
-    }
+    Self { singular: singular.into(), plural: plural.into() }
   }
 
   // Builder methods
@@ -640,11 +615,7 @@ pub struct MatchingFieldsLabels {
 
 impl MatchingFieldsLabels {
   pub fn new() -> Self {
-    Self {
-      title: None,
-      description: None,
-      hint: None,
-    }
+    Self { title: None, description: None, hint: None }
   }
 
   // Builder methods
@@ -834,11 +805,7 @@ pub struct AssignmentKindOptions {
 
 impl AssignmentKindOptions {
   pub fn new() -> Self {
-    Self {
-      hide_kind: None,
-      default_kind: None,
-      disable_kind: None,
-    }
+    Self { hide_kind: None, default_kind: None, disable_kind: None }
   }
 
   // Builder methods

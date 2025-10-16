@@ -78,37 +78,11 @@ fn create_base() -> NodeDefinition {
         .with_display_name("HTTP Method")
         .with_name("http_method")
         .with_options(vec![
-          Box::new(NodeProperty::new_option(
-            "GET",
-            "get",
-            json!("GET"),
-            NodePropertyKind::String,
-
-          )),
-          Box::new(NodeProperty::new_option(
-            "POST",
-            "post",
-            json!("POST"),
-            NodePropertyKind::String,
-          )),
-          Box::new(NodeProperty::new_option(
-            "PUT",
-            "put",
-            json!("PUT"),
-            NodePropertyKind::String,
-          )),
-          Box::new(NodeProperty::new_option(
-            "DELETE",
-            "delete",
-            json!("DELETE"),
-            NodePropertyKind::String,
-          )),
-          Box::new(NodeProperty::new_option(
-            "PATCH",
-            "patch",
-            json!("PATCH"),
-            NodePropertyKind::String,
-          )),
+          Box::new(NodeProperty::new_option("GET", "get", json!("GET"), NodePropertyKind::String)),
+          Box::new(NodeProperty::new_option("POST", "post", json!("POST"), NodePropertyKind::String)),
+          Box::new(NodeProperty::new_option("PUT", "put", json!("PUT"), NodePropertyKind::String)),
+          Box::new(NodeProperty::new_option("DELETE", "delete", json!("DELETE"), NodePropertyKind::String)),
+          Box::new(NodeProperty::new_option("PATCH", "patch", json!("PATCH"), NodePropertyKind::String)),
         ])
         .with_required(true)
         .with_description("HTTP method for the webhook endpoint"),
@@ -128,30 +102,10 @@ fn create_base() -> NodeDefinition {
         .with_display_name("Authentication")
         .with_name("authentication")
         .with_options(vec![
-          Box::new(NodeProperty::new_option(
-            "None",
-            "none",
-            json!("none"),
-            NodePropertyKind::String,
-          )),
-          Box::new(NodeProperty::new_option(
-            "Basic Auth",
-            "basic",
-            json!("basic"),
-            NodePropertyKind::String,
-          )),
-          Box::new(NodeProperty::new_option(
-            "Bearer Token",
-            "bearer",
-            json!("bearer"),
-            NodePropertyKind::String,
-          )),
-          Box::new(NodeProperty::new_option(
-            "Header Auth",
-            "header",
-            json!("header"),
-            NodePropertyKind::String,
-          )),
+          Box::new(NodeProperty::new_option("None", "none", json!("none"), NodePropertyKind::String)),
+          Box::new(NodeProperty::new_option("Basic Auth", "basic", json!("basic"), NodePropertyKind::String)),
+          Box::new(NodeProperty::new_option("Bearer Token", "bearer", json!("bearer"), NodePropertyKind::String)),
+          Box::new(NodeProperty::new_option("Header Auth", "header", json!("header"), NodePropertyKind::String)),
         ])
         .with_required(true)
         .with_description("Authentication method for the webhook"),

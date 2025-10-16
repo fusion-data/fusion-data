@@ -5,13 +5,14 @@ use fusion_web::WebError;
 use fusionsql::{ModelManager, filter::OpValInt64, page::PageResult};
 
 use jieyuan_core::model::{
-  User, UserCredential, UserCredentialForInsert, UserFilter, UserForCreate, UserForPage, UserForUpdate,
-  UserRoleForCreate,
+  TenantUserStatus, User, UserCredential, UserCredentialForInsert, UserFilter, UserForCreate, UserForPage,
+  UserForUpdate, UserRoleForCreate, UserStatus,
 };
 
 use crate::utils::model_manager_from_parts;
 
 use super::{UserBmc, UserCredentialBmc, UserRoleBmc};
+use crate::TenantUserBmc;
 
 #[derive(Clone)]
 pub struct UserSvc {
@@ -38,7 +39,11 @@ impl UserSvc {
       generate_pwd(setting.security().pwd().default_pwd()).await?
     };
 
-    let id = UserBmc::create(&mm, Self::validate_and_init(input)?).await?;
+    // 初始状态为未关联租户
+    let mut create_input = Self::validate_and_init(input)?;
+    create_input.status = Some(UserStatus::Inactive);
+
+    let id = UserBmc::create(&mm, create_input).await?;
     UserCredentialBmc::insert(&mm, UserCredentialForInsert { id, encrypted_pwd }).await?;
 
     mm.dbx().commit_txn().await?;
@@ -79,10 +84,109 @@ impl UserSvc {
     Ok((u, uc))
   }
 
+  /// 简化的用户创建方法，用于注册
+  pub async fn create_user(&self, filter: UserFilter, _encrypted_pwd: String) -> Result<i64> {
+    // 从 filter 中提取用户信息
+    let email = filter.email.as_ref().and_then(|op| op.eq.clone());
+
+    let phone = filter.phone.as_ref().and_then(|op| op.eq.clone());
+
+    let user_create = UserForCreate {
+      email,
+      phone,
+      name: None,                         // 将在 validate_and_init 中自动生成
+      status: Some(UserStatus::Inactive), // 初始状态为未关联租户
+      password: None,                     // 密码已经加密，不需要再处理
+    };
+
+    self.create(user_create).await
+  }
+
   pub async fn assign_role(&self, user_id: i64, role_ids: Vec<i64>) -> Result<()> {
     let user_roles = role_ids.into_iter().map(|role_id| UserRoleForCreate { user_id, role_id }).collect();
     UserRoleBmc::insert_many(&self.mm, user_roles).await?;
     Ok(())
+  }
+
+  /// 关联用户到租户
+  pub async fn link_user_to_tenant(&self, user_id: i64, tenant_id: i64, status: TenantUserStatus) -> Result<()> {
+    let mm = self.mm.get_txn_clone();
+    mm.dbx().begin_txn().await?;
+
+    // 创建关联
+    TenantUserBmc::link_user_to_tenant(&mm, user_id, tenant_id, status).await?;
+
+    // 更新用户状态
+    self.update_user_status_based_on_tenants(&mm, user_id).await?;
+
+    mm.dbx().commit_txn().await?;
+    Ok(())
+  }
+
+  /// 取消用户与租户的关联
+  pub async fn unlink_user_from_tenant(&self, user_id: i64, tenant_id: i64) -> Result<()> {
+    let mm = self.mm.get_txn_clone();
+    mm.dbx().begin_txn().await?;
+
+    // 删除关联
+    TenantUserBmc::unlink_user_from_tenant(&mm, user_id, tenant_id).await?;
+
+    // 更新用户状态
+    self.update_user_status_based_on_tenants(&mm, user_id).await?;
+
+    mm.dbx().commit_txn().await?;
+    Ok(())
+  }
+
+  /// 更新用户在租户中的状态
+  pub async fn update_user_tenant_status(&self, user_id: i64, tenant_id: i64, status: TenantUserStatus) -> Result<()> {
+    let mm = self.mm.get_txn_clone();
+    mm.dbx().begin_txn().await?;
+
+    // 更新关联状态
+    TenantUserBmc::update_tenant_user_status(&mm, user_id, tenant_id, status).await?;
+
+    // 更新用户状态
+    self.update_user_status_based_on_tenants(&mm, user_id).await?;
+
+    mm.dbx().commit_txn().await?;
+    Ok(())
+  }
+
+  /// 根据用户的租户关联状态更新用户状态
+  async fn update_user_status_based_on_tenants(&self, mm: &ModelManager, user_id: i64) -> Result<()> {
+    let active_tenant_count = TenantUserBmc::get_user_active_tenant_count(mm, user_id).await?;
+
+    let new_status = if active_tenant_count > 0 { UserStatus::Active } else { UserStatus::Inactive };
+
+    UserBmc::update_by_id(mm, user_id, UserForUpdate { status: Some(new_status), name: None }).await?;
+
+    Ok(())
+  }
+
+  /// 检查用户在指定租户中是否活跃
+  pub async fn is_user_active_in_tenant(&self, user_id: i64, tenant_id: i64) -> Result<bool> {
+    TenantUserBmc::is_user_active_in_tenant(&self.mm, user_id, tenant_id)
+      .await
+      .map_err(|e| fusion_core::DataError::from(e))
+  }
+
+  /// 获取用户的所有活跃租户关联
+  pub async fn get_user_active_tenants(&self, user_id: i64) -> Result<Vec<jieyuan_core::model::TenantUser>> {
+    TenantUserBmc::get_user_active_tenants(&self.mm, user_id)
+      .await
+      .map_err(|e| fusion_core::DataError::from(e))
+  }
+
+  /// 获取包含租户信息的用户数据（用于登录验证）
+  pub async fn get_user_with_tenant(
+    &self,
+    user_id: i64,
+    tenant_id: i64,
+  ) -> Result<Option<jieyuan_core::model::UserWithTenant>> {
+    TenantUserBmc::get_user_with_tenant(&self.mm, user_id, tenant_id)
+      .await
+      .map_err(|e| fusion_core::DataError::from(e))
   }
 
   /// 校验数据并进行初始化。`email` 或 `phone` 至少有一个，若两个值都设置，则只有 `email` 有效。

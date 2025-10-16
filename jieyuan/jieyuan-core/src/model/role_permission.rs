@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
-#[cfg_attr(feature = "with-db", derive(sqlx::FromRow, fusionsql::field::Fields), sea_query::enum_def)]
+#[cfg_attr(feature = "with-db", derive(sqlx::FromRow, fusionsql::Fields), sea_query::enum_def)]
 pub struct RolePermission {
   role_id: i64,
   permission_id: i64,
@@ -14,7 +14,7 @@ pub struct RolePermission {
 }
 
 #[derive(Debug)]
-#[cfg_attr(feature = "with-db", derive(fusionsql::field::Fields))]
+#[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct RolePermissionForCreate {
   pub role_id: i64,

@@ -6,7 +6,7 @@ create table if not exists user_entity (
   -- 用户ID，使用 jieyuan.iam_user.id（由程序端显式指定）
   id bigint constraint user_pk primary key,
   -- 用户邮箱，全局唯一，登录凭证
-  email varchar(255) not null,
+  email varchar(255),
   -- 手机号，全局唯一，登录凭证，可选。存储为完整格式（含国家/地区码），如 +8613800138000
   phone varchar(16),
   -- 用户名
@@ -33,22 +33,14 @@ create table if not exists user_entity (
   updated_by bigint
 );
 
-create unique index if not exists user_uidx_email on user_entity (email);
+create unique index if not exists user_uidx_email on user_entity (email)
+where
+  phone is not null;
 
 create unique index if not exists user_uidx_phone on user_entity (phone)
 where
   phone is not null;
 
-create table if not exists auth_identity (
-  user_id bigint constraint auth_identity_fk_user references user_entity,
-  provider_id varchar(64) not null,
-  provider_kind varchar(32) not null,
-  created_at timestamptz not null,
-  created_by bigint not null,
-  updated_at timestamptz,
-  updated_by bigint,
-  constraint auth_identity_pk primary key (provider_id, provider_kind)
-);
 
 create table if not exists user_api_key (
   id uuid not null constraint user_api_key_pk primary key,

@@ -12,10 +12,7 @@ pub struct PortInputFilter {
 
 impl PortInputFilter {
   pub fn new() -> Self {
-    Self {
-      includes: Vec::default(),
-      excludes: Vec::default(),
-    }
+    Self { includes: Vec::default(), excludes: Vec::default() }
   }
 
   pub fn with_includes<I, V>(mut self, includes: I) -> Self
@@ -68,14 +65,7 @@ pub struct InputPortConfig {
 
 impl InputPortConfig {
   pub fn new(kind: ConnectionKind, display_name: impl Into<String>) -> Self {
-    Self {
-      kind,
-      display_name: display_name.into(),
-      required: true,
-      filter: None,
-      max_connections: 1,
-      category: None,
-    }
+    Self { kind, display_name: display_name.into(), required: true, filter: None, max_connections: 1, category: None }
   }
 
   pub fn with_kind(mut self, kind: ConnectionKind) -> Self {
@@ -128,13 +118,7 @@ pub struct OutputPortConfig {
 
 impl OutputPortConfig {
   pub fn new(kind: ConnectionKind, display_name: impl Into<String>) -> Self {
-    Self {
-      kind,
-      display_name: display_name.into(),
-      required: true,
-      max_connections: 1,
-      category: None,
-    }
+    Self { kind, display_name: display_name.into(), required: true, max_connections: 1, category: None }
   }
 
   pub fn with_kind(mut self, kind: ConnectionKind) -> Self {

@@ -3,6 +3,8 @@ use fusion_common::time::{DateTime, FixedOffset};
 use fusionsql_core::filter::{OpValDateTime, OpValInt32, OpValInt64, OpValString};
 use serde::{Deserialize, Serialize};
 
+use super::tenant_user::TenantUserFilter;
+
 /// User status enumeration
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-db", derive(sqlx::Type))]
@@ -48,7 +50,7 @@ impl From<i32> for Gender {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(sqlx::FromRow, fusionsql::field::Fields), sea_query::enum_def)]
+#[cfg_attr(feature = "with-db", derive(sqlx::FromRow, fusionsql::Fields), sea_query::enum_def)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct User {
   pub id: i64,
@@ -64,7 +66,7 @@ pub struct User {
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(fusionsql::field::Fields))]
+#[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct UserForCreate {
   pub email: Option<String>,
@@ -76,7 +78,7 @@ pub struct UserForCreate {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(fusionsql::field::Fields))]
+#[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct UserForUpdate {
   pub name: Option<String>,
@@ -88,6 +90,13 @@ pub struct UserForUpdate {
 pub struct UserForPage {
   pub page: Page,
   pub filters: Vec<UserFilter>,
+}
+
+#[derive(Debug, Default, Deserialize)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
+pub struct UserForQuery {
+  pub page: Page,
+  pub filters: Vec<TenantUserFilter>,
 }
 
 #[derive(Debug, Default, Deserialize)]
@@ -106,6 +115,8 @@ pub struct UserFilter {
 
   pub gender: Option<OpValInt32>,
 
+  pub tenant_id: Option<OpValInt64>,
+
   pub created_by: Option<OpValInt64>,
 
   pub created_at: Option<OpValDateTime>,
@@ -115,7 +126,7 @@ pub struct UserFilter {
   pub updated_at: Option<OpValDateTime>,
 }
 
-#[cfg_attr(feature = "with-db", derive(sqlx::FromRow, fusionsql::field::Fields), sea_query::enum_def)]
+#[cfg_attr(feature = "with-db", derive(sqlx::FromRow, fusionsql::Fields), sea_query::enum_def)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct UserCredential {
   pub id: i64,
@@ -126,14 +137,14 @@ pub struct UserCredential {
   pub updated_at: Option<DateTime<FixedOffset>>,
 }
 
-#[cfg_attr(feature = "with-db", derive(fusionsql::field::Fields))]
+#[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
 pub struct UserCredentialForInsert {
   pub id: i64,
   pub encrypted_pwd: String,
 }
 
 #[derive(Default)]
-#[cfg_attr(feature = "with-db", derive(fusionsql::field::Fields))]
+#[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
 pub struct UserCredentialForUpdate {
   pub id: Option<i64>,
   pub encrypted_pwd: Option<String>,

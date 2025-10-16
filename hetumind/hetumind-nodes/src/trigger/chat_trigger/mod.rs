@@ -158,30 +158,10 @@ fn create_base() -> NodeDefinition {
         .with_display_name("Chat Interface")
         .with_name("chatInterface")
         .with_options(vec![
-          Box::new(NodeProperty::new_option(
-            "Web",
-            "web",
-            json!("web"),
-            NodePropertyKind::String,
-          )),
-          Box::new(NodeProperty::new_option(
-            "Embedded",
-            "embedded",
-            json!("embedded"),
-            NodePropertyKind::String,
-          )),
-          Box::new(NodeProperty::new_option(
-            "API",
-            "api",
-            json!("api"),
-            NodePropertyKind::String,
-          )),
-          Box::new(NodeProperty::new_option(
-            "Custom",
-            "custom",
-            json!("custom"),
-            NodePropertyKind::String,
-          )),
+          Box::new(NodeProperty::new_option("Web", "web", json!("web"), NodePropertyKind::String)),
+          Box::new(NodeProperty::new_option("Embedded", "embedded", json!("embedded"), NodePropertyKind::String)),
+          Box::new(NodeProperty::new_option("API", "api", json!("api"), NodePropertyKind::String)),
+          Box::new(NodeProperty::new_option("Custom", "custom", json!("custom"), NodePropertyKind::String)),
         ])
         .with_required(true)
         .with_description("The type of chat interface to use"),
@@ -215,24 +195,9 @@ fn create_base() -> NodeDefinition {
         .with_display_name("Response Format")
         .with_name("responseFormat")
         .with_options(vec![
-          Box::new(NodeProperty::new_option(
-            "JSON",
-            "json",
-            json!("json"),
-            NodePropertyKind::String,
-          )),
-          Box::new(NodeProperty::new_option(
-            "Text",
-            "text",
-            json!("text"),
-            NodePropertyKind::String,
-          )),
-          Box::new(NodeProperty::new_option(
-            "Markdown",
-            "markdown",
-            json!("markdown"),
-            NodePropertyKind::String,
-          )),
+          Box::new(NodeProperty::new_option("JSON", "json", json!("json"), NodePropertyKind::String)),
+          Box::new(NodeProperty::new_option("Text", "text", json!("text"), NodePropertyKind::String)),
+          Box::new(NodeProperty::new_option("Markdown", "markdown", json!("markdown"), NodePropertyKind::String)),
         ])
         .with_required(true)
         .with_description("Format of the response"),
@@ -258,24 +223,9 @@ fn create_base() -> NodeDefinition {
         .with_display_name("Authentication")
         .with_name("authentication")
         .with_options(vec![
-          Box::new(NodeProperty::new_option(
-            "None",
-            "none",
-            json!("none"),
-            NodePropertyKind::String,
-          )),
-          Box::new(NodeProperty::new_option(
-            "API Key",
-            "api_key",
-            json!("api_key"),
-            NodePropertyKind::String,
-          )),
-          Box::new(NodeProperty::new_option(
-            "Bearer Token",
-            "bearer",
-            json!("bearer"),
-            NodePropertyKind::String,
-          )),
+          Box::new(NodeProperty::new_option("None", "none", json!("none"), NodePropertyKind::String)),
+          Box::new(NodeProperty::new_option("API Key", "api_key", json!("api_key"), NodePropertyKind::String)),
+          Box::new(NodeProperty::new_option("Bearer Token", "bearer", json!("bearer"), NodePropertyKind::String)),
         ])
         .with_required(true)
         .with_description("Authentication method for the chat interface"),

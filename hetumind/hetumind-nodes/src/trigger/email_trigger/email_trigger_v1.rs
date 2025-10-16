@@ -281,24 +281,9 @@ impl EmailTriggerV1 {
           .with_display_name("Security")
           .with_name("imap_security")
           .with_options(vec![
-            Box::new(NodeProperty::new_option(
-              "SSL/TLS",
-              "ssl",
-              json!("ssl"),
-              NodePropertyKind::String,
-            )),
-            Box::new(NodeProperty::new_option(
-              "STARTTLS",
-              "starttls",
-              json!("starttls"),
-              NodePropertyKind::String,
-            )),
-            Box::new(NodeProperty::new_option(
-              "None",
-              "none",
-              json!("none"),
-              NodePropertyKind::String,
-            )),
+            Box::new(NodeProperty::new_option("SSL/TLS", "ssl", json!("ssl"), NodePropertyKind::String)),
+            Box::new(NodeProperty::new_option("STARTTLS", "starttls", json!("starttls"), NodePropertyKind::String)),
+            Box::new(NodeProperty::new_option("None", "none", json!("none"), NodePropertyKind::String)),
           ])
           .with_required(true)
           .with_description("Connection security mode")
@@ -309,24 +294,9 @@ impl EmailTriggerV1 {
           .with_display_name("Authentication")
           .with_name("imap_authentication")
           .with_options(vec![
-            Box::new(NodeProperty::new_option(
-              "Normal",
-              "normal",
-              json!("normal"),
-              NodePropertyKind::String,
-            )),
-            Box::new(NodeProperty::new_option(
-              "OAuth 2.0",
-              "oauth",
-              json!("oauth"),
-              NodePropertyKind::String,
-            )),
-            Box::new(NodeProperty::new_option(
-              "CRAM-MD5",
-              "cram_md5",
-              json!("cram_md5"),
-              NodePropertyKind::String,
-            )),
+            Box::new(NodeProperty::new_option("Normal", "normal", json!("normal"), NodePropertyKind::String)),
+            Box::new(NodeProperty::new_option("OAuth 2.0", "oauth", json!("oauth"), NodePropertyKind::String)),
+            Box::new(NodeProperty::new_option("CRAM-MD5", "cram_md5", json!("cram_md5"), NodePropertyKind::String)),
             Box::new(NodeProperty::new_option(
               "Digest MD5",
               "digest_md5",
@@ -383,24 +353,9 @@ impl EmailTriggerV1 {
           .with_display_name("Email Read Format")
           .with_name("email_read_format")
           .with_options(vec![
-            Box::new(NodeProperty::new_option(
-              "Raw",
-              "raw",
-              json!("raw"),
-              NodePropertyKind::String,
-            )),
-            Box::new(NodeProperty::new_option(
-              "Resolved",
-              "resolved",
-              json!("resolved"),
-              NodePropertyKind::String,
-            )),
-            Box::new(NodeProperty::new_option(
-              "Simple",
-              "simple",
-              json!("simple"),
-              NodePropertyKind::String,
-            )),
+            Box::new(NodeProperty::new_option("Raw", "raw", json!("raw"), NodePropertyKind::String)),
+            Box::new(NodeProperty::new_option("Resolved", "resolved", json!("resolved"), NodePropertyKind::String)),
+            Box::new(NodeProperty::new_option("Simple", "simple", json!("simple"), NodePropertyKind::String)),
           ])
           .with_required(true)
           .with_description("Email output format")
@@ -495,11 +450,11 @@ impl EmailTriggerV1 {
       )
       .add_property(
         NodeProperty::new(NodePropertyKind::Number)
-        .with_display_name("Max Attachment Size (bytes)")
-        .with_name("max_attachment_size")
-        .with_required(false)
-        .with_description("Maximum attachment size in bytes")
-        .with_value(json!(10485760)), // 10MB
+          .with_display_name("Max Attachment Size (bytes)")
+          .with_name("max_attachment_size")
+          .with_required(false)
+          .with_description("Maximum attachment size in bytes")
+          .with_value(json!(10485760)), // 10MB
       )
       .add_property(
         NodeProperty::new(NodePropertyKind::String)

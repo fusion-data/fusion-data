@@ -99,13 +99,7 @@ pub struct ExecutionTrace {
 
 impl ExecutionTrace {
   pub fn new(execution_id: ExecutionId, start_time: chrono::DateTime<chrono::FixedOffset>) -> Self {
-    Self {
-      execution_id,
-      start_time,
-      end_time: None,
-      node_traces: Vec::default(),
-      error_traces: Vec::default(),
-    }
+    Self { execution_id, start_time, end_time: None, node_traces: Vec::default(), error_traces: Vec::default() }
   }
 
   pub fn with_execution_id(mut self, execution_id: ExecutionId) -> Self {

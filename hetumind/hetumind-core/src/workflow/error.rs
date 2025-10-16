@@ -192,11 +192,7 @@ pub struct WorkflowErrorData {
 
 impl WorkflowErrorData {
   pub fn new(workflow: WorkflowErrorSource) -> Self {
-    Self {
-      workflow,
-      execution: None,
-      trigger: None,
-    }
+    Self { workflow, execution: None, trigger: None }
   }
 
   pub fn with_execution(mut self, execution: ExecutionErrorInfo) -> Self {

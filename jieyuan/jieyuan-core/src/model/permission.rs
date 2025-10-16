@@ -9,7 +9,7 @@ use super::RolePermissionFilter;
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 #[cfg_attr(
   feature = "with-db",
-  derive(sqlx::FromRow, fusionsql::field::Fields),
+  derive(sqlx::FromRow, fusionsql::Fields),
   sea_query::enum_def(table_name = "iam_permission")
 )]
 pub struct Permission {
@@ -25,7 +25,7 @@ pub struct Permission {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(fusionsql::field::Fields))]
+#[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct PermissionForCreate {
   pub code: String,
@@ -35,7 +35,7 @@ pub struct PermissionForCreate {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(fusionsql::field::Fields))]
+#[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct PermissionForUpdate {
   pub code: Option<String>,

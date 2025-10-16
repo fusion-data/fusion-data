@@ -1,6 +1,6 @@
 pub type Result<T> = core::result::Result<T, Error>;
 pub type Error = Box<dyn std::error::Error>; // For early dev.
-use fusionsql::field::Fields;
+use fusionsql::Fields;
 
 #[derive(Debug, Default, Fields)]
 #[fusionsql(rel = "todo_table", names_as_consts)]

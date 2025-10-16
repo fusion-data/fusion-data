@@ -12,28 +12,28 @@ use hetumind_core::workflow::{
   ExecuteWorkflowRequest, ExecutionIdResponse, ValidateWorkflowRequest, ValidateWorkflowResponse, Workflow,
   WorkflowForCreate, WorkflowForQuery, WorkflowForUpdate, WorkflowId, WorkflowStatus,
 };
-use jieyuan_core::auth::permission_middleware::permission_middleware_layer;
+use jieyuan_core::web::middleware::permission_layer;
 
 use crate::domain::workflow::WorkflowSvc;
 
 pub fn routes() -> Router<Application> {
   Router::new()
-    .route("/", post(create_workflow).layer(permission_middleware_layer(&["workflow_create"])))
-    .route("/query", post(query_workflows).layer(permission_middleware_layer(&["workflow_read"])))
-    .route("/validate", post(validate_workflow).layer(permission_middleware_layer(&["workflow_create"])))
+    .route("/", post(create_workflow).layer(permission_layer(["workflow_create"])))
+    .route("/query", post(query_workflows).layer(permission_layer(["workflow_read"])))
+    .route("/validate", post(validate_workflow).layer(permission_layer(["workflow_create"])))
     .route(
       "/{id}",
       get(get_workflow)
-        .layer(permission_middleware_layer(&["workflow_read"]))
+        .layer(permission_layer(["workflow_read"]))
         .put(update_workflow)
-        .layer(permission_middleware_layer(&["workflow_update"]))
+        .layer(permission_layer(["workflow_update"]))
         .delete(delete_workflow)
-        .layer(permission_middleware_layer(&["workflow_delete"])),
+        .layer(permission_layer(["workflow_delete"])),
     )
-    .route("/{id}/execute", post(execute_workflow).layer(permission_middleware_layer(&["workflow_execute"])))
-    .route("/{id}/activate", post(activate_workflow).layer(permission_middleware_layer(&["workflow_update"])))
-    .route("/{id}/deactivate", post(deactivate_workflow).layer(permission_middleware_layer(&["workflow_update"])))
-    .route("/{id}/duplicate", post(duplicate_workflow).layer(permission_middleware_layer(&["workflow_create"])))
+    .route("/{id}/execute", post(execute_workflow).layer(permission_layer(["workflow_execute"])))
+    .route("/{id}/activate", post(activate_workflow).layer(permission_layer(["workflow_update"])))
+    .route("/{id}/deactivate", post(deactivate_workflow).layer(permission_layer(["workflow_update"])))
+    .route("/{id}/duplicate", post(duplicate_workflow).layer(permission_layer(["workflow_create"])))
 }
 
 /// 列出工作流

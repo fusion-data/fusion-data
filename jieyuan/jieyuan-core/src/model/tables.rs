@@ -1,3 +1,5 @@
+pub const TABLE_TENANT: &str = "iam_tenant";
+pub const TABLE_TENANT_USER: &str = "iam_tenant_user";
 pub const TABLE_PERMISSION: &str = "iam_permission";
 pub const TABLE_USER: &str = "iam_user";
 pub const TABLE_USER_CREDENTIAL: &str = "iam_user_credential";

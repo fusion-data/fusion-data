@@ -179,39 +179,31 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
           transition: 'width 0.2s, left 0.2s',
         }}
       >
-        {/* 直接元素垂直排列，但内部元素保持原始布局 */}
+        {/* 底部菜单项 - 左对齐显示，参考顶部导航菜单样式 */}
         <div
           style={{
             display: 'flex',
             flexDirection: 'column',
-            alignItems: 'center',
-            gap: '12px',
+            alignItems: 'stretch',
+            gap: '4px',
           }}
         >
-          {/* 主题切换器 - ThemeSwitcher 保持原始布局 */}
+          {/* 主题切换器 - 左对齐布局 */}
           <div
             style={{
               display: 'flex',
-              flexDirection: 'column',
               alignItems: 'center',
-              gap: '4px',
+              padding: collapsed ? '8px' : '8px 16px',
+              borderRadius: '4px',
+              transition: 'background-color 0.2s',
+              justifyContent: collapsed ? 'center' : 'flex-start',
+              gap: collapsed ? '0' : '8px',
             }}
           >
-            <div
-              style={{
-                fontSize: collapsed ? '10px' : '12px',
-                color: 'var(--text-secondary)',
-                textAlign: 'center',
-                lineHeight: 1,
-                fontWeight: 500,
-              }}
-            >
-              主题
-            </div>
             <ThemeSwitcher />
           </div>
 
-          {/* 用户菜单 - 保持简洁的图标+文字布局 */}
+          {/* 用户菜单 - 左对齐布局 */}
           <Dropdown
             menu={{
               items: userMenuItems,
@@ -224,12 +216,12 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: collapsed ? '0' : '8px',
                 cursor: 'pointer',
-                padding: collapsed ? '4px' : '8px 12px',
+                padding: collapsed ? '8px' : '8px 16px',
                 borderRadius: '4px',
                 transition: 'background-color 0.2s',
-                flexDirection: collapsed ? 'column' : 'row',
+                justifyContent: collapsed ? 'center' : 'flex-start',
+                gap: collapsed ? '0' : '8px',
               }}
               onMouseEnter={e => {
                 e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
@@ -240,49 +232,9 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, onCollapse }) => {
             >
               <Avatar size="small" icon={<UserOutlined />} style={{ cursor: 'pointer' }} />
               {!collapsed && (
-                <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                  用户
-                </span>
+                <span style={{ fontSize: '14px', color: 'var(--text-primary)', fontWeight: 500 }}>用户</span>
               )}
             </div>
-          </Dropdown>
-
-          {/* 设置按钮 - 简洁的按钮布局 */}
-          <Dropdown
-            menu={{
-              items: userMenuItems.filter(item => item.key !== 'profile'), // 过滤掉重复的个人设置
-              onClick: handleUserMenuClick,
-            }}
-            trigger={['click']}
-            placement="topRight"
-          >
-            <Button
-              type="text"
-              size="small"
-              icon={<SettingOutlined />}
-              style={{
-                padding: collapsed ? '4px 8px' : '8px 12px',
-                color: 'var(--text-secondary)',
-                borderRadius: '4px',
-                transition: 'all 0.2s',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                flexDirection: collapsed ? 'column' : 'row',
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.backgroundColor = 'transparent';
-              }}
-            >
-              {!collapsed && (
-                <span style={{ fontSize: '12px' }}>
-                  设置
-                </span>
-              )}
-            </Button>
           </Dropdown>
         </div>
       </div>

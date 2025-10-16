@@ -28,6 +28,8 @@ with-web = [
   "dep:tower-http",
   "dep:http",
   "dep:futures",
+  "dep:reqwest",
+  "dep:headers",
 ]
 
 [dependencies]
@@ -49,5 +51,7 @@ tower-http = { workspace = true, optional = true }
 futures = { workspace = true, optional = true }
 log = { workspace = true }
 http = { workspace = true, optional = true }
+reqwest = { workspace = true, optional = true }
+headers = { workspace = true, optional = true }
 chrono = { workspace = true }
 semver = { workspace = true }

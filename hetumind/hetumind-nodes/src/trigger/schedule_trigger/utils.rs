@@ -16,24 +16,9 @@ pub fn create_base() -> NodeDefinition {
         .with_display_name("Schedule Mode")
         .with_name("schedule_mode")
         .with_options(vec![
-          Box::new(NodeProperty::new_option(
-            "Cron Expression",
-            "cron",
-            json!("cron"),
-            NodePropertyKind::String,
-          )),
-          Box::new(NodeProperty::new_option(
-            "Interval",
-            "interval",
-            json!("interval"),
-            NodePropertyKind::String,
-          )),
-          Box::new(NodeProperty::new_option(
-            "Daily",
-            "daily",
-            json!("daily"),
-            NodePropertyKind::String,
-          )),
+          Box::new(NodeProperty::new_option("Cron Expression", "cron", json!("cron"), NodePropertyKind::String)),
+          Box::new(NodeProperty::new_option("Interval", "interval", json!("interval"), NodePropertyKind::String)),
+          Box::new(NodeProperty::new_option("Daily", "daily", json!("daily"), NodePropertyKind::String)),
         ])
         .with_required(true)
         .with_description("The scheduling mode to use"),
@@ -120,36 +105,11 @@ pub fn create_base() -> NodeDefinition {
         .with_name("retry_interval")
         .with_required(false)
         .with_options(vec![
-          Box::new(NodeProperty::new_option(
-            "1 Minute",
-            "1m",
-            json!("1m"),
-            NodePropertyKind::String,
-          )),
-          Box::new(NodeProperty::new_option(
-            "5 Minutes",
-            "5m",
-            json!("5m"),
-            NodePropertyKind::String,
-          )),
-          Box::new(NodeProperty::new_option(
-            "15 Minutes",
-            "15m",
-            json!("15m"),
-            NodePropertyKind::String,
-          )),
-          Box::new(NodeProperty::new_option(
-            "30 Minutes",
-            "30m",
-            json!("30m"),
-            NodePropertyKind::String,
-          )),
-          Box::new(NodeProperty::new_option(
-            "1 Hour",
-            "1h",
-            json!("1h"),
-            NodePropertyKind::String,
-          )),
+          Box::new(NodeProperty::new_option("1 Minute", "1m", json!("1m"), NodePropertyKind::String)),
+          Box::new(NodeProperty::new_option("5 Minutes", "5m", json!("5m"), NodePropertyKind::String)),
+          Box::new(NodeProperty::new_option("15 Minutes", "15m", json!("15m"), NodePropertyKind::String)),
+          Box::new(NodeProperty::new_option("30 Minutes", "30m", json!("30m"), NodePropertyKind::String)),
+          Box::new(NodeProperty::new_option("1 Hour", "1h", json!("1h"), NodePropertyKind::String)),
         ])
         .with_description("Interval between retry attempts"),
     )

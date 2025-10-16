@@ -315,38 +315,38 @@ impl TryFrom<NodeDefinition> for IfV1 {
           .with_required(true)
           .with_description("要评估的条件列表")
           .with_placeholder("添加条件...")
-          .with_kind_options(
-            hetumind_core::workflow::NodePropertyKindOptions {
-              filter: Some(hetumind_core::workflow::FilterTypeOptions::new()
-                .with_case_sensitive(json!("={{!$parameter.options.ignore_case}}"))),
-              button_config: None,
-              container_class: None,
-              always_open_edit_window: None,
-              code_autocomplete: None,
-              editor: None,
-              editor_is_read_only: None,
-              sql_dialect: None,
-              load_options_depends_on: None,
-              load_options_method: None,
-              load_options: None,
-              max_value: None,
-              min_value: None,
-              multiple_values: None,
-              multiple_value_button_text: None,
-              number_precision: None,
-              password: None,
-              rows: None,
-              show_alpha: None,
-              sortable: None,
-              expirable: None,
-              resource_mapper: None,
-              assignment: None,
-              min_required_fields: None,
-              max_allowed_fields: None,
-              callout_action: None,
-              additional_properties: serde_json::Map::new(),
-            },
-          ),
+          .with_kind_options(hetumind_core::workflow::NodePropertyKindOptions {
+            filter: Some(
+              hetumind_core::workflow::FilterTypeOptions::new()
+                .with_case_sensitive(json!("={{!$parameter.options.ignore_case}}")),
+            ),
+            button_config: None,
+            container_class: None,
+            always_open_edit_window: None,
+            code_autocomplete: None,
+            editor: None,
+            editor_is_read_only: None,
+            sql_dialect: None,
+            load_options_depends_on: None,
+            load_options_method: None,
+            load_options: None,
+            max_value: None,
+            min_value: None,
+            multiple_values: None,
+            multiple_value_button_text: None,
+            number_precision: None,
+            password: None,
+            rows: None,
+            show_alpha: None,
+            sortable: None,
+            expirable: None,
+            resource_mapper: None,
+            assignment: None,
+            min_required_fields: None,
+            max_allowed_fields: None,
+            callout_action: None,
+            additional_properties: serde_json::Map::new(),
+          }),
       )
       .add_property(
         NodeProperty::new(NodePropertyKind::Collection)
@@ -368,8 +368,18 @@ impl TryFrom<NodeDefinition> for IfV1 {
           .with_required(false)
           .with_description("多个条件之间的逻辑关系")
           .with_value(json!(LogicCombination::And))
-          .add_option(Box::new(NodeProperty::new_option("AND", "and", json!(LogicCombination::And), NodePropertyKind::Boolean)))
-          .add_option(Box::new(NodeProperty::new_option("OR", "or", json!(LogicCombination::Or), NodePropertyKind::Boolean)))
+          .add_option(Box::new(NodeProperty::new_option(
+            "AND",
+            "and",
+            json!(LogicCombination::And),
+            NodePropertyKind::Boolean,
+          )))
+          .add_option(Box::new(NodeProperty::new_option(
+            "OR",
+            "or",
+            json!(LogicCombination::Or),
+            NodePropertyKind::Boolean,
+          )))
           .with_placeholder(""),
       )
       .add_property(

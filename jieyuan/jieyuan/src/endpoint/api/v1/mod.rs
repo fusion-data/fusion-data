@@ -1,4 +1,3 @@
-pub mod auth;
 pub mod permissions;
 pub mod policies;
 pub mod roles;
@@ -13,5 +12,4 @@ pub fn routes() -> OpenApiRouter<Application> {
     .nest("/roles", roles::routes())
     .nest("/permissions", permissions::routes())
     .nest("/policies", policies::routes())
-    .nest("/auth", auth::routes())
 }

@@ -57,12 +57,7 @@ pub fn create_base() -> NodeDefinition {
             json!("node_execution"),
             NodePropertyKind::String,
           )),
-          Box::new(NodeProperty::new_option(
-            "Timeout",
-            "timeout",
-            json!("timeout"),
-            NodePropertyKind::String,
-          )),
+          Box::new(NodeProperty::new_option("Timeout", "timeout", json!("timeout"), NodePropertyKind::String)),
           Box::new(NodeProperty::new_option(
             "Resource Exhausted",
             "resource_exhausted",
@@ -75,12 +70,7 @@ pub fn create_base() -> NodeDefinition {
             json!("external_service"),
             NodePropertyKind::String,
           )),
-          Box::new(NodeProperty::new_option(
-            "Validation",
-            "validation",
-            json!("validation"),
-            NodePropertyKind::String,
-          )),
+          Box::new(NodeProperty::new_option("Validation", "validation", json!("validation"), NodePropertyKind::String)),
           Box::new(NodeProperty::new_option(
             "Configuration",
             "configuration",
@@ -104,30 +94,10 @@ pub fn create_base() -> NodeDefinition {
         .with_display_name("Error Severity")
         .with_name("error_severity")
         .with_options(vec![
-          Box::new(NodeProperty::new_option(
-            "Low",
-            "low",
-            json!("low"),
-            NodePropertyKind::String,
-          )),
-          Box::new(NodeProperty::new_option(
-            "Medium",
-            "medium",
-            json!("medium"),
-            NodePropertyKind::String,
-          )),
-          Box::new(NodeProperty::new_option(
-            "High",
-            "high",
-            json!("high"),
-            NodePropertyKind::String,
-          )),
-          Box::new(NodeProperty::new_option(
-            "Critical",
-            "critical",
-            json!("critical"),
-            NodePropertyKind::String,
-          )),
+          Box::new(NodeProperty::new_option("Low", "low", json!("low"), NodePropertyKind::String)),
+          Box::new(NodeProperty::new_option("Medium", "medium", json!("medium"), NodePropertyKind::String)),
+          Box::new(NodeProperty::new_option("High", "high", json!("high"), NodePropertyKind::String)),
+          Box::new(NodeProperty::new_option("Critical", "critical", json!("critical"), NodePropertyKind::String)),
         ])
         .with_required(false)
         .with_description("Minimum error severity to trigger"),
@@ -169,30 +139,10 @@ pub fn create_base() -> NodeDefinition {
         .with_display_name("Notification Methods")
         .with_name("notification_methods")
         .with_options(vec![
-          Box::new(NodeProperty::new_option(
-            "Email",
-            "email",
-            json!("email"),
-            NodePropertyKind::String,
-          )),
-          Box::new(NodeProperty::new_option(
-            "Slack",
-            "slack",
-            json!("slack"),
-            NodePropertyKind::String,
-          )),
-          Box::new(NodeProperty::new_option(
-            "Webhook",
-            "webhook",
-            json!("webhook"),
-            NodePropertyKind::String,
-          )),
-          Box::new(NodeProperty::new_option(
-            "Database",
-            "database",
-            json!("database"),
-            NodePropertyKind::String,
-          )),
+          Box::new(NodeProperty::new_option("Email", "email", json!("email"), NodePropertyKind::String)),
+          Box::new(NodeProperty::new_option("Slack", "slack", json!("slack"), NodePropertyKind::String)),
+          Box::new(NodeProperty::new_option("Webhook", "webhook", json!("webhook"), NodePropertyKind::String)),
+          Box::new(NodeProperty::new_option("Database", "database", json!("database"), NodePropertyKind::String)),
         ])
         .with_required(false)
         .with_description("Methods to send notifications"),

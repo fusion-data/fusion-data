@@ -97,29 +97,24 @@ impl AgentBmc {
 
   /// 更新 Agent 心跳时间
   pub async fn update_heartbeat(mm: &ModelManager, agent_id: &str) -> Result<(), SqlError> {
-    let update = AgentForUpdate { 
-      last_heartbeat_at: Some(now_offset()),
-      status: Some(AgentStatus::Online),
-      ..Default::default() 
-    };
+    let update =
+      AgentForUpdate { last_heartbeat_at: Some(now_offset()), status: Some(AgentStatus::Online), ..Default::default() };
     Self::update_by_id(mm, agent_id, update).await.map(|_| ())
   }
 
   /// 更新 Agent 统计信息
   pub async fn update_statistics(
-    mm: &ModelManager, 
-    agent_id: &str, 
-    statistics: &AgentStatistics
+    mm: &ModelManager,
+    agent_id: &str,
+    statistics: &AgentStatistics,
   ) -> Result<(), SqlError> {
     // 由于 AgentForUpdate 没有 statistics 字段，我们需要直接使用 SQL 更新
     let sql = r#"
       UPDATE sched_agent 
       SET statistics = $1 
       WHERE id = $2"#;
-    
-    let query = sqlx::query(sql)
-      .bind(serde_json::to_value(statistics).unwrap())
-      .bind(agent_id);
+
+    let query = sqlx::query(sql).bind(serde_json::to_value(statistics).unwrap()).bind(agent_id);
 
     mm.dbx().db_postgres()?.execute(query).await?;
     Ok(())
@@ -136,7 +131,7 @@ impl AgentBmc {
     let agent = Self::get_by_id(mm, agent_id).await?;
     if let Some(agent) = agent {
       let mut stats = agent.statistics;
-      
+
       // 更新统计信息
       stats.total_tasks += 1;
       if success {

@@ -195,12 +195,10 @@ pub(super) fn create_definition() -> Result<NodeDefinition, RegistrationError> {
     .with_icon("globe");
 
   // Add input port
-  definition =
-    definition.add_input(InputPortConfig::new(ConnectionKind::Main, "Input"));
+  definition = definition.add_input(InputPortConfig::new(ConnectionKind::Main, "Input"));
 
   // Add output port
-  definition =
-    definition.add_output(OutputPortConfig::new(ConnectionKind::Main, "Output"));
+  definition = definition.add_output(OutputPortConfig::new(ConnectionKind::Main, "Output"));
 
   // Add properties
   definition = definition.add_property(

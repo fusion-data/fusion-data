@@ -15,7 +15,6 @@ create table if not exists iam_tenant (
 -- user
 create table if not exists iam_user (
   id bigserial not null,
-  tenant_id bigint not null,
   email text,
   phone text,
   name text not null,
@@ -40,6 +39,20 @@ create table if not exists iam_user_credential (
   updated_at timestamptz,
   constraint iam_user_credential_fk_id foreign key (id) references iam_user (id),
   constraint iam_user_credential_pk primary key (id)
+);
+
+-- tenant user association
+create table if not exists iam_tenant_user (
+  tenant_id bigint not null,
+  user_id bigint not null,
+  status smallint not null default 100,
+  created_by bigint not null,
+  created_at timestamptz not null default now(),
+  updated_by bigint,
+  updated_at timestamptz,
+  constraint iam_tenant_user_fk_tenant_id foreign key (tenant_id) references iam_tenant (id) on delete cascade,
+  constraint iam_tenant_user_fk_user_id foreign key (user_id) references iam_user (id) on delete cascade,
+  constraint iam_tenant_user_pk primary key (tenant_id, user_id)
 );
 
 -- policy
@@ -101,12 +114,19 @@ create table if not exists iam_user_role (
 );
 
 -- 统一唯一约束（中心负责）
-create unique index if not exists iam_user_uidx_email on iam_user (email) where email is not null;
-create unique index if not exists iam_user_uidx_phone on iam_user (phone) where phone is not null;
+create unique index if not exists iam_user_uidx_email on iam_user (email)
+where
+  email is not null;
+
+create unique index if not exists iam_user_uidx_phone on iam_user (phone)
+where
+  phone is not null;
 
 -- tenant 相关索引
-create index if not exists iam_user_idx_tenant_id on iam_user (tenant_id);
-create index if not exists iam_user_idx_tenant_status on iam_user (tenant_id, status);
 create index if not exists iam_role_idx_tenant_id on iam_role (tenant_id);
+
 create index if not exists iam_permission_idx_tenant_id on iam_permission (tenant_id);
+
 create index if not exists iam_policy_idx_tenant_id on iam_policy (tenant_id);
+
+create index if not exists iam_tenant_user_idx_status on iam_tenant_user (status);

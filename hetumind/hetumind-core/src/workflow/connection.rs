@@ -64,10 +64,7 @@ pub struct ConnectionCondition {
 
 impl ConnectionCondition {
   pub fn new(expression: impl Into<String>) -> Self {
-    Self {
-      expression: expression.into(),
-      description: None,
-    }
+    Self { expression: expression.into(), description: None }
   }
 
   pub fn with_expression(mut self, expression: impl Into<String>) -> Self {
@@ -109,14 +106,7 @@ pub struct Connection {
 
 impl Connection {
   pub fn new(node_name: impl Into<NodeName>, kind: ConnectionKind, index: ConnectionIndex) -> Self {
-    Self {
-      node_name: node_name.into(),
-      kind,
-      index,
-      condition: None,
-      weight: None,
-      enabled: true,
-    }
+    Self { node_name: node_name.into(), kind, index, condition: None, weight: None, enabled: true }
   }
 
   pub fn with_condition(mut self, condition: ConnectionCondition) -> Self {

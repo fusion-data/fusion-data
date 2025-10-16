@@ -1,5 +1,5 @@
 use fusion_common::time::OffsetDateTime;
-use fusionsql::field::Fields;
+use fusionsql::Fields;
 use hetumind_core::workflow::WorkflowId;
 use sea_query::enum_def;
 use serde::{Deserialize, Serialize};

@@ -1,10 +1,6 @@
 use axum::extract::FromRequestParts;
 use fusion_common::time::now_utc;
-use fusion_core::{
-  DataError,
-  application::Application,
-  configuration::KeyConf,
-};
+use fusion_core::{DataError, application::Application, configuration::KeyConf};
 use fusion_web::WebError;
 use hetumind_context::utils::{make_token, verify_token};
 use hetumind_core::credential::TokenType;
@@ -85,9 +81,6 @@ impl FromRequestParts<Application> for SignSvc {
   type Rejection = WebError;
 
   async fn from_request_parts(_parts: &mut Parts, state: &Application) -> Result<Self, Self::Rejection> {
-    Ok(SignSvc {
-      mm: state.component(),
-      application: state.clone()
-    })
+    Ok(SignSvc { mm: state.component(), application: state.clone() })
   }
 }
