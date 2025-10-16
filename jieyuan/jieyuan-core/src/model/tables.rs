@@ -7,3 +7,4 @@ pub const TABLE_ROLE: &str = "iam_role";
 pub const TABLE_USER_ROLE: &str = "iam_user_role";
 pub const TABLE_ROLE_PERMISSION: &str = "iam_role_permission";
 pub const TABLE_POLICY: &str = "iam_policy";
+pub const TABLE_POLICY_ATTACHMENT: &str = "iam_policy_attachment";

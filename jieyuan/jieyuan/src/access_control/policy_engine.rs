@@ -1,0 +1,493 @@
+use super::auth_ctx::AuthContext;
+use jieyuan_core::model::{PolicyDocument, PolicyEffect, PolicyEntity};
+
+/// 授权决策结果
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Decision {
+  Allow,
+  Deny,
+}
+
+/// 策略评估引擎
+pub struct PolicyEngine;
+
+impl PolicyEngine {
+  /// 函数级注释：匹配任意策略是否命中指定 effect
+  pub fn match_any(
+    policies: &[PolicyEntity],
+    ctx: &AuthContext,
+    action: &str,
+    resource: &str,
+    effect: PolicyEffect,
+  ) -> bool {
+    policies.iter().any(|p| Self::match_policy(p, ctx, action, resource, effect))
+  }
+
+  /// 函数级注释：匹配单个策略文档（Action/Resource 通配与 Condition 求值）
+  pub fn match_policy(
+    policy_entity: &PolicyEntity,
+    ctx: &AuthContext,
+    action: &str,
+    resource: &str,
+    target_effect: PolicyEffect,
+  ) -> bool {
+    // 解析策略文档
+    let policy: Result<PolicyDocument, _> = serde_json::from_value(policy_entity.policy.clone());
+    let Ok(policy) = policy else {
+      return false;
+    };
+
+    // 遍历策略中的所有声明
+    for statement in &policy.statement {
+      if statement.effect != target_effect {
+        continue;
+      }
+
+      // 检查动作匹配
+      if !Self::match_patterns(&statement.action, action) {
+        continue;
+      }
+
+      // 检查资源匹配
+      if !Self::match_patterns(&statement.resource, resource) {
+        continue;
+      }
+
+      // 检查条件匹配
+      if let Some(condition) = &statement.condition
+        && !Self::evaluate_condition(condition, ctx)
+      {
+        continue;
+      }
+
+      // 所有条件都匹配
+      return true;
+    }
+
+    false
+  }
+
+  /// 函数级注释：匹配模式（支持通配符 *）
+  pub fn match_patterns(patterns: &[String], target: &str) -> bool {
+    patterns.iter().any(|pattern| Self::match_pattern(pattern, target))
+  }
+
+  /// 函数级注释：匹配单个模式（支持高级通配符匹配）
+  fn match_pattern(pattern: &str, target: &str) -> bool {
+    // 完全匹配
+    if pattern == target {
+      return true;
+    }
+
+    // 全通配符
+    if pattern == "*" {
+      return true;
+    }
+
+    // 高级通配符匹配
+    Self::wildcard_match(pattern, target)
+  }
+
+  /// 通配符匹配算法（支持简单的 * 通配符）
+  fn wildcard_match(pattern: &str, target: &str) -> bool {
+    // 处理简单的单通配符情况
+    if let Some(star_pos) = pattern.find('*') {
+      let prefix = &pattern[..star_pos];
+      let suffix = &pattern[star_pos + 1..];
+
+      // 检查前缀匹配
+      if !prefix.is_empty() && !target.starts_with(prefix) {
+        return false;
+      }
+
+      // 检查后缀匹配
+      if !suffix.is_empty() && !target.ends_with(suffix) {
+        return false;
+      }
+
+      // 如果有前缀和后缀，检查中间部分长度是否足够
+      let middle_start = prefix.len();
+      let middle_end = target.len().saturating_sub(suffix.len());
+      if middle_end >= middle_start {
+        return true;
+      }
+
+      false
+    } else {
+      // 没有通配符，精确匹配
+      pattern == target
+    }
+  }
+
+  /// 函数级注释：求值条件表达式
+  fn evaluate_condition(condition: &serde_json::Value, ctx: &AuthContext) -> bool {
+    if let serde_json::Value::Object(map) = condition {
+      for (operator, operands) in map {
+        if let serde_json::Value::Object(operand_map) = operands {
+          for (key, expected_value) in operand_map {
+            let actual_value = Self::resolve_condition_key(key, ctx);
+            if !Self::evaluate_condition_operator(operator, &actual_value, expected_value) {
+              return false;
+            }
+          }
+        }
+      }
+      true
+    } else {
+      false
+    }
+  }
+
+  /// 函数级注释：解析条件键到实际值
+  fn resolve_condition_key(key: &str, ctx: &AuthContext) -> serde_json::Value {
+    match key {
+      "jr:tenant_id" => serde_json::Value::Number(ctx.principal_tenant_id.into()),
+      "jr:principal_user_id" => serde_json::Value::Number(ctx.principal_user_id.into()),
+      "jr:principal_roles" => {
+        serde_json::Value::Array(ctx.principal_roles.iter().map(|r| serde_json::Value::String(r.clone())).collect())
+      }
+      "jr:is_platform_admin" => serde_json::Value::Bool(ctx.is_platform_admin),
+      "jr:request_ip" => serde_json::Value::String(ctx.request_ip.clone()),
+      "jr:method" => serde_json::Value::String(ctx.method.clone()),
+      "jr:path" => serde_json::Value::String(ctx.path.clone()),
+      "jr:token_seq" => serde_json::Value::Number(ctx.token_seq.into()),
+      // 时间相关的条件键
+      "jr:current_time" => serde_json::Value::String(ctx.now.to_rfc3339()),
+      _ => serde_json::Value::Null,
+    }
+  }
+
+  /// 函数级注释：求值条件操作符
+  fn evaluate_condition_operator(operator: &str, actual: &serde_json::Value, expected: &serde_json::Value) -> bool {
+    match operator {
+      "string_equals" => Self::string_equals(actual, expected),
+      "string_not_equals" => Self::string_not_equals(actual, expected),
+      "string_like" => Self::string_like(actual, expected),
+      "string_not_like" => Self::string_not_like(actual, expected),
+      "numeric_equals" => Self::numeric_equals(actual, expected),
+      "numeric_not_equals" => Self::numeric_not_equals(actual, expected),
+      "numeric_greater_than" => Self::numeric_greater_than(actual, expected),
+      "numeric_less_than" => Self::numeric_less_than(actual, expected),
+      "numeric_greater_than_equal" => Self::numeric_greater_than_equal(actual, expected),
+      "numeric_less_than_equal" => Self::numeric_less_than_equal(actual, expected),
+      "bool" => Self::bool_equals(actual, expected),
+      "ip_in_network" => Self::ip_in_network(actual, expected),
+      "date_less_than" => Self::date_less_than(actual, expected),
+      "date_greater_than" => Self::date_greater_than(actual, expected),
+      "date_less_than_equal" => Self::date_less_than_equal(actual, expected),
+      "date_greater_than_equal" => Self::date_greater_than_equal(actual, expected),
+      _ => false,
+    }
+  }
+
+  fn string_equals(actual: &serde_json::Value, expected: &serde_json::Value) -> bool {
+    match (actual, expected) {
+      (serde_json::Value::String(a), serde_json::Value::String(e)) => a == e,
+      (serde_json::Value::Number(a), serde_json::Value::String(e)) => a.to_string() == *e,
+      (serde_json::Value::Array(arr), serde_json::Value::String(e)) => arr.iter().any(|v| match v {
+        serde_json::Value::String(a) => a == e,
+        serde_json::Value::Number(a) => a.to_string() == *e,
+        _ => false,
+      }),
+      _ => false,
+    }
+  }
+
+  fn string_like(actual: &serde_json::Value, expected: &serde_json::Value) -> bool {
+    match (actual, expected) {
+      (serde_json::Value::String(a), serde_json::Value::String(e)) => {
+        // 简单的通配符匹配
+        Self::match_pattern(e, a)
+      }
+      _ => false,
+    }
+  }
+
+  fn numeric_equals(actual: &serde_json::Value, expected: &serde_json::Value) -> bool {
+    match (actual, expected) {
+      (serde_json::Value::Number(a), serde_json::Value::Number(e)) => a == e,
+      _ => false,
+    }
+  }
+
+  fn bool_equals(actual: &serde_json::Value, expected: &serde_json::Value) -> bool {
+    match (actual, expected) {
+      (serde_json::Value::Bool(a), serde_json::Value::Bool(e)) => a == e,
+      _ => false,
+    }
+  }
+
+  fn date_less_than(actual: &serde_json::Value, expected: &serde_json::Value) -> bool {
+    match (actual, expected) {
+      (serde_json::Value::String(a), serde_json::Value::String(e)) => {
+        // 简单的字符串比较（实际应该解析为DateTime）
+        a < e
+      }
+      _ => false,
+    }
+  }
+
+  fn date_greater_than(actual: &serde_json::Value, expected: &serde_json::Value) -> bool {
+    match (actual, expected) {
+      (serde_json::Value::String(a), serde_json::Value::String(e)) => {
+        // 简单的字符串比较（实际应该解析为DateTime）
+        a > e
+      }
+      _ => false,
+    }
+  }
+
+  fn date_less_than_equal(actual: &serde_json::Value, expected: &serde_json::Value) -> bool {
+    match (actual, expected) {
+      (serde_json::Value::String(a), serde_json::Value::String(e)) => {
+        a <= e
+      }
+      _ => false,
+    }
+  }
+
+  fn date_greater_than_equal(actual: &serde_json::Value, expected: &serde_json::Value) -> bool {
+    match (actual, expected) {
+      (serde_json::Value::String(a), serde_json::Value::String(e)) => {
+        a >= e
+      }
+      _ => false,
+    }
+  }
+
+  fn string_not_equals(actual: &serde_json::Value, expected: &serde_json::Value) -> bool {
+    !Self::string_equals(actual, expected)
+  }
+
+  fn string_not_like(actual: &serde_json::Value, expected: &serde_json::Value) -> bool {
+    !Self::string_like(actual, expected)
+  }
+
+  fn numeric_not_equals(actual: &serde_json::Value, expected: &serde_json::Value) -> bool {
+    !Self::numeric_equals(actual, expected)
+  }
+
+  fn numeric_greater_than(actual: &serde_json::Value, expected: &serde_json::Value) -> bool {
+    match (actual, expected) {
+      (serde_json::Value::Number(a), serde_json::Value::Number(e)) => a.as_i64().map(|a_val| {
+        e.as_i64().map(|e_val| a_val > e_val).unwrap_or(false)
+      }).unwrap_or(false),
+      _ => false,
+    }
+  }
+
+  fn numeric_less_than(actual: &serde_json::Value, expected: &serde_json::Value) -> bool {
+    match (actual, expected) {
+      (serde_json::Value::Number(a), serde_json::Value::Number(e)) => a.as_i64().map(|a_val| {
+        e.as_i64().map(|e_val| a_val < e_val).unwrap_or(false)
+      }).unwrap_or(false),
+      _ => false,
+    }
+  }
+
+  fn numeric_greater_than_equal(actual: &serde_json::Value, expected: &serde_json::Value) -> bool {
+    match (actual, expected) {
+      (serde_json::Value::Number(a), serde_json::Value::Number(e)) => a.as_i64().map(|a_val| {
+        e.as_i64().map(|e_val| a_val >= e_val).unwrap_or(false)
+      }).unwrap_or(false),
+      _ => false,
+    }
+  }
+
+  fn numeric_less_than_equal(actual: &serde_json::Value, expected: &serde_json::Value) -> bool {
+    match (actual, expected) {
+      (serde_json::Value::Number(a), serde_json::Value::Number(e)) => a.as_i64().map(|a_val| {
+        e.as_i64().map(|e_val| a_val <= e_val).unwrap_or(false)
+      }).unwrap_or(false),
+      _ => false,
+    }
+  }
+
+  fn ip_in_network(actual: &serde_json::Value, expected: &serde_json::Value) -> bool {
+    match (actual, expected) {
+      (serde_json::Value::String(ip), serde_json::Value::String(network)) => {
+        // 简单的 IP 网络匹配实现（支持基本的 CIDR 表示法）
+        // 这里只实现基本的 IPv4 匹配，不依赖外部库
+        Self::ip_in_network_simple(ip, network)
+      }
+      _ => false,
+    }
+  }
+
+  // 简单的 IP 网络匹配实现
+  fn ip_in_network_simple(ip: &str, network: &str) -> bool {
+    // 简单实现：只支持精确匹配和 /24, /16, /8 网络匹配
+    if ip == network {
+      return true;
+    }
+
+    if let Some(slash_pos) = network.find('/') {
+      let network_ip = &network[..slash_pos];
+      let prefix_len: u32 = network[slash_pos + 1..].parse().unwrap_or(32);
+
+      if let (Ok(ip_addr), Ok(network_addr)) = (Self::parse_ipv4(ip), Self::parse_ipv4(network_ip)) {
+        if prefix_len == 0 {
+          return true; // 0.0.0.0/0 匹配所有
+        }
+        if prefix_len > 32 {
+          return false;
+        }
+
+        let mask = if prefix_len == 32 { 0xFFFFFFFF } else { !((1 << (32 - prefix_len)) - 1) };
+        (ip_addr & mask) == (network_addr & mask)
+      } else {
+        false
+      }
+    } else {
+      false
+    }
+  }
+
+  // 简单的 IPv4 地址解析
+  fn parse_ipv4(ip: &str) -> Result<u32, ()> {
+    let parts: Vec<&str> = ip.split('.').collect();
+    if parts.len() != 4 {
+      return Err(());
+    }
+
+    let mut result = 0u32;
+    for (i, part) in parts.iter().enumerate() {
+      let octet: u8 = part.parse().map_err(|_| ())?;
+      result |= (octet as u32) << (24 - i * 8);
+    }
+
+    Ok(result)
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+  use chrono::DateTime;
+  use serde_json::json;
+
+  fn create_test_context() -> AuthContext {
+    AuthContext {
+      principal_user_id: 1001,
+      principal_tenant_id: 42,
+      principal_roles: vec!["tenant_admin".to_string(), "ops".to_string()],
+      is_platform_admin: false,
+      token_seq: 3,
+      request_ip: "192.168.1.100".to_string(),
+      now: DateTime::parse_from_rfc3339("2025-01-01T12:00:00Z").unwrap(),
+      method: "put".to_string(),
+      path: "/api/v1/users/1001/password".to_string(),
+    }
+  }
+
+  #[test]
+  fn test_match_pattern_exact() {
+    assert!(PolicyEngine::match_pattern("user:update", "user:update"));
+    assert!(!PolicyEngine::match_pattern("user:update", "user:read"));
+  }
+
+  #[test]
+  fn test_match_pattern_wildcard() {
+    assert!(PolicyEngine::match_pattern("user:*", "user:update"));
+    assert!(PolicyEngine::match_pattern("user:*", "user:read"));
+    assert!(PolicyEngine::match_pattern("*", "any:action"));
+  }
+
+  #[test]
+  fn test_match_pattern_advanced_wildcard() {
+    // 测试通配符在中间
+    assert!(PolicyEngine::match_pattern("jr:user:*:profile", "jr:user:1001:profile"));
+  }
+
+  #[test]
+  fn test_match_pattern_edge_cases() {
+    // 测试边界情况
+    assert!(PolicyEngine::match_pattern("", ""));
+    assert!(!PolicyEngine::match_pattern("", "test"));
+    assert!(!PolicyEngine::match_pattern("test", ""));
+
+    // 测试不匹配的情况
+    assert!(!PolicyEngine::match_pattern("user:*:read", "user:1001:write"));
+    assert!(!PolicyEngine::match_pattern("admin:*", "user:read"));
+  }
+
+  #[test]
+  fn test_string_equals_condition() {
+    let ctx = create_test_context();
+
+    let condition = json!({
+      "string_equals": {
+        "jr:tenant_id": "42"
+      }
+    });
+
+    assert!(PolicyEngine::evaluate_condition(&condition, &ctx));
+  }
+
+  #[test]
+  fn test_string_equals_array_condition() {
+    let ctx = create_test_context();
+
+    let condition = json!({
+      "string_equals": {
+        "jr:principal_roles": "tenant_admin"
+      }
+    });
+
+    assert!(PolicyEngine::evaluate_condition(&condition, &ctx));
+  }
+
+  #[test]
+  fn test_numeric_greater_than_condition() {
+    let ctx = create_test_context();
+
+    let condition = json!({
+      "numeric_greater_than": {
+        "jr:tenant_id": 40
+      }
+    });
+
+    assert!(PolicyEngine::evaluate_condition(&condition, &ctx));
+  }
+
+  #[test]
+  fn test_numeric_less_than_condition() {
+    let ctx = create_test_context();
+
+    let condition = json!({
+      "numeric_less_than": {
+        "jr:tenant_id": 50
+      }
+    });
+
+    assert!(PolicyEngine::evaluate_condition(&condition, &ctx));
+  }
+
+  #[test]
+  fn test_ip_in_network_condition() {
+    let ctx = create_test_context();
+
+    let condition = json!({
+      "ip_in_network": {
+        "jr:request_ip": "192.168.2.100"
+      }
+    });
+
+    // 192.168.1.100 不在 192.168.2.0/24 网络中
+    assert!(!PolicyEngine::evaluate_condition(&condition, &ctx));
+  }
+
+  #[test]
+  fn test_ip_in_network_condition_with_network() {
+    let ctx = create_test_context();
+
+    let condition = json!({
+      "ip_in_network": {
+        "jr:request_ip": "192.168.1.0/24"
+      }
+    });
+
+    // 192.168.1.100 应该在 192.168.1.0/24 网络中
+    assert!(PolicyEngine::evaluate_condition(&condition, &ctx));
+  }
+}

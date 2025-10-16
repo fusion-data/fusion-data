@@ -14,6 +14,7 @@
   - 复用现有的错误处理模式
   - 遵循当前项目 Rust 编程最佳实践，对参数使用 snake_case 风格命名，对于 serde 序列化使用 `#[serde(rename_all = "snake_case")]` 注解
   - 注意 Arc 的使用以支持并发访问
+  - 确保程序正确实现并编译成功
 
 ---
 
@@ -212,12 +213,26 @@ use jieyuan_core::model::PolicyEntity;
 /// - 占位符来源统一：模板渲染的内置占位符仅来自 `AuthContext`；路由参数统一通过 `extras` 显式注入。
 /// - 便捷构建方法统一：使用 `AuthContext::try_from_ctx(ctx, time_offset)` 或 `build_auth_context`；不再提供不含时区的 `TryFrom<&Ctx>`。
 /// - 错误分层统一：仓库层返回 `fusion_core::DataError`（内部映射 `SqlError`）；端点/中间件仅使用 `fusion_web::WebError`。
-pub trait PolicyRepo: Send + Sync {
-  fn list_attached_policies_for_user(&self, tenant_id: i64, user_id: i64) -> Result<Vec<PolicyEntity>>;
-  fn list_policies_for_roles(&self, tenant_id: i64, role_codes: &[String]) -> Result<Vec<PolicyEntity>>;
-  fn list_resource_policies(&self, tenant_id: i64, resource: &str) -> Result<Vec<PolicyEntity>>;
-  fn find_permission_boundary(&self, tenant_id: i64, user_id: i64) -> Result<Option<PolicyEntity>>;
-  fn find_session_policy(&self, token_id: &str) -> Result<Option<PolicyEntity>>;
+#[derive(Clone)]
+pub struct PolicyRepo {
+  mm: ModelManager,
+}
+impl PolicyRepo {
+  pub fn list_attached_policies_for_user(&self, tenant_id: i64, user_id: i64) -> Result<Vec<PolicyEntity>> {
+    todo!("Implement list_attached_policies_for_user")
+  }
+  pub fn list_policies_for_roles(&self, tenant_id: i64, role_codes: &[String]) -> Result<Vec<PolicyEntity>> {
+    todo!("Implement list_policies_for_roles")
+  }
+  pub fn list_resource_policies(&self, tenant_id: i64, resource: &str) -> Result<Vec<PolicyEntity>> {
+    todo!("Implement list_resource_policies")
+  }
+  pub fn find_permission_boundary(&self, tenant_id: i64, user_id: i64) -> Result<Option<PolicyEntity>> {
+    todo!("Implement find_permission_boundary")
+  }
+  pub fn find_session_policy(&self, token_id: &str) -> Result<Option<PolicyEntity>> {
+    todo!("Implement find_session_policy")
+  }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -226,13 +241,12 @@ pub enum Decision { Allow, Deny }
 /// 权限服务（Arc 并发友好，使用 trait object）
 #[derive(Clone)]
 pub struct PolicySvc {
-  pub(crate) repo: Arc<dyn PolicyRepo + Send + Sync>,
+  pub(crate) repo: PolicyRepo,
 }
 
 impl PolicySvc {
   /// 函数级注释：创建权限服务（泛型入参，存储为 trait object）
-  pub fn new<R: PolicyRepo + Send + Sync + 'static>(repo: Arc<R>) -> Self {
-    // Arc<R> 可隐式强制转换为 Arc<dyn PolicyRepo + Send + Sync>
+  pub fn new(repo: PolicyRepo) -> Self {
     Self { repo }
   }
 
@@ -740,7 +754,7 @@ pub struct IamConfig {
 
 ## 并发与性能
 
-- `PolicySvc` 实现 `Clone`，并在内部以 `Arc<dyn PolicyRepo>` 持有仓库，使用时可直接按值传递或 `clone()`，无需再用 `Arc<PolicySvc>` 包裹。
+- `PolicySvc` 实现 `Clone`，并在内部以 `PolicyRepo` 持有仓库，使用时可直接按值传递或 `clone()`，无需再用 `Arc<PolicySvc>` 包裹。
 - 仓库查询遵循 BMC 模式与租户隔离；如需要强一致更新可在具体业务中使用 `SELECT ... FOR UPDATE`。
 
 ---
