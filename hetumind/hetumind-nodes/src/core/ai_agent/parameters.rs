@@ -82,6 +82,7 @@ pub enum ToolExecutionStatus {
 
 /// 会话消息
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct ConversationMessage {
   /// 消息角色
   pub role: MessageRole,

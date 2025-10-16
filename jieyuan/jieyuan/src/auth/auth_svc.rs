@@ -48,7 +48,7 @@ impl AuthSvc {
     }
 
     // 生成包含租户ID和令牌序列的令牌
-    let config = Application::global().fusion_config();
+    let config = Application::global().fusion_setting();
     let token = make_token_with_tenant(config.security(), u.id, tenant_id, uc.token_seq)?;
     Ok(SigninResponse { token, token_type: TokenType::Bearer })
   }
@@ -102,7 +102,7 @@ impl AuthSvc {
     let user_id = validate_token(&req.refresh_token)?;
 
     // 生成新的 access token
-    let config = Application::global().fusion_config();
+    let config = Application::global().fusion_setting();
     let token = make_token(config.security(), user_id)?;
     Ok(SigninResponse { token, token_type: TokenType::Bearer })
   }

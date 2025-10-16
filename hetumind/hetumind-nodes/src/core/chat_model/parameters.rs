@@ -45,34 +45,42 @@ impl Default for LlmConfig {
 
 /// 模型客户端枚举
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub enum ModelClient {
   OpenAI(OpenAIModel),
   Anthropic(AnthropicModel),
   Local(LocalModel),
+  #[allow(dead_code)]
   Custom(CustomModel),
 }
 
 /// OpenAI 模型
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct OpenAIModel {
   pub model: String,
+  #[allow(dead_code)]
   pub api_key: String,
   pub base_url: Option<String>,
 }
 
 /// Anthropic 模型
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct AnthropicModel {
   pub model: String,
+  #[allow(dead_code)]
   pub api_key: String,
   pub base_url: Option<String>,
 }
 
 /// 本地模型
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct LocalModel {
   pub endpoint: String,
   pub model_name: String,
+  #[allow(dead_code)]
   pub api_key: Option<String>,
 }
 
@@ -214,6 +222,7 @@ impl StreamingResponse {
   }
 
   /// 设置错误
+  #[allow(dead_code)]
   pub fn set_error(&mut self, error: String) {
     self.metadata.error = Some(error);
     self.finished = true;

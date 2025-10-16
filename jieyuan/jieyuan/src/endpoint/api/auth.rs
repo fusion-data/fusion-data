@@ -73,7 +73,7 @@ async fn signup(State(app): State<Application>, Json(req): Json<SignupReq>) -> W
 )]
 async fn signout(parts: Parts, State(app): State<Application>) -> WebResult<serde_json::Value> {
   // 从 Authorization 头中提取 token，简化处理
-  let _ctx = extract_ctx(&parts, app.fusion_config().security())?;
+  let _ctx = extract_ctx(&parts, app.fusion_setting().security())?;
 
   // TODO: 实际实现中应该提取完整的 token 字符串
   // 目前简化处理，直接返回成功
@@ -114,11 +114,10 @@ async fn refresh_token(State(app): State<Application>, Json(req): Json<RefreshTo
   tag = "认证"
 )]
 async fn extract_token(parts: Parts, State(app): State<Application>) -> WebResult<serde_json::Value> {
-  let ctx = extract_ctx(&parts, app.fusion_config().security())?;
+  let ctx = extract_ctx(&parts, app.fusion_setting().security())?;
   let ctx_json = serde_json::to_value(ctx.payload())?;
   ok_json!(ctx_json)
 }
-
 
 /// 用户变更查询 - 用于事件轮询
 #[utoipa::path(

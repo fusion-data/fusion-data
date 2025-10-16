@@ -9,6 +9,7 @@ use std::collections::HashMap;
 use super::{ErrorLevel, ErrorObject, StopAndErrorConfig};
 
 /// 错误处理结果
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct ErrorResult {
   /// 错误消息
@@ -161,6 +162,7 @@ pub fn validate_config_with_context(config: &StopAndErrorConfig, node_name: &str
 ///
 /// # 返回
 /// 返回解析后的 `ErrorObject` 或带有详细错误信息的 `ValidationError`。
+#[allow(dead_code)]
 pub fn parse_error_object(json_value: &Value) -> Result<ErrorObject, ValidationError> {
   // 检查是否为对象类型
   if !json_value.is_object() {
@@ -194,6 +196,7 @@ pub fn parse_error_object(json_value: &Value) -> Result<ErrorObject, ValidationE
 ///
 /// # 返回
 /// 返回提取到的错误消息字符串。
+#[allow(dead_code)]
 pub fn extract_error_message(error_obj: &ErrorObject) -> String {
   // 第一优先级: message 字段
   if let Some(ref message) = error_obj.message {
@@ -230,6 +233,7 @@ pub fn extract_error_message(error_obj: &ErrorObject) -> String {
 ///
 /// # 返回
 /// 返回包含所有错误上下文的元数据 JSON 对象。
+#[allow(dead_code)]
 pub fn build_error_metadata(error_obj: &ErrorObject, node_name: &str) -> Value {
   let mut metadata_map = HashMap::new();
 
@@ -297,6 +301,7 @@ pub fn format_error_level(level: &ErrorLevel) -> &'static str {
 ///
 /// # 返回
 /// 如果消息有效，返回 `Ok(())`，否则返回 `ValidationError`。
+#[allow(dead_code)]
 pub fn validate_error_message(message: &str) -> Result<(), ValidationError> {
   if message.trim().is_empty() {
     return Err(ValidationError::invalid_field_value(
@@ -336,6 +341,7 @@ pub fn validate_error_message(message: &str) -> Result<(), ValidationError> {
 ///
 /// # 返回
 /// 返回一个合理的默认错误对象。
+#[allow(dead_code)]
 pub fn create_default_error_object(node_name: &str, context: &str) -> ErrorObject {
   ErrorObject {
     code: Some("STOP_AND_ERROR_DEFAULT".to_string()),

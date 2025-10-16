@@ -30,7 +30,7 @@ impl SignSvc {
   /// 刷新访问令牌
   pub async fn refresh_token(&self, refresh_req: RefreshTokenRequest) -> Result<RefreshTokenResponse, DataError> {
     // 验证刷新令牌
-    let payload = verify_token(&refresh_req.refresh_token, self.application.fusion_config().security().pwd())?;
+    let payload = verify_token(&refresh_req.refresh_token, self.application.fusion_setting().security().pwd())?;
     let user_id = payload
       .get_subject()
       .ok_or_else(|| DataError::unauthorized("Invalid refresh token: missing user id"))?;
@@ -49,8 +49,8 @@ impl SignSvc {
     }
 
     // 生成新的访问令牌
-    let access_token = make_token(user.id.to_string(), self.application.fusion_config().security().pwd())?;
-    let expires_in = self.application.fusion_config().security().pwd().expires_in();
+    let access_token = make_token(user.id.to_string(), self.application.fusion_setting().security().pwd())?;
+    let expires_in = self.application.fusion_setting().security().pwd().expires_in();
 
     Ok(RefreshTokenResponse { access_token, token_type: TokenType::Bearer, expires_in })
   }
@@ -61,7 +61,7 @@ impl SignSvc {
 
     if !token_to_invalidate.is_empty() {
       // 将指定的令牌加入黑名单
-      if let Ok(payload) = verify_token(&token_to_invalidate, self.application.fusion_config().security().pwd()) {
+      if let Ok(payload) = verify_token(&token_to_invalidate, self.application.fusion_setting().security().pwd()) {
         let exp_timestamp = payload.get_exp().unwrap_or_else(|| {
           // 如果没有过期时间，设置24小时后过期
           (now_utc().timestamp() + 24 * 60 * 60) as i64

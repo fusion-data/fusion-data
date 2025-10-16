@@ -1,12 +1,16 @@
 use axum::extract::FromRequestParts;
 use fusion_common::regex;
-use fusion_core::{DataError, Result, application::Application, security::pwd::{generate_pwd, verify_pwd, is_strong_password}};
+use fusion_core::{
+  DataError, Result,
+  application::Application,
+  security::pwd::{generate_pwd, is_strong_password, verify_pwd},
+};
 use fusion_web::WebError;
 use fusionsql::{ModelManager, filter::OpValInt64, page::PageResult};
 
 use jieyuan_core::model::{
-  TenantUserStatus, UpdatePasswordRequest, User, UserCredential, UserCredentialForInsert, UserFilter, UserForCreate, UserForPage,
-  UserForUpdate, UserRoleForCreate, UserStatus,
+  TenantUserStatus, UpdatePasswordRequest, User, UserCredential, UserCredentialForInsert, UserFilter, UserForCreate,
+  UserForPage, UserForUpdate, UserRoleForCreate, UserStatus,
 };
 
 use crate::utils::model_manager_from_parts;
@@ -35,7 +39,7 @@ impl UserSvc {
       }
       generate_pwd(password).await?
     } else {
-      let setting = Application::global().fusion_config();
+      let setting = Application::global().fusion_setting();
       generate_pwd(setting.security().pwd().default_pwd()).await?
     };
 
@@ -199,14 +203,17 @@ impl UserSvc {
   ) -> Result<()> {
     // 1) 校验密码复杂度
     if !is_strong_password(&req.new_password) {
-      return Err(DataError::bad_request("Password must be at least 8 characters long and contain uppercase, lowercase, and digits"));
+      return Err(DataError::bad_request(
+        "Password must be at least 8 characters long and contain uppercase, lowercase, and digits",
+      ));
     }
 
     let mm = self.mm.get_txn_clone();
     mm.dbx().begin_txn().await?;
 
     // 2) 读取并锁定目标用户（租户隔离）
-    let user_credential = UserCredentialBmc::get_by_id_for_update(&mm, target_user_id, req.tenant_id).await?
+    let user_credential = UserCredentialBmc::get_by_id_for_update(&mm, target_user_id, req.tenant_id)
+      .await?
       .ok_or_else(|| DataError::not_found("User not found in specified tenant"))?;
 
     // 3) 权限判断
@@ -216,16 +223,20 @@ impl UserSvc {
     let is_admin = actor_tenant_id == 1; // 平台租户管理员
 
     if !is_self && !is_admin {
-      return Err(DataError::forbidden("Only users can modify their own password or administrators can modify others' passwords"));
+      return Err(DataError::forbidden(
+        "Only users can modify their own password or administrators can modify others' passwords",
+      ));
     }
 
     // 4) 自助修改必须校验旧密码
     if is_self {
-      let old_password = req.old_password
+      let old_password = req
+        .old_password
         .ok_or_else(|| DataError::bad_request("Old password is required for self-service password change"))?;
 
       // 校验旧密码
-      verify_pwd(&old_password, &user_credential.encrypted_pwd).await
+      verify_pwd(&old_password, &user_credential.encrypted_pwd)
+        .await
         .map_err(|_| DataError::bad_request("Current password is incorrect"))?;
     }
 

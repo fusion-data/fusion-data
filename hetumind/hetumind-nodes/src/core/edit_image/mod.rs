@@ -91,6 +91,7 @@ pub enum ImageFormat {
 }
 
 /// 调整大小选项
+#[allow(dead_code)]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ResizeOption {
@@ -105,6 +106,7 @@ pub enum ResizeOption {
 }
 
 /// 图像合成操作符
+#[allow(dead_code)]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum CompositeOperator {
@@ -123,6 +125,7 @@ pub enum CompositeOperator {
 }
 
 /// 绘制基本形状类型
+#[allow(dead_code)]
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum DrawPrimitive {

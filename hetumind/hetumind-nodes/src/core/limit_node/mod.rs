@@ -67,6 +67,7 @@ impl LimitConfig {
   }
 
   /// 获取配置描述
+  #[allow(dead_code)]
   pub fn get_description(&self) -> String {
     format!(
       "Limit to {} {} items",

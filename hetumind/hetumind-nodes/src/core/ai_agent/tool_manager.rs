@@ -4,6 +4,7 @@ use serde_json::Value;
 
 /// 工具定义结构
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct ToolDefinition {
   pub name: String,
   pub description: String,
@@ -11,6 +12,7 @@ pub struct ToolDefinition {
 }
 
 /// 工具管理器，负责注册和管理AI Agent可用的工具
+#[allow(dead_code)]
 pub struct ToolManager {
   tools: HashMap<String, ToolDefinition>,
 }
@@ -22,21 +24,25 @@ impl ToolManager {
   }
 
   /// 注册工具定义
+  #[allow(dead_code)]
   pub fn register_tool(&mut self, name: String, tool: ToolDefinition) {
     self.tools.insert(name, tool);
   }
 
   /// 获取工具定义
+  #[allow(dead_code)]
   pub fn get_tool(&self, name: &str) -> Option<&ToolDefinition> {
     self.tools.get(name)
   }
 
   /// 获取所有工具名称
+  #[allow(dead_code)]
   pub fn list_tools(&self) -> Vec<String> {
     self.tools.keys().cloned().collect()
   }
 
   /// 将工具定义转换为 rig-core 格式
+  #[allow(dead_code)]
   pub async fn convert_tool_definition(&self, tool_def: &Value) -> Result<ToolDefinition, NodeExecutionError> {
     let tool_name = tool_def
       .get("name")
@@ -64,6 +70,7 @@ impl Default for ToolManager {
 
 /// 工具调用结果
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[allow(dead_code)]
 pub struct ToolExecutionResult {
   /// 工具调用ID
   pub call_id: String,
@@ -81,11 +88,13 @@ pub struct ToolExecutionResult {
 
 impl ToolExecutionResult {
   /// 创建成功的执行结果
+  #[allow(dead_code)]
   pub fn success(call_id: String, tool_name: String, result: Value, duration_ms: u64) -> Self {
     Self { call_id, tool_name, result, success: true, error: None, duration_ms }
   }
 
   /// 创建失败的执行结果
+  #[allow(dead_code)]
   pub fn failure(call_id: String, tool_name: String, error: String, duration_ms: u64) -> Self {
     Self { call_id, tool_name, result: Value::Null, success: false, error: Some(error), duration_ms }
   }

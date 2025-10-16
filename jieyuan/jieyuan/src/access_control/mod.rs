@@ -1,4 +1,5 @@
 //! 访问控制服务
+pub mod auth_ctx;
 mod policy_bmc;
 mod policy_svc;
 

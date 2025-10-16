@@ -199,6 +199,7 @@ The project uses Cargo workspace with the following main components:
 Always utilize the latest Rust syntax features for cleaner, more maintainable code:
 
 - **Collapsible if statements**: Use `&&` operators instead of nested if blocks
+
   ```rust
   // ❌ Avoid nested if blocks
   if condition1 {
@@ -214,6 +215,7 @@ Always utilize the latest Rust syntax features for cleaner, more maintainable co
   ```
 
 - **Let-chains**: Use `let` in conditions for pattern matching
+
   ```rust
   // ✅ Modern let-chain syntax
   if let Some(value) = optional_value && value > 0 {
@@ -222,6 +224,7 @@ Always utilize the latest Rust syntax features for cleaner, more maintainable co
   ```
 
 - **If-let guards**: Use guards in if-let expressions
+
   ```rust
   // ✅ Guard patterns
   if let Some(value) = optional_value if value > 0 {
@@ -296,6 +299,7 @@ The platform implements a robust multi-tenant architecture to ensure data isolat
 **Tenant ID Field Guidelines**:
 
 - **Primary Tables (Require tenant_id)**: Core business entities that are tenant-specific
+
   - `user_entity`, `project`, `workflow_entity`, `execution_entity`
   - `credential_entity`, `sched_job`, `sched_task` (job definitions and task schedules)
   - These tables store tenant-owned data and require strict isolation
@@ -469,7 +473,7 @@ impl FromRequestParts<Application> for CredentialSvc {
   type Rejection = WebError;
 
   async fn from_request_parts(parts: &mut Parts, state: &Application) -> core::result::Result<Self, Self::Rejection> {
-    let ctx = extract_ctx(parts, state.fusion_config().security())?;
+    let ctx = extract_ctx(parts, state.fusion_setting().security())?;
     let mm = state.component::<ModelManager>().with_ctx(ctx);
     let key_manager = state.component();
     Ok(CredentialSvc { mm, key_manager })

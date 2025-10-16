@@ -1,7 +1,11 @@
-use axum::{Json, extract::{Path, State}, http::{StatusCode, request::Parts}};
+use axum::{
+  Json,
+  extract::{Path, State},
+  http::{StatusCode, request::Parts},
+};
 use fusion_common::model::IdI64Result;
 use fusion_core::application::Application;
-use fusion_web::{WebError, WebResult, ok_json, extract_ctx};
+use fusion_web::{WebError, WebResult, extract_ctx, ok_json};
 use utoipa_axum::router::OpenApiRouter;
 
 use jieyuan_core::model::{UpdatePasswordRequest, User, UserForCreate, UserForPage, UserForUpdate};
@@ -133,15 +137,10 @@ async fn user_update_password(
   Json(req): Json<UpdatePasswordRequest>,
 ) -> WebResult<()> {
   // 从请求中提取用户上下文
-  let ctx = extract_ctx(&parts, _app.fusion_config().security())?;
+  let ctx = extract_ctx(&parts, _app.fusion_setting().security())?;
 
   // 调用用户服务修改密码
-  user_svc.update_password(
-    ctx.uid(),
-    ctx.tenant_id(),
-    target_user_id,
-    req,
-  ).await?;
+  user_svc.update_password(ctx.uid(), ctx.tenant_id(), target_user_id, req).await?;
 
   ok_json!(())
 }

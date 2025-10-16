@@ -12,8 +12,7 @@ use hetumind_core::{
 use serde_json::json;
 
 use super::{
-  AggregateField, AggregateOperation, DataType, ErrorHandlingStrategy, GroupByConfig, GroupSortOrder, OutputFormat,
-  SerializationStyle, SummarizeConfig,
+  AggregateField, ErrorHandlingStrategy, GroupByConfig, OutputFormat, SerializationStyle, SummarizeConfig,
   utils::{aggregate_data, format_output},
 };
 
@@ -314,7 +313,10 @@ impl TryFrom<NodeDefinition> for SummarizeV1 {
 #[cfg(test)]
 mod tests {
   use super::*;
-  use crate::core::SummarizeNode;
+  use crate::core::{
+    SummarizeNode,
+    summarize_node::{AggregateOperation, DataType, GroupSortOrder},
+  };
   use hetumind_core::workflow::Node;
 
   #[test]

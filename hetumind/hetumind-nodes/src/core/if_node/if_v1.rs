@@ -5,9 +5,9 @@ use hetumind_core::{
   types::JsonValue,
   version::Version,
   workflow::{
-    ConnectionKind, ExecutionDataItems, ExecutionDataMap, FilterTypeOptions, InputPortConfig, NodeDefinition,
-    NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, NodePropertyKindOptions,
-    OutputPortConfig, RegistrationError, make_execution_data_map,
+    ConnectionKind, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition, NodeExecutable,
+    NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig, RegistrationError,
+    make_execution_data_map,
   },
 };
 use serde_json::json;
@@ -51,6 +51,7 @@ impl IfV1 {
   }
 
   /// 评估所有条件（保持向后兼容）
+  #[allow(dead_code)]
   pub fn evaluate_conditions(
     &self,
     conditions: &[ConditionConfig],

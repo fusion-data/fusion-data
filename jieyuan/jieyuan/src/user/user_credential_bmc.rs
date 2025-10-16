@@ -1,5 +1,5 @@
+use fusion_core::{DataError, Result};
 use fusionsql::{base::DbBmc, generate_pg_bmc_common, generate_pg_bmc_filter};
-use fusion_core::{Result, DataError};
 
 use jieyuan_core::model::{
   TABLE_USER_CREDENTIAL, UserCredential, UserCredentialFilter, UserCredentialForInsert, UserCredentialForUpdate,
@@ -30,7 +30,10 @@ impl UserCredentialBmc {
     user_id: i64,
     tenant_id: i64,
   ) -> Result<Option<UserCredential>> {
-    let db = mm.dbx().db_postgres().map_err(|e| DataError::bad_request(format!("Database connection error: {}", e)))?;
+    let db = mm
+      .dbx()
+      .db_postgres()
+      .map_err(|e| DataError::bad_request(format!("Database connection error: {}", e)))?;
 
     let query = r#"
       SELECT uc.id, uc.encrypted_pwd, uc.token_seq, uc.created_by, uc.created_at, uc.updated_by, uc.updated_at
@@ -56,7 +59,10 @@ impl UserCredentialBmc {
     user_id: i64,
     new_hashed_pwd: &str,
   ) -> Result<()> {
-    let db = mm.dbx().db_postgres().map_err(|e| DataError::bad_request(format!("Database connection error: {}", e)))?;
+    let db = mm
+      .dbx()
+      .db_postgres()
+      .map_err(|e| DataError::bad_request(format!("Database connection error: {}", e)))?;
 
     let query = r#"
       UPDATE iam_user_credential

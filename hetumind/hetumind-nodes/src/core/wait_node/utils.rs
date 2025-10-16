@@ -7,11 +7,11 @@ use serde_json::{Value, json};
 use std::collections::HashMap;
 
 use super::{
-  AuthenticationType, FieldValidation, FormConfig, FormField, FormFieldType, HttpMethod, LimitType, ResponseMode,
-  TimeLimitConfig, TimeUnit, WaitConfig, WaitMode, WebhookConfig,
+  FormConfig, FormField, FormFieldType, LimitType, TimeLimitConfig, TimeUnit, WaitConfig, WaitMode, WebhookConfig,
 };
 
 /// 简单的 HTML 转义函数
+#[allow(dead_code)]
 fn escape_html(text: &str) -> String {
   text
     .replace('&', "&amp;")
@@ -22,6 +22,7 @@ fn escape_html(text: &str) -> String {
 }
 
 /// HTML 属性转义函数
+#[allow(dead_code)]
 fn escape_html_attribute(text: &str) -> String {
   text
     .replace('&', "&amp;")
@@ -35,6 +36,7 @@ fn escape_html_attribute(text: &str) -> String {
 }
 
 /// 等待信息结构
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct WaitInfo {
   /// 等待模式
@@ -56,6 +58,7 @@ pub struct WaitInfo {
 }
 
 /// Webhook 响应数据
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct WebhookResponse {
   /// 响应状态码
@@ -957,7 +960,9 @@ pub fn create_form_html(form_config: &FormConfig, form_url: &str) -> String {
 #[cfg(test)]
 mod tests {
   use super::*;
-  use crate::core::wait_node::{SpecificTimeConfig, TimeIntervalConfig};
+  use crate::core::wait_node::{
+    AuthenticationType, FieldValidation, HttpMethod, ResponseMode, SpecificTimeConfig, TimeIntervalConfig,
+  };
   use chrono::Utc;
   use chrono::{Datelike, Timelike};
 

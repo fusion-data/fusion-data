@@ -314,6 +314,7 @@ impl SummarizeConfig {
   }
 
   /// 获取有效的序列化风格
+  #[allow(dead_code)]
   pub fn get_serialization_style(&self) -> SerializationStyle {
     self.serialization_style.clone()
   }

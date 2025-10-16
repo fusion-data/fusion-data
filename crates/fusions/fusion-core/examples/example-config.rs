@@ -4,6 +4,6 @@ use fusion_core::application::Application;
 async fn main() {
   let app = Application::builder().build().await.unwrap();
 
-  let config = app.fusion_config();
+  let config = app.fusion_setting();
   println!("Loaded config[app] is {:?}", config.app());
 }

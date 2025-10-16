@@ -19,6 +19,7 @@ use read_write_files_v1::ReadWriteFilesV1;
 use crate::constants::READ_WRITE_FILES_NODE_KIND;
 
 /// 操作类型
+#[allow(dead_code)]
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum OperationKind {
@@ -29,6 +30,7 @@ pub enum OperationKind {
 }
 
 /// 文件错误上下文
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct FileErrorContext {
   pub operation: String, // "read" or "write"

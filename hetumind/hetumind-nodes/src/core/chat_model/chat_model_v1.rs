@@ -143,14 +143,14 @@ impl ChatModelV1 {
     match config.provider.as_str() {
       "openai" => {
         let api_key = self.get_api_key_from_config_or_env(config, "OPENAI_API_KEY").await?;
-        let client = OpenAIClient::new(&api_key);
+        let _client = OpenAIClient::new(&api_key);
 
         // 创建一个简化的ModelClient，不使用rig-core的model方法
         Ok(ModelClient::OpenAI(OpenAIModel { model: config.model.clone(), api_key, base_url: config.base_url.clone() }))
       }
       "anthropic" => {
         let api_key = self.get_api_key_from_config_or_env(config, "ANTHROPIC_API_KEY").await?;
-        let client = AnthropicClient::new(&api_key);
+        let _client = AnthropicClient::new(&api_key);
 
         // 创建一个简化的ModelClient
         Ok(ModelClient::Anthropic(AnthropicModel {
@@ -207,7 +207,7 @@ impl ChatModelV1 {
 
   async fn execute_standard_inference(
     &self,
-    client: &ModelClient,
+    _client: &ModelClient,
     input_data: &hetumind_core::workflow::ExecutionData,
     config: &LlmConfig,
   ) -> Result<JsonValue, NodeExecutionError> {
@@ -227,7 +227,7 @@ impl ChatModelV1 {
       estimated_cost: 0.0,
     };
 
-    let total_tokens = usage.prompt_tokens + usage.completion_tokens;
+    let _total_tokens = usage.prompt_tokens + usage.completion_tokens;
 
     Ok(json!({
         "response": mock_response,
@@ -241,7 +241,7 @@ impl ChatModelV1 {
 
   async fn execute_streaming_inference(
     &self,
-    client: &ModelClient,
+    _client: &ModelClient,
     input_data: &hetumind_core::workflow::ExecutionData,
     config: &LlmConfig,
   ) -> Result<JsonValue, NodeExecutionError> {

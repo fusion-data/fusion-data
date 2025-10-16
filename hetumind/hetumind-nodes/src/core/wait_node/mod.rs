@@ -442,6 +442,7 @@ impl WaitConfig {
   }
 
   /// 检查是否超过时间限制
+  #[allow(dead_code)]
   pub fn is_time_limit_exceeded(&self) -> bool {
     if let Some(ref time_limit) = self.time_limit {
       if time_limit.enabled {

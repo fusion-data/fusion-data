@@ -17,10 +17,11 @@
 
 ### Coding
 
-- 复用现有的数据结构（hetumind-core 及 hetumind-nodes 两个项目）
+- 复用 fusion-xxx 库功能，如： fusion-common, fusion-core, fusion-web, fusion-db, fusionsql 等
 - 复用现有的错误处理模式
-- 遵循当前项目 Rust 编程最佳实践，对参数使用 snake_case 风格命名
+- 遵循当前项目 Rust 编程最佳实践，对参数使用 snake_case 风格命名，对于 serde 序列化使用 `#[serde(rename_all = "snake_case")]` 注解
 - 注意 Arc 的使用以支持并发访问
+- 编写单元测试并运行，确保代码实现正确
 - 定义结构化的数据类型优先（如：`pub struct Config`）；若需要直接使用 JSON 对象，请使用 `serde_json::json!` 宏进行构造
 - 使用 `serde` 的 struct, enum，当手动构建 JSON 字符串时注意序列化方式。比如：`#[serde(rename_all = "snake_case")]` 需要使用 snake_case 风格
 
@@ -303,7 +304,7 @@ API 接口规范：
 - 复用现有的错误处理模式
 - 遵循当前项目 Rust 编程最佳实践，对参数使用 snake_case 风格命名
 - 注意 Arc 的使用以支持并发访问
-- 确保代码正确，能够通过编译
+- 编写单元测试并运行，确保代码实现正确
 ```
 
 ---

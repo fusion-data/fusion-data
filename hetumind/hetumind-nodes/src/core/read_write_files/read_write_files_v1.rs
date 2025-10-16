@@ -25,6 +25,7 @@ pub struct ReadWriteFilesV1 {
 
 impl ReadWriteFilesV1 {
   /// 创建新的 ReadWriteFiles V1 执行器
+  #[allow(dead_code)]
   pub fn new(definition: NodeDefinition) -> Self {
     Self { definition: Arc::new(definition) }
   }
@@ -55,7 +56,7 @@ impl ReadWriteFilesV1 {
     let mut result_items = Vec::new();
 
     // 处理每个输入项
-    for (item_index, input_item) in input_items.iter().enumerate() {
+    for (_item_index, _input_item) in input_items.iter().enumerate() {
       // 获取文件选择器参数
       let file_selector: String = node
         .get_parameter("file_selector")
@@ -77,7 +78,7 @@ impl ReadWriteFilesV1 {
             let file_metadata = FileReader::create_file_metadata(&binary_ref, &file_path);
 
             // 创建执行数据项
-            let execution_data = ExecutionData::new_binary(
+            let _execution_data = ExecutionData::new_binary(
               binary_ref.clone(),
               Some(hetumind_core::workflow::DataSource {
                 node_name: context.current_node_name.clone(),
@@ -162,7 +163,7 @@ impl ReadWriteFilesV1 {
     let mut result_items = Vec::new();
 
     // 处理每个输入项
-    for (item_index, input_item) in input_items.iter().enumerate() {
+    for (_item_index, input_item) in input_items.iter().enumerate() {
       // 获取文件路径
       let file_path: String = node
         .get_parameter("file_path")
@@ -174,7 +175,7 @@ impl ReadWriteFilesV1 {
       let append_mode = options.get("append").and_then(|v| v.as_bool()).unwrap_or(false);
 
       // 获取文件内容，优先使用 JSON 数据而不是二进制数据
-      let file_content = if let Some(binary_ref) = input_item.binary() {
+      let file_content = if let Some(_binary_ref) = input_item.binary() {
         // 在真实实现中，这里应该从二进制数据管理器获取文件内容
         // 为了测试兼容性，尝试从 JSON 数据获取内容
         log::warn!("二进制数据引用检测到，但使用 JSON 数据进行测试兼容");
@@ -216,7 +217,7 @@ impl ReadWriteFilesV1 {
       let file_metadata = FileWriter::create_file_metadata(&updated_binary_ref, &file_path, append_mode);
 
       // 创建执行数据项
-      let execution_data = ExecutionData::new_binary(
+      let _execution_data = ExecutionData::new_binary(
         updated_binary_ref.clone(),
         Some(hetumind_core::workflow::DataSource {
           node_name: context.current_node_name.clone(),

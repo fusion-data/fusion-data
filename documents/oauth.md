@@ -87,12 +87,14 @@
     "page": 1,
     "limit": 100
   },
-  "filters": [{
-    "updated_at": {
-      "$gte": "2025-01-01T12:00:00Z",
-      "$lt": "2025-01-01T13:00:00Z"
+  "filters": [
+    {
+      "updated_at": {
+        "$gte": "2025-01-01T12:00:00Z",
+        "$lt": "2025-01-01T13:00:00Z"
+      }
     }
-  }]
+  ]
 }
 ```
 
@@ -106,7 +108,7 @@
   },
   "result": [
     { "id": 123, "status": "disabled", "updated_at": "2025-01-01T12:00:00Z" },
-    { "id": 456, "status": "revoked",  "updated_at": "2025-01-01T12:10:00Z" }
+    { "id": 456, "status": "revoked", "updated_at": "2025-01-01T12:10:00Z" }
   ]
 }
 ```
@@ -122,7 +124,7 @@ Hetumind 侧处理要点：
 ```rust
   /* 函数级注释：轮询中心用户变更，更新本地镜像（幂等） */
   async fn poll_user_changes(app: Application, updated_from: String, updated_to: String) -> Result<(), DataError> {
-    let base = app.fusion_config().service().get("JIEYUAN_BASE_URL").unwrap_or_default();
+    let base = app.fusion_setting().service().get("JIEYUAN_BASE_URL").unwrap_or_default();
     let url = format!("{}/iam/users/changes", base);
     let payload = serde_json::json!({
       "page": { "page": 1, "limit": 100 },
@@ -175,7 +177,7 @@ Hetumind 侧处理要点：
     mut parts: Parts,
   ) -> WebResult<serde_json::Value> {
     // 从请求提取 Ctx（读取 Authorization Bearer 或查询参数 access_token）
-    let ctx: Ctx = extract_ctx(&parts, app.fusion_config().security())?;
+    let ctx: Ctx = extract_ctx(&parts, app.fusion_setting().security())?;
 
     // 示例：检查 scopes（从 ctx.payload() 读取）
     let has_scope = ctx
@@ -328,7 +330,7 @@ Hetumind 侧处理要点：
 
     async fn from_request_parts(parts: &mut Parts, state: &Application) -> core::result::Result<Self, Self::Rejection> {
       // 提取 Ctx（支持 Authorization Bearer 或查询参数 access_token）
-      let ctx = extract_ctx(parts, state.fusion_config().security())?;
+      let ctx = extract_ctx(parts, state.fusion_setting().security())?;
       // 按上下文构造依赖（如 ModelManager.with_ctx(ctx)）
       let mm = state.component::<ModelManager>().with_ctx(ctx);
       Ok(WorkflowSvc { mm })
@@ -417,7 +419,7 @@ Hetumind 侧处理要点：
     app: Application,
     axum::extract::Path(provider): axum::extract::Path<String>,
   ) -> WebResult<serde_json::Value> {
-    let base = app.fusion_config().service().get("JIEYUAN_BASE_URL").unwrap_or("http://localhost:50010");
+    let base = app.fusion_setting().service().get("JIEYUAN_BASE_URL").unwrap_or("http://localhost:50010");
     // 请求 Jieyuan 构建授权 URL（含 code_challenge）
     let authorize_url = format!("{}/oauth/authorize?provider={}", base, provider);
     ok_json!(serde_json::json!({ "authorize_url": authorize_url }))
@@ -509,6 +511,7 @@ Hetumind 侧处理要点：
   - `result` 数据列表（数组）
 
 说明：
+
 - `jieyuan-core` 已提供统一模型以复用：
   - 请求：`ChangeQueryReq { page: PageRequest, filters: Vec<UpdatedAtWrapper> }`
   - 响应：`ChangeQueryResp<T> { page: PageResponse, result: Vec<T> }`
@@ -582,7 +585,7 @@ Hetumind 侧处理要点：
 
   /* 函数级注释：登录代理，转发至中心并原样响应令牌 */
   async fn signin(app: Application, JsonOrForm(req): JsonOrForm<SigninRequest>) -> WebResult<SigninResponse> {
-    let base = app.fusion_config().service().get("JIEYUAN_BASE_URL").unwrap_or("");
+    let base = app.fusion_setting().service().get("JIEYUAN_BASE_URL").unwrap_or("");
     let resp = Client::new().post(format!("{}/auth/signin", base)).json(&req).send().await?;
     if !resp.status().is_success() { /* 返回 DataError 映射 */ }
     let body: SigninResponse = resp.json().await?;
@@ -591,7 +594,7 @@ Hetumind 侧处理要点：
 
   /* 函数级注释：刷新令牌代理（中心刷新 Access） */
   async fn refresh(app: Application, JsonOrForm(req): JsonOrForm<RefreshRequest>) -> WebResult<SigninResponse> {
-    let base = app.fusion_config().service().get("JIEYUAN_BASE_URL").unwrap_or("");
+    let base = app.fusion_setting().service().get("JIEYUAN_BASE_URL").unwrap_or("");
     let resp = Client::new().post(format!("{}/auth/refresh", base)).json(&req).send().await?;
     let body: SigninResponse = resp.json().await?;
     ok_json!(body)
@@ -599,7 +602,7 @@ Hetumind 侧处理要点：
 
   /* 函数级注释：登出代理（中心撤销 Refresh Token/加入黑名单） */
   async fn signout(app: Application, JsonOrForm(req): JsonOrForm<SignoutRequest>) -> WebResult<()> {
-    let base = app.fusion_config().service().get("JIEYUAN_BASE_URL").unwrap_or("");
+    let base = app.fusion_setting().service().get("JIEYUAN_BASE_URL").unwrap_or("");
     let _ = Client::new().post(format!("{}/auth/signout", base)).json(&req).send().await?;
     ok_json!()
   }

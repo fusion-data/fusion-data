@@ -3,7 +3,6 @@
 use std::{sync::Arc, time::Duration};
 
 use async_trait::async_trait;
-use hetumind_core::version::Version;
 use hetumind_core::workflow::{
   ConnectionKind, DataSource, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition,
   NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeGroupKind, NodeProperty, NodePropertyKind,
@@ -263,6 +262,8 @@ pub(super) fn create_definition() -> Result<NodeDefinition, RegistrationError> {
 
 #[cfg(test)]
 mod tests {
+  use hetumind_core::version::Version;
+
   use super::*;
 
   #[test]

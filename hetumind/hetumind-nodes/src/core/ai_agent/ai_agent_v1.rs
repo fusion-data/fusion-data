@@ -265,22 +265,18 @@ impl AiAgentV1 {
 
   fn extract_tool_result(&self, result: &hetumind_core::workflow::EngineResult) -> Option<ToolCallResult> {
     // 从引擎结果中提取工具调用结果
-    match &result.action {
-      EngineAction::ExecuteNode(node_action) => {
-        if let Some(data) = result.data.get(&ConnectionKind::AiTool)
-          && let Some(items) = data.first()
-          && let Some(data_items) = items.get_data_items()
-          && let Some(execution_data) = data_items.first()
-        {
-          return Some(ToolCallResult {
-            tool_call_id: node_action.action_id.to_string(),
-            tool_name: node_action.node_name.clone(),
-            result: execution_data.json().clone(),
-            status: ToolExecutionStatus::Success,
-          });
-        }
-      }
-      _ => {}
+    if let EngineAction::ExecuteNode(node_action) = &result.action
+      && let Some(data) = result.data.get(&ConnectionKind::AiTool)
+      && let Some(items) = data.first()
+      && let Some(data_items) = items.get_data_items()
+      && let Some(execution_data) = data_items.first()
+    {
+      return Some(ToolCallResult {
+        tool_call_id: node_action.action_id.to_string(),
+        tool_name: node_action.node_name.clone(),
+        result: execution_data.json().clone(),
+        status: ToolExecutionStatus::Success,
+      });
     }
     None
   }

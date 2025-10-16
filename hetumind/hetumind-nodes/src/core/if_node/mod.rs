@@ -121,6 +121,7 @@ impl ConditionConfig {
   }
 
   /// 获取条件描述
+  #[allow(dead_code)]
   pub fn get_description(&self) -> String {
     self.description.clone().unwrap_or_else(|| {
       format!(

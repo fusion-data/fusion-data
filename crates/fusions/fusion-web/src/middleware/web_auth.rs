@@ -89,7 +89,7 @@ impl AsyncAuthorizeRequest<Body> for WebAuth {
       }
       None => Box::pin(async {
         let (mut parts, body) = request.into_parts();
-        let ctx = extract_ctx(&parts, Application::global().fusion_config().security()).map_err(web_error_2_body)?;
+        let ctx = extract_ctx(&parts, Application::global().fusion_setting().security()).map_err(web_error_2_body)?;
         parts.extensions.insert(ctx);
         Ok(Request::from_parts(parts, body))
       }),

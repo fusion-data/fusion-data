@@ -139,12 +139,14 @@ impl ConnectionDataManager {
   }
 
   /// 清空所有缓存
+  #[allow(dead_code)]
   pub async fn clear_cache(&self) {
     let mut cache = self.cache.write().await;
     cache.clear();
   }
 
   /// 获取缓存统计信息
+  #[allow(dead_code)]
   pub async fn get_cache_stats(&self) -> ConnectionCacheStats {
     let cache = self.cache.read().await;
     let now = chrono::Utc::now();
@@ -168,6 +170,7 @@ impl ConnectionDataManager {
 }
 
 /// 连接缓存统计信息
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct ConnectionCacheStats {
   pub total_entries: usize,

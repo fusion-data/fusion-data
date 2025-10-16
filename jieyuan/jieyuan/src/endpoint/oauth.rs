@@ -4,9 +4,7 @@ use fusion_web::{WebResult, ok_json};
 use fusionsql::ModelManager;
 use utoipa_axum::router::OpenApiRouter;
 
-use jieyuan_core::model::{
-  OAuthAuthorizeRequest, OAuthAuthorizeResponse, OAuthTokenRequest, OAuthTokenResponse,
-};
+use jieyuan_core::model::{OAuthAuthorizeRequest, OAuthAuthorizeResponse, OAuthTokenRequest, OAuthTokenResponse};
 
 use crate::auth::OAuthSvc;
 

@@ -124,7 +124,7 @@ impl OAuthSvc {
     let iam_user_id = self.create_or_update_user(&user_info).await?;
 
     // 生成 Jieyuan 统一令牌
-    let config = self.app.fusion_config();
+    let config = self.app.fusion_setting();
     let token = make_token(config.security(), iam_user_id)?;
 
     info!("Successfully exchanged token for provider {:?}, user_id: {}", req.provider, iam_user_id);

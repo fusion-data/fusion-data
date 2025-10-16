@@ -41,7 +41,7 @@ pub struct Application(pub(crate) Arc<ApplicationInner>);
 
 impl Display for Application {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-    write!(f, "Application({}|{})", self.fusion_config().app().name(), self.0.start_time)
+    write!(f, "Application({}|{})", self.fusion_setting().app().name(), self.0.start_time)
   }
 }
 
@@ -164,8 +164,8 @@ impl Application {
     debug!("added component: {}", component_name);
   }
 
-  pub fn fusion_config(&self) -> Arc<FusionSetting> {
-    self.0.config_registry.fusion_config()
+  pub fn fusion_setting(&self) -> Arc<FusionSetting> {
+    self.0.config_registry.fusion_setting()
   }
 
   /// Get `::config::Config` Instance
@@ -215,7 +215,7 @@ unsafe impl Sync for ApplicationBuilder {}
 
 impl ApplicationBuilder {
   pub fn get_fusion_config(&self) -> Arc<FusionSetting> {
-    self.config_registry.fusion_config()
+    self.config_registry.fusion_setting()
   }
 
   pub fn with_config_registry(&mut self, config_registry: FusionConfigRegistry) -> &Self {
@@ -384,7 +384,7 @@ impl ApplicationBuilder {
   fn build_application(&mut self) -> Application {
     let components = std::mem::take(&mut self.components);
     let configuration_state = std::mem::take(&mut self.config_registry);
-    let init_time = configuration_state.fusion_config().app().time_now();
+    let init_time = configuration_state.fusion_setting().app().time_now();
     let shutdown = Mutex::new(Some(mea::shutdown::new_pair()));
     Application(Arc::new(ApplicationInner {
       config_registry: configuration_state,
@@ -427,6 +427,6 @@ mod tests {
     .unwrap();
     Application::builder().run().await.unwrap();
     let app = Application::global();
-    assert_eq!(app.fusion_config().app().name(), "fusion");
+    assert_eq!(app.fusion_setting().app().name(), "fusion");
   }
 }

@@ -10,7 +10,7 @@ use super::{Configurable, ConfigureError, ConfigureResult, FusionSetting, util::
 #[derive(Clone)]
 pub struct FusionConfigRegistry {
   config: Arc<RwLock<Arc<Config>>>,
-  fusion_config: Arc<RwLock<Arc<FusionSetting>>>,
+  fusion_setting: Arc<RwLock<Arc<FusionSetting>>>,
 }
 
 impl FusionConfigRegistry {
@@ -18,27 +18,27 @@ impl FusionConfigRegistry {
     FusionConfigRegistryBuilder::default()
   }
 
-  pub fn new(underling: Arc<Config>, fusion_config: Arc<FusionSetting>) -> Self {
-    Self { config: Arc::new(RwLock::new(underling)), fusion_config: Arc::new(RwLock::new(fusion_config)) }
+  pub fn new(underling: Arc<Config>, fusion_setting: Arc<FusionSetting>) -> Self {
+    Self { config: Arc::new(RwLock::new(underling)), fusion_setting: Arc::new(RwLock::new(fusion_setting)) }
   }
 
   pub fn reload(&self) -> Result<(), ConfigureError> {
     let config = Arc::new(load_config()?);
-    let fusion_config = Arc::new(FusionSetting::try_from(config.as_ref())?);
+    let fusion_setting = Arc::new(FusionSetting::try_from(config.as_ref())?);
 
     {
       let mut config_write = self.config.write().unwrap();
       *config_write = config.clone();
     }
 
-    let mut fusion_config_write = self.fusion_config.write().unwrap();
-    *fusion_config_write = fusion_config;
+    let mut fusion_config_write = self.fusion_setting.write().unwrap();
+    *fusion_config_write = fusion_setting;
 
     Ok(())
   }
 
-  pub fn fusion_config(&self) -> Arc<FusionSetting> {
-    self.fusion_config.read().unwrap().clone()
+  pub fn fusion_setting(&self) -> Arc<FusionSetting> {
+    self.fusion_setting.read().unwrap().clone()
   }
 
   pub fn config(&self) -> Arc<Config> {
@@ -54,13 +54,13 @@ impl FusionConfigRegistry {
     let b = Config::builder().add_source(c).add_source(source);
     let new_config = Arc::new(b.build()?);
 
-    // 同时更新 fusion_config
+    // 同时更新 fusion_setting
     let new_fusion_config = Arc::new(FusionSetting::try_from(new_config.as_ref())?);
 
     *config = new_config;
     drop(config); // 释放 config 的写锁
 
-    let mut fusion_config_write = self.fusion_config.write().unwrap();
+    let mut fusion_config_write = self.fusion_setting.write().unwrap();
     *fusion_config_write = new_fusion_config;
 
     Ok(())
@@ -94,7 +94,7 @@ impl Default for FusionConfigRegistry {
 #[derive(Default)]
 pub struct FusionConfigRegistryBuilder {
   config: Option<Config>,
-  fusion_config: Option<FusionSetting>,
+  fusion_setting: Option<FusionSetting>,
 }
 
 impl FusionConfigRegistryBuilder {
@@ -103,17 +103,17 @@ impl FusionConfigRegistryBuilder {
     self
   }
 
-  pub fn with_fusion_config(mut self, fusion_config: FusionSetting) -> Self {
-    self.fusion_config = Some(fusion_config);
+  pub fn with_fusion_config(mut self, fusion_setting: FusionSetting) -> Self {
+    self.fusion_setting = Some(fusion_setting);
     self
   }
 
   pub fn build(self) -> ConfigureResult<FusionConfigRegistry> {
     let config = load_config_with(self.config)?;
-    let fusion_config = match self.fusion_config {
-      Some(fusion_config) => fusion_config,
+    let fusion_setting = match self.fusion_setting {
+      Some(fusion_setting) => fusion_setting,
       None => FusionSetting::try_from(&config)?,
     };
-    Ok(FusionConfigRegistry::new(Arc::new(config), Arc::new(fusion_config)))
+    Ok(FusionConfigRegistry::new(Arc::new(config), Arc::new(fusion_setting)))
   }
 }

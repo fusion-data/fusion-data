@@ -145,7 +145,7 @@ impl ImapConnector {
   }
 
   /// 标记邮件为已读
-  pub async fn mark_as_read(&mut self, uid: u32) -> Result<(), String> {
+  pub async fn mark_as_read(&mut self, _uid: u32) -> Result<(), String> {
     if !self.connected {
       return Err("Not connected to IMAP server".to_string());
     }

@@ -31,7 +31,8 @@ pub async fn validate_token_seq_against_db(
 ) -> Result<()> {
   use crate::user::UserCredentialBmc;
 
-  let user_credential = UserCredentialBmc::get_by_id_for_update(mm, user_id, tenant_id).await?
+  let user_credential = UserCredentialBmc::get_by_id_for_update(mm, user_id, tenant_id)
+    .await?
     .ok_or_else(|| DataError::unauthorized("User not found in specified tenant"))?;
 
   if user_credential.token_seq != token_seq {
@@ -43,7 +44,7 @@ pub async fn validate_token_seq_against_db(
 
 /// 验证 token 并提取用户 ID
 pub fn validate_token(token: &str) -> Result<i64> {
-  let config = fusion_core::application::Application::global().fusion_config();
+  let config = fusion_core::application::Application::global().fusion_setting();
   let (payload, _header) = SecurityUtils::decrypt_jwt(config.security().pwd(), token)
     .map_err(|_e| DataError::unauthorized("Invalid token"))?;
 
@@ -53,7 +54,7 @@ pub fn validate_token(token: &str) -> Result<i64> {
 
 /// 验证 token 并提取用户 ID 和租户 ID
 pub fn validate_token_with_tenant(token: &str) -> Result<(i64, i64)> {
-  let config = fusion_core::application::Application::global().fusion_config();
+  let config = fusion_core::application::Application::global().fusion_setting();
   let (payload, _header) = SecurityUtils::decrypt_jwt(config.security().pwd(), token)
     .map_err(|_e| DataError::unauthorized("Invalid token"))?;
 
@@ -67,7 +68,7 @@ pub fn validate_token_with_tenant(token: &str) -> Result<(i64, i64)> {
 
 /// 验证 token 并提取用户 ID、租户 ID 和令牌序列
 pub fn validate_token_with_tenant_and_seq(token: &str) -> Result<(i64, i64, i32)> {
-  let config = fusion_core::application::Application::global().fusion_config();
+  let config = fusion_core::application::Application::global().fusion_setting();
   let (payload, _header) = SecurityUtils::decrypt_jwt(config.security().pwd(), token)
     .map_err(|_e| DataError::unauthorized("Invalid token"))?;
 
@@ -85,16 +86,19 @@ pub async fn extract_ctx_with_token_seq_validation(
   parts: &axum::http::request::Parts,
   mm: &fusionsql::ModelManager,
 ) -> Result<fusion_common::ctx::Ctx> {
-  use std::time::SystemTime;
   use fusion_core::application::Application;
+  use std::time::SystemTime;
 
-  let app_config = Application::global().fusion_config();
+  let app_config = Application::global().fusion_setting();
   let security_config = app_config.security();
 
   // 获取令牌
-  let token = if let Some(bearer) = parts.headers.get("authorization")
+  let token = if let Some(bearer) = parts
+    .headers
+    .get("authorization")
     .and_then(|h| h.to_str().ok())
-    .and_then(|h| h.strip_prefix("Bearer ")) {
+    .and_then(|h| h.strip_prefix("Bearer "))
+  {
     bearer.to_string()
   } else if let Some(query) = parts.uri.query() {
     format!("?{}", query)

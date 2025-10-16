@@ -1,8 +1,4 @@
-use hetumind_core::{
-  types::JsonValue,
-  version::Version,
-  workflow::{NodeDefinition, NodeGroupKind, NodeProperty, NodePropertyKind},
-};
+use hetumind_core::workflow::{NodeDefinition, NodeGroupKind, NodeProperty, NodePropertyKind};
 use serde_json::json;
 
 use crate::constants::SCHEDULE_TRIGGER_NODE_KIND;

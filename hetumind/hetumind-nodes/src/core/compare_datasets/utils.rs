@@ -420,6 +420,7 @@ fn get_sort_value(result: &RecordComparisonResult, sort_field: &str) -> String {
 }
 
 /// Validate that field path follows valid JSON dot notation
+#[allow(dead_code)]
 pub fn validate_field_path(field_path: &str) -> Result<(), String> {
   if field_path.is_empty() {
     return Err("Field path cannot be empty".to_string());

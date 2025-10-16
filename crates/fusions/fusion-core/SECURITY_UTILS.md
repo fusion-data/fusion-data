@@ -35,7 +35,7 @@ async fn handler(
   axum::extract::State(app): axum::extract::State<Application>,
   mut parts: Parts,
 ) -> WebResult<serde_json::Value> {
-  let ctx: Ctx = extract_ctx(&parts, app.fusion_config().security())?;
+  let ctx: Ctx = extract_ctx(&parts, app.fusion_setting().security())?;
   let uid = ctx.uid();
   let scopes = ctx.payload().get_strings("scopes").unwrap_or_default();
   ok_json!(serde_json::json!({"uid": uid, "scopes": scopes}))

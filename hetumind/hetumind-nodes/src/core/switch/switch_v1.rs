@@ -5,9 +5,9 @@ use hetumind_core::{
   types::JsonValue,
   version::Version,
   workflow::{
-    ConnectionKind, ExecutionDataItems, ExecutionDataMap, FilterTypeOptions, InputPortConfig, NodeDefinition,
-    NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, NodePropertyKindOptions,
-    OutputPortConfig, RegistrationError, make_execution_data_map,
+    ConnectionKind, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition, NodeExecutable,
+    NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig, RegistrationError,
+    make_execution_data_map,
   },
 };
 use serde_json::json;
@@ -40,6 +40,7 @@ pub struct SwitchV1 {
 
 impl SwitchV1 {
   /// 配置输出端口
+  #[allow(dead_code)]
   pub fn configure_outputs(&self, config: &SwitchConfig) -> Vec<OutputPortConfig> {
     match config.mode {
       SwitchMode::Rules => {
