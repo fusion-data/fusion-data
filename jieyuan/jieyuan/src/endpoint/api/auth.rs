@@ -5,8 +5,7 @@ use fusionsql::ModelManager;
 use utoipa_axum::router::OpenApiRouter;
 
 use jieyuan_core::model::{
-  OAuthAuthorizeRequest, OAuthAuthorizeResponse, OAuthTokenRequest, OAuthTokenResponse, RefreshTokenReq, SigninRequest,
-  SigninResponse, SignupReq, UserChangeQueryReq, UserChangeQueryResp,
+  RefreshTokenReq, SigninRequest, SigninResponse, SignupReq, UserChangeQueryReq, UserChangeQueryResp,
 };
 
 use crate::{
@@ -21,8 +20,6 @@ pub fn routes() -> OpenApiRouter<Application> {
     .routes(utoipa_axum::routes!(signout))
     .routes(utoipa_axum::routes!(refresh_token))
     .routes(utoipa_axum::routes!(extract_token))
-    .routes(utoipa_axum::routes!(oauth_authorize))
-    .routes(utoipa_axum::routes!(oauth_token))
     .routes(utoipa_axum::routes!(users_changes))
 }
 
@@ -122,48 +119,6 @@ async fn extract_token(parts: Parts, State(app): State<Application>) -> WebResul
   ok_json!(ctx_json)
 }
 
-/// OAuth 授权 - 生成授权 URL
-#[utoipa::path(
-  post,
-  path = "/oauth/authorize",
-  request_body = OAuthAuthorizeRequest,
-  responses(
-    (status = 200, description = "授权 URL 生成成功", body = OAuthAuthorizeResponse),
-    (status = 400, description = "请求参数错误")
-  ),
-  tag = "认证"
-)]
-async fn oauth_authorize(
-  State(app): State<Application>,
-  Json(req): Json<OAuthAuthorizeRequest>,
-) -> WebResult<OAuthAuthorizeResponse> {
-  let mm = app.get_component::<ModelManager>().unwrap();
-  let oauth_svc = OAuthSvc::new(mm.clone(), app);
-  let response = oauth_svc.authorize(req).await?;
-  ok_json!(response)
-}
-
-/// OAuth 令牌交换 - 使用授权码获取访问令牌
-#[utoipa::path(
-  post,
-  path = "/oauth/token",
-  request_body = OAuthTokenRequest,
-  responses(
-    (status = 200, description = "令牌交换成功", body = OAuthTokenResponse),
-    (status = 400, description = "请求参数错误"),
-    (status = 401, description = "授权码无效或已过期")
-  ),
-  tag = "认证"
-)]
-async fn oauth_token(
-  State(app): State<Application>,
-  Json(req): Json<OAuthTokenRequest>,
-) -> WebResult<OAuthTokenResponse> {
-  let mm = app.get_component::<ModelManager>().unwrap();
-  let oauth_svc = OAuthSvc::new(mm.clone(), app);
-  let response = oauth_svc.exchange_token(req).await?;
-  ok_json!(response)
-}
 
 /// 用户变更查询 - 用于事件轮询
 #[utoipa::path(

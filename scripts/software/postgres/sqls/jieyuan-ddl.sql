@@ -33,6 +33,7 @@ create table if not exists iam_user_credential (
   id bigint not null,
   tenant_id bigint not null,
   encrypted_pwd text not null,
+  token_seq integer not null default 0,
   created_by bigint not null,
   created_at timestamptz not null default now(),
   updated_by bigint,
@@ -40,6 +41,9 @@ create table if not exists iam_user_credential (
   constraint iam_user_credential_fk_id foreign key (id) references iam_user (id),
   constraint iam_user_credential_pk primary key (id)
 );
+
+-- comment on token_seq column
+comment on column iam_user_credential.token_seq is '令牌序列；密码变更时 +1，用于全量作废令牌';
 
 -- tenant user association
 create table if not exists iam_tenant_user (

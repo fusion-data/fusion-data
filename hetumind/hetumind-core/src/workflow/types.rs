@@ -108,6 +108,12 @@ pub struct GetNodeParameterOptions {
   pub skip_validation: Option<bool>,
 }
 
+impl Default for GetNodeParameterOptions {
+  fn default() -> Self {
+    Self::new()
+  }
+}
+
 impl GetNodeParameterOptions {
   pub fn new() -> Self {
     Self { ensure_type: None, extract_value: None, raw_expressions: None, skip_validation: None }
@@ -298,6 +304,12 @@ pub struct DisplayOptions {
   pub hide_on_cloud: Option<bool>,
 }
 
+impl Default for DisplayOptions {
+  fn default() -> Self {
+    Self::new()
+  }
+}
+
 impl DisplayOptions {
   pub fn new() -> Self {
     Self { hide: None, show: None, hide_on_cloud: None }
@@ -341,6 +353,12 @@ pub struct ShowOptions {
   pub tool: Option<Vec<bool>>,
   #[serde(flatten)]
   pub other: HashMap<String, Vec<JsonValue>>,
+}
+
+impl Default for ShowOptions {
+  fn default() -> Self {
+    Self::new()
+  }
 }
 
 impl ShowOptions {
@@ -613,6 +631,12 @@ pub struct MatchingFieldsLabels {
   pub hint: Option<String>,
 }
 
+impl Default for MatchingFieldsLabels {
+  fn default() -> Self {
+    Self::new()
+  }
+}
+
 impl MatchingFieldsLabels {
   pub fn new() -> Self {
     Self { title: None, description: None, hint: None }
@@ -742,6 +766,12 @@ pub struct FilterTypeOptions {
   pub type_validation: Option<TypeValidationMode>,
 }
 
+impl Default for FilterTypeOptions {
+  fn default() -> Self {
+    Self::new()
+  }
+}
+
 impl FilterTypeOptions {
   pub fn new() -> Self {
     Self {
@@ -801,6 +831,12 @@ pub struct AssignmentKindOptions {
   pub hide_kind: Option<bool>,
   pub default_kind: Option<FieldKind>,
   pub disable_kind: Option<bool>,
+}
+
+impl Default for AssignmentKindOptions {
+  fn default() -> Self {
+    Self::new()
+  }
 }
 
 impl AssignmentKindOptions {

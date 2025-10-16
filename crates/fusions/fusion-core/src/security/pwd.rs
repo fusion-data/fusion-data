@@ -22,6 +22,17 @@ pub async fn verify_pwd(password: &str, hashed_pwd: &str) -> Result<u16> {
   if verify(password.to_owned(), hash.to_owned()).await? { Ok(version) } else { Err(Error::InvalidPassword) }
 }
 
+/// 校验密码复杂度基线：长度≥8，含大小写与数字
+pub fn is_strong_password(password: &str) -> bool {
+  if password.len() < 8 {
+    return false;
+  }
+  let has_upper = password.chars().any(|c| c.is_ascii_uppercase());
+  let has_lower = password.chars().any(|c| c.is_ascii_lowercase());
+  let has_digit = password.chars().any(|c| c.is_ascii_digit());
+  has_upper && has_lower && has_digit
+}
+
 pub(crate) async fn try_to_hash(plain_pwd: String) -> Result<String> {
   tokio::task::spawn_blocking(move || {
     let salt = generate_salt();
@@ -106,5 +117,30 @@ mod tests {
     assert_eq!(version, 1);
 
     Ok(())
+  }
+
+  #[test]
+  fn test_password_strength() {
+    // 弱密码 - 长度不足
+    assert!(!is_strong_password("Ab1"));
+    assert!(!is_strong_password("Abcdef1"));
+
+    // 弱密码 - 缺少大写字母
+    assert!(!is_strong_password("abcdefg1"));
+    assert!(!is_strong_password("abcdefgh1"));
+
+    // 弱密码 - 缺少小写字母
+    assert!(!is_strong_password("ABCDEFG1"));
+    assert!(!is_strong_password("ABCDEFGH1"));
+
+    // 弱密码 - 缺少数字
+    assert!(!is_strong_password("Abcdefgh"));
+    assert!(!is_strong_password("AbcdefghIj"));
+
+    // 强密码 - 满足所有条件
+    assert!(is_strong_password("Abcdefg1"));
+    assert!(is_strong_password("Password123"));
+    assert!(is_strong_password("MySecret1"));
+    assert!(is_strong_password("TestPass1"));
   }
 }

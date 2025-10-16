@@ -131,6 +131,7 @@ pub struct UserFilter {
 pub struct UserCredential {
   pub id: i64,
   pub encrypted_pwd: String,
+  pub token_seq: i32,
   pub created_by: i64,
   pub created_at: DateTime<FixedOffset>,
   pub updated_by: Option<i64>,
@@ -148,6 +149,14 @@ pub struct UserCredentialForInsert {
 pub struct UserCredentialForUpdate {
   pub id: Option<i64>,
   pub encrypted_pwd: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
+pub struct UpdatePasswordRequest {
+  pub tenant_id: i64,
+  pub old_password: Option<String>, // 自助修改必填；管理员修改他人密码不填
+  pub new_password: String,
 }
 
 #[derive(Default)]

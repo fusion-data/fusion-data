@@ -1,10 +1,10 @@
-use axum::{Json, extract::Path, http::StatusCode};
+use axum::{Json, extract::{Path, State}, http::{StatusCode, request::Parts}};
 use fusion_common::model::IdI64Result;
 use fusion_core::application::Application;
-use fusion_web::{WebError, WebResult, ok_json};
+use fusion_web::{WebError, WebResult, ok_json, extract_ctx};
 use utoipa_axum::router::OpenApiRouter;
 
-use jieyuan_core::model::{User, UserForCreate, UserForPage, UserForUpdate};
+use jieyuan_core::model::{UpdatePasswordRequest, User, UserForCreate, UserForPage, UserForUpdate};
 
 use crate::UserSvc;
 
@@ -15,6 +15,7 @@ pub fn routes() -> OpenApiRouter<Application> {
     .routes(utoipa_axum::routes!(user_update))
     .routes(utoipa_axum::routes!(user_delete))
     .routes(utoipa_axum::routes!(user_page))
+    .routes(utoipa_axum::routes!(user_update_password))
 }
 
 /// 创建用户
@@ -105,4 +106,42 @@ async fn user_delete(user_svc: UserSvc, Path(id): Path<i64>) -> WebResult<()> {
 async fn user_page(user_svc: UserSvc, Json(req): Json<UserForPage>) -> WebResult<fusionsql::page::PageResult<User>> {
   let result = user_svc.page(req).await?;
   ok_json!(result)
+}
+
+/// 修改用户密码
+#[utoipa::path(
+  put,
+  path = "/item/{id}/password",
+  params(
+    ("id" = i64, Path, description = "用户ID")
+  ),
+  request_body = UpdatePasswordRequest,
+  responses(
+    (status = 200, description = "密码修改成功"),
+    (status = 400, description = "请求参数错误"),
+    (status = 401, description = "认证失败"),
+    (status = 403, description = "权限不足"),
+    (status = 404, description = "用户不存在")
+  ),
+  tag = "用户管理"
+)]
+async fn user_update_password(
+  parts: Parts,
+  State(_app): State<Application>,
+  Path(target_user_id): Path<i64>,
+  user_svc: UserSvc,
+  Json(req): Json<UpdatePasswordRequest>,
+) -> WebResult<()> {
+  // 从请求中提取用户上下文
+  let ctx = extract_ctx(&parts, _app.fusion_config().security())?;
+
+  // 调用用户服务修改密码
+  user_svc.update_password(
+    ctx.uid(),
+    ctx.tenant_id(),
+    target_user_id,
+    req,
+  ).await?;
+
+  ok_json!(())
 }

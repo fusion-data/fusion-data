@@ -47,9 +47,9 @@ impl AuthSvc {
       return Err(DataError::forbidden("User access to this tenant is disabled"));
     }
 
-    // 生成包含租户ID的令牌
+    // 生成包含租户ID和令牌序列的令牌
     let config = Application::global().fusion_config();
-    let token = make_token_with_tenant(config.security(), u.id, tenant_id)?;
+    let token = make_token_with_tenant(config.security(), u.id, tenant_id, uc.token_seq)?;
     Ok(SigninResponse { token, token_type: TokenType::Bearer })
   }
 

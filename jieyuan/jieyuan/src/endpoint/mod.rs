@@ -1,4 +1,5 @@
 pub mod api;
+pub mod oauth;
 
 use fusion_core::application::Application;
 use fusion_web::Router;
@@ -19,7 +20,10 @@ struct ApiDoc;
 
 pub fn routes() -> Router<Application> {
   let openapi = ApiDoc::openapi();
-  let (router, api) = OpenApiRouter::with_openapi(openapi).nest("/api", api::routes()).split_for_parts();
+  let (router, api) = OpenApiRouter::with_openapi(openapi)
+    .nest("/api", api::routes())
+    .nest("/oauth", oauth::routes())
+    .split_for_parts();
 
   router.merge(SwaggerUi::new("/docs/swagger-ui").url("/docs/openapi.json", api))
 }

@@ -1,3 +1,6 @@
+use std::convert::Infallible;
+use std::time::Duration;
+
 use axum::{
   Router,
   extract::Path,
@@ -10,8 +13,6 @@ use fusionsql::page::PageResult;
 use futures::stream::Stream;
 use hetumind_core::workflow::{Execution, ExecutionData, ExecutionForQuery, ExecutionId, ExecutionStatus};
 use serde::{Deserialize, Serialize};
-use std::convert::Infallible;
-use std::time::Duration;
 
 use crate::domain::workflow::ExecutionSvc;
 
@@ -155,8 +156,8 @@ pub async fn stream_execution_logs(
           match execution_svc.find_execution_by_id(execution_id).await {
             Ok(current_execution) => {
               // 获取新的日志
-              if let Ok(logs) = execution_svc.logs(execution_id).await {
-                if logs.len() > last_log_count {
+              if let Ok(logs) = execution_svc.logs(execution_id).await
+                && logs.len() > last_log_count {
                   for (i, log) in logs.iter().skip(last_log_count).enumerate() {
                     let log_event = Event::default()
                       .event("log")
@@ -166,7 +167,6 @@ pub async fn stream_execution_logs(
                   }
                   last_log_count = logs.len();
                 }
-              }
 
               // 如果执行完成，发送完成事件并退出
               if matches!(current_execution.status,
@@ -193,10 +193,9 @@ pub async fn stream_execution_logs(
       }
       Err(_) => {
         // 执行不存在
-        let error_event = Event::default()
+        yield Ok(Event::default()
           .event("error")
-          .data("Execution not found");
-        let _ = yield Ok(error_event);
+          .data("Execution not found"))
       }
     }
   };

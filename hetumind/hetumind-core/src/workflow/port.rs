@@ -10,6 +10,12 @@ pub struct PortInputFilter {
   excludes: Vec<NodeName>,
 }
 
+impl Default for PortInputFilter {
+  fn default() -> Self {
+    Self::new()
+  }
+}
+
 impl PortInputFilter {
   pub fn new() -> Self {
     Self { includes: Vec::default(), excludes: Vec::default() }

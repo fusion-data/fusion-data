@@ -1,11 +1,11 @@
 use axum::extract::FromRequestParts;
 use fusion_common::regex;
-use fusion_core::{DataError, Result, application::Application, security::pwd::generate_pwd};
+use fusion_core::{DataError, Result, application::Application, security::pwd::{generate_pwd, verify_pwd, is_strong_password}};
 use fusion_web::WebError;
 use fusionsql::{ModelManager, filter::OpValInt64, page::PageResult};
 
 use jieyuan_core::model::{
-  TenantUserStatus, User, UserCredential, UserCredentialForInsert, UserFilter, UserForCreate, UserForPage,
+  TenantUserStatus, UpdatePasswordRequest, User, UserCredential, UserCredentialForInsert, UserFilter, UserForCreate, UserForPage,
   UserForUpdate, UserRoleForCreate, UserStatus,
 };
 
@@ -187,6 +187,56 @@ impl UserSvc {
     TenantUserBmc::get_user_with_tenant(&self.mm, user_id, tenant_id)
       .await
       .map_err(|e| fusion_core::DataError::from(e))
+  }
+
+  /// 修改密码功能
+  pub async fn update_password(
+    &self,
+    actor_user_id: i64,
+    actor_tenant_id: i64,
+    target_user_id: i64,
+    req: UpdatePasswordRequest,
+  ) -> Result<()> {
+    // 1) 校验密码复杂度
+    if !is_strong_password(&req.new_password) {
+      return Err(DataError::bad_request("Password must be at least 8 characters long and contain uppercase, lowercase, and digits"));
+    }
+
+    let mm = self.mm.get_txn_clone();
+    mm.dbx().begin_txn().await?;
+
+    // 2) 读取并锁定目标用户（租户隔离）
+    let user_credential = UserCredentialBmc::get_by_id_for_update(&mm, target_user_id, req.tenant_id).await?
+      .ok_or_else(|| DataError::not_found("User not found in specified tenant"))?;
+
+    // 3) 权限判断
+    let is_self = actor_user_id == target_user_id;
+
+    // 检查操作者是否为管理员（这里简化为平台租户管理，实际应根据权限系统判断）
+    let is_admin = actor_tenant_id == 1; // 平台租户管理员
+
+    if !is_self && !is_admin {
+      return Err(DataError::forbidden("Only users can modify their own password or administrators can modify others' passwords"));
+    }
+
+    // 4) 自助修改必须校验旧密码
+    if is_self {
+      let old_password = req.old_password
+        .ok_or_else(|| DataError::bad_request("Old password is required for self-service password change"))?;
+
+      // 校验旧密码
+      verify_pwd(&old_password, &user_credential.encrypted_pwd).await
+        .map_err(|_| DataError::bad_request("Current password is incorrect"))?;
+    }
+
+    // 5) 生成新密码哈希（复用 generate_pwd）
+    let new_hashed_pwd = generate_pwd(&req.new_password).await?;
+
+    // 6) 事务内原子更新密码并令牌序列自增（并发下最后提交为准）
+    UserCredentialBmc::update_password_and_bump_token_seq(&mm, target_user_id, &new_hashed_pwd).await?;
+
+    mm.dbx().commit_txn().await?;
+    Ok(())
   }
 
   /// 校验数据并进行初始化。`email` 或 `phone` 至少有一个，若两个值都设置，则只有 `email` 有效。
