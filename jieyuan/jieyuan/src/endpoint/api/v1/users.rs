@@ -10,7 +10,7 @@ use utoipa_axum::router::OpenApiRouter;
 
 use jieyuan_core::model::{UpdatePasswordRequest, User, UserForCreate, UserForPage, UserForUpdate};
 
-use crate::UserSvc;
+use crate::user::UserSvc;
 
 pub fn routes() -> OpenApiRouter<Application> {
   OpenApiRouter::new()

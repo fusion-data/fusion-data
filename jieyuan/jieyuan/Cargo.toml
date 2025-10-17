@@ -21,7 +21,11 @@ fusion-common = { workspace = true, features = ["with-uuid", "with-openapi"] }
 fusion-core = { workspace = true, features = ["with-uuid"] }
 
 # -- hetus
-jieyuan-core = { workspace = true, features = ["with-openapi", "with-db", "with-web"] }
+jieyuan-core = { workspace = true, features = [
+  "with-openapi",
+  "with-db",
+  "with-web",
+] }
 
 # -- misc
 serde = { workspace = true }
@@ -59,7 +63,7 @@ sea-query = { workspace = true }
 sea-query-binder = { workspace = true }
 
 # -- Web
-fusion-web = { workspace = true }
+fusion-web = { workspace = true, features = ["with-openapi"] }
 axum = { workspace = true, features = ["ws"] }
 axum-extra = { workspace = true }
 utoipa = { workspace = true }

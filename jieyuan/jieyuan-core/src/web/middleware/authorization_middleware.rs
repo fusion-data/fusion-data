@@ -8,6 +8,7 @@ use fusion_web::WebError;
 
 use crate::model::auth_ctx::{AuthContext, build_auth_context_with_timezone};
 use crate::model::policy_engine::Decision;
+use crate::model::render_resource;
 
 /// 路由元数据，用于绑定动作和资源模板
 #[derive(Clone)]
@@ -37,7 +38,7 @@ where
     .ok_or_else(|| WebError::new_with_msg("missing route meta".to_string()))?;
 
   // 渲染资源模板
-  let resource = render_resource(meta.resource_tpl, &ac);
+  let resource = render_resource(meta.resource_tpl, &ac, None);
 
   // 执行授权检查
   policy_svc
@@ -46,16 +47,6 @@ where
     .map_err(|e| WebError::new_with_code(401, e.to_string()))?;
 
   Ok(next.run(req).await)
-}
-
-/// 函数级注释：简单的资源模板渲染（仅支持内置占位符）
-fn render_resource(tpl: &str, ac: &AuthContext) -> String {
-  tpl
-    .replace("{tenant_id}", &ac.principal_tenant_id.to_string())
-    .replace("{user_id}", &ac.principal_user_id.to_string())
-    .replace("{method}", &ac.method)
-    .replace("{path}", &ac.path)
-    .replace("{token_seq}", &ac.token_seq.to_string())
 }
 
 /// 函数级注释：路由元数据注入中间件

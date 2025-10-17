@@ -9,14 +9,15 @@ use fusion_web::WebError;
 use fusionsql::{ModelManager, filter::OpValInt64, page::PageResult};
 
 use jieyuan_core::model::{
-  TenantUserStatus, UpdatePasswordRequest, User, UserCredential, UserCredentialForInsert, UserFilter, UserForCreate,
-  UserForPage, UserForUpdate, UserRoleForCreate, UserStatus,
+  TenantUser, TenantUserStatus, UpdatePasswordRequest, User, UserCredential, UserCredentialForInsert, UserFilter,
+  UserForCreate, UserForPage, UserForUpdate, UserRoleForCreate, UserStatus, UserWithTenant,
 };
 
 use crate::utils::model_manager_from_parts;
-
-use super::{UserBmc, UserCredentialBmc, UserRoleBmc};
-use crate::TenantUserBmc;
+use crate::{
+  tenant_user::TenantUserBmc,
+  user::{UserBmc, UserCredentialBmc, UserRoleBmc},
+};
 
 #[derive(Clone)]
 pub struct UserSvc {
@@ -170,27 +171,17 @@ impl UserSvc {
 
   /// 检查用户在指定租户中是否活跃
   pub async fn is_user_active_in_tenant(&self, user_id: i64, tenant_id: i64) -> Result<bool> {
-    TenantUserBmc::is_user_active_in_tenant(&self.mm, user_id, tenant_id)
-      .await
-      .map_err(|e| fusion_core::DataError::from(e))
+    TenantUserBmc::is_user_active_in_tenant(&self.mm, user_id, tenant_id).await.map_err(DataError::from)
   }
 
   /// 获取用户的所有活跃租户关联
-  pub async fn get_user_active_tenants(&self, user_id: i64) -> Result<Vec<jieyuan_core::model::TenantUser>> {
-    TenantUserBmc::get_user_active_tenants(&self.mm, user_id)
-      .await
-      .map_err(|e| fusion_core::DataError::from(e))
+  pub async fn get_user_active_tenants(&self, user_id: i64) -> Result<Vec<TenantUser>> {
+    TenantUserBmc::get_user_active_tenants(&self.mm, user_id).await.map_err(DataError::from)
   }
 
   /// 获取包含租户信息的用户数据（用于登录验证）
-  pub async fn get_user_with_tenant(
-    &self,
-    user_id: i64,
-    tenant_id: i64,
-  ) -> Result<Option<jieyuan_core::model::UserWithTenant>> {
-    TenantUserBmc::get_user_with_tenant(&self.mm, user_id, tenant_id)
-      .await
-      .map_err(|e| fusion_core::DataError::from(e))
+  pub async fn get_user_with_tenant(&self, user_id: i64, tenant_id: i64) -> Result<Option<UserWithTenant>> {
+    TenantUserBmc::get_user_with_tenant(&self.mm, user_id, tenant_id).await.map_err(DataError::from)
   }
 
   /// 修改密码功能

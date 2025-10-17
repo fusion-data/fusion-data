@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use crate::model::auth_ctx::AuthContext;
 use serde::{Deserialize, Serialize};
 
 /// 远程授权请求体（snake_case）
@@ -125,23 +126,6 @@ impl AuthorizeResponse {
   }
 }
 
-impl CtxPayload {
-  /// 创建新的上下文载荷
-  pub fn new(
-    tenant_id: i64,
-    sub: i64,
-    principal_roles: Vec<String>,
-    is_platform_admin: bool,
-    token_seq: i32,
-    method: String,
-    path: String,
-    request_ip: String,
-    req_time: String,
-  ) -> Self {
-    Self { tenant_id, sub, principal_roles, is_platform_admin, token_seq, method, path, request_ip, req_time }
-  }
-}
-
 impl AuthorizeDenyDetail {
   /// 创建拒绝详情
   pub fn new(ctx: CtxPayload) -> Self {
@@ -173,6 +157,66 @@ impl CtxPayload {
       req_time: format!("{:?}", ctx.req_time()), // 暂时使用 Debug 格式
     }
   }
+}
+
+/// 统一的资源模板渲染函数
+/// 支持内置占位符和可选的自定义占位符，支持双层格式
+///
+/// # 参数
+/// - `tpl`: 资源模板字符串
+/// - `ac`: 授权上下文
+/// - `extras`: 可选的自定义占位符映射，如果不需要自定义占位符则传入 `None`
+///
+/// # 示例
+/// ```rust
+/// // 仅使用内置占位符
+/// let resource = render_resource("jr:hetumind:workflow/{id}", &ac, None);
+///
+/// // 使用自定义占位符
+/// let mut extras = HashMap::new();
+/// extras.insert("id".to_string(), "123".to_string());
+/// let resource = render_resource("jr:hetumind:workflow/{id}", &ac, Some(&extras));
+/// ```
+pub fn render_resource(tpl: &str, ac: &AuthContext, extras: Option<&HashMap<String, String>>) -> String {
+  let mut result = tpl.to_string();
+
+  // 检查模板是否已包含 tenant_id 占位符
+  if result.contains("{tenant_id}") {
+    // 完整格式：直接替换占位符
+    result = result.replace("{tenant_id}", &ac.principal_tenant_id.to_string());
+  } else {
+    // 简化格式：自动注入 tenant_id
+    if let Some(colon_pos) = result.find(':')
+      && let Some(second_colon_pos) = result[colon_pos + 1..].find(':')
+    {
+      let insert_pos = colon_pos + 1 + second_colon_pos + 1;
+      result.insert_str(insert_pos, &format!("{}:", ac.principal_tenant_id));
+    }
+  }
+
+  // 替换其他内置占位符
+  result = result.replace("{user_id}", &ac.principal_user_id.to_string());
+  result = result.replace("{method}", &ac.method);
+  result = result.replace("{path}", &ac.path);
+  result = result.replace("{token_seq}", &ac.token_seq.to_string());
+
+  // 处理角色拼接
+  if result.contains("{principal_roles}") {
+    let joined = ac.principal_roles.join(",");
+    result = result.replace("{principal_roles}", &joined);
+  }
+
+  // 处理自定义占位符（可选）
+  if let Some(extras) = extras {
+    for (k, v) in extras.iter() {
+      let ph = format!("{{{}}}", k);
+      if result.contains(&ph) {
+        result = result.replace(&ph, v);
+      }
+    }
+  }
+
+  result
 }
 
 #[cfg(feature = "with-web")]

@@ -69,13 +69,13 @@ impl TenantUserBmc {
   }
 
   /// Unlink user from tenant
-  pub async fn unlink_user_from_tenant(mm: &ModelManager, user_id: i64, tenant_id: i64) -> Result<(), SqlError> {
+  pub async fn unlink_user_from_tenant(mm: &ModelManager, user_id: i64, tenant_id: i64) -> Result<u64, SqlError> {
     let filters = vec![
       TenantUserFilter { tenant_id: Some(OpValInt64::eq(tenant_id)), ..Default::default() },
       TenantUserFilter { user_id: Some(OpValInt64::eq(user_id)), ..Default::default() },
     ];
 
-    base::delete::<Self, _>(&mm, filters).await.map(|_| ())
+    base::delete::<Self, _>(mm, filters).await
   }
 
   /// Update tenant user status
@@ -84,7 +84,7 @@ impl TenantUserBmc {
     user_id: i64,
     tenant_id: i64,
     status: TenantUserStatus,
-  ) -> Result<(), SqlError> {
+  ) -> Result<u64, SqlError> {
     let filters = vec![
       TenantUserFilter { tenant_id: Some(OpValInt64::eq(tenant_id)), ..Default::default() },
       TenantUserFilter { user_id: Some(OpValInt64::eq(user_id)), ..Default::default() },
@@ -92,7 +92,7 @@ impl TenantUserBmc {
 
     let update_data = TenantUserForUpdate { status: Some(status) };
 
-    base::update::<Self, _, _>(&mm, filters, update_data).await.map(|_| ())
+    base::update::<Self, _, _>(mm, filters, update_data).await
   }
 
   /// Check if user has active association with tenant
@@ -103,7 +103,7 @@ impl TenantUserBmc {
       TenantUserFilter { status: Some(OpValInt64::eq(TenantUserStatus::Active as i64)), ..Default::default() },
     ];
 
-    let result = base::pg_find_first::<Self, TenantUser, _>(&mm, filters).await?;
+    let result = base::pg_find_first::<Self, TenantUser, _>(mm, filters).await?;
     Ok(result.is_some())
   }
 
@@ -149,7 +149,7 @@ impl TenantUserBmc {
       TenantUserFilter { status: Some(OpValInt64::eq(TenantUserStatus::Active as i64)), ..Default::default() },
     ];
 
-    base::pg_find_many::<Self, TenantUser, _>(&mm, filters, None).await
+    base::pg_find_many::<Self, TenantUser, _>(mm, filters, None).await
   }
 
   /// Get user with tenant information for login

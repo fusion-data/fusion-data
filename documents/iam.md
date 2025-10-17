@@ -101,12 +101,31 @@ flowchart LR
 
 ## 资源与行为命名规范
 
-- 资源标识：`jr:{service}:{tenant_id}:{type}/{id}`（约定简化为常用：`jr:user:{tenant_id}:{user_id}`、`jr:role:{tenant_id}:{role_id}`、`jr:policy:{tenant_id}:{policy_id}`）。
-- 行为命名：`{service}:{verb}`，示例：
-  - `user:create`、`user:read`、`user:update`、`user:delete`
-  - `user:update_password`、`user:disable`、`user:enable`
-  - `role:attach_policy`、`role:detach_policy`、`role:assign_to_user`
-  - `policy:create`、`policy:update`、`policy:delete`、`policy:attach`、`policy:detach`
+- **资源标识格式**：`jr:{service}:{tenant_id}:{type}/{id}`
+
+  - **策略配置**：完整格式，如 `jr:hetumind:42:workflow/123`
+  - **API 调用**：简化格式，如 `jr:hetumind:workflow/123`（自动注入 tenant_id）
+  - **约定简化**：`jr:user:{tenant_id}:{user_id}`、`jr:role:{tenant_id}:{role_id}`、`jr:policy:{tenant_id}:{policy_id}`
+
+- **行为命名**：`{service}:{verb}`
+  - **通用操作**：`create`、`read`、`update`、`delete`、`list`
+  - **特定操作**：`execute`、`validate`、`activate`、`deactivate`、`duplicate`、`cancel`、`retry`、`share`、`manage`
+  - **示例**：
+    - `user:create`、`user:read`、`user:update`、`user:delete`
+    - `hetumind:execute`、`hetumind:duplicate`、`hetumind:manage`
+    - `role:attach_policy`、`role:detach_policy`、`role:assign_to_user`
+    - `policy:create`、`policy:update`、`policy:delete`、`policy:attach`、`policy:detach`
+
+### 双层格式设计
+
+为兼顾健壮性与便捷性，采用双层格式设计：
+
+1. **策略层健壮性** - 策略配置中明确包含 tenant_id，确保权限评估准确性
+2. **使用层便捷性** - API 调用时使用简化格式，系统自动注入当前用户的 tenant_id
+3. **自动转换机制** - jieyuan 在处理请求时自动将简化格式转换为完整格式
+4. **向后兼容** - 支持两种格式，确保现有系统平稳迁移
+
+**实现位置**：`jieyuan/jieyuan-core/src/model/iam_api.rs:181-254`
 
 ---
 
@@ -415,7 +434,7 @@ pub async fn update_user_endpoint(
   // 将端点参数解析后作为 extras 占位符注入
   let mut extras = std::collections::HashMap::new();
   extras.insert("user_id", user_id.to_string());
-  let resource = render_resource_ext("jr:user:{tenant_id}:{user_id}", &ac, &extras);
+  let resource = render_resource("jr:user:{tenant_id}:{user_id}", &ac, Some(&extras));
 
   // 调用授权（业务层返回 DataError；在端点层映射为 WebError::unauthorized）
   policy_svc
@@ -434,7 +453,7 @@ use axum::extract::State;
 use fusion_common::ctx::Ctx;
 use fusion_web::WebError;
 use fusion_core::application::Application;
-use crate::access_control::{auth_ctx::build_auth_context, PolicySvc};
+use fusion_core::model::{auth_ctx::build_auth_context, PolicySvc};
 
 // `jieyuan/jieyuan-core/src/web/middleware/authorization_middleware.rs`
 /// 函数级注释：最小授权中间件，将业务层 DataError 映射为 WebError
@@ -504,33 +523,7 @@ fn render_resource(tpl: &str, ac: &AuthContext) -> String {
 // policy_svc.authorize(&ac, meta.action, &resource)?;
 
 /// 函数级注释：扩展资源模板渲染，支持内置与自定义占位符
-/// 补充了完整的 render_resource_ext 实现，支持 extras 参数注入
-use std::collections::HashMap;
-fn render_resource_ext(tpl: &str, ac: &AuthContext, extras: &HashMap<&str, String>) -> String {
-  let mut s = tpl.to_string();
-  // 内置占位符
-  s = s
-    .replace("{tenant_id}", &ac.principal_tenant_id.to_string())
-    .replace("{user_id}", &ac.principal_user_id.to_string())
-    .replace("{method}", &ac.method)
-    .replace("{path}", &ac.path)
-    .replace("{token_seq}", &ac.token_seq.to_string());
-
-  // 角色（拼接为逗号分隔）
-  if s.contains("{principal_roles}") {
-    let joined = ac.principal_roles.join(",");
-    s = s.replace("{principal_roles}", &joined);
-  }
-
-  // 其它自定义占位符（如 role_id/policy_id/resource_id 等）
-  for (k, v) in extras.iter() {
-    let ph = format!("{{{}}}", k);
-    if s.contains(&ph) { s = s.replace(&ph, v); }
-  }
-
-  s
-}
-````
+/// 统一的 render_resource 函数实现见下文"远程授权 API 合约与实现"章节
 
 规范约束：
 
@@ -586,7 +579,7 @@ macro_rules! route_with_meta {
 
 #### 模板渲染的扩展占位符支持
 
-为支持更丰富的资源表达，提供扩展模板渲染函数。完整的 `render_resource_ext` 实现已在前面的章节中提供，支持内置与自定义占位符：
+为支持更丰富的资源表达，提供统一的模板渲染函数。完整的 `render_resource` 实现已在前面的章节中提供，支持内置与可选的自定义占位符：
 
 - 内置占位符：`{tenant_id}`、`{user_id}`、`{method}`、`{path}`、`{token_seq}`、`{principal_roles}`
 - 自定义占位符：通过 `extras` 参数注入（如 `role_id`、`policy_id`、`resource_id` 等）
@@ -710,7 +703,7 @@ pub async fn attach_policy_to_role(Path((role_id, policy_id)): Path<(i64, i64)>,
     ("role_id", role_id.to_string()),
     ("policy_id", policy_id.to_string()),
   ]);
-  let resource = render_resource_ext("jr:role:{tenant_id}:{role_id}", &ac, &extras);
+  let resource = render_resource("jr:role:{tenant_id}:{role_id}", &ac, Some(&extras));
   // ... 授权评估与业务处理
 }
 ```
@@ -1120,6 +1113,319 @@ pub struct IamConfig {
 
 ---
 
+## 远程授权 API 合约与实现
+
+### 远程授权 API 端点
+
+**实现位置**：`jieyuan/jieyuan/src/endpoint/api/v1/iams.rs:39-82`
+
+```rust
+pub async fn authorize(
+    parts: Parts,
+    State(app): State<Application>,
+    policy_svc: PolicySvc,
+    Json(req): Json<AuthorizeRequest>,
+) -> WebResult<AuthorizeResponse> {
+    // 1) 从请求 extensions 中提取用户上下文
+    let ctx: &Ctx = parts.extensions.get()
+        .ok_or_else(|| WebError::new_with_code(401, "invalid token"))?;
+
+    // 2) 构建授权上下文 (AuthContext)
+    let time_offset = *app.fusion_setting().app().time_offset();
+    let ac = build_auth_context_with_timezone(ctx, time_offset)
+        .map_err(|e| WebError::new_with_code(401, format!("invalid token: {}", e)))?;
+
+    // 3) 渲染资源模板
+    let resource = if let Some(extras) = &req.extras {
+        render_resource(&req.resource_tpl, &ac, Some(extras))
+    } else {
+        render_resource(&req.resource_tpl, &ac)
+    };
+
+    // 4) 执行授权检查
+    match policy_svc.authorize_ext(&ac, &req.action, &resource).await {
+        Ok(Decision::Allow) => {
+            let response = AuthorizeResponse::success(CtxPayload::from_ctx(ctx));
+            Ok(axum::Json(response))
+        }
+        Ok(Decision::Deny) => {
+            let _detail = jieyuan_core::model::AuthorizeDenyDetail::new(CtxPayload::from_ctx(ctx));
+            let error_response = WebError::new(403, format!("policy deny: {} not allowed on {}", req.action, resource), None);
+            Err(error_response)
+        }
+        Err(e) => {
+            Err(WebError::new_with_code(401, format!("authorization failed: {}", e)))
+        }
+    }
+}
+```
+
+### 双层格式资源模板渲染
+
+**实现位置**：`jieyuan/jieyuan-core/src/model/iam_api.rs:181-254`
+
+```rust
+pub fn render_resource(tpl: &str, ac: &AuthContext, extras: Option<&HashMap<String, String>>) -> String {
+    let mut s = tpl.to_string();
+
+    // 检查模板是否已包含 tenant_id 占位符
+    if s.contains("{tenant_id}") {
+        // 完整格式：直接替换占位符
+        s = s.replace("{tenant_id}", &ac.principal_tenant_id.to_string());
+    } else {
+        // 简化格式：自动注入 tenant_id
+        if let Some(colon_pos) = s.find(':') {
+            if let Some(second_colon_pos) = s[colon_pos + 1..].find(':') {
+                let insert_pos = colon_pos + 1 + second_colon_pos + 1;
+                s.insert_str(insert_pos, &format!("{}:", ac.principal_tenant_id));
+            }
+        }
+    }
+
+    // 其它内置占位符
+    s = s
+        .replace("{user_id}", &ac.principal_user_id.to_string())
+        .replace("{method}", &ac.method)
+        .replace("{path}", &ac.path)
+        .replace("{token_seq}", &ac.token_seq.to_string());
+
+    // 角色（拼接为逗号分隔）
+    if s.contains("{principal_roles}") {
+        let joined = ac.principal_roles.join(",");
+        s = s.replace("{principal_roles}", &joined);
+    }
+
+    // 其它自定义占位符（如 role_id/policy_id/resource_id 等）
+    for (k, v) in extras.iter() {
+        let ph = format!("{{{}}}", k);
+        if s.contains(&ph) {
+            s = s.replace(&ph, v);
+        }
+    }
+
+    s
+}
+```
+
+### 客户端远程授权中间件
+
+**实现位置**：`hetumind/hetumind-studio/src/web/remote_authz_middleware.rs:35-132`
+
+```rust
+pub async fn remote_authz_guard(
+    State(app): State<Application>,
+    mut req: Request<axum::body::Body>,
+    next: Next,
+) -> Result<Response, WebError> {
+    // 获取远程授权配置
+    let config = get_remote_authz_config(&app);
+
+    // 1) 读取 Authorization 头
+    let auth_header = req.headers()
+        .get(header::AUTHORIZATION)
+        .and_then(|v| v.to_str().ok())
+        .ok_or_else(|| WebError::unauthorized("missing Authorization header"))?;
+
+    // 2) 读取路由元数据（动作与资源模板）
+    let meta = req.extensions().get::<jieyuan_core::web::route_meta::RouteMeta>()
+        .ok_or_else(|| WebError::bad_request("missing route meta"))?;
+
+    // 3) 读取 extras（路由参数或业务参数）
+    let extras = req.extensions().get::<HashMap<String, String>>().cloned().unwrap_or_default();
+
+    // 4) 组装请求体（snake_case）
+    let method = req.method().to_string().to_lowercase();
+    let path = req.uri().path().to_string();
+    let request_ip = req
+        .headers()
+        .get("x-forwarded-for")
+        .and_then(|v| v.to_str().ok())
+        .or_else(|| req.headers().get("x-real-ip").and_then(|v| v.to_str().ok()))
+        .unwrap_or("")
+        .to_string();
+
+    let body = serde_json::json!({
+        "action": meta.action,
+        "resource_tpl": meta.resource_tpl,
+        "extras": extras,
+        "method": method,
+        "path": path,
+        "request_ip": request_ip,
+    });
+
+    // 5) 远程调用 Jieyuan 授权 API
+    let url = format!("{}/api/v1/iam/authorize", config.jieyuan_base_url);
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_millis(config.timeout_ms))
+        .build()
+        .map_err(|e| WebError::bad_gateway(format!("failed to create HTTP client: {}", e)))?;
+
+    let resp = client
+        .post(&url)
+        .header(header::AUTHORIZATION, auth_header)
+        .header(header::CONTENT_TYPE, "application/json")
+        .json(&body)
+        .send()
+        .await
+        .map_err(|e| WebError::bad_gateway(format!("authorize request failed: {}", e)))?;
+
+    // 6) 响应处理（200/403/401）
+    let status = resp.status();
+    let bytes = resp.bytes().await.map_err(|e| WebError::bad_gateway(e.to_string()))?;
+
+    match status {
+        StatusCode::OK => {
+            // 约定：{ decision: "allow", ctx: {...} }
+            let json: Value = serde_json::from_slice(&bytes).map_err(|e| WebError::bad_gateway(e.to_string()))?;
+
+            // 决策防御性检查
+            let decision = json.get("decision").and_then(|v| v.as_str()).unwrap_or("deny");
+            if decision != "allow" {
+                return Err(WebError::forbidden("policy deny (unexpected decision)"));
+            }
+
+            // 将 ctx 注入请求上下文
+            if let Some(ctx) = json.get("ctx") {
+                // 转换为 CtxPayloadView 并注入
+                if let Ok(ctx_view) = CtxPayloadView::from_json(ctx) {
+                    req.extensions_mut().insert(ctx_view);
+                }
+            }
+
+            Ok(next.run(req).await)
+        }
+        StatusCode::FORBIDDEN => {
+            // 约定：返回 JSON 错误响应
+            let error_text = String::from_utf8_lossy(&bytes);
+            Err(WebError::forbidden(error_text))
+        }
+        StatusCode::UNAUTHORIZED => {
+            let error_text = String::from_utf8_lossy(&bytes);
+            Err(WebError::unauthorized(error_text))
+        }
+        _ => Err(WebError::bad_gateway(format!("unexpected status: {}", status))),
+    }
+}
+```
+
+### API 合约规范
+
+- **Endpoint**: `POST /api/v1/iam/authorize`
+- **Headers**: `Authorization: Bearer <token>`, `Content-Type: application/json`
+- **Request Body** (snake_case):
+  ```json
+  {
+    "action": "user:update_password",
+    "resource_tpl": "jr:user:{tenant_id}:{user_id}",
+    "extras": { "user_id": "12345" },
+    "method": "put",
+    "path": "/api/v1/users/12345/password",
+    "request_ip": "203.0.113.3"
+  }
+  ```
+- **Response 200 OK**: `{ "decision": "allow", "ctx": {...} }`
+- **Response 403 Forbidden**: WebError with policy deny message
+- **Response 401 Unauthorized**: WebError with invalid token message
+
+---
+
+## 故障排除与调试
+
+### 常见错误
+
+#### **错误**: "missing route meta"
+- **原因**: 忘记在路由上注入路由元数据
+- **解决**: 确保使用 `inject_route_meta` 中间件或相关宏
+
+#### **错误**: "missing Authorization header"
+- **原因**: 请求缺少授权头
+- **解决**: 确保客户端发送 `Authorization: Bearer <token>` 头
+
+#### **错误**: "policy deny"
+- **原因**: 用户权限不足
+- **解决**: 检查 jieyuan 中的策略配置和用户角色
+
+### 调试工具
+
+```rust
+// 调试中间件 - 记录详细信息
+pub async fn debug_middleware(
+    req: Request<axum::body::Body>,
+    next: Next,
+) -> Response {
+    log::debug!("请求路径: {}", req.uri().path());
+    log::debug!("请求方法: {}", req.method());
+
+    if let Some(meta) = req.extensions().get::<RouteMeta>() {
+        log::debug!("权限动作: {}", meta.action);
+        log::debug!("资源模板: {}", meta.resource_tpl);
+    }
+
+    next.run(req).await
+}
+```
+
+---
+
+## 部署与配置
+
+### 环境变量
+
+```bash
+# jieyuan 服务配置
+JIEYUAN_BASE_URL=http://your-jieyuan-server:50010
+JIEYUAN_TIMEOUT_MS=5000
+
+# 日志级别
+RUST_LOG=debug
+```
+
+### 依赖检查
+
+确保 `Cargo.toml` 包含必要的依赖：
+
+```toml
+jieyuan-core = { workspace = true, features = ["with-web"] }
+fusion-core = { workspace = true, features = ["with-uuid"] }
+fusion-web = { workspace = true, features = ["with-uuid"] }
+axum = { workspace = true }
+reqwest = { workspace = true }
+serde_json = { workspace = true }
+```
+
+### 健康检查
+
+```rust
+// 权限系统健康检查端点
+pub async fn authz_health_check() -> impl axum::response::IntoResponse {
+    let status = match check_jieyuan_connectivity().await {
+        Ok(_) => "healthy",
+        Err(e) => {
+            log::error!("jieyuan 连接检查失败: {}", e);
+            "unhealthy"
+        }
+    };
+
+    (axum::http::StatusCode::OK, axum::Json(json!({
+        "authz_system": status
+    })))
+}
+```
+
+### 配置约定
+
+```toml
+[jieyuan.iam]
+# 策略求值缓存的 TTL（秒）
+evaluation_cache_ttl_secs = 60
+# 是否启用资源策略（默认 true）
+enable_resource_policies = true
+# 是否启用权限边界（默认 false）
+enable_permission_boundary = false
+```
+
+---
+
 ## 错误处理
 
 - 统一错误类型（按层次使用）：
@@ -1138,3 +1444,4 @@ pub fn unauthorized_err(msg: &str) -> WebError {
   WebError::unauthorized(msg)
 }
 ```
+````

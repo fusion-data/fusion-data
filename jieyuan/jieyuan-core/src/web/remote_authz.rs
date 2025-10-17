@@ -1,7 +1,7 @@
-//! 远程授权客户端集成示例
+//! 远程授权客户端集成
 //!
-//! 这个模块展示了如何在其他项目（如 hetumind-studio、hetuflow-server）
-//! 中集成和使用 jieyuan 的远程授权 API。
+//! 这个模块提供了在其他项目（如 hetumind-studio、hetuflow-server）
+//! 中集成和使用 jieyuan 的远程授权 API 的客户端功能。
 
 use axum::{
   extract::{Request, State},
@@ -14,10 +14,7 @@ use fusion_web::WebError;
 use serde_json::{Value, json};
 use std::collections::HashMap;
 
-use crate::web::route_meta::RouteMeta;
-
-// 使用 jieyuan-core 中的数据结构
-use jieyuan_core::model::{AuthorizeRequest, AuthorizeResponse};
+use crate::model::{AuthorizeRequest, AuthorizeResponse};
 
 /// 远程授权客户端配置
 #[derive(Clone)]
@@ -55,7 +52,10 @@ pub async fn remote_authz_guard(
     .ok_or_else(|| WebError::unauthorized("missing Authorization header"))?;
 
   // 2) 读取路由元数据（动作与资源模板）
-  let meta = req.extensions().get::<RouteMeta>().ok_or_else(|| WebError::bad_request("missing route meta"))?;
+  let meta = req
+    .extensions()
+    .get::<super::route_meta::RouteMeta>()
+    .ok_or_else(|| WebError::bad_request("missing route meta"))?;
 
   // 3) 读取 extras（路由参数或业务参数）
   let extras = req.extensions().get::<HashMap<String, String>>().cloned().unwrap_or_default();

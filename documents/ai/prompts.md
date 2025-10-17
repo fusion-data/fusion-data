@@ -24,6 +24,7 @@
 - 编写单元测试并运行，确保代码实现正确
 - 定义结构化的数据类型优先（如：`pub struct Config`）；若需要直接使用 JSON 对象，请使用 `serde_json::json!` 宏进行构造
 - 使用 `serde` 的 struct, enum，当手动构建 JSON 字符串时注意序列化方式。比如：`#[serde(rename_all = "snake_case")]` 需要使用 snake_case 风格
+- 完成后输出任务总结
 
 ### 实现测试
 

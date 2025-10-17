@@ -3,11 +3,14 @@ use fusion_core::{Result, application::Application};
 use fusion_web::WebError;
 use fusionsql::{ModelManager, page::PageResult};
 
-use jieyuan_core::model::{
-  AuthContext, Decision, DecisionEffect, PolicyEngine, PolicyEntity, PolicyForCreate, PolicyForPage, PolicyForUpdate,
+use jieyuan_core::{
+  model::{
+    AuthContext, Decision, DecisionEffect, PolicyEngine, PolicyEntity, PolicyForCreate, PolicyForPage, PolicyForUpdate,
+  },
+  web::middleware::AuthorizationServiceExt,
 };
 
-use super::{AuthorizationServiceExt, PolicyRepo, policy_bmc::PolicyBmc};
+use super::{PolicyRepo, policy_bmc::PolicyBmc};
 
 /// 权限服务（Arc 并发友好）
 #[derive(Clone)]

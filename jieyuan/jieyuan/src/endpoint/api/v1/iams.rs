@@ -7,12 +7,11 @@ use fusion_core::application::Application;
 use fusion_web::{WebError, WebResult};
 use utoipa_axum::router::OpenApiRouter;
 
-use jieyuan_core::model::{AuthorizeRequest, AuthorizeResponse, CtxPayload};
-
-use crate::{
-  access_control::{PolicySvc, build_auth_context_with_timezone},
-  web::{iam_api::render_resource_ext, render_resource},
+use jieyuan_core::model::{
+  AuthorizeRequest, AuthorizeResponse, CtxPayload, Decision, build_auth_context_with_timezone, render_resource,
 };
+
+use crate::access_control::PolicySvc;
 
 pub fn routes() -> OpenApiRouter<Application> {
   OpenApiRouter::new().routes(utoipa_axum::routes!(authorize))
@@ -52,20 +51,16 @@ pub async fn authorize(
     .map_err(|e| WebError::new_with_code(401, format!("invalid token: {}", e)))?;
 
   // 3) 渲染资源模板
-  let resource = if let Some(extras) = &req.extras {
-    render_resource_ext(&req.resource_tpl, &ac, extras)
-  } else {
-    render_resource(&req.resource_tpl, &ac)
-  };
+  let resource = render_resource(&req.resource_tpl, &ac, req.extras.as_ref());
 
   // 4) 执行授权检查
   match policy_svc.authorize_ext(&ac, &req.action, &resource).await {
-    Ok(crate::access_control::Decision::Allow) => {
+    Ok(Decision::Allow) => {
       // 授权通过，构建成功响应
       let response = AuthorizeResponse::success(CtxPayload::from_ctx(ctx));
       Ok(axum::Json(response))
     }
-    Ok(crate::access_control::Decision::Deny) => {
+    Ok(Decision::Deny) => {
       // 授权拒绝，构建拒绝详情（用于日志）
       let _detail = jieyuan_core::model::AuthorizeDenyDetail::new(CtxPayload::from_ctx(ctx));
 

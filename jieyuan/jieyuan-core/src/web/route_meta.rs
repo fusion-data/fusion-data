@@ -38,8 +38,8 @@ pub async fn inject_extras(
 #[macro_export]
 macro_rules! route_with_meta {
   ($router:expr, $method:path, $path:expr, $handler:path, $action:expr, $resource_tpl:expr) => {{
-    use crate::web::route_meta::RouteMeta;
     use axum::{http::Request, middleware};
+    use $crate::web::route_meta::RouteMeta;
 
     async fn inject_meta(mut req: Request<axum::body::Body>, next: Next) -> Response {
       req.extensions_mut().insert(RouteMeta { action: $action, resource_tpl: $resource_tpl });
@@ -54,8 +54,8 @@ macro_rules! route_with_meta {
 #[macro_export]
 macro_rules! route_with_meta_and_extras {
   ($router:expr, $method:path, $path:expr, $handler:path, $action:expr, $resource_tpl:expr, $extras:expr) => {{
-    use crate::web::route_meta::RouteMeta;
     use axum::{http::Request, middleware};
+    use $crate::web::route_meta::RouteMeta;
 
     async fn inject_meta(mut req: Request<axum::body::Body>, next: Next) -> Response {
       req.extensions_mut().insert(RouteMeta { action: $action, resource_tpl: $resource_tpl });

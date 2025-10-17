@@ -25,10 +25,7 @@ pub fn set_env(name: &str, value: &str) -> Result<(), Error> {
   std::panic::catch_unwind(|| unsafe {
     env::set_var(name, value);
   })
-  .map_err(|e| {
-    let leaked_value: &'static str = Box::leak(value.to_string().into_boxed_str());
-    Error::FailedToSetEnv(name.to_string(), leaked_value.to_string(), panic_message(e))
-  })
+  .map_err(|e| Error::FailedToSetEnv(name.to_string(), value.to_string(), panic_message(e)))
 }
 
 pub fn remove_env(name: &str) -> Result<(), Error> {
@@ -53,5 +50,5 @@ fn panic_message(e: Box<dyn std::any::Any + Send>) -> String {
   if let Some(s) = any.downcast_ref::<&'static str>() {
     return (*s).to_string();
   }
-  "panic with non-string payload".to_string()
+  format!("panic with non-string payload: {:?}", any)
 }

@@ -1,4 +1,4 @@
-pub mod iam;
+pub mod iams;
 pub mod permissions;
 pub mod policies;
 pub mod roles;
@@ -11,7 +11,7 @@ use utoipa_axum::router::OpenApiRouter;
 
 pub fn routes() -> OpenApiRouter<Application> {
   OpenApiRouter::new()
-    .nest("/iam", iam::routes())
+    .nest("/iam", iams::routes())
     .nest("/users", users::routes())
     .nest("/roles", roles::routes())
     .nest("/permissions", permissions::routes())

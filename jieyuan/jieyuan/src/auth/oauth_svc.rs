@@ -6,11 +6,12 @@ use serde::Deserialize;
 use serde_json::Value;
 use std::collections::HashMap;
 
-use crate::{UserBmc, auth::utils::make_token};
 use jieyuan_core::model::{
   OAuthAuthorizeRequest, OAuthAuthorizeResponse, OAuthProvider, OAuthTokenRequest, OAuthTokenResponse, TokenType,
   UserChangeQueryReq, UserChangeQueryResp, UserForCreate, UserStatus,
 };
+
+use crate::{auth::utils::make_token, user::UserBmc};
 
 #[derive(Clone)]
 pub struct OAuthSvc {
