@@ -152,7 +152,7 @@ impl WorkflowSvc {
     }
 
     // 2. 创建执行记录
-    let created_by = self.mm.ctx_ref()?.uid();
+    let created_by = self.mm.ctx_ref()?.user_id();
     let execution_id = ExecutionId::now_v7();
     let execution_entity = ExecutionEntity {
       id: execution_id.clone(),

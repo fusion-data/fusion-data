@@ -1,4 +1,3 @@
-use chrono::{DateTime, Utc};
 use fusion_common::ctx::Ctx;
 use fusion_common::page::Page;
 use sea_query::{DeleteStatement, Expr, InsertStatement, IntoIden, SelectStatement, UpdateStatement, WithQuery};
@@ -126,13 +125,13 @@ where
   MC: DbBmc,
 {
   if MC::_has_owner_id() {
-    fields.push(SeaField::new(CommonIden::OwnerId.into_iden(), ctx.uid()));
+    fields.push(SeaField::new(CommonIden::OwnerId.into_iden(), ctx.user_id()));
   }
   if MC::_has_created_by() && !fields.exists(TimestampIden::CreatedBy.into_iden()) {
-    fields.push(SeaField::new(TimestampIden::CreatedBy, ctx.uid()));
+    fields.push(SeaField::new(TimestampIden::CreatedBy, ctx.user_id()));
   }
   if MC::_has_created_at() && !fields.exists(TimestampIden::CreatedAt.into_iden()) {
-    fields.push(SeaField::new(TimestampIden::CreatedAt, DateTime::<Utc>::from(*ctx.req_time())));
+    fields.push(SeaField::new(TimestampIden::CreatedAt, *ctx.req_time()));
   }
 }
 
@@ -143,10 +142,10 @@ where
   MC: DbBmc,
 {
   if MC::_has_updated_by() && !fields.exists(TimestampIden::UpdatedBy.into_iden()) {
-    fields.push(SeaField::new(TimestampIden::UpdatedBy, ctx.uid()));
+    fields.push(SeaField::new(TimestampIden::UpdatedBy, ctx.user_id()));
   }
   if MC::_has_updated_at() && !fields.exists(TimestampIden::UpdatedAt.into_iden()) {
-    fields.push(SeaField::new(TimestampIden::UpdatedAt, DateTime::<Utc>::from(*ctx.req_time())));
+    fields.push(SeaField::new(TimestampIden::UpdatedAt, *ctx.req_time()));
   }
 }
 

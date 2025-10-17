@@ -143,7 +143,7 @@ impl ChatModelV1 {
     match config.provider.as_str() {
       "openai" => {
         let api_key = self.get_api_key_from_config_or_env(config, "OPENAI_API_KEY").await?;
-        let _client = OpenAIClient::new(&api_key);
+        let _client: OpenAIClient = OpenAIClient::new(&api_key);
 
         // 创建一个简化的ModelClient，不使用rig-core的model方法
         Ok(ModelClient::OpenAI(OpenAIModel { model: config.model.clone(), api_key, base_url: config.base_url.clone() }))
@@ -294,7 +294,8 @@ impl ChatModelV1 {
       chunks.push(chunk_str);
 
       // 最后一个块添加完成标记
-      if i == (full_response.chars().count() + chunk_size - 1) / chunk_size - 1 {
+      // (full_response.chars().count() + chunk_size - 1) / chunk_size - 1
+      if i == full_response.chars().count().div_ceil(chunk_size) - 1 {
         chunks.push("[DONE]".to_string());
       }
     }

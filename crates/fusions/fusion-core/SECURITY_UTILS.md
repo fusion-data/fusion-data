@@ -36,7 +36,7 @@ async fn handler(
   mut parts: Parts,
 ) -> WebResult<serde_json::Value> {
   let ctx: Ctx = extract_ctx(&parts, app.fusion_setting().security())?;
-  let uid = ctx.uid();
+  let uid = ctx.user_id();
   let scopes = ctx.payload().get_strings("scopes").unwrap_or_default();
   ok_json!(serde_json::json!({"uid": uid, "scopes": scopes}))
 }

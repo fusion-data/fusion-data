@@ -14,6 +14,7 @@ use fusion_web::WebError;
 use serde_json::{Value, json};
 use std::collections::HashMap;
 
+use crate::model::iam_api::IamCtxPayload;
 use crate::model::{AuthorizeRequest, AuthorizeResponse};
 
 /// 远程授权客户端配置
@@ -31,11 +32,11 @@ impl Default for RemoteAuthzConfig {
   }
 }
 
-/// 远程授权中间件
+/// 远程授权中间件（简化版本）
 ///
 /// 这个中间件会：
-/// 1. 读取 Authorization 头和 RouteMeta
-/// 2. 构造授权请求体（snake_case）
+/// 1. 读取 Authorization 头
+/// 2. 构造授权请求体（snake_case），action 和 resource_tpl 将在远程端通过路径映射自动解析
 /// 3. 调用远程授权 API 并处理 200/403/401
 /// 4. 在 200 allow 时，将 ctx 注入到请求扩展供后续 handler 使用
 pub async fn remote_authz_guard(
@@ -51,16 +52,13 @@ pub async fn remote_authz_guard(
     .and_then(|v| v.to_str().ok())
     .ok_or_else(|| WebError::unauthorized("missing Authorization header"))?;
 
-  // 2) 读取路由元数据（动作与资源模板）
-  let meta = req
-    .extensions()
-    .get::<super::route_meta::RouteMeta>()
-    .ok_or_else(|| WebError::bad_request("missing route meta"))?;
+  // 2) 使用简化的路径授权（新方案不再需要 RouteMeta）
+  // 动作和资源模板将通过路径映射在远程端自动解析
 
-  // 3) 读取 extras（路由参数或业务参数）
+  // 读取 extras（路由参数或业务参数）
   let extras = req.extensions().get::<HashMap<String, String>>().cloned().unwrap_or_default();
 
-  // 4) 组装请求体（snake_case）
+  // 3) 组装请求体（snake_case）
   let method = req.method().to_string().to_lowercase();
   let path = req.uri().path().to_string();
   let request_ip = req
@@ -71,16 +69,15 @@ pub async fn remote_authz_guard(
     .unwrap_or("")
     .to_string();
 
+  // 新的简化方案：action 和 resource_tpl 将在远程端通过路径映射自动解析
   let body = json!({
-    "action": meta.action,
-    "resource_tpl": meta.resource_tpl,
     "extras": extras,
     "method": method,
     "path": path,
     "request_ip": request_ip,
   });
 
-  // 5) 远程调用 Jieyuan 授权 API
+  // 4) 远程调用 Jieyuan 授权 API
   let url = format!("{}/api/v1/iam/authorize", config.jieyuan_base_url);
   let client = reqwest::Client::builder()
     .timeout(std::time::Duration::from_millis(config.timeout_ms))
@@ -96,7 +93,7 @@ pub async fn remote_authz_guard(
     .await
     .map_err(|e| WebError::bad_gateway(format!("authorize request failed: {}", e)))?;
 
-  // 6) 响应处理（200/403/401）
+  // 5) 响应处理（200/403/401）
   let status = resp.status();
   let bytes = resp.bytes().await.map_err(|e| WebError::bad_gateway(e.to_string()))?;
 
@@ -132,55 +129,66 @@ pub async fn remote_authz_guard(
   }
 }
 
-/// 客户端上下文载荷视图
-/// 用于在客户端项目中映射远程返回的 ctx
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub struct CtxPayloadView {
-  /// 租户 ID
-  pub tenant_id: i64,
-  /// 用户 ID（sub）
-  pub sub: i64,
-  /// 用户角色编码列表
-  pub principal_roles: Vec<String>,
-  /// 是否平台管理员
-  pub is_platform_admin: bool,
-  /// 令牌序列号
-  pub token_seq: i32,
-  /// HTTP 方法
-  pub method: String,
-  /// 请求路径
-  pub path: String,
-  /// 客户端 IP
-  pub request_ip: String,
-  /// 请求时间（RFC3339 + FixedOffset）
-  pub req_time: String,
+/// 从 JSON 值创建 IamCtxPayload
+pub fn ctx_payload_from_json(value: &Value) -> Result<IamCtxPayload, serde_json::Error> {
+  serde_json::from_value(value.clone())
 }
 
-impl CtxPayloadView {
-  /// 从 JSON 值创建视图
-  pub fn from_json(value: &Value) -> Result<Self, serde_json::Error> {
-    serde_json::from_value(value.clone())
+/// 授权请求参数
+#[derive(Debug, Clone)]
+pub struct AuthorizeParams {
+  /// 认证令牌
+  pub token: String,
+  /// 动作
+  pub action: String,
+  /// 资源模板
+  pub resource_tpl: String,
+  /// 额外参数
+  pub extras: Option<HashMap<String, String>>,
+  /// HTTP 方法
+  pub method: Option<String>,
+  /// 请求路径
+  pub path: Option<String>,
+  /// 请求 IP
+  pub request_ip: Option<String>,
+}
+
+impl AuthorizeParams {
+  /// 创建新的授权参数
+  pub fn new(token: impl Into<String>, action: impl Into<String>, resource_tpl: impl Into<String>) -> Self {
+    Self {
+      token: token.into(),
+      action: action.into(),
+      resource_tpl: resource_tpl.into(),
+      extras: None,
+      method: None,
+      path: None,
+      request_ip: None,
+    }
   }
 
-  /// 获取用户 ID
-  pub fn user_id(&self) -> i64 {
-    self.sub
+  /// 设置额外参数
+  pub fn with_extras(mut self, extras: HashMap<String, String>) -> Self {
+    self.extras = Some(extras);
+    self
   }
 
-  /// 获取租户 ID
-  pub fn tenant_id(&self) -> i64 {
-    self.tenant_id
+  /// 设置 HTTP 方法
+  pub fn with_method(mut self, method: impl Into<String>) -> Self {
+    self.method = Some(method.into());
+    self
   }
 
-  /// 检查是否具有指定角色
-  pub fn has_role(&self, role: &str) -> bool {
-    self.principal_roles.contains(&role.to_string())
+  /// 设置请求路径
+  pub fn with_path(mut self, path: impl Into<String>) -> Self {
+    self.path = Some(path.into());
+    self
   }
 
-  /// 检查是否是平台管理员
-  pub fn is_platform_admin(&self) -> bool {
-    self.is_platform_admin
+  /// 设置请求 IP
+  pub fn with_request_ip(mut self, request_ip: impl Into<String>) -> Self {
+    self.request_ip = Some(request_ip.into());
+    self
   }
 }
 
@@ -203,28 +211,19 @@ impl RemoteAuthzClient {
   }
 
   /// 执行远程授权检查
-  pub async fn authorize(
-    &self,
-    token: &str,
-    action: &str,
-    resource_tpl: &str,
-    extras: Option<HashMap<String, String>>,
-    method: Option<&str>,
-    path: Option<&str>,
-    request_ip: Option<&str>,
-  ) -> Result<AuthorizeResponse, WebError> {
+  pub async fn authorize(&self, params: AuthorizeParams) -> Result<AuthorizeResponse, WebError> {
     let url = format!("{}/api/v1/iam/authorize", self.config.jieyuan_base_url);
 
-    let request = AuthorizeRequest::new(action, resource_tpl)
-      .with_extras(extras.unwrap_or_default())
-      .with_method(method.unwrap_or(""))
-      .with_path(path.unwrap_or(""))
-      .with_request_ip(request_ip.unwrap_or(""));
+    let request = AuthorizeRequest::new(&params.action, &params.resource_tpl)
+      .with_extras(params.extras.unwrap_or_default())
+      .with_method(params.method.unwrap_or_default())
+      .with_path(params.path.unwrap_or_default())
+      .with_request_ip(params.request_ip.unwrap_or_default());
 
     let resp = self
       .client
       .post(&url)
-      .bearer_auth(token)
+      .bearer_auth(&params.token)
       .json(&request)
       .send()
       .await

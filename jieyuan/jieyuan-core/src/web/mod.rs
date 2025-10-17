@@ -1,8 +1,9 @@
 #[cfg(feature = "with-web")]
+pub mod client;
+#[cfg(feature = "with-web")]
 pub mod middleware;
 
 #[cfg(feature = "with-web")]
-pub mod route_meta;
-
+pub use client::*;
 #[cfg(feature = "with-web")]
-pub mod remote_authz;
+pub use middleware::*;

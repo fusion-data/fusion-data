@@ -140,7 +140,7 @@ async fn user_update_password(
   let ctx = extract_ctx(&parts, _app.fusion_setting().security())?;
 
   // 调用用户服务修改密码
-  user_svc.update_password(ctx.uid(), ctx.tenant_id(), target_user_id, req).await?;
+  user_svc.update_password(ctx.user_id(), ctx.tenant_id(), target_user_id, req).await?;
 
   ok_json!(())
 }

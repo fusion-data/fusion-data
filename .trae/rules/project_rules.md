@@ -128,8 +128,8 @@ The project uses Cargo workspace with the following main components:
   - `fusionsql`: Main database ORM with field-level operations
   - `fusionsql-macros`: Derive macros for model definitions
 - `jieyuan`: Access control and authentication utilities
-  - `jieyuan-core`: Core access control models and OAuth authentication
-  - Centralized IAM system with OAuth 2.0 + PKCE support
+  - `jieyuan-core`: Core access control models, OAuth authentication, and policy engine
+  - Centralized IAM system with OAuth 2.0 + PKCE support, remote authorization API, and double-layer resource format
 
 ### Key Architecture Patterns
 
@@ -425,12 +425,13 @@ pub struct CredentialForInsert {
 
 **Centralized Identity Management**:
 
-The platform implements centralized authentication through Jieyuan with OAuth 2.0 + PKCE flow:
+The platform implements a sophisticated IAM system through Jieyuan with comprehensive authentication and authorization capabilities:
 
-- **Jieyuan**: Provides unified IAM capabilities and OAuth authentication
-- **Hetumind**: Acts as authentication proxy, redirecting to Jieyuan
-- **User Synchronization**: Event-driven synchronization of user changes
-- **Multi-tenant Security**: Tenant-based data isolation with permission middleware
+- **Jieyuan**: Provides unified IAM capabilities with OAuth 2.0 + PKCE authentication and policy-based authorization
+- **Hetumind**: Acts as authentication proxy, redirecting to Jieyuan for centralized identity management
+- **User Synchronization**: Event-driven synchronization of user changes across the platform
+- **Multi-tenant Security**: Tenant-based data isolation with fine-grained permission middleware
+- **Double-layer Resource Format**: Supports both policy configuration format and simplified API usage format
 
 **Authentication Flow**:
 
@@ -438,14 +439,37 @@ The platform implements centralized authentication through Jieyuan with OAuth 2.
 2. Jieyuan handles OAuth flow with PKCE security
 3. Jieyuan issues JWT tokens → Hetumind validates and processes
 4. Tenant middleware injects tenant context → Permission-based access control
+5. Remote authorization API evaluates policies → Fine-grained access decisions
+
+**Authorization System**:
+
+The IAM system implements a sophisticated policy-based authorization with:
+
+- **Remote Authorization API**: Centralized policy evaluation at `/iam/authorize` endpoint
+- **Resource Template Rendering**: Automatic tenant_id injection with double-layer format support
+  - Policy format: `iam:hetumind:{tenant_id}:workflow/123` (complete, unambiguous)
+  - API format: `iam:hetumind:workflow/123` (simplified, auto-injected)
+- **Policy Engine**: "Explicit deny 优先 → allow 命中 → 边界/会话裁剪" evaluation flow
+- **Role-based Access Control**: Predefined roles (viewer, editor, admin) with hierarchical permissions
+- **Resource-level Permissions**: Fine-grained control over specific resources and actions
 
 **Security Features**:
 
 - OAuth 2.0 with Authorization Code + PKCE
-- JWT token validation and refresh
-- Tenant isolation middleware
-- Fine-grained permission system
+- JWT token validation and refresh with sequence-based replay protection
+- Tenant isolation middleware with automatic context injection
+- Fine-grained permission system with policy-based access control
 - User change synchronization via event polling
+- Comprehensive audit logging for all authorization decisions
+- Zero unsafe code policy with security-first dependency management
+
+**Implementation Details**:
+
+- **Remote Authorization Endpoint**: `jieyuan/src/endpoint/api/v1/iams.rs`
+- **Resource Template Rendering**: `jieyuan-core/src/model/iam_api.rs` with unified `render_resource` function
+- **Authorization Middleware**: `jieyuan-core/src/web/middleware/authorization_middleware.rs`
+- **Policy Configuration**: JSON-based policies with condition-based access control
+- **Integration Documentation**: `documents/hetumind-jieyuan-integration.md` and `documents/iam.md`
 
 ### Important Notes
 
@@ -500,6 +524,16 @@ Apply tenant and permission middleware to routes:
 - Follow pagination patterns with `Page` and `PageResult`
 - Use `Fields` derive macro for automatic mapping
 - Implement proper error handling with `DataError`
+
+**IAM Development Best Practices**:
+
+- Use the unified `render_resource` function for resource template rendering with optional extras parameter
+- Leverage double-layer resource format: simplified format for APIs, complete format for policies
+- Implement role-based access control with hierarchical permissions (viewer → editor → admin)
+- Use remote authorization middleware for centralized policy evaluation
+- Follow resource naming convention: `iam:{service}:{type}/{id}` for API calls
+- Define policies using complete format: `iam:{service}:{tenant_id}:{type}/{id}` for unambiguous evaluation
+- Maintain backward compatibility when refactoring authorization components
 
 ### Testing
 

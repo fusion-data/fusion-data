@@ -39,6 +39,10 @@ where
 pub async fn start() -> Result<(), DataError> {
   let app = app_builder::<config::Config>(None).run().await?;
 
+  // 注册 Jieyuan 客户端
+  let jieyuan_client = jieyuan_core::web::client::JieyuanClient::new()?;
+  app.add_component(jieyuan_client);
+
   // 启动用户同步服务
   let user_sync_svc = UserSyncSvc::new(app.component())?;
   let shutdown_rx = app.shutdown_recv().await;

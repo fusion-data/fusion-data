@@ -79,11 +79,11 @@ flowchart LR
       "sid": "self_change_password",
       "effect": "allow",
       "action": ["user:update_password"],
-      "resource": ["jr:user:{tenant_id}:{user_id}"],
+      "resource": ["iam:user:{tenant_id}:{user_id}"],
       "condition": {
         "string_equals": {
-          "jr:principal_user_id": "{user_id}",
-          "jr:tenant_id": "{tenant_id}"
+          "iam:principal_user_id": "{user_id}",
+          "iam:tenant_id": "{tenant_id}"
         }
       }
     }
@@ -94,18 +94,24 @@ flowchart LR
 - 关键字段说明：
   - `effect`: `allow`/`deny`，显式拒绝优先。
   - `action`: 行为集合，支持通配（如 `user:*`）。
-  - `resource`: 受保护资源集合，支持通配（如 `jr:user:{tenant_id}:*` 或 `jr:user:*:*`）。
+  - `resource`: 受保护资源集合，支持通配（如 `iam:user:{tenant_id}:*` 或 `iam:user:*:*`）。
   - `condition`: 条件键与上下文绑定进行求值，常用操作包含 `string_equals`、`string_like`、`numeric_equals`、`bool`、`date_less_than`。
 
 ---
 
-## 资源与行为命名规范
+## Resource-Path 管理机制优化
 
-- **资源标识格式**：`jr:{service}:{tenant_id}:{type}/{id}`
+### 概述
 
-  - **策略配置**：完整格式，如 `jr:hetumind:42:workflow/123`
-  - **API 调用**：简化格式，如 `jr:hetumind:workflow/123`（自动注入 tenant_id）
-  - **约定简化**：`jr:user:{tenant_id}:{user_id}`、`jr:role:{tenant_id}:{role_id}`、`jr:policy:{tenant_id}:{policy_id}`
+Resource-Path 管理机制通过 jieyuan 管理后台配置 API 路径与权限资源的映射关系，客户端运行时只需提供路径信息，jieyuan 自动查找对应的权限配置，简化客户端集成，提高系统的灵活性和可维护性。
+
+### 资源与行为命名规范
+
+- **资源标识格式**：`iam:{service}:{tenant_id}:{type}/{id}`
+
+  - **策略配置**：完整格式，如 `iam:hetumind:42:workflow/123`
+  - **API 调用**：简化格式，如 `iam:hetumind:workflow/123`（自动注入 tenant_id）
+  - **约定简化**：`iam:user:{tenant_id}:{user_id}`、`iam:role:{tenant_id}:{role_id}`、`iam:policy:{tenant_id}:{policy_id}`
 
 - **行为命名**：`{service}:{verb}`
   - **通用操作**：`create`、`read`、`update`、`delete`、`list`
@@ -125,7 +131,163 @@ flowchart LR
 3. **自动转换机制** - jieyuan 在处理请求时自动将简化格式转换为完整格式
 4. **向后兼容** - 支持两种格式，确保现有系统平稳迁移
 
-**实现位置**：`jieyuan/jieyuan-core/src/model/iam_api.rs:181-254`
+**实现位置**：`jieyuan/jieyuan-core/src/model/iam_api.rs:111-158`
+
+### 路径映射数据库设计
+
+```sql
+-- 服务路径映射表
+CREATE TABLE service_path_mappings (
+    id BIGSERIAL PRIMARY KEY,
+    service VARCHAR(50) NOT NULL,
+    path_pattern VARCHAR(500) NOT NULL,
+    method VARCHAR(10) NOT NULL,
+    action VARCHAR(100) NOT NULL,
+    resource_tpl VARCHAR(500) NOT NULL,
+    path_params JSONB,
+    enabled BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    created_by BIGINT NOT NULL,
+    updated_by BIGINT,
+    description TEXT,
+    UNIQUE(service, path_pattern, method)
+);
+
+-- 索引优化
+CREATE INDEX idx_service_path_lookup ON service_path_mappings(service, method, enabled);
+CREATE INDEX idx_service_path_pattern ON service_path_mappings(service, path_pattern);
+CREATE INDEX idx_service_path_updated_at ON service_path_mappings(updated_at);
+```
+
+### 数据模型
+
+**路径映射实体**：`jieyuan/jieyuan-core/src/model/path_mapping.rs`
+
+```rust
+/// 路径映射实体
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
+#[serde(rename_all = "snake_case")]
+pub struct PathMappingEntity {
+    pub id: i64,
+    pub service: String,
+    pub path_pattern: String,
+    pub method: String,
+    pub action: String,
+    pub resource_tpl: String,
+    pub path_params: Vec<PathParam>,
+    pub enabled: bool,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+    pub created_by: i64,
+    pub updated_by: Option<i64>,
+    pub description: Option<String>,
+}
+```
+
+**基于路径的授权模型**：`jieyuan/jieyuan-core/src/model/path_authz.rs`
+
+```rust
+/// 基于路径的授权请求
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
+#[serde(rename_all = "snake_case")]
+pub struct PathBasedAuthzRequest {
+    pub service: String,
+    pub path: String,
+    pub method: String,
+    pub request_ip: Option<String>,
+}
+
+/// 基于路径的授权响应
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
+#[serde(rename_all = "snake_case")]
+pub struct PathBasedAuthzResponse {
+    pub decision: String,
+    pub ctx: Option<PathAuthzCtxPayload>,
+    pub matched_mapping: Option<MatchedMapping>,
+}
+```
+
+### 路径查找与缓存机制
+
+```rust
+/// 路径查找请求
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
+#[serde(rename_all = "snake_case")]
+pub struct PathLookupRequest {
+    pub service: String,
+    pub path: String,
+    pub method: String,
+}
+
+/// 路径查找响应
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
+#[serde(rename_all = "snake_case")]
+pub struct PathLookupResponse {
+    pub action: String,
+    pub resource_tpl: String,
+    pub path_params: HashMap<String, String>,
+    pub cache_ttl: Option<u64>,
+}
+```
+
+### API 端点
+
+**管理端点**：`jieyuan/jieyuan/src/endpoint/api/v1/path_mappings.rs`
+- CRUD 操作：`POST /`, `GET /:id`, `PUT /:id`, `DELETE /:id`
+- 批量操作：`POST /batch`
+- 查询：`POST /query`
+
+**基于路径的授权端点**：`jieyuan/jieyuan/src/endpoint/api/v1/path_authz.rs`
+- 授权检查：`POST /authorize-by-path`
+
+### 客户端集成简化
+
+使用 Resource-Path 机制后，客户端集成变得非常简单：
+
+1. **简化路由定义**：无需手动注入 RouteMeta
+2. **自动权限查找**：只需提供 service、path、method
+3. **统一的响应格式**：包含决策结果和上下文信息
+
+**示例请求**：
+```json
+{
+  "service": "hetumind",
+  "path": "/api/v1/workflows/123e4567-e89b-12d3-a456-426614174000",
+  "method": "GET",
+  "request_ip": "203.0.113.3"
+}
+```
+
+**示例响应**：
+```json
+{
+  "decision": "allow",
+  "ctx": {
+    "tenant_id": 42,
+    "sub": 1001,
+    "principal_roles": ["tenant_admin", "ops"],
+    "is_platform_admin": false,
+    "token_seq": 3,
+    "method": "get",
+    "path": "/api/v1/workflows/123e4567-e89b-12d3-a456-426614174000",
+    "request_ip": "203.0.113.3",
+    "req_time": "2025-01-01T08:00:01+08:00"
+  },
+  "matched_mapping": {
+    "action": "hetumind:read",
+    "resource_tpl": "iam:hetumind:workflow/{id}",
+    "extracted_params": {
+      "id": "123e4567-e89b-12d3-a456-426614174000"
+    }
+  }
+}
+```
 
 ---
 
@@ -133,10 +295,10 @@ flowchart LR
 
 - 常用条件键（snake_case）：
 
-  - `jr:tenant_id`、`jr:principal_user_id`、`jr:principal_roles`、`jr:is_platform_admin`
-  - `jr:request_ip`、`jr:method`、`jr:path`
-  - `jr:token_seq`、`jr:auth_level`
-  - `jr:target_user_id`、`jr:target_tenant_id`
+  - `iam:tenant_id`、`iam:principal_user_id`、`iam:principal_roles`、`iam:is_platform_admin`
+  - `iam:request_ip`、`iam:method`、`iam:path`
+  - `iam:token_seq`、`iam:auth_level`
+  - `iam:target_user_id`、`iam:target_tenant_id`
 
 - 上下文结构（Rust，`Arc` 友好）：
 
@@ -304,7 +466,7 @@ impl PolicySvc {
   /// 函数级注释：匹配单个策略文档（Action/Resource 通配与 Condition 求值）
   fn match_policy(_p: &PolicyEntity, _ctx: &AuthContext, _action: &str, _resource: &str, _effect: DecisionEffect) -> bool {
     // 解析 JSON，匹配 Action/Resource（支持通配），并求值 Condition
-    // 条件键映射：如 jr:tenant_id -> ctx.principal_tenant_id 等
+    // 条件键映射：如 iam:tenant_id -> ctx.principal_tenant_id 等
     // 具体实现留作后续迭代；当前返回 false 保证可编译
     false
   }
@@ -386,7 +548,7 @@ pub fn build_auth_context(ctx: &Ctx, time_offset: FixedOffset) -> Result<AuthCon
     .collect();
 
   Ok(AuthContext {
-    principal_user_id: ctx.uid(),
+    principal_user_id: ctx.user_id(),
     principal_tenant_id: ctx.tenant_id(),
     principal_roles: roles,
     is_platform_admin: ctx.payload().get_bool("is_platform_admin").unwrap_or(false),
@@ -434,7 +596,7 @@ pub async fn update_user_endpoint(
   // 将端点参数解析后作为 extras 占位符注入
   let mut extras = std::collections::HashMap::new();
   extras.insert("user_id", user_id.to_string());
-  let resource = render_resource("jr:user:{tenant_id}:{user_id}", &ac, Some(&extras));
+  let resource = render_resource("iam:user:{tenant_id}:{user_id}", &ac, Some(&extras));
 
   // 调用授权（业务层返回 DataError；在端点层映射为 WebError::unauthorized）
   policy_svc
@@ -447,7 +609,7 @@ pub async fn update_user_endpoint(
 
 ### 最小中间件示例：将 DataError 映射为 WebError
 
-````rust
+```rust
 use axum::{http::Request, middleware::Next, response::Response};
 use axum::extract::State;
 use fusion_common::ctx::Ctx;
@@ -489,14 +651,14 @@ use axum::http::Request;
 #[derive(Clone)]
 pub struct RouteMeta {
   pub action: &'static str,
-  pub resource_tpl: &'static str, // 例如 "jr:user:{tenant_id}:{user_id}"
+  pub resource_tpl: &'static str, // 例如 "iam:user:{tenant_id}:{user_id}"
 }
 
 /// 函数级注释：注入路由元数据（动作与资源模板）到请求扩展
 async fn inject_route_meta<B>(mut req: Request<B>, next: middleware::Next<B>) -> axum::response::Response {
   req.extensions_mut().insert(RouteMeta {
     action: "user:update_password",
-    resource_tpl: "jr:user:{tenant_id}:{user_id}",
+    resource_tpl: "iam:user:{tenant_id}:{user_id}",
   });
   next.run(req).await
 }
@@ -529,7 +691,7 @@ fn render_resource(tpl: &str, ac: &AuthContext) -> String {
 
 - 资源模板占位符统一使用 `{snake_case}`，推荐内置：`{tenant_id}`、`{user_id}`、`{role_id}`、`{policy_id}`、`{resource_id}`。
 - 动作统一为 `{service}:{verb}`，例如：`user:update_password`、`policy:attach`。
-- 平台租户跨租户权限建议通过策略中条件键 `jr:is_platform_admin` 或资源通配 `jr:user:*:*` 明示。
+- 平台租户跨租户权限建议通过策略中条件键 `iam:is_platform_admin` 或资源通配 `iam:user:*:*` 明示。
 
 #### AppSetting 获取方式（统一约定）
 
@@ -569,7 +731,7 @@ macro_rules! route_with_meta {
 
 // 使用示例：
 // let router = Router::new();
-// let router = route_with_meta!(router, axum::routing::put, "/api/v1/users/:user_id/password", update_user_endpoint, "user:update_password", "jr:user:{tenant_id}:{user_id}");
+// let router = route_with_meta!(router, axum::routing::put, "/api/v1/users/:user_id/password", update_user_endpoint, "user:update_password", "iam:user:{tenant_id}:{user_id}");
 ```
 
 该宏与 `web_auth` 的 `AsyncRequireAuthorizationLayer` 互补：
@@ -703,7 +865,7 @@ pub async fn attach_policy_to_role(Path((role_id, policy_id)): Path<(i64, i64)>,
     ("role_id", role_id.to_string()),
     ("policy_id", policy_id.to_string()),
   ]);
-  let resource = render_resource("jr:role:{tenant_id}:{role_id}", &ac, Some(&extras));
+  let resource = render_resource("iam:role:{tenant_id}:{role_id}", &ac, Some(&extras));
   // ... 授权评估与业务处理
 }
 ```
@@ -733,7 +895,7 @@ pub async fn attach_policy_to_role(Path((role_id, policy_id)): Path<(i64, i64)>,
 ```json
 {
   "action": "user:update_password",
-  "resource_tpl": "jr:user:{tenant_id}:{user_id}",
+  "resource_tpl": "iam:user:{tenant_id}:{user_id}",
   "extras": { "user_id": "12345" },
   "method": "put",
   "path": "/api/v1/users/12345/password",
@@ -781,7 +943,7 @@ pub async fn attach_policy_to_role(Path((role_id, policy_id)): Path<(i64, i64)>,
     ```json
     {
       "err_code": 403,
-      "err_msg": "policy deny: user:update_password not allowed on jr:user:42:12345",
+      "err_msg": "policy deny: user:update_password not allowed on iam:user:42:12345",
       "err_detail": {
         "decision": "deny",
         "ctx": {
@@ -1316,7 +1478,7 @@ pub async fn remote_authz_guard(
   ```json
   {
     "action": "user:update_password",
-    "resource_tpl": "jr:user:{tenant_id}:{user_id}",
+    "resource_tpl": "iam:user:{tenant_id}:{user_id}",
     "extras": { "user_id": "12345" },
     "method": "put",
     "path": "/api/v1/users/12345/password",
@@ -1444,4 +1606,3 @@ pub fn unauthorized_err(msg: &str) -> WebError {
   WebError::unauthorized(msg)
 }
 ```
-````

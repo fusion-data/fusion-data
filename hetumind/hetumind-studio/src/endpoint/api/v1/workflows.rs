@@ -12,28 +12,20 @@ use hetumind_core::workflow::{
   ExecuteWorkflowRequest, ExecutionIdResponse, ValidateWorkflowRequest, ValidateWorkflowResponse, Workflow,
   WorkflowForCreate, WorkflowForQuery, WorkflowForUpdate, WorkflowId, WorkflowStatus,
 };
-use jieyuan_core::web::middleware::permission_layer;
 
 use crate::domain::workflow::WorkflowSvc;
 
 pub fn routes() -> Router<Application> {
   Router::new()
-    .route("/", post(create_workflow).layer(permission_layer(["workflow_create"])))
-    .route("/query", post(query_workflows).layer(permission_layer(["workflow_read"])))
-    .route("/validate", post(validate_workflow).layer(permission_layer(["workflow_create"])))
-    .route(
-      "/{id}",
-      get(get_workflow)
-        .layer(permission_layer(["workflow_read"]))
-        .put(update_workflow)
-        .layer(permission_layer(["workflow_update"]))
-        .delete(delete_workflow)
-        .layer(permission_layer(["workflow_delete"])),
-    )
-    .route("/{id}/execute", post(execute_workflow).layer(permission_layer(["workflow_execute"])))
-    .route("/{id}/activate", post(activate_workflow).layer(permission_layer(["workflow_update"])))
-    .route("/{id}/deactivate", post(deactivate_workflow).layer(permission_layer(["workflow_update"])))
-    .route("/{id}/duplicate", post(duplicate_workflow).layer(permission_layer(["workflow_create"])))
+    .route("/", post(create_workflow))
+    .route("/query", post(query_workflows))
+    .route("/validate", post(validate_workflow))
+    .route("/{id}", get(get_workflow).put(update_workflow).delete(delete_workflow))
+    .route("/{id}/execute", post(execute_workflow))
+    .route("/{id}/activate", post(activate_workflow))
+    .route("/{id}/deactivate", post(deactivate_workflow))
+    .route("/{id}/duplicate", post(duplicate_workflow))
+  // 注意：这里不再需要任何权限相关的中间件
 }
 
 /// 列出工作流
@@ -59,6 +51,7 @@ pub async fn create_workflow(
   workflow_svc: WorkflowSvc,
   Json(input): Json<WorkflowForCreate>,
 ) -> WebResult<IdUuidResult> {
+  // 可以直接使用 ctx 中的用户信息
   let id = workflow_svc.create(input).await?;
   ok_json!(IdUuidResult::new(id.into()))
 }
@@ -66,6 +59,7 @@ pub async fn create_workflow(
 /// 获取工作流详情
 pub async fn get_workflow(workflow_svc: WorkflowSvc, Path(workflow_id): Path<WorkflowId>) -> WebResult<Workflow> {
   let res = workflow_svc.get_workflow(&workflow_id).await?;
+
   ok_json!(res)
 }
 
@@ -81,6 +75,8 @@ pub async fn update_workflow(
 
 /// 删除工作流
 pub async fn delete_workflow(workflow_svc: WorkflowSvc, Path(workflow_id): Path<WorkflowId>) -> WebResult<()> {
+  let res = workflow_svc.get_workflow(&workflow_id).await?;
+
   workflow_svc.delete_workflow(&workflow_id).await?;
   ok_json!()
 }

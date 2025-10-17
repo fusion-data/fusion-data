@@ -36,8 +36,8 @@ graph LR
 
 支持策略配置和 API 调用的不同格式：
 
-- **策略配置格式**：`jr:hetumind:{tenant_id}:workflow/123`
-- **API 调用格式**：`jr:hetumind:workflow/123`（自动注入 tenant_id）
+- **策略配置格式**：`iam:hetumind:{tenant_id}:workflow/123`
+- **API 调用格式**：`iam:hetumind:workflow/123`（自动注入 tenant_id）
 
 ### 2. 远程授权中间件
 
@@ -53,7 +53,7 @@ graph LR
 将权限要求绑定到具体路由：
 
 - 动作定义（如 `hetumind:read`）
-- 资源模板（如 `jr:hetumind:workflow/{id}`）
+- 资源模板（如 `iam:hetumind:workflow/{id}`）
 - 参数注入（如路径参数）
 
 ## 权限资源命名规范
@@ -63,25 +63,25 @@ graph LR
 #### 1. 策略配置格式（完整格式）
 
 - **用途**：策略定义、数据库存储、权限评估
-- **格式**：`jr:{service}:{tenant_id}:{type}/{id}`
+- **格式**：`iam:{service}:{tenant_id}:{type}/{id}`
 - **特点**：明确、健壮、无歧义
 
 #### 2. 客户端使用格式（简化格式）
 
 - **用途**：API 调用、代码编写、日常使用
-- **格式**：`jr:{service}:{type}/{id}`
+- **格式**：`iam:{service}:{type}/{id}`
 - **特点**：简洁、便捷、自动注入
 
 ### 资源类型定义
 
-| 使用场景     | 格式类型 | 示例                                                             |
-| ------------ | -------- | ---------------------------------------------------------------- |
-| **策略配置** | 完整格式 | `jr:hetumind:42:workflow/123e4567-e89b-12d3-a456-426614174000`   |
-| **API 调用** | 简化格式 | `jr:hetumind:workflow/123e4567-e89b-12d3-a456-426614174000`      |
-| **策略配置** | 完整格式 | `jr:hetumind:42:credential/123e4567-e89b-12d3-a456-426614174000` |
-| **API 调用** | 简化格式 | `jr:hetumind:credential/123e4567-e89b-12d3-a456-426614174000`    |
-| **策略配置** | 完整格式 | `jr:hetumind:42:execution/123e4567-e89b-12d3-a456-426614174000`  |
-| **API 调用** | 简化格式 | `jr:hetumind:execution/123e4567-e89b-12d3-a456-426614174000`     |
+| 使用场景     | 格式类型 | 示例                                                              |
+| ------------ | -------- | ----------------------------------------------------------------- |
+| **策略配置** | 完整格式 | `iam:hetumind:42:workflow/123e4567-e89b-12d3-a456-426614174000`   |
+| **API 调用** | 简化格式 | `iam:hetumind:workflow/123e4567-e89b-12d3-a456-426614174000`      |
+| **策略配置** | 完整格式 | `iam:hetumind:42:credential/123e4567-e89b-12d3-a456-426614174000` |
+| **API 调用** | 简化格式 | `iam:hetumind:credential/123e4567-e89b-12d3-a456-426614174000`    |
+| **策略配置** | 完整格式 | `iam:hetumind:42:execution/123e4567-e89b-12d3-a456-426614174000`  |
+| **API 调用** | 简化格式 | `iam:hetumind:execution/123e4567-e89b-12d3-a456-426614174000`     |
 
 ## 操作命名规范
 
@@ -111,49 +111,49 @@ graph LR
 
 ### 1. 工作流 (workflow)
 
-| 操作           | API 端点                             | 资源模板                    | 权限要求              |
-| -------------- | ------------------------------------ | --------------------------- | --------------------- |
-| 创建工作流     | `POST /v1/workflows`                 | `jr:hetumind:workflow/*`    | `hetumind:create`     |
-| 查询工作流列表 | `POST /v1/workflows/query`           | `jr:hetumind:workflow/*`    | `hetumind:list`       |
-| 获取工作流详情 | `GET /v1/workflows/{id}`             | `jr:hetumind:workflow/{id}` | `hetumind:read`       |
-| 更新工作流     | `PUT /v1/workflows/{id}`             | `jr:hetumind:workflow/{id}` | `hetumind:update`     |
-| 删除工作流     | `DELETE /v1/workflows/{id}`          | `jr:hetumind:workflow/{id}` | `hetumind:delete`     |
-| 验证工作流     | `POST /v1/workflows/validate`        | `jr:hetumind:workflow/*`    | `hetumind:validate`   |
-| 执行工作流     | `POST /v1/workflows/{id}/execute`    | `jr:hetumind:workflow/{id}` | `hetumind:execute`    |
-| 激活工作流     | `POST /v1/workflows/{id}/activate`   | `jr:hetumind:workflow/{id}` | `hetumind:activate`   |
-| 停用工作流     | `POST /v1/workflows/{id}/deactivate` | `jr:hetumind:workflow/{id}` | `hetumind:deactivate` |
-| 复制工作流     | `POST /v1/workflows/{id}/duplicate`  | `jr:hetumind:workflow/{id}` | `hetumind:duplicate`  |
+| 操作           | API 端点                             | 资源模板                     | 权限要求              |
+| -------------- | ------------------------------------ | ---------------------------- | --------------------- |
+| 创建工作流     | `POST /v1/workflows`                 | `iam:hetumind:workflow/*`    | `hetumind:create`     |
+| 查询工作流列表 | `POST /v1/workflows/query`           | `iam:hetumind:workflow/*`    | `hetumind:list`       |
+| 获取工作流详情 | `GET /v1/workflows/{id}`             | `iam:hetumind:workflow/{id}` | `hetumind:read`       |
+| 更新工作流     | `PUT /v1/workflows/{id}`             | `iam:hetumind:workflow/{id}` | `hetumind:update`     |
+| 删除工作流     | `DELETE /v1/workflows/{id}`          | `iam:hetumind:workflow/{id}` | `hetumind:delete`     |
+| 验证工作流     | `POST /v1/workflows/validate`        | `iam:hetumind:workflow/*`    | `hetumind:validate`   |
+| 执行工作流     | `POST /v1/workflows/{id}/execute`    | `iam:hetumind:workflow/{id}` | `hetumind:execute`    |
+| 激活工作流     | `POST /v1/workflows/{id}/activate`   | `iam:hetumind:workflow/{id}` | `hetumind:activate`   |
+| 停用工作流     | `POST /v1/workflows/{id}/deactivate` | `iam:hetumind:workflow/{id}` | `hetumind:deactivate` |
+| 复制工作流     | `POST /v1/workflows/{id}/duplicate`  | `iam:hetumind:workflow/{id}` | `hetumind:duplicate`  |
 
 ### 2. 凭证 (credential)
 
-| 操作         | API 端点                      | 资源模板                      | 权限要求            |
-| ------------ | ----------------------------- | ----------------------------- | ------------------- |
-| 创建凭证     | `POST /v1/credentials`        | `jr:hetumind:credential/*`    | `hetumind:create`   |
-| 查询凭证列表 | `POST /v1/credentials/query`  | `jr:hetumind:credential/*`    | `hetumind:list`     |
-| 获取凭证详情 | `GET /v1/credentials/{id}`    | `jr:hetumind:credential/{id}` | `hetumind:read`     |
-| 更新凭证     | `PUT /v1/credentials/{id}`    | `jr:hetumind:credential/{id}` | `hetumind:update`   |
-| 删除凭证     | `DELETE /v1/credentials/{id}` | `jr:hetumind:credential/{id}` | `hetumind:delete`   |
-| 验证凭证     | `POST /v1/credentials/verify` | `jr:hetumind:credential/*`    | `hetumind:validate` |
+| 操作         | API 端点                      | 资源模板                       | 权限要求            |
+| ------------ | ----------------------------- | ------------------------------ | ------------------- |
+| 创建凭证     | `POST /v1/credentials`        | `iam:hetumind:credential/*`    | `hetumind:create`   |
+| 查询凭证列表 | `POST /v1/credentials/query`  | `iam:hetumind:credential/*`    | `hetumind:list`     |
+| 获取凭证详情 | `GET /v1/credentials/{id}`    | `iam:hetumind:credential/{id}` | `hetumind:read`     |
+| 更新凭证     | `PUT /v1/credentials/{id}`    | `iam:hetumind:credential/{id}` | `hetumind:update`   |
+| 删除凭证     | `DELETE /v1/credentials/{id}` | `iam:hetumind:credential/{id}` | `hetumind:delete`   |
+| 验证凭证     | `POST /v1/credentials/verify` | `iam:hetumind:credential/*`    | `hetumind:validate` |
 
 ### 3. 执行记录 (execution)
 
-| 操作         | API 端点                          | 资源模板                     | 权限要求          |
-| ------------ | --------------------------------- | ---------------------------- | ----------------- |
-| 查询执行记录 | `POST /v1/executions/query`       | `jr:hetumind:execution/*`    | `hetumind:list`   |
-| 获取执行详情 | `GET /v1/executions/{id}`         | `jr:hetumind:execution/{id}` | `hetumind:read`   |
-| 取消执行     | `POST /v1/executions/{id}/cancel` | `jr:hetumind:execution/{id}` | `hetumind:cancel` |
-| 重试执行     | `POST /v1/executions/{id}/retry`  | `jr:hetumind:execution/{id}` | `hetumind:retry`  |
+| 操作         | API 端点                          | 资源模板                      | 权限要求          |
+| ------------ | --------------------------------- | ----------------------------- | ----------------- |
+| 查询执行记录 | `POST /v1/executions/query`       | `iam:hetumind:execution/*`    | `hetumind:list`   |
+| 获取执行详情 | `GET /v1/executions/{id}`         | `iam:hetumind:execution/{id}` | `hetumind:read`   |
+| 取消执行     | `POST /v1/executions/{id}/cancel` | `iam:hetumind:execution/{id}` | `hetumind:cancel` |
+| 重试执行     | `POST /v1/executions/{id}/retry`  | `iam:hetumind:execution/{id}` | `hetumind:retry`  |
 
 ### 4. 项目管理 (project)
 
-| 操作         | 资源模板                   | 权限要求          |
-| ------------ | -------------------------- | ----------------- |
-| 创建项目     | `jr:hetumind:project/*`    | `hetumind:create` |
-| 读取项目     | `jr:hetumind:project/{id}` | `hetumind:read`   |
-| 更新项目     | `jr:hetumind:project/{id}` | `hetumind:update` |
-| 删除项目     | `jr:hetumind:project/{id}` | `hetumind:delete` |
-| 列出项目     | `jr:hetumind:project/*`    | `hetumind:list`   |
-| 管理项目成员 | `jr:hetumind:project/{id}` | `hetumind:manage` |
+| 操作         | 资源模板                    | 权限要求          |
+| ------------ | --------------------------- | ----------------- |
+| 创建项目     | `iam:hetumind:project/*`    | `hetumind:create` |
+| 读取项目     | `iam:hetumind:project/{id}` | `hetumind:read`   |
+| 更新项目     | `iam:hetumind:project/{id}` | `hetumind:update` |
+| 删除项目     | `iam:hetumind:project/{id}` | `hetumind:delete` |
+| 列出项目     | `iam:hetumind:project/*`    | `hetumind:list`   |
+| 管理项目成员 | `iam:hetumind:project/{id}` | `hetumind:manage` |
 
 ## 角色权限设计
 
@@ -201,10 +201,10 @@ graph LR
       "sid": "viewer_access",
       "effect": "allow",
       "action": ["hetumind:read", "hetumind:list"],
-      "resource": ["jr:hetumind:{tenant_id}:*"],
+      "resource": ["iam:hetumind:{tenant_id}:*"],
       "condition": {
         "string_equals": {
-          "jr:principal_roles": ["viewer", "editor", "admin"]
+          "iam:principal_roles": ["viewer", "editor", "admin"]
         }
       }
     },
@@ -212,10 +212,10 @@ graph LR
       "sid": "editor_access",
       "effect": "allow",
       "action": ["hetumind:create", "hetumind:update", "hetumind:execute", "hetumind:duplicate"],
-      "resource": ["jr:hetumind:{tenant_id}:workflow/*"],
+      "resource": ["iam:hetumind:{tenant_id}:workflow/*"],
       "condition": {
         "string_equals": {
-          "jr:principal_roles": ["editor", "admin"]
+          "iam:principal_roles": ["editor", "admin"]
         }
       }
     },
@@ -223,10 +223,10 @@ graph LR
       "sid": "admin_access",
       "effect": "allow",
       "action": ["hetumind:*"],
-      "resource": ["jr:hetumind:{tenant_id}:*"],
+      "resource": ["iam:hetumind:{tenant_id}:*"],
       "condition": {
         "string_equals": {
-          "jr:principal_roles": ["admin"]
+          "iam:principal_roles": ["admin"]
         }
       }
     }
@@ -245,10 +245,10 @@ graph LR
       "sid": "own_workflow_access",
       "effect": "allow",
       "action": ["hetumind:*"],
-      "resource": ["jr:hetumind:{tenant_id}:workflow/*"],
+      "resource": ["iam:hetumind:{tenant_id}:workflow/*"],
       "condition": {
         "string_equals": {
-          "jr:principal_user_id": "{created_by}"
+          "iam:principal_user_id": "{created_by}"
         }
       }
     },
@@ -256,10 +256,10 @@ graph LR
       "sid": "project_member_access",
       "effect": "allow",
       "action": ["hetumind:read", "hetumind:list"],
-      "resource": ["jr:hetumind:{tenant_id}:project/{project_id}/*"],
+      "resource": ["iam:hetumind:{tenant_id}:project/{project_id}/*"],
       "condition": {
         "string_equals": {
-          "jr:principal_user_id": "{project_member_id}"
+          "iam:principal_user_id": "{project_member_id}"
         }
       }
     }
@@ -289,7 +289,7 @@ let router = route_with_authz!(
     "/api/v1/workflows",
     list_workflows_handler,
     "hetumind:list",           // 权限动作
-    "jr:hetumind:workflow/*"  // 资源模板
+    "iam:hetumind:workflow/*"  // 资源模板
 );
 ```
 
@@ -305,7 +305,7 @@ let router = route_with_authz_and_extras!(
     "/api/v1/workflows/:id",
     get_workflow_handler,
     "hetumind:read",
-    "jr:hetumind:workflow/{id}",
+    "iam:hetumind:workflow/{id}",
     HashMap::from([("id".to_string(), "".to_string())])
 );
 ```
@@ -353,7 +353,7 @@ router = router
     .route_layer(middleware::from_fn_with_args(
         inject_route_meta,
         "hetumind:execute",
-        "jr:hetumind:workflow/{workflow_id}"
+        "iam:hetumind:workflow/{workflow_id}"
     ))
     // 步骤3: 执行权限检查
     .route_layer(middleware::from_fn(remote_authz_guard));
@@ -381,11 +381,253 @@ pub async fn sensitive_operation_handler(
 }
 ```
 
+## Resource-Path 优化方案
+
+### 概述
+
+基于新的 Resource-Path 管理机制，hetumind-studio 可以实现极简的权限控制体验，无需在代码中配置权限元数据，所有权限配置通过 jieyuan 管理后台进行。
+
+### 当前集成方式的问题
+
+#### 1. 复杂的路由元数据绑定
+
+当前方式需要在每个路由上手动绑定权限元数据：
+
+```rust
+// 当前方式：复杂的中间件链
+router
+  .route("/api/v1/workflows/{id}", get(get_workflow))
+  .route_layer(middleware::from_fn(inject_extras))
+  .route_layer(middleware::from_fn(inject_route_meta))
+  .route_layer(middleware::from_fn(remote_authz_guard))
+
+// 需要手动定义 RouteMeta
+async fn inject_route_meta(
+  action: &'static str,
+  resource_tpl: &'static str,
+  mut req: Request<axum::body::Body>,
+  next: Next,
+) -> Response {
+  req.extensions_mut().insert(RouteMeta { action, resource_tpl });
+  next.run(req).await
+}
+```
+
+#### 2. 代码冗余和维护困难
+
+- 每个路由都需要重复的中间件配置
+- 权限配置分散在代码各处，难以统一管理
+- 修改权限需要同时更新多个地方
+
+### 新的简化集成方案
+
+#### 核心理念
+
+**零配置权限控制**：hetumind 开发者只需要定义业务路由，权限配置完全通过 jieyuan 管理后台进行。
+
+#### 简化的权限中间件
+
+创建一个统一的权限中间件，自动处理所有权限检查：
+
+```rust
+// 文件：jieyuan/jieyuan-core/src/web/middleware/path_authz.rs
+/// 简化的路径权限中间件
+/// 自动从请求中提取必要信息并调用 jieyuan 权限检查
+pub async fn path_authz_middleware(
+    State(app): State<Application>,
+    mut req: Request<axum::body::Body>,
+    next: Next,
+) -> Result<Response, WebError> {
+    // 1. 提取 Authorization 头
+    let auth_header = req
+        .headers()
+        .get(header::AUTHORIZATION)
+        .and_then(|v| v.to_str().ok())
+        .ok_or_else(|| WebError::unauthorized("missing Authorization header"))?;
+
+    // 2. 提取请求信息
+    let path = req.uri().path().to_string();
+    let method = req.method().to_string().to_lowercase();
+    let request_ip = extract_client_ip(&req);
+
+    // 3. 调用 jieyuan 路径权限检查
+    let jieyuan_client = app.component::<crate::web::client::JieyuanClient>();
+    let authz_response = jieyuan_client
+        .authorize_by_path(&auth_header, "hetumind", &path, &method, &request_ip)
+        .await?;
+
+    // 4. 注入用户上下文
+    if let Some(ctx) = authz_response.ctx {
+        req.extensions_mut().insert(crate::web::authz::CtxPayload::from_response_ctx(ctx));
+    }
+
+    // 5. 继续处理请求
+    Ok(next.run(req).await)
+}
+```
+
+#### 极简的路由定义
+
+路由定义变得非常简洁，只需要业务逻辑：
+
+```rust
+// 路由定义
+pub fn routes() -> Router<Application> {
+    Router::new()
+        .route("/", post(create_workflow))
+        .route("/{id}", get(get_workflow))
+        // ... 其他路由
+}
+
+// Handler 示例
+pub async fn get_workflow(
+    workflow_svc: WorkflowSvc,
+    ctx: CtxPayload,  // 直接从中间件获取
+    Path(workflow_id): Path<WorkflowId>,
+) -> WebResult<Workflow> {
+    // 直接使用 ctx 中的用户信息
+    let res = workflow_svc.get_workflow(&workflow_id).await?;
+
+    // 业务逻辑中的权限检查
+    if !ctx.has_role("admin") && res.created_by != ctx.user_id() {
+        return Err(WebError::forbidden("只能访问自己的工作流"));
+    }
+
+    ok_json!(res)
+}
+```
+
+#### 应用级别的权限中间件配置
+
+在应用初始化时，只需要添加一个权限中间件：
+
+```rust
+// 文件：hetumind/hetumind-studio/src/endpoint/mod.rs
+pub async fn init_web(app: Application) -> Result<(), DataError> {
+    let router = Router::new()
+        .nest("/api", api::routes())
+        .with_state(app.clone())
+        .layer(TraceLayer::new_for_http())
+        .layer(CorsLayer::new().allow_methods(cors::Any).allow_origin(cors::Any))
+        .layer(SetSensitiveRequestHeadersLayer::new(vec![AUTHORIZATION]))
+        .layer(CompressionLayer::new())
+        // 只需要添加这一个权限中间件
+        .layer(axum::middleware::from_fn_with_state(app.clone(), path_authz_middleware));
+
+    WebServerBuilder::new(router).build().await
+}
+```
+
+### 开发体验对比
+
+#### 当前方式 vs 简化方式
+
+| 方面       | 当前方式        | 简化方式     |
+| ---------- | --------------- | ------------ |
+| 路由定义   | 需要多层中间件  | 纯业务路由   |
+| 权限配置   | 代码中硬编码    | 管理后台配置 |
+| 参数提取   | 手动注入 extras | 自动提取     |
+| 上下文获取 | 复杂的扩展获取  | 直接参数注入 |
+| 维护成本   | 高              | 低           |
+| 学习成本   | 高              | 低           |
+
+#### 代码示例对比
+
+**当前方式**：
+```rust
+// 复杂的路由定义
+router
+  .route("/api/v1/workflows/{id}", get(get_workflow))
+  .route_layer(middleware::from_fn(inject_extras))
+  .route_layer(middleware::from_fn(inject_route_meta))
+  .route_layer(middleware::from_fn(remote_authz_guard))
+
+// 复杂的 handler
+pub async fn get_workflow(
+    parts: Parts,
+    State(_app): State<Application>,
+    Path(workflow_id): Path<WorkflowId>,
+) -> WebResult<Json<Value>> {
+    // 需要从扩展中获取上下文
+    let ctx = parts.extensions.get::<CtxPayload>()
+        .ok_or_else(|| WebError::unauthorized("missing user context"))?;
+    // 业务逻辑...
+}
+```
+
+**简化方式**：
+```rust
+// 简单的路由定义
+router.route("/api/v1/workflows/{id}", get(get_workflow))
+
+// 简单的 handler
+pub async fn get_workflow(
+    workflow_svc: WorkflowSvc,
+    ctx: CtxPayload,  // 直接注入
+    Path(workflow_id): Path<WorkflowId>,
+) -> WebResult<Workflow> {
+    // 业务逻辑...
+}
+```
+
+### 迁移指南
+
+#### 从当前方式迁移到简化方式
+
+**步骤 1：移除现有权限中间件**
+```rust
+// 移除这些导入
+// use jieyuan_core::web::route_meta::{RouteMeta, inject_route_meta, inject_extras};
+// use jieyuan_core::web::remote_authz_guard;
+
+// 移除路由上的中间件
+// .route_layer(middleware::from_fn(inject_extras))
+// .route_layer(middleware::from_fn(inject_route_meta))
+// .route_layer(middleware::from_fn(remote_authz_guard))
+```
+
+**步骤 2：添加新的权限中间件**
+```rust
+// 添加导入
+use crate::web::authz_middleware::{path_authz_middleware, CtxPayload};
+
+// 在应用级别添加中间件
+.layer(axum::middleware::from_fn_with_state(app.clone(), path_authz_middleware))
+```
+
+**步骤 3：更新 Handler 签名**
+```rust
+// 从
+pub async fn get_workflow(
+    parts: Parts,
+    State(_app): State<Application>,
+    Path(workflow_id): Path<WorkflowId>,
+) -> WebResult<Json<Value>>
+
+// 改为
+pub async fn get_workflow(
+    workflow_svc: WorkflowSvc,
+    ctx: CtxPayload,
+    Path(workflow_id): Path<WorkflowId>,
+) -> WebResult<Workflow>
+```
+
+**步骤 4：在 jieyuan 管理后台配置权限**
+1. 登录 jieyuan 管理后台
+2. 导航到"路径映射管理"
+3. 为 hetumind 服务添加路径映射：
+   - 路径模式：`/api/v1/workflows/{id}`
+   - 方法：`GET`
+   - 动作：`hetumind:read`
+   - 资源模板：`iam:hetumind:workflow/{id}`
+
 ## 技术实现参考
 
 核心技术实现已移至 [`iam.md`](./iam.md) 文档，包括：
 
 - **远程授权 API 端点实现** (`jieyuan/jieyuan/src/endpoint/api/v1/iams.rs`)
+- **Resource-Path 管理机制** (`jieyuan/jieyuan-core/src/model/path_mapping.rs`)
+- **基于路径的授权** (`jieyuan/jieyuan/src/endpoint/api/v1/path_authz.rs`)
 - **双层格式资源模板渲染** (`jieyuan/jieyuan-core/src/model/iam_api.rs`)
 - **客户端远程授权中间件** (`hetumind/hetumind-studio/src/web/remote_authz_middleware.rs`)
 - **故障排除与调试工具**
@@ -415,7 +657,7 @@ pub async fn sensitive_operation_handler(
 
 ## 总结
 
-通过集成 jieyuan 的 IAM 权限系统，hetumind-studio 获得了企业级的权限控制能力，包括：
+通过集成 jieyuan 的 IAM 权限系统和 Resource-Path 优化机制，hetumind-studio 获得了企业级的权限控制能力，包括：
 
 - ✅ 远程权限验证和策略评估
 - ✅ 双层资源格式支持（自动 tenant_id 注入）
@@ -423,8 +665,19 @@ pub async fn sensitive_operation_handler(
 - ✅ 细粒度的资源级权限
 - ✅ 完整的权限审计和日志
 - ✅ 高性能的权限检查中间件
+- ✅ **零配置权限控制**：通过 Resource-Path 机制实现极简集成
+- ✅ **集中权限管理**：通过 jieyuan 管理后台统一配置路径映射
+- ✅ **简化的开发体验**：无需在代码中配置权限元数据
 
-这个集成方案为 hetumind-studio 提供了安全、可扩展且易于维护的权限控制基础设施。
+这个集成方案为 hetumind-studio 提供了安全、可扩展、易于维护且开发友好的权限控制基础设施。
+
+### 集成方案选择
+
+| 需求场景 | 推荐方案 | 特点 |
+|---------|---------|------|
+| 新项目 | **Resource-Path 优化方案** | 零配置、极简开发、集中管理 |
+| 现有项目 | 传统方案 + 逐步迁移 | 兼容性好、可控风险 |
+| 复杂权限需求 | 混合方案 | 基础权限用优化方案，特殊权限用传统方案 |
 
 ## 代码文件引用
 

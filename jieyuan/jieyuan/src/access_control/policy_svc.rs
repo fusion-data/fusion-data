@@ -1,13 +1,11 @@
 use axum::extract::FromRequestParts;
+use fusion_common::ctx::Ctx;
 use fusion_core::{Result, application::Application};
 use fusion_web::WebError;
 use fusionsql::{ModelManager, page::PageResult};
 
-use jieyuan_core::{
-  model::{
-    AuthContext, Decision, DecisionEffect, PolicyEngine, PolicyEntity, PolicyForCreate, PolicyForPage, PolicyForUpdate,
-  },
-  web::middleware::AuthorizationServiceExt,
+use jieyuan_core::model::{
+  CtxExt, Decision, DecisionEffect, PolicyEngine, PolicyEntity, PolicyForCreate, PolicyForPage, PolicyForUpdate,
 };
 
 use super::{PolicyRepo, policy_bmc::PolicyBmc};
@@ -28,14 +26,14 @@ impl PolicySvc {
   }
 
   /// 函数级注释：执行授权判断
-  pub async fn authorize_ext(&self, ctx: &AuthContext, action: &str, resource: &str) -> Result<Decision> {
+  pub async fn authorize_ext(&self, ctx: &Ctx, action: &str, resource: &str) -> Result<Decision> {
     // 1) 聚合策略集
     let mut policies = Vec::new();
-    policies.extend(self.repo.list_attached_policies_for_user(ctx.principal_tenant_id, ctx.principal_user_id).await?);
-    policies.extend(self.repo.list_policies_for_roles(ctx.principal_tenant_id, &ctx.principal_roles).await?);
-    policies.extend(self.repo.list_resource_policies(ctx.principal_tenant_id, resource).await?);
+    policies.extend(self.repo.list_attached_policies_for_user(ctx.tenant_id(), ctx.user_id()).await?);
+    policies.extend(self.repo.list_policies_for_roles(ctx.tenant_id(), &ctx.roles()).await?);
+    policies.extend(self.repo.list_resource_policies(ctx.tenant_id(), resource).await?);
 
-    let boundary = self.repo.find_permission_boundary(ctx.principal_tenant_id, ctx.principal_user_id).await?;
+    let boundary = self.repo.find_permission_boundary(ctx.tenant_id(), ctx.user_id()).await?;
     let session = self.repo.find_session_policy("current").await?;
 
     // 2) 求值：显式拒绝优先
@@ -106,12 +104,5 @@ impl FromRequestParts<Application> for PolicySvc {
   ) -> core::result::Result<Self, Self::Rejection> {
     let mm = state.component::<ModelManager>();
     Ok(PolicySvc::new(mm))
-  }
-}
-
-// 为 PolicySvc 实现 AuthorizationServiceExt trait
-impl AuthorizationServiceExt for PolicySvc {
-  async fn authorize_ext(&self, ctx: &AuthContext, action: &str, resource: &str) -> Result<Decision> {
-    self.authorize_ext(ctx, action, resource).await
   }
 }

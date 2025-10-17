@@ -158,7 +158,7 @@ impl DefaultWorkflowEngine {
       Application::global().component(),
     )
     .with_started_at(now())
-    .with_user_id(context.ctx().uid())
+    .with_user_id(context.ctx().user_id())
     .with_env_vars(std::env::vars())
     .with_expression_evaluator(ExpressionEvaluator::new());
 
@@ -205,7 +205,7 @@ fn make_node_context(
     Application::global().component(),
   )
   .with_started_at(now())
-  .with_user_id(context.ctx().uid())
+  .with_user_id(context.ctx().user_id())
   .with_env_vars(std::env::vars())
   .with_expression_evaluator(ExpressionEvaluator::new());
 

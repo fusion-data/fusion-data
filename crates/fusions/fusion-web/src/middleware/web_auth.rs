@@ -128,7 +128,7 @@ async fn validate_token_remote(url: &str, client: &reqwest::Client, parts: &Part
 
     // Create Ctx from payload
     let req_time = SystemTime::now();
-    let ctx = Ctx::try_new(ctx_payload, Some(req_time), fusion_core::log::get_trace_id())
+    let ctx = Ctx::try_new(ctx_payload, Some(req_time.into()), fusion_core::log::get_trace_id())
       .map_err(|e| WebError::new_with_code(401, format!("Failed to create context: {}", e)))?;
 
     Ok(ctx)

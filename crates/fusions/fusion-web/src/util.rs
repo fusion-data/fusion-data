@@ -66,7 +66,7 @@ pub fn extract_ctx(parts: &Parts, sc: &SecuritySetting) -> Result<Ctx, WebError>
     SecurityUtils::decrypt_jwt(sc.pwd(), &token).map_err(|_e| WebError::new_with_code(401, "Failed decode jwt"))?;
 
   let ctx =
-    Ctx::try_new(payload, Some(req_time), get_trace_id()).map_err(|e| WebError::new_with_code(401, e.to_string()))?;
+    Ctx::try_new(payload, Some(req_time.into()), get_trace_id()).map_err(|e| WebError::new_with_code(401, e.to_string()))?;
   Ok(ctx)
 }
 

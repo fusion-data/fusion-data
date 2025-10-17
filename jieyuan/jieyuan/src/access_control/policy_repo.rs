@@ -39,7 +39,7 @@ impl PolicyRepo {
   }
 
   /// 通过角色查询策略
-  pub async fn list_policies_for_roles(&self, tenant_id: i64, role_codes: &[String]) -> Result<Vec<PolicyEntity>> {
+  pub async fn list_policies_for_roles(&self, tenant_id: i64, role_codes: &[&str]) -> Result<Vec<PolicyEntity>> {
     let db = self.mm.dbx().db_postgres()?;
 
     if role_codes.is_empty() {

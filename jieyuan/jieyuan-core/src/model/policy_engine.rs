@@ -1,5 +1,6 @@
-use crate::model::auth_ctx::AuthContext;
-use crate::model::{DecisionEffect, PolicyDocument, PolicyEntity};
+use fusion_common::ctx::Ctx;
+
+use crate::model::{CtxExt, DecisionEffect, PolicyDocument, PolicyEntity};
 
 /// 授权决策结果
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -13,20 +14,14 @@ pub struct PolicyEngine;
 
 impl PolicyEngine {
   /// 函数级注释：匹配任意策略是否命中指定 effect
-  pub fn match_any(
-    policies: &[PolicyEntity],
-    ctx: &AuthContext,
-    action: &str,
-    resource: &str,
-    effect: DecisionEffect,
-  ) -> bool {
+  pub fn match_any(policies: &[PolicyEntity], ctx: &Ctx, action: &str, resource: &str, effect: DecisionEffect) -> bool {
     policies.iter().any(|p| Self::match_policy(p, ctx, action, resource, effect))
   }
 
   /// 函数级注释：匹配单个策略文档（Action/Resource 通配与 Condition 求值）
   pub fn match_policy(
     policy_entity: &PolicyEntity,
-    ctx: &AuthContext,
+    ctx: &Ctx,
     action: &str,
     resource: &str,
     target_effect: DecisionEffect,
@@ -120,7 +115,7 @@ impl PolicyEngine {
   }
 
   /// 函数级注释：求值条件表达式
-  fn evaluate_condition(condition: &serde_json::Value, ctx: &AuthContext) -> bool {
+  fn evaluate_condition(condition: &serde_json::Value, ctx: &Ctx) -> bool {
     if let serde_json::Value::Object(map) = condition {
       for (operator, operands) in map {
         if let serde_json::Value::Object(operand_map) = operands {
@@ -139,20 +134,20 @@ impl PolicyEngine {
   }
 
   /// 函数级注释：解析条件键到实际值
-  fn resolve_condition_key(key: &str, ctx: &AuthContext) -> serde_json::Value {
+  fn resolve_condition_key(key: &str, ctx: &Ctx) -> serde_json::Value {
     match key {
-      "jr:tenant_id" => serde_json::Value::Number(ctx.principal_tenant_id.into()),
-      "jr:principal_user_id" => serde_json::Value::Number(ctx.principal_user_id.into()),
-      "jr:principal_roles" => {
-        serde_json::Value::Array(ctx.principal_roles.iter().map(|r| serde_json::Value::String(r.clone())).collect())
+      "iam:tenant_id" => serde_json::Value::Number(ctx.tenant_id().into()),
+      "iam:principal_user_id" => serde_json::Value::Number(ctx.user_id().into()),
+      "iam:principal_roles" => {
+        serde_json::Value::Array(ctx.roles().iter().map(|r| serde_json::Value::String(r.to_string())).collect())
       }
-      "jr:is_platform_admin" => serde_json::Value::Bool(ctx.is_platform_admin),
-      "jr:request_ip" => serde_json::Value::String(ctx.request_ip.clone()),
-      "jr:method" => serde_json::Value::String(ctx.method.clone()),
-      "jr:path" => serde_json::Value::String(ctx.path.clone()),
-      "jr:token_seq" => serde_json::Value::Number(ctx.token_seq.into()),
+      "iam:is_platform_admin" => serde_json::Value::Bool(ctx.is_platform_admin()),
+      "iam:request_ip" => serde_json::Value::String(ctx.client_ip().to_string()),
+      "iam:method" => serde_json::Value::String(ctx.request_method().to_string()),
+      "iam:path" => serde_json::Value::String(ctx.request_path().to_string()),
+      "iam:token_seq" => serde_json::Value::Number(ctx.token_seq().into()),
       // 时间相关的条件键
-      "jr:current_time" => serde_json::Value::String(ctx.now.to_rfc3339()),
+      "iam:current_time" => serde_json::Value::String(ctx.req_datetime().to_rfc3339()),
       _ => serde_json::Value::Null,
     }
   }

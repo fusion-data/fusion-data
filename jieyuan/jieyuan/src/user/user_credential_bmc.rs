@@ -1,5 +1,5 @@
 use fusion_core::{DataError, Result};
-use fusionsql::{base::DbBmc, generate_pg_bmc_common, generate_pg_bmc_filter};
+use fusionsql::{ModelManager, base::DbBmc, generate_pg_bmc_common, generate_pg_bmc_filter};
 
 use jieyuan_core::model::{
   TABLE_USER_CREDENTIAL, UserCredential, UserCredentialFilter, UserCredentialForInsert, UserCredentialForUpdate,
@@ -25,11 +25,7 @@ generate_pg_bmc_filter!(
 
 impl UserCredentialBmc {
   /// Get user credential by ID with tenant isolation and row locking
-  pub async fn get_by_id_for_update(
-    mm: &fusionsql::ModelManager,
-    user_id: i64,
-    tenant_id: i64,
-  ) -> Result<Option<UserCredential>> {
+  pub async fn get_by_id_for_update(mm: &ModelManager, user_id: i64, tenant_id: i64) -> Result<Option<UserCredential>> {
     let db = mm
       .dbx()
       .db_postgres()
@@ -54,11 +50,7 @@ impl UserCredentialBmc {
   }
 
   /// Update password and increment token_seq atomically
-  pub async fn update_password_and_bump_token_seq(
-    mm: &fusionsql::ModelManager,
-    user_id: i64,
-    new_hashed_pwd: &str,
-  ) -> Result<()> {
+  pub async fn update_password_and_bump_token_seq(mm: &ModelManager, user_id: i64, new_hashed_pwd: &str) -> Result<()> {
     let db = mm
       .dbx()
       .db_postgres()

@@ -48,7 +48,7 @@ impl AsyncAuthorizeRequest<Body> for TenantMiddleware {
         web_error_2_body(WebError::new_with_code(StatusCode::UNAUTHORIZED.as_u16() as i32, "Tenant context required"))
       })?;
 
-      debug!("Tenant isolation check passed: user {} accessing tenant {}", ctx.uid(), tenant_id);
+      debug!("Tenant isolation check passed: user {} accessing tenant {}", ctx.user_id(), tenant_id);
 
       // Store tenant_id in request extensions for later use
       let mut request = request;

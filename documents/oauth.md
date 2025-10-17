@@ -187,7 +187,7 @@ Hetumind 侧处理要点：
       .unwrap_or(false);
     if !has_scope { return Err(fusion_web::error::WebError::from(fusion_core::DataError::forbidden("insufficient scope"))); }
 
-    ok_json!(serde_json::json!({"ok": true, "uid": ctx.uid()}))
+    ok_json!(serde_json::json!({"ok": true, "uid": ctx.user_id()}))
   }
 
   /* 函数级注释：在 Handler 中读取 CtxPayload，进行资源层授权判定 */
@@ -203,7 +203,7 @@ Hetumind 侧处理要点：
       .map(|v| v.iter().any(|s| *s == "workflow:write"))
       .unwrap_or(false);
     if !has_scope { return Err(DataError::forbidden("insufficient scope")); }
-    ok_json!(serde_json::json!({"ok": true, "uid": ctx.uid()}))
+    ok_json!(serde_json::json!({"ok": true, "uid": ctx.user_id()}))
   }
 ```
 
@@ -289,7 +289,7 @@ Hetumind 侧处理要点：
     action: &str,
   ) -> Result<(), DataError> {
     // 将 Ctx 映射为 UserPrincipal
-    let uid = ctx.uid();
+    let uid = ctx.user_id();
     let tenant_id = ctx.payload().get_str("tenant_id").map(|s| s.to_string());
     let roles = ctx.payload().get_strings("roles").unwrap_or_default().into_iter().map(|s| s.to_string()).collect::<Vec<_>>();
     let scopes = ctx.payload().get_strings("scopes").unwrap_or_default().into_iter().map(|s| s.to_string()).collect::<Vec<_>>();

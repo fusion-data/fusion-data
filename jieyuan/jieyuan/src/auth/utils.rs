@@ -126,7 +126,7 @@ pub async fn extract_ctx_with_token_seq_validation(
   let (payload, _) = SecurityUtils::decrypt_jwt(security_config.pwd(), &token)
     .map_err(|_e| DataError::unauthorized("Failed decode jwt"))?;
 
-  let ctx = fusion_common::ctx::Ctx::try_new(payload, Some(req_time), None)
+  let ctx = fusion_common::ctx::Ctx::try_new(payload, Some(req_time.into()), None)
     .map_err(|e| DataError::unauthorized(e.to_string()))?;
 
   Ok(ctx)

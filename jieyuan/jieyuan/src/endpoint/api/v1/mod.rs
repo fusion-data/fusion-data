@@ -1,13 +1,15 @@
-pub mod iams;
-pub mod permissions;
-pub mod policies;
-pub mod roles;
-pub mod tenant_users;
-pub mod users;
-
 use fusion_core::application::Application;
 use fusion_web::middleware::WebAuth;
 use utoipa_axum::router::OpenApiRouter;
+
+mod iams;
+mod path_authz;
+mod path_mappings;
+mod permissions;
+mod policies;
+mod roles;
+mod tenant_users;
+mod users;
 
 pub fn routes() -> OpenApiRouter<Application> {
   OpenApiRouter::new()
@@ -17,5 +19,7 @@ pub fn routes() -> OpenApiRouter<Application> {
     .nest("/permissions", permissions::routes())
     .nest("/policies", policies::routes())
     .nest("/tenant-users", tenant_users::routes())
+    .nest("/path-authz", path_authz::routes())
+    .nest("/path-mappings", path_mappings::routes())
     .route_layer(WebAuth::default().into_layer())
 }
