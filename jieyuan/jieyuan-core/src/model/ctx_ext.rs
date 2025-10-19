@@ -1,5 +1,7 @@
 use fusion_common::ctx::Ctx;
 
+use crate::model::policy::TenantAccessMode;
+
 /// Context 扩展 trait，为 fusion-common::Ctx 提供 IAM 相关的便捷方法
 /// 直接使用 Ctx 和 ctx.payload() 方法，避免与内置方法冲突
 ///
@@ -11,6 +13,15 @@ pub trait CtxExt {
 
   /// 检查用户是否平台管理员
   fn is_platform_admin(&self) -> bool;
+
+  /// 获取用户的租户访问模式
+  fn tenant_access_mode(&self) -> TenantAccessMode;
+
+  /// 获取用户可管理的租户ID列表（当模式为Specific时）
+  fn managed_tenant_ids(&self) -> Vec<String>;
+
+  /// 检查用户是否可以访问指定租户
+  fn can_access_tenant(&self, tenant_id: i64) -> bool;
 
   /// 获取令牌序列号
   fn token_seq(&self) -> i32;
@@ -38,6 +49,39 @@ impl CtxExt for Ctx {
 
   fn is_platform_admin(&self) -> bool {
     self.payload().get_bool("is_platform_admin").unwrap_or(false)
+  }
+
+  fn tenant_access_mode(&self) -> TenantAccessMode {
+    if !self.is_platform_admin() {
+      return TenantAccessMode::Current;
+    }
+
+    match self.payload().get_str("tenant_access_mode") {
+      Some("all") => TenantAccessMode::All,
+      Some("specific") => TenantAccessMode::Specific,
+      _ => TenantAccessMode::Current,
+    }
+  }
+
+  fn managed_tenant_ids(&self) -> Vec<String> {
+    self
+      .payload()
+      .get_strings("managed_tenant_ids")
+      .unwrap_or_default()
+      .into_iter()
+      .map(|s| s.to_string())
+      .collect()
+  }
+
+  fn can_access_tenant(&self, tenant_id: i64) -> bool {
+    match self.tenant_access_mode() {
+      TenantAccessMode::Current => self.tenant_id() == tenant_id,
+      TenantAccessMode::All => true,
+      TenantAccessMode::Specific => {
+        let managed_ids = self.managed_tenant_ids();
+        managed_ids.contains(&tenant_id.to_string())
+      }
+    }
   }
 
   fn token_seq(&self) -> i32 {

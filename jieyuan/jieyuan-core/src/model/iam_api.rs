@@ -77,32 +77,73 @@ impl AuthorizeResponse {
 }
 
 /// 统一的资源模板渲染函数
-/// 支持内置占位符和可选的自定义占位符，支持双层格式
+/// 支持内置占位符和可选的自定义占位符，支持混合架构
 ///
 /// # 参数
-/// - `tpl`: 资源模板字符串
+/// - `tpl`: 资源模板字符串（简化格式，不包含 tenant_id）
 /// - `ac`: 授权上下文
 /// - `extras`: 可选的自定义占位符映射，如果不需要自定义占位符则传入 `None`
+/// - `target_tenant_id`: 可选的目标租户ID，用于平台管理员跨租户访问
 /// ```
-pub fn render_resource(tpl: &str, ac: &Ctx, extras: Option<&HashMap<String, String>>) -> String {
+pub fn render_resource(
+  tpl: &str,
+  ac: &Ctx,
+  extras: Option<&HashMap<String, String>>,
+  target_tenant_id: Option<i64>,
+) -> String {
   let mut result = tpl.to_string();
 
-  // 检查模板是否已包含 tenant_id 占位符
-  if result.contains("{tenant_id}") {
-    // 完整格式：直接替换占位符
-    result = result.replace("{tenant_id}", &ac.tenant_id().to_string());
+  // 根据用户类型决定是否注入 tenant_id
+  if ac.is_platform_admin() {
+    match ac.tenant_access_mode() {
+      crate::model::policy::TenantAccessMode::All => {
+        // 平台管理员可访问所有租户，不注入 tenant_id
+      }
+      crate::model::policy::TenantAccessMode::Specific => {
+        // 特定租户访问模式，使用指定租户ID
+        if let Some(tenant_id) = target_tenant_id.or(ac.get_tenant_id()) {
+          if !result.contains("{tenant_id}") {
+            if let Some(colon_pos) = result.find(':')
+              && let Some(second_colon_pos) = result[colon_pos + 1..].find(':')
+            {
+              let insert_pos = colon_pos + 1 + second_colon_pos + 1;
+              result.insert_str(insert_pos, &format!("{}:", tenant_id));
+            }
+          }
+        }
+      }
+      crate::model::policy::TenantAccessMode::Current => {
+        // 当前租户模式，使用当前租户ID
+        if !result.contains("{tenant_id}") {
+          if let Some(colon_pos) = result.find(':')
+            && let Some(second_colon_pos) = result[colon_pos + 1..].find(':')
+          {
+            let insert_pos = colon_pos + 1 + second_colon_pos + 1;
+            result.insert_str(insert_pos, &format!("{}:", ac.tenant_id()));
+          }
+        }
+      }
+    }
   } else {
-    // 简化格式：自动注入 tenant_id
-    if let Some(colon_pos) = result.find(':')
-      && let Some(second_colon_pos) = result[colon_pos + 1..].find(':')
-    {
-      let insert_pos = colon_pos + 1 + second_colon_pos + 1;
-      result.insert_str(insert_pos, &format!("{}:", ac.tenant_id()));
+    // 普通用户：自动注入当前租户ID
+    if !result.contains("{tenant_id}") {
+      if let Some(colon_pos) = result.find(':')
+        && let Some(second_colon_pos) = result[colon_pos + 1..].find(':')
+      {
+        let insert_pos = colon_pos + 1 + second_colon_pos + 1;
+        result.insert_str(insert_pos, &format!("{}:", ac.tenant_id()));
+      }
     }
   }
 
+  // 替换 tenant_id 占位符（如果存在）
+  if result.contains("{tenant_id}") {
+    let tenant_id = target_tenant_id.unwrap_or(ac.tenant_id());
+    result = result.replace("{tenant_id}", &tenant_id.to_string());
+  }
+
   // 替换其他内置占位符
-  result = result.replace("{user_id}", &ac.tenant_id().to_string());
+  result = result.replace("{user_id}", &ac.user_id().to_string());
   result = result.replace("{method}", ac.request_method());
   result = result.replace("{path}", ac.request_path());
   result = result.replace("{token_seq}", &ac.token_seq().to_string());

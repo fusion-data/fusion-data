@@ -124,14 +124,14 @@ IAM Resource Mapping 管理机制通过 jieyuan 管理后台配置 API 路径与
     - `role:attach_policy`、`role:detach_policy`、`role:assign_to_user`
     - `policy:create`、`policy:update`、`policy:delete`、`policy:attach`、`policy:detach`
 
-### 双层格式设计
+### 混合架构设计
 
-为兼顾健壮性与便捷性，采用双层格式设计：
+基于混合架构，采用统一的简化策略格式：
 
-1. **策略层健壮性** - 策略配置中明确包含 tenant_id，确保权限评估准确性
-2. **使用层便捷性** - API 调用时使用简化格式，系统自动注入当前用户的 tenant_id
-3. **自动转换机制** - jieyuan 在处理请求时自动将简化格式转换为完整格式
-4. **向后兼容** - 支持两种格式，确保现有系统平稳迁移
+1. **策略简化** - 策略配置中的 resource 不包含 tenant_id，简化策略管理
+2. **运行时注入** - 系统在运行时根据用户类型自动注入适当的租户上下文
+3. **平台管理员支持** - 支持跨租户访问和多种租户访问模式（当前/全部/特定）
+4. **零配置开发** - 开发者无需手动处理租户隔离，系统自动管理
 
 **实现位置**：`jieyuan/jieyuan-core/src/model/iam_api.rs:111-158`
 
@@ -1155,16 +1155,20 @@ pub fn render_resource(tpl: &str, ctx: &Ctx, extras: Option<&HashMap<String, Str
 
 ### API 合约规范
 
-#### 方式一：基于路径映射的授权（推荐）
+#### 路径码授权方式（统一接口）
 
-- **Endpoint**: `POST /api/v1/iam/authorize-by-path`
+- **Endpoint**: `POST /api/v1/iam/authorize`
 - **Headers**: `Authorization: Bearer <token>`, `Content-Type: application/json`
 - **Request Body** (snake_case):
   ```json
   {
-    "service": "hetumind",
-    "path": "/api/v1/workflows/123e4567-e89b-12d3-a456-426614174000",
+    "path_code": "workflow_read",
+    "extras": { 
+      "id": "123e4567-e89b-12d3-a456-426614174000",
+      "target_tenant_id": "42"
+    },
     "method": "get",
+    "path": "/api/v1/workflows/123e4567-e89b-12d3-a456-426614174000",
     "request_ip": "203.0.113.3"
   }
   ```
@@ -1177,6 +1181,8 @@ pub fn render_resource(tpl: &str, ctx: &Ctx, extras: Option<&HashMap<String, Str
       "sub": 1001,
       "principal_roles": ["tenant_admin"],
       "is_platform_admin": false,
+      "tenant_access_mode": "current",
+      "managed_tenant_ids": [],
       "token_seq": 3,
       "method": "get",
       "path": "/api/v1/workflows/123e4567-e89b-12d3-a456-426614174000",
@@ -1193,37 +1199,11 @@ pub fn render_resource(tpl: &str, ctx: &Ctx, extras: Option<&HashMap<String, Str
   }
   ```
 
-#### 方式二：基于路径码的授权（简化）
-
-- **Endpoint**: `POST /api/v1/iam/authorize`
-- **Headers**: `Authorization: Bearer <token>`, `Content-Type: application/json`
-- **Request Body** (snake_case):
-  ```json
-  {
-    "path_code": "workflow_read",
-    "extras": { "id": "123e4567-e89b-12d3-a456-426614174000" },
-    "method": "get",
-    "path": "/api/v1/workflows/123e4567-e89b-12d3-a456-426614174000",
-    "request_ip": "203.0.113.3"
-  }
-  ```
-- **Response 200 OK**: `{ "decision": "allow", "ctx": {...} }`
-
-#### 方式三：直接资源模板授权
-
-- **Endpoint**: `POST /api/v1/iam/authorize`
-- **Headers**: `Authorization: Bearer <token>`, `Content-Type: application/json`
-- **Request Body** (snake_case):
-  ```json
-  {
-    "action": "hetumind:read",
-    "resource_tpl": "iam:hetumind:workflow/{id}",
-    "extras": { "id": "123e4567-e89b-12d3-a456-426614174000" },
-    "method": "get",
-    "path": "/api/v1/workflows/123e4567-e89b-12d3-a456-426614174000",
-    "request_ip": "203.0.113.3"
-  }
-  ```
+**说明**：
+- `path_code`: 路径代码，用于直接查找权限映射
+- `extras.target_tenant_id`: 目标租户ID（可选，用于平台管理员跨租户访问）
+- `ctx.tenant_access_mode`: 租户访问模式（current/all/specific）
+- `ctx.managed_tenant_ids`: 管理的租户ID列表（当模式为specific时）
 
 #### 错误响应
 

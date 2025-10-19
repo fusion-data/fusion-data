@@ -60,7 +60,7 @@ pub async fn authorize(
   let final_extras = Some(extras);
 
   // 3) 渲染资源模板
-  let resource = render_resource(&final_resource_tpl, ctx, final_extras.as_ref());
+  let resource = render_resource(&final_resource_tpl, ctx, final_extras.as_ref(), None);
 
   // 4) 记录授权日志
   log::info!(

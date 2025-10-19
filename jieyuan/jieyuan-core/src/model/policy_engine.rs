@@ -1,6 +1,6 @@
 use fusion_common::ctx::Ctx;
 
-use crate::model::{CtxExt, DecisionEffect, PolicyDocument, PolicyEntity};
+use crate::model::{CtxExt, DecisionEffect, PolicyCondition, PolicyDocument, PolicyEntity, TenantAccessCondition};
 
 /// 授权决策结果
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -114,26 +114,101 @@ impl PolicyEngine {
     }
   }
 
-  /// 函数级注释：求值条件表达式
+  /// 函数级注释：求值条件表达式（混合架构）
   fn evaluate_condition(condition: &serde_json::Value, ctx: &Ctx) -> bool {
-    if let serde_json::Value::Object(map) = condition {
-      for (operator, operands) in map {
-        if let serde_json::Value::Object(operand_map) = operands {
-          for (key, expected_value) in operand_map {
-            let actual_value = Self::resolve_condition_key(key, ctx);
-            if !Self::evaluate_condition_operator(operator, &actual_value, expected_value) {
-              return false;
-            }
+    // 解析为增强条件类型
+    let enhanced_condition: PolicyCondition = serde_json::from_value(condition.clone())
+      .map_err(|e| {
+        log::warn!("Failed to parse condition as enhanced format: {}", e);
+        e
+      })
+      .unwrap_or_else(|_| {
+        // 如果解析失败，尝试创建默认增强条件
+        PolicyCondition {
+          string_equals: Some(condition.clone()),
+          numeric_equals: None,
+          bool: None,
+          tenant_access: None,
+        }
+      });
+
+    Self::evaluate_enhanced_condition(&enhanced_condition, ctx)
+  }
+
+  /// 函数级注释：求值增强条件表达式（支持租户访问控制）
+  fn evaluate_enhanced_condition(condition: &PolicyCondition, ctx: &Ctx) -> bool {
+    // 求值字符串条件
+    if let Some(string_equals) = &condition.string_equals {
+      if let serde_json::Value::Object(operand_map) = string_equals {
+        for (key, expected_value) in operand_map {
+          let actual_value = Self::resolve_condition_key(key, ctx);
+          if !Self::evaluate_condition_operator("string_equals", &actual_value, expected_value) {
+            return false;
           }
         }
       }
-      true
-    } else {
-      false
+    }
+
+    // 求值数值条件
+    if let Some(numeric_equals) = &condition.numeric_equals {
+      if let serde_json::Value::Object(operand_map) = numeric_equals {
+        for (key, expected_value) in operand_map {
+          let actual_value = Self::resolve_condition_key(key, ctx);
+          if !Self::evaluate_condition_operator("numeric_equals", &actual_value, expected_value) {
+            return false;
+          }
+        }
+      }
+    }
+
+    // 求值布尔条件
+    if let Some(bool_condition) = &condition.bool {
+      if let serde_json::Value::Object(operand_map) = bool_condition {
+        for (key, expected_value) in operand_map {
+          let actual_value = Self::resolve_condition_key(key, ctx);
+          if !Self::evaluate_condition_operator("bool", &actual_value, expected_value) {
+            return false;
+          }
+        }
+      }
+    }
+
+    // 求值租户访问条件
+    if let Some(tenant_access) = &condition.tenant_access {
+      return Self::evaluate_tenant_access_condition(tenant_access, ctx);
+    }
+
+    true
+  }
+
+  /// 函数级注释：求值租户访问条件
+  fn evaluate_tenant_access_condition(condition: &TenantAccessCondition, ctx: &Ctx) -> bool {
+    if !ctx.is_platform_admin() {
+      return false; // 非平台管理员不能使用租户访问条件
+    }
+
+    match condition.mode {
+      crate::model::policy::TenantAccessMode::Current => {
+        // 当前租户模式：用户只能访问当前租户
+        true // 由业务层验证
+      }
+      crate::model::policy::TenantAccessMode::All => {
+        // 全租户访问模式
+        true
+      }
+      crate::model::policy::TenantAccessMode::Specific => {
+        // 特定租户列表模式
+        if let Some(allowed_tenant_ids) = &condition.tenant_ids {
+          let managed_ids = ctx.managed_tenant_ids();
+          allowed_tenant_ids.iter().any(|id| managed_ids.contains(id))
+        } else {
+          false
+        }
+      }
     }
   }
 
-  /// 函数级注释：解析条件键到实际值
+  /// 函数级注释：解析条件键到实际值（支持混合架构）
   fn resolve_condition_key(key: &str, ctx: &Ctx) -> serde_json::Value {
     match key {
       "iam:tenant_id" => serde_json::Value::Number(ctx.tenant_id().into()),
@@ -142,6 +217,14 @@ impl PolicyEngine {
         serde_json::Value::Array(ctx.roles().iter().map(|r| serde_json::Value::String(r.to_string())).collect())
       }
       "iam:is_platform_admin" => serde_json::Value::Bool(ctx.is_platform_admin()),
+      "iam:tenant_access_mode" => match ctx.tenant_access_mode() {
+        crate::model::policy::TenantAccessMode::Current => serde_json::Value::String("current".to_string()),
+        crate::model::policy::TenantAccessMode::All => serde_json::Value::String("all".to_string()),
+        crate::model::policy::TenantAccessMode::Specific => serde_json::Value::String("specific".to_string()),
+      },
+      "iam:managed_tenant_ids" => serde_json::Value::Array(
+        ctx.managed_tenant_ids().iter().map(|id| serde_json::Value::String(id.clone())).collect(),
+      ),
       "iam:request_ip" => serde_json::Value::String(ctx.client_ip().to_string()),
       "iam:method" => serde_json::Value::String(ctx.request_method().to_string()),
       "iam:path" => serde_json::Value::String(ctx.request_path().to_string()),

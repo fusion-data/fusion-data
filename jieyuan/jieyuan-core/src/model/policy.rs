@@ -37,6 +37,66 @@ pub struct PolicyStatement {
   pub condition: Option<serde_json::Value>,
 }
 
+/// Tenant access mode for platform administrators
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
+#[serde(rename_all = "snake_case")]
+pub enum TenantAccessMode {
+  /// Access current tenant only (normal users)
+  Current,
+  /// Access all tenants (platform administrators)
+  All,
+  /// Access specific tenant list
+  Specific,
+}
+
+/// Enhanced condition keys for mixed architecture
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
+#[serde(rename_all = "snake_case")]
+pub struct PolicyCondition {
+  /// String equality conditions
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub string_equals: Option<serde_json::Value>,
+  /// Numeric equality conditions
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub numeric_equals: Option<serde_json::Value>,
+  /// Boolean conditions
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub bool: Option<serde_json::Value>,
+  /// Tenant access configuration for platform administrators
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub tenant_access: Option<TenantAccessCondition>,
+}
+
+/// Tenant access condition for platform administrators
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
+#[serde(rename_all = "snake_case")]
+pub struct TenantAccessCondition {
+  /// Access mode: "current", "all", or "specific"
+  pub mode: TenantAccessMode,
+  /// Specific tenant IDs (used when mode is "specific")
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub tenant_ids: Option<Vec<String>>,
+}
+
+/// Enhanced policy statement with tenant access support
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
+pub struct EnhancedPolicyStatement {
+  /// Statement ID (optional)
+  pub sid: Option<String>,
+  /// Effect of the statement (Allow or Deny)
+  pub effect: DecisionEffect,
+  /// Actions that are permitted or denied
+  pub action: Vec<String>,
+  /// Resources that the actions apply to (simplified format without tenant_id)
+  pub resource: Vec<String>,
+  /// Enhanced conditions for evaluation (optional)
+  pub condition: Option<PolicyCondition>,
+}
+
 /// Policy document containing version and statements
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]

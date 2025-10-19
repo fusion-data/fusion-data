@@ -70,7 +70,7 @@ create table if not exists iam_tenant_user (
 );
 create index if not exists iam_tenant_user_idx_status on iam_tenant_user (status);
 
--- policy
+-- policy (混合架构：resource中不包含tenant_id，由运行时根据用户上下文注入)
 create table if not exists iam_policy (
   id bigserial not null,
   tenant_id bigint not null,
@@ -167,7 +167,7 @@ create index if not exists iam_role_idx_tenant_id on iam_role (tenant_id);
 create index if not exists iam_permission_idx_tenant_id on iam_permission (tenant_id);
 create index if not exists iam_policy_idx_tenant_id on iam_policy (tenant_id);
 
--- IAM Resource Mapping table
+-- IAM Resource Mapping table (混合架构：统一使用路径码，resource_tpl为简化格式不含tenant_id)
 create table iam_resource_mapping (
     id BIGSERIAL PRIMARY KEY,
     mapping_code varchar(100) unique,
@@ -178,7 +178,7 @@ create table iam_resource_mapping (
     resource_tpl VARCHAR(500) NOT NULL,
     mapping_params JSONB,
     enabled BOOLEAN DEFAULT true,
-    tenant_id bigint,  -- Added tenant isolation support
+    tenant_id bigint,  -- 支持租户隔离的映射配置
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     created_by BIGINT NOT NULL,

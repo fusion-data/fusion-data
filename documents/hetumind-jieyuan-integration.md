@@ -58,12 +58,14 @@ graph LR
 - **用户同步**：实时用户信息同步
 - **认证代理**：hetumind 作为认证代理重定向到 jieyuan
 
-### 3. 双层资源格式支持
+### 3. 混合架构资源格式
 
-支持策略配置和 API 调用的不同格式：
+采用统一的简化策略格式，支持智能租户处理：
 
-- **策略配置格式**：`iam:hetumind:{tenant_id}:workflow/123`
-- **API 调用格式**：`iam:hetumind:workflow/123`（自动注入 tenant_id）
+- **策略配置格式**：`iam:hetumind:workflow/123`（统一简化格式，不含 tenant_id）
+- **运行时智能注入**：根据用户类型自动处理租户隔离或跨租户访问
+  - 普通用户：自动注入当前租户ID
+  - 平台管理员：根据访问模式处理（当前/全部/特定租户）
 
 ### 4. 模块化访问控制
 
@@ -76,15 +78,16 @@ graph LR
 
 ## 权限资源命名规范
 
-### 双层格式设计
+### 混合架构统一格式
 
-#### 1. 策略配置格式（完整格式）
+#### 统一简化格式
 
-- **用途**：策略定义、数据库存储、权限评估
-- **格式**：`iam:{service}:{tenant_id}:{type}/{id}`
-- **特点**：明确、健壮、无歧义
-
-#### 2. 客户端使用格式（简化格式）
+- **用途**：策略定义、API调用、权限评估
+- **格式**：`iam:{service}:{type}/{id}`
+- **特点**：简化、灵活、智能租户处理
+- **租户处理**：运行时根据用户上下文自动注入
+  - 普通用户：当前租户ID
+  - 平台管理员：根据访问模式处理（当前/全部/特定）
 
 - **用途**：API 调用、代码编写、日常使用
 - **格式**：`iam:{service}:{type}/{id}`
@@ -92,14 +95,16 @@ graph LR
 
 ### 资源类型定义
 
-| 使用场景     | 格式类型 | 示例                                                              |
-| ------------ | -------- | ----------------------------------------------------------------- |
-| **策略配置** | 完整格式 | `iam:hetumind:42:workflow/123e4567-e89b-12d3-a456-426614174000`   |
-| **API 调用** | 简化格式 | `iam:hetumind:workflow/123e4567-e89b-12d3-a456-426614174000`      |
-| **策略配置** | 完整格式 | `iam:hetumind:42:credential/123e4567-e89b-12d3-a456-426614174000` |
-| **API 调用** | 简化格式 | `iam:hetumind:credential/123e4567-e89b-12d3-a456-426614174000`    |
-| **策略配置** | 完整格式 | `iam:hetumind:42:execution/123e4567-e89b-12d3-a456-426614174000`  |
-| **API 调用** | 简化格式 | `iam:hetumind:execution/123e4567-e89b-12d3-a456-426614174000`     |
+| 资源类型 | 格式示例 | 说明 |
+| -------- | -------- | ---- |
+| **工作流** | `iam:hetumind:workflow/{id}` | 工作流资源 |
+| **凭证** | `iam:hetumind:credential/{id}` | 凭证资源 |
+| **执行记录** | `iam:hetumind:execution/{id}` | 执行记录资源 |
+| **项目管理** | `iam:hetumind:project/{id}` | 项目资源 |
+
+**智能租户处理**：
+- 普通用户：自动注入当前租户ID
+- 平台管理员：根据租户访问模式处理（当前/全部/特定）
 
 ## 操作命名规范
 
@@ -396,45 +401,20 @@ pub async fn sensitive_operation_handler(
 
 ### 概述
 
-基于新的 Resource-Path 管理机制，hetumind-studio 可以实现极简的权限控制体验，无需在代码中配置权限元数据，所有权限配置通过 jieyuan 管理后台进行。
+基于混合架构的 IAM 系统，hetumind-studio 可以实现简化的权限控制体验：
 
-### 当前集成方式的问题
+- **普通用户**：策略资源格式简化（不包含 tenant_id），自动租户隔离
+- **平台管理员**：支持跨租户访问和多种租户访问模式
+- **统一集成**：基于路径码的权限管理，零配置开发体验
 
-#### 1. 复杂的路由元数据绑定
-
-当前方式需要在每个路由上手动绑定权限元数据：
-
-```rust
-// 当前方式：复杂的中间件链
-router
-  .route("/api/v1/workflows/{id}", get(get_workflow))
-  .route_layer(middleware::from_fn(inject_extras))
-  .route_layer(middleware::from_fn(inject_route_meta))
-  .route_layer(middleware::from_fn(remote_authz_guard))
-
-// 需要手动定义 RouteMeta
-async fn inject_route_meta(
-  action: &'static str,
-  resource_tpl: &'static str,
-  mut req: Request<axum::body::Body>,
-  next: Next,
-) -> Response {
-  req.extensions_mut().insert(RouteMeta { action, resource_tpl });
-  next.run(req).await
-}
-```
-
-#### 2. 代码冗余和维护困难
-
-- 每个路由都需要重复的中间件配置
-- 权限配置分散在代码各处，难以统一管理
-- 修改权限需要同时更新多个地方
-
-### IAM Resource Mapping 零配置集成方案
+### IAM Resource Mapping 混合架构集成方案
 
 #### 核心理念
 
-**零配置权限控制**：hetumind 开发者只需要定义业务路由，权限配置完全通过 jieyuan 管理后台的 IAM Resource Mapping 进行。
+**混合架构权限控制**：
+- 普通用户使用简化的策略格式，自动处理租户隔离
+- 平台管理员支持灵活的跨租户访问权限配置
+- 所有权限配置通过 jieyuan 管理后台的 IAM Resource Mapping 进行
 
 #### 集成步骤
 
@@ -445,7 +425,7 @@ use jieyuan::oauth::OAuthSvc;
 
 pub async fn init_web(app: Application) -> Result<(), DataError> {
     let oauth_svc = OAuthSvc::new(app.jieyuan_config()?);
-    
+
     let router = Router::new()
         .nest("/api", api::routes())
         .with_state(app.clone())
@@ -462,61 +442,54 @@ pub async fn init_web(app: Application) -> Result<(), DataError> {
 }
 ```
 
-2. **路径授权中间件**
+2. **混合架构权限中间件**
 ```rust
-// 文件：hetumind/hetumind-studio/src/web/path_authz_middleware.rs
+// 文件：jieyuan/jieyuan-core/src/web/middleware/mixed_authz.rs
 use axum::{extract::Request, middleware::Next, response::Response};
 use fusion_core::application::Application;
 
-pub async fn path_authz_middleware(
+pub async fn mixed_authz_middleware(
     State(app): State<Application>,
-    req: Request,
+    mut req: Request,
     next: Next,
 ) -> Result<Response, WebError> {
-    // 1) 提取路径信息
-    let path = req.uri().path();
-    let method = req.method().to_string().to_lowercase();
-    let service = "hetumind";
+    // 1) 提取认证和请求信息
+    let auth_header = extract_auth_header(&req)?;
+    let path_code = extract_path_code(&req);
+    let request_ip = extract_client_ip(&req);
+    let extras = extract_request_extras(&req);
     
-    // 2) 调用 jieyuan 路径授权 API
-    let authz_req = PathBasedAuthzRequest {
-        service: service.to_string(),
-        path: path.to_string(),
-        method: method.clone(),
-        request_ip: extract_client_ip(&req),
-    };
-    
-    let response = app.jieyuan_client()
-        .authorize_by_path(&authz_req)
+    // 2) 调用 jieyuan 权限检查
+    let authz_response = app.jieyuan_client()
+        .authorize(auth_header, AuthorizeRequest::new(path_code)
+            .with_request_ip(request_ip)
+            .with_extras(extras))
         .await?;
     
-    // 3) 处理授权结果
-    match response.decision.as_str() {
-        "allow" => {
-            // 注入上下文信息到请求扩展
-            let mut req = req;
-            req.extensions_mut().insert(response.ctx.unwrap());
-            Ok(next.run(req).await)
-        }
-        _ => Err(WebError::new(403, "permission denied"))
-    }
+    // 3) 增强用户上下文（平台管理员特殊处理）
+    let enhanced_ctx = enhance_context_for_platform_admin(authz_response.ctx, &req).await?;
+    
+    // 4) 注入增强的上下文和租户过滤器
+    req.extensions_mut().insert(enhanced_ctx.clone());
+    req.extensions_mut().insert(TenantFilter::new(enhanced_ctx.clone()));
+    req.extensions_mut().insert(TenantAccessValidator::new(enhanced_ctx.clone()));
+    
+    Ok(next.run(req).await)
 }
 ```
 
-### 开发体验对比
+### 混合架构开发体验
 
-#### 传统方式 vs IAM Resource Mapping 方式
+#### 普通用户 vs 平台管理员
 
-| 方面       | 传统方式        | IAM Resource Mapping 方式 |
-| ---------- | --------------- | ------------ |
-| 路由定义   | 需要多层中间件  | 纯业务路由   |
-| 权限配置   | 代码中硬编码    | 管理后台配置 |
-| 参数提取   | 手动注入 extras | 自动提取     |
-| 上下文获取 | 复杂的扩展获取  | 直接参数注入 |
-| 维护成本   | 高              | 低           |
-| 学习成本   | 高              | 低           |
-| 认证集成   | 需要额外开发    | 内置 OAuth   |
-| 模块化     | 单体架构        | 模块化架构   |
+| 方面 | 普通用户 | 平台管理员 |
+| --- | --- | --- |
+| **策略格式** | 简化（无 tenant_id） | 支持租户访问条件 |
+| **租户隔离** | 自动，仅当前租户 | 可配置（当前/全部/特定） |
+| **跨租户访问** | 不支持 | 支持 |
+| **权限管理** | 基础角色权限 | 高级权限和特权 |
+| **开发复杂度** | 简单 | 中等 |
+| **配置方式** | 策略驱动 | 配置 + 策略驱动 |
 
 ## 技术实现参考
 
@@ -524,10 +497,12 @@ pub async fn path_authz_middleware(
 
 - **远程授权 API 端点实现** (`jieyuan/jieyuan/src/endpoint/api/v1/iams.rs`)
 - **IAM Resource Mapping 管理机制** (`jieyuan/jieyuan-core/src/model/iam_resource_mapping.rs`)
-- **基于路径的授权** (`jieyuan/jieyuan/src/endpoint/api/v1/path_authz.rs`)
+- **基于路径码的授权** (`jieyuan/jieyuan/src/endpoint/api/v1/iams.rs`)
 - **OAuth 认证模块** (`jieyuan/jieyuan/src/oauth/oauth_svc.rs`)
 - **访问控制模块** (`jieyuan/jieyuan/src/access_control/`)
-- **双层格式资源模板渲染** (`jieyuan/jieyuan-core/src/model/iam_api.rs`)
+- **混合架构资源模板渲染** (`jieyuan/jieyuan-core/src/model/iam_api.rs`)
+- **平台管理员服务** (`jieyuan/jieyuan-core/src/service/platform_admin_svc.rs`)
+- **租户过滤组件** (`jieyuan/jieyuan-core/src/model/tenant_filter.rs`)
 - **故障排除与调试工具**
 - **部署与配置指南**
 
