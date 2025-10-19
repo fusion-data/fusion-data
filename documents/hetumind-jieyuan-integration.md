@@ -4,6 +4,8 @@
 
 本文档描述了 hetumind-studio 如何集成 jieyuan 的 IAM 权限系统，实现企业级的权限控制。Hetumind 是一个类似于 n8n 的 AI Workflow 和普通 Workflow 平台，支持工作流设计、执行、监控等功能。通过与 jieyuan 的远程授权集成，hetumind-studio 可以实现细粒度的权限控制，包括基于角色的访问控制（RBAC）和资源级别的权限管理。
 
+> **架构更新**: jieyuan 已重构为模块化架构，支持 OAuth 认证模块独立运行和 IAM Resource Mapping 零配置权限管理。
+
 ## 架构概览
 
 ```mermaid
@@ -13,48 +15,64 @@ graph LR
     end
 
     subgraph HetumindStudio[hetumind-studio]
-        Middleware[权限中间件]
+        OAuthMW[OAuth认证中间件]
+        PathAuthzMW[路径授权中间件]
         Router[路由处理器]
     end
 
     subgraph Jieyuan[jieyuan IAM]
-        AuthzAPI[远程授权API]
+        OAuthModule[OAuth模块]
+        AccessControl[访问控制模块]
+        ResourceMapping[IAM Resource Mapping]
         PolicyEngine[策略引擎]
         PolicyDB[(策略数据库)]
     end
 
     Browser --> HetumindStudio
-    Middleware --> Jieyuan
-    AuthzAPI --> PolicyEngine
+    OAuthMW --> OAuthModule
+    PathAuthzMW --> ResourceMapping
+    ResourceMapping --> AccessControl
+    AccessControl --> PolicyEngine
     PolicyEngine --> PolicyDB
-    Router --> Middleware
+    Router --> OAuthMW
+    Router --> PathAuthzMW
 ```
 
 ## 核心功能
 
-### 1. 双层资源格式支持
+### 1. IAM Resource Mapping 零配置权限管理
+
+通过路径映射实现零配置权限控制：
+
+- **路径模式匹配**：`/api/v1/workflows/{id}` → `hetumind:read` / `iam:hetumind:workflow/{id}`
+- **自动参数提取**：路径参数自动解析并注入到资源模板
+- **集中管理**：所有权限配置集中在 jieyuan 管理后台
+- **租户隔离**：支持租户级别的权限隔离
+
+### 2. OAuth 2.0 + PKCE 认证
+
+独立的 OAuth 认证模块提供：
+
+- **Authorization Code + PKCE**：安全的认证流程
+- **JWT 令牌管理**：自动令牌验证和刷新
+- **用户同步**：实时用户信息同步
+- **认证代理**：hetumind 作为认证代理重定向到 jieyuan
+
+### 3. 双层资源格式支持
 
 支持策略配置和 API 调用的不同格式：
 
 - **策略配置格式**：`iam:hetumind:{tenant_id}:workflow/123`
 - **API 调用格式**：`iam:hetumind:workflow/123`（自动注入 tenant_id）
 
-### 2. 远程授权中间件
+### 4. 模块化访问控制
 
-自动处理权限检查，包括：
+新的访问控制模块提供：
 
-- 令牌验证
-- 策略评估
-- 上下文注入
-- 权限拒绝响应
-
-### 3. 路由元数据系统
-
-将权限要求绑定到具体路由：
-
-- 动作定义（如 `hetumind:read`）
-- 资源模板（如 `iam:hetumind:workflow/{id}`）
-- 参数注入（如路径参数）
+- **统一认证服务**：AuthSvc 集中处理认证逻辑
+- **策略服务**：PolicySvc 处理策略评估和授权
+- **资源映射服务**：ResourceSvc 管理 IAM Resource Mapping
+- **缓存优化**：提高权限检查性能
 
 ## 权限资源命名规范
 
@@ -338,36 +356,29 @@ pub async fn get_workflow_handler(
 
 ## 高级用法
 
-### 自定义中间件栈
+### 简化的权限中间件配置
+
+使用 Resource-Path 优化方案后，权限配置变得非常简单：
 
 ```rust
-// 构建复杂的中间件栈
-router = router
-    .route("/api/v1/workflows/:id/execute", execute_workflow_handler)
-    // 步骤1: 注入路径参数
-    .route_layer(middleware::from_fn_with_args(
-        inject_extras,
-        HashMap::from([("workflow_id".to_string(), "".to_string())])
-    ))
-    // 步骤2: 注入路由元数据
-    .route_layer(middleware::from_fn_with_args(
-        inject_route_meta,
-        "hetumind:execute",
-        "iam:hetumind:workflow/{workflow_id}"
-    ))
-    // 步骤3: 执行权限检查
-    .route_layer(middleware::from_fn(remote_authz_guard));
+// 应用级别的权限中间件配置
+pub fn app() -> Router {
+    Router::new()
+        // 所有路由都自动应用权限检查
+        .route("/api/v1/workflows", post(create_workflow))
+        .route("/api/v1/workflows/:id", get(get_workflow))
+        .route("/api/v1/workflows/:id/execute", post(execute_workflow))
+        // 统一的权限中间件，无需额外配置
+        .layer(middleware::from_fn_with_state(app.clone(), unified_authz_middleware))
+}
 ```
 
 ### 条件权限检查
 
 ```rust
 pub async fn sensitive_operation_handler(
-    parts: Parts,
-    State(_app): State<Application>,
+    ctx: CtxPayload,  // 直接从中间件获取用户上下文
 ) -> WebResult<Json<Value>> {
-    let ctx = get_user_context(&parts)?;
-
     // 额外的业务逻辑权限检查
     let can_perform = ctx.has_role("admin") ||
         (ctx.has_role("editor") && is_business_hours());
@@ -419,91 +430,22 @@ async fn inject_route_meta(
 - 权限配置分散在代码各处，难以统一管理
 - 修改权限需要同时更新多个地方
 
-### 新的简化集成方案
+### IAM Resource Mapping 零配置集成方案
 
 #### 核心理念
 
-**零配置权限控制**：hetumind 开发者只需要定义业务路由，权限配置完全通过 jieyuan 管理后台进行。
+**零配置权限控制**：hetumind 开发者只需要定义业务路由，权限配置完全通过 jieyuan 管理后台的 IAM Resource Mapping 进行。
 
-#### 简化的权限中间件
+#### 集成步骤
 
-创建一个统一的权限中间件，自动处理所有权限检查：
-
-```rust
-// 文件：jieyuan/jieyuan-core/src/web/middleware/path_authz.rs
-/// 简化的路径权限中间件
-/// 自动从请求中提取必要信息并调用 jieyuan 权限检查
-pub async fn path_authz_middleware(
-    State(app): State<Application>,
-    mut req: Request<axum::body::Body>,
-    next: Next,
-) -> Result<Response, WebError> {
-    // 1. 提取 Authorization 头
-    let auth_header = req
-        .headers()
-        .get(header::AUTHORIZATION)
-        .and_then(|v| v.to_str().ok())
-        .ok_or_else(|| WebError::unauthorized("missing Authorization header"))?;
-
-    // 2. 提取请求信息
-    let path = req.uri().path().to_string();
-    let method = req.method().to_string().to_lowercase();
-    let request_ip = extract_client_ip(&req);
-
-    // 3. 调用 jieyuan 路径权限检查
-    let jieyuan_client = app.component::<crate::web::client::JieyuanClient>();
-    let authz_response = jieyuan_client
-        .authorize_by_path(&auth_header, "hetumind", &path, &method, &request_ip)
-        .await?;
-
-    // 4. 注入用户上下文
-    if let Some(ctx) = authz_response.ctx {
-        req.extensions_mut().insert(crate::web::authz::CtxPayload::from_response_ctx(ctx));
-    }
-
-    // 5. 继续处理请求
-    Ok(next.run(req).await)
-}
-```
-
-#### 极简的路由定义
-
-路由定义变得非常简洁，只需要业务逻辑：
-
-```rust
-// 路由定义
-pub fn routes() -> Router<Application> {
-    Router::new()
-        .route("/", post(create_workflow))
-        .route("/{id}", get(get_workflow))
-        // ... 其他路由
-}
-
-// Handler 示例
-pub async fn get_workflow(
-    workflow_svc: WorkflowSvc,
-    ctx: CtxPayload,  // 直接从中间件获取
-    Path(workflow_id): Path<WorkflowId>,
-) -> WebResult<Workflow> {
-    // 直接使用 ctx 中的用户信息
-    let res = workflow_svc.get_workflow(&workflow_id).await?;
-
-    // 业务逻辑中的权限检查
-    if !ctx.has_role("admin") && res.created_by != ctx.user_id() {
-        return Err(WebError::forbidden("只能访问自己的工作流"));
-    }
-
-    ok_json!(res)
-}
-```
-
-#### 应用级别的权限中间件配置
-
-在应用初始化时，只需要添加一个权限中间件：
-
+1. **OAuth 认证集成**
 ```rust
 // 文件：hetumind/hetumind-studio/src/endpoint/mod.rs
+use jieyuan::oauth::OAuthSvc;
+
 pub async fn init_web(app: Application) -> Result<(), DataError> {
+    let oauth_svc = OAuthSvc::new(app.jieyuan_config()?);
+    
     let router = Router::new()
         .nest("/api", api::routes())
         .with_state(app.clone())
@@ -511,18 +453,61 @@ pub async fn init_web(app: Application) -> Result<(), DataError> {
         .layer(CorsLayer::new().allow_methods(cors::Any).allow_origin(cors::Any))
         .layer(SetSensitiveRequestHeadersLayer::new(vec![AUTHORIZATION]))
         .layer(CompressionLayer::new())
-        // 只需要添加这一个权限中间件
+        // OAuth 认证中间件
+        .layer(axum::middleware::from_fn_with_state(oauth_svc, oauth_middleware))
+        // IAM Resource Mapping 权限中间件
         .layer(axum::middleware::from_fn_with_state(app.clone(), path_authz_middleware));
 
     WebServerBuilder::new(router).build().await
 }
 ```
 
+2. **路径授权中间件**
+```rust
+// 文件：hetumind/hetumind-studio/src/web/path_authz_middleware.rs
+use axum::{extract::Request, middleware::Next, response::Response};
+use fusion_core::application::Application;
+
+pub async fn path_authz_middleware(
+    State(app): State<Application>,
+    req: Request,
+    next: Next,
+) -> Result<Response, WebError> {
+    // 1) 提取路径信息
+    let path = req.uri().path();
+    let method = req.method().to_string().to_lowercase();
+    let service = "hetumind";
+    
+    // 2) 调用 jieyuan 路径授权 API
+    let authz_req = PathBasedAuthzRequest {
+        service: service.to_string(),
+        path: path.to_string(),
+        method: method.clone(),
+        request_ip: extract_client_ip(&req),
+    };
+    
+    let response = app.jieyuan_client()
+        .authorize_by_path(&authz_req)
+        .await?;
+    
+    // 3) 处理授权结果
+    match response.decision.as_str() {
+        "allow" => {
+            // 注入上下文信息到请求扩展
+            let mut req = req;
+            req.extensions_mut().insert(response.ctx.unwrap());
+            Ok(next.run(req).await)
+        }
+        _ => Err(WebError::new(403, "permission denied"))
+    }
+}
+```
+
 ### 开发体验对比
 
-#### 当前方式 vs 简化方式
+#### 传统方式 vs IAM Resource Mapping 方式
 
-| 方面       | 当前方式        | 简化方式     |
+| 方面       | 传统方式        | IAM Resource Mapping 方式 |
 | ---------- | --------------- | ------------ |
 | 路由定义   | 需要多层中间件  | 纯业务路由   |
 | 权限配置   | 代码中硬编码    | 管理后台配置 |
@@ -530,106 +515,19 @@ pub async fn init_web(app: Application) -> Result<(), DataError> {
 | 上下文获取 | 复杂的扩展获取  | 直接参数注入 |
 | 维护成本   | 高              | 低           |
 | 学习成本   | 高              | 低           |
-
-#### 代码示例对比
-
-**当前方式**：
-```rust
-// 复杂的路由定义
-router
-  .route("/api/v1/workflows/{id}", get(get_workflow))
-  .route_layer(middleware::from_fn(inject_extras))
-  .route_layer(middleware::from_fn(inject_route_meta))
-  .route_layer(middleware::from_fn(remote_authz_guard))
-
-// 复杂的 handler
-pub async fn get_workflow(
-    parts: Parts,
-    State(_app): State<Application>,
-    Path(workflow_id): Path<WorkflowId>,
-) -> WebResult<Json<Value>> {
-    // 需要从扩展中获取上下文
-    let ctx = parts.extensions.get::<CtxPayload>()
-        .ok_or_else(|| WebError::unauthorized("missing user context"))?;
-    // 业务逻辑...
-}
-```
-
-**简化方式**：
-```rust
-// 简单的路由定义
-router.route("/api/v1/workflows/{id}", get(get_workflow))
-
-// 简单的 handler
-pub async fn get_workflow(
-    workflow_svc: WorkflowSvc,
-    ctx: CtxPayload,  // 直接注入
-    Path(workflow_id): Path<WorkflowId>,
-) -> WebResult<Workflow> {
-    // 业务逻辑...
-}
-```
-
-### 迁移指南
-
-#### 从当前方式迁移到简化方式
-
-**步骤 1：移除现有权限中间件**
-```rust
-// 移除这些导入
-// use jieyuan_core::web::route_meta::{RouteMeta, inject_route_meta, inject_extras};
-// use jieyuan_core::web::remote_authz_guard;
-
-// 移除路由上的中间件
-// .route_layer(middleware::from_fn(inject_extras))
-// .route_layer(middleware::from_fn(inject_route_meta))
-// .route_layer(middleware::from_fn(remote_authz_guard))
-```
-
-**步骤 2：添加新的权限中间件**
-```rust
-// 添加导入
-use crate::web::authz_middleware::{path_authz_middleware, CtxPayload};
-
-// 在应用级别添加中间件
-.layer(axum::middleware::from_fn_with_state(app.clone(), path_authz_middleware))
-```
-
-**步骤 3：更新 Handler 签名**
-```rust
-// 从
-pub async fn get_workflow(
-    parts: Parts,
-    State(_app): State<Application>,
-    Path(workflow_id): Path<WorkflowId>,
-) -> WebResult<Json<Value>>
-
-// 改为
-pub async fn get_workflow(
-    workflow_svc: WorkflowSvc,
-    ctx: CtxPayload,
-    Path(workflow_id): Path<WorkflowId>,
-) -> WebResult<Workflow>
-```
-
-**步骤 4：在 jieyuan 管理后台配置权限**
-1. 登录 jieyuan 管理后台
-2. 导航到"路径映射管理"
-3. 为 hetumind 服务添加路径映射：
-   - 路径模式：`/api/v1/workflows/{id}`
-   - 方法：`GET`
-   - 动作：`hetumind:read`
-   - 资源模板：`iam:hetumind:workflow/{id}`
+| 认证集成   | 需要额外开发    | 内置 OAuth   |
+| 模块化     | 单体架构        | 模块化架构   |
 
 ## 技术实现参考
 
 核心技术实现已移至 [`iam.md`](./iam.md) 文档，包括：
 
 - **远程授权 API 端点实现** (`jieyuan/jieyuan/src/endpoint/api/v1/iams.rs`)
-- **Resource-Path 管理机制** (`jieyuan/jieyuan-core/src/model/path_mapping.rs`)
+- **IAM Resource Mapping 管理机制** (`jieyuan/jieyuan-core/src/model/iam_resource_mapping.rs`)
 - **基于路径的授权** (`jieyuan/jieyuan/src/endpoint/api/v1/path_authz.rs`)
+- **OAuth 认证模块** (`jieyuan/jieyuan/src/oauth/oauth_svc.rs`)
+- **访问控制模块** (`jieyuan/jieyuan/src/access_control/`)
 - **双层格式资源模板渲染** (`jieyuan/jieyuan-core/src/model/iam_api.rs`)
-- **客户端远程授权中间件** (`hetumind/hetumind-studio/src/web/remote_authz_middleware.rs`)
 - **故障排除与调试工具**
 - **部署与配置指南**
 
@@ -675,9 +573,73 @@ pub async fn get_workflow(
 
 | 需求场景 | 推荐方案 | 特点 |
 |---------|---------|------|
-| 新项目 | **Resource-Path 优化方案** | 零配置、极简开发、集中管理 |
-| 现有项目 | 传统方案 + 逐步迁移 | 兼容性好、可控风险 |
-| 复杂权限需求 | 混合方案 | 基础权限用优化方案，特殊权限用传统方案 |
+| 新项目 | **IAM Resource Mapping 方案** | 零配置、极简开发、集中管理 |
+| 复杂权限需求 | 混合方案 | 基础权限用路径映射，特殊权限用直接模板 |
+| 需要 OAuth 集成 | **OAuth + IAM Resource Mapping** | 完整认证授权解决方案 |
+
+---
+
+## 未来优化改进方向
+
+### 1. 智能化权限管理
+
+#### 自适应权限配置
+- **AI 辅助配置**: 基于业务模式自动推荐权限策略
+- **权限使用分析**: 分析权限使用模式，优化策略配置
+- **异常检测**: 自动识别异常权限使用行为
+
+#### 权限可视化
+- **权限图谱**: 可视化展示权限关系和依赖
+- **影响分析**: 权限变更的影响范围分析
+- **合规检查**: 自动化的权限合规性检查
+
+### 2. 生态系统扩展
+
+#### 多租户增强
+- **租户隔离优化**: 更细粒度的租户资源隔离
+- **跨租户权限**: 安全的跨租户权限协作机制
+- **租户模板**: 标准化的租户权限配置模板
+
+#### 第三方集成
+- **OAuth Provider 集成**: 支持更多第三方 OAuth 提供商
+- **LDAP/AD 集成**: 企业目录服务集成
+- **SAML 支持**: 企业级单点登录支持
+
+### 3. 开发体验提升
+
+#### 低代码平台支持
+- **可视化工作流**: 拖拽式权限配置工作流
+- **模板市场**: 权限配置模板共享市场
+- **快速部署**: 一键式权限环境部署
+
+#### API 生态
+- **GraphQL 支持**: GraphQL 权限查询接口
+- **Webhook 事件**: 权限变更的 Webhook 通知
+- **开放 API**: 更丰富的权限管理 API
+
+### 4. 性能与可靠性
+
+#### 高可用架构
+- **多活部署**: 权限服务多活部署支持
+- **故障恢复**: 自动故障检测和恢复机制
+- **降级策略**: 服务降级时的权限保护机制
+
+#### 性能监控
+- **实时监控**: 权限检查性能实时监控
+- **性能调优**: 基于监控数据的自动性能调优
+- **容量规划**: 基于使用模式的容量预测
+
+### 5. 安全合规
+
+#### 隐私保护
+- **数据脱敏**: 敏感权限数据的脱敏处理
+- **隐私计算**: 支持隐私计算的权限验证
+- **数据最小化**: 权限数据的最小化收集和使用
+
+#### 审计与合规
+- **实时审计**: 权限操作的实时审计日志
+- **合规报告**: 自动化的合规性报告生成
+- **取证支持**: 安全事件的数字取证支持
 
 ## 代码文件引用
 

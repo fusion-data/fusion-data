@@ -8,11 +8,19 @@ use std::collections::HashMap;
 
 use jieyuan_core::model::{
   OAuthAuthorizeRequest, OAuthAuthorizeResponse, OAuthProvider, OAuthTokenRequest, OAuthTokenResponse, TokenType,
-  UserChangeQueryReq, UserChangeQueryResp, UserForCreate, UserStatus,
+  UserForCreate, UserStatus,
 };
 
-use crate::{auth::utils::make_token, user::UserBmc};
+use crate::{access_control::make_token, user::UserBmc};
 
+/// OAuth 认证服务
+///
+/// 提供完整的 OAuth 2.0 + PKCE 认证流程支持，包括：
+/// - 授权 URL 生成和 PKCE 支持
+/// - 授权码交换令牌
+/// - 第三方用户信息获取和解析
+/// - 用户创建/更新和统一令牌生成
+/// - 用户变更查询（事件轮询）
 #[derive(Clone)]
 pub struct OAuthSvc {
   mm: ModelManager,
@@ -22,11 +30,30 @@ pub struct OAuthSvc {
 
 impl OAuthSvc {
   /// 创建新的 OAuth 服务实例
+  ///
+  /// # Arguments
+  /// * `mm` - 数据库模型管理器
+  /// * `app` - 应用程序实例，用于访问配置
+  ///
+  /// # Returns
+  /// OAuth 服务实例
   pub fn new(mm: ModelManager, app: Application) -> Self {
     Self { mm, http: Client::builder().timeout(std::time::Duration::from_secs(30)).build().unwrap_or_default(), app }
   }
 
   /// 生成授权 URL
+  ///
+  /// 根据 OAuth 提供商配置生成授权 URL，支持 PKCE 安全增强。
+  /// 如果未提供 code_challenge，将自动生成 PKCE code_verifier 和 code_challenge。
+  ///
+  /// # Arguments
+  /// * `req` - OAuth 授权请求参数
+  ///
+  /// # Returns
+  /// 包含授权 URL、状态参数和 code_verifier 的响应
+  ///
+  /// # Errors
+  /// 如果 OAuth 提供商配置无效或 URL 构建失败
   pub async fn authorize(&self, req: OAuthAuthorizeRequest) -> fusion_core::Result<OAuthAuthorizeResponse> {
     let provider_config = self.get_provider_config(req.provider)?;
 
@@ -72,6 +99,18 @@ impl OAuthSvc {
   }
 
   /// 交换授权码获取令牌
+  ///
+  /// 使用授权码向第三方 OAuth 提供商交换访问令牌，
+  /// 获取用户信息，创建/更新本地用户记录，并生成 Jieyuan 统一令牌。
+  ///
+  /// # Arguments
+  /// * `req` - OAuth 令牌交换请求参数
+  ///
+  /// # Returns
+  /// 包含 Jieyuan 统一令牌和用户信息的响应
+  ///
+  /// # Errors
+  /// 如果令牌交换失败、用户信息获取失败或用户创建失败
   pub async fn exchange_token(&self, req: OAuthTokenRequest) -> fusion_core::Result<OAuthTokenResponse> {
     let provider_config = self.get_provider_config(req.provider)?;
 
@@ -140,17 +179,21 @@ impl OAuthSvc {
     })
   }
 
-  /// 查询用户变更（用于事件轮询）
-  pub async fn query_user_changes(&self, req: UserChangeQueryReq) -> fusion_core::Result<UserChangeQueryResp> {
-    UserBmc::query_user_changes(&self.mm, req).await.map_err(DataError::from)
-  }
-
   // --- 私有辅助方法 ---
 
   /// 获取 OAuth 提供商配置
+  ///
+  /// 从应用程序配置中获取指定 OAuth 提供商的配置信息。
+  ///
+  /// # Arguments
+  /// * `provider` - OAuth 提供商类型
+  ///
+  /// # Returns
+  /// OAuth 提供商配置
+  ///
+  /// # Errors
+  /// 如果提供商无效或配置不存在
   fn get_provider_config(&self, provider: OAuthProvider) -> fusion_core::Result<OAuthProviderConfig> {
-    // 从配置中读取 OAuth 提供商配置
-    // 这里需要根据实际的配置结构来实现
     match provider {
       OAuthProvider::Unspecified => Err(DataError::bad_request("Invalid oauth provider")),
       _ => {
@@ -163,6 +206,11 @@ impl OAuthSvc {
   }
 
   /// 生成 PKCE code_verifier
+  ///
+  /// 生成符合 RFC 7636 规范的 code_verifier，包含 43-128 个字符。
+  ///
+  /// # Returns
+  /// 随机生成的 code_verifier 字符串
   fn generate_code_verifier(&self) -> String {
     use rand::Rng;
     const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~";
@@ -176,6 +224,14 @@ impl OAuthSvc {
   }
 
   /// 生成 PKCE code_challenge
+  ///
+  /// 使用 SHA256 算法对 code_verifier 进行哈希，并使用 Base64URL 编码生成 code_challenge。
+  ///
+  /// # Arguments
+  /// * `verifier` - code_verifier 字符串
+  ///
+  /// # Returns
+  /// Base64URL 编码的 code_challenge 字符串
   fn generate_code_challenge(&self, verifier: &str) -> String {
     use base64ct::{Base64UrlUnpadded, Encoding};
     use sha2::{Digest, Sha256};
@@ -184,6 +240,18 @@ impl OAuthSvc {
   }
 
   /// 获取第三方用户信息
+  ///
+  /// 使用访问令牌向第三方 OAuth 提供商请求用户信息。
+  ///
+  /// # Arguments
+  /// * `provider` - OAuth 提供商类型
+  /// * `access_token` - 访问令牌
+  ///
+  /// # Returns
+  /// 标准化的用户信息
+  ///
+  /// # Errors
+  /// 如果请求失败或响应解析失败
   async fn get_user_info(&self, provider: OAuthProvider, access_token: &str) -> fusion_core::Result<OAuthUserInfo> {
     let provider_config = self.get_provider_config(provider)?;
 
@@ -209,6 +277,18 @@ impl OAuthSvc {
   }
 
   /// 解析第三方用户信息为统一格式
+  ///
+  /// 将不同 OAuth 提供商的用户信息响应格式转换为统一的内部格式。
+  ///
+  /// # Arguments
+  /// * `provider` - OAuth 提供商类型
+  /// * `user_info` - 第三方用户信息 JSON
+  ///
+  /// # Returns
+  /// 标准化的用户信息
+  ///
+  /// # Errors
+  /// 如果提供商不支持或信息解析失败
   fn parse_user_info(&self, provider: OAuthProvider, user_info: &Value) -> fusion_core::Result<OAuthUserInfo> {
     match provider {
       OAuthProvider::Wechat => Ok(OAuthUserInfo {
@@ -230,6 +310,17 @@ impl OAuthSvc {
   }
 
   /// 创建或更新用户
+  ///
+  /// 根据第三方用户信息在本地系统中创建新用户或更新现有用户。
+  ///
+  /// # Arguments
+  /// * `user_info` - 第三方用户信息
+  ///
+  /// # Returns
+  /// 本地用户 ID
+  ///
+  /// # Errors
+  /// 如果用户信息无效或数据库操作失败
   async fn create_or_update_user(&self, user_info: &OAuthUserInfo) -> fusion_core::Result<i64> {
     // 检查用户是否已存在（通过第三方 provider 的用户ID）
     // 这里需要在 user_entity 表中添加 provider 相关字段或创建关联表
@@ -254,6 +345,8 @@ impl OAuthSvc {
 }
 
 /// OAuth 提供商配置
+///
+/// 包含 OAuth 2.0 流程所需的所有配置参数。
 #[derive(Clone, Deserialize)]
 struct OAuthProviderConfig {
   client_id: String,
@@ -266,6 +359,8 @@ struct OAuthProviderConfig {
 }
 
 /// 第三方用户信息统一格式
+///
+/// 标准化不同 OAuth 提供商的用户信息格式，便于内部处理。
 #[derive(Debug, Clone)]
 struct OAuthUserInfo {
   id: String,

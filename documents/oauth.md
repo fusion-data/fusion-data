@@ -2,6 +2,8 @@
 
 > 目标：由 Jieyuan 提供统一的 IAM（身份认证与授权）能力，Hetumind 统一代理认证并仅信任中心令牌；保留 Hetumind 的 `user_entity` 表，使用 `jieyuan.iam_user.id` 作为 `user_entity.id` 显式插入；统一令牌治理与权限判定由 Jieyuan 负责。
 
+> **架构更新**: OAuth 功能已重构为独立模块，位于 `jieyuan/jieyuan/src/oauth/`，提供专门的 OAuth 2.0 + PKCE 认证服务。
+
 ## 系统架构设计
 
 ```mermaid
@@ -29,6 +31,7 @@
 - 认证代理：Hetumind Studio 的 `/api/auth/*` 路由代理到 Jieyuan 的认证服务，令牌颁发与校验由 Jieyuan 负责。
 - 用户映射：首次登录时，Hetumind 使用 `jieyuan.iam_user.id` 作为 `user_entity.id`（应用层显式指定插入），不再创建 `oauth_login` 表。
 - 令牌验证：Hetumind Studio 的鉴权中间件 `AsyncRequireAuthorizationLayer(WebAuth)` 接入 Jieyuan 的公钥/JWKS 或 Token 内省接口，统一验证 Bearer Token。
+- **模块化 OAuth**: OAuth 2.0 + PKCE 功能已重构为独立模块，提供专门的认证服务和端点。
 
 ## 数据库表结构变更与 DDL 文件说明
 
@@ -354,43 +357,46 @@ Hetumind 侧处理要点：
   sequenceDiagram
     participant Web as Hetumind Web
     participant Studio as Hetumind Studio
-    participant Auth as Jieyuan Auth
+    participant OAuth as OAuth Module
     participant Provider as OAuth Provider
     participant DBH as Hetumind DB
     participant DBJ as Jieyuan DB
 
     Web->>Studio: GET /api/auth/oauth/:provider/start
-    Studio->>Auth: POST /oauth/authorize (生成授权URL，携带code_challenge)
-    Auth-->>Web: 302 Redirect to Provider (授权页)
+    Studio->>OAuth: POST /oauth/authorize (生成授权URL，携带code_challenge)
+    OAuth-->>Web: 302 Redirect to Provider (授权页)
     Web->>Provider: 用户同意授权
-    Provider-->>Auth: 回调(code)
-    Auth->>Auth: 交换令牌(code_verifier) -> access_token/refresh_token
-    Auth->>DBJ: upsert iam_user & tokens
-    Auth-->>Studio: 200 SigninResponse(token=JWT-Bearer)
+    Provider-->>OAuth: 回调(code)
+    OAuth->>OAuth: 交换令牌(code_verifier) -> access_token/refresh_token
+    OAuth->>DBJ: upsert iam_user & tokens
+    OAuth-->>Studio: 200 SigninResponse(token=JWT-Bearer)
     Studio->>DBH: upsert user_entity（id = iam_user.id，镜像基础资料）
     Studio-->>Web: 返回 Bearer Token（由 Jieyuan 颁发）
 
     Web->>Studio: 后续携带 Authorization: Bearer <token>
-    Studio->>Auth: 验证令牌（JWKS/内省）
+    Studio->>OAuth: 验证令牌（JWKS/内省）
     Studio-->>Web: 200/401
 ```
 
 - Start：`/api/auth/oauth/:provider/start` 返回授权 URL，前端重定向到 Provider 授权页。
-- Callback：Jieyuan 接收 `code` 并换取 token，返回 `SigninResponse { token, token_type: Bearer }` 给 Hetumind Studio。
-- 映射：Hetumind Studio 根据 `iam_user_id` 与 Provider subject，创建或更新 `user_entity` 与 `oauth_login`，确保后续业务主体仍以 Hetumind 的 `hm_user_id` 为主键引用。
+- Callback：OAuth 模块接收 `code` 并换取 token，返回 `SigninResponse { token, token_type: Bearer }` 给 Hetumind Studio。
+- 映射：Hetumind Studio 根据 `iam_user_id` 与 Provider subject，创建或更新 `user_entity`，确保后续业务主体仍以 Hetumind 的 `hm_user_id` 为主键引用。
 - 校验：所有 `/api/v1/*` 路由通过 WebAuth 中间件使用 Jieyuan 的 JWKS 或内省接口统一校验 Token。
+
+> **架构更新**: OAuth 功能现在位于独立的 `oauth` 模块中，提供专门的 `OAuthSvc` 服务和 `/oauth/` 端点。
 
 ## 与 Jieyuan 项目的集成方式
 
 - 服务发现与配置
 
-  - 在 Hetumind Studio 配置 Jieyuan Auth 服务地址（如 `JIEYUAN_BASE_URL`），并注入到 `SignSvc` 或专用 `OauthProxySvc`。
+  - 在 Hetumind Studio 配置 Jieyuan 服务地址，并注入到相关的服务中。
   - 使用 `AsyncRequireAuthorizationLayer(WebAuth)` 的自定义验证器，加载 Jieyuan 的 JWKS 公钥或内省端点。
 
-- 代理登录与回调
+- 模块化 OAuth 集成
 
-  - Hetumind Studio 提供开始登录的代理路由 `/api/auth/oauth/:provider/start`。
-  - 回调处理由 Jieyuan 完成；Hetumind 在收到 `SigninResponse` 后进行用户与映射维护。
+  - Hetumind Studio 从 `jieyuan::oauth` 模块导入 `OAuthSvc` 服务。
+  - 使用独立的 `/oauth/` 端点进行 OAuth 流程处理。
+  - 回调处理由 OAuth 模块完成；Hetumind 在收到 `SigninResponse` 后进行用户映射维护。
 
 - 用户资料同步
   - 首次登录：用 `iam_user` 的基础资料（email/name/phone）创建或更新 `user_entity`。
@@ -399,30 +405,51 @@ Hetumind 侧处理要点：
 ## 代码示例（Hetumind Studio）
 
 > 以下示例展示：
->
-> 1. 开始 OAuth 的代理；2) 处理登录响应并写入映射；3) 使用 JWKS 验证 Bearer Token。
+> 1. 从独立 OAuth 模块导入服务；2) 开始 OAuth 流程；3) 处理登录响应并写入映射；4) 使用 JWKS 验证 Bearer Token。
 
 ```rust
   // src/endpoint/api/auth.rs
-  use axum::{Router, routing::get};
+  use axum::{Router, routing::get, post, Json, Path, State};
   use fusion_core::application::Application;
   use fusion_web::{WebResult, ok_json};
+  use jieyuan::oauth::OAuthSvc;  // 从独立 oauth 模块导入
 
   pub fn auth_routes() -> Router<Application> {
     Router::new()
       .route("/oauth/:provider/start", get(oauth_start))
+      .route("/oauth/token", post(oauth_token))
       // 保留原有 signin/signup（代理或兼容）
   }
 
   /* 函数级注释：启动 OAuth 流程，返回授权 URL */
   async fn oauth_start(
-    app: Application,
-    axum::extract::Path(provider): axum::extract::Path<String>,
-  ) -> WebResult<serde_json::Value> {
-    let base = app.fusion_setting().service().get("JIEYUAN_BASE_URL").unwrap_or("http://localhost:50010");
-    // 请求 Jieyuan 构建授权 URL（含 code_challenge）
-    let authorize_url = format!("{}/oauth/authorize?provider={}", base, provider);
-    ok_json!(serde_json::json!({ "authorize_url": authorize_url }))
+    State(app): State<Application>,
+    Path(provider): Path<String>,
+  ) -> WebResult<OAuthAuthorizeResponse> {
+    let mm = app.get_component::<ModelManager>().unwrap();
+    let oauth_svc = OAuthSvc::new(mm.clone(), app.clone());
+    
+    let request = OAuthAuthorizeRequest {
+      provider: OAuthProvider::from_str(&provider).unwrap_or_default(),
+      redirect_uri: None,
+      state: None,
+      code_challenge: None,
+      code_challenge_method: None,
+    };
+    
+    let response = oauth_svc.authorize(request).await?;
+    ok_json!(response)
+  }
+
+  async fn oauth_token(
+    State(app): State<Application>,
+    Json(req): Json<OAuthTokenRequest>,
+  ) -> WebResult<OAuthTokenResponse> {
+    let mm = app.get_component::<ModelManager>().unwrap();
+    let oauth_svc = OAuthSvc::new(mm.clone(), app.clone());
+    
+    let response = oauth_svc.exchange_token(req).await?;
+    ok_json!(response)
   }
 ```
 
@@ -521,10 +548,10 @@ Hetumind 侧处理要点：
 - 错误处理：统一使用 `fusion_core::DataError`（如 `unauthorized/bad_request/server_error`），在代理流程与验证失败时返回一致的 HTTP 状态码与错误体。
 - 安全策略：令牌验证由 Jieyuan 统一管理；Hetumind 通过 JWKS/内省进行验签或有效性检查；敏感令牌不在 Hetumind 明文落库。
 
-## 兼容与扩展建议
+## 扩展建议
 
-- 兼容：保留现有 `signin/signup`，在配置开启后走代理；必要时支持本地账号与 OAuth 并存（双栈）。
-- 扩展：统一在 `jieyuan-core` 定义资源/动作常量或枚举（例如 `workflow:read`, `workflow:write`, `execution:execute`），避免权限字符串散落；第三方 Provider 集成统一由 `jieyuan` 承担，`hetumind` 不接入。
+- 统一在 `jieyuan-core` 定义资源/动作常量或枚举（例如 `workflow:read`, `workflow:write`, `execution:execute`），避免权限字符串散落
+- 第三方 Provider 集成统一由 `jieyuan` 承担，`hetumind` 不接入
 
 ## 统一令牌治理方案细则
 
@@ -649,12 +676,76 @@ Hetumind 侧处理要点：
 - 鉴权降级：JWKS 缓存可用且未过期情况下继续验签；通知运维。
 - 撤销延迟：对敏感路径增加短期内省确认，缩短不一致窗口。
 
-### 兼容性与迁移
+### 实施步骤
 
-- 从本地会话迁移：删除会话逻辑；统一改为中心令牌验证。
-- 保留 `user_entity` 与 `oauth_login` 映射，用于业务主键与历史数据关联。
-- 灰度：先在非敏感路由启用中心令牌校验，收集延迟与错误，再统一启用。
+- 删除本地会话逻辑，统一改为中心令牌验证
+- 灰度发布：先在非敏感路由启用中心令牌校验，收集性能指标后全面启用
+- 监控告警：建立令牌验证延迟和错误率的监控告警机制
 
 ---
 
-以上方案在不改变 `user_entity` 主键类型的前提下，实现了 Hetumind 与 Jieyuan 的认证代理与用户映射，保证令牌由 Jieyuan 统一签发与验证，Hetumind 保持本地用户主体与业务引用的稳定性。
+以上方案实现了 Hetumind 与 Jieyuan 的统一认证，令牌由 Jieyuan 统一签发与验证，Hetumind 保持业务引用的稳定性。
+
+---
+
+## 未来优化改进方向
+
+### 1. 认证体验优化
+
+#### 无密码认证
+- **生物识别**: 支持指纹、面部识别等生物特征认证
+- **硬件令牌**: 支持 FIDO2/WebAuthn 硬件密钥认证
+- **移动端认证**: 手机扫码、推送确认等移动认证方式
+
+#### 单点登录增强
+- **企业级 SSO**: 支持 SAML 2.0、CAS 等企业 SSO 协议
+- **社交登录扩展**: 支持更多第三方身份提供商
+- **跨应用 SSO**: 实现多个应用间的无缝单点登录
+
+### 2. 安全能力提升
+
+#### 零信任架构
+- **持续认证**: 基于风险评分的持续身份验证
+- **设备信任**: 设备指纹识别和信任评估
+- **行为分析**: 用户行为模式分析和异常检测
+
+#### 高级威胁防护
+- **暴力破解防护**: 智能限流和异常登录检测
+- **会话劫持保护**: 强化会话管理和异常会话检测
+- **钓鱼攻击防护**: 邮箱验证和多因素认证
+
+### 3. 可观测性增强
+
+#### 认证监控
+- **实时监控面板**: 认证成功率、延迟、错误分布等指标
+- **异常检测**: 基于机器学习的认证异常检测
+- **性能分析**: 认证流程性能瓶颈分析和优化
+
+#### 审计合规
+- **详细审计日志**: 完整的认证事件审计追踪
+- **合规报告**: 自动生成合规性检查报告
+- **数据治理**: 身份数据的生命周期管理
+
+### 4. 开发体验优化
+
+#### 开发工具支持
+- **多语言 SDK**: 提供更多语言的客户端 SDK
+- **调试工具**: 本地开发环境的认证调试工具
+- **文档完善**: 更详细的 API 文档和最佳实践
+
+#### 管理界面增强
+- **可视化配置**: 图形化的 OAuth 配置界面
+- **批量管理**: 支持批量用户和应用管理
+- **自动化运维**: CI/CD 集成和自动化部署
+
+### 5. 生态集成扩展
+
+#### 云原生支持
+- **Kubernetes 集成**: 支持在 K8s 环境中的服务发现和配置
+- **服务网格**: 与 Istio、Linkerd 等服务网格集成
+- **Serverless**: 支持 Serverless 架构的无服务器认证
+
+#### API 生态
+- **GraphQL 支持**: 提供 GraphQL 认证查询接口
+- **Webhook 事件**: 认证相关事件的 Webhook 通知
+- **开放标准**: 支持 OpenID Connect、OAuth 2.1 等新标准

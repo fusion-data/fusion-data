@@ -9,8 +9,9 @@ use fusion_web::WebError;
 use fusionsql::{ModelManager, filter::OpValInt64, page::PageResult};
 
 use jieyuan_core::model::{
-  TenantUser, TenantUserStatus, UpdatePasswordRequest, User, UserCredential, UserCredentialForInsert, UserFilter,
-  UserForCreate, UserForPage, UserForUpdate, UserRoleForCreate, UserStatus, UserWithTenant,
+  TenantUser, TenantUserStatus, UpdatePasswordRequest, User, UserChangeQueryReq, UserChangeQueryResp, UserCredential,
+  UserCredentialForInsert, UserFilter, UserForCreate, UserForPage, UserForUpdate, UserRoleForCreate, UserStatus,
+  UserWithTenant,
 };
 
 use crate::utils::model_manager_from_parts;
@@ -265,6 +266,22 @@ impl UserSvc {
     }
 
     Ok(input)
+  }
+
+  /// 查询用户变更（用于事件轮询）
+  ///
+  /// 查询指定时间范围内的用户变更事件，用于同步用户数据到其他服务。
+  ///
+  /// # Arguments
+  /// * `req` - 用户变更查询请求参数
+  ///
+  /// # Returns
+  /// 包含用户变更列表的响应
+  ///
+  /// # Errors
+  /// 如果查询失败
+  pub async fn query_user_changes(&self, req: UserChangeQueryReq) -> fusion_core::Result<UserChangeQueryResp> {
+    UserBmc::query_user_changes(&self.mm, req).await.map_err(DataError::from)
   }
 }
 

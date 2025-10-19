@@ -2,9 +2,8 @@ use fusion_core::application::Application;
 use fusion_web::middleware::WebAuth;
 use utoipa_axum::router::OpenApiRouter;
 
+mod iam_resource_mappings;
 mod iams;
-mod path_authz;
-mod path_mappings;
 mod permissions;
 mod policies;
 mod roles;
@@ -14,12 +13,11 @@ mod users;
 pub fn routes() -> OpenApiRouter<Application> {
   OpenApiRouter::new()
     .nest("/iam", iams::routes())
+    .nest("/iam-resource-mappings", iam_resource_mappings::routes())
     .nest("/users", users::routes())
     .nest("/roles", roles::routes())
     .nest("/permissions", permissions::routes())
     .nest("/policies", policies::routes())
     .nest("/tenant-users", tenant_users::routes())
-    .nest("/path-authz", path_authz::routes())
-    .nest("/path-mappings", path_mappings::routes())
     .route_layer(WebAuth::default().into_layer())
 }

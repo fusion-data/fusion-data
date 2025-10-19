@@ -8,10 +8,7 @@ use jieyuan_core::model::{
   RefreshTokenReq, SigninRequest, SigninResponse, SignupReq, UserChangeQueryReq, UserChangeQueryResp,
 };
 
-use crate::{
-  auth::{AuthSvc, OAuthSvc},
-  user::UserSvc,
-};
+use crate::{access_control::AuthSvc, user::UserSvc};
 
 pub fn routes() -> OpenApiRouter<Application> {
   OpenApiRouter::new()
@@ -143,12 +140,7 @@ async fn extract_token(parts: Parts, State(app): State<Application>) -> WebResul
     ("bearer_auth" = [])
   )
 )]
-async fn users_changes(
-  State(app): State<Application>,
-  Json(req): Json<UserChangeQueryReq>,
-) -> WebResult<UserChangeQueryResp> {
-  let mm = app.get_component::<ModelManager>().unwrap();
-  let oauth_svc = OAuthSvc::new(mm.clone(), app);
-  let response = oauth_svc.query_user_changes(req).await?;
+async fn users_changes(user_svc: UserSvc, Json(req): Json<UserChangeQueryReq>) -> WebResult<UserChangeQueryResp> {
+  let response = user_svc.query_user_changes(req).await?;
   ok_json!(response)
 }

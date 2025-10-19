@@ -1,12 +1,10 @@
 pub mod access_control;
-pub mod auth;
 pub mod config;
 pub mod endpoint;
 pub mod iam;
-pub mod model;
+pub mod oauth;
 pub mod permission;
 pub mod role;
-pub mod service;
 pub mod start;
 pub mod tenant_user;
 pub mod user;

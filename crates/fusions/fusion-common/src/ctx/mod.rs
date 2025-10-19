@@ -1,5 +1,5 @@
 use chrono::{DateTime, Utc};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 use std::{
   ops::Deref,
@@ -19,7 +19,7 @@ pub enum CtxError {
   Unauthorized(String),
 }
 
-#[derive(Debug, Clone, Default, Serialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 #[serde(transparent)]
 pub struct CtxPayload(Map<String, Value>);
@@ -127,7 +127,7 @@ impl From<Map<String, Value>> for CtxPayload {
   }
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct CtxInner {
   payload: CtxPayload,
@@ -136,7 +136,7 @@ pub struct CtxInner {
 }
 
 /// 会话上下文。此处 clone 的成本很低
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 #[serde(transparent)]
 pub struct Ctx(Arc<CtxInner>);

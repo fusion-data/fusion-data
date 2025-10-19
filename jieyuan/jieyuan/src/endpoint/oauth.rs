@@ -6,7 +6,7 @@ use utoipa_axum::router::OpenApiRouter;
 
 use jieyuan_core::model::{OAuthAuthorizeRequest, OAuthAuthorizeResponse, OAuthTokenRequest, OAuthTokenResponse};
 
-use crate::auth::OAuthSvc;
+use crate::oauth::OAuthSvc;
 
 pub fn routes() -> OpenApiRouter<Application> {
   OpenApiRouter::new()

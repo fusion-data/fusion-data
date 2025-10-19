@@ -9,6 +9,8 @@ use axum::{
 use fusion_core::application::Application;
 use fusion_web::WebError;
 
+use crate::{model::AuthorizeRequest, web::JieyuanClient};
+
 /// 简化的路径权限中间件
 /// 自动从请求中提取必要信息并调用 jieyuan 权限检查
 pub async fn path_authz_middleware(
@@ -24,13 +26,14 @@ pub async fn path_authz_middleware(
     .ok_or_else(|| WebError::unauthorized("missing Authorization header"))?;
 
   // 2. 提取请求信息
-  let path = req.uri().path().to_string();
-  let method = req.method().to_string().to_lowercase();
+  let path_code = "TODO";
   let request_ip = extract_client_ip(&req);
 
   // 3. 调用 jieyuan 路径权限检查
-  let jieyuan_client = app.component::<crate::web::client::JieyuanClient>();
-  let authz_response = jieyuan_client.authorize_by_path(auth_header, "hetumind", &path, &method, &request_ip).await?;
+  let jieyuan_client = app.component::<JieyuanClient>();
+  let authz_response = jieyuan_client
+    .authorize(auth_header, AuthorizeRequest::new(path_code).with_request_ip(request_ip))
+    .await?;
 
   // 4. 注入用户上下文
   if let Some(ctx) = authz_response.ctx {

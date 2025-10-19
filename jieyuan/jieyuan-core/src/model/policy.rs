@@ -12,6 +12,15 @@ pub enum DecisionEffect {
   Deny,
 }
 
+impl std::fmt::Display for DecisionEffect {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    match self {
+      DecisionEffect::Allow => write!(f, "allow"),
+      DecisionEffect::Deny => write!(f, "deny"),
+    }
+  }
+}
+
 /// Policy statement representing a single permission rule
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]

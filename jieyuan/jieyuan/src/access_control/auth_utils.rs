@@ -1,6 +1,23 @@
 use fusion_common::ctx::CtxPayload;
 use fusion_core::{DataError, Result, configuration::SecuritySetting, security::SecurityUtils};
 
+/// 认证工具模块
+///
+/// 提供令牌生成、验证和上下文提取等功能，支持多租户和令牌序列验证。
+
+/// 生成基本访问令牌
+///
+/// 创建包含用户 ID 的 JWT 令牌，用于基本身份验证。
+///
+/// # Arguments
+/// * `sc` - 安全配置
+/// * `uid` - 用户 ID
+///
+/// # Returns
+/// 生成的 JWT 令牌字符串
+///
+/// # Errors
+/// 如果令牌生成失败
 pub fn make_token(sc: &SecuritySetting, uid: i64) -> Result<String> {
   let mut payload = CtxPayload::default();
   payload.set_subject(uid.to_string());
@@ -11,6 +28,21 @@ pub fn make_token(sc: &SecuritySetting, uid: i64) -> Result<String> {
 }
 
 /// 生成包含租户ID和令牌序列的令牌
+///
+/// 创建包含用户 ID、租户 ID 和令牌序列的 JWT 令牌，用于多租户环境下的身份验证。
+/// 令牌序列用于支持令牌失效机制（如密码更改后使旧令牌失效）。
+///
+/// # Arguments
+/// * `sc` - 安全配置
+/// * `uid` - 用户 ID
+/// * `tenant_id` - 租户 ID
+/// * `token_seq` - 令牌序列号
+///
+/// # Returns
+/// 生成的 JWT 令牌字符串
+///
+/// # Errors
+/// 如果令牌生成失败
 pub fn make_token_with_tenant(sc: &SecuritySetting, uid: i64, tenant_id: i64, token_seq: i32) -> Result<String> {
   let mut payload = CtxPayload::default();
   payload.set_subject(uid.to_string());
@@ -23,6 +55,21 @@ pub fn make_token_with_tenant(sc: &SecuritySetting, uid: i64, tenant_id: i64, to
 }
 
 /// 验证令牌序列是否有效（与数据库中的当前序列比对）
+///
+/// 检查令牌中的序列号是否与数据库中存储的当前序列号一致，
+/// 用于检测令牌是否已被失效（如密码更改后）。
+///
+/// # Arguments
+/// * `user_id` - 用户 ID
+/// * `tenant_id` - 租户 ID
+/// * `token_seq` - 令牌序列号
+/// * `mm` - 数据库模型管理器
+///
+/// # Returns
+/// 如果验证成功返回空值
+///
+/// # Errors
+/// 如果用户不存在或令牌序列不匹配
 pub async fn validate_token_seq_against_db(
   user_id: i64,
   tenant_id: i64,
@@ -43,6 +90,17 @@ pub async fn validate_token_seq_against_db(
 }
 
 /// 验证 token 并提取用户 ID
+///
+/// 解析 JWT 令牌并提取用户 ID，用于基本身份验证。
+///
+/// # Arguments
+/// * `token` - JWT 令牌字符串
+///
+/// # Returns
+/// 用户 ID
+///
+/// # Errors
+/// 如果令牌无效或解析失败
 pub fn validate_token(token: &str) -> Result<i64> {
   let config = fusion_core::application::Application::global().fusion_setting();
   let (payload, _header) = SecurityUtils::decrypt_jwt(config.security().pwd(), token)
@@ -53,6 +111,17 @@ pub fn validate_token(token: &str) -> Result<i64> {
 }
 
 /// 验证 token 并提取用户 ID 和租户 ID
+///
+/// 解析 JWT 令牌并提取用户 ID 和租户 ID，用于多租户环境下的身份验证。
+///
+/// # Arguments
+/// * `token` - JWT 令牌字符串
+///
+/// # Returns
+/// 元组 (用户 ID, 租户 ID)
+///
+/// # Errors
+/// 如果令牌无效或解析失败
 pub fn validate_token_with_tenant(token: &str) -> Result<(i64, i64)> {
   let config = fusion_core::application::Application::global().fusion_setting();
   let (payload, _header) = SecurityUtils::decrypt_jwt(config.security().pwd(), token)
@@ -67,6 +136,17 @@ pub fn validate_token_with_tenant(token: &str) -> Result<(i64, i64)> {
 }
 
 /// 验证 token 并提取用户 ID、租户 ID 和令牌序列
+///
+/// 解析 JWT 令牌并提取用户 ID、租户 ID 和令牌序列，用于完整的多租户身份验证。
+///
+/// # Arguments
+/// * `token` - JWT 令牌字符串
+///
+/// # Returns
+/// 元组 (用户 ID, 租户 ID, 令牌序列)
+///
+/// # Errors
+/// 如果令牌无效或解析失败
 pub fn validate_token_with_tenant_and_seq(token: &str) -> Result<(i64, i64, i32)> {
   let config = fusion_core::application::Application::global().fusion_setting();
   let (payload, _header) = SecurityUtils::decrypt_jwt(config.security().pwd(), token)
@@ -82,6 +162,19 @@ pub fn validate_token_with_tenant_and_seq(token: &str) -> Result<(i64, i64, i32)
 }
 
 /// 从 Http Request Parts 中获取并验证令牌序列的 Ctx
+///
+/// 从 HTTP 请求中提取令牌，验证其有效性，并创建包含令牌序列验证的上下文对象。
+/// 支持从 Authorization header 或 query parameter 中提取令牌。
+///
+/// # Arguments
+/// * `parts` - HTTP 请求的部分
+/// * `mm` - 数据库模型管理器
+///
+/// # Returns
+/// 验证后的上下文对象
+///
+/// # Errors
+/// 如果令牌缺失、无效或验证失败
 pub async fn extract_ctx_with_token_seq_validation(
   parts: &axum::http::request::Parts,
   mm: &fusionsql::ModelManager,

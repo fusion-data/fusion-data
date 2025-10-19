@@ -27,12 +27,12 @@ pub struct WebError {
 
   /// Optional Additional error details.
   #[serde(skip_serializing_if = "Option::is_none")]
-  pub err_detail: Option<Box<Value>>,
+  pub detail: Option<Value>,
 }
 
 impl WebError {
-  pub fn new(err_code: i32, err_msg: impl Into<String>, err_detail: Option<Box<Value>>) -> Self {
-    Self { err_code, err_msg: err_msg.into(), err_detail }
+  pub fn new(err_code: i32, err_msg: impl Into<String>, detail: Option<Value>) -> Self {
+    Self { err_code, err_msg: err_msg.into(), detail }
   }
 
   pub fn new_with_msg(err_msg: impl Into<String>) -> Self {
@@ -43,8 +43,8 @@ impl WebError {
     Self::new(err_code, err_msg, None)
   }
 
-  pub fn server_error_with_detail(err_msg: impl Into<String>, err_detail: Box<Value>) -> Self {
-    Self::new(500, err_msg, Some(err_detail))
+  pub fn server_error_with_detail(err_msg: impl Into<String>, detail: Value) -> Self {
+    Self::new(500, err_msg, Some(detail))
   }
 
   pub fn with_err_code(mut self, err_code: i32) -> Self {
@@ -52,11 +52,11 @@ impl WebError {
     self
   }
 
-  pub fn with_details(mut self, details: Box<Value>) -> Self {
-    if *details == Value::Null {
-      self.err_detail = None
+  pub fn with_details(mut self, details: Value) -> Self {
+    if details == Value::Null {
+      self.detail = None
     } else {
-      self.err_detail = Some(details);
+      self.detail = Some(details);
     }
     self
   }
@@ -107,7 +107,7 @@ impl From<DataError> for WebError {
 
     // Add details if present
     if let Some(data) = err.data.as_ref() {
-      web_error = web_error.with_details(Box::new(data.clone()));
+      web_error = web_error.with_details(data.clone());
     }
 
     web_error

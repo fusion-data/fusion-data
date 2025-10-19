@@ -166,3 +166,44 @@ create index if not exists iam_session_policy_idx_expires_at on iam_session_poli
 create index if not exists iam_role_idx_tenant_id on iam_role (tenant_id);
 create index if not exists iam_permission_idx_tenant_id on iam_permission (tenant_id);
 create index if not exists iam_policy_idx_tenant_id on iam_policy (tenant_id);
+
+-- IAM Resource Mapping table
+create table iam_resource_mapping (
+    id BIGSERIAL PRIMARY KEY,
+    mapping_code varchar(100) unique,
+    service VARCHAR(50) NOT NULL,
+    path_pattern VARCHAR(1024) NOT NULL,
+    method VARCHAR(10) NOT NULL,
+    action VARCHAR(100) NOT NULL,
+    resource_tpl VARCHAR(500) NOT NULL,
+    mapping_params JSONB,
+    enabled BOOLEAN DEFAULT true,
+    tenant_id bigint,  -- Added tenant isolation support
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    created_by BIGINT NOT NULL,
+    updated_by BIGINT,
+    description TEXT,
+    UNIQUE(service, path_pattern, method)
+);
+
+-- Resource Mapping Cache table
+create table resource_mapping_cache (
+    cache_key VARCHAR(255) PRIMARY KEY,
+    service VARCHAR(50) NOT NULL,
+    mapping_response JSONB NOT NULL,
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 索引优化
+create index idx_iam_resource_mapping_lookup ON iam_resource_mapping(service, method, enabled, tenant_id);
+create index idx_iam_resource_mapping_pattern ON iam_resource_mapping(service, path_pattern, tenant_id);
+create index idx_iam_resource_mapping_updated_at ON iam_resource_mapping(updated_at);
+create index idx_iam_resource_mapping_code ON iam_resource_mapping(mapping_code);
+create index idx_iam_resource_mapping_service_path ON iam_resource_mapping(service, path_pattern, method, tenant_id);
+create index idx_iam_resource_mapping_tenant_id ON iam_resource_mapping(tenant_id);
+
+-- Resource Mapping Cache indexes
+create index idx_resource_mapping_cache_expires_at ON resource_mapping_cache(expires_at);
+create index idx_resource_mapping_cache_service ON resource_mapping_cache(service);

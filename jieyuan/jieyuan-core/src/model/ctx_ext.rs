@@ -2,6 +2,9 @@ use fusion_common::ctx::Ctx;
 
 /// Context 扩展 trait，为 fusion-common::Ctx 提供 IAM 相关的便捷方法
 /// 直接使用 Ctx 和 ctx.payload() 方法，避免与内置方法冲突
+///
+/// 注意：直接从用户登录的会话 tokon(jwe) 中只能获取到此 trait 定义的 token_seq, request_timestamp 数据，
+/// 其它数据需要服务通过调用 /api/v1/authorize/authorize 返回的 ctx 获取
 pub trait CtxExt {
   /// 检查用户是否拥有指定角色
   fn has_role(&self, role: &str) -> bool;
@@ -30,7 +33,7 @@ pub trait CtxExt {
 
 impl CtxExt for Ctx {
   fn has_role(&self, role: &str) -> bool {
-    self.payload().get_strings("principal_roles").unwrap_or_default().iter().any(|r| *r == role)
+    self.payload().get_strings("principal_roles").unwrap_or_default().contains(&role)
   }
 
   fn is_platform_admin(&self) -> bool {
