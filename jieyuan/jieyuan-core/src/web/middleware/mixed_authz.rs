@@ -7,6 +7,7 @@ use axum::{
   middleware::Next,
   response::Response,
 };
+use fusion_common::ahash::{HashMap, HashMapExt};
 use fusion_core::application::Application;
 use fusion_web::WebError;
 
@@ -144,8 +145,8 @@ fn extract_path_code(req: &Request<axum::body::Body>) -> Result<String, WebError
 }
 
 /// 从请求中提取额外参数
-fn extract_request_extras(req: &Request<axum::body::Body>) -> std::collections::HashMap<String, String> {
-  let mut extras = std::collections::HashMap::new();
+fn extract_request_extras(req: &Request<axum::body::Body>) -> HashMap<String, String> {
+  let mut extras = HashMap::default();
 
   // 从路径参数中提取ID
   let path = req.uri().path();

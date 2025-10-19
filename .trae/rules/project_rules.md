@@ -1,4 +1,6 @@
-# Project Rules
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Repository Overview
 
@@ -7,7 +9,7 @@ This is a **fusion-data** platform - a comprehensive data fusion platform built 
 - **fusionsql**: Database abstraction layer with sea-query(and sqlx) based ORM
 - **hetuflow**: Distributed task scheduling and workflow orchestration system ("河图流动")
 - **hetumind**: AI Agent/Flow platform with LLM integration ("河图智思")
-- **jieyuan**: Access control and authentication utilities ("界垣")
+- **jieyuan**: Access control and authentication utilities with modular IAM system ("界垣")
 - **fusions**: Core library suite providing foundational components
 
 **Version**: 0.1.1
@@ -125,10 +127,12 @@ The project uses Cargo workspace with the following main components:
   - `fusionsql-core`: Core types, traits, and database abstractions
   - `fusionsql`: Main database ORM with field-level operations
   - `fusionsql-macros`: Derive macros for model definitions
-- `jieyuan`: Access control and authentication utilities
-  - `jieyuan-core`: Core access control models, OAuth authentication, policy engine, and Resource-Path management
-  - Centralized IAM system with OAuth 2.0 + PKCE support, remote authorization API, Resource-Path optimization, and double-layer resource format
-  - **Resource-Path Management**: Zero-configuration permission control through managed API path mappings
+- `jieyuan`: Access control and authentication utilities with modular IAM system
+  - `jieyuan-core`: Core access control models, OAuth authentication, policy engine, and IAM Resource Mapping
+  - Centralized IAM system with OAuth 2.0 + PKCE support, remote authorization API, and modular architecture
+  - **IAM Resource Mapping**: Zero-configuration permission control through managed API path mappings
+  - **Modular Access Control**: Separated authentication and authorization into specialized modules
+  - **OAuth Module**: Independent OAuth 2.0 + PKCE authentication service
   - **Policy Engine**: Role-based access control with fine-grained permissions
   - **Remote Authorization**: Centralized policy evaluation with automatic tenant injection
 
@@ -194,6 +198,11 @@ The project uses Cargo workspace with the following main components:
 - 120 character max line width
 - Visual indent style
 - `rustfmt` configuration in `rustfmt.toml`
+
+**Development Rules**:
+
+- **No audit functionality**: Do not design or implement audit features for tracking user actions or data changes
+- **No migration logic**: Do not consider historical version compatibility or database migration logic (system not yet released)
 
 **Modern Rust Syntax (1.90+)**:
 
@@ -441,9 +450,9 @@ The platform implements a sophisticated IAM system through Jieyuan with comprehe
 - **User Synchronization**: Event-driven synchronization of user changes across the platform
 - **Multi-tenant Security**: Tenant-based data isolation with fine-grained permission middleware
 - **IAM Resource Mapping**: Zero-configuration permission control through managed API path mappings
-- **Unified Access Control Module**: Authentication and authorization functionality distributed across specialized modules
-  - `access_control`: Core authentication services and policy management
-  - `oauth`: Dedicated OAuth 2.0 + PKCE authentication module
+- **Modular Access Control Architecture**: Authentication and authorization functionality distributed across specialized modules
+  - `access_control`: Core authentication services, policy management, and resource mapping
+  - `oauth`: Independent OAuth 2.0 + PKCE authentication module with comprehensive PKCE support
 
 **Authentication Flow**:
 
@@ -656,6 +665,38 @@ Apply tenant and permission middleware to routes:
   .layer(tenant_middleware_layer())
 ```
 
+### Service Layer Development
+
+**Service Clone Requirements**:
+
+All service layer structs must implement Clone macro to ensure cheap cloning operations:
+
+```rust
+#[derive(Clone)]
+pub struct UserSvc {
+  mm: ModelManager,
+}
+```
+
+**Arc Wrapping Rules**:
+
+- Components and services that support cheap cloning should NOT be wrapped in Arc
+- Use direct references instead of Arc wrapping for cloneable types
+
+```rust
+// ✅ Correct: Direct reference
+pub struct WorkflowSvc {
+  mm: ModelManager,
+  auth_svc: AuthSvc,
+}
+
+// ❌ Incorrect: Unnecessary Arc wrapping
+pub struct WorkflowSvc {
+  mm: Arc<ModelManager>,
+  auth_svc: Arc<AuthSvc>,
+}
+```
+
 ### Database Development
 
 **FusionSQL Best Practices**:
@@ -666,11 +707,32 @@ Apply tenant and permission middleware to routes:
 - Use `Fields` derive macro for automatic mapping
 - Implement proper error handling with `DataError`
 
+**BMC Layer Function Patterns**:
+
+- BMC functions should NOT hold `&self` as a parameter
+- First parameter should be `mm: &ModelManager`
+
+```rust
+// ✅ Correct: BMC function signature
+impl UserBmc {
+  pub fn get_by_id(mm: &ModelManager, id: UserId) -> Result<Option<UserEntity>, SqlError> {
+    // implementation
+  }
+}
+
+// ❌ Incorrect: Using &self
+impl UserBmc {
+  pub fn get_by_id(&self, id: UserId) -> Result<Option<UserEntity>, SqlError> {
+    // implementation
+  }
+}
+```
+
 **IAM Development Best Practices**:
 
 - Use the unified `render_resource` function for resource template rendering with optional extras parameter
 - Leverage double-layer resource format: simplified format for APIs, complete format for policies
-- **Resource-Path Integration**: Use path-based authorization for simplified permission control
+- **IAM Resource Mapping**: Use path-based authorization for zero-configuration permission control
   - Configure path mappings through jieyuan management interface
   - Use simplified middleware: `path_authz_middleware` for automatic permission checking
   - No need to manually configure RouteMeta or action/resource templates in code
@@ -678,20 +740,20 @@ Apply tenant and permission middleware to routes:
 - Use remote authorization middleware for centralized policy evaluation
 - Follow resource naming convention: `iam:{service}:{type}/{id}` for API calls
 - Define policies using complete format: `iam:{service}:{tenant_id}:{type}/{id}` for unambiguous evaluation
-- Maintain backward compatibility when refactoring authorization components
 
 **IAM Integration Approaches**:
 
-1. **Resource-Path Optimization (Recommended for new projects)**:
-   - Zero configuration permission control
-   - Centralized path mapping management
-   - Simplified development experience
-   - Implementation: `jieyuan-core/src/web/middleware/path_authz.rs`
+1. **IAM Resource Mapping (Recommended approach)**:
+   - Zero configuration permission control through path pattern matching
+   - Centralized path mapping management via jieyuan admin interface
+   - Simplified development experience with automatic parameter extraction
+   - Implementation: `jieyuan-core/src/model/iam_resource_mapping.rs`
 
-2. **Traditional Route Metadata (For complex requirements)**:
+2. **Direct Resource Template Authorization**:
    - Manual action and resource template configuration
    - Fine-grained control over specific endpoints
-   - Implementation: `jieyuan-core/src/web/route_meta.rs`
+   - Use when complex authorization logic is required
+   - Implementation: `jieyuan-core/src/model/iam_api.rs`
 
 ### Testing
 
@@ -702,6 +764,45 @@ cargo check -p hetumind-studio
 cargo check -p fusionsql
 cargo clippy --workspace --all-targets --all-features --no-deps -- -D warnings
 ```
+
+## Performance Optimization Guidelines
+
+### Hash Map and Set Usage
+
+**Performance-First Approach**: The platform prioritizes performance by using `ahash` instead of standard library hash collections.
+
+**Why ahash?**:
+- **2-3x faster** than `std::collections::HashMap` for typical workloads
+- **Better hash distribution** reducing collisions
+- **Memory efficient** with optimized layouts
+- **Zero runtime overhead** with compile-time optimizations
+
+**Usage Guidelines**:
+
+```rust
+// ✅ Prefer ahash for all hash collections
+use fusion_common::ahash::{HashMap, HashSet};
+
+// ✅ Use default() constructor for optimal performance
+let mut map = HashMap::default();
+let mut set = HashSet::default();
+
+// ✅ Type annotations when needed
+let mut source_ports: HashSet<&ConnectionKind> = HashSet::default();
+```
+
+**Performance Benefits**:
+- Faster data processing in workflow engines
+- Improved cache hit rates in resource management
+- Reduced latency in API request handling
+- Better throughput in concurrent scenarios
+
+**Migration Completed**: All platform modules have been migrated to ahash:
+- `jieyuan`: Authentication and authorization services
+- `hetumind-core`: Core workflow execution engine
+- `hetumind-studio`: Web interface and management tools
+- `hetumind-nodes`: Workflow node execution framework
+- `fusion-core`: Core application framework
 
 ## Documentation and Code Generation
 

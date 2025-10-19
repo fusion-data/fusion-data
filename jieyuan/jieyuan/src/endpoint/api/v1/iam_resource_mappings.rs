@@ -1,17 +1,15 @@
 use axum::{Json, extract::Path, http::StatusCode};
+use fusion_common::page::PageResult;
 use fusion_core::application::Application;
 use fusion_web::{WebError, WebResult, ok_json};
 use utoipa_axum::router::OpenApiRouter;
 
 use jieyuan_core::model::{
   IamResourceMappingEntity, IamResourceMappingForCreateWithService, IamResourceMappingForQuery,
-  IamResourceMappingForUpdate,
+  IamResourceMappingForUpdate, ResourceMappingLookupRequest, ResourceMappingLookupResponse,
 };
 
-use crate::access_control::{
-  ResourceMappingBmc, ResourceMappingCacheBmc, ResourceMappingLookupRequest, ResourceMappingLookupResponse,
-  ResourceMappingSvc,
-};
+use crate::access_control::{ResourceMappingBmc, ResourceMappingCacheBmc, ResourceMappingSvc};
 
 /// IAM 资源映射管理路由
 pub fn routes() -> OpenApiRouter<Application> {
@@ -33,7 +31,7 @@ pub fn routes() -> OpenApiRouter<Application> {
   path = "/query",
   request_body = IamResourceMappingForQuery,
   responses(
-    (status = 200, description = "查询成功", body = fusion_common::page::PageResult<IamResourceMappingEntity>),
+    (status = 200, description = "查询成功", body = PageResult<IamResourceMappingEntity>),
     (status = 400, description = "请求参数错误")
   ),
   tag = "IAM 资源映射管理"
@@ -41,7 +39,7 @@ pub fn routes() -> OpenApiRouter<Application> {
 pub async fn list_mappings(
   mapping_svc: ResourceMappingSvc,
   Json(query): Json<IamResourceMappingForQuery>,
-) -> WebResult<fusion_common::page::PageResult<IamResourceMappingEntity>> {
+) -> WebResult<PageResult<IamResourceMappingEntity>> {
   let result = mapping_svc.list_mappings(query).await.map_err(|e| WebError::bad_gateway(e.to_string()))?;
   ok_json!(result)
 }

@@ -1,13 +1,13 @@
-use std::collections::HashMap;
 use std::time::Duration;
 
-use super::types::{ResourceMappingLookupRequest, ResourceMappingLookupResponse};
 use axum::extract::FromRequestParts;
+use fusion_common::ahash::HashMap;
+use fusion_common::page::PageResult;
 use fusion_web::WebError;
 use fusionsql::{ModelManager, SqlError};
 use jieyuan_core::model::{
   IamResourceMappingEntity, IamResourceMappingForCreateWithService, IamResourceMappingForQuery,
-  IamResourceMappingForUpdate, MappingParam,
+  IamResourceMappingForUpdate, MappingParam, ResourceMappingLookupRequest, ResourceMappingLookupResponse,
 };
 
 use crate::access_control::{
@@ -122,10 +122,10 @@ impl ResourceMappingSvc {
     let actual_parts: Vec<&str> = actual.split('/').collect();
 
     if pattern_parts.len() != actual_parts.len() {
-      return Ok(HashMap::new());
+      return Ok(HashMap::default());
     }
 
-    let mut params = HashMap::new();
+    let mut params = HashMap::default();
 
     for (pattern_part, actual_part) in pattern_parts.iter().zip(actual_parts.iter()) {
       if pattern_part.starts_with('{') && pattern_part.ends_with('}') {
@@ -226,7 +226,7 @@ impl ResourceMappingSvc {
   pub async fn list_mappings(
     &self,
     query: IamResourceMappingForQuery,
-  ) -> Result<fusion_common::page::PageResult<IamResourceMappingEntity>, SqlError> {
+  ) -> Result<PageResult<IamResourceMappingEntity>, SqlError> {
     ResourceMappingBmc::list_with_query(&self.mm, query).await
   }
 

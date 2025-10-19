@@ -310,16 +310,59 @@ pub struct PathLookupResponse {
 
 ## 条件键与上下文
 
-- 常用条件键（snake_case）：
+### 支持的条件键（混合架构）
 
-  - `iam:tenant_id`、`iam:principal_user_id`、`iam:principal_roles`、`iam:is_platform_admin`
-  - `iam:request_ip`、`iam:method`、`iam:path`
-  - `iam:token_seq`、`iam:auth_level`
-  - `iam:target_user_id`、`iam:target_tenant_id`
+- **用户身份条件键**：
+  - `iam:principal_user_id`: 用户ID
+  - `iam:principal_roles`: 用户角色列表
+  - `iam:is_platform_admin`: 是否平台管理员
+  - `iam:tenant_access_mode`: 租户访问模式（current/all/specific）
+  - `iam:managed_tenant_ids`: 管理的租户ID列表
 
-- 上下文结构（Rust，`Arc` 友好）：
+- **请求信息条件键**：
+  - `iam:request_ip`: 客户端IP地址
+  - `iam:method`: HTTP方法
+  - `iam:path`: 请求路径
+  - `iam:token_seq`: 令牌序列号
+
+- **时间相关条件键**：
+  - `iam:current_time`: 当前时间（RFC3339格式）
+
+### 上下文数据来源
+
+条件键的数据来源于 `fusion_common::ctx::Ctx` 通过 `CtxExt` trait 提供：
 
 ```rust
+// 当前实现：直接使用 Ctx 和 CtxExt
+use fusion_common::ctx::Ctx;
+use crate::model::CtxExt;
+
+// 在策略评估中直接使用
+fn evaluate_condition(key: &str, ctx: &Ctx) -> serde_json::Value {
+    match key {
+        "iam:tenant_id" => serde_json::Value::Number(ctx.tenant_id().into()),
+        "iam:principal_user_id" => serde_json::Value::Number(ctx.user_id().into()),
+        "iam:principal_roles" => serde_json::Value::Array(
+            ctx.roles().iter().map(|r| serde_json::Value::String(r.to_string())).collect()
+        ),
+        "iam:is_platform_admin" => serde_json::Value::Bool(ctx.is_platform_admin()),
+        "iam:tenant_access_mode" => serde_json::Value::String(match ctx.tenant_access_mode() {
+            crate::model::policy::TenantAccessMode::Current => "current".to_string(),
+            crate::model::policy::TenantAccessMode::All => "all".to_string(),
+            crate::model::policy::TenantAccessMode::Specific => "specific".to_string(),
+        }),
+        "iam:managed_tenant_ids" => serde_json::Value::Array(
+            ctx.managed_tenant_ids().iter().map(|id| serde_json::Value::String(id.clone())).collect()
+        ),
+        "iam:method" => serde_json::Value::String(ctx.request_method().to_string()),
+        "iam:path" => serde_json::Value::String(ctx.request_path().to_string()),
+        "iam:token_seq" => serde_json::Value::Number(ctx.token_seq().into()),
+        "iam:current_time" => serde_json::Value::String(ctx.req_datetime().to_rfc3339()),
+        _ => serde_json::Value::Null,
+    }
+}
+```
+
 // 文件：jieyuan/jieyuan/src/access_control/auth_ctx.rs
 // 结构定义与投影函数已落地于代码库
 use chrono::{DateTime, FixedOffset};
@@ -328,7 +371,6 @@ use serde::{Deserialize, Serialize};
 /// 授权上下文（从 Ctx 构建）
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub struct AuthContext {
     pub tenant_id: i64,
     pub user_id: i64,
     pub principal_roles: Vec<String>,
@@ -340,9 +382,7 @@ pub struct AuthContext {
     pub req_time: DateTime<FixedOffset>,
 }
 
-impl AuthContext {
     /// 从 Ctx 构建授权上下文
-    pub fn from_ctx(ctx: &Ctx, time_offset: i32) -> Result<Self> {
         Ok(Self {
             tenant_id: ctx.tenant_id(),
             user_id: ctx.user_id(),
@@ -1099,7 +1139,7 @@ pub async fn authorize_by_path(
 }
 ```
 
-### 双层格式资源模板渲染
+### 混合架构资源模板渲染
 
 **实现位置**：`jieyuan/jieyuan-core/src/model/iam_api.rs:181-254`
 

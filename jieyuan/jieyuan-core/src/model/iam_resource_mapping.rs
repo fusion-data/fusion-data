@@ -1,4 +1,5 @@
 use chrono::{DateTime, Utc};
+use fusion_common::{ahash::HashMap, page::Page};
 use fusionsql_core::filter::{OpValBool, OpValInt64, OpValString};
 use serde::{Deserialize, Serialize};
 
@@ -161,10 +162,37 @@ pub struct IamResourceMappingFilter {
 #[serde(rename_all = "snake_case")]
 pub struct IamResourceMappingForQuery {
   #[serde(default)]
-  pub page: fusion_common::page::Page,
+  pub page: Page,
   #[serde(default)]
   pub filters: Vec<IamResourceMappingFilter>,
 }
 
 /// 表名常量
 pub const TABLE_IAM_RESOURCE_MAPPING: &str = "iam_resource_mapping";
+
+/// 资源映射查找请求
+#[derive(Debug, Clone, Serialize, Deserialize, utoipa::ToSchema)]
+#[serde(rename_all = "snake_case")]
+pub struct ResourceMappingLookupRequest {
+  pub service: String,
+  pub path: String,
+  pub method: String,
+}
+
+/// 资源映射查找响应
+#[derive(Debug, Clone, Serialize, Deserialize, utoipa::ToSchema)]
+#[serde(rename_all = "snake_case")]
+pub struct ResourceMappingLookupResponse {
+  pub action: String,
+  pub resource_tpl: String,
+  pub mapping_params: HashMap<String, String>,
+  pub cache_ttl: Option<u64>,
+}
+
+/// 解析后的资源映射
+#[derive(Debug, Clone)]
+pub struct ResolvedResourceMapping {
+  pub action: String,
+  pub resource_tpl: String,
+  pub extracted_params: HashMap<String, String>,
+}

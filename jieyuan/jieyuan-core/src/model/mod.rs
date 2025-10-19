@@ -23,7 +23,6 @@ pub use auth::*;
 pub use ctx_ext::*;
 pub use iam_api::*;
 pub use iam_resource_mapping::*;
-pub use page::*;
 pub use path_authz::*;
 
 pub use permission::*;

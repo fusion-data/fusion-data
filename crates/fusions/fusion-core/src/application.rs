@@ -1,6 +1,5 @@
 use std::{
   any::Any,
-  collections::HashSet,
   fmt::Display,
   future::Future,
   sync::{Arc, OnceLock},
@@ -8,6 +7,7 @@ use std::{
 
 use config::Config;
 use dashmap::DashMap;
+use fusion_common::ahash::HashSet;
 use log::{debug, info};
 use mea::{
   mutex::Mutex,
@@ -352,7 +352,7 @@ impl ApplicationBuilder {
 
     let registry = std::mem::take(&mut self.plugin_registry);
     let mut to_register = registry.iter().map(|e| e.value().to_owned()).collect::<Vec<_>>();
-    let mut registered: HashSet<String> = HashSet::new();
+    let mut registered: HashSet<String> = HashSet::default();
 
     while !to_register.is_empty() {
       let mut progress = false;

@@ -1,4 +1,4 @@
-use ahash::{HashMap, HashMapExt};
+use ahash::HashMap;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -245,7 +245,7 @@ impl Default for EngineResponse {
 impl EngineResponse {
   /// 创建新的引擎响应
   pub fn new(request_id: Uuid) -> Self {
-    Self { action_responses: Vec::new(), metadata: HashMap::new(), response_id: request_id }
+    Self { action_responses: Vec::new(), metadata: HashMap::default(), response_id: request_id }
   }
 
   /// 添加动作结果

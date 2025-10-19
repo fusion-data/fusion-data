@@ -2,9 +2,9 @@
 //!
 //! 提供等待计算、格式化和状态管理的核心工具函数。
 
+use fusion_common::ahash::HashMap;
 use hetumind_core::workflow::{NodeExecutionError, ValidationError};
 use serde_json::{Value, json};
-use std::collections::HashMap;
 
 use super::{
   FormConfig, FormField, FormFieldType, LimitType, TimeLimitConfig, TimeUnit, WaitConfig, WaitMode, WebhookConfig,
@@ -324,7 +324,7 @@ pub fn create_webhook_response(
   config: &WebhookConfig,
   request_data: &Value,
 ) -> Result<WebhookResponse, NodeExecutionError> {
-  let mut headers = HashMap::new();
+  let mut headers = HashMap::default();
   headers.insert("Content-Type".to_string(), "application/json".to_string());
 
   // 添加自定义响应头
@@ -1060,7 +1060,7 @@ mod tests {
       authentication_type: Some(AuthenticationType::BasicAuth),
       response_data: Some(json!({"custom": "response"})),
       response_headers: Some({
-        let mut headers = std::collections::HashMap::new();
+        let mut headers = HashMap::default();
         headers.insert("X-Custom".to_string(), "value".to_string());
         headers
       }),

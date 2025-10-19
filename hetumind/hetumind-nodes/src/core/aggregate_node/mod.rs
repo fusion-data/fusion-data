@@ -5,6 +5,7 @@
 
 use std::sync::Arc;
 
+use fusion_common::ahash::HashSet;
 use hetumind_core::{
   version::Version,
   workflow::{Node, NodeDefinition, NodeExecutor, NodeGroupKind, NodeKind, RegistrationError},
@@ -123,7 +124,7 @@ impl AggregateConfig {
         }
 
         // 验证输出字段名称唯一性
-        let mut output_field_names = std::collections::HashSet::new();
+        let mut output_field_names = HashSet::default();
         for field in &self.fields_to_aggregate {
           field.validate()?;
           let output_name = field.get_output_field_name();

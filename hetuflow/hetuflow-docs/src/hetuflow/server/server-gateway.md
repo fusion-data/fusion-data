@@ -271,12 +271,12 @@ use fusion_core::DataError;
 use fusionsql::page::{PageResult, Page};
 
 pub struct ConnectionManager {
-  mm: Arc<ModelManager>,
+  mm: ModelManager,
   connections: Arc<RwLock<HashMap<String, AgentConnection>>>,
 }
 
 impl ConnectionManager {
-  pub fn new(mm: Arc<ModelManager>) -> Self {
+  pub fn new(mm: ModelManager) -> Self {
     Self {
       mm,
       connections: Arc::new(RwLock::new(HashMap::default())),

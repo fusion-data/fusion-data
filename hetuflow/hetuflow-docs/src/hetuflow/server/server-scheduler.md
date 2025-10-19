@@ -497,7 +497,7 @@ impl Default for PollingConfig {
 }
 
 pub struct TaskPoller {
-    mm: Arc<ModelManager>,
+    mm: ModelManager,
     config: PollingConfig,
     server_id: String,
     is_running: Arc<AtomicBool>,
@@ -506,7 +506,7 @@ pub struct TaskPoller {
 
 impl TaskPoller {
     pub fn new(
-        mm: Arc<ModelManager>,
+        mm: ModelManager,
         config: PollingConfig,
         server_id: String,
     ) -> Self {
@@ -1181,12 +1181,12 @@ pub struct AgentInfo {
 }
 
 pub struct AgentManager {
-  mm: Arc<ModelManager>,
+  mm: ModelManager,
   agents: Arc<RwLock<HashMap<String, AgentInfo>>>,
 }
 
 impl AgentManager {
-  pub fn new(mm: Arc<ModelManager>) -> Self {
+  pub fn new(mm: ModelManager) -> Self {
     Self {
       mm,
       agents: Arc::new(RwLock::new(HashMap::default())),

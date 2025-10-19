@@ -1,7 +1,7 @@
 //! Merge 节点工具函数
 
+use fusion_common::ahash::{HashMap, HashSet};
 use serde_json::{Map, Value};
-use std::collections::HashMap;
 
 use super::{MergeConfig, MergeMode};
 use hetumind_core::workflow::{ConnectionKind, DataSource, ExecutionData, NodeExecutionError, NodeName};
@@ -128,7 +128,7 @@ fn merge_wait_for_all(
   let expected_ports = config.input_ports.unwrap_or(2);
 
   // 检查是否有足够的输入分支数据
-  let mut source_ports = std::collections::HashSet::new();
+  let mut source_ports: HashSet<&ConnectionKind> = HashSet::default();
   for data in input_items {
     if let Some(source) = data.source() {
       source_ports.insert(&source.output_port);

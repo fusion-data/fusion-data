@@ -5,6 +5,7 @@
 
 use std::sync::Arc;
 
+use fusion_common::ahash::HashSet;
 use hetumind_core::{
   version::Version,
   workflow::{Node, NodeDefinition, NodeExecutor, NodeGroupKind, NodeKind, RegistrationError, ValidationError},
@@ -300,7 +301,7 @@ impl SummarizeConfig {
     }
 
     // 验证字段名唯一性
-    let mut field_names = std::collections::HashSet::new();
+    let mut field_names = HashSet::default();
     for field in &self.aggregate_fields {
       if !field_names.insert(&field.output_field) {
         return Err(ValidationError::invalid_field_value(

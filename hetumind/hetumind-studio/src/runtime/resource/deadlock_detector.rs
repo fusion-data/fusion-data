@@ -2,7 +2,8 @@
 //!
 //! 实现资源分配图和死锁检测算法，预防和解决死锁问题
 
-use std::collections::{HashMap, HashSet, VecDeque};
+use fusion_common::ahash::HashSet;
+use std::collections::{HashMap, VecDeque};
 use std::sync::Arc;
 use tokio::sync::{Mutex, Notify};
 use uuid::Uuid;
@@ -143,15 +144,15 @@ impl DeadlockDetector {
     let process = ProcessNode {
       process_id: process_id.clone(),
       status: ProcessStatus::Running,
-      held_resources: HashSet::new(),
-      waiting_resources: HashSet::new(),
+      held_resources: HashSet::default(),
+      waiting_resources: HashSet::default(),
       priority,
       created_at: chrono::Utc::now(),
     };
 
     graph.processes.insert(process_id.clone(), process);
-    graph.allocation_edges.insert(process_id.clone(), HashSet::new());
-    graph.request_edges.insert(process_id, HashSet::new());
+    graph.allocation_edges.insert(process_id.clone(), HashSet::default());
+    graph.request_edges.insert(process_id, HashSet::default());
 
     Ok(())
   }
@@ -342,8 +343,8 @@ impl DeadlockDetector {
 
   /// 查找死锁进程（使用资源分配图算法）
   fn find_deadlocked_processes(&self, graph: &ResourceAllocationGraph) -> HashSet<String> {
-    let mut deadlocked = HashSet::new();
-    let mut visited = HashSet::new();
+    let mut deadlocked = HashSet::default();
+    let mut visited = HashSet::default();
 
     // 对每个等待资源的进程进行DFS
     for (process_id, process) in &graph.processes {
@@ -394,7 +395,7 @@ impl DeadlockDetector {
     graph: &ResourceAllocationGraph,
     deadlocked_processes: &HashSet<String>,
   ) -> HashSet<ResourceType> {
-    let mut involved_resources = HashSet::new();
+    let mut involved_resources = HashSet::default();
 
     for process_id in deadlocked_processes {
       if let Some(process) = graph.processes.get(process_id) {

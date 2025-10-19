@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use serde::{Deserialize, Serialize};
 
 /* 函数级注释：分页请求模型，统一请求中的页码与每页数量 */

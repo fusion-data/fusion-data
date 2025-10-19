@@ -1,3 +1,4 @@
+use fusion_common::page::Page;
 use fusion_common::time::{DateTime, FixedOffset};
 use fusionsql_core::filter::{OpValDateTime, OpValInt64};
 use serde::{Deserialize, Serialize};
@@ -66,7 +67,7 @@ pub struct TenantUserForUpdate {
 #[derive(Debug, Default, Deserialize)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct TenantUserForPage {
-  pub page: fusion_common::page::Page,
+  pub page: Page,
   pub filters: Vec<TenantUserFilter>,
 }
 

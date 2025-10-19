@@ -1,10 +1,10 @@
+use fusion_common::ahash::HashMap;
 use fusion_core::{DataError, application::Application, configuration::ConfigRegistry};
 use fusionsql::ModelManager;
 use log::info;
 use reqwest::Client;
 use serde::Deserialize;
 use serde_json::Value;
-use std::collections::HashMap;
 
 use jieyuan_core::model::{
   OAuthAuthorizeRequest, OAuthAuthorizeResponse, OAuthProvider, OAuthTokenRequest, OAuthTokenResponse, TokenType,
@@ -67,7 +67,7 @@ impl OAuthSvc {
     };
 
     // 构建授权 URL
-    let mut params = HashMap::new();
+    let mut params = HashMap::default();
     params.insert("response_type", "code");
     params.insert("client_id", &provider_config.client_id);
     params.insert("redirect_uri", req.redirect_uri.as_deref().unwrap_or(&provider_config.redirect_uri));
@@ -115,7 +115,7 @@ impl OAuthSvc {
     let provider_config = self.get_provider_config(req.provider)?;
 
     // 构建令牌交换请求
-    let mut params = HashMap::new();
+    let mut params = HashMap::default();
     params.insert("grant_type", "authorization_code");
     params.insert("client_id", &provider_config.client_id);
     params.insert("client_secret", &provider_config.client_secret);

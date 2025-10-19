@@ -26,7 +26,7 @@ pub fn routes() -> OpenApiRouter<Application> {
   path = "/query",
   request_body = PathMappingForQuery,
   responses(
-    (status = 200, description = "查询成功", body = fusion_common::page::PageResult<PathMappingEntity>),
+    (status = 200, description = "查询成功", body = PageResult<PathMappingEntity>),
     (status = 400, description = "请求参数错误")
   ),
   tag = "路径映射管理"
@@ -34,7 +34,7 @@ pub fn routes() -> OpenApiRouter<Application> {
 pub async fn list_mappings(
   path_mapping_svc: PathMappingSvc,
   Json(query): Json<PathMappingForQuery>,
-) -> WebResult<fusion_common::page::PageResult<PathMappingEntity>> {
+) -> WebResult<PageResult<PathMappingEntity>> {
   let result = path_mapping_svc.list_mappings(query).await.map_err(|e| WebError::bad_gateway(e.to_string()))?;
   ok_json!(result)
 }

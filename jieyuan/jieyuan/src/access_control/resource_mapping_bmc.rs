@@ -1,3 +1,5 @@
+use fusion_common::ahash::HashMap;
+use fusion_common::page::PageResult;
 use fusionsql::{
   ModelManager, SqlError,
   base::{DbBmc, pg_page},
@@ -7,7 +9,6 @@ use jieyuan_core::model::{
   IamResourceMappingEntity, IamResourceMappingFilter, IamResourceMappingForCreate, IamResourceMappingForQuery,
   IamResourceMappingForUpdate, TABLE_IAM_RESOURCE_MAPPING,
 };
-use std::collections::HashMap;
 
 pub struct ResourceMappingBmc;
 
@@ -74,7 +75,7 @@ impl ResourceMappingBmc {
       return Ok(None);
     }
 
-    let mut params = HashMap::new();
+    let mut params = HashMap::default();
 
     for (pattern_part, actual_part) in pattern_parts.iter().zip(actual_parts.iter()) {
       if pattern_part.starts_with('{') && pattern_part.ends_with('}') {
@@ -92,7 +93,7 @@ impl ResourceMappingBmc {
   pub async fn list_with_query(
     mm: &ModelManager,
     query: IamResourceMappingForQuery,
-  ) -> Result<fusion_common::page::PageResult<IamResourceMappingEntity>, SqlError> {
+  ) -> Result<PageResult<IamResourceMappingEntity>, SqlError> {
     pg_page::<Self, _, _>(mm, query.filters, query.page).await
   }
 

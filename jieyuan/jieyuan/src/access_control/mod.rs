@@ -16,7 +16,6 @@ mod policy_svc;
 mod resource_mapping_bmc;
 mod resource_mapping_cache_bmc;
 mod resource_mapping_svc;
-mod types;
 
 pub use auth_svc::AuthSvc;
 pub use auth_utils::*;
@@ -26,4 +25,3 @@ pub use policy_svc::PolicySvc;
 pub use resource_mapping_bmc::ResourceMappingBmc;
 pub use resource_mapping_cache_bmc::{CacheStats, ResourceMappingCacheBmc};
 pub use resource_mapping_svc::ResourceMappingSvc;
-pub use types::{ResolvedResourceMapping, ResourceMappingLookupRequest, ResourceMappingLookupResponse};

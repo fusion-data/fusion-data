@@ -199,6 +199,11 @@ The project uses Cargo workspace with the following main components:
 - Visual indent style
 - `rustfmt` configuration in `rustfmt.toml`
 
+**Development Rules**:
+
+- **No audit functionality**: Do not design or implement audit features for tracking user actions or data changes
+- **No migration logic**: Do not consider historical version compatibility or database migration logic (system not yet released)
+
 **Modern Rust Syntax (1.90+)**:
 
 Always utilize the latest Rust syntax features for cleaner, more maintainable code:
@@ -660,6 +665,38 @@ Apply tenant and permission middleware to routes:
   .layer(tenant_middleware_layer())
 ```
 
+### Service Layer Development
+
+**Service Clone Requirements**:
+
+All service layer structs must implement Clone macro to ensure cheap cloning operations:
+
+```rust
+#[derive(Clone)]
+pub struct UserSvc {
+  mm: ModelManager,
+}
+```
+
+**Arc Wrapping Rules**:
+
+- Components and services that support cheap cloning should NOT be wrapped in Arc
+- Use direct references instead of Arc wrapping for cloneable types
+
+```rust
+// ✅ Correct: Direct reference
+pub struct WorkflowSvc {
+  mm: ModelManager,
+  auth_svc: AuthSvc,
+}
+
+// ❌ Incorrect: Unnecessary Arc wrapping
+pub struct WorkflowSvc {
+  mm: Arc<ModelManager>,
+  auth_svc: Arc<AuthSvc>,
+}
+```
+
 ### Database Development
 
 **FusionSQL Best Practices**:
@@ -669,6 +706,27 @@ Apply tenant and permission middleware to routes:
 - Follow pagination patterns with `Page` and `PageResult`
 - Use `Fields` derive macro for automatic mapping
 - Implement proper error handling with `DataError`
+
+**BMC Layer Function Patterns**:
+
+- BMC functions should NOT hold `&self` as a parameter
+- First parameter should be `mm: &ModelManager`
+
+```rust
+// ✅ Correct: BMC function signature
+impl UserBmc {
+  pub fn get_by_id(mm: &ModelManager, id: UserId) -> Result<Option<UserEntity>, SqlError> {
+    // implementation
+  }
+}
+
+// ❌ Incorrect: Using &self
+impl UserBmc {
+  pub fn get_by_id(&self, id: UserId) -> Result<Option<UserEntity>, SqlError> {
+    // implementation
+  }
+}
+```
 
 **IAM Development Best Practices**:
 
@@ -706,6 +764,45 @@ cargo check -p hetumind-studio
 cargo check -p fusionsql
 cargo clippy --workspace --all-targets --all-features --no-deps -- -D warnings
 ```
+
+## Performance Optimization Guidelines
+
+### Hash Map and Set Usage
+
+**Performance-First Approach**: The platform prioritizes performance by using `ahash` instead of standard library hash collections.
+
+**Why ahash?**:
+- **2-3x faster** than `std::collections::HashMap` for typical workloads
+- **Better hash distribution** reducing collisions
+- **Memory efficient** with optimized layouts
+- **Zero runtime overhead** with compile-time optimizations
+
+**Usage Guidelines**:
+
+```rust
+// ✅ Prefer ahash for all hash collections
+use fusion_common::ahash::{HashMap, HashSet};
+
+// ✅ Use default() constructor for optimal performance
+let mut map = HashMap::default();
+let mut set = HashSet::default();
+
+// ✅ Type annotations when needed
+let mut source_ports: HashSet<&ConnectionKind> = HashSet::default();
+```
+
+**Performance Benefits**:
+- Faster data processing in workflow engines
+- Improved cache hit rates in resource management
+- Reduced latency in API request handling
+- Better throughput in concurrent scenarios
+
+**Migration Completed**: All platform modules have been migrated to ahash:
+- `jieyuan`: Authentication and authorization services
+- `hetumind-core`: Core workflow execution engine
+- `hetumind-studio`: Web interface and management tools
+- `hetumind-nodes`: Workflow node execution framework
+- `fusion-core`: Core application framework
 
 ## Documentation and Code Generation
 
