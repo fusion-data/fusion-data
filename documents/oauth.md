@@ -412,7 +412,7 @@ Hetumind 侧处理要点：
   use axum::{Router, routing::get, post, Json, Path, State};
   use fusion_core::application::Application;
   use fusion_web::{WebResult, ok_json};
-  use jieyuan::oauth::OAuthSvc;  // 从独立 oauth 模块导入
+  use jieyuan_server::oauth::OAuthSvc;  // 从独立 oauth 模块导入
 
   pub fn auth_routes() -> Router<Application> {
     Router::new()

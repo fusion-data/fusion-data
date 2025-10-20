@@ -64,7 +64,7 @@ graph LR
 
 - **策略配置格式**：`iam:hetumind:workflow/123`（统一简化格式，不含 tenant_id）
 - **运行时智能注入**：根据用户类型自动处理租户隔离或跨租户访问
-  - 普通用户：自动注入当前租户ID
+  - 普通用户：自动注入当前租户 ID
   - 平台管理员：根据访问模式处理（当前/全部/特定租户）
 
 ### 4. 模块化访问控制
@@ -82,11 +82,12 @@ graph LR
 
 #### 统一简化格式
 
-- **用途**：策略定义、API调用、权限评估
+- **用途**：策略定义、API 调用、权限评估
 - **格式**：`iam:{service}:{type}/{id}`
 - **特点**：简化、灵活、智能租户处理
 - **租户处理**：运行时根据用户上下文自动注入
-  - 普通用户：当前租户ID
+
+  - 普通用户：当前租户 ID
   - 平台管理员：根据访问模式处理（当前/全部/特定）
 
 - **用途**：API 调用、代码编写、日常使用
@@ -95,15 +96,16 @@ graph LR
 
 ### 资源类型定义
 
-| 资源类型 | 格式示例 | 说明 |
-| -------- | -------- | ---- |
-| **工作流** | `iam:hetumind:workflow/{id}` | 工作流资源 |
-| **凭证** | `iam:hetumind:credential/{id}` | 凭证资源 |
-| **执行记录** | `iam:hetumind:execution/{id}` | 执行记录资源 |
-| **项目管理** | `iam:hetumind:project/{id}` | 项目资源 |
+| 资源类型     | 格式示例                       | 说明         |
+| ------------ | ------------------------------ | ------------ |
+| **工作流**   | `iam:hetumind:workflow/{id}`   | 工作流资源   |
+| **凭证**     | `iam:hetumind:credential/{id}` | 凭证资源     |
+| **执行记录** | `iam:hetumind:execution/{id}`  | 执行记录资源 |
+| **项目管理** | `iam:hetumind:project/{id}`    | 项目资源     |
 
 **智能租户处理**：
-- 普通用户：自动注入当前租户ID
+
+- 普通用户：自动注入当前租户 ID
 - 平台管理员：根据租户访问模式处理（当前/全部/特定）
 
 ## 操作命名规范
@@ -227,7 +229,7 @@ graph LR
       "resource": ["iam:hetumind:{tenant_id}:*"],
       "condition": {
         "string_equals": {
-          "iam:principal_roles": ["viewer", "editor", "admin"]
+          "iam:roles": ["viewer", "editor", "admin"]
         }
       }
     },
@@ -238,7 +240,7 @@ graph LR
       "resource": ["iam:hetumind:{tenant_id}:workflow/*"],
       "condition": {
         "string_equals": {
-          "iam:principal_roles": ["editor", "admin"]
+          "iam:roles": ["editor", "admin"]
         }
       }
     },
@@ -249,7 +251,7 @@ graph LR
       "resource": ["iam:hetumind:{tenant_id}:*"],
       "condition": {
         "string_equals": {
-          "iam:principal_roles": ["admin"]
+          "iam:roles": ["admin"]
         }
       }
     }
@@ -271,7 +273,7 @@ graph LR
       "resource": ["iam:hetumind:{tenant_id}:workflow/*"],
       "condition": {
         "string_equals": {
-          "iam:principal_user_id": "{created_by}"
+          "iam:user_id": "{created_by}"
         }
       }
     },
@@ -282,7 +284,7 @@ graph LR
       "resource": ["iam:hetumind:{tenant_id}:project/{project_id}/*"],
       "condition": {
         "string_equals": {
-          "iam:principal_user_id": "{project_member_id}"
+          "iam:user_id": "{project_member_id}"
         }
       }
     }
@@ -352,7 +354,7 @@ pub async fn get_workflow_handler(
         "workflow_id": workflow_id,
         "user_id": ctx.user_id(),
         "tenant_id": ctx.tenant_id(),
-        "roles": ctx.principal_roles
+        "roles": ctx.roles
     });
 
     Ok(Json(response))
@@ -412,6 +414,7 @@ pub async fn sensitive_operation_handler(
 #### 核心理念
 
 **混合架构权限控制**：
+
 - 普通用户使用简化的策略格式，自动处理租户隔离
 - 平台管理员支持灵活的跨租户访问权限配置
 - 所有权限配置通过 jieyuan 管理后台的 IAM Resource Mapping 进行
@@ -419,9 +422,10 @@ pub async fn sensitive_operation_handler(
 #### 集成步骤
 
 1. **OAuth 认证集成**
+
 ```rust
 // 文件：hetumind/hetumind-studio/src/endpoint/mod.rs
-use jieyuan::oauth::OAuthSvc;
+use jieyuan_server::oauth::OAuthSvc;
 
 pub async fn init_web(app: Application) -> Result<(), DataError> {
     let oauth_svc = OAuthSvc::new(app.jieyuan_config()?);
@@ -443,6 +447,7 @@ pub async fn init_web(app: Application) -> Result<(), DataError> {
 ```
 
 2. **混合架构权限中间件**
+
 ```rust
 // 文件：jieyuan/jieyuan-core/src/web/middleware/mixed_authz.rs
 use axum::{extract::Request, middleware::Next, response::Response};
@@ -458,22 +463,22 @@ pub async fn mixed_authz_middleware(
     let path_code = extract_path_code(&req);
     let request_ip = extract_client_ip(&req);
     let extras = extract_request_extras(&req);
-    
+
     // 2) 调用 jieyuan 权限检查
     let authz_response = app.jieyuan_client()
         .authorize(auth_header, AuthorizeRequest::new(path_code)
             .with_request_ip(request_ip)
             .with_extras(extras))
         .await?;
-    
+
     // 3) 增强用户上下文（平台管理员特殊处理）
     let enhanced_ctx = enhance_context_for_platform_admin(authz_response.ctx, &req).await?;
-    
+
     // 4) 注入增强的上下文和租户过滤器
     req.extensions_mut().insert(enhanced_ctx.clone());
     req.extensions_mut().insert(TenantFilter::new(enhanced_ctx.clone()));
     req.extensions_mut().insert(TenantAccessValidator::new(enhanced_ctx.clone()));
-    
+
     Ok(next.run(req).await)
 }
 ```
@@ -482,14 +487,14 @@ pub async fn mixed_authz_middleware(
 
 #### 普通用户 vs 平台管理员
 
-| 方面 | 普通用户 | 平台管理员 |
-| --- | --- | --- |
-| **策略格式** | 简化（无 tenant_id） | 支持租户访问条件 |
-| **租户隔离** | 自动，仅当前租户 | 可配置（当前/全部/特定） |
-| **跨租户访问** | 不支持 | 支持 |
-| **权限管理** | 基础角色权限 | 高级权限和特权 |
-| **开发复杂度** | 简单 | 中等 |
-| **配置方式** | 策略驱动 | 配置 + 策略驱动 |
+| 方面           | 普通用户             | 平台管理员               |
+| -------------- | -------------------- | ------------------------ |
+| **策略格式**   | 简化（无 tenant_id） | 支持租户访问条件         |
+| **租户隔离**   | 自动，仅当前租户     | 可配置（当前/全部/特定） |
+| **跨租户访问** | 不支持               | 支持                     |
+| **权限管理**   | 基础角色权限         | 高级权限和特权           |
+| **开发复杂度** | 简单                 | 中等                     |
+| **配置方式**   | 策略驱动             | 配置 + 策略驱动          |
 
 ## 技术实现参考
 
@@ -546,11 +551,11 @@ pub async fn mixed_authz_middleware(
 
 ### 集成方案选择
 
-| 需求场景 | 推荐方案 | 特点 |
-|---------|---------|------|
-| 新项目 | **IAM Resource Mapping 方案** | 零配置、极简开发、集中管理 |
-| 复杂权限需求 | 混合方案 | 基础权限用路径映射，特殊权限用直接模板 |
-| 需要 OAuth 集成 | **OAuth + IAM Resource Mapping** | 完整认证授权解决方案 |
+| 需求场景        | 推荐方案                         | 特点                                   |
+| --------------- | -------------------------------- | -------------------------------------- |
+| 新项目          | **IAM Resource Mapping 方案**    | 零配置、极简开发、集中管理             |
+| 复杂权限需求    | 混合方案                         | 基础权限用路径映射，特殊权限用直接模板 |
+| 需要 OAuth 集成 | **OAuth + IAM Resource Mapping** | 完整认证授权解决方案                   |
 
 ---
 
@@ -559,11 +564,13 @@ pub async fn mixed_authz_middleware(
 ### 1. 智能化权限管理
 
 #### 自适应权限配置
+
 - **AI 辅助配置**: 基于业务模式自动推荐权限策略
 - **权限使用分析**: 分析权限使用模式，优化策略配置
 - **异常检测**: 自动识别异常权限使用行为
 
 #### 权限可视化
+
 - **权限图谱**: 可视化展示权限关系和依赖
 - **影响分析**: 权限变更的影响范围分析
 - **合规检查**: 自动化的权限合规性检查
@@ -571,11 +578,13 @@ pub async fn mixed_authz_middleware(
 ### 2. 生态系统扩展
 
 #### 多租户增强
+
 - **租户隔离优化**: 更细粒度的租户资源隔离
 - **跨租户权限**: 安全的跨租户权限协作机制
 - **租户模板**: 标准化的租户权限配置模板
 
 #### 第三方集成
+
 - **OAuth Provider 集成**: 支持更多第三方 OAuth 提供商
 - **LDAP/AD 集成**: 企业目录服务集成
 - **SAML 支持**: 企业级单点登录支持
@@ -583,11 +592,13 @@ pub async fn mixed_authz_middleware(
 ### 3. 开发体验提升
 
 #### 低代码平台支持
+
 - **可视化工作流**: 拖拽式权限配置工作流
 - **模板市场**: 权限配置模板共享市场
 - **快速部署**: 一键式权限环境部署
 
 #### API 生态
+
 - **GraphQL 支持**: GraphQL 权限查询接口
 - **Webhook 事件**: 权限变更的 Webhook 通知
 - **开放 API**: 更丰富的权限管理 API
@@ -595,11 +606,13 @@ pub async fn mixed_authz_middleware(
 ### 4. 性能与可靠性
 
 #### 高可用架构
+
 - **多活部署**: 权限服务多活部署支持
 - **故障恢复**: 自动故障检测和恢复机制
 - **降级策略**: 服务降级时的权限保护机制
 
 #### 性能监控
+
 - **实时监控**: 权限检查性能实时监控
 - **性能调优**: 基于监控数据的自动性能调优
 - **容量规划**: 基于使用模式的容量预测
@@ -607,11 +620,13 @@ pub async fn mixed_authz_middleware(
 ### 5. 安全合规
 
 #### 隐私保护
+
 - **数据脱敏**: 敏感权限数据的脱敏处理
 - **隐私计算**: 支持隐私计算的权限验证
 - **数据最小化**: 权限数据的最小化收集和使用
 
 #### 审计与合规
+
 - **实时审计**: 权限操作的实时审计日志
 - **合规报告**: 自动化的合规性报告生成
 - **取证支持**: 安全事件的数字取证支持

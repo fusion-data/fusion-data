@@ -68,7 +68,7 @@ cargo run --bin hetumind-studio
 cargo run --bin hetumind-cli
 
 # jieyuan access control
-cargo run --bin jieyuan
+cargo run --bin jieyuan-server
 
 # Development tools
 cargo run --bin <binary-name> -- --help          # Show help for any binary
@@ -315,6 +315,7 @@ The platform implements a robust multi-tenant architecture to ensure data isolat
   - These tables store tenant-owned data and require strict isolation
 
 - **Secondary/Dimension Tables (No tenant_id required)**: Supporting tables that store execution data, logs, or system-wide metadata
+
   - `sched_task_instance`, `sched_agent` (execution instances and runtime components)
   - `execution_data`, `execution_annotation` (execution metadata and logs)
   - `migrations`, `settings` (system configuration tables)
@@ -609,6 +610,7 @@ let lookup_result = mapping_svc.lookup_by_path(&lookup_request).await?;
 **Integration Approaches**:
 
 1. **Modular Access Control (Recommended for all projects)**:
+
    - Distributed functionality across specialized modules
    - Core authentication in `access_control` module
    - OAuth functionality in dedicated `oauth` module
@@ -704,16 +706,19 @@ pub struct WorkflowSvc {
 Follow these naming conventions for all database objects to ensure consistency across the platform:
 
 **Constraints Naming**:
+
 - **Primary Key**: `{table_name}_pk` (e.g., `iam_user_pk`, `iam_namespace_pk`)
 - **Foreign Key**: `{table_name}_fk_{column_name}` (e.g., `iam_user_fk_tenant_id`, `iam_namespace_fk_created_by`)
 
 **Indexes Naming**:
+
 - **Single Column Index**: `{table_name}_idx_{column_name}` (e.g., `iam_user_idx_email`, `iam_namespace_idx_tenant_id`)
 - **Foreign Key Index**: `{table_name}_idx_{foreign_key_column_name}` (e.g., `iam_user_idx_created_by`, `iam_namespace_fk_updated_by`)
 - **Composite Index**: `{table_name}_idx_{column1}_{column2}` (e.g., `iam_user_idx_tenant_status`, `iam_namespace_idx_tenant_name`)
 - **Unique Index**: `{table_name}_uidx_{column_name}` (e.g., `iam_user_uidx_email`, `iam_tenant_user_uidx_user_tenant`)
 
 **Example Implementation**:
+
 ```sql
 -- Table with proper naming conventions
 CREATE TABLE iam_namespace (
@@ -722,7 +727,7 @@ CREATE TABLE iam_namespace (
   name VARCHAR(255) NOT NULL,
   created_by BIGINT NOT NULL,
   -- ... other columns
-  
+
   -- Constraints
   CONSTRAINT iam_namespace_pk PRIMARY KEY (id),
   CONSTRAINT iam_namespace_fk_tenant FOREIGN KEY (tenant_id) REFERENCES iam_tenant(id),
@@ -783,6 +788,7 @@ impl UserBmc {
 **IAM Integration Approaches**:
 
 1. **IAM Resource Mapping (Recommended approach)**:
+
    - Zero configuration permission control through path pattern matching
    - Centralized path mapping management via jieyuan admin interface
    - Simplified development experience with automatic parameter extraction
@@ -811,6 +817,7 @@ cargo clippy --workspace --all-targets --all-features --no-deps -- -D warnings
 **Performance-First Approach**: The platform prioritizes performance by using `ahash` instead of standard library hash collections.
 
 **Why ahash?**:
+
 - **2-3x faster** than `std::collections::HashMap` for typical workloads
 - **Better hash distribution** reducing collisions
 - **Memory efficient** with optimized layouts
@@ -831,12 +838,14 @@ let mut source_ports: HashSet<&ConnectionKind> = HashSet::default();
 ```
 
 **Performance Benefits**:
+
 - Faster data processing in workflow engines
 - Improved cache hit rates in resource management
 - Reduced latency in API request handling
 - Better throughput in concurrent scenarios
 
 **Migration Completed**: All platform modules have been migrated to ahash:
+
 - `jieyuan`: Authentication and authorization services
 - `hetumind-core`: Core workflow execution engine
 - `hetumind-studio`: Web interface and management tools

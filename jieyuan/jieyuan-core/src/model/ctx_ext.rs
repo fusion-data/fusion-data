@@ -44,7 +44,7 @@ pub trait CtxExt {
 
 impl CtxExt for Ctx {
   fn has_role(&self, role: &str) -> bool {
-    self.payload().get_strings("principal_roles").unwrap_or_default().contains(&role)
+    self.payload().get_strings("roles").unwrap_or_default().contains(&role)
   }
 
   fn is_platform_admin(&self) -> bool {
@@ -105,6 +105,6 @@ impl CtxExt for Ctx {
   }
 
   fn roles(&self) -> Vec<&str> {
-    self.payload().get_strings("principal_roles").unwrap_or_default()
+    self.payload().get_strings("roles").unwrap_or_default()
   }
 }

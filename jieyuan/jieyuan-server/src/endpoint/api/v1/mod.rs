@@ -9,6 +9,7 @@ mod policies;
 mod resource_mappings;
 mod roles;
 mod tenant_users;
+mod tenants;
 mod users;
 
 pub fn routes() -> OpenApiRouter<Application> {
@@ -16,6 +17,7 @@ pub fn routes() -> OpenApiRouter<Application> {
     .nest("/iam", iams::routes())
     .nest("/resource-mappings", resource_mappings::routes())
     .nest("/namespaces", namespaces::routes())
+    .nest("/tenants", tenants::routes())
     .nest("/users", users::routes())
     .nest("/roles", roles::routes())
     .nest("/permissions", permissions::routes())

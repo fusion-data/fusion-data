@@ -2,8 +2,8 @@ use fusion_core::{DataError, application::Application};
 use fusion_db::DbPlugin;
 use fusionsql::filter::OpValInt64;
 
-use jieyuan::{access_control::AuthSvc, user::UserSvc};
 use jieyuan_core::model::{SigninRequest, UserFilter, UserForCreate};
+use jieyuan_server::{access_control::AuthSvc, user::UserSvc};
 
 #[tokio::main]
 async fn main() -> Result<(), DataError> {

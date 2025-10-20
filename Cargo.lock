@@ -3376,7 +3376,35 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4a5f13b858c8d314ee3e8f639011f7ccefe71f97f96e50151fb991f267928e2c"
 
 [[package]]
-name = "jieyuan"
+name = "jieyuan-core"
+version = "0.1.1"
+dependencies = [
+ "axum",
+ "chrono",
+ "fusion-common",
+ "fusion-core",
+ "fusion-web",
+ "fusionsql",
+ "fusionsql-core",
+ "futures",
+ "headers",
+ "http",
+ "log",
+ "reqwest",
+ "sea-query",
+ "semver",
+ "serde",
+ "serde_json",
+ "serde_repr",
+ "sqlx",
+ "strum",
+ "tower-http",
+ "utoipa",
+ "uuid",
+]
+
+[[package]]
+name = "jieyuan-server"
 version = "0.1.1"
 dependencies = [
  "async-stream",
@@ -3423,34 +3451,6 @@ dependencies = [
  "utoipa",
  "utoipa-axum",
  "utoipa-swagger-ui",
- "uuid",
-]
-
-[[package]]
-name = "jieyuan-core"
-version = "0.1.1"
-dependencies = [
- "axum",
- "chrono",
- "fusion-common",
- "fusion-core",
- "fusion-web",
- "fusionsql",
- "fusionsql-core",
- "futures",
- "headers",
- "http",
- "log",
- "reqwest",
- "sea-query",
- "semver",
- "serde",
- "serde_json",
- "serde_repr",
- "sqlx",
- "strum",
- "tower-http",
- "utoipa",
  "uuid",
 ]
 

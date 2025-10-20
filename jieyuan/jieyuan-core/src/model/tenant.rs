@@ -27,7 +27,6 @@ pub struct Tenant {
   pub created_at: DateTime<FixedOffset>,
   pub updated_by: Option<i64>,
   pub updated_at: Option<DateTime<FixedOffset>>,
-  pub logical_deletion: Option<DateTime<FixedOffset>>,
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
@@ -39,7 +38,7 @@ pub struct TenantForCreate {
   pub status: Option<TenantStatus>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Default, Deserialize)]
 #[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct TenantForUpdate {

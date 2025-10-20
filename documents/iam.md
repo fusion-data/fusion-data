@@ -82,7 +82,7 @@ flowchart LR
       "resource": ["iam:user:{tenant_id}:{user_id}"],
       "condition": {
         "string_equals": {
-          "iam:principal_user_id": "{user_id}",
+          "iam:user_id": "{user_id}",
           "iam:tenant_id": "{tenant_id}"
         }
       }
@@ -256,11 +256,13 @@ pub struct PathLookupResponse {
 ### API 端点
 
 **管理端点**：`jieyuan/jieyuan/src/endpoint/api/v1/path_mappings.rs`
+
 - CRUD 操作：`POST /`, `GET /:id`, `PUT /:id`, `DELETE /:id`
 - 批量操作：`POST /batch`
 - 查询：`POST /query`
 
 **基于路径的授权端点**：`jieyuan/jieyuan/src/endpoint/api/v1/iams.rs`
+
 - 授权检查：`POST /authorize`
 
 ### 客户端集成简化
@@ -272,6 +274,7 @@ pub struct PathLookupResponse {
 3. **统一的响应格式**：包含决策结果和上下文信息
 
 **示例请求**：
+
 ```json
 {
   "service": "hetumind",
@@ -282,13 +285,14 @@ pub struct PathLookupResponse {
 ```
 
 **示例响应**：
+
 ```json
 {
   "decision": "allow",
   "ctx": {
     "tenant_id": 42,
     "sub": 1001,
-    "principal_roles": ["tenant_admin", "ops"],
+    "roles": ["tenant_admin", "ops"],
     "is_platform_admin": false,
     "token_seq": 3,
     "method": "get",
@@ -313,20 +317,22 @@ pub struct PathLookupResponse {
 ### 支持的条件键（混合架构）
 
 - **用户身份条件键**：
-  - `iam:principal_user_id`: 用户ID
-  - `iam:principal_roles`: 用户角色列表
+
+  - `iam:user_id`: 用户 ID
+  - `iam:roles`: 用户角色列表
   - `iam:is_platform_admin`: 是否平台管理员
   - `iam:tenant_access_mode`: 租户访问模式（current/all/specific）
-  - `iam:managed_tenant_ids`: 管理的租户ID列表
+  - `iam:managed_tenant_ids`: 管理的租户 ID 列表
 
 - **请求信息条件键**：
-  - `iam:request_ip`: 客户端IP地址
-  - `iam:method`: HTTP方法
+
+  - `iam:request_ip`: 客户端 IP 地址
+  - `iam:method`: HTTP 方法
   - `iam:path`: 请求路径
   - `iam:token_seq`: 令牌序列号
 
 - **时间相关条件键**：
-  - `iam:current_time`: 当前时间（RFC3339格式）
+  - `iam:current_time`: 当前时间（RFC3339 格式）
 
 ### 上下文数据来源
 
@@ -341,8 +347,8 @@ use crate::model::CtxExt;
 fn evaluate_condition(key: &str, ctx: &Ctx) -> serde_json::Value {
     match key {
         "iam:tenant_id" => serde_json::Value::Number(ctx.tenant_id().into()),
-        "iam:principal_user_id" => serde_json::Value::Number(ctx.user_id().into()),
-        "iam:principal_roles" => serde_json::Value::Array(
+        "iam:user_id" => serde_json::Value::Number(ctx.user_id().into()),
+        "iam:roles" => serde_json::Value::Array(
             ctx.roles().iter().map(|r| serde_json::Value::String(r.to_string())).collect()
         ),
         "iam:is_platform_admin" => serde_json::Value::Bool(ctx.is_platform_admin()),
@@ -368,26 +374,24 @@ fn evaluate_condition(key: &str, ctx: &Ctx) -> serde_json::Value {
 use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 
-/// 授权上下文（从 Ctx 构建）
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-    pub tenant_id: i64,
-    pub user_id: i64,
-    pub principal_roles: Vec<String>,
-    pub is_platform_admin: bool,
-    pub token_seq: i32,
-    pub method: String,
-    pub path: String,
-    pub request_ip: Option<String>,
-    pub req_time: DateTime<FixedOffset>,
+/// 授权上下文（从 Ctx 构建） #[derive(Debug, Clone, Serialize, Deserialize)] #[serde(rename_all = "snake_case")]
+pub tenant_id: i64,
+pub user_id: i64,
+pub roles: Vec<String>,
+pub is_platform_admin: bool,
+pub token_seq: i32,
+pub method: String,
+pub path: String,
+pub request_ip: Option<String>,
+pub req_time: DateTime<FixedOffset>,
 }
 
     /// 从 Ctx 构建授权上下文
         Ok(Self {
             tenant_id: ctx.tenant_id(),
             user_id: ctx.user_id(),
-            principal_roles: ctx.payload()
-                .get_strings("principal_roles")
+            roles: ctx.payload()
+                .get_strings("roles")
                 .unwrap_or_default()
                 .into_iter()
                 .map(|s| s.to_string())
@@ -400,10 +404,10 @@ use serde::{Deserialize, Serialize};
             req_time: ctx.now_fixed(time_offset),
         })
     }
+
 }
 
-
-```
+````
 
 ---
 
@@ -418,7 +422,7 @@ flowchart TD
   C -- 是 --> D{权限边界裁剪}
   D --> E{会话策略裁剪}
   E --> F[允许]
-```
+````
 
 - 顺序：
   - 收集候选声明（动作与资源匹配，含通配）→ 条件求值（绑定 `Ctx`）。
@@ -472,7 +476,7 @@ impl PolicySvc {
 
     let roles: Vec<String> = ctx
       .payload()
-      .get_strings("principal_roles")
+      .get_strings("roles")
       .unwrap_or_default()
       .into_iter()
       .map(|s| s.to_string())
@@ -485,25 +489,25 @@ impl PolicySvc {
     let session = self.repo.find_session_policy("current")?;
 
     // 2) 求值：显式拒绝优先
-    if Self::match_any(&policies, ctx, action, resource, DecisionEffect::Deny) { 
-      return Ok(Decision::Deny); 
+    if Self::match_any(&policies, ctx, action, resource, DecisionEffect::Deny) {
+      return Ok(Decision::Deny);
     }
 
     let allowed = Self::match_any(&policies, ctx, action, resource, DecisionEffect::Allow);
-    if !allowed { 
-      return Ok(Decision::Deny); 
+    if !allowed {
+      return Ok(Decision::Deny);
     }
 
     // 3) 边界与会话策略裁剪
-    if let Some(pb) = boundary { 
-      if !Self::match_policy(&pb, ctx, action, resource, DecisionEffect::Allow) { 
-        return Ok(Decision::Deny); 
-      } 
+    if let Some(pb) = boundary {
+      if !Self::match_policy(&pb, ctx, action, resource, DecisionEffect::Allow) {
+        return Ok(Decision::Deny);
+      }
     }
-    if let Some(sp) = session { 
-      if !Self::match_policy(&sp, ctx, action, resource, DecisionEffect::Allow) { 
-        return Ok(Decision::Deny); 
-      } 
+    if let Some(sp) = session {
+      if !Self::match_policy(&sp, ctx, action, resource, DecisionEffect::Allow) {
+        return Ok(Decision::Deny);
+      }
     }
 
     Ok(Decision::Allow)
@@ -516,11 +520,11 @@ impl PolicySvc {
       let service = extracted.get("service").unwrap_or("");
       let path = extracted.get("path").unwrap_or("");
       let method = ctx.payload().get_str("method").unwrap_or("");
-      
+
       // 使用路径映射进行授权
       return self.authorize_by_path(ctx, service, path, method).await;
     }
-    
+
     // 回退到传统授权
     self.authorize(ctx, action, resource).await
   }
@@ -531,7 +535,7 @@ impl PolicySvc {
       let resource = render_resource(&mapping.resource_tpl, ctx, None);
       return self.authorize(ctx, &mapping.action, &resource).await;
     }
-    
+
     // 未找到映射，拒绝访问
     Ok(Decision::Deny)
   }
@@ -573,7 +577,7 @@ impl ResourceSvc {
 
     // 2) 数据库查找
     let mapping = self.bmc.find_by_path_pattern(service, path, method, tenant_id)?;
-    
+
     // 3) 更新缓存
     if let Some(ref m) = mapping {
       self.cache.set(&cache_key, m.clone()).await;
@@ -692,7 +696,7 @@ impl PolicySvc {
 
     let roles: Vec<String> = ctx
       .payload()
-      .get_strings("principal_roles")
+      .get_strings("roles")
       .unwrap_or_default()
       .into_iter()
       .map(|s| s.to_string())
@@ -785,13 +789,9 @@ pub fn routes(policy_svc: PolicySvc) -> Router {
 
 - 中间件从令牌解析 `user_id`、`tenant_id`、`token_seq`、`roles` 等，使用 `Ctx` 并交由 `PolicySvc::authorize`；返回 `WebError` 作为拒绝响应。
 
-
-
-
-
 ### 最小中间件示例：将 DataError 映射为 WebError
 
-```rust
+````rust
 use axum::{http::Request, middleware::Next, response::Response};
 use axum::extract::State;
 use fusion_common::ctx::Ctx;
@@ -847,11 +847,11 @@ pub async fn authz_guard<B>(
   "path": "/api/v1/users/12345/password",
   "request_ip": "203.0.113.3"
 }
-```
+````
 
 - 字段约束与来源说明：
   - `action`（必填，string）：行为名，格式 `{service}:{verb}`，如 `user:update_password`。
-  - `resource_tpl`（必填，string）：资源模板，支持内置占位符（`{tenant_id}`、`{principal_roles}` 等）与路由参数占位符（通过 `extras` 显式注入）。
+  - `resource_tpl`（必填，string）：资源模板，支持内置占位符（`{tenant_id}`、`{roles}` 等）与路由参数占位符（通过 `extras` 显式注入）。
   - `extras`（可选，object<string,string>）：路由参数或业务参数的显式占位符值，如 `{ "user_id": "12345" }`。
   - `method`（可选，string）：HTTP 方法小写（如 `get`、`post`、`put`、`delete`），可参与策略条件匹配。
   - `path`（可选，string）：当前请求路径（如 `/api/v1/users/12345/password`），可参与策略条件匹配。
@@ -870,7 +870,7 @@ pub async fn authz_guard<B>(
       "ctx": {
         "tenant_id": 42,
         "sub": 1001,
-        "principal_roles": ["tenant_admin", "ops"],
+        "roles": ["tenant_admin", "ops"],
         "is_platform_admin": false,
         "token_seq": 3,
         "method": "put",
@@ -895,7 +895,7 @@ pub async fn authz_guard<B>(
         "ctx": {
           "tenant_id": 42,
           "sub": 1001,
-          "principal_roles": ["viewer"],
+          "roles": ["viewer"],
           "is_platform_admin": false,
           "token_seq": 3,
           "method": "put",
@@ -922,7 +922,7 @@ pub async fn authz_guard<B>(
 
 - 字段与类型约束：
   - `decision`：复用 `DecisionEffect`（`allow`/`deny`，`#[serde(rename_all = "snake_case")]`），仅在 200 返回；403 的 `decision` 存于 `err_detail`。
-  - `ctx`：为 Ctx 的 JSON 视图（CtxPayload），字段示例：`tenant_id`（i64）、`sub`（i64）、`principal_roles`（Vec<String>，角色编码）、`is_platform_admin`（bool）、`token_seq`（i32）、`method`（string）、`path`（string）、`request_ip`（string）、`req_time`（RFC3339 + 固定时区）。
+  - `ctx`：为 Ctx 的 JSON 视图（CtxPayload），字段示例：`tenant_id`（i64）、`sub`（i64）、`roles`（Vec<String>，角色编码）、`is_platform_admin`（bool）、`token_seq`（i32）、`method`（string）、`path`（string）、`request_ip`（string）、`req_time`（RFC3339 + 固定时区）。
   - `WebError`：`{ err_code: i32, err_msg: String, err_detail?: Value }`；在 401/403 返回。
 
 ### 客户端集成流程清单
@@ -932,6 +932,7 @@ pub async fn authz_guard<B>(
 **推荐方案：基于路径映射的零配置集成**
 
 1. **简化路由定义**：无需手动配置 `RouteMeta`，直接使用路径映射中间件
+
    ```rust
    // 无需 RouteMeta，使用路径映射中间件
    .route("/workflows/*", workflows_routes())
@@ -939,6 +940,7 @@ pub async fn authz_guard<B>(
    ```
 
 2. **路径映射中间件**：自动提取路径信息并调用 jieyuan 授权
+
    ```rust
    pub async fn path_authz_middleware() -> impl Middleware<Bound> {
        // 1) 提取 service, path, method
@@ -953,6 +955,7 @@ pub async fn authz_guard<B>(
    - 租户隔离配置
 
 **优势**：
+
 - 零代码配置：仅需在 jieyuan 管理后台配置路径映射
 - 自动参数提取：路径参数自动解析并注入到资源模板
 - 统一管理：所有权限配置集中在 jieyuan，便于维护
@@ -968,10 +971,11 @@ pub async fn authz_guard<B>(
 
 - 角色统一使用“字符串编码”（如 `tenant_admin`），客户端不传数值 ID；策略条件中按编码匹配。
 - 资源模板统一 snake_case，占位符来源显式：内置来自 Ctx，路由参数来自 `extras`。
+- 当模板包含 `{namespace_id}` 或 `{project_id}` 等数据维度，占位符渲染需使用严格模式 `render_resource_enhanced`（缺失必须参数直接拒绝），并限制评估/继承在同租户内。
 - 错误分层统一：客户端端点仅用 `WebError` 响应；业务服务内用 `DataError`；数据库访问层用 `SqlError` 并在仓库层转换。
 - 时区与时间：服务端返回 `req_time` 为固定偏移（`FixedOffset`）；客户端按 `AppSetting.time_offset` 对齐使用。
 
-```
+````
 
 ---
 
@@ -987,7 +991,7 @@ evaluation_cache_ttl_secs = 60
 enable_resource_policies = true
 # 是否启用权限边界（默认 false）
 enable_permission_boundary = false
-```
+````
 
 - 对应 Rust 配置结构：
 
@@ -1105,7 +1109,7 @@ pub async fn authorize_by_path(
 
     // 4) 提取路径参数
     let path_params = extract_path_params(&req.path, &mapping.path_pattern);
-    
+
     // 5) 渲染资源模板
     let resource = render_resource(&mapping.resource_tpl, &ac, Some(&path_params));
 
@@ -1122,7 +1126,7 @@ pub async fn authorize_by_path(
                 resource_tpl: mapping.resource_tpl.clone(),
                 extracted_params: path_params,
             };
-            
+
             let response = PathBasedAuthzResponse {
                 decision: "allow".to_string(),
                 ctx: Some(PathAuthzCtxPayload::from_ctx_payload(ctx_payload)),
@@ -1140,6 +1144,8 @@ pub async fn authorize_by_path(
 ```
 
 ### 混合架构资源模板渲染
+
+> 说明：当资源模板涉及 `{namespace_id}` 或 `{project_id}` 等多层级数据维度时，需使用严格模式的 `render_resource_enhanced` 进行渲染；缺失必须参数将返回错误并拒绝评估。单层模板或不含数据维度时可继续使用 `render_resource`。
 
 **实现位置**：`jieyuan/jieyuan-core/src/model/iam_api.rs:181-254`
 
@@ -1169,16 +1175,16 @@ pub fn render_resource(tpl: &str, ctx: &Ctx, extras: Option<&HashMap<String, Str
         .replace("{token_seq}", &ctx.payload().get_i32("token_seq").unwrap_or(0).to_string());
 
     // 角色（拼接为逗号分隔）
-    if s.contains("{principal_roles}") {
+    if s.contains("{roles}") {
         let roles: Vec<String> = ctx
             .payload()
-            .get_strings("principal_roles")
+            .get_strings("roles")
             .unwrap_or_default()
             .into_iter()
             .map(|s| s.to_string())
             .collect();
         let joined = roles.join(",");
-        s = s.replace("{principal_roles}", &joined);
+        s = s.replace("{roles}", &joined);
     }
 
     // 其它自定义占位符（如 role_id/policy_id/resource_id 等）
@@ -1203,7 +1209,7 @@ pub fn render_resource(tpl: &str, ctx: &Ctx, extras: Option<&HashMap<String, Str
   ```json
   {
     "path_code": "workflow_read",
-    "extras": { 
+    "extras": {
       "id": "123e4567-e89b-12d3-a456-426614174000",
       "target_tenant_id": "42"
     },
@@ -1219,7 +1225,7 @@ pub fn render_resource(tpl: &str, ctx: &Ctx, extras: Option<&HashMap<String, Str
     "ctx": {
       "tenant_id": 42,
       "sub": 1001,
-      "principal_roles": ["tenant_admin"],
+      "roles": ["tenant_admin"],
       "is_platform_admin": false,
       "tenant_access_mode": "current",
       "managed_tenant_ids": [],
@@ -1240,10 +1246,11 @@ pub fn render_resource(tpl: &str, ctx: &Ctx, extras: Option<&HashMap<String, Str
   ```
 
 **说明**：
+
 - `path_code`: 路径代码，用于直接查找权限映射
-- `extras.target_tenant_id`: 目标租户ID（可选，用于平台管理员跨租户访问）
+- `extras.target_tenant_id`: 目标租户 ID（可选，用于平台管理员跨租户访问）
 - `ctx.tenant_access_mode`: 租户访问模式（current/all/specific）
-- `ctx.managed_tenant_ids`: 管理的租户ID列表（当模式为specific时）
+- `ctx.managed_tenant_ids`: 管理的租户 ID 列表（当模式为 specific 时）
 
 #### 错误响应
 
@@ -1258,14 +1265,17 @@ pub fn render_resource(tpl: &str, ctx: &Ctx, extras: Option<&HashMap<String, Str
 ### 常见错误
 
 #### **错误**: "authorization failed"
+
 - **原因**: Resource-Path 映射未配置或权限不足
 - **解决**: 检查 jieyuan 管理后台的路径映射配置和用户策略权限
 
 #### **错误**: "missing Authorization header"
+
 - **原因**: 请求缺少授权头
 - **解决**: 确保客户端发送 `Authorization: Bearer <token>` 头
 
 #### **错误**: "policy deny"
+
 - **原因**: 用户权限不足
 - **解决**: 检查 jieyuan 中的策略配置和用户角色
 
@@ -1355,11 +1365,13 @@ enable_permission_boundary = false
 ### 1. 性能优化
 
 #### 缓存策略增强
+
 - **分布式缓存**: 引入 Redis 集群支持策略评估结果缓存
 - **智能缓存失效**: 基于策略变更事件的精确缓存失效机制
 - **预计算缓存**: 预计算常用角色权限组合，减少实时计算开销
 
 #### 数据库优化
+
 - **读写分离**: 策略读取使用只读副本，写入使用主库
 - **索引优化**: 基于实际查询模式优化复合索引
 - **分区策略**: 按租户 ID 进行表分区，提升大规模查询性能
@@ -1367,11 +1379,13 @@ enable_permission_boundary = false
 ### 2. 架构演进
 
 #### 微服务化
+
 - **策略引擎服务**: 独立部署的策略评估微服务
 - **认证网关**: 统一的认证和授权网关服务
 - **配置中心**: 集中化的权限配置和策略管理服务
 
 #### 事件驱动架构
+
 - **权限变更事件**: 策略变更时实时推送通知
 - **审计日志**: 完整的权限操作审计追踪
 - **异步处理**: 非关键权限检查异步化，提升响应速度
@@ -1379,11 +1393,13 @@ enable_permission_boundary = false
 ### 3. 功能扩展
 
 #### 高级权限控制
+
 - **时间基础权限**: 支持时间段限制的权限控制
 - **地理位置权限**: 基于 IP 地理位置的访问控制
 - **动态权限**: 基于业务数据状态的动态权限评估
 
 #### 策略模板化
+
 - **权限模板**: 预定义的常用权限组合模板
 - **策略继承**: 支持策略的继承和覆盖机制
 - **条件扩展**: 更丰富的条件操作符和函数支持
@@ -1391,11 +1407,13 @@ enable_permission_boundary = false
 ### 4. 开发体验优化
 
 #### 管理界面增强
+
 - **可视化策略编辑器**: 拖拽式的权限策略配置界面
 - **权限模拟器**: 模拟用户权限检查，辅助配置验证
 - **批量操作**: 支持批量权限配置和管理
 
 #### 开发工具完善
+
 - **SDK 多语言支持**: 提供 Go、Python、Java 等 SDK
 - **开发插件**: IDE 插件支持权限配置智能提示
 - **调试工具**: 权限检查过程的详细调试信息
@@ -1403,11 +1421,13 @@ enable_permission_boundary = false
 ### 5. 安全增强
 
 #### 零信任架构
+
 - **持续验证**: 每次请求都进行完整的权限验证
 - **最小权限原则**: 动态权限最小化，按需分配
 - **风险评估**: 基于行为分析的权限风险评估
 
 #### 合规性支持
+
 - **GDPR 合规**: 数据访问权限的 GDPR 合规性支持
 - **审计要求**: 满足企业级审计要求的权限日志
 - **数据保护**: 敏感数据的访问控制和加密

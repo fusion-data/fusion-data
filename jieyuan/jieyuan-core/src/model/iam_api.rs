@@ -149,9 +149,9 @@ pub fn render_resource(
   result = result.replace("{token_seq}", &ac.token_seq().to_string());
 
   // 处理角色拼接
-  if result.contains("{principal_roles}") {
+  if result.contains("{roles}") {
     let joined = ac.roles().join(",");
-    result = result.replace("{principal_roles}", &joined);
+    result = result.replace("{roles}", &joined);
   }
 
   // 处理自定义占位符（可选）

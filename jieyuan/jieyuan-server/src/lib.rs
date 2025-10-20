@@ -9,6 +9,7 @@ pub mod oauth;
 pub mod permission;
 pub mod role;
 pub mod start;
+pub mod tenant;
 pub mod tenant_user;
 pub mod user;
 pub mod utils;

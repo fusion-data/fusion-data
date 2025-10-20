@@ -171,7 +171,8 @@ pub struct IamResourceMappingForQuery {
 pub const TABLE_IAM_RESOURCE_MAPPING: &str = "iam_resource_mapping";
 
 /// 资源映射查找请求
-#[derive(Debug, Clone, Serialize, Deserialize, utoipa::ToSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 #[serde(rename_all = "snake_case")]
 pub struct ResourceMappingLookupRequest {
   pub service: String,
@@ -180,7 +181,8 @@ pub struct ResourceMappingLookupRequest {
 }
 
 /// 资源映射查找响应
-#[derive(Debug, Clone, Serialize, Deserialize, utoipa::ToSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 #[serde(rename_all = "snake_case")]
 pub struct ResourceMappingLookupResponse {
   pub action: String,

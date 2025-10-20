@@ -5,7 +5,7 @@
 当前的条件键系统可以扩展以支持更多数据维度：
 
 ```rust
-// 扩展的条件键支持
+// 扩展的条件键支持（本次范围：tenant/namespace/project；保留其他维度键但不设计组织权限）
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum DataPermissionConditionKey {
@@ -15,11 +15,9 @@ pub enum DataPermissionConditionKey {
     PrincipalRoles,
     IsPlatformAdmin,
 
-    // 新增数据权限维度
+    // 新增数据权限维度（组织相关维度本次不设计，不包含 Organization/Department）
     NamespaceId,
     ProjectId,
-    OrganizationId,
-    DepartmentId,
     TeamId,
     RegionId,
     ProductLineId,
@@ -37,7 +35,10 @@ pub enum DataPermissionConditionKey {
 
 2. 增强的授权上下文
 
-扩展 CtxExt trait 以支持多层级数据权限：
+重构 CtxExt trait，将 roles 方法从 trait 移动到 CtxSvc 服务中，以减少 JWT payload 大小，确保：
+
+- 仅在需要时才加载角色信息
+- 角色信息仅包含必要的权限，而不是所有角色
 
 ```rust
 // jieyuan/jieyuan-core/src/model/ctx_ext.rs
@@ -45,17 +46,41 @@ pub trait CtxExt {
     // 现有方法
     fn tenant_id(&self) -> i64;
     fn user_id(&self) -> i64;
-    fn roles(&self) -> &[String];
+}
+```
 
-    // 新增数据权限方法
-    fn namespace_id(&self) -> Option<i64>;
-    fn project_id(&self) -> Option<i64>;
-    fn organization_id(&self) -> Option<i64>;
-    fn department_id(&self) -> Option<i64>;
-    fn accessible_namespaces(&self) -> &[i64];
-    fn accessible_projects(&self) -> &[i64];
-    fn data_permissions(&self) -> &DataPermissions;
-    fn resource_hierarchy(&self) -> &ResourceHierarchy;
+新增 CtxSvc 服务，以支持多层级数据权限
+
+```rust
+pub struct CtxSvc; // 位于 jieyuan-server 应用 crate（不可被其他库引用），用于按需查询扩展维度
+impl CtxSvc {
+    // 从 trait CtxExt 移动到此
+    pub fn roles(&self) -> Vec<String> {
+        todo!("Implement roles retrieval")
+    }
+
+    // 新增数据权限方法（本次范围：tenant/namespace/project）
+    pub fn namespace_id(&self) -> Option<i64> {
+        todo!("Implement namespace_id retrieval")
+    }
+    pub fn project_id(&self) -> Option<i64> {
+        todo!("Implement project_id retrieval")
+    }
+    // 其他维度（team_id/region_id/product_line_id/business_unit_id）由 CtxSvc 基于 user_id, tenant_id + AuthorizeRequest.extras 按需查询；
+    // 组织相关维度（organization/department）本次不设计，不提供接口。
+
+    pub fn accessible_namespaces(&self) -> Vec<i64> {
+        todo!("Implement accessible_namespaces retrieval")
+    }
+    pub fn accessible_projects(&self) -> Vec<i64> {
+        todo!("Implement accessible_projects retrieval")
+    }
+    pub fn data_permissions(&self) -> &DataPermissions {
+        todo!("Implement data_permissions retrieval")
+    }
+    pub fn resource_hierarchy(&self) -> &ResourceHierarchy {
+        todo!("Implement resource_hierarchy retrieval")
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -63,8 +88,48 @@ pub trait CtxExt {
 pub struct DataPermissions {
     pub namespace_access: NamespaceAccess,
     pub project_access: ProjectAccess,
-    pub organization_access: OrganizationAccess,
+    // 本次不设计组织权限，移除 organization_access
     pub custom_permissions: HashMap<String, Vec<String>>,
+}
+
+// 核心新增类型（位于 jieyuan-core，可被其他库引用）
+// jieyuan/jieyuan-core/src/model/iam_types.rs
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ResourceHierarchy {
+    pub tenant_id: i64,
+    pub namespace_id: Option<i64>,
+    pub project_id: Option<i64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ConditionOperator {
+    StringEquals,
+    StringLike,
+    NumericEquals,
+    NumericLessThan,
+    NumericGreaterThan,
+    In,
+    NotIn,
+    BoolEquals,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Condition {
+    pub key: String,
+    pub operator: ConditionOperator,
+    pub value: serde_json::Value,
+    pub scope: Option<String>, // 例如 "tenant" | "namespace" | "project"
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum Effect { Allow, Deny }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Permission {
+    pub effect: Effect,
+    pub action: String,
+    pub resource: String,
+    pub conditions: Vec<Condition>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -103,7 +168,7 @@ pub struct HierarchicalResourceTemplate {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub struct HierarchyLevel {
-    pub level_name: String, // "tenant", "namespace", "project", "organization"
+    pub level_name: String, // "tenant", "namespace", "project"
     pub condition_key: String, // "iam:namespace_id", "iam:project_id"
     pub is_required: bool,
     pub default_value: Option<String>,
@@ -137,6 +202,14 @@ let template = HierarchicalResourceTemplate {
         "iam:hetumind:{tenant_id}:workflow/{id}".to_string(),
     ],
 };
+
+// 标准资源标识语法（参考 iam.md）
+// - 规范格式（策略配置用）：iam:{service}:{tenant_id}[:{namespace_id}][:{project_id}]:{type}/{id}
+// - 简化格式（API端使用）：iam:{service}:{type}/{id} 由运行时注入 tenant_id（以及必要层级参数）
+// - 规则：
+//   * 若出现 {project_id}，必须同时出现 {namespace_id}
+//   * 缺失必须参数时拒绝，不得使用默认值占位（如 0）
+//   * 仅允许同租户内评估与继承
 ```
 
 4. 增强的策略评估引擎
@@ -144,7 +217,7 @@ let template = HierarchicalResourceTemplate {
 扩展策略评估以支持多层级数据权限：
 
 ```rust
-// jieyuan/jieyuan/src/access_control/enhanced_policy_engine.rs
+// jieyuan/jieyuan-server/src/access_control/enhanced_policy_engine.rs
 #[derive(Clone)]
 pub struct EnhancedPolicyEngine {
     base_engine: PolicyEngine,
@@ -160,17 +233,14 @@ impl EnhancedPolicyEngine {
         resource: &str,
         data_context: &DataContext,
     ) -> Result<Decision> {
-        // 1. 基础策略评估
+        // 1. 基础策略评估（显式 Deny 优先）
         let base_decision = self.base_engine.evaluate(ctx, action, resource).await?;
-
-        if base_decision == Decision::Deny {
-            return Ok(Decision::Deny);
-        }
+        if base_decision == Decision::Deny { return Ok(Decision::Deny); }
 
         // 2. 数据权限评估
         let data_decision = self.evaluate_data_permissions(ctx, resource, data_context).await?;
 
-        // 3. 层级权限评估
+        // 3. 层级权限评估（同租户内的垂直层级）
         let hierarchy_decision = self.evaluate_hierarchy_permissions(ctx, resource, data_context).await?;
 
         // 4. 综合决策
@@ -186,22 +256,18 @@ impl EnhancedPolicyEngine {
         // 解析资源中的数据维度
         let resource_dims = self.parse_resource_dimensions(resource)?;
 
-        // 检查namespace权限
+        // 检查 namespace 权限
         if let Some(resource_namespace) = resource_dims.namespace_id {
             if !self.has_namespace_access(ctx, resource_namespace, data_context)? {
                 return Ok(Decision::Deny);
             }
         }
-
-        // 检查project权限
+        // 检查 project 权限
         if let Some(resource_project) = resource_dims.project_id {
             if !self.has_project_access(ctx, resource_project, data_context)? {
                 return Ok(Decision::Deny);
             }
         }
-
-        // 检查其他数据维度...
-
         Ok(Decision::Allow)
     }
 }
@@ -210,17 +276,24 @@ impl EnhancedPolicyEngine {
 pub struct DataContext {
     pub namespace_id: Option<i64>,
     pub project_id: Option<i64>,
-    pub organization_id: Option<i64>,
     pub custom_attributes: HashMap<String, String>,
 }
 ```
+
+规则说明（策略求值的综合规则与显式 Deny 优先级）
+
+- 评估时即时解析（不做预解析/缓存/入库）：校验资源标识语法，并使用 `render_resource_enhanced` 渲染占位符；若检测到所需参数缺失（如 `{namespace_id}`、`{project_id}`）立即返回错误并拒绝。所有策略均在评估时从策略配置文件加载与解析，不生成持久化表示。
+- 显式 `deny` 优先：任一匹配声明命中 `deny` 即短路拒绝，后续不再评估。
+- `allow` 后裁剪：命中 `allow` 后仍需通过权限边界与会话策略裁剪，越界则拒绝。
+- 条件求值：绑定 `Ctx` 与必要的 `DataContext`，缺失必须参数直接拒绝，且不使用默认 ID。
+- 合并顺序：基础策略 → 数据权限 → 层级权限。每一步都应用显式 `deny` 优先规则并进行裁剪。
 
 5. 权限继承和传播机制
 
 实现权限的层级继承：
 
 ```rust
-// jieyuan/jieyuan/src/access_control/permission_inheritance.rs
+// jieyuan/jieyuan-server/src/access_control/permission_inheritance.rs
 #[derive(Debug, Clone)]
 pub struct PermissionInheritanceEngine {
     inheritance_rules: Vec<InheritanceRule>,
@@ -228,10 +301,10 @@ pub struct PermissionInheritanceEngine {
 
 #[derive(Debug, Clone)]
 pub struct InheritanceRule {
-    pub from_level: String, // "organization" -> "department" -> "team"
+    pub from_level: String, // "tenant" -> "namespace" -> "project"
     pub to_level: String,
     pub inheritance_type: InheritanceType,
-    pub conditions: Vec<Condition>,
+    pub conditions: Vec<Condition>, // 不允许跨租户或跨平级传播
 }
 
 #[derive(Debug, Clone)]
@@ -273,18 +346,22 @@ pub async fn create_workflow(
     workflow_svc: WorkflowSvc,
     Json(req): Json<CreateWorkflowRequest>,
 ) -> WebResult<Workflow> {
-    // 设置数据上下文
+    // 必须提供 namespace_id，缺失即拒绝
+    let Some(namespace_id) = req.namespace_id else {
+        return Err(WebError::forbidden("missing namespace_id"));
+    };
+
+    // 设置数据上下文（不包含组织维度）
     let data_context = DataContext {
-        namespace_id: req.namespace_id,
+        namespace_id: Some(namespace_id),
         project_id: None,
-        organization_id: ctx.organization_id(),
         custom_attributes: HashMap::new(),
     };
 
     // 使用增强的策略引擎评估权限
     let resource = format!("iam:hetuflow:{}:{}:workflow",
         ctx.tenant_id(),
-        req.namespace_id.unwrap_or(0)
+        namespace_id
     );
 
     let decision = enhanced_policy_engine
@@ -310,18 +387,23 @@ pub async fn get_project_agents(
     agent_svc: AgentSvc,
     Path(project_id): Path<ProjectId>,
 ) -> WebResult<Vec<Agent>> {
-    // 构建层级化资源模板
-    let resource = format!("iam:hetumind:{}:{}:{}/agent",
+    // 必须提供 namespace_id（同域约束），缺失即拒绝
+    let namespace_id = match ctx.namespace_id() {
+        Some(ns) => ns,
+        None => return Err(WebError::forbidden("missing namespace_id")),
+    };
+
+    // 构建层级化资源模板（tenant -> namespace -> project）
+    let resource = format!("iam:hetumind:{}:{}:{}:agent",
         ctx.tenant_id(),
-        ctx.namespace_id().unwrap_or(0),
+        namespace_id,
         project_id
     );
 
-    // 检查项目访问权限
+    // 检查项目访问权限（不包含组织维度）
     let data_context = DataContext {
-        namespace_id: ctx.namespace_id(),
+        namespace_id: Some(namespace_id),
         project_id: Some(project_id),
-        organization_id: ctx.organization_id(),
         custom_attributes: HashMap::new(),
     };
 
@@ -356,21 +438,23 @@ pub async fn get_project_agents(
           "iam:namespace_access_level": "admin"
         },
         "numeric_equals": {
-          "iam:namespace_id": "{ctx_namespace_id}"
+          "iam:tenant_id": "{ctx.tenant_id}",
+          "iam:namespace_id": "{ctx.namespace_id}"
         }
       }
     },
     {
-      "sid": "project_limited_access",
+      "sid": "namespace_limited_access",
       "effect": "allow",
       "action": ["hetuflow:read", "hetuflow:execute"],
-      "resource": ["iam:hetuflow:{tenant_id}:{namespace_id}:{project_id}:*"],
+      "resource": ["iam:hetuflow:{tenant_id}:{namespace_id}:*/**"],
       "condition": {
         "string_equals": {
-          "iam:project_access_level": ["member", "admin"]
+          "iam:namespace_access_level": "member"
         },
         "numeric_equals": {
-          "iam:project_id": "{ctx_project_id}"
+          "iam:tenant_id": "{ctx.tenant_id}",
+          "iam:namespace_id": "{ctx.namespace_id}"
         }
       }
     }
@@ -385,54 +469,67 @@ pub async fn get_project_agents(
 阶段一：扩展条件键系统
 
 ```rust
-// 在现有条件键基础上扩展
+// 在现有条件键基础上扩展（本次范围不含组织维度）
 // jieyuan/jieyuan-core/src/model/condition_keys.rs
 pub const DATA_PERMISSION_CONDITION_KEYS: &[&str] = &[
     // 现有条件键
     "iam:tenant_id",
-    "iam:principal_user_id",
-    "iam:principal_roles",
+    "iam:user_id",
+    "iam:roles",
     "iam:is_platform_admin",
 
-    // 新增数据权限条件键
+    // 数据权限条件键（namespace/project）
     "iam:namespace_id",
     "iam:project_id",
-    "iam:organization_id",
-    "iam:department_id",
     "iam:accessible_namespaces",
     "iam:accessible_projects",
-    "iam:data_permission_level",
+    "iam:namespace_access_level",
+    "iam:project_access_level",
     "iam:resource_hierarchy",
 ];
+
+// 说明：本次采用独立的 access_level 键（namespace/project），避免 scope 叠加的歧义；
+// 若未来统一为 "iam:access_level"，需引入规范化 scope 标识并调整条件求值器的键解析。
 ```
+
+选择说明（access_level 设计）
+
+- 使用独立键 `iam:namespace_access_level` 与 `iam:project_access_level`，使条件更直观、解析更稳定。
+- 若统一为单键 `iam:access_level`，必须同时携带明确的 `scope`（如 `namespace`/`project`），并在条件解析层做键拆分与规范校验，避免跨域误匹配。
+- 当前版本采用独立键，未来如确需统一，可在不破坏兼容的前提下增加解析映射层。
 
 阶段二：增强资源模板渲染
 
 ```rust
-// 扩展现有的 render_resource 函数
+// 扩展现有的 render_resource 函数（严格模式：缺失必须参数直接拒绝）
 // jieyuan/jieyuan-core/src/model/iam_api.rs
 pub fn render_resource_enhanced(
     tpl: &str,
     ctx: &Ctx,
     extras: Option<&HashMap<String, String>>,
     data_context: Option<&DataContext>
-) -> String {
+) -> Result<String, RenderError> {
     let mut s = tpl.to_string();
 
     // 现有占位符替换
     s = render_base_placeholders(&s, ctx, extras);
 
-    // 新增数据权限占位符
+    // 新增数据权限占位符（不允许使用 unwrap_or(0) 作为缺省）
     if let Some(dc) = data_context {
-        s = s.replace("{namespace_id}", &dc.namespace_id.unwrap_or(0).to_string());
-        s = s.replace("{project_id}", &dc.project_id.unwrap_or(0).to_string());
-        s = s.replace("{organization_id}", &dc.organization_id.unwrap_or(0).to_string());
+        if s.contains("{namespace_id}") && dc.namespace_id.is_none() {
+            return Err(RenderError::missing_param("namespace_id"));
+        }
+        if s.contains("{project_id}") && dc.project_id.is_none() {
+            return Err(RenderError::missing_param("project_id"));
+        }
+        if let Some(ns) = dc.namespace_id { s = s.replace("{namespace_id}", &ns.to_string()); }
+        if let Some(pid) = dc.project_id { s = s.replace("{project_id}", &pid.to_string()); }
     }
 
     // 智能层级注入
     s = inject_hierarchy_context(&s, ctx, data_context);
 
-    s
+    Ok(s)
 }
 
 fn inject_hierarchy_context(
@@ -441,8 +538,7 @@ fn inject_hierarchy_context(
     data_context: Option<&DataContext>
 ) -> String {
     // 根据模板的复杂程度自动注入适当的层级上下文
-    if template.contains("{namespace_id}") &&
-        template.contains("{project_id}") {
+    if template.contains("{namespace_id}") && template.contains("{project_id}") {
         // 完整层级：iam:service:tenant:namespace:project:resource
         template.to_string()
     } else if template.contains("{namespace_id}") {
@@ -463,7 +559,7 @@ CREATE TABLE iam_user_data_permissions (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL,
     tenant_id BIGINT NOT NULL,
-    permission_type VARCHAR(50) NOT NULL, -- 'namespace', 'project', 'organization'
+    permission_type VARCHAR(50) NOT NULL, -- 'namespace', 'project'
     resource_id BIGINT NOT NULL,
     access_level VARCHAR(50) NOT NULL, -- 'admin', 'member', 'guest', 'viewer'
     granted_by BIGINT NOT NULL,
@@ -483,11 +579,41 @@ CREATE INDEX idx_user_data_permissions_resource ON iam_user_data_permissions(per
 CREATE INDEX idx_user_data_permissions_level ON iam_user_data_permissions(access_level);
 CREATE INDEX idx_user_data_permissions_expires ON iam_user_data_permissions(expires_at);
 
+-- 条件规范化与索引设计建议（新增）
+-- 1) 统一条件结构：在策略语句中使用规范化条件结构，便于校验与检索
+--    conditions: [
+--      { key: "iam:namespace_id", operator: "string_equals", value: "123" },
+--      { key: "iam:namespace_access_level", operator: "in", value: ["admin", "member"] }
+--    ]
+-- 2) JSON Schema 校验：在导入/保存策略时执行 schema 验证，拒绝不合法条件
+-- 3) 索引策略：
+--    - 为常用键（principal_user_id/namespace_id/project_id/access_level）建立映射表做二级索引
+--    - 同时对原始 JSONB 使用 GIN 索引以支持快速存在性检查
+-- 4) 迁移建议：初版实现可仅使用 JSONB + GIN；当策略量增大或查询变复杂，再引入映射表
+
+-- 示例：策略条件二级映射表（可选，后续按需启用）
+CREATE TABLE iam_policy_condition_index (
+    id BIGSERIAL PRIMARY KEY,
+    policy_id BIGINT NOT NULL,
+    statement_id BIGINT NOT NULL,
+    key TEXT NOT NULL,
+    operator TEXT NOT NULL,
+    value_text TEXT,
+    value_numeric BIGINT,
+    value_json JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+CREATE INDEX idx_condition_index_policy ON iam_policy_condition_index (policy_id);
+CREATE INDEX idx_condition_index_key_op ON iam_policy_condition_index (key, operator);
+CREATE INDEX idx_condition_index_value_text ON iam_policy_condition_index (value_text);
+CREATE INDEX idx_condition_index_value_numeric ON iam_policy_condition_index (value_numeric);
+CREATE INDEX idx_condition_index_value_json_gin ON iam_policy_condition_index USING GIN (value_json);
+
 -- 权限继承规则表
 CREATE TABLE iam_permission_inheritance_rules (
     id BIGSERIAL PRIMARY KEY,
     tenant_id BIGINT NOT NULL,
-    parent_type VARCHAR(50) NOT NULL, -- 'organization', 'namespace', 'project'
+    parent_type VARCHAR(50) NOT NULL, -- 'tenant', 'namespace', 'project'
     child_type VARCHAR(50) NOT NULL,  -- 'namespace', 'project', 'workflow'
     inheritance_type VARCHAR(50) NOT NULL, -- 'full', 'filtered', 'aggregated'
     conditions JSONB,
@@ -500,19 +626,18 @@ CREATE TABLE iam_permission_inheritance_rules (
 
 3. 性能优化策略
 
-缓存层级权限
+缓存层级权限（未来计划，当前阶段不实现）
 
 ```rust
-// jieyuan/jieyuan/src/access_control/permission_cache.rs
+// jieyuan/jieyuan-server/src/access_control/permission_cache.rs
 #[derive(Clone)]
 pub struct HierarchicalPermissionCache {
-    // 多层缓存设计
+    // 多层缓存设计（未来计划：当前不实现缓存/入库，仅保留设计草案）
     user_permissions_cache: Arc<DashMap<String, CachedPermissions>>,
     namespace_hierarchy_cache: Arc<DashMap<i64, CachedHierarchy>>,
     project_permissions_cache: Arc<DashMap<i64, CachedProjectPermissions>>,
 
-    // 缓存配置
-    cache_ttl: Duration,
+    // 容量控制（可选）
     max_cache_size: usize,
 }
 
@@ -520,7 +645,6 @@ pub struct HierarchicalPermissionCache {
 pub struct CachedPermissions {
     pub permissions: Vec<Permission>,
     pub hierarchy_path: Vec<String>,
-    pub expires_at: Instant,
     pub access_levels: HashMap<String, Vec<String>>,
 }
 
@@ -528,25 +652,17 @@ impl HierarchicalPermissionCache {
     pub async fn get_user_permissions(&self, ctx: &Ctx) -> Result<CachedPermissions> {
         let cache_key = format!("user:{}:tenant:{}", ctx.user_id(), ctx.tenant_id());
 
-        // 检查缓存
-        if let Some(cached) = self.user_permissions_cache.get(&cache_key) {
-            if cached.expires_at > Instant::now() {
-                return Ok(cached.clone());
-            }
-        }
-
-        // 缓存未命中，从数据库加载
+        // 本次不使用 TTL：直接从数据库加载，后续可在 TODO 中引入 TTL/事件广播
         let permissions = self.load_user_permissions_from_db(ctx).await?;
         let hierarchy = self.resolve_user_hierarchy(ctx).await?;
 
         let cached_permissions = CachedPermissions {
             permissions: permissions.clone(),
             hierarchy_path: hierarchy,
-            expires_at: Instant::now() + self.cache_ttl,
             access_levels: self.extract_access_levels(&permissions),
         };
 
-        // 更新缓存
+        // 写入缓存（未来计划，不在当前阶段实现）
         self.user_permissions_cache.insert(cache_key, cached_permissions.clone());
 
         Ok(cached_permissions)
@@ -560,7 +676,7 @@ Hetuflow 集成示例
 
 ```rust
 // hetuflow-server/src/workflow_handler.rs
-use jieyuan::access_control::{EnhancedPolicyEngine, DataContext};
+use jieyuan_server::access_control::{EnhancedPolicyEngine, DataContext};
 
 pub async fn list_workflows(
     ctx: Ctx,
@@ -571,7 +687,6 @@ pub async fn list_workflows(
     let data_context = DataContext {
         namespace_id: params.namespace_id.or(ctx.namespace_id()),
         project_id: params.project_id,
-        organization_id: ctx.organization_id(),
         custom_attributes: HashMap::from([
             ("workflow_type".to_string(), params.workflow_type.clone().unwrap_or_default())
         ]),
@@ -614,23 +729,30 @@ pub async fn create_agent(
     Json(req): Json<CreateAgentRequest>,
 ) -> WebResult<Agent> {
     // 多层级权限验证
+    // 必须提供 project_id 和 namespace_id（同域约束），缺失即拒绝
+    let Some(namespace_id) = req.namespace_id else {
+        return Err(WebError::forbidden("missing namespace_id"));
+    };
+    let Some(project_id) = req.project_id else {
+        return Err(WebError::forbidden("missing project_id"));
+    };
+
     let resource_hierarchies = vec![
         format!("iam:hetumind:{}:{}:{}:agent",
             ctx.tenant_id(),
-            req.namespace_id.unwrap_or(0),
-            req.project_id.unwrap_or(0)
+            namespace_id,
+            project_id
         ),
         format!("iam:hetumind:{}:{}:agent",
             ctx.tenant_id(),
-            req.namespace_id.unwrap_or(0)
+            namespace_id
         ),
         format!("iam:hetumind:{}:agent", ctx.tenant_id())
     ];
 
     let data_context = DataContext {
-        namespace_id: req.namespace_id,
-        project_id: req.project_id,
-        organization_id: ctx.organization_id(),
+        namespace_id: Some(namespace_id),
+        project_id: Some(project_id),
         custom_attributes: HashMap::from([
             ("agent_type".to_string(), req.agent_type.clone())
         ]),
@@ -656,24 +778,24 @@ pub async fn create_agent(
 
 核心增强要点
 
-1. 扩展条件键系统：在现有条件键基础上增加 namespace_id、project_id、organization_id 等数据权限维度
+1. 扩展条件键系统：在现有条件键基础上增加 namespace_id、project_id 等数据权限维度（本次不设计组织/部门维度）
 2. 层级化资源模板：支持多层级资源标识符，如 iam:service:tenant:namespace:project:resource
 3. 权限继承机制：实现自顶向下的权限继承和自底向上的权限聚合
 4. 增强的策略引擎：支持多维度权限评估和层级权限解析
-5. 性能优化：通过多层缓存和智能索引优化权限检查性能
+5. 性能优化（未来计划）：通过多层缓存和智能索引优化权限检查性能；当前阶段禁用缓存与持久化，仅保留设计建议。
 
 实施路径
 
 1. 渐进式扩展：先扩展条件键和资源模板，再增加权限继承功能
 2. 向后兼容：保持现有 API 和策略格式的兼容性
-3. 性能优先：通过缓存和索引优化确保权限检查不成为性能瓶颈
+3. 性能优先（未来计划）：通过缓存和索引优化确保权限检查不成为性能瓶颈；当前阶段不实现缓存与持久化。
 4. 灵活配置：支持动态配置权限层级和继承规则
 
 最佳实践
 
 1. 权限最小化：默认拒绝，明确授权
 2. 层级简化：避免过深的权限层级，建议不超过 3-4 层
-3. 缓存策略：合理设置缓存 TTL，平衡性能和一致性
+3. 缓存策略（未来计划）：合理设置缓存 TTL，平衡性能和一致性；当前阶段不实现缓存与持久化。
 4. 监控审计：记录权限决策过程，便于问题排查和安全审计
 
 这个增强方案在保持现有 IAM 设计优点的基础上，通过扩展条件键、资源模板和策略引擎，实现了对 namespace_id、project_id 等多层级数据权限的支持，同时保持了系统的可扩展性和高性能。

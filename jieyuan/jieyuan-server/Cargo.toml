@@ -1,5 +1,5 @@
 [package]
-name = "jieyuan"
+name = "jieyuan-server"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -9,8 +9,8 @@ repository.workspace = true
 publish = false
 
 [[bin]]
-name = "jieyuan"
-path = "bin/jieyuan.rs"
+name = "jieyuan-server"
+path = "bin/jieyuan-server.rs"
 
 [lints]
 workspace = true

@@ -49,7 +49,7 @@ pub struct PathBasedAuthzResponse {
 pub struct PathAuthzCtxPayload {
   pub tenant_id: i64,
   pub sub: i64,
-  pub principal_roles: Vec<String>,
+  pub roles: Vec<String>,
   pub is_platform_admin: bool,
   pub token_seq: i32,
   pub method: String,

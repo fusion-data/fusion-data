@@ -10,9 +10,6 @@ use jieyuan_core::model::{NamespaceEntity, NamespaceFilter, NamespaceForCreate, 
 pub struct NamespaceBmc;
 impl DbBmc for NamespaceBmc {
   const TABLE: &'static str = TABLE_NAMESPACE;
-  fn _use_logical_deletion() -> bool {
-    false // 不再使用逻辑删除
-  }
 }
 
 // Generate common BMC functions (create, update, get, list, delete, etc.)

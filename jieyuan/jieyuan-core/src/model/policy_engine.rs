@@ -212,8 +212,8 @@ impl PolicyEngine {
   fn resolve_condition_key(key: &str, ctx: &Ctx) -> serde_json::Value {
     match key {
       "iam:tenant_id" => serde_json::Value::Number(ctx.tenant_id().into()),
-      "iam:principal_user_id" => serde_json::Value::Number(ctx.user_id().into()),
-      "iam:principal_roles" => {
+      "iam:user_id" => serde_json::Value::Number(ctx.user_id().into()),
+      "iam:roles" => {
         serde_json::Value::Array(ctx.roles().iter().map(|r| serde_json::Value::String(r.to_string())).collect())
       }
       "iam:is_platform_admin" => serde_json::Value::Bool(ctx.is_platform_admin()),

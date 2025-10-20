@@ -2,7 +2,7 @@
 members = [
   "crates/fusions/*",
   "jieyuan/jieyuan-core",
-  "jieyuan/jieyuan",
+  "jieyuan/jieyuan-server",
   "hetuflow/hetuflow-core",
   "hetuflow/hetuflow-server",
   "hetuflow/hetuflow-agent",
