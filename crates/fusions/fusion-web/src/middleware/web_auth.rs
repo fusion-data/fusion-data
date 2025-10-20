@@ -1,7 +1,8 @@
 use std::sync::Arc;
-use std::time::SystemTime;
 
 use axum::body::Body;
+use fusion_common::time::now_offset;
+use fusion_core::log::get_trace_id;
 use http::request::Parts;
 use http::{Request, header::AUTHORIZATION, header::CONTENT_TYPE};
 use tower_http::auth::{AsyncAuthorizeRequest, AsyncRequireAuthorizationLayer};
@@ -127,8 +128,7 @@ async fn validate_token_remote(url: &str, client: &reqwest::Client, parts: &Part
     let ctx_payload = fusion_common::ctx::CtxPayload::from(response_map);
 
     // Create Ctx from payload
-    let req_time = SystemTime::now();
-    let ctx = Ctx::try_new(ctx_payload, Some(req_time.into()), fusion_core::log::get_trace_id())
+    let ctx = Ctx::try_new(ctx_payload, Some(now_offset()), get_trace_id())
       .map_err(|e| WebError::new_with_code(401, format!("Failed to create context: {}", e)))?;
 
     Ok(ctx)

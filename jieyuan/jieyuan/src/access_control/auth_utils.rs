@@ -1,5 +1,7 @@
-use fusion_common::ctx::CtxPayload;
+use fusion_common::ctx::{Ctx, CtxPayload};
+use fusion_core::application::Application;
 use fusion_core::{DataError, Result, configuration::SecuritySetting, security::SecurityUtils};
+use fusionsql::common::now_offset;
 
 /// 认证工具模块
 ///
@@ -179,9 +181,6 @@ pub async fn extract_ctx_with_token_seq_validation(
   parts: &axum::http::request::Parts,
   mm: &fusionsql::ModelManager,
 ) -> Result<fusion_common::ctx::Ctx> {
-  use fusion_core::application::Application;
-  use std::time::SystemTime;
-
   let app_config = Application::global().fusion_setting();
   let security_config = app_config.security();
 
@@ -215,12 +214,11 @@ pub async fn extract_ctx_with_token_seq_validation(
   validate_token_seq_against_db(user_id, tenant_id, token_seq, mm).await?;
 
   // 创建标准 Ctx
-  let req_time = SystemTime::now();
+  let req_time = now_offset();
   let (payload, _) = SecurityUtils::decrypt_jwt(security_config.pwd(), &token)
     .map_err(|_e| DataError::unauthorized("Failed decode jwt"))?;
 
-  let ctx = fusion_common::ctx::Ctx::try_new(payload, Some(req_time.into()), None)
-    .map_err(|e| DataError::unauthorized(e.to_string()))?;
+  let ctx = Ctx::try_new(payload, Some(req_time), None).map_err(|e| DataError::unauthorized(e.to_string()))?;
 
   Ok(ctx)
 }

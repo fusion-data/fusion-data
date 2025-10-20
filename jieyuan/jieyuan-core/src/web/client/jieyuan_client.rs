@@ -33,11 +33,8 @@ impl JieyuanClient {
   /// 确保授权规则的一致性和统一管理。
   ///
   /// # 参数
-  /// - `token`: 认证令牌
-  /// - `service`: 服务名称（必需，除非使用 mapping_code）
-  /// - `path`: 请求路径（必需，除非使用 mapping_code）
-  /// - `method`: HTTP 方法（必需）
-  /// - `request_ip`: 客户端 IP（可选）
+  /// - `token`: 认证令牌, Bearer 格式
+  /// - `authorize_request`: 认证请求参数
   pub async fn authorize(
     &self,
     token: &str,

@@ -23,7 +23,7 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use fusion_common::ahash::HashMap;
 use fusion_common::ctx::{Ctx, CtxPayload};
-use fusion_common::time::{now, now_utc};
+use fusion_common::time::{now, now_offset};
 use fusion_core::application::Application;
 use hetumind_core::workflow::{
   Connection, ConnectionKind, Execution, ExecutionContext, ExecutionData, ExecutionDataItems, ExecutionDataMap,
@@ -327,7 +327,7 @@ async fn test_integration_workflow() -> Result<(), Box<dyn std::error::Error>> {
   // 4. Create execution context
   let execution_id = ExecutionId::now_v7();
   let workflow_arc = Arc::new(workflow);
-  let ctx = Ctx::try_new(CtxPayload::default(), Some(now_utc()), Some(Uuid::now_v7().to_string()))?;
+  let ctx = Ctx::try_new(CtxPayload::default(), Some(now_offset()), Some(Uuid::now_v7().to_string()))?;
 
   let execution_context = ExecutionContext::new(execution_id.clone(), workflow_arc, ctx);
   println!("✅ Created execution context");
@@ -503,7 +503,7 @@ async fn test_integration_workflow_false_branch() -> Result<(), Box<dyn std::err
 
   let execution_id = ExecutionId::now_v7();
   let workflow_arc = Arc::new(create_integration_workflow()?);
-  let ctx = Ctx::try_new(CtxPayload::default(), Some(now_utc()), Some(Uuid::now_v7().to_string()))?;
+  let ctx = Ctx::try_new(CtxPayload::default(), Some(now_offset()), Some(Uuid::now_v7().to_string()))?;
 
   let execution_context = ExecutionContext::new(execution_id.clone(), workflow_arc, ctx);
 

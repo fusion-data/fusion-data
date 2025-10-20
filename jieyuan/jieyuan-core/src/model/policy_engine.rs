@@ -230,7 +230,7 @@ impl PolicyEngine {
       "iam:path" => serde_json::Value::String(ctx.request_path().to_string()),
       "iam:token_seq" => serde_json::Value::Number(ctx.token_seq().into()),
       // 时间相关的条件键
-      "iam:current_time" => serde_json::Value::String(ctx.req_datetime().to_rfc3339()),
+      "iam:current_time" => serde_json::Value::String(ctx.req_time().to_rfc3339()),
       _ => serde_json::Value::Null,
     }
   }

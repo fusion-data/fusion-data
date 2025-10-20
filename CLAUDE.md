@@ -699,6 +699,43 @@ pub struct WorkflowSvc {
 
 ### Database Development
 
+**Database Naming Conventions**:
+
+Follow these naming conventions for all database objects to ensure consistency across the platform:
+
+**Constraints Naming**:
+- **Primary Key**: `{table_name}_pk` (e.g., `iam_user_pk`, `iam_namespace_pk`)
+- **Foreign Key**: `{table_name}_fk_{column_name}` (e.g., `iam_user_fk_tenant_id`, `iam_namespace_fk_created_by`)
+
+**Indexes Naming**:
+- **Single Column Index**: `{table_name}_idx_{column_name}` (e.g., `iam_user_idx_email`, `iam_namespace_idx_tenant_id`)
+- **Foreign Key Index**: `{table_name}_idx_{foreign_key_column_name}` (e.g., `iam_user_idx_created_by`, `iam_namespace_fk_updated_by`)
+- **Composite Index**: `{table_name}_idx_{column1}_{column2}` (e.g., `iam_user_idx_tenant_status`, `iam_namespace_idx_tenant_name`)
+- **Unique Index**: `{table_name}_uidx_{column_name}` (e.g., `iam_user_uidx_email`, `iam_tenant_user_uidx_user_tenant`)
+
+**Example Implementation**:
+```sql
+-- Table with proper naming conventions
+CREATE TABLE iam_namespace (
+  id BIGSERIAL NOT NULL,
+  tenant_id BIGINT NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  created_by BIGINT NOT NULL,
+  -- ... other columns
+  
+  -- Constraints
+  CONSTRAINT iam_namespace_pk PRIMARY KEY (id),
+  CONSTRAINT iam_namespace_fk_tenant FOREIGN KEY (tenant_id) REFERENCES iam_tenant(id),
+  CONSTRAINT iam_namespace_fk_created_by FOREIGN KEY (created_by) REFERENCES iam_user(id),
+  CONSTRAINT iam_namespace_uk_tenant_name UNIQUE (tenant_id, name)
+);
+
+-- Indexes
+CREATE INDEX iam_namespace_idx_tenant_id ON iam_namespace(tenant_id);
+CREATE INDEX iam_namespace_idx_created_by ON iam_namespace(created_by);
+CREATE UNIQUE INDEX iam_namespace_idx_tenant_name ON iam_namespace(tenant_id, name);
+```
+
 **FusionSQL Best Practices**:
 
 - Use `OpValXxx` types for type-safe filtering
@@ -706,6 +743,8 @@ pub struct WorkflowSvc {
 - Follow pagination patterns with `Page` and `PageResult`
 - Use `Fields` derive macro for automatic mapping
 - Implement proper error handling with `DataError`
+- **Always create indexes for foreign key columns** to optimize JOIN queries and cascade operations
+- **Use partial indexes** for conditional data (e.g., logical deletion: `WHERE logical_deletion IS NOT NULL`)
 
 **BMC Layer Function Patterns**:
 

@@ -1,21 +1,33 @@
+-- Tenant
 insert into
   iam_tenant (id, name, description, status, created_by, created_at)
 values
-  (1, 'platform', 'Platform Super Tenant', 100, 1, now()),
+  (1, 'platform', 'Platform Tenant', 100, 1, now()),
   (2, 'test', 'Test Tenant', 100, 1, now());
 
 alter sequence iam_tenant_id_seq restart
 with
-  3;
+  1024;
 
+-- Namespace
+insert into iam_namespace (id, tenant_id, name, description, status, created_by, created_at)
+values
+  (1, 1, 'default', 'Default Namespace', 100, 1, now()),
+  (2, 2, 'default', 'Default Namespace', 100, 1, now());
+
+alter sequence iam_namespace_id_seq restart
+with
+  1024;
+
+-- User
 insert into
   iam_user (id, email, name, status, gender, created_by, created_at)
 values
-  (1, 'root@jieyuan.com', 'Super Admin', 100, 0, 1, now());
+  (1, 'root@jieyuan.com', 'Platform Super Admin', 100, 0, 1, now());
 
 alter sequence iam_user_id_seq restart
 with
-  2;
+  1024;
 
 insert into
   iam_user_credential (id, encrypted_pwd, created_by, created_at)

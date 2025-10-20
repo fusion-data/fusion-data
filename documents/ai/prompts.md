@@ -40,6 +40,24 @@
 
 ## 示例
 
+### 示例：为 jieyuan 设计 namespace 管理功能。
+
+```markdown
+任务：为 jieyuan 设计 namespace 管理功能。
+
+背景：
+- 当前 tenant 是对租户的隔离
+- 策略配置文件中的 service 是对一系列服务功能集合的限制，而 type 是对单个服务功能的限制
+- 现在需要添加一个跨服务功能的权限（主要是数据权限）配置管理功能，所以设计 namespace 用于实现此功能
+
+需求：
+- namespace 的创建、更新、删除、查询
+- namespace 的权限控制
+- namespace 的资源分配
+- 管理端实现在 jieyuan 项目中
+
+```
+
 ### 示例 1
 
 ```markdown

@@ -4,6 +4,7 @@ mod auth;
 mod ctx_ext;
 pub mod iam_api;
 mod iam_resource_mapping;
+mod namespace;
 mod page;
 pub mod path_authz;
 mod permission;
@@ -23,8 +24,8 @@ pub use auth::*;
 pub use ctx_ext::*;
 pub use iam_api::*;
 pub use iam_resource_mapping::*;
+pub use namespace::*;
 pub use path_authz::*;
-
 pub use permission::*;
 pub use policy::*;
 pub use policy_attachment::*;

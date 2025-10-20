@@ -1,19 +1,19 @@
-use std::time::SystemTime;
-
 use axum::Json;
 use axum::extract::Query;
 use axum::http::StatusCode;
 use axum::http::request::Parts;
-use fusion_common::ctx::Ctx;
-use fusion_common::model::IdI64Result;
-use fusion_core::configuration::SecuritySetting;
-use fusion_core::log::get_trace_id;
-use fusion_core::security::{AccessToken, SecurityUtils};
 use headers::authorization::Bearer;
 use headers::{Authorization, HeaderMapExt};
 use serde::de::DeserializeOwned;
 #[cfg(feature = "with-ulid")]
 use ulid::Ulid;
+
+use fusion_common::ctx::Ctx;
+use fusion_common::model::IdI64Result;
+use fusion_common::time::now_offset;
+use fusion_core::configuration::SecuritySetting;
+use fusion_core::log::get_trace_id;
+use fusion_core::security::{AccessToken, SecurityUtils};
 
 use crate::WebResult;
 use crate::error::WebError;
@@ -52,7 +52,7 @@ pub fn unauthorized_app_error(msg: impl Into<String>) -> (StatusCode, Json<WebEr
 
 /// 从 Http Request Authorization Header 或 access_token query 中获取 [Ctx]
 pub fn extract_ctx(parts: &Parts, sc: &SecuritySetting) -> Result<Ctx, WebError> {
-  let req_time = SystemTime::now();
+  let req_time = now_offset();
 
   let token = if let Some(Authorization(bearer)) = parts.headers.typed_get::<Authorization<Bearer>>() {
     bearer.token().to_string()
@@ -65,8 +65,8 @@ pub fn extract_ctx(parts: &Parts, sc: &SecuritySetting) -> Result<Ctx, WebError>
   let (payload, _) =
     SecurityUtils::decrypt_jwt(sc.pwd(), &token).map_err(|_e| WebError::new_with_code(401, "Failed decode jwt"))?;
 
-  let ctx = Ctx::try_new(payload, Some(req_time.into()), get_trace_id())
-    .map_err(|e| WebError::new_with_code(401, e.to_string()))?;
+  let ctx =
+    Ctx::try_new(payload, Some(req_time), get_trace_id()).map_err(|e| WebError::new_with_code(401, e.to_string()))?;
   Ok(ctx)
 }
 
