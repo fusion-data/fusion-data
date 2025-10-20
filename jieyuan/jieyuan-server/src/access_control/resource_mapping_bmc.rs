@@ -200,24 +200,4 @@ impl ResourceMappingBmc {
 
     Ok(None)
   }
-
-  /// 清除服务的缓存
-  pub async fn clear_service_cache(mm: &ModelManager, service: &str) -> Result<u64, SqlError> {
-    let db = mm
-      .dbx()
-      .db_postgres()
-      .map_err(|e| SqlError::InvalidArgument { message: format!("Database connection error: {}", e) })?;
-
-    let sql = r#"
-      DELETE FROM resource_mapping_cache
-      WHERE cache_key LIKE $1 || ':%'
-    "#;
-
-    let result = db
-      .execute(sqlx::query(sql).bind(format!("{}:%:%", service)))
-      .await
-      .map_err(|e| SqlError::InvalidArgument { message: format!("Query error: {}", e) })?;
-
-    Ok(result)
-  }
 }

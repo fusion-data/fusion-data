@@ -261,14 +261,3 @@ create index iam_resource_mapping_idx_service_path ON iam_resource_mapping(servi
 create index iam_resource_mapping_idx_tenant_id ON iam_resource_mapping(tenant_id);
 create index iam_resource_mapping_idx_created_by ON iam_resource_mapping(created_by);
 
--- Resource Mapping Cache table
-create table resource_mapping_cache (
-    cache_key VARCHAR(255) PRIMARY KEY,
-    service VARCHAR(50) NOT NULL,
-    mapping_response JSONB NOT NULL,
-    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
-create index resource_mapping_cache_idx_expires_at ON resource_mapping_cache(expires_at);
-create index resource_mapping_cache_idx_service ON resource_mapping_cache(service);

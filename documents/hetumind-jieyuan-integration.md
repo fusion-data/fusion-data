@@ -74,7 +74,6 @@ graph LR
 - **统一认证服务**：AuthSvc 集中处理认证逻辑
 - **策略服务**：PolicySvc 处理策略评估和授权
 - **资源映射服务**：ResourceSvc 管理 IAM Resource Mapping
-- **缓存优化**：提高权限检查性能
 
 ## 权限资源命名规范
 

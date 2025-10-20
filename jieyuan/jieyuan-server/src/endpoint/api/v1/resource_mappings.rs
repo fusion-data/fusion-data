@@ -9,7 +9,7 @@ use jieyuan_core::model::{
   IamResourceMappingForUpdate, ResourceMappingLookupRequest, ResourceMappingLookupResponse,
 };
 
-use crate::access_control::{ResourceMappingBmc, ResourceMappingCacheBmc, ResourceMappingSvc};
+use crate::access_control::{ResourceMappingBmc, ResourceMappingSvc};
 
 /// IAM 资源映射管理路由
 pub fn routes() -> OpenApiRouter<Application> {
@@ -22,7 +22,6 @@ pub fn routes() -> OpenApiRouter<Application> {
     .routes(utoipa_axum::routes!(batch_operations))
     .routes(utoipa_axum::routes!(lookup_by_code))
     .routes(utoipa_axum::routes!(lookup_by_path))
-    .routes(utoipa_axum::routes!(cache_operations))
 }
 
 /// 列出 IAM 资源映射
@@ -225,63 +224,3 @@ pub async fn lookup_by_path(
   ok_json!(response)
 }
 
-/// 缓存操作
-#[derive(serde::Deserialize, utoipa::ToSchema)]
-#[serde(rename_all = "snake_case")]
-pub struct CacheOperation {
-  /// 操作类型："clear"（清除）、"cleanup"（清理过期）、"stats"（统计）
-  pub action: String,
-  /// 服务名称（用于清除特定服务的缓存）
-  pub service: Option<String>,
-}
-
-/// 缓存操作
-#[utoipa::path(
-  post,
-  path = "/cache",
-  request_body = CacheOperation,
-  responses(
-    (status = 200, description = "缓存操作成功"),
-    (status = 400, description = "请求参数错误")
-  ),
-  tag = "IAM 资源映射管理"
-)]
-pub async fn cache_operations(
-  mapping_svc: ResourceMappingSvc,
-  Json(request): Json<CacheOperation>,
-) -> WebResult<serde_json::Value> {
-  let mm = mapping_svc.mm().clone();
-
-  match request.action.as_str() {
-    "clear" => {
-      if let Some(service) = request.service {
-        // 清除特定服务的缓存
-        let count = ResourceMappingBmc::clear_service_cache(&mm, &service)
-          .await
-          .map_err(|e| WebError::bad_gateway(e.to_string()))?;
-        ok_json!(serde_json::json!({ "cleared": count, "service": service }))
-      } else {
-        // 清除所有缓存
-        let count = ResourceMappingCacheBmc::clear_by_pattern(&mm, "%")
-          .await
-          .map_err(|e| WebError::bad_gateway(e.to_string()))?;
-        ok_json!(serde_json::json!({ "cleared": count }))
-      }
-    }
-    "cleanup" => {
-      // 清理过期缓存
-      let count = ResourceMappingCacheBmc::cleanup_expired(&mm)
-        .await
-        .map_err(|e| WebError::bad_gateway(e.to_string()))?;
-      ok_json!(serde_json::json!({ "cleaned": count }))
-    }
-    "stats" => {
-      // 获取缓存统计
-      let stats = ResourceMappingCacheBmc::get_cache_stats(&mm)
-        .await
-        .map_err(|e| WebError::bad_gateway(e.to_string()))?;
-      ok_json!(serde_json::json!(stats))
-    }
-    _ => Err(WebError::bad_request("invalid cache operation")),
-  }
-}

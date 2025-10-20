@@ -14,7 +14,6 @@ mod policy_bmc;
 mod policy_repo;
 mod policy_svc;
 mod resource_mapping_bmc;
-mod resource_mapping_cache_bmc;
 mod resource_mapping_svc;
 
 pub use auth_svc::AuthSvc;
@@ -23,5 +22,4 @@ pub use config::IamConfig;
 pub use policy_repo::PolicyRepo;
 pub use policy_svc::PolicySvc;
 pub use resource_mapping_bmc::ResourceMappingBmc;
-pub use resource_mapping_cache_bmc::{CacheStats, ResourceMappingCacheBmc};
 pub use resource_mapping_svc::ResourceMappingSvc;

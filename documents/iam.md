@@ -163,16 +163,6 @@ CREATE INDEX idx_iam_resource_lookup ON iam_resource_mapping(service, method, en
 CREATE INDEX idx_iam_resource_pattern ON iam_resource_mapping(service, path_pattern);
 CREATE INDEX idx_iam_resource_mapping_code ON iam_resource_mapping(mapping_code);
 CREATE INDEX idx_iam_resource_updated_at ON iam_resource_mapping(updated_at);
-
--- 缓存表（提高性能）
-CREATE TABLE resource_mapping_cache (
-    cache_key VARCHAR(255) PRIMARY KEY,
-    service VARCHAR(50) NOT NULL,
-    mapping_response JSONB NOT NULL,
-    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-CREATE INDEX idx_cache_expires_at ON resource_mapping_cache(expires_at);
 ```
 
 ### 数据模型
@@ -1363,12 +1353,6 @@ enable_permission_boundary = false
 ## 未来优化改进方向
 
 ### 1. 性能优化
-
-#### 缓存策略增强
-
-- **分布式缓存**: 引入 Redis 集群支持策略评估结果缓存
-- **智能缓存失效**: 基于策略变更事件的精确缓存失效机制
-- **预计算缓存**: 预计算常用角色权限组合，减少实时计算开销
 
 #### 数据库优化
 

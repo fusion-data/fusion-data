@@ -188,7 +188,6 @@ pub struct ResourceMappingLookupResponse {
   pub action: String,
   pub resource_tpl: String,
   pub mapping_params: HashMap<String, String>,
-  pub cache_ttl: Option<u64>,
 }
 
 /// 解析后的资源映射

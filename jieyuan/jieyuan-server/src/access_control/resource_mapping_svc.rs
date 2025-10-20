@@ -1,5 +1,3 @@
-use std::time::Duration;
-
 use axum::extract::FromRequestParts;
 use fusion_common::ahash::HashMap;
 use fusion_common::page::PageResult;
@@ -10,9 +8,7 @@ use jieyuan_core::model::{
   IamResourceMappingForUpdate, MappingParam, ResourceMappingLookupRequest, ResourceMappingLookupResponse,
 };
 
-use crate::access_control::{
-  resource_mapping_bmc::ResourceMappingBmc, resource_mapping_cache_bmc::ResourceMappingCacheBmc,
-};
+use crate::access_control::resource_mapping_bmc::ResourceMappingBmc;
 
 /// IAM 资源映射服务
 #[derive(Clone)]
@@ -32,15 +28,9 @@ impl ResourceMappingSvc {
 
   /// 根据映射代码查找资源映射
   pub async fn lookup_by_code(&self, mapping_code: &str) -> Result<Option<ResourceMappingLookupResponse>, SqlError> {
-    // 1. 尝试缓存查找
-    let cache_key = format!("code:{}", mapping_code);
-    if let Some(cached) = ResourceMappingCacheBmc::get(&self.mm, &cache_key).await? {
-      return Ok(Some(serde_json::from_value(cached)?));
-    }
-
-    // 2. 数据库查找 - 这里需要在 IamResourceMappingBmc 中实现 find_by_code 方法
+    // 直接从数据库查找 - 不使用缓存
     if let Some(entity) = ResourceMappingBmc::find_by_code(&self.mm, mapping_code).await? {
-      // 3. 从 mapping_code 查找时，没有实际的路径参数提取
+      // 从 mapping_code 查找时，没有实际的路径参数提取
       // 但可以从 entity.mapping_params 字段获取预定义的参数
       // 注意：这里只能获取参数定义，实际值需要从 extras 中提供
       let params = Self::deserialize_mapping_params(&entity)?
@@ -48,25 +38,12 @@ impl ResourceMappingSvc {
         .filter_map(|param| param.default_value.clone().map(|value| (param.name, value)))
         .collect();
 
-      // 4. 构建响应
+      // 构建响应
       let response = ResourceMappingLookupResponse {
         action: entity.action,
         resource_tpl: entity.resource_tpl,
         mapping_params: params,
-        cache_ttl: Some(600), // mapping_code 缓存时间更长，10分钟
       };
-
-      // 5. 缓存结果
-      ResourceMappingCacheBmc::set(
-        &self.mm,
-        &cache_key,
-        &entity.service,
-        "", // mapping_code 查找时没有具体路径
-        "", // mapping_code 查找时没有具体方法
-        &serde_json::to_value(&response).unwrap(),
-        Duration::from_secs(600),
-      )
-      .await?;
 
       Ok(Some(response))
     } else {
@@ -79,36 +56,17 @@ impl ResourceMappingSvc {
     &self,
     req: &ResourceMappingLookupRequest,
   ) -> Result<Option<ResourceMappingLookupResponse>, SqlError> {
-    // 1. 尝试缓存查找
-    let cache_key = format!("{}:{}:{}", req.service, req.method, req.path);
-    if let Some(cached) = ResourceMappingCacheBmc::get(&self.mm, &cache_key).await? {
-      return Ok(Some(serde_json::from_value(cached)?));
-    }
-
-    // 2. 数据库查找
+    // 直接从数据库查找 - 不使用缓存
     if let Some(entity) = ResourceMappingBmc::find_by_path(&self.mm, &req.service, &req.path, &req.method).await? {
-      // 3. 提取路径参数
+      // 提取路径参数
       let params = Self::extract_path_params(&entity.path_pattern, &req.path)?;
 
-      // 4. 构建响应
+      // 构建响应
       let response = ResourceMappingLookupResponse {
         action: entity.action,
         resource_tpl: entity.resource_tpl,
         mapping_params: params,
-        cache_ttl: Some(300), // 缓存5分钟
       };
-
-      // 5. 缓存结果
-      ResourceMappingCacheBmc::set(
-        &self.mm,
-        &cache_key,
-        &req.service,
-        &req.path,
-        &req.method,
-        &serde_json::to_value(&response).unwrap(),
-        Duration::from_secs(300),
-      )
-      .await?;
 
       Ok(Some(response))
     } else {
@@ -168,9 +126,6 @@ impl ResourceMappingSvc {
       id: id.into(),
     })?;
 
-    // 清除相关缓存
-    let _ = ResourceMappingCacheBmc::clear_service_cache(&self.mm, &entity.service).await?;
-
     Ok(entity)
   }
 
@@ -184,7 +139,7 @@ impl ResourceMappingSvc {
     Self::validate_update_request(&request)?;
 
     // 获取现有映射
-    let existing = ResourceMappingBmc::get_by_id(&self.mm, id).await?.ok_or_else(|| SqlError::EntityNotFound {
+    let _existing = ResourceMappingBmc::get_by_id(&self.mm, id).await?.ok_or_else(|| SqlError::EntityNotFound {
       schema: None,
       entity: "iam_resource_mapping",
       id: id.into(),
@@ -200,24 +155,18 @@ impl ResourceMappingSvc {
       id: id.into(),
     })?;
 
-    // 清除相关缓存
-    ResourceMappingCacheBmc::clear_service_cache(&self.mm, &existing.service).await?;
-
     Ok(entity)
   }
 
   /// 删除资源映射
   pub async fn delete_mapping(&self, id: i64) -> Result<(), SqlError> {
-    let existing = ResourceMappingBmc::get_by_id(&self.mm, id).await?.ok_or_else(|| SqlError::EntityNotFound {
+    let _existing = ResourceMappingBmc::get_by_id(&self.mm, id).await?.ok_or_else(|| SqlError::EntityNotFound {
       schema: None,
       entity: "iam_resource_mapping",
       id: id.into(),
     })?;
 
     ResourceMappingBmc::delete_by_id(&self.mm, id).await?;
-
-    // 清除相关缓存
-    ResourceMappingCacheBmc::clear_service_cache(&self.mm, &existing.service).await?;
 
     Ok(())
   }
