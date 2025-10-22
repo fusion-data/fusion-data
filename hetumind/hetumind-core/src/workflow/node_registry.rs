@@ -5,8 +5,8 @@ use std::{
 
 use dashmap::DashMap;
 
-use crate::version::Version;
 use crate::workflow::{Node, NodeDefinition, NodeExecutor, NodeKind, RegistrationError};
+use crate::{version::Version, workflow::NodeSupplier};
 
 pub type NodeRef = Arc<dyn Node + Send + Sync>;
 
@@ -52,6 +52,29 @@ impl InnerNodeRegistry {
   /// - `Option<NodeExecutor>` - The node executor if found, otherwise None
   pub fn get_executor_by_version(&self, node_kind: &NodeKind, version: &Version) -> Option<NodeExecutor> {
     self.nodes.get(node_kind).and_then(|x| x.value().get_node_executor(version))
+  }
+
+  /// Get the node supplier for the given node kind
+  ///
+  /// Args:
+  /// - `node_kind` - The kind of the node to get the supplier for
+  ///
+  /// Returns:
+  /// - `Option<NodeSupplier>` - The node supplier if found, otherwise None
+  pub fn get_supplier(&self, node_kind: &NodeKind) -> Option<NodeSupplier> {
+    self.nodes.get(node_kind).and_then(|x| x.value().default_node_supplier())
+  }
+
+  /// Get the node supplier for the given node kind and version
+  ///
+  /// Args:
+  /// - `node_kind` - The kind of the node to get the supplier for
+  /// - `version` - The version of the node supplier to get
+  ///
+  /// Returns:
+  /// - `Option<NodeSupplier>` - The node supplier if found, otherwise None
+  pub fn get_supplier_by_version(&self, node_kind: &NodeKind, version: &Version) -> Option<NodeSupplier> {
+    self.nodes.get(node_kind).and_then(|x| x.value().get_node_supplier(version))
   }
 
   /// Get the default version of node definition for the given node kind

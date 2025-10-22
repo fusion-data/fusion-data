@@ -169,7 +169,7 @@ impl EngineResult {
   }
 }
 
-/// 引擎请求结构
+/// 引擎请求结构。Root node 向 sub node 发起调用
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EngineRequest<T = HashMap<String, JsonValue>> {
   /// 需要执行的动作列表

@@ -2735,6 +2735,7 @@ dependencies = [
  "imageproc",
  "lettre",
  "log",
+ "mea",
  "mime_guess",
  "once_cell",
  "opendal",

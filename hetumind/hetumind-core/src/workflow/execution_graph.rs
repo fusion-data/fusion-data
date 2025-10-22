@@ -1,5 +1,7 @@
 use fusion_common::ahash::HashMap;
 
+use crate::workflow::NodeRegistry;
+
 use super::{NodeName, Workflow};
 
 /// 用于表示工作流执行图的内部结构
@@ -17,11 +19,16 @@ pub struct ExecutionGraph {
 
 impl ExecutionGraph {
   /// 从工作流构建执行图
-  pub fn new(workflow: &Workflow) -> Self {
+  pub fn new(workflow: &Workflow, node_registry: &NodeRegistry) -> Self {
     let mut adjacency: HashMap<NodeName, Vec<NodeName>> = HashMap::default();
     let mut in_degrees: HashMap<NodeName, usize> = HashMap::default();
     let mut parents: HashMap<NodeName, Vec<NodeName>> = HashMap::default();
-    let nodes: Vec<NodeName> = workflow.nodes.iter().map(|n| n.name.clone()).collect();
+    let nodes: Vec<NodeName> = workflow
+      .nodes
+      .iter()
+      .filter(|n| node_registry.get_executor(&n.kind).is_some()) // filter executor nodes
+      .map(|n| n.name.clone())
+      .collect();
 
     // 初始化所有节点的入度和邻接表
     for node_name in &nodes {

@@ -85,8 +85,6 @@ docker-compose down -v    # Stop and clean volumes
 
 # Service-specific commands
 docker-compose restart postgres
-docker-compose restart redis
-docker-compose restart minio
 ```
 
 ## Architecture Overview
@@ -322,8 +320,7 @@ The platform implements a robust multi-tenant architecture to ensure data isolat
   - These tables either reference tenant data through foreign keys or store system-wide information
 
 - **IAM and Authorization Tables (Special handling)**:
-  - `service_path_mappings`: Path mapping configurations for Resource-Path optimization (tenant-scoped)
-  - `path_lookup_cache`: Caching table for path lookup results (tenant-aware)
+  - `iam_resource_mapping`: Path mapping configurations for Resource-Path optimization (tenant-scoped)
   - `permission_audit_logs`: Authorization audit logging (tenant_id included for filtering)
   - `policy_entity`, `policy_attachment`: Policy definitions and attachments (tenant-scoped)
 
@@ -333,7 +330,6 @@ The platform implements a robust multi-tenant architecture to ensure data isolat
 - Composite queries: `idx_table_tenant_status` on (tenant_id, status) combinations
 - Performance optimization for multi-tenant filtering scenarios
 - Path mapping indexes: `idx_path_mappings_service_pattern` for efficient path lookups
-- Cache indexes: `idx_cache_key_service` for fast cache retrieval
 
 **Data Isolation**:
 
@@ -355,6 +351,12 @@ Follow the established three-file pattern for database entities:
 2. **`{entity}_model.rs`** - Request/response models and filter types
 3. **`{entity}_bmc.rs`** - Database model controller (BMC) with CRUD operations
 4. **`{entity}_svc.rs`** - Business logic service layer
+
+**Crate Placement Rules**:
+
+- **Entity and Model files** (`{entity}_entity.rs`, `{entity}_model.rs`) can be placed in reusable `xxx-core` crates
+- **BMC and Service files** (`{entity}_bmc.rs`, `{entity}_svc.rs`) should **only** be defined in binary application crates, not in reusable `xxx-core` crates
+- **Exception**: Projects with special requirements may create dedicated `xxx-db` crates to store reusable database access code that can be shared across multiple projects
 
 ### Query Filter Types
 
@@ -415,6 +417,30 @@ pub struct CredentialEntity {
 }
 ```
 
+**Feature-Conditional Derives for Core Crates**:
+
+When generating code in reusable crates (like `xxx-core`) that can be referenced by other projects, use conditional compilation for database-related derives when the project has a `with-db` feature flag:
+
+```rust
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "with-db", derive(sqlx::FromRow, fusionsql::Fields))]
+pub struct CredentialEntity {
+  pub id: CredentialId,
+  pub namespace_id: String,
+  pub name: String,
+  pub data: String,
+  pub kind: CredentialKind,
+  pub is_managed: bool,
+  pub created_at: OffsetDateTime,
+  pub updated_at: Option<OffsetDateTime>,
+  pub created_by: i64,
+  pub updated_by: Option<i64>,
+  pub logical_deletion: Option<OffsetDateTime>,
+}
+```
+
+This pattern allows the core crate to be used in contexts where database functionality is not needed, while still providing full ORM capabilities when the `with-db` feature is enabled.
+
 ### Request/Response Models
 
 Separate models for different operations:
@@ -454,6 +480,7 @@ The platform implements a sophisticated IAM system through Jieyuan with comprehe
 - **Modular Access Control Architecture**: Authentication and authorization functionality distributed across specialized modules
   - `access_control`: Core authentication services, policy management, and resource mapping
   - `oauth`: Independent OAuth 2.0 + PKCE authentication module with comprehensive PKCE support
+  - **即时解析 + 严格渲染**: 每次权限评估都直接从策略配置文件加载并解析，不生成持久化表示，缺失必须参数直接拒绝
 
 **Authentication Flow**:
 
@@ -471,8 +498,7 @@ The IAM system implements a sophisticated policy-based authorization with:
   - **access_control module** (`jieyuan/jieyuan/src/access_control/`):
     - `AuthSvc`: User authentication service with signin/signup/token validation
     - `PolicySvc`: Policy evaluation and authorization decisions
-    - `IamResourceMappingSvc`: Resource path mapping and management
-    - `ResourceMappingCacheBmc`: High-performance caching for authorization decisions
+    - `IamResourceMappingSvc`: Resource path mapping and management (即时解析 + 严格渲染)
   - **oauth module** (`jieyuan/jieyuan/src/oauth/`):
     - `OAuthSvc`: Dedicated OAuth 2.0 + PKCE authentication flow service
 - **Unified Context**: Direct use of `fusion_common::ctx::Ctx` throughout the system, eliminating complex intermediate types
@@ -485,6 +511,7 @@ The IAM system implements a sophisticated policy-based authorization with:
   - Centralized configuration via jieyuan management interface
   - Simplified client integration with automatic parameter extraction
   - Path code support for direct mapping lookup
+  - **即时解析 + 严格渲染**: 每次权限评估都直接从策略配置文件加载并解析，不生成持久化表示，缺失必须参数直接拒绝
 - **Policy Engine**: "Explicit deny 优先 → allow 命中 → 边界/会话裁剪" evaluation flow
 - **Role-based Access Control**: Predefined roles (viewer, editor, admin) with hierarchical permissions
 - **Resource-level Permissions**: Fine-grained control over specific resources and actions
@@ -780,6 +807,7 @@ impl UserBmc {
   - Configure path mappings through jieyuan management interface
   - Use simplified middleware: `path_authz_middleware` for automatic permission checking
   - No need to manually configure RouteMeta or action/resource templates in code
+  - **即时解析 + 严格渲染**: 每次权限评估都直接从策略配置文件加载并解析，不生成持久化表示，缺失必须参数直接拒绝
 - Implement role-based access control with hierarchical permissions (viewer → editor → admin)
 - Use remote authorization middleware for centralized policy evaluation
 - Follow resource naming convention: `iam:{service}:{type}/{id}` for API calls

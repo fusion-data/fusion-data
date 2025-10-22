@@ -10,7 +10,7 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 use crate::types::JsonValue;
 
 use super::{
-  Connection, ConnectionKind, ExecutionMode, NodeName, NodeRegistry, PinData, ValidationError, WorkflowId, WorkflowNode,
+  Connection, ConnectionKind, ExecutionMode, NodeElement, NodeName, NodeRegistry, PinData, ValidationError, WorkflowId,
 };
 
 /// 工作流状态
@@ -126,7 +126,7 @@ pub struct Workflow {
 
   /// 节点列表
   #[serde(default)]
-  pub nodes: Vec<WorkflowNode>,
+  pub nodes: Vec<NodeElement>,
 
   /// 节点连接关系。<节点名称, <连接类型, 连接关系>>
   #[serde(default)]
@@ -176,7 +176,7 @@ impl Workflow {
     self
   }
 
-  pub fn with_nodes(mut self, nodes: Vec<WorkflowNode>) -> Self {
+  pub fn with_nodes(mut self, nodes: Vec<NodeElement>) -> Self {
     self.nodes = nodes;
     self
   }
@@ -262,12 +262,12 @@ impl Workflow {
   }
 
   /// 添加节点
-  pub fn add_node(&mut self, node: WorkflowNode) {
+  pub fn add_node(&mut self, node: NodeElement) {
     self.nodes.push(node);
   }
 
   /// 根据ID查找节点
-  pub fn get_node(&self, id: &NodeName) -> Option<&WorkflowNode> {
+  pub fn get_node(&self, id: &NodeName) -> Option<&NodeElement> {
     self.nodes.iter().find(|node| &node.name == id)
   }
 

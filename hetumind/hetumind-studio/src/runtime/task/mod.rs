@@ -10,7 +10,7 @@ use ahash::{HashMap, HashSet};
 use fusion_common::time::OffsetDateTime;
 use hetumind_core::{
   task::TaskPriority,
-  workflow::{ExecutionData, ExecutionId, NodeExecutionError, NodeName, WorkflowNode},
+  workflow::{ExecutionData, ExecutionId, NodeExecutionError, NodeName, NodeElement},
 };
 use serde::{Deserialize, Serialize};
 
@@ -22,7 +22,7 @@ pub struct ExecutionTask {
   pub node_name: NodeName,
   /// 节点信息
   /// TODO 是否应该使用 Workflow ?
-  pub node: Arc<WorkflowNode>,
+  pub node: Arc<NodeElement>,
   /// 输入数据
   pub input_data: Arc<Vec<ExecutionData>>,
   /// 优先级

@@ -223,4 +223,3 @@ pub async fn lookup_by_path(
     .ok_or_else(|| WebError::new_with_code(404, "mapping not found"))?;
   ok_json!(response)
 }
-

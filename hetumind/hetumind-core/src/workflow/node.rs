@@ -1,15 +1,9 @@
 use std::ops::Deref;
-use std::sync::Arc;
 
-use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 
-use crate::types::IconColor;
-use crate::version::Version;
-use crate::workflow::{
-  ExecutionDataMap, InputPortConfig, NodeExecutionContext, NodeExecutionError, NodeGroupKind, NodeProperty,
-  OutputPortConfig,
-};
+use crate::workflow::{InputPortConfig, NodeExecutor, NodeGroupKind, NodeProperty, NodeSupplier, OutputPortConfig};
+use crate::{types::IconColor, version::Version};
 
 /// The unique name of a node within a workflow. It is used to identify nodes configured in the workflow definition
 /// and can be used to locate the node within the workflow.
@@ -277,7 +271,21 @@ fusionsql::generate_string_newtype_to_sea_query_value!(Struct: NodeName, Struct:
 pub trait Node {
   fn default_version(&self) -> &Version;
 
-  fn node_executors(&self) -> &[NodeExecutor];
+  fn node_executors(&self) -> &[NodeExecutor] {
+    &[]
+  }
+
+  fn node_suppliers(&self) -> &[NodeSupplier] {
+    &[]
+  }
+
+  fn is_executor(&self) -> bool {
+    !self.node_executors().is_empty()
+  }
+
+  fn is_supplier(&self) -> bool {
+    !self.node_suppliers().is_empty()
+  }
 
   fn kind(&self) -> NodeKind;
 
@@ -292,25 +300,12 @@ pub trait Node {
   fn default_node_executor(&self) -> Option<NodeExecutor> {
     self.get_node_executor(self.default_version())
   }
-}
 
-#[async_trait]
-pub trait NodeExecutable {
-  /// Initialize the node. This can be used to implement node initialization logic, such as loading configuration, initializing resources, etc.
-  async fn init(&mut self, _context: &NodeExecutionContext) -> Result<(), NodeExecutionError> {
-    Ok(())
+  fn get_node_supplier(&self, version: &Version) -> Option<NodeSupplier> {
+    self.node_suppliers().iter().find(|node| node.definition().version == *version).cloned()
   }
 
-  /// Execute the node
-  ///
-  /// Returns:
-  /// - On success, returns data for multiple output ports, with the first output port starting from 0
-  /// - On failure, returns an error
-  async fn execute(&self, context: &NodeExecutionContext) -> Result<ExecutionDataMap, NodeExecutionError>;
-
-  /// Get Node definition
-  fn definition(&self) -> Arc<NodeDefinition>;
+  fn default_node_supplier(&self) -> Option<NodeSupplier> {
+    self.get_node_supplier(self.default_version())
+  }
 }
-
-/// Node Executor Type
-pub type NodeExecutor = Arc<dyn NodeExecutable + Send + Sync>;

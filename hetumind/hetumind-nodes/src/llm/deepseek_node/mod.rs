@@ -1,28 +1,28 @@
+use std::sync::Arc;
+
 use hetumind_core::{
   version::Version,
   workflow::{Node, NodeExecutor, NodeKind, NodeRegistry, RegistrationError},
 };
-use std::sync::Arc;
 
-pub mod chat_model_v1;
-pub mod parameters;
+mod deepseek_v1;
 
-use chat_model_v1::ChatModelV1;
+use deepseek_v1::*;
 
-pub struct ChatModelNode {
+pub struct DeepseekModelNode {
   default_version: Version,
   executors: Vec<NodeExecutor>,
 }
 
-impl ChatModelNode {
+impl DeepseekModelNode {
   pub fn new() -> Result<Self, RegistrationError> {
-    let executors: Vec<NodeExecutor> = vec![Arc::new(ChatModelV1::new()?)];
+    let executors: Vec<NodeExecutor> = vec![Arc::new(DeepseekV1::new()?)];
     let default_version = executors.iter().map(|node| node.definition().version.clone()).max().unwrap();
     Ok(Self { default_version, executors })
   }
 }
 
-impl Node for ChatModelNode {
+impl Node for DeepseekModelNode {
   fn default_version(&self) -> &Version {
     &self.default_version
   }
@@ -37,7 +37,7 @@ impl Node for ChatModelNode {
 }
 
 pub fn register_nodes(node_registry: &NodeRegistry) -> Result<(), RegistrationError> {
-  let llm_node = Arc::new(ChatModelNode::new()?);
-  node_registry.register_node(llm_node)?;
+  let ai_agent_node = Arc::new(DeepseekModelNode::new()?);
+  node_registry.register_node(ai_agent_node)?;
   Ok(())
 }

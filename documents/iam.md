@@ -3,11 +3,16 @@
 - 目标：在 `jieyuan` 项目内实现一套可扩展、可维护的 IAM 策略与权限系统，支持租户隔离、平台租户跨租户能力、显式拒绝优先、条件驱动的细粒度授权。
 - 约束与约定：
   - 策略配置与结构字段统一使用 `snake_case` 命名；Rust enum 使用 `#[serde(rename_all = "snake_case")]`。
+  - 采用"即时解析 + 严格渲染"的权限评估策略，每次权限评估都直接从策略配置文件加载并解析，不生成持久化表示，缺失必须参数直接拒绝，确保了系统的简洁性和可维护性
   - 策略评估遵循“显式 deny 优先 → allow 命中 → 边界/会话裁剪”。
   - 时间类型统一使用 `chrono::DateTime<chrono::FixedOffset>`。
   - 数据库访问统一使用 BMC 模式（`fusionsql` 宏），并复用当前项目已有模块与错误处理：`fusion-common`、`fusion-core`、`fusion-db`、`fusion-web`、`fusionsql`、`jieyuan-core`。
-  - 错误统一复用：`fusion_core::DataError`、`fusionsql::SqlError`、`fusion_web::WebError`。
-  - 并发访问：对外服务对象（如 `PolicySvc`）可便宜 `clone`；内部以 `Arc` 持有仓库与缓存（可结合 `ArcSwap`/`DashMap` 后续拓展）。
+    - BMC 参考示例见 `jieyuan/jieyuan-server/src/namespace/namespace_bmc.rs` 和 `jieyuan/jieyuan-server/src/user/user_credential_bmc.rs`
+  - 错误统一复用：
+    - 业务及通用错误：`fusion_core::DataError`
+    - BMC 层错误：`fusionsql::SqlError`
+    - Axum Route 错误：`fusion_web::WebError`
+  - 并发访问：对外服务对象（如 `PolicySvc`）可便宜 `clone`
   - 统一依赖来自工作区 `Cargo.toml`，不引入未声明的第三方库。若需要的库不存在，则终止任务并显示需要的库列表和原因
   - 不设计审计功能；不考虑历史版本兼容与数据库迁移逻辑（系统尚未发布）。
   - 复用 fusion-xxx 库功能，如： fusion-common, fusion-core, fusion-web, fusion-db, fusionsql 等

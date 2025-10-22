@@ -3,10 +3,8 @@ use std::sync::Arc;
 use hetumind_core::workflow::{NodeRegistry, RegistrationError};
 
 mod aggregate_node;
-mod ai_agent;
-mod chat_model;
 mod compare_datasets;
-mod connection_manager;
+// pub mod connection_manager;
 mod edit_fields;
 mod edit_image;
 mod if_node;
@@ -87,10 +85,6 @@ pub fn register_nodes(node_registry: &NodeRegistry) -> Result<(), RegistrationEr
 
   let wait_node = Arc::new(WaitNode::new()?);
   node_registry.register_node(wait_node)?;
-
-  // Register AI nodes
-  ai_agent::register_nodes(node_registry)?;
-  chat_model::register_nodes(node_registry)?;
 
   Ok(())
 }

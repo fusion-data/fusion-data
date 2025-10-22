@@ -7,6 +7,7 @@ use std::sync::Arc;
 pub mod ai_agent_v1;
 pub mod parameters;
 pub mod tool_manager;
+mod utils;
 
 use ai_agent_v1::AiAgentV1;
 

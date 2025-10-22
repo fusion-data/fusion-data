@@ -156,7 +156,7 @@ impl EditFieldsV1 {
   /// 解析节点配置
   fn parse_node_config(
     &self,
-    node: &hetumind_core::workflow::WorkflowNode,
+    node: &hetumind_core::workflow::NodeElement,
   ) -> Result<EditFieldsConfig, NodeExecutionError> {
     // 解析操作模式
     let mode_str: String = node.get_parameter("mode").unwrap_or_else(|_| "manual".to_string());
@@ -419,7 +419,7 @@ mod tests {
   use crate::constants::EDIT_FIELDS_NODE_KIND;
   use hetumind_core::{
     version::Version,
-    workflow::{NodeDefinition, NodeGroupKind, NodeKind, ParameterMap, WorkflowNode},
+    workflow::{NodeDefinition, NodeGroupKind, NodeKind, ParameterMap, NodeElement},
   };
   use serde_json::json;
 
@@ -441,7 +441,7 @@ mod tests {
     param_map.insert("include_mode".to_string(), json!("all"));
 
     // 模拟节点参数
-    let node = WorkflowNode::new(NodeKind::from(EDIT_FIELDS_NODE_KIND), "test_node")
+    let node = NodeElement::new(NodeKind::from(EDIT_FIELDS_NODE_KIND), "test_node")
       .with_display_name("Test Node")
       .with_parameters(ParameterMap::from(param_map));
 
@@ -471,7 +471,7 @@ mod tests {
     param_map.insert("error_handling".to_string(), json!("stop_execution"));
 
     // 模拟节点参数
-    let node = WorkflowNode::new(NodeKind::from(EDIT_FIELDS_NODE_KIND), "test_node")
+    let node = NodeElement::new(NodeKind::from(EDIT_FIELDS_NODE_KIND), "test_node")
       .with_display_name("Test Node")
       .with_parameters(ParameterMap::from(param_map));
 

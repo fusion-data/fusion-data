@@ -32,4 +32,4 @@ pub static SEND_EMAIL_NODE_KIND: &str = "hetumind_nodes::SendEmail";
 pub static AI_AGENT_NODE_KIND: &str = "hetumind_nodes::AiAgent";
 
 // Sub-nodes for Cluster Nodes
-pub static CHAT_MODEL_NODE_KIND: &str = "hetumind_nodes::ChatModel";
+pub static DEEPSEEK_MODEL_NODE_KIND: &str = "hetumind_nodes::DeepseekModel";

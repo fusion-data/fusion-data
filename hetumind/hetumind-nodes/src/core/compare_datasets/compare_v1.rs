@@ -36,7 +36,7 @@ impl CompareDatasetsV1 {
   /// 解析操作配置
   fn parse_operation_config(
     &self,
-    node: &hetumind_core::workflow::WorkflowNode,
+    node: &hetumind_core::workflow::NodeElement,
   ) -> Result<CompareDatasetsOperation, NodeExecutionError> {
     // Parse match fields
     let match_fields: Vec<serde_json::Value> = node.get_parameter("match_fields")?;

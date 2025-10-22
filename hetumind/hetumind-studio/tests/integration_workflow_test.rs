@@ -27,8 +27,8 @@ use fusion_common::time::{now, now_offset};
 use fusion_core::application::Application;
 use hetumind_core::workflow::{
   Connection, ConnectionKind, Execution, ExecutionContext, ExecutionData, ExecutionDataItems, ExecutionDataMap,
-  ExecutionId, ExecutionStatus, NodeExecutionStatus, NodeKind, NodeName, NodeRegistry, ParameterMap, PinData, Workflow,
-  WorkflowExecutionError, WorkflowId, WorkflowMeta, WorkflowNode, WorkflowSettings, WorkflowStatus,
+  ExecutionId, ExecutionStatus, NodeElement, NodeExecutionStatus, NodeKind, NodeName, NodeRegistry, ParameterMap,
+  PinData, Workflow, WorkflowExecutionError, WorkflowId, WorkflowMeta, WorkflowSettings, WorkflowStatus,
   WorkflowTriggerData,
 };
 use hetumind_nodes::constants::{
@@ -114,27 +114,27 @@ fn create_integration_workflow() -> Result<Workflow, Box<dyn std::error::Error>>
 
   // Create ManualTriggerNode
   let manual_trigger_node =
-    WorkflowNode::new(NodeKind::from(MANUAL_TRIGGER_NODE_KIND), NodeName::from("manual_trigger"))
+    NodeElement::new(NodeKind::from(MANUAL_TRIGGER_NODE_KIND), NodeName::from("manual_trigger"))
       .with_display_name("Manual Trigger")
       .with_parameters(create_manual_trigger_parameters());
 
   // Create IfNode for conditional branching
-  let if_node = WorkflowNode::new(NodeKind::from(IF_NODE_KIND), NodeName::from("condition_check"))
+  let if_node = NodeElement::new(NodeKind::from(IF_NODE_KIND), NodeName::from("condition_check"))
     .with_display_name("Check Condition")
     .with_parameters(create_if_node_parameters());
 
   // Create EditFieldsNode for data transformation (true branch)
-  let set_node_true = WorkflowNode::new(NodeKind::from(EDIT_FIELDS_NODE_KIND), NodeName::from("set_data_true"))
+  let set_node_true = NodeElement::new(NodeKind::from(EDIT_FIELDS_NODE_KIND), NodeName::from("set_data_true"))
     .with_display_name("Set Data (True)")
     .with_parameters(create_set_node_parameters_true());
 
   // Create EditFieldsNode for data transformation (false branch)
-  let set_node_false = WorkflowNode::new(NodeKind::from(EDIT_FIELDS_NODE_KIND), NodeName::from("set_data_false"))
+  let set_node_false = NodeElement::new(NodeKind::from(EDIT_FIELDS_NODE_KIND), NodeName::from("set_data_false"))
     .with_display_name("Set Data (False)")
     .with_parameters(create_set_node_parameters_false());
 
   // Create ReadWriteFilesNode for file operations
-  let file_node = WorkflowNode::new(NodeKind::from(READ_WRITE_FILES_NODE_KIND), NodeName::from("file_operations"))
+  let file_node = NodeElement::new(NodeKind::from(READ_WRITE_FILES_NODE_KIND), NodeName::from("file_operations"))
     .with_display_name("File Operations")
     .with_parameters(create_file_node_parameters());
 

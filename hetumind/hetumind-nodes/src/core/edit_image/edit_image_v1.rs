@@ -185,7 +185,7 @@ impl EditImageV1 {
   /// 解析节点配置
   fn parse_node_config(
     &self,
-    node: &hetumind_core::workflow::WorkflowNode,
+    node: &hetumind_core::workflow::NodeElement,
   ) -> Result<EditImageConfig, NodeExecutionError> {
     // 解析操作模式
     let operation_mode_str: String = node.get_parameter("operation_mode").unwrap_or_else(|_| "single".to_string());
@@ -264,7 +264,7 @@ impl EditImageV1 {
   /// 解析输出选项
   fn parse_output_options(
     &self,
-    node: &hetumind_core::workflow::WorkflowNode,
+    node: &hetumind_core::workflow::NodeElement,
   ) -> Result<ImageOutputOptions, NodeExecutionError> {
     let format_str: Option<String> = node.get_optional_parameter("output_format");
     let format = if let Some(format_str) = format_str {
@@ -295,7 +295,7 @@ impl EditImageV1 {
   /// 解析操作参数
   fn parse_operation_parameters(
     &self,
-    node: &hetumind_core::workflow::WorkflowNode,
+    node: &hetumind_core::workflow::NodeElement,
     operation: &ImageOperation,
   ) -> Result<serde_json::Value, NodeExecutionError> {
     let mut parameters = serde_json::Map::new();

@@ -68,7 +68,7 @@ cargo run --bin hetumind-studio
 cargo run --bin hetumind-cli
 
 # jieyuan access control
-cargo run --bin jieyuan
+cargo run --bin jieyuan-server
 
 # Development tools
 cargo run --bin <binary-name> -- --help          # Show help for any binary
@@ -85,8 +85,6 @@ docker-compose down -v    # Stop and clean volumes
 
 # Service-specific commands
 docker-compose restart postgres
-docker-compose restart redis
-docker-compose restart minio
 ```
 
 ## Architecture Overview
@@ -315,14 +313,14 @@ The platform implements a robust multi-tenant architecture to ensure data isolat
   - These tables store tenant-owned data and require strict isolation
 
 - **Secondary/Dimension Tables (No tenant_id required)**: Supporting tables that store execution data, logs, or system-wide metadata
+
   - `sched_task_instance`, `sched_agent` (execution instances and runtime components)
   - `execution_data`, `execution_annotation` (execution metadata and logs)
   - `migrations`, `settings` (system configuration tables)
   - These tables either reference tenant data through foreign keys or store system-wide information
 
 - **IAM and Authorization Tables (Special handling)**:
-  - `service_path_mappings`: Path mapping configurations for Resource-Path optimization (tenant-scoped)
-  - `path_lookup_cache`: Caching table for path lookup results (tenant-aware)
+  - `iam_resource_mapping`: Path mapping configurations for Resource-Path optimization (tenant-scoped)
   - `permission_audit_logs`: Authorization audit logging (tenant_id included for filtering)
   - `policy_entity`, `policy_attachment`: Policy definitions and attachments (tenant-scoped)
 
@@ -332,7 +330,6 @@ The platform implements a robust multi-tenant architecture to ensure data isolat
 - Composite queries: `idx_table_tenant_status` on (tenant_id, status) combinations
 - Performance optimization for multi-tenant filtering scenarios
 - Path mapping indexes: `idx_path_mappings_service_pattern` for efficient path lookups
-- Cache indexes: `idx_cache_key_service` for fast cache retrieval
 
 **Data Isolation**:
 
@@ -354,6 +351,12 @@ Follow the established three-file pattern for database entities:
 2. **`{entity}_model.rs`** - Request/response models and filter types
 3. **`{entity}_bmc.rs`** - Database model controller (BMC) with CRUD operations
 4. **`{entity}_svc.rs`** - Business logic service layer
+
+**Crate Placement Rules**:
+
+- **Entity and Model files** (`{entity}_entity.rs`, `{entity}_model.rs`) can be placed in reusable `xxx-core` crates
+- **BMC and Service files** (`{entity}_bmc.rs`, `{entity}_svc.rs`) should **only** be defined in binary application crates, not in reusable `xxx-core` crates
+- **Exception**: Projects with special requirements may create dedicated `xxx-db` crates to store reusable database access code that can be shared across multiple projects
 
 ### Query Filter Types
 
@@ -414,6 +417,30 @@ pub struct CredentialEntity {
 }
 ```
 
+**Feature-Conditional Derives for Core Crates**:
+
+When generating code in reusable crates (like `xxx-core`) that can be referenced by other projects, use conditional compilation for database-related derives when the project has a `with-db` feature flag:
+
+```rust
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "with-db", derive(sqlx::FromRow, fusionsql::Fields))]
+pub struct CredentialEntity {
+  pub id: CredentialId,
+  pub namespace_id: String,
+  pub name: String,
+  pub data: String,
+  pub kind: CredentialKind,
+  pub is_managed: bool,
+  pub created_at: OffsetDateTime,
+  pub updated_at: Option<OffsetDateTime>,
+  pub created_by: i64,
+  pub updated_by: Option<i64>,
+  pub logical_deletion: Option<OffsetDateTime>,
+}
+```
+
+This pattern allows the core crate to be used in contexts where database functionality is not needed, while still providing full ORM capabilities when the `with-db` feature is enabled.
+
 ### Request/Response Models
 
 Separate models for different operations:
@@ -453,6 +480,7 @@ The platform implements a sophisticated IAM system through Jieyuan with comprehe
 - **Modular Access Control Architecture**: Authentication and authorization functionality distributed across specialized modules
   - `access_control`: Core authentication services, policy management, and resource mapping
   - `oauth`: Independent OAuth 2.0 + PKCE authentication module with comprehensive PKCE support
+  - **即时解析 + 严格渲染**: 每次权限评估都直接从策略配置文件加载并解析，不生成持久化表示，缺失必须参数直接拒绝
 
 **Authentication Flow**:
 
@@ -470,8 +498,7 @@ The IAM system implements a sophisticated policy-based authorization with:
   - **access_control module** (`jieyuan/jieyuan/src/access_control/`):
     - `AuthSvc`: User authentication service with signin/signup/token validation
     - `PolicySvc`: Policy evaluation and authorization decisions
-    - `IamResourceMappingSvc`: Resource path mapping and management
-    - `ResourceMappingCacheBmc`: High-performance caching for authorization decisions
+    - `IamResourceMappingSvc`: Resource path mapping and management (即时解析 + 严格渲染)
   - **oauth module** (`jieyuan/jieyuan/src/oauth/`):
     - `OAuthSvc`: Dedicated OAuth 2.0 + PKCE authentication flow service
 - **Unified Context**: Direct use of `fusion_common::ctx::Ctx` throughout the system, eliminating complex intermediate types
@@ -484,6 +511,7 @@ The IAM system implements a sophisticated policy-based authorization with:
   - Centralized configuration via jieyuan management interface
   - Simplified client integration with automatic parameter extraction
   - Path code support for direct mapping lookup
+  - **即时解析 + 严格渲染**: 每次权限评估都直接从策略配置文件加载并解析，不生成持久化表示，缺失必须参数直接拒绝
 - **Policy Engine**: "Explicit deny 优先 → allow 命中 → 边界/会话裁剪" evaluation flow
 - **Role-based Access Control**: Predefined roles (viewer, editor, admin) with hierarchical permissions
 - **Resource-level Permissions**: Fine-grained control over specific resources and actions
@@ -609,6 +637,7 @@ let lookup_result = mapping_svc.lookup_by_path(&lookup_request).await?;
 **Integration Approaches**:
 
 1. **Modular Access Control (Recommended for all projects)**:
+
    - Distributed functionality across specialized modules
    - Core authentication in `access_control` module
    - OAuth functionality in dedicated `oauth` module
@@ -699,6 +728,46 @@ pub struct WorkflowSvc {
 
 ### Database Development
 
+**Database Naming Conventions**:
+
+Follow these naming conventions for all database objects to ensure consistency across the platform:
+
+**Constraints Naming**:
+
+- **Primary Key**: `{table_name}_pk` (e.g., `iam_user_pk`, `iam_namespace_pk`)
+- **Foreign Key**: `{table_name}_fk_{column_name}` (e.g., `iam_user_fk_tenant_id`, `iam_namespace_fk_created_by`)
+
+**Indexes Naming**:
+
+- **Single Column Index**: `{table_name}_idx_{column_name}` (e.g., `iam_user_idx_email`, `iam_namespace_idx_tenant_id`)
+- **Foreign Key Index**: `{table_name}_idx_{foreign_key_column_name}` (e.g., `iam_user_idx_created_by`, `iam_namespace_fk_updated_by`)
+- **Composite Index**: `{table_name}_idx_{column1}_{column2}` (e.g., `iam_user_idx_tenant_status`, `iam_namespace_idx_tenant_name`)
+- **Unique Index**: `{table_name}_uidx_{column_name}` (e.g., `iam_user_uidx_email`, `iam_tenant_user_uidx_user_tenant`)
+
+**Example Implementation**:
+
+```sql
+-- Table with proper naming conventions
+CREATE TABLE iam_namespace (
+  id BIGSERIAL NOT NULL,
+  tenant_id BIGINT NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  created_by BIGINT NOT NULL,
+  -- ... other columns
+
+  -- Constraints
+  CONSTRAINT iam_namespace_pk PRIMARY KEY (id),
+  CONSTRAINT iam_namespace_fk_tenant FOREIGN KEY (tenant_id) REFERENCES iam_tenant(id),
+  CONSTRAINT iam_namespace_fk_created_by FOREIGN KEY (created_by) REFERENCES iam_user(id),
+  CONSTRAINT iam_namespace_uk_tenant_name UNIQUE (tenant_id, name)
+);
+
+-- Indexes
+CREATE INDEX iam_namespace_idx_tenant_id ON iam_namespace(tenant_id);
+CREATE INDEX iam_namespace_idx_created_by ON iam_namespace(created_by);
+CREATE UNIQUE INDEX iam_namespace_idx_tenant_name ON iam_namespace(tenant_id, name);
+```
+
 **FusionSQL Best Practices**:
 
 - Use `OpValXxx` types for type-safe filtering
@@ -706,6 +775,8 @@ pub struct WorkflowSvc {
 - Follow pagination patterns with `Page` and `PageResult`
 - Use `Fields` derive macro for automatic mapping
 - Implement proper error handling with `DataError`
+- **Always create indexes for foreign key columns** to optimize JOIN queries and cascade operations
+- **Use partial indexes** for conditional data (e.g., logical deletion: `WHERE logical_deletion IS NOT NULL`)
 
 **BMC Layer Function Patterns**:
 
@@ -736,6 +807,7 @@ impl UserBmc {
   - Configure path mappings through jieyuan management interface
   - Use simplified middleware: `path_authz_middleware` for automatic permission checking
   - No need to manually configure RouteMeta or action/resource templates in code
+  - **即时解析 + 严格渲染**: 每次权限评估都直接从策略配置文件加载并解析，不生成持久化表示，缺失必须参数直接拒绝
 - Implement role-based access control with hierarchical permissions (viewer → editor → admin)
 - Use remote authorization middleware for centralized policy evaluation
 - Follow resource naming convention: `iam:{service}:{type}/{id}` for API calls
@@ -744,6 +816,7 @@ impl UserBmc {
 **IAM Integration Approaches**:
 
 1. **IAM Resource Mapping (Recommended approach)**:
+
    - Zero configuration permission control through path pattern matching
    - Centralized path mapping management via jieyuan admin interface
    - Simplified development experience with automatic parameter extraction
@@ -772,6 +845,7 @@ cargo clippy --workspace --all-targets --all-features --no-deps -- -D warnings
 **Performance-First Approach**: The platform prioritizes performance by using `ahash` instead of standard library hash collections.
 
 **Why ahash?**:
+
 - **2-3x faster** than `std::collections::HashMap` for typical workloads
 - **Better hash distribution** reducing collisions
 - **Memory efficient** with optimized layouts
@@ -792,12 +866,14 @@ let mut source_ports: HashSet<&ConnectionKind> = HashSet::default();
 ```
 
 **Performance Benefits**:
+
 - Faster data processing in workflow engines
 - Improved cache hit rates in resource management
 - Reduced latency in API request handling
 - Better throughput in concurrent scenarios
 
 **Migration Completed**: All platform modules have been migrated to ahash:
+
 - `jieyuan`: Authentication and authorization services
 - `hetumind-core`: Core workflow execution engine
 - `hetumind-studio`: Web interface and management tools

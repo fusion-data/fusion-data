@@ -212,15 +212,13 @@ pub trait OptimizedConnectionContext {
 
 /// 为NodeExecutionContext实现优化的连接数据获取
 impl OptimizedConnectionContext for NodeExecutionContext {
-  fn get_connection_data_optimized(
+  async fn get_connection_data_optimized(
     &self,
     connection_type: ConnectionKind,
     index: usize,
-  ) -> impl std::future::Future<Output = Result<Option<ExecutionData>, NodeExecutionError>> + Send {
-    async move {
-      let manager = get_connection_manager();
-      manager.get_connection_data(self, connection_type, index).await
-    }
+  ) -> Result<Option<ExecutionData>, NodeExecutionError> {
+    let manager = get_connection_manager();
+    manager.get_connection_data(self, connection_type, index).await
   }
 
   fn get_all_connections_optimized(

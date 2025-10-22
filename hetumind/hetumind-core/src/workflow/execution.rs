@@ -1,10 +1,11 @@
 //! 节点执行
 use std::sync::Arc;
 
+use async_trait::async_trait;
 use chrono::{DateTime, FixedOffset};
 use fusion_common::ahash::HashMap;
 use fusion_common::time::now;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::DeserializeOwned, ser::Error};
 use uuid::Uuid;
 
 use crate::{
@@ -12,12 +13,13 @@ use crate::{
   expression::ExpressionEvaluator,
   types::{BinaryFileKind, JsonValue},
   user::UserId,
-  workflow::{ExecutionId, GetNodeParameterOptions, ValidationError, Workflow},
+  workflow::{
+    Connection, ExecutionId, GetNodeParameterOptions, NodeDefinition, NodeRegistry, ValidationError, Workflow,
+  },
 };
 
 use super::{
-  ConnectionIndex, ConnectionKind, EngineResponse, NodeExecutionError, NodeExecutionStatus, NodeName, ParameterMap,
-  WorkflowNode,
+  ConnectionIndex, ConnectionKind, NodeElement, NodeExecutionError, NodeExecutionStatus, NodeName, ParameterMap,
 };
 
 pub struct NodeExecutionContext {
@@ -37,10 +39,10 @@ pub struct NodeExecutionContext {
   pub env_vars: HashMap<String, String>,
   /// 表达式评估器
   pub expression_evaluator: ExpressionEvaluator,
-  /// 引擎响应（用于子节点执行）
-  pub engine_response: Option<EngineResponse>,
-  /// 二进制数据管理器（可选，用于处理附件等二进制数据）
+  /// 二进制数据管理器（用于处理附件等二进制数据）
   pub binary_data_manager: BinaryDataManager,
+  /// 节点注册表
+  pub node_registry: NodeRegistry,
 }
 
 impl NodeExecutionContext {
@@ -50,6 +52,7 @@ impl NodeExecutionContext {
     current_node_name: impl Into<NodeName>,
     input_data: ExecutionDataMap,
     binary_data_manager: BinaryDataManager,
+    node_registry: NodeRegistry,
   ) -> Self {
     Self {
       execution_id,
@@ -60,10 +63,15 @@ impl NodeExecutionContext {
       user_id: None,
       env_vars: HashMap::default(),
       expression_evaluator: ExpressionEvaluator::new(),
-      engine_response: None,
       binary_data_manager,
+      node_registry,
     }
   }
+
+  pub fn current_node_name(&self) -> &NodeName {
+    &self.current_node_name
+  }
+
   pub fn with_execution_id(mut self, execution_id: ExecutionId) -> Self {
     self.execution_id = execution_id;
     self
@@ -124,17 +132,13 @@ impl NodeExecutionContext {
     self
   }
 
-  pub fn with_engine_response(mut self, engine_response: EngineResponse) -> Self {
-    self.engine_response = Some(engine_response);
-    self
-  }
-
   pub fn with_binary_data_manager(mut self, binary_data_manager: BinaryDataManager) -> Self {
     self.binary_data_manager = binary_data_manager;
     self
   }
 
-  pub fn current_node(&self) -> Result<&WorkflowNode, NodeExecutionError> {
+  /// 获取当前工作流节点（不包含 sub node）
+  pub fn current_node(&self) -> Result<&NodeElement, NodeExecutionError> {
     match self.workflow.nodes.iter().find(|n| n.name == self.current_node_name) {
       Some(node) => Ok(node),
       None => Err(NodeExecutionError::NodeNotFound {
@@ -179,18 +183,18 @@ impl NodeExecutionContext {
   }
 
   /// 获取指定连接类型和索引的连接数据
-  pub fn get_connection_data(&self, connection_type: ConnectionKind, index: usize) -> Option<ExecutionData> {
+  pub fn get_connection_data(&self, connection_kind: ConnectionKind, index: usize) -> Option<ExecutionData> {
     self
-      .get_input_items(connection_type, index)
+      .get_input_items(connection_kind, index)
       .and_then(|items| items.get_data_items())
       .and_then(|data| data.first().cloned())
   }
 
   /// 获取指定连接类型的所有连接数据
-  pub fn get_all_connections(&self, connection_type: ConnectionKind) -> Vec<ExecutionData> {
+  pub fn get_all_connections_data(&self, connection_kind: ConnectionKind) -> Vec<ExecutionData> {
     let mut all_data = Vec::new();
 
-    if let Some(items) = self.input_data.get(&connection_type) {
+    if let Some(items) = self.input_data.get(&connection_kind) {
       for item in items {
         if let Some(data) = item.get_data_items() {
           all_data.extend(data);
@@ -201,21 +205,21 @@ impl NodeExecutionContext {
     all_data
   }
 
-  /// 获取输入数据的便捷方法
-  pub fn get_input_data(&self, port_name: &str) -> Result<ExecutionData, NodeExecutionError> {
-    let connection_type = match port_name {
-      "main" => ConnectionKind::Main,
-      "ai_agent" => ConnectionKind::AiAgent,
-      "ai_tool" => ConnectionKind::AiTool,
-      "ai_model" => ConnectionKind::AiModel,
-      "ai_memory" => ConnectionKind::AiMemory,
-      "error" => ConnectionKind::Error,
-      _ => return Err(NodeExecutionError::InvalidInput(format!("Unknown port: {}", port_name))),
-    };
+  pub fn get_all_connections(&self, kind: &ConnectionKind) -> &[Connection] {
+    if let Some(data) = self.workflow.connections.get(self.current_node_name())
+      && let Some(connections) = data.get(kind)
+    {
+      connections
+    } else {
+      &[]
+    }
+  }
 
+  /// 获取输入数据的便捷方法
+  pub fn get_input_data(&self, port_kind: ConnectionKind) -> Result<ExecutionData, NodeExecutionError> {
     self
-      .get_connection_data(connection_type, 0)
-      .ok_or_else(|| NodeExecutionError::InvalidInput(format!("No data on port: {}", port_name)))
+      .get_connection_data(port_kind, 0)
+      .ok_or_else(|| NodeExecutionError::InvalidInput(format!("No data on port: {}", port_kind)))
   }
 
   /// 获取节点参数的便捷方法
@@ -229,16 +233,6 @@ impl NodeExecutionContext {
     parameters
       .get::<T>()
       .map_err(|e| NodeExecutionError::ConfigurationError(format!("Failed to parse parameters: {}", e)))
-  }
-
-  /// 检查是否是子节点执行
-  pub fn is_sub_node_execution(&self) -> bool {
-    self.engine_response.is_some()
-  }
-
-  /// 获取子节点执行结果
-  pub fn get_sub_node_results(&self) -> Option<&EngineResponse> {
-    self.engine_response.as_ref()
   }
 }
 
@@ -290,6 +284,20 @@ impl ExecutionData {
 
   pub fn json(&self) -> &JsonValue {
     &self.0.json
+  }
+
+  /// Get serde_json::Value with key
+  pub fn get(&self, key: &str) -> Result<&JsonValue, serde_json::Error> {
+    self.json().get(key).ok_or_else(|| serde_json::Error::custom(format!("key '{}' not exists", key)))
+  }
+
+  /// Get T with key
+  pub fn get_value<T>(&self, key: &str) -> Result<T, serde_json::Error>
+  where
+    T: DeserializeOwned,
+  {
+    let value = self.get(key)?;
+    serde_json::from_value(value.clone())
   }
 
   pub fn binary(&self) -> Option<&BinaryDataReference> {
@@ -470,7 +478,7 @@ pub struct NodeExecutionResult {
   /// 执行状态
   pub status: NodeExecutionStatus,
   /// 输出数据
-  pub output_data: ExecutionDataMap, // Vec<ExecutionDataItems>,
+  pub output_data: ExecutionDataMap,
   /// 错误信息
   pub error: Option<String>,
   /// 执行时长
@@ -478,13 +486,22 @@ pub struct NodeExecutionResult {
 }
 
 impl NodeExecutionResult {
-  pub fn new(
-    node_name: NodeName,
-    status: NodeExecutionStatus,
-    output_data: ExecutionDataMap,
-    duration_ms: u64,
-  ) -> Self {
-    Self { node_name, status, output_data, error: None, duration_ms }
+  pub fn success(node_name: NodeName, duration_ms: u64, output_data: ExecutionDataMap) -> Self {
+    Self { node_name, status: NodeExecutionStatus::Success, output_data, error: None, duration_ms }
+  }
+
+  pub fn failure(node_name: NodeName, duration_ms: u64, status: NodeExecutionStatus, error: impl Into<String>) -> Self {
+    Self { node_name, status, output_data: Default::default(), error: Some(error.into()), duration_ms }
+  }
+
+  pub fn with_status(mut self, status: NodeExecutionStatus) -> Self {
+    self.status = status;
+    self
+  }
+
+  pub fn with_output_data(mut self, output_data: ExecutionDataMap) -> Self {
+    self.output_data = output_data;
+    self
   }
 
   pub fn with_error(mut self, error: impl Into<String>) -> Self {
@@ -598,3 +615,25 @@ impl NodeExecution {
     self
   }
 }
+
+/// Normal/Root node, can be called by workflow
+#[async_trait]
+pub trait NodeExecutable {
+  /// Initialize the node. This can be used to implement node initialization logic, such as loading configuration, initializing resources, etc.
+  async fn init(&mut self, _context: &NodeExecutionContext) -> Result<(), NodeExecutionError> {
+    Ok(())
+  }
+
+  /// Execute the node
+  ///
+  /// Returns:
+  /// - On success, returns data for multiple output ports, with the first output port starting from 0
+  /// - On failure, returns an error
+  async fn execute(&self, context: &NodeExecutionContext) -> Result<ExecutionDataMap, NodeExecutionError>;
+
+  /// Get Node definition
+  fn definition(&self) -> Arc<NodeDefinition>;
+}
+
+/// Node Executor Type
+pub type NodeExecutor = Arc<dyn NodeExecutable + Send + Sync>;

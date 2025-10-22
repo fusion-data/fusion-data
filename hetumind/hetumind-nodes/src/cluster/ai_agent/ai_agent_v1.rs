@@ -2,35 +2,34 @@ use std::sync::Arc;
 
 use ahash::{HashMap, HashMapExt};
 use async_trait::async_trait;
-use hetumind_core::{
-  types::JsonValue,
-  version::Version,
-  workflow::{
-    ConnectionKind, EngineAction, EngineRequest, EngineResponse, ExecuteNodeAction, ExecutionData, ExecutionDataItems,
-    ExecutionDataMap, InputPortConfig, NodeDefinition, NodeExecutable, NodeExecutionContext, NodeExecutionError,
-    NodeProperty, NodePropertyKind, OutputPortConfig, RegistrationError, make_execution_data_map,
-  },
+use fusion_common::time::now_offset;
+use hetumind_core::types::JsonValue;
+use hetumind_core::version::Version;
+use hetumind_core::workflow::{
+  ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, NodeDefinition, NodeExecutable,
+  NodeExecutionContext, NodeExecutionError, NodeSupplier, RegistrationError, make_execution_data_map,
 };
+use mea::rwlock::RwLock;
 use rig::{client::CompletionClient, completion::Prompt};
 use serde_json::json;
 use uuid::Uuid;
 
-use crate::core::ai_agent::tool_manager::ToolManager;
+use crate::cluster::ai_agent::parameters::ToolExecutionStatus;
+use crate::cluster::ai_agent::tool_manager::ToolManager;
+use crate::cluster::ai_agent::utils::create_base_definition;
 use crate::core::connection_manager::OptimizedConnectionContext;
-use crate::{constants::AI_AGENT_NODE_KIND, core::ai_agent::parameters::ToolExecutionStatus};
 
 use super::parameters::{AiAgentConfig, ModelInstance, ToolCallRequest, ToolCallResult};
 
-#[allow(dead_code)]
 pub struct AiAgentV1 {
   pub definition: Arc<NodeDefinition>,
   #[allow(dead_code)]
-  tool_manager: Arc<tokio::sync::RwLock<ToolManager>>,
+  tool_manager: Arc<RwLock<ToolManager>>,
 }
 
 impl AiAgentV1 {
   pub fn new() -> Result<Self, RegistrationError> {
-    let base = NodeDefinition::new(AI_AGENT_NODE_KIND, "AI Agent");
+    let base = create_base_definition();
     Self::try_from(base)
   }
 }
@@ -39,53 +38,8 @@ impl TryFrom<NodeDefinition> for AiAgentV1 {
   type Error = RegistrationError;
 
   fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
-    let definition = base
-      .with_version(Version::new(1, 0, 0))
-      .with_description("AI Agent 节点，支持工具调用和记忆功能")
-      .with_icon("🤖")
-      // 输入端口
-      .add_input(InputPortConfig::new(ConnectionKind::Main, "Main Input")
-          .with_required(true))
-      .add_input(InputPortConfig::new(ConnectionKind::AiModel, "Large Language Model")
-          .with_required(true)
-          .with_max_connections(1))
-      .add_input(InputPortConfig::new(ConnectionKind::AiMemory, "Memory(Vector storage)")
-          .with_required(false))
-      .add_input(InputPortConfig::new(ConnectionKind::AiTool, "AI Tool")
-          .with_required(false))
-
-      // 输出端口
-      .add_output(OutputPortConfig::new(ConnectionKind::Main, "AI 响应输出"))
-      .add_output(OutputPortConfig::new(ConnectionKind::AiTool, "工具调用请求"))
-      .add_output(OutputPortConfig::new(ConnectionKind::Error, "错误输出"))
-
-      // 参数
-      .add_property(NodeProperty::new(NodePropertyKind::String)
-          .with_display_name("系统提示词")
-          .with_name("system_prompt")
-          .with_required(false)
-          .with_description("AI Agent 的系统提示词")
-          .with_value(json!("你是一个有帮助的AI助手")))
-      .add_property(NodeProperty::new(NodePropertyKind::Number)
-          .with_display_name("最大迭代次数")
-          .with_name("max_iterations")
-          .with_required(false)
-          .with_description("AI Agent 的最大迭代次数")
-          .with_value(json!(10)))
-      .add_property(NodeProperty::new(NodePropertyKind::Number)
-          .with_display_name("温度参数")
-          .with_name("temperature")
-          .with_required(false)
-          .with_description("控制生成文本的随机性")
-          .with_value(json!(0.7)))
-      .add_property(NodeProperty::new(NodePropertyKind::Boolean)
-          .with_display_name("是否启用流式响应")
-          .with_name("enable_streaming")
-          .with_required(false)
-          .with_description("是否启用流式响应")
-          .with_value(json!(false)));
-
-    Ok(Self { definition: Arc::new(definition), tool_manager: Arc::new(tokio::sync::RwLock::new(ToolManager::new())) })
+    let definition = base.with_version(Version::new(1, 0, 0));
+    Ok(Self { definition: Arc::new(definition), tool_manager: Arc::new(RwLock::new(ToolManager::new())) })
   }
 }
 
@@ -93,35 +47,24 @@ impl TryFrom<NodeDefinition> for AiAgentV1 {
 impl NodeExecutable for AiAgentV1 {
   async fn execute(&self, context: &NodeExecutionContext) -> Result<ExecutionDataMap, NodeExecutionError> {
     // 1. 获取输入数据和配置
-    let input_data = context.get_input_data("main")?;
+    let input_data = context.get_input_data(ConnectionKind::Main)?;
     let config: AiAgentConfig = context.get_parameters()?;
 
-    // 2. 处理引擎响应（工具调用结果）
-    if let Some(response) = &context.engine_response {
-      return self.handle_tool_responses(context, response, &config).await;
-    }
-
-    // 3. 获取连接的 LLM 实例
+    // 2. 获取连接的 LLM 实例
     let llm_instance = self.get_llm_instance(context).await?;
 
-    // 4. 获取连接的工具
+    // 3. 获取连接的工具
     let tools = self.get_tools(context).await?;
 
-    // 5. 创建 Agent
+    // 4. 创建 Agent
     let agent = self.create_agent(llm_instance, tools, &config).await?;
 
-    // 6. 执行 Agent
-    let result = if config.enable_streaming {
+    // 5. 执行 Agent
+    let result = if config.enable_streaming() {
       self.execute_agent_streaming(&agent, &input_data, &config).await?
     } else {
       self.execute_agent(&agent, &input_data, &config).await?
     };
-
-    // 7. 解析响应，检查是否需要工具调用
-    if let Some(tool_calls) = self.parse_tool_calls(&result) {
-      // 返回引擎请求以执行工具
-      return self.create_engine_request(context, tool_calls, &config).await;
-    }
 
     // 8. 返回最终结果
     Ok(make_execution_data_map(vec![(
@@ -129,9 +72,9 @@ impl NodeExecutable for AiAgentV1 {
       vec![ExecutionDataItems::Items(vec![ExecutionData::new_json(
         json!({
             "response": result,
-            "agent_type": "ai_agent_v1",
+            "node_kind": &self.definition().kind,
             "streaming": config.enable_streaming,
-            "timestamp": chrono::Utc::now().timestamp(),
+            "timestamp": now_offset(),
         }),
         None,
       )])],
@@ -144,26 +87,33 @@ impl NodeExecutable for AiAgentV1 {
 }
 
 impl AiAgentV1 {
-  async fn get_llm_instance(&self, context: &NodeExecutionContext) -> Result<ModelInstance, NodeExecutionError> {
-    // 通过优化的连接类型获取 LLM 实例
-    let connection_data = context
-      .get_connection_data_optimized(ConnectionKind::AiModel, 0)
-      .await?
-      .ok_or_else(|| NodeExecutionError::ConnectionError("No LLM model connected".to_string()))?;
+  async fn get_llm_instance(&self, context: &NodeExecutionContext) -> Result<NodeSupplier, NodeExecutionError> {
+    // TODO 获取 ConnectionKind::AiLM 的 Arc<dyn NodeSupplier>
+    let lm_conn = context
+      .workflow
+      .connections
+      .get(context.current_node_name())
+      .and_then(|kind_conns| kind_conns.get(&ConnectionKind::AiLM))
+      .and_then(|conns| conns.iter().next())
+      .ok_or_else(|| {
+        NodeExecutionError::ConfigurationError(format!(
+          "No ConnectionKind::AiLM found, node_name: {}",
+          context.current_node_name()
+        ))
+      })?;
+    let node = context.workflow.get_node(lm_conn.node_name()).ok_or_else(|| {
+      NodeExecutionError::ConnectionError(format!("No Node fount, node_name: {}", lm_conn.node_name()))
+    })?;
+    let lm = context.node_registry.get_supplier(&node.kind).ok_or_else(|| {
+      NodeExecutionError::ConfigurationError(format!("No NodeSupplier found, node_kind: {}", lm_conn.kind()))
+    })?;
 
-    // 解析 LLM 实例
-    self.parse_llm_instance(connection_data)
-  }
-
-  fn parse_llm_instance(&self, connection_data: ExecutionData) -> Result<ModelInstance, NodeExecutionError> {
-    let data = connection_data.json();
-    serde_json::from_value(data.clone())
-      .map_err(|e| NodeExecutionError::ConfigurationError(format!("Failed to parse LLM instance: {}", e)))
+    Ok(lm)
   }
 
   async fn get_tools(&self, context: &NodeExecutionContext) -> Result<Vec<JsonValue>, NodeExecutionError> {
     // 获取所有连接的工具（使用优化的批量获取）
-    let tool_connections = context.get_all_connections_optimized(ConnectionKind::AiTool).await?;
+    let tool_connections = context.get_all_connections_data(ConnectionKind::AiTool).await?;
 
     let mut tools = Vec::new();
     for connection in tool_connections {

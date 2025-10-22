@@ -140,9 +140,9 @@ impl From<(i32, i32)> for Position {
   }
 }
 
-/// Workflow Node
+/// Node element of workflow
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct WorkflowNode {
+pub struct NodeElement {
   pub kind: NodeKind,
 
   /// The unique identifier name of the node within the workflow. Other nodes can be accessed via this name,
@@ -198,7 +198,7 @@ pub struct WorkflowNode {
   pub timeout: Option<u64>,
 }
 
-impl WorkflowNode {
+impl NodeElement {
   pub fn new(kind: impl Into<NodeKind>, name: impl Into<NodeName>) -> Self {
     Self {
       kind: kind.into(),

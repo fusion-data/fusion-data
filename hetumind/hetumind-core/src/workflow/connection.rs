@@ -1,6 +1,5 @@
-use serde::{Deserialize, Serialize};
-
 use fusion_common::helper::{default_bool_true, default_usize_0, is_true};
+use serde::{Deserialize, Serialize};
 
 use super::NodeName;
 
@@ -8,49 +7,68 @@ use super::NodeName;
 pub type ConnectionIndex = usize;
 
 /// 节点连接类型 - 使用枚举确保类型安全
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, strum::Display, strum::AsRefStr)]
+#[derive(
+  Debug,
+  Clone,
+  Copy,
+  PartialEq,
+  Eq,
+  Hash,
+  Serialize,
+  Deserialize,
+  strum::Display,
+  strum::AsRefStr,
+  strum::EnumString,
+  strum::VariantArray,
+)]
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 pub enum ConnectionKind {
   /// 传统工作流的主要数据流
   /// - 特点：最常用的连接类型，用于节点间传递业务数据
   /// - 示例：HTTP请求 → 数据处理 → 数据库写入
-  Main = 1,
+  Main,
 
   /// 错误端口
-  Error = 2,
+  Error,
 
   /// AI 工作流的主要数据流
   /// - 特点：用于复杂AI工作流的控制和协调
   /// - 示例：多步骤AI推理、决策链
-  AiAgent = 101,
+  AiAgent,
 
   /// 为AI代理提供可调用的工具
   /// - 特点：AI代理可以动态调用这些工具来完成任务
   /// - 示例：计算器工具、API调用工具、数据查询工具
-  AiTool = 111,
+  AiTool,
 
   // AI 模型和解析连接
-  /// 语言模型
-  AiModel = 121,
+  /// Large Language Model
+  AiLM,
   /// 输出解析器
-  AiOutputParser = 122,
-  /// 记忆模块
-  AiMemory = 123,
+  AiOutputParser,
+  /// 记忆模块，用于存储和检索AI代理的记忆
+  AiMemory,
 
   // AI 数据处理连接
   /// 文档加载器
-  AiDocument = 131,
+  AiDocument,
   /// 向量嵌入
-  AiEmbedding = 132,
+  AiEmbedding,
   /// 向量检索器
-  AiRetriever = 133,
+  AiRetriever,
   /// 向量存储
-  AiVectorStore = 134,
+  AiVectorStore,
   /// 重排序器
-  AiReranker = 135,
+  AiReranker,
   /// 文本分割器
-  AiTextSplitter = 136,
+  AiTextSplitter,
+}
+
+impl ConnectionKind {
+  pub fn can_used_workflow(&self) -> bool {
+    matches!(self, ConnectionKind::Main | ConnectionKind::Error)
+  }
 }
 
 /// 连接条件

@@ -1,7 +1,7 @@
 use async_trait::async_trait;
 use fusion_core::{application::ApplicationBuilder, plugin::Plugin};
 use hetumind_core::workflow::{NodeRegistry, RegistrationError};
-use hetumind_nodes::{core, integration, trigger};
+use hetumind_nodes::{core, integration, llm, trigger};
 
 /// 初始化节点注册表
 fn init_node_registry() -> Result<NodeRegistry, RegistrationError> {
@@ -10,6 +10,7 @@ fn init_node_registry() -> Result<NodeRegistry, RegistrationError> {
   core::register_nodes(&node_registry)?;
   trigger::register_nodes(&node_registry)?;
   integration::register_nodes(&node_registry)?;
+  llm::register_nodes(&node_registry)?;
 
   Ok(node_registry)
 }

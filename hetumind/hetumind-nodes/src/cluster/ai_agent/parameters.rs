@@ -2,47 +2,51 @@ use hetumind_core::types::JsonValue;
 use serde::{Deserialize, Serialize};
 
 /// AI Agent 节点配置
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct AiAgentConfig {
   /// 系统提示词
-  pub system_prompt: String,
+  pub system_prompt: Option<String>,
   /// 最大迭代次数
-  pub max_iterations: u32,
+  pub max_iterations: Option<u32>,
   /// 温度参数
-  pub temperature: f64,
+  pub temperature: Option<f64>,
   /// 是否启用流式响应
-  pub enable_streaming: bool,
+  pub enable_streaming: Option<bool>,
   /// 记忆配置
   pub memory_config: Option<MemoryConfig>,
 }
 
-impl Default for AiAgentConfig {
-  fn default() -> Self {
-    Self {
-      system_prompt: "你是一个有帮助的AI助手".to_string(),
-      max_iterations: 10,
-      temperature: 0.7,
-      enable_streaming: false,
-      memory_config: None,
-    }
+impl AiAgentConfig {
+  pub fn system_prompt(&self) -> Option<&str> {
+    self.system_prompt.as_deref()
+  }
+
+  pub fn max_iterations(&self) -> Option<u32> {
+    self.max_iterations
+  }
+
+  pub fn temperature(&self) -> Option<f64> {
+    self.temperature
+  }
+
+  pub fn enable_streaming(&self) -> bool {
+    self.enable_streaming.unwrap_or(false)
+  }
+
+  pub fn memory_config(&self) -> Option<&MemoryConfig> {
+    self.memory_config.as_ref()
   }
 }
 
 /// 记忆配置
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct MemoryConfig {
   /// 最大历史记录数
-  pub max_history: usize,
+  pub max_history: Option<usize>,
   /// 是否启用持久化
-  pub persistence_enabled: bool,
+  pub persistence_enabled: Option<bool>,
   /// 上下文窗口大小
-  pub context_window: usize,
-}
-
-impl Default for MemoryConfig {
-  fn default() -> Self {
-    Self { max_history: 50, persistence_enabled: false, context_window: 4000 }
-  }
+  pub context_window: Option<usize>,
 }
 
 /// 工具调用请求
