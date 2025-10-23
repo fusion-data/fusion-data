@@ -1,0 +1,4 @@
+allow-branch = ["main", "release/*"]
+push = true
+publish = true
+tag = true
