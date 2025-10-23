@@ -2,7 +2,7 @@
 
 ## 项目介绍
 
-fusion-data 是一个基于 Rust 生态开发的 **融合数据** 平台，当前版本 0.1.1，采用 Rust 2024 Edition 构建。平台包含以下核心项目：
+fusion-data 是一个基于 Rust 生态开发的 **融合数据** 平台，当前版本 0.1.0，采用 Rust 2024 Edition 构建。平台包含以下核心项目：
 
 ### 核心库 (crates/fusions/)
 

@@ -155,6 +155,12 @@ pub enum NodeExecutionError {
   ConnectionError(String),
 }
 
+impl NodeExecutionError {
+  pub fn invalid_input(message: impl Into<String>) -> Self {
+    NodeExecutionError::InvalidInput(message.into())
+  }
+}
+
 #[derive(Debug, Error)]
 pub enum TriggerError {
   #[error("触发器启动失败")]

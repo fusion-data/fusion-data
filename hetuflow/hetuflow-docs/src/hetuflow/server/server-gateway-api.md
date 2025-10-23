@@ -442,7 +442,7 @@ let result = agent_svc.query(query_request).await?;
 {
   "status": "healthy",
   "timestamp": "2024-01-01T00:00:00Z",
-  "version": "0.1.1",
+  "version": "0.1.0",
   "uptime": 3600,
   "database": {
     "status": "connected",

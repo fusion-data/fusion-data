@@ -12,7 +12,7 @@ This is a **fusion-data** platform - a comprehensive data fusion platform built 
 - **jieyuan**: Access control and authentication utilities with modular IAM system ("界垣")
 - **fusions**: Core library suite providing foundational components
 
-**Version**: 0.1.1
+**Version**: 0.1.0
 **Rust Edition**: 2024
 **License**: Apache-2.0
 

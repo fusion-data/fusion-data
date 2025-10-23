@@ -75,6 +75,12 @@ cargo run -p hetumind-studio --bin hetumind-studio
 
 `-p` 指定 crate 包，`--bin` 指定要运行的程序（不指定 `--bin` 时，默认运行与 crate 包同名程序）
 
+### 发布 crates 到 crates.io
+
+```shell
+cargo publish --registry crates-io
+```
+
 ## 3. Node.js 依赖安装
 
 如有前端或 Node.js 相关子项目（如 `web`、`admin` 等），请进入对应目录，执行：

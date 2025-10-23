@@ -8,10 +8,10 @@ use fusion_core::application::Application;
 use hetumind_core::{
   expression::ExpressionEvaluator,
   workflow::{
-    ConnectionKind, EngineResponse, ExecutionContext, ExecutionData, ExecutionDataItems, ExecutionDataMap,
-    ExecutionGraph, ExecutionId, ExecutionMetrics, ExecutionPlanner, ExecutionResult, ExecutionStatus, ExecutionTrace,
-    NodeExecutionContext, NodeExecutionResult, NodeExecutionStatus, NodeName, NodeRegistry, NodesExecutionMap,
-    TriggerType, WorkflowEngine, WorkflowEngineSetting, WorkflowExecutionError, WorkflowTriggerData,
+    ConnectionKind, ExecutionContext, ExecutionData, ExecutionDataItems, ExecutionDataMap, ExecutionGraph, ExecutionId,
+    ExecutionMetrics, ExecutionPlanner, ExecutionResult, ExecutionStatus, ExecutionTrace, NodeExecutionContext,
+    NodeExecutionResult, NodeExecutionStatus, NodeName, NodeRegistry, NodesExecutionMap, TriggerType, WorkflowEngine,
+    WorkflowEngineSetting, WorkflowExecutionError, WorkflowTriggerData,
   },
 };
 
@@ -59,7 +59,6 @@ impl DefaultWorkflowEngine {
     graph: &ExecutionGraph,
     all_results: &NodesExecutionMap,
     context: &ExecutionContext,
-    engine_response: Option<&EngineResponse>,
   ) -> Result<ExecutionDataMap, WorkflowExecutionError> {
     let workflow = context.workflow();
     let node = workflow.get_node(node_name).ok_or_else(|| WorkflowExecutionError::NodeExecutionFailed {
@@ -79,7 +78,7 @@ impl DefaultWorkflowEngine {
     let parents_results = collect_parents_results(node_name, graph, all_results);
 
     // 3. 创建节点执行上下文
-    let node_context = make_node_context(context, node_name, parents_results, engine_response.cloned());
+    let node_context = make_node_context(context, node_name, parents_results);
 
     // 4. 执行节点
     log::debug!("开始执行节点: {} ({})", node_name, node.kind);
@@ -100,25 +99,19 @@ fn make_node_context(
   context: &ExecutionContext,
   node_name: &NodeName,
   parents_results: ExecutionDataMap,
-  engine_response: Option<EngineResponse>,
 ) -> NodeExecutionContext {
-  let mut node_context = NodeExecutionContext::new(
+  NodeExecutionContext::new(
     *context.execution_id(),
     context.workflow(),
     node_name.clone(),
     parents_results,
     Application::global().component(),
+    Application::global().component(),
   )
   .with_started_at(now())
   .with_user_id(context.ctx().user_id())
   .with_env_vars(std::env::vars())
-  .with_expression_evaluator(ExpressionEvaluator::new());
-
-  if let Some(response) = engine_response {
-    node_context = node_context.with_engine_response(response);
-  }
-
-  node_context
+  .with_expression_evaluator(ExpressionEvaluator::new())
 }
 
 fn collect_parents_results(
@@ -251,7 +244,7 @@ impl WorkflowEngine for DefaultWorkflowEngine {
         .unwrap_or(Some(chrono::Utc::now().fixed_offset()));
 
       let trace = ExecutionTrace {
-        execution_id: execution_id.clone(),
+        execution_id: *execution_id,
         start_time,
         end_time,
         node_traces: vec![],  // TODO: 从执行记录中构建节点追踪
@@ -318,7 +311,6 @@ impl DefaultWorkflowEngine {
     all_results.insert(trigger_data.0, trigger_data.1);
 
     let mut nodes_result: HashMap<NodeName, NodeExecutionResult> = HashMap::default();
-    let mut engine_responses: HashMap<NodeName, EngineResponse> = HashMap::default();
 
     // 按照并行组执行 - 真正的并行执行
     for parallel_group in execution_plan.parallel_groups {
@@ -345,10 +337,7 @@ impl DefaultWorkflowEngine {
           let node_name = node_name.clone();
           let graph = &graph;
           let all_results = &all_results;
-          let context = &context;
-          let engine_response = engine_responses.remove(&node_name);
-
-          async move { self.execute_node_in_parallel(node_name, graph, all_results, context, engine_response).await }
+          async move { self.execute_node_in_parallel(node_name, graph, all_results, context).await }
         };
         node_futures.push(node_future);
       }
@@ -391,11 +380,10 @@ impl DefaultWorkflowEngine {
     graph: &ExecutionGraph,
     all_results: &NodesExecutionMap,
     context: &ExecutionContext,
-    engine_response: Option<EngineResponse>,
   ) -> Result<NodeExecutionResult, WorkflowExecutionError> {
     let started_at = now();
 
-    let result = self.execute_single_node(&node_name, graph, all_results, context, engine_response.as_ref()).await;
+    let result = self.execute_single_node(&node_name, graph, all_results, context).await;
     let duration_ms = now().signed_duration_since(started_at).num_milliseconds() as u64;
 
     let node_execution_result = match result {

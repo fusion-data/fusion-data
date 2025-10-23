@@ -28,6 +28,7 @@ with-openapi = [
   "fusionsql/with-openapi",
   "dep:utoipa",
 ]
+with-ai = ["dep:fusion-ai"]
 
 [dependencies]
 tokio = { workspace = true }
@@ -43,5 +44,7 @@ utoipa = { workspace = true, optional = true }
 # -- grpc & tonic
 fusion-grpc = { workspace = true, optional = true }
 tonic = { workspace = true, optional = true }
+# -- ai
+fusion-ai = { workspace = true, optional = true }
 # -- misc
 ulid = { workspace = true, optional = true }

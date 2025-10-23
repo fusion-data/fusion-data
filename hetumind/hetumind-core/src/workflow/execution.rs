@@ -445,8 +445,12 @@ impl ExecutionDataItems {
     Self::Null
   }
 
-  pub fn new_items(items: VecExecutionData) -> Self {
+  pub fn new_items(items: Vec<ExecutionData>) -> Self {
     Self::Items(items)
+  }
+
+  pub fn new_item(item: ExecutionData) -> Self {
+    Self::Items(vec![item])
   }
 
   pub fn get_data_items(&self) -> Option<VecExecutionData> {

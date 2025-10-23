@@ -81,7 +81,7 @@ impl CtxPayload {
   }
 
   pub fn get_expires_at(&self) -> Option<DateTime<Utc>> {
-    self.get_exp().and_then(|exp| DateTime::<Utc>::from_timestamp_secs(exp))
+    self.get_exp().and_then(DateTime::<Utc>::from_timestamp_secs)
   }
 
   pub fn get_exp(&self) -> Option<i64> {
@@ -152,7 +152,7 @@ impl Ctx {
     req_id: Option<String>,
   ) -> Result<Self, CtxError> {
     let now = now_offset();
-    if let Some(st) = payload.get_expires_at().map(|st| DateTime::<Utc>::from(st)) {
+    if let Some(st) = payload.get_expires_at() {
       if st < now {
         return Err(CtxError::Unauthorized("The token expired".to_string()));
       }
