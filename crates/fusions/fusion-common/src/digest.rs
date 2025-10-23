@@ -1,38 +1,29 @@
 use base64ct::{Base64UrlUnpadded, Encoding};
 pub use hmac::digest::InvalidLength;
-use hmac::{
-  Hmac, Mac,
-  digest::{
-    CtOutput,
-    generic_array::GenericArray,
-    typenum::{B0, B1, UInt, UTerm},
-  },
-};
+use hmac::{Hmac, Mac};
 use sha2::{Digest, Sha256};
 
 use crate::Error;
 
 type HmacSha256 = Hmac<Sha256>;
 
-pub fn hmac_sha256(secret: &[u8], s: &[u8]) -> Result<CtOutput<HmacSha256>, InvalidLength> {
+pub fn hmac_sha256(secret: &[u8], data: &[u8]) -> Result<Vec<u8>, InvalidLength> {
   let mut mac = HmacSha256::new_from_slice(secret)?;
-  mac.update(s);
-  let result = mac.finalize();
+  mac.update(data);
+  let result = mac.finalize().into_bytes().to_vec();
   Ok(result)
 }
 
 #[inline]
-pub fn hmac_sha256_string(secret: &[u8], s: &[u8]) -> Result<String, InvalidLength> {
-  let bytes = hmac_sha256(secret, s)?.into_bytes();
+pub fn hmac_sha256_string(secret: &[u8], data: &[u8]) -> Result<String, InvalidLength> {
+  let bytes = hmac_sha256(secret, data)?;
   Ok(base16ct::lower::encode_string(&bytes))
 }
 
-type ShaArray = GenericArray<u8, UInt<UInt<UInt<UInt<UInt<UInt<UTerm, B1>, B0>, B0>, B0>, B0>, B0>>;
-
-pub fn sha256(s: &[u8]) -> ShaArray {
+pub fn sha256(s: &[u8]) -> Vec<u8> {
   let mut hasher: Sha256 = Sha256::new();
   hasher.update(s);
-  hasher.finalize()
+  hasher.finalize().to_vec()
 }
 
 #[inline]

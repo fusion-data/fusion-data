@@ -62,7 +62,7 @@ pub struct AgentStatistics {
 
 /// SchedAgent 数据模型
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(sqlx::FromRow, fusionsql::field::Fields))]
+#[cfg_attr(feature = "with-db", derive(sqlx::FromRow, fusionsql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct SchedAgent {
   pub id: String,

@@ -242,7 +242,7 @@ impl StopAndErrorNode {
   }
 
   fn base() -> NodeDefinition {
-    NodeDefinition::new(STOP_AND_ERROR_NODE_KIND, Version::new(1, 0, 0), "Stop and Error")
+    NodeDefinition::new(STOP_AND_ERROR_NODE_KIND, "Stop and Error")
       .add_group(NodeGroupKind::Transform)
       .add_group(NodeGroupKind::Input)
       .with_description("主动抛出错误以终止工作流执行。支持简单错误消息和复杂错误对象。")

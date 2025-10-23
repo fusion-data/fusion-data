@@ -55,7 +55,7 @@
     "@monaco-editor/react": "^4.6.0",
     "@tanstack/react-query": "^5.62.3",
     "@fusion-data/fusion-core": "workspace:*",
-    "@fusion-data/modelsql": "workspace:*",
+    "@fusion-data/fusionsql": "workspace:*",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-router-dom": "^7.9.3",

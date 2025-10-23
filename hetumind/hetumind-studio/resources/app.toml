@@ -2,7 +2,6 @@
 run_mode = "DEV"
 name = "hetumind"
 
-
 # 添加队列配置
 [hetumind.queue]
 type = "postgres"

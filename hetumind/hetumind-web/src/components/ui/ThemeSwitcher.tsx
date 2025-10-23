@@ -125,7 +125,7 @@ const ThemeSwitcher: React.FC = () => {
       <Dropdown
         trigger={['click']}
         placement="topRight"
-        dropdownRender={() => (
+        popupRender={() => (
           <div
             style={{
               backgroundColor: 'var(--bg-primary)',

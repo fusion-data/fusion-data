@@ -1,4 +1,4 @@
-import { Page, PageResult } from '@fusion-data/modelsql/page';
+import { Page, PageResult } from '@fusion-data/fusionsql';
 
 export interface AgentForCreate {
   name: string;

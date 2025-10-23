@@ -153,6 +153,7 @@ pub struct FileWriter;
 
 impl FileWriter {
   /// 从二进制数据引用获取文件内容（模拟实现）
+  #[allow(dead_code)]
   pub async fn get_file_content_from_binary_ref(
     _binary_ref: &BinaryDataReference,
     _context: &NodeExecutionContext,
@@ -284,10 +285,12 @@ impl FileWriter {
 }
 
 /// 文件操作错误映射器
+#[allow(dead_code)]
 pub struct FileErrorMapper;
 
 impl FileErrorMapper {
   /// 映射文件系统错误到用户友好的错误信息
+  #[allow(dead_code)]
   pub fn map_file_error(error: &std::io::Error, context: &FileErrorContext) -> NodeExecutionError {
     match error.kind() {
       std::io::ErrorKind::PermissionDenied => {

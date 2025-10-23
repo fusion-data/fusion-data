@@ -5,13 +5,10 @@ pub use agent::*;
 pub use distributed_lock::*;
 use uuid::Uuid;
 
-use std::sync::{
-  Arc,
-  atomic::{AtomicI64, Ordering},
-};
+use std::sync::atomic::{AtomicI64, Ordering};
 
 use fusion_common::time::now_epoch_millis;
-use mea::{mpsc, rwlock::RwLock};
+use mea::mpsc;
 use serde::{Deserialize, Serialize};
 
 use hetuflow_core::protocol::CommandMessage;
@@ -88,12 +85,7 @@ pub struct AgentConnection {
 
 impl AgentConnection {
   pub fn new(agent_id: String, address: String, sender: mpsc::UnboundedSender<CommandMessage>) -> Self {
-    Self {
-      agent_id,
-      address,
-      last_heartbeat_ms: AtomicI64::new(0),
-      sender: Some(sender),
-    }
+    Self { agent_id, address, last_heartbeat_ms: AtomicI64::new(0), sender: Some(sender) }
   }
 
   pub async fn is_online(&self) -> bool {

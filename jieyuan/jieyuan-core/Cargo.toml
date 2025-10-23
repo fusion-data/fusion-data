@@ -13,17 +13,45 @@ publish = true
 workspace = true
 
 [features]
-with-openapi = ["dep:utoipa", "fusion-common/with-openapi"]
-with-db = ["dep:sqlx", "dep:fusionsql", "dep:sea-query"]
+with-openapi = ["dep:utoipa", "fusion-common/with-openapi", "fusionsql-core/with-openapi"]
+with-db = [
+  "dep:sqlx",
+  "dep:fusionsql",
+  "dep:sea-query",
+  "fusion-common/with-db",
+]
+with-web = [
+  "with-openapi",
+  "dep:fusion-core",
+  "dep:fusion-web",
+  "dep:axum",
+  "dep:tower-http",
+  "dep:http",
+  "dep:futures",
+  "dep:reqwest",
+  "dep:headers",
+]
 
 [dependencies]
 fusion-common = { workspace = true, features = ["with-uuid"] }
+fusion-core = { workspace = true, optional = true }
+fusion-web = { workspace = true, optional = true }
 uuid = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 serde_repr = { workspace = true }
+strum = { workspace = true }
 utoipa = { workspace = true, optional = true }
 sqlx = { workspace = true, optional = true }
 sea-query = { workspace = true, optional = true }
 fusionsql = { workspace = true, optional = true }
 fusionsql-core = { workspace = true }
+axum = { workspace = true, optional = true }
+tower-http = { workspace = true, optional = true }
+futures = { workspace = true, optional = true }
+log = { workspace = true }
+http = { workspace = true, optional = true }
+reqwest = { workspace = true, optional = true }
+headers = { workspace = true, optional = true }
+chrono = { workspace = true }
+semver = { workspace = true }

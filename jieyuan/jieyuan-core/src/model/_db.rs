@@ -1,9 +1,12 @@
 use fusionsql::postgres::PgRowType;
 use sea_query::{Nullable, Value};
 
-use super::{Gender, Permission, Policy, RolePermission, RoleStatus, User, UserCredential, UserRole, UserStatus};
+use crate::model::{
+  Gender, Permission, PolicyEntity, RolePermission, RoleStatus, TenantStatus, User, UserCredential, UserRole,
+  UserStatus,
+};
 
-impl PgRowType for Policy {}
+impl PgRowType for PolicyEntity {}
 impl PgRowType for User {}
 impl PgRowType for UserCredential {}
 impl PgRowType for UserRole {}
@@ -16,7 +19,6 @@ impl From<UserStatus> for sea_query::Value {
     sea_query::Value::Int(Some(value as i32))
   }
 }
-
 impl sea_query::Nullable for UserStatus {
   fn null() -> sea_query::Value {
     sea_query::Value::Int(None)
@@ -28,7 +30,6 @@ impl From<Gender> for sea_query::Value {
     sea_query::Value::Int(Some(value as i32))
   }
 }
-
 impl sea_query::Nullable for Gender {
   fn null() -> sea_query::Value {
     sea_query::Value::Int(None)
@@ -43,5 +44,16 @@ impl From<RoleStatus> for Value {
 impl Nullable for RoleStatus {
   fn null() -> Value {
     Value::Int(None)
+  }
+}
+
+impl From<TenantStatus> for sea_query::Value {
+  fn from(status: TenantStatus) -> Self {
+    sea_query::Value::Int(Some(status as i32))
+  }
+}
+impl sea_query::Nullable for TenantStatus {
+  fn null() -> sea_query::Value {
+    sea_query::Value::Int(None)
   }
 }

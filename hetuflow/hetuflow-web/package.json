@@ -21,7 +21,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@fusion-data/fusion-core": "workspace:*",
-    "@fusion-data/modelsql": "workspace:*",
+    "@fusion-data/fusionsql": "workspace:*",
     "@fusion-data/hetuflow-sdk": "workspace:*",
     "@types/react-router-dom": "^5.3.3",
     "react": "^19.1.1",

@@ -13,10 +13,10 @@ readme = "README.md"
 unsafe_code = "allow"
 
 [features]
-with-uuid = ["uuid", "utoipa/uuid"]
-with-ulid = ["ulid", "utoipa/ulid"]
-with-openapi = ["utoipa"]
-with-db = ["sqlx", "sea-query"]
+with-uuid = ["dep:uuid", "utoipa/uuid"]
+with-ulid = ["dep:ulid", "utoipa/ulid"]
+with-openapi = ["dep:utoipa"]
+with-db = ["dep:sqlx", "dep:sea-query"]
 # WASM compatibility features
 with-wasm = []
 

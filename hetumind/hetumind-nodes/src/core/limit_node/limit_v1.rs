@@ -137,30 +137,28 @@ impl NodeExecutable for LimitV1 {
 impl TryFrom<NodeDefinition> for LimitV1 {
   type Error = RegistrationError;
 
-  fn try_from(mut base: NodeDefinition) -> Result<Self, Self::Error> {
+  fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
     let definition = base
-      .add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build())
-      .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build())
+      .with_version(Version::new(1, 0, 0))
+      .add_input(InputPortConfig::new(ConnectionKind::Main, "Input"))
+      .add_output(OutputPortConfig::new(ConnectionKind::Main, "Output"))
       .add_property(
-        NodeProperty::builder()
-          .display_name("Max Items".to_string())
-          .name("max_items")
-          .kind(NodePropertyKind::Number)
-          .required(true)
-          .description("If there are more items than this number, some are removed".to_string())
-          .placeholder("1".to_string())
-          .value(json!(1))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Number)
+          .with_display_name("Max Items")
+          .with_name("max_items")
+          .with_required(true)
+          .with_description("If there are more items than this number, some are removed")
+          .with_placeholder("1")
+          .with_value(json!(1)),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Keep".to_string())
-          .name("keep_strategy")
-          .kind(NodePropertyKind::Options)
-          .required(false)
-          .description("When removing items, whether to keep the ones at the start or the ending".to_string())
-          .value(json!(KeepStrategy::FirstItems))
-          .options(vec![
+        NodeProperty::new(NodePropertyKind::Options)
+          .with_display_name("Keep")
+          .with_name("keep_strategy")
+          .with_required(false)
+          .with_description("When removing items, whether to keep the ones at the start or the ending")
+          .with_value(json!(KeepStrategy::FirstItems))
+          .with_options(vec![
             Box::new(NodeProperty::new_option(
               "First Items",
               "first_items",
@@ -173,18 +171,15 @@ impl TryFrom<NodeDefinition> for LimitV1 {
               json!(KeepStrategy::LastItems),
               NodePropertyKind::String,
             )),
-          ])
-          .build(),
+          ]),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Warn on Limit".to_string())
-          .name("warn_on_limit")
-          .kind(NodePropertyKind::Boolean)
-          .required(false)
-          .description("Whether to log a warning when the limit is applied".to_string())
-          .value(json!(true))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Boolean)
+          .with_display_name("Warn on Limit")
+          .with_name("warn_on_limit")
+          .with_required(false)
+          .with_description("Whether to log a warning when the limit is applied")
+          .with_value(json!(true)),
       );
     Ok(Self { definition: Arc::new(definition) })
   }

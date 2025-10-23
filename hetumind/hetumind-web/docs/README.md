@@ -7,7 +7,7 @@
 **Hetumind Web** 是一个现代化的 AI Agent 开发和工作流编排平台，提供直观的可视化界面来设计、构建和管理复杂的 AI 工作流。
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/Version-0.1.1-green.svg)](https://github.com/fusion-data/hetumind)
+[![Version](https://img.shields.io/badge/Version-0.1.0-green.svg)](https://github.com/fusion-data/hetumind)
 [![React](https://img.shields.io/badge/React-19.1.1-blue.svg)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9.2-blue.svg)](https://www.typescriptlang.org/)
 [![Ant Design](https://img.shields.io/badge/Ant%20Design-5.27.4-blue.svg)](https://ant.design/)
@@ -30,30 +30,35 @@
 ## ✨ 核心特性
 
 ### 🎨 可视化工作流编辑器
+
 - **拖拽式设计**: 直观的拖放界面，轻松构建复杂工作流
 - **实时预览**: 即时查看工作流执行效果
 - **智能连接**: 自动节点连接验证和优化建议
 - **版本控制**: 工作流版本管理和回滚功能
 
 ### 🤖 AI Agent 集成
+
 - **多模型支持**: 支持 GPT、Claude、本地模型等多种 AI 模型
 - **智能配置**: 自动优化 AI 模型参数设置
 - **上下文管理**: 智能的对话上下文保持和管理
 - **成本控制**: 实时监控和优化 API 调用成本
 
 ### ⚡ 高性能执行引擎
+
 - **并发处理**: 支持大规模并发工作流执行
 - **智能调度**: 基于优先级和资源的智能任务调度
 - **错误恢复**: 自动错误检测和恢复机制
 - **实时监控**: 全面的执行状态和性能监控
 
 ### 🔧 数据处理能力
+
 - **数据映射**: 可视化数据字段映射和转换
 - **表达式引擎**: 强大的表达式计算和条件判断
 - **连接器**: 丰富的数据源连接器（数据库、API、文件等）
 - **数据验证**: 完整的数据类型和格式验证
 
 ### 📊 监控和分析
+
 - **实时仪表板**: 工作流执行状态和系统性能实时监控
 - **性能分析**: 详细的性能指标和优化建议
 - **日志管理**: 完整的执行日志和审计跟踪
@@ -142,6 +147,7 @@ pnpm preview
 ### 技术栈
 
 #### 前端技术
+
 - **React 19.1.1**: 用户界面框架
 - **TypeScript 5.9.2**: 类型安全的 JavaScript
 - **Ant Design 5.27.4**: 企业级 UI 组件库
@@ -151,6 +157,7 @@ pnpm preview
 - **Recharts 3.2.1**: 数据可视化
 
 #### 开发工具
+
 - **Vite 7.1.7**: 构建工具
 - **ESLint 9.36.0**: 代码检查
 - **Prettier 3.3.3**: 代码格式化
@@ -160,6 +167,7 @@ pnpm preview
 ### 核心模块
 
 #### 1. 工作流编辑器 (WorkflowEditor)
+
 ```typescript
 interface WorkflowEditor {
   // 画布组件
@@ -178,6 +186,7 @@ interface WorkflowEditor {
 ```
 
 #### 2. 节点系统 (Node System)
+
 ```typescript
 interface NodeSystem {
   // 基础节点类型
@@ -194,6 +203,7 @@ interface NodeSystem {
 ```
 
 #### 3. 执行引擎 (Execution Engine)
+
 ```typescript
 interface ExecutionEngine {
   // 工作流执行
@@ -211,6 +221,7 @@ interface ExecutionEngine {
 ```
 
 #### 4. 数据处理 (Data Processing)
+
 ```typescript
 interface DataProcessing {
   // 数据映射
@@ -232,6 +243,7 @@ interface DataProcessing {
 ### 工作流基础
 
 #### 什么是工作流？
+
 工作流是一个自动化的业务流程，由一系列相互连接的节点组成，每个节点执行特定的任务。
 
 #### 节点类型
@@ -315,18 +327,21 @@ interface DataProcessing {
 ### 高级功能
 
 #### 数据映射
+
 - **字段映射**: 在不同节点间映射数据字段
 - **数据转换**: 使用表达式转换数据格式
 - **条件映射**: 基于条件进行不同的数据映射
 - **批量处理**: 处理数组类型的数据
 
 #### 表达式引擎
+
 - **基础表达式**: 数学运算、字符串操作、逻辑判断
 - **函数调用**: 内置函数和自定义函数
 - **变量引用**: 引用工作流变量和节点输出
 - **模板字符串**: 动态生成文本内容
 
 #### 错误处理
+
 - **重试机制**: 自动重试失败的节点
 - **错误捕获**: 捕获和处理执行错误
 - **分支处理**: 基于错误结果执行不同的逻辑
@@ -337,6 +352,7 @@ interface DataProcessing {
 ### 开发环境设置
 
 #### 1. 克隆和安装
+
 ```bash
 git clone https://github.com/fusion-data/hetumind.git
 cd hetumind/hetumind-web
@@ -344,6 +360,7 @@ pnpm install
 ```
 
 #### 2. 环境配置
+
 ```bash
 # 复制环境配置文件
 cp .env.example .env
@@ -353,6 +370,7 @@ vim .env
 ```
 
 #### 3. 启动开发服务器
+
 ```bash
 pnpm dev
 ```
@@ -390,6 +408,7 @@ hetumind-web/
 #### 创建新组件
 
 1. **组件文件结构**
+
 ```
 src/components/workflow/NewComponent/
 ├── index.ts              # 导出文件
@@ -403,6 +422,7 @@ src/components/workflow/NewComponent/
 ```
 
 2. **组件模板**
+
 ```typescript
 // NewComponent.tsx
 import React, { useState, useEffect } from 'react';
@@ -436,6 +456,7 @@ export default NewComponent;
 ```
 
 3. **类型定义**
+
 ```typescript
 // types.ts
 export interface NewComponentData {
@@ -454,6 +475,7 @@ export interface NewComponentProps {
 #### 节点开发指南
 
 1. **基础节点结构**
+
 ```typescript
 // nodes/CustomNode/CustomNode.tsx
 import React from 'react';
@@ -488,6 +510,7 @@ export const CustomNode: React.FC<CustomNodeProps> = ({
 ```
 
 2. **节点执行器**
+
 ```typescript
 // nodes/CustomNode/CustomNodeExecutor.ts
 import { BaseNodeExecutor } from '../BaseNode';
@@ -529,6 +552,7 @@ export class CustomNodeExecutor extends BaseNodeExecutor {
 ```
 
 3. **注册节点**
+
 ```typescript
 // nodes/index.ts
 export { CustomNode } from './CustomNode/CustomNode';
@@ -542,6 +566,7 @@ nodeRegistry.register('custom', CustomNode, CustomNodeExecutor);
 ### 状态管理
 
 #### Zustand Store 结构
+
 ```typescript
 // store/workflowStore.ts
 import { create } from 'zustand';
@@ -571,17 +596,18 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
   selectedNodes: [],
 
   // 实现动作
-  setWorkflows: (workflows) => set({ workflows }),
-  setCurrentWorkflow: (workflow) => set({ currentWorkflow: workflow }),
+  setWorkflows: workflows => set({ workflows }),
+  setCurrentWorkflow: workflow => set({ currentWorkflow: workflow }),
 
-  addNode: (node) => set((state) => ({
-    currentWorkflow: state.currentWorkflow
-      ? {
-          ...state.currentWorkflow,
-          nodes: [...state.currentWorkflow.nodes, node],
-        }
-      : null,
-  })),
+  addNode: node =>
+    set(state => ({
+      currentWorkflow: state.currentWorkflow
+        ? {
+            ...state.currentWorkflow,
+            nodes: [...state.currentWorkflow.nodes, node],
+          }
+        : null,
+    })),
 
   // 实现其他动作...
 }));
@@ -590,6 +616,7 @@ export const useWorkflowStore = create<WorkflowState>((set, get) => ({
 ### API 集成
 
 #### 数据获取示例
+
 ```typescript
 // hooks/useWorkflows.ts
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -618,6 +645,7 @@ export const useCreateWorkflow = () => {
 ### 样式指南
 
 #### CSS Modules
+
 ```css
 /* CustomNode.module.css */
 .container {
@@ -646,6 +674,7 @@ export const useCreateWorkflow = () => {
 ```
 
 #### 主题定制
+
 ```typescript
 // styles/theme.ts
 import { theme } from 'antd';
@@ -674,18 +703,21 @@ export const customTheme = {
 ### 测试策略
 
 #### 1. 单元测试
+
 - 组件渲染测试
 - 用户交互测试
 - 工具函数测试
 - 状态管理测试
 
 #### 2. 集成测试
+
 - 组件间交互测试
 - API 集成测试
 - 工作流执行测试
 - 数据流测试
 
 #### 3. 端到端测试
+
 - 完整用户流程测试
 - 跨浏览器兼容性测试
 - 性能测试
@@ -738,16 +770,19 @@ describe('WorkflowCanvas', () => {
 ### 性能监控
 
 #### 1. 渲染性能
+
 - 组件渲染时间监控
 - 重渲染优化
 - 虚拟化长列表
 
 #### 2. 内存管理
+
 - 内存泄漏检测
 - 组件卸载清理
 - 大对象处理优化
 
 #### 3. 网络优化
+
 - API 请求缓存
 - 数据分页加载
 - 并发请求控制
@@ -755,6 +790,7 @@ describe('WorkflowCanvas', () => {
 ### 优化策略
 
 #### 1. React 优化
+
 ```typescript
 // 使用 React.memo
 const OptimizedComponent = React.memo(({ data }) => {
@@ -776,6 +812,7 @@ const Component = ({ items, onItemClick }) => {
 ```
 
 #### 2. 工作流引擎优化
+
 ```typescript
 // 批量处理节点
 class WorkflowEngine {
@@ -790,6 +827,7 @@ class WorkflowEngine {
 ```
 
 #### 3. 缓存策略
+
 ```typescript
 // 使用 React Query 缓存
 const useWorkflows = () => {
@@ -807,6 +845,7 @@ const useWorkflows = () => {
 ### 构建配置
 
 #### 1. 生产构建
+
 ```bash
 # 构建生产版本
 npm run build
@@ -816,6 +855,7 @@ npm run build:analyze
 ```
 
 #### 2. 环境配置
+
 ```typescript
 // config/environments.ts
 export const environments = {
@@ -833,6 +873,7 @@ export const environments = {
 ### Docker 部署
 
 #### Dockerfile
+
 ```dockerfile
 # 多阶段构建
 FROM node:22-alpine AS builder
@@ -855,6 +896,7 @@ CMD ["nginx", "-g", "daemon off;"]
 ```
 
 #### docker-compose.yml
+
 ```yaml
 version: '3.8'
 
@@ -862,7 +904,7 @@ services:
   hetumind-web:
     build: .
     ports:
-      - "80:80"
+      - '80:80'
     environment:
       - NODE_ENV=production
     volumes:
@@ -873,6 +915,7 @@ services:
 ### CI/CD 配置
 
 #### GitHub Actions
+
 ```yaml
 # .github/workflows/deploy.yml
 name: Deploy
@@ -908,21 +951,25 @@ jobs:
 ### 开发流程
 
 1. **Fork 项目**
+
    ```bash
    git clone https://github.com/your-username/hetumind.git
    ```
 
 2. **创建功能分支**
+
    ```bash
    git checkout -b feature/amazing-feature
    ```
 
 3. **提交更改**
+
    ```bash
    git commit -m 'Add amazing feature'
    ```
 
 4. **推送分支**
+
    ```bash
    git push origin feature/amazing-feature
    ```
@@ -932,6 +979,7 @@ jobs:
 ### 代码规范
 
 #### 1. TypeScript 规范
+
 ```typescript
 // ✅ 好的实践
 interface UserData {
@@ -946,12 +994,13 @@ const getUser = async (id: string): Promise<UserData> => {
 };
 
 // ❌ 避免的实践
-const getUser = (id) => {
+const getUser = id => {
   return fetch(`/api/users/${id}`);
 };
 ```
 
 #### 2. React 组件规范
+
 ```typescript
 // ✅ 函数组件 + TypeScript
 interface ComponentProps {
@@ -979,6 +1028,7 @@ export const Component: React.FC<ComponentProps> = ({
 ```
 
 #### 3. 样式规范
+
 ```typescript
 // ✅ CSS Modules + TypeScript
 import styles from './Component.module.css';
@@ -1001,6 +1051,7 @@ const Component = () => {
 ```
 
 类型说明：
+
 - `feat`: 新功能
 - `fix`: 修复 bug
 - `docs`: 文档更新
@@ -1010,6 +1061,7 @@ const Component = () => {
 - `chore`: 构建工具或辅助工具的变动
 
 示例：
+
 ```
 feat(workflow): add AI agent node integration
 

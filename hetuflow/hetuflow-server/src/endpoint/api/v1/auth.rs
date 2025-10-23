@@ -81,7 +81,7 @@ pub async fn generate_token(
       Json(WebError::new(
         403,
         "This API endpoint is only accessible from localhost",
-        Some(Box::new(json!({"remote_addr": addr.to_string()}))),
+        Some(json!({"remote_addr": addr.to_string()})),
       )),
     ));
   }
@@ -99,7 +99,7 @@ pub async fn generate_token(
   let jwe_service = JweSvc::new(jwe_config.clone()).map_err(|e| {
     (
       StatusCode::INTERNAL_SERVER_ERROR,
-      Json(WebError::new(500, "JWE service initialization failed", Some(Box::new(json!({"error": e.to_string()}))))),
+      Json(WebError::new(500, "JWE service initialization failed", Some(json!({"error": e.to_string()})))),
     )
   })?;
 
@@ -110,15 +110,14 @@ pub async fn generate_token(
   let token = jwe_service.generate_token(agent_id, server_id, permissions).map_err(|e| match e {
     JweError::TokenGenerationFailed(msg) => (
       StatusCode::INTERNAL_SERVER_ERROR,
-      Json(WebError::new(500, "Token generation failed", Some(Box::new(json!({"error": msg}))))),
+      Json(WebError::new(500, "Token generation failed", Some(json!({"error": msg})))),
     ),
-    JweError::InvalidKeyFormat(msg) => (
-      StatusCode::INTERNAL_SERVER_ERROR,
-      Json(WebError::new(500, "JWE key format error", Some(Box::new(json!({"error": msg}))))),
-    ),
+    JweError::InvalidKeyFormat(msg) => {
+      (StatusCode::INTERNAL_SERVER_ERROR, Json(WebError::new(500, "JWE key format error", Some(json!({"error": msg})))))
+    }
     _ => (
       StatusCode::INTERNAL_SERVER_ERROR,
-      Json(WebError::new(500, "Internal server error", Some(Box::new(json!({"error": e.to_string()}))))),
+      Json(WebError::new(500, "Internal server error", Some(json!({"error": e.to_string()})))),
     ),
   })?;
 

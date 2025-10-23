@@ -185,7 +185,7 @@ impl EditImageV1 {
   /// 解析节点配置
   fn parse_node_config(
     &self,
-    node: &hetumind_core::workflow::WorkflowNode,
+    node: &hetumind_core::workflow::NodeElement,
   ) -> Result<EditImageConfig, NodeExecutionError> {
     // 解析操作模式
     let operation_mode_str: String = node.get_parameter("operation_mode").unwrap_or_else(|_| "single".to_string());
@@ -264,7 +264,7 @@ impl EditImageV1 {
   /// 解析输出选项
   fn parse_output_options(
     &self,
-    node: &hetumind_core::workflow::WorkflowNode,
+    node: &hetumind_core::workflow::NodeElement,
   ) -> Result<ImageOutputOptions, NodeExecutionError> {
     let format_str: Option<String> = node.get_optional_parameter("output_format");
     let format = if let Some(format_str) = format_str {
@@ -295,7 +295,7 @@ impl EditImageV1 {
   /// 解析操作参数
   fn parse_operation_parameters(
     &self,
-    node: &hetumind_core::workflow::WorkflowNode,
+    node: &hetumind_core::workflow::NodeElement,
     operation: &ImageOperation,
   ) -> Result<serde_json::Value, NodeExecutionError> {
     let mut parameters = serde_json::Map::new();
@@ -445,18 +445,18 @@ impl TryFrom<NodeDefinition> for EditImageV1 {
 
   fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
     let base = base
-      .add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build())
-      .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build())
+      .with_version(Version::new(1, 0, 0))
+      .add_input(InputPortConfig::new(ConnectionKind::Main, "Input"))
+      .add_output(OutputPortConfig::new(ConnectionKind::Main, "Output"))
       .add_property(
         // 操作模式
-        NodeProperty::builder()
-          .display_name("Operation Mode".to_string())
-          .name("operation_mode")
-          .kind(NodePropertyKind::Options)
-          .required(true)
-          .description("Select the operation mode for image processing".to_string())
-          .value(json!("single"))
-          .options(vec![
+        NodeProperty::new(NodePropertyKind::Options)
+          .with_display_name("Operation Mode")
+          .with_name("operation_mode")
+          .with_required(true)
+          .with_description("Select the operation mode for image processing")
+          .with_value(json!("single"))
+          .with_options(vec![
             Box::new(NodeProperty::new_option("Single Operation", "single", json!("single"), NodePropertyKind::String)),
             Box::new(NodeProperty::new_option(
               "Multi-Step",
@@ -464,30 +464,26 @@ impl TryFrom<NodeDefinition> for EditImageV1 {
               json!("multi_step"),
               NodePropertyKind::String,
             )),
-          ])
-          .build(),
+          ]),
       )
       .add_property(
         // 数据属性名称
-        NodeProperty::builder()
-          .display_name("Data Property Name".to_string())
-          .name("data_property_name")
-          .kind(NodePropertyKind::String)
-          .required(true)
-          .description("Name of the property containing the binary image data".to_string())
-          .value(json!("data"))
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("Data Property Name")
+          .with_name("data_property_name")
+          .with_required(true)
+          .with_description("Name of the property containing the binary image data")
+          .with_value(json!("data")),
       )
       .add_property(
         // 单操作配置
-        NodeProperty::builder()
-          .display_name("Operation".to_string())
-          .name("operation")
-          .kind(NodePropertyKind::Options)
-          .required(false)
-          .description("Image operation to perform (Single mode)".to_string())
-          .value(json!("resize"))
-          .options(vec![
+        NodeProperty::new(NodePropertyKind::Options)
+          .with_display_name("Operation")
+          .with_name("operation")
+          .with_required(false)
+          .with_description("Image operation to perform (Single mode)")
+          .with_value(json!("resize"))
+          .with_options(vec![
             Box::new(NodeProperty::new_option("Blur", "blur", json!("blur"), NodePropertyKind::String)),
             Box::new(NodeProperty::new_option("Border", "border", json!("border"), NodePropertyKind::String)),
             Box::new(NodeProperty::new_option("Composite", "composite", json!("composite"), NodePropertyKind::String)),
@@ -510,82 +506,69 @@ impl TryFrom<NodeDefinition> for EditImageV1 {
               json!("transparent"),
               NodePropertyKind::String,
             )),
-          ])
-          .build(),
+          ]),
       )
       .add_property(
         // 多步骤配置
-        NodeProperty::builder()
-          .display_name("Operations".to_string())
-          .name("operations")
-          .kind(NodePropertyKind::String)
-          .required(false)
-          .description("Operations sequence for multi-step mode".to_string())
-          .value(json!([]))
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("Operations")
+          .with_name("operations")
+          .with_required(false)
+          .with_description("Operations sequence for multi-step mode")
+          .with_value(json!([])),
       )
       .add_property(
         // 输出格式
-        NodeProperty::builder()
-          .display_name("Output Format".to_string())
-          .name("output_format")
-          .kind(NodePropertyKind::Options)
-          .required(false)
-          .description("Output image format".to_string())
-          .value(json!("png"))
-          .options(vec![
+        NodeProperty::new(NodePropertyKind::Options)
+          .with_display_name("Output Format")
+          .with_name("output_format")
+          .with_required(false)
+          .with_description("Output image format")
+          .with_value(json!("png"))
+          .with_options(vec![
             Box::new(NodeProperty::new_option("BMP", "bmp", json!("bmp"), NodePropertyKind::String)),
             Box::new(NodeProperty::new_option("GIF", "gif", json!("gif"), NodePropertyKind::String)),
             Box::new(NodeProperty::new_option("JPEG", "jpeg", json!("jpeg"), NodePropertyKind::String)),
             Box::new(NodeProperty::new_option("PNG", "png", json!("png"), NodePropertyKind::String)),
             Box::new(NodeProperty::new_option("TIFF", "tiff", json!("tiff"), NodePropertyKind::String)),
             Box::new(NodeProperty::new_option("WebP", "webp", json!("webp"), NodePropertyKind::String)),
-          ])
-          .build(),
+          ]),
       )
       .add_property(
         // 图像质量
-        NodeProperty::builder()
-          .display_name("Quality".to_string())
-          .name("quality")
-          .kind(NodePropertyKind::Number)
-          .required(false)
-          .description("Image quality (0-100, for lossy formats)".to_string())
-          .value(json!(90))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Number)
+          .with_display_name("Quality")
+          .with_name("quality")
+          .with_required(false)
+          .with_description("Image quality (0-100, for lossy formats)")
+          .with_value(json!(90)),
       )
       .add_property(
         // 文件名模板
-        NodeProperty::builder()
-          .display_name("File Name Template".to_string())
-          .name("file_name_template")
-          .kind(NodePropertyKind::String)
-          .required(false)
-          .description("Template for output file name".to_string())
-          .value(json!("processed-image"))
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("File Name Template")
+          .with_name("file_name_template")
+          .with_required(false)
+          .with_description("Template for output file name")
+          .with_value(json!("processed-image")),
       )
       .add_property(
         // 保留元数据
-        NodeProperty::builder()
-          .display_name("Preserve Metadata".to_string())
-          .name("preserve_metadata")
-          .kind(NodePropertyKind::Boolean)
-          .required(false)
-          .description("Preserve original image metadata".to_string())
-          .value(json!(false))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Boolean)
+          .with_display_name("Preserve Metadata")
+          .with_name("preserve_metadata")
+          .with_required(false)
+          .with_description("Preserve original image metadata")
+          .with_value(json!(false)),
       )
       .add_property(
         // 错误处理选项
-        NodeProperty::builder()
-          .display_name("Stop on First Error".to_string())
-          .name("stop_on_first_error")
-          .kind(NodePropertyKind::Boolean)
-          .required(false)
-          .description("Stop processing on first error (Multi-step mode)".to_string())
-          .value(json!(true))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Boolean)
+          .with_display_name("Stop on First Error")
+          .with_name("stop_on_first_error")
+          .with_required(false)
+          .with_description("Stop processing on first error (Multi-step mode)")
+          .with_value(json!(true)),
       );
 
     Ok(Self { definition: Arc::new(base) })

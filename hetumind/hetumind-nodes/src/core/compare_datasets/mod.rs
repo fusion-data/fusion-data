@@ -13,7 +13,7 @@ use compare_v1::CompareDatasetsV1;
 
 /// Comparison result type for datasets
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+#[serde(rename_all = "snake_case")]
 pub enum ComparisonResultType {
   /// Records only in Input Dataset A
   InAOnly,
@@ -27,7 +27,7 @@ pub enum ComparisonResultType {
 
 /// Comparison mode for field matching
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+#[serde(rename_all = "snake_case")]
 pub enum ComparisonMode {
   /// Exact match comparison
   Exact,
@@ -37,7 +37,7 @@ pub enum ComparisonMode {
 
 /// Conflict resolution strategy for handling differences
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+#[serde(rename_all = "snake_case")]
 pub enum ConflictResolution {
   /// Prefer values from Input Dataset A
   PreferInputA,
@@ -225,7 +225,7 @@ impl CompareDatasetsNode {
   }
 
   fn base() -> NodeDefinition {
-    NodeDefinition::new("hetumind_nodes::CompareDatasets", Version::new(1, 0, 0), "Compare Datasets")
+    NodeDefinition::new("hetumind_nodes::CompareDatasets", "Compare Datasets")
       .add_group(NodeGroupKind::Transform)
       .with_description("Compare two datasets and categorize results into matched, unmatched, and different records")
       .with_icon("compare")

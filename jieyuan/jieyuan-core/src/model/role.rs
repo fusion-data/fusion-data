@@ -1,4 +1,4 @@
-use fusion_common::time::OffsetDateTime;
+use chrono::{DateTime, FixedOffset};
 use fusionsql_core::filter::{OpValInt32, OpValString};
 use serde::{Deserialize, Serialize};
 
@@ -26,7 +26,7 @@ impl From<i32> for RoleStatus {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(fusionsql::field::Fields, sqlx::FromRow), sea_query::enum_def)]
+#[cfg_attr(feature = "with-db", derive(fusionsql::Fields, sqlx::FromRow), sea_query::enum_def)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct Role {
   pub id: i64,
@@ -34,15 +34,13 @@ pub struct Role {
   pub description: Option<String>,
   pub status: RoleStatus,
   pub created_by: i64,
-  #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
-  pub created_at: OffsetDateTime,
+  pub created_at: DateTime<FixedOffset>,
   pub updated_by: Option<i64>,
-  #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
-  pub updated_at: Option<OffsetDateTime>,
+  pub updated_at: Option<DateTime<FixedOffset>>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(fusionsql::field::Fields))]
+#[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct CreateRoleDto {
   pub name: String,
@@ -51,7 +49,7 @@ pub struct CreateRoleDto {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(fusionsql::field::Fields))]
+#[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct RoleForUpdate {
   pub name: Option<String>,

@@ -135,9 +135,9 @@ fn create_node_outputs() -> HashMap<String, NodeOutput> {
 }
 
 fn create_execution_context() -> ExpressionExecutionContext {
-  let workflow = Arc::new(Workflow::builder().id(WorkflowId::now_v7()).name("Test Workflow").build());
-  let execution = Arc::new(Execution::builder().id(ExecutionId::now_v7()).workflow_id(workflow.id.clone()).build());
-  let mut context = ExpressionExecutionContext::builder().workflow(workflow).execution(execution).build();
+  let workflow = Arc::new(Workflow::new(WorkflowId::now_v7(), "Test Workflow"));
+  let execution = Arc::new(Execution::new(ExecutionId::now_v7(), workflow.id.clone()));
+  let mut context = ExpressionExecutionContext::new(workflow, execution);
 
   // 添加环境变量
   context.env.insert("API_KEY".to_string(), "sk-1234567890abcdef".to_string());

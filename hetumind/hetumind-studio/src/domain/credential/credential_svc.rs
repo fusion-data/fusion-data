@@ -169,7 +169,7 @@ impl FromRequestParts<Application> for CredentialSvc {
   type Rejection = WebError;
 
   async fn from_request_parts(parts: &mut Parts, state: &Application) -> core::result::Result<Self, Self::Rejection> {
-    let ctx = extract_ctx(parts, state.fusion_config().security())?;
+    let ctx = extract_ctx(parts, state.fusion_setting().security())?;
     let mm = state.component::<ModelManager>().with_ctx(ctx);
     let key_manager = state.component();
     Ok(CredentialSvc { mm, key_manager })

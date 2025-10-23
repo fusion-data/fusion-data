@@ -24,7 +24,7 @@ pub fn to_datetime(value: &JsonValue) -> Option<OffsetDateTime> {
       // 暂时简化实现，专注于 JSON Path 功能
       None
     }
-    JsonValue::Number(n) => {
+    JsonValue::Number(_n) => {
       // 如果是时间戳数字，需要转换为 OffsetDateTime
       // TODO: 实现时间戳转换
       None
@@ -126,6 +126,7 @@ pub fn evaluate_single_condition(
 }
 
 /// 数值比较
+#[allow(dead_code)]
 pub fn compare_numbers(
   value1: &JsonValue,
   operation: &ComparisonOperation,
@@ -153,6 +154,7 @@ pub fn compare_numbers(
 }
 
 /// 布尔值比较
+#[allow(dead_code)]
 pub fn compare_booleans(
   value1: &JsonValue,
   operation: &ComparisonOperation,
@@ -178,6 +180,7 @@ pub fn compare_booleans(
 }
 
 /// 日期时间比较
+#[allow(dead_code)]
 pub fn compare_datetimes(
   value1: &JsonValue,
   operation: &ComparisonOperation,
@@ -211,6 +214,7 @@ pub fn compare_datetimes(
   Ok(result)
 }
 /// 字符串比较
+#[allow(dead_code)]
 pub fn compare_strings(
   value1: &JsonValue,
   operation: &ComparisonOperation,
@@ -500,7 +504,7 @@ fn apply_case_handling(s: &str, ignore_case: bool) -> String {
 }
 
 /// 获取默认值
-fn get_default_value(data_type: &DataType, options: &IfNodeOptions) -> JsonValue {
+fn get_default_value(_data_type: &DataType, options: &IfNodeOptions) -> JsonValue {
   match &options.default_value_handling {
     DefaultValueHandling::UseNull => JsonValue::Null,
     DefaultValueHandling::UseEmptyString => JsonValue::String("".to_string()),
@@ -680,12 +684,13 @@ pub fn parse_expression_expression(expression: &str, input_data: &JsonValue) -> 
 }
 
 /// 解析简单表达式 {{ expression }}
-fn parse_simple_expression(expression: &str) -> Option<regex::Captures> {
+fn parse_simple_expression<'a>(expression: &'a str) -> Option<regex::Captures<'a>> {
   let re = Regex::new(r"\{\{\s*([^}]+)\s*\}\}").ok()?;
   re.captures(expression)
 }
 
 /// 应用表达式到值
+#[allow(dead_code)]
 pub fn apply_expressions_to_value(value: &JsonValue, input_data: &JsonValue) -> Result<JsonValue, NodeExecutionError> {
   match value {
     JsonValue::String(s) => {

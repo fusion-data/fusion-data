@@ -5,9 +5,9 @@ use hetumind_core::{
   types::JsonValue,
   version::Version,
   workflow::{
-    ConnectionKind, ExecutionDataItems, ExecutionDataMap, FilterTypeOptions, InputPortConfig, NodeDefinition,
-    NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, NodePropertyKindOptions,
-    OutputPortConfig, RegistrationError, make_execution_data_map,
+    ConnectionKind, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition, NodeExecutable,
+    NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig, RegistrationError,
+    make_execution_data_map,
   },
 };
 use serde_json::json;
@@ -33,12 +33,14 @@ use super::{
 /// - Rules 模式：基于规则数量和 fallback 配置
 /// - Expression 模式：基于 numberOutputs 参数
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct SwitchV1 {
   pub definition: Arc<NodeDefinition>,
 }
 
 impl SwitchV1 {
   /// 配置输出端口
+  #[allow(dead_code)]
   pub fn configure_outputs(&self, config: &SwitchConfig) -> Vec<OutputPortConfig> {
     match config.mode {
       SwitchMode::Rules => {
@@ -49,26 +51,25 @@ impl SwitchV1 {
         for (index, rule) in rules.iter().enumerate() {
           let index_str = index.to_string();
           let display_name = rule.output_key.as_deref().unwrap_or(&index_str);
-          outputs.push(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name(display_name).build());
+          outputs.push(OutputPortConfig::new(ConnectionKind::Main, display_name));
         }
 
         // 添加 fallback 输出端口
         if let Some(FallbackOutput::Extra) = config.options.fallback_output {
-          outputs.push(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Fallback").build());
+          outputs.push(OutputPortConfig::new(ConnectionKind::Main, "Fallback"));
         }
 
         outputs
       }
       SwitchMode::Expression => {
         let number_outputs = config.number_outputs.unwrap_or(1);
-        (0..number_outputs)
-          .map(|i| OutputPortConfig::builder().kind(ConnectionKind::Main).display_name(i.to_string()).build())
-          .collect()
+        (0..number_outputs).map(|i| OutputPortConfig::new(ConnectionKind::Main, &i.to_string())).collect()
       }
     }
   }
 
   /// 处理 Rules 模式
+  #[allow(unused_variables)]
   async fn process_rules_mode(
     &self,
     _context: &NodeExecutionContext,
@@ -118,6 +119,7 @@ impl SwitchV1 {
   }
 
   /// 处理 Expression 模式
+  #[allow(unused_variables)]
   async fn process_expression_mode(
     &self,
     _context: &NodeExecutionContext,
@@ -154,6 +156,7 @@ impl SwitchV1 {
 
 #[async_trait]
 impl NodeExecutable for SwitchV1 {
+  #[allow(unused_variables)]
   fn definition(&self) -> Arc<NodeDefinition> {
     self.definition.clone()
   }
@@ -270,18 +273,18 @@ impl TryFrom<NodeDefinition> for SwitchV1 {
 
   fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
     let definition = base
-      .add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build())
-      .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output 0").build())
-      .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output 1").build())
+      .with_version(Version::new(1, 0, 0))
+      .add_input(InputPortConfig::new(ConnectionKind::Main, "Input"))
+      .add_output(OutputPortConfig::new(ConnectionKind::Main, "Output 0"))
+      .add_output(OutputPortConfig::new(ConnectionKind::Main, "Output 1"))
       .add_property(
-        NodeProperty::builder()
-          .display_name("模式")
-          .name("mode")
-          .kind(NodePropertyKind::Options)
-          .required(true)
-          .description("Switch 节点的工作模式")
-          .value(json!(SwitchMode::Rules))
-          .options(vec![
+        NodeProperty::new(NodePropertyKind::Options)
+          .with_display_name("模式")
+          .with_name("mode")
+          .with_required(true)
+          .with_description("Switch 节点的工作模式")
+          .with_value(json!(SwitchMode::Rules))
+          .with_options(vec![
             Box::new(NodeProperty::new_option("Rules", "rules", json!(SwitchMode::Rules), NodePropertyKind::String)),
             Box::new(NodeProperty::new_option(
               "Expression",
@@ -289,51 +292,71 @@ impl TryFrom<NodeDefinition> for SwitchV1 {
               json!(SwitchMode::Expression),
               NodePropertyKind::String,
             )),
-          ])
-          .build(),
+          ]),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("规则")
-          .name("rules")
-          .kind(NodePropertyKind::Filter)
-          .required(false)
-          .description("路由规则集合（Rules 模式）")
-          .placeholder("添加规则...")
-          .kind_options(
-            NodePropertyKindOptions::builder()
-              .filter(FilterTypeOptions::builder().case_sensitive(json!("={{!$parameter.options.ignoreCase}}")).build())
-              .build(),
-          )
-          .build(),
+        NodeProperty::new(NodePropertyKind::Filter)
+          .with_display_name("规则")
+          .with_name("rules")
+          .with_required(false)
+          .with_description("路由规则集合（Rules 模式）")
+          .with_placeholder("添加规则...")
+          .with_kind_options(hetumind_core::workflow::NodePropertyKindOptions {
+            filter: Some(
+              hetumind_core::workflow::FilterTypeOptions::new()
+                .with_case_sensitive(json!("={{!$parameter.options.ignoreCase}}")),
+            ),
+            button_config: None,
+            container_class: None,
+            always_open_edit_window: None,
+            code_autocomplete: None,
+            editor: None,
+            editor_is_read_only: None,
+            sql_dialect: None,
+            load_options_depends_on: None,
+            load_options_method: None,
+            load_options: None,
+            max_value: None,
+            min_value: None,
+            multiple_values: None,
+            multiple_value_button_text: None,
+            number_precision: None,
+            password: None,
+            rows: None,
+            show_alpha: None,
+            sortable: None,
+            expirable: None,
+            resource_mapper: None,
+            assignment: None,
+            min_required_fields: None,
+            max_allowed_fields: None,
+            callout_action: None,
+            additional_properties: serde_json::Map::new(),
+          }),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("输出数量")
-          .name("numberOutputs")
-          .kind(NodePropertyKind::Number)
-          .required(false)
-          .description("输出端口数量（Expression 模式）")
-          .value(json!(2))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Number)
+          .with_display_name("输出数量")
+          .with_name("numberOutputs")
+          .with_required(false)
+          .with_description("输出端口数量（Expression 模式）")
+          .with_value(json!(2)),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("输出表达式")
-          .name("outputExpression")
-          .kind(NodePropertyKind::String)
-          .required(false)
-          .description("用于计算输出索引的表达式（Expression 模式）")
-          .placeholder("{{ $json.index }}")
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("输出表达式")
+          .with_name("outputExpression")
+          .with_required(false)
+          .with_description("用于计算输出索引的表达式（Expression 模式）")
+          .with_placeholder("{{ $json.index }}"),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("选项")
-          .name("options")
-          .required(false)
-          .placeholder("添加选项")
-          .options(vec![
+        NodeProperty::new(NodePropertyKind::FixedCollection)
+          .with_display_name("选项")
+          .with_name("options")
+          .with_required(false)
+          .with_placeholder("添加选项")
+          .with_options(vec![
             Box::new(NodeProperty::new_option(
               "All Matching Outputs",
               "allMatchingOutputs",
@@ -353,8 +376,7 @@ impl TryFrom<NodeDefinition> for SwitchV1 {
               json!("none"),
               NodePropertyKind::Options,
             )),
-          ])
-          .build(),
+          ]),
       );
     Ok(Self { definition: Arc::new(definition) })
   }

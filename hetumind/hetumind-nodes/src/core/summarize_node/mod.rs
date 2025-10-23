@@ -5,6 +5,7 @@
 
 use std::sync::Arc;
 
+use fusion_common::ahash::HashSet;
 use hetumind_core::{
   version::Version,
   workflow::{Node, NodeDefinition, NodeExecutor, NodeGroupKind, NodeKind, RegistrationError, ValidationError},
@@ -300,7 +301,7 @@ impl SummarizeConfig {
     }
 
     // 验证字段名唯一性
-    let mut field_names = std::collections::HashSet::new();
+    let mut field_names = HashSet::default();
     for field in &self.aggregate_fields {
       if !field_names.insert(&field.output_field) {
         return Err(ValidationError::invalid_field_value(
@@ -314,6 +315,7 @@ impl SummarizeConfig {
   }
 
   /// 获取有效的序列化风格
+  #[allow(dead_code)]
   pub fn get_serialization_style(&self) -> SerializationStyle {
     self.serialization_style.clone()
   }
@@ -400,7 +402,7 @@ impl SummarizeNode {
   }
 
   fn base() -> NodeDefinition {
-    NodeDefinition::new(SUMMARIZE_NODE_KIND, Version::new(1, 0, 0), "Summarize")
+    NodeDefinition::new(SUMMARIZE_NODE_KIND, "Summarize")
       .add_group(NodeGroupKind::Transform)
       .add_group(NodeGroupKind::Input)
       .with_description("对数据进行聚合计算和统计。支持多种聚合操作、分组和输出格式。")

@@ -22,8 +22,9 @@ hetumind-core = { workspace = true, features = ["with-db"] }
 hetumind-context = { workspace = true }
 hetumind-nodes = { workspace = true }
 
-fusion-common = { workspace = true, features = ["with-uuid"] }
+fusion-common = { workspace = true, features = ["with-uuid", "with-db"] }
 fusion-core = { workspace = true, features = ["with-uuid"] }
+jieyuan-core = { workspace = true, features = ["with-web"] }
 
 async-trait = { workspace = true }
 thiserror = { workspace = true }
@@ -97,6 +98,9 @@ croner = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 serde_repr = { workspace = true }
+
+# -- encoding
+urlencoding = { workspace = true }
 
 # -- security & config
 josekit = { workspace = true }

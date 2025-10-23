@@ -1,5 +1,4 @@
 use crate::core::if_node::utils::{resolve_value, to_number};
-use hetumind_core::types::JsonValue;
 use serde_json::json;
 
 #[cfg(test)]

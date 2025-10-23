@@ -100,83 +100,70 @@ impl TryFrom<NodeDefinition> for LoopV1 {
 
   fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
     let definition = base
-      .add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build())
-      .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build())
+      .with_version(Version::new(1, 0, 0))
+      .add_input(InputPortConfig::new(ConnectionKind::Main, "Input"))
+      .add_output(OutputPortConfig::new(ConnectionKind::Main, "Output"))
       .add_property(
-        NodeProperty::builder()
-          .display_name("循环模式")
-          .name("mode")
-          .kind(NodePropertyKind::Options)
-          .required(true)
-          .description("循环执行策略")
-          .value(json!(LoopMode::Items))
-          .options(vec![
+        NodeProperty::new(NodePropertyKind::Options)
+          .with_display_name("循环模式")
+          .with_name("mode")
+          .with_required(true)
+          .with_description("循环执行策略")
+          .with_value(json!(LoopMode::Items))
+          .with_options(vec![
             Box::new(NodeProperty::new_option("Items", "items", json!(LoopMode::Items), NodePropertyKind::String)),
             Box::new(NodeProperty::new_option("Times", "times", json!(LoopMode::Times), NodePropertyKind::String)),
             Box::new(NodeProperty::new_option("While", "while", json!(LoopMode::While), NodePropertyKind::String)),
             Box::new(NodeProperty::new_option("Batch", "batch", json!(LoopMode::Batch), NodePropertyKind::String)),
-          ])
-          .build(),
+          ]),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("循环次数")
-          .name("iterations")
-          .kind(NodePropertyKind::Number)
-          .required(false)
-          .description("循环执行次数（仅 Times 模式）")
-          .value(json!(1))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Number)
+          .with_display_name("循环次数")
+          .with_name("iterations")
+          .with_required(false)
+          .with_description("循环执行次数（仅 Times 模式）")
+          .with_value(json!(1)),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("批量大小")
-          .name("batch_size")
-          .kind(NodePropertyKind::Number)
-          .required(false)
-          .description("每批处理的数据项数量（仅 Batch 模式）")
-          .value(json!(10))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Number)
+          .with_display_name("批量大小")
+          .with_name("batch_size")
+          .with_required(false)
+          .with_description("每批处理的数据项数量（仅 Batch 模式）")
+          .with_value(json!(10)),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("条件表达式")
-          .name("condition")
-          .kind(NodePropertyKind::String)
-          .required(false)
-          .description("循环条件（仅 While 模式）")
-          .placeholder("data.enabled")
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("条件表达式")
+          .with_name("condition")
+          .with_required(false)
+          .with_description("循环条件（仅 While 模式）")
+          .with_placeholder("data.enabled"),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("最大循环次数")
-          .name("max_iterations")
-          .kind(NodePropertyKind::Number)
-          .required(false)
-          .description("防止无限循环的最大迭代次数")
-          .value(json!(1000))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Number)
+          .with_display_name("最大循环次数")
+          .with_name("max_iterations")
+          .with_required(false)
+          .with_description("防止无限循环的最大迭代次数")
+          .with_value(json!(1000)),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("包含索引")
-          .name("include_index")
-          .kind(NodePropertyKind::Boolean)
-          .required(false)
-          .description("是否在输出中包含索引信息")
-          .value(json!(false))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Boolean)
+          .with_display_name("包含索引")
+          .with_name("include_index")
+          .with_required(false)
+          .with_description("是否在输出中包含索引信息")
+          .with_value(json!(false)),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("并行处理")
-          .name("parallel")
-          .kind(NodePropertyKind::Boolean)
-          .required(false)
-          .description("是否并行处理数据项")
-          .value(json!(false))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Boolean)
+          .with_display_name("并行处理")
+          .with_name("parallel")
+          .with_required(false)
+          .with_description("是否并行处理数据项")
+          .with_value(json!(false)),
       );
     Ok(Self { definition: Arc::new(definition) })
   }

@@ -1,7 +1,8 @@
 use std::sync::Arc;
 
+use chrono::{DateTime, FixedOffset};
 use fusion_common::ctx::Ctx;
-use fusion_common::time::{OffsetDateTime, now};
+use fusionsql::common::now_offset;
 
 use crate::workflow::ExecutionId;
 
@@ -12,12 +13,32 @@ pub struct ExecutionContext {
   execution_id: ExecutionId,
   workflow: Arc<Workflow>,
   ctx: Ctx,
-  started_at: OffsetDateTime,
+  started_at: DateTime<FixedOffset>,
 }
 
 impl ExecutionContext {
   pub fn new(execution_id: ExecutionId, workflow: Arc<Workflow>, ctx: Ctx) -> Self {
-    Self { execution_id, workflow, ctx, started_at: now() }
+    Self { execution_id, workflow, ctx, started_at: now_offset() }
+  }
+
+  pub fn with_execution_id(mut self, execution_id: ExecutionId) -> Self {
+    self.execution_id = execution_id;
+    self
+  }
+
+  pub fn with_workflow(mut self, workflow: Arc<Workflow>) -> Self {
+    self.workflow = workflow;
+    self
+  }
+
+  pub fn with_ctx(mut self, ctx: Ctx) -> Self {
+    self.ctx = ctx;
+    self
+  }
+
+  pub fn with_started_at(mut self, started_at: DateTime<FixedOffset>) -> Self {
+    self.started_at = started_at;
+    self
   }
 
   pub fn ctx(&self) -> &Ctx {
@@ -32,7 +53,7 @@ impl ExecutionContext {
     self.workflow.clone()
   }
 
-  pub fn started_at(&self) -> &OffsetDateTime {
+  pub fn started_at(&self) -> &DateTime<FixedOffset> {
     &self.started_at
   }
 }

@@ -2,7 +2,7 @@
 //!
 //! 提供邮件处理、IMAP 连接管理、邮件解析等核心功能
 
-use std::collections::HashMap;
+use fusion_common::ahash::{HashMap, HashMapExt, HashSet};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use base64::{Engine as _, engine::general_purpose};
@@ -19,13 +19,13 @@ pub struct ImapConnector {
   /// 最后检查时间戳
   last_check_timestamp: Option<u64>,
   /// 已处理的邮件 UID 集合
-  processed_uids: std::collections::HashSet<u32>,
+  processed_uids: HashSet<u32>,
 }
 
 impl ImapConnector {
   /// 创建新的 IMAP 连接器
   pub fn new(config: super::ImapConnectionConfig) -> Self {
-    Self { config, connected: false, last_check_timestamp: None, processed_uids: std::collections::HashSet::new() }
+    Self { config, connected: false, last_check_timestamp: None, processed_uids: HashSet::default() }
   }
 
   /// 连接到 IMAP 服务器
@@ -145,7 +145,7 @@ impl ImapConnector {
   }
 
   /// 标记邮件为已读
-  pub async fn mark_as_read(&mut self, uid: u32) -> Result<(), String> {
+  pub async fn mark_as_read(&mut self, _uid: u32) -> Result<(), String> {
     if !self.connected {
       return Err("Not connected to IMAP server".to_string());
     }
@@ -436,7 +436,7 @@ pub struct TriggerState {
   /// 最后处理时间戳
   pub last_updated: u64,
   /// 已处理的邮件 UID 集合
-  pub processed_uids: std::collections::HashSet<u32>,
+  pub processed_uids: HashSet<u32>,
   /// 错误计数
   pub error_count: u32,
   /// 最后错误信息
@@ -448,7 +448,7 @@ impl TriggerState {
   pub fn new() -> Self {
     Self {
       last_updated: SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0),
-      processed_uids: std::collections::HashSet::new(),
+      processed_uids: HashSet::default(),
       error_count: 0,
       last_error: None,
     }

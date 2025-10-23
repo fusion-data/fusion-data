@@ -5,9 +5,9 @@ use hetumind_core::{
   types::JsonValue,
   version::Version,
   workflow::{
-    ConnectionKind, ExecutionDataItems, ExecutionDataMap, FilterTypeOptions, InputPortConfig, NodeDefinition,
-    NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, NodePropertyKindOptions,
-    OutputPortConfig, RegistrationError, make_execution_data_map,
+    ConnectionKind, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition, NodeExecutable,
+    NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig, RegistrationError,
+    make_execution_data_map,
   },
 };
 use serde_json::json;
@@ -51,6 +51,7 @@ impl IfV1 {
   }
 
   /// 评估所有条件（保持向后兼容）
+  #[allow(dead_code)]
   pub fn evaluate_conditions(
     &self,
     conditions: &[ConditionConfig],
@@ -304,85 +305,108 @@ impl TryFrom<NodeDefinition> for IfV1 {
 
   fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
     let definition = base
-      .add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build())
-      .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("True").build())
-      .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("False").build())
+      .with_version(Version::new(1, 0, 0))
+      .add_input(InputPortConfig::new(ConnectionKind::Main, "Input"))
+      .add_output(OutputPortConfig::new(ConnectionKind::Main, "True"))
+      .add_output(OutputPortConfig::new(ConnectionKind::Main, "False"))
       .add_property(
-        NodeProperty::builder()
-          .display_name("条件".to_string())
-          .name("conditions")
-          .required(true)
-          .description("要评估的条件列表".to_string())
-          .placeholder("添加条件...".to_string())
-          .kind(NodePropertyKind::Filter)
-          .kind_options(
-            NodePropertyKindOptions::builder()
-              .filter(
-                FilterTypeOptions::builder().case_sensitive(json!("={{!$parameter.options.ignore_case}}")).build(),
-              )
-              .build(),
-          )
-          .build(),
+        NodeProperty::new(NodePropertyKind::Filter)
+          .with_display_name("条件")
+          .with_name("conditions")
+          .with_required(true)
+          .with_description("要评估的条件列表")
+          .with_placeholder("添加条件...")
+          .with_kind_options(hetumind_core::workflow::NodePropertyKindOptions {
+            filter: Some(
+              hetumind_core::workflow::FilterTypeOptions::new()
+                .with_case_sensitive(json!("={{!$parameter.options.ignore_case}}")),
+            ),
+            button_config: None,
+            container_class: None,
+            always_open_edit_window: None,
+            code_autocomplete: None,
+            editor: None,
+            editor_is_read_only: None,
+            sql_dialect: None,
+            load_options_depends_on: None,
+            load_options_method: None,
+            load_options: None,
+            max_value: None,
+            min_value: None,
+            multiple_values: None,
+            multiple_value_button_text: None,
+            number_precision: None,
+            password: None,
+            rows: None,
+            show_alpha: None,
+            sortable: None,
+            expirable: None,
+            resource_mapper: None,
+            assignment: None,
+            min_required_fields: None,
+            max_allowed_fields: None,
+            callout_action: None,
+            additional_properties: serde_json::Map::new(),
+          }),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Options")
-          .name("options")
-          .required(false)
-          .placeholder("Add Option")
-          .options(vec![Box::new(NodeProperty::new_option(
+        NodeProperty::new(NodePropertyKind::Collection)
+          .with_display_name("Options")
+          .with_name("options")
+          .with_required(false)
+          .with_placeholder("Add Option")
+          .add_option(Box::new(NodeProperty::new_option(
             "Ignore Case",
             "ignore_case",
             json!(true),
             NodePropertyKind::Boolean,
-          ))])
-          .build(),
+          ))),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("逻辑组合".to_string())
-          .name("combination")
-          .kind(NodePropertyKind::Options)
-          .required(false)
-          .description("多个条件之间的逻辑关系".to_string())
-          .value(json!(LogicCombination::And))
-          .options(vec![
-            Box::new(NodeProperty::new_option("AND", "and", json!(LogicCombination::And), NodePropertyKind::Boolean)),
-            Box::new(NodeProperty::new_option("OR", "or", json!(LogicCombination::Or), NodePropertyKind::Boolean)),
-          ])
-          .placeholder("".to_string())
-          .build(),
+        NodeProperty::new(NodePropertyKind::Options)
+          .with_display_name("逻辑组合")
+          .with_name("combination")
+          .with_required(false)
+          .with_description("多个条件之间的逻辑关系")
+          .with_value(json!(LogicCombination::And))
+          .add_option(Box::new(NodeProperty::new_option(
+            "AND",
+            "and",
+            json!(LogicCombination::And),
+            NodePropertyKind::Boolean,
+          )))
+          .add_option(Box::new(NodeProperty::new_option(
+            "OR",
+            "or",
+            json!(LogicCombination::Or),
+            NodePropertyKind::Boolean,
+          )))
+          .with_placeholder(""),
       )
       .add_property(
         // 高级配置选项
-        NodeProperty::builder()
-          .display_name("高级选项".to_string())
-          .name("advanced_options")
-          .required(false)
-          .description("IfNode 高级配置选项".to_string())
-          .kind(NodePropertyKind::String)
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("高级选项")
+          .with_name("advanced_options")
+          .with_required(false)
+          .with_description("IfNode 高级配置选项"),
       )
       .add_property(
         // 高级条件组合（V2 功能）
-        NodeProperty::builder()
-          .display_name("高级条件组合".to_string())
-          .name("advanced_condition_groups")
-          .required(false)
-          .description("高级条件组合配置，支持复杂的条件逻辑组合".to_string())
-          .kind(NodePropertyKind::String)
-          .placeholder("配置高级条件组...")
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("高级条件组合")
+          .with_name("advanced_condition_groups")
+          .with_required(false)
+          .with_description("高级条件组合配置，支持复杂的条件逻辑组合")
+          .with_placeholder("配置高级条件组..."),
       )
       .add_property(
         // 条件描述和配置
-        NodeProperty::builder()
-          .display_name("条件配置".to_string())
-          .name("condition_config")
-          .required(false)
-          .description("条件的高级配置选项".to_string())
-          .kind(NodePropertyKind::String)
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("条件配置")
+          .with_name("condition_config")
+          .with_required(false)
+          .with_description("条件的高级配置选项"),
       );
 
     Ok(Self { definition: Arc::new(definition) })

@@ -2,14 +2,18 @@ use axum::Json;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use fusion_core::DataError;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 pub type WebResult<T> = core::result::Result<Json<T>, WebError>;
 
 /// A default error response for most API errors.
-#[derive(Debug, Serialize)]
-#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
+#[derive(Debug, Serialize, Deserialize)]
+#[cfg_attr(
+  feature = "with-openapi",
+  derive(utoipa::ToSchema, utoipa::ToResponse),
+  response(description = "A default error response for most API errors.")
+)]
 pub struct WebError {
   /// A unique error ID.
   // TODO 应从 tracing 中获取
@@ -23,12 +27,12 @@ pub struct WebError {
 
   /// Optional Additional error details.
   #[serde(skip_serializing_if = "Option::is_none")]
-  pub err_detail: Option<Box<Value>>,
+  pub detail: Option<Value>,
 }
 
 impl WebError {
-  pub fn new(err_code: i32, err_msg: impl Into<String>, err_detail: Option<Box<Value>>) -> Self {
-    Self { err_code, err_msg: err_msg.into(), err_detail }
+  pub fn new(err_code: i32, err_msg: impl Into<String>, detail: Option<Value>) -> Self {
+    Self { err_code, err_msg: err_msg.into(), detail }
   }
 
   pub fn new_with_msg(err_msg: impl Into<String>) -> Self {
@@ -39,8 +43,8 @@ impl WebError {
     Self::new(err_code, err_msg, None)
   }
 
-  pub fn server_error_with_detail(err_msg: impl Into<String>, err_detail: Box<Value>) -> Self {
-    Self::new(500, err_msg, Some(err_detail))
+  pub fn server_error_with_detail(err_msg: impl Into<String>, detail: Value) -> Self {
+    Self::new(500, err_msg, Some(detail))
   }
 
   pub fn with_err_code(mut self, err_code: i32) -> Self {
@@ -48,11 +52,11 @@ impl WebError {
     self
   }
 
-  pub fn with_details(mut self, details: Box<Value>) -> Self {
-    if *details == Value::Null {
-      self.err_detail = None
+  pub fn with_details(mut self, details: Value) -> Self {
+    if details == Value::Null {
+      self.detail = None
     } else {
-      self.err_detail = Some(details);
+      self.detail = Some(details);
     }
     self
   }
@@ -60,6 +64,26 @@ impl WebError {
   pub fn with_err_msg(mut self, err_msg: impl Into<String>) -> Self {
     self.err_msg = err_msg.into();
     self
+  }
+
+  /// Create a 401 Unauthorized error
+  pub fn unauthorized(err_msg: impl Into<String>) -> Self {
+    Self::new_with_code(401, err_msg)
+  }
+
+  /// Create a 403 Forbidden error
+  pub fn forbidden(err_msg: impl Into<String>) -> Self {
+    Self::new_with_code(403, err_msg)
+  }
+
+  /// Create a 400 Bad Request error
+  pub fn bad_request(err_msg: impl Into<String>) -> Self {
+    Self::new_with_code(400, err_msg)
+  }
+
+  /// Create a 502 Bad Gateway error
+  pub fn bad_gateway(err_msg: impl Into<String>) -> Self {
+    Self::new_with_code(502, err_msg)
   }
 }
 
@@ -83,7 +107,7 @@ impl From<DataError> for WebError {
 
     // Add details if present
     if let Some(data) = err.data.as_ref() {
-      web_error = web_error.with_details(Box::new(data.clone()));
+      web_error = web_error.with_details(data.clone());
     }
 
     web_error

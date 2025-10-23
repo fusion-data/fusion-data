@@ -66,7 +66,7 @@ e = "EA"
   );
   Application::builder().add_config_source(cs).add_plugin(MyPlugin).run().await.unwrap();
   let app = Application::global();
-  assert_eq!(app.fusion_config().app().name(), "fusion");
+  assert_eq!(app.fusion_setting().app().name(), "fusion");
   let c: Config = app.get_config().unwrap();
   assert_eq!(c.c.g, "hello");
 }

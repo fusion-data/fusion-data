@@ -58,11 +58,13 @@ pub fn format_data_summary(data: &ExecutionData) -> String {
 ///
 /// # 返回值
 /// 返回近似大小的字节数
+#[allow(dead_code)]
 pub fn estimate_data_size(data: &ExecutionData) -> usize {
   estimate_json_size(data.json())
 }
 
 /// 递归计算 JSON 值的近似大小
+#[allow(dead_code)]
 fn estimate_json_size(value: &Value) -> usize {
   match value {
     Value::Object(map) => {
@@ -96,6 +98,7 @@ fn estimate_json_size(value: &Value) -> usize {
 ///
 /// # 返回值
 /// 返回验证结果，包含是否有效和错误信息
+#[allow(dead_code)]
 pub fn validate_data_integrity(data: &ExecutionData) -> Result<(), String> {
   // 检查 JSON 数据是否有效
   let json_value = data.json();
@@ -127,6 +130,7 @@ pub fn validate_data_integrity(data: &ExecutionData) -> Result<(), String> {
 ///
 /// # 返回值
 /// 返回包含性能指标的 JSON 值
+#[allow(dead_code)]
 pub fn create_performance_metrics(
   input_count: usize,
   output_count: usize,

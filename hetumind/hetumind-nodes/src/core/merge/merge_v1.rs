@@ -88,19 +88,19 @@ impl NodeExecutable for MergeV1 {
 impl TryFrom<NodeDefinition> for MergeV1 {
   type Error = RegistrationError;
 
-  fn try_from(mut base: NodeDefinition) -> Result<Self, Self::Error> {
+  fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
     let definition = base
-      .add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build())
-      .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build())
+      .with_version(Version::new(1, 0, 0))
+      .add_input(InputPortConfig::new(ConnectionKind::Main, "Input"))
+      .add_output(OutputPortConfig::new(ConnectionKind::Main, "Output"))
       .add_property(
-        NodeProperty::builder()
-          .display_name("合并模式")
-          .name("mode")
-          .kind(NodePropertyKind::Options)
-          .required(true)
-          .description("数据合并策略")
-          .value(json!(MergeMode::Append))
-          .options(vec![
+        NodeProperty::new(NodePropertyKind::Options)
+          .with_display_name("合并模式")
+          .with_name("mode")
+          .with_required(true)
+          .with_description("数据合并策略")
+          .with_value(json!(MergeMode::Append))
+          .with_options(vec![
             Box::new(NodeProperty::new_option("Append", "append", json!(MergeMode::Append), NodePropertyKind::String)),
             Box::new(NodeProperty::new_option(
               "MergeByKey",
@@ -120,28 +120,23 @@ impl TryFrom<NodeDefinition> for MergeV1 {
               json!(MergeMode::WaitForAll),
               NodePropertyKind::String,
             )),
-          ])
-          .build(),
+          ]),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("合并键")
-          .name("merge_key")
-          .kind(NodePropertyKind::String)
-          .required(false)
-          .description("用于按键合并的字段名（仅 mergeByKey 模式）")
-          .placeholder("id")
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("合并键")
+          .with_name("merge_key")
+          .with_required(false)
+          .with_description("用于按键合并的字段名（仅 mergeByKey 模式）")
+          .with_placeholder("id"),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("输入端口数量")
-          .name("input_ports")
-          .kind(NodePropertyKind::Number)
-          .required(false)
-          .description("期望的输入端口数量（2-10）")
-          .value(json!(2))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Number)
+          .with_display_name("输入端口数量")
+          .with_name("input_ports")
+          .with_required(false)
+          .with_description("期望的输入端口数量（2-10）")
+          .with_value(json!(2)),
       );
     Ok(Self { definition: Arc::new(definition) })
   }

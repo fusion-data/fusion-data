@@ -1,6 +1,6 @@
 use chrono::{DateTime, FixedOffset};
 use fusion_common::page::Page;
-use fusion_common::time::{OffsetDateTime, now_offset};
+use fusion_common::time::now_offset;
 use fusionsql_core::{
   field::FieldMask,
   filter::{OpValDateTime, OpValInt32, OpValUuid},
@@ -68,10 +68,8 @@ pub struct ScheduleForCreate {
   pub description: Option<String>,
   pub schedule_kind: ScheduleKind,
   pub cron_expression: Option<String>,
-  #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
-  pub start_time: Option<OffsetDateTime>,
-  #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
-  pub end_time: Option<OffsetDateTime>,
+  pub start_time: Option<DateTime<FixedOffset>>,
+  pub end_time: Option<DateTime<FixedOffset>>,
   pub status: Option<ScheduleStatus>,
 }
 
@@ -84,10 +82,8 @@ pub struct ScheduleForUpdate {
   pub description: Option<String>,
   pub schedule_kind: Option<ScheduleKind>,
   pub cron_expression: Option<String>,
-  #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
-  pub start_time: Option<OffsetDateTime>,
-  #[cfg_attr(feature = "with-openapi", schema(value_type = String, format = DateTime, example = "2023-01-01T00:00:00Z"))]
-  pub end_time: Option<OffsetDateTime>,
+  pub start_time: Option<DateTime<FixedOffset>>,
+  pub end_time: Option<DateTime<FixedOffset>>,
   pub status: Option<ScheduleStatus>,
   pub update_mask: Option<FieldMask>,
 }

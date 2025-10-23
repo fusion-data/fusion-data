@@ -18,6 +18,7 @@ import {
   Tooltip,
   Badge,
   InputNumber,
+  Tabs,
 } from 'antd';
 import {
   DesktopOutlined,
@@ -31,6 +32,7 @@ import {
   CheckCircleOutlined,
   ExclamationCircleOutlined,
   MonitorOutlined,
+  ClockCircleOutlined,
 } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
@@ -681,11 +683,11 @@ export const CanvasOptimizer: React.FC<CanvasOptimizerProps> = ({
                     <Tag color={
                       tip.impact === 'high' ? 'red' :
                       tip.impact === 'medium' ? 'orange' : 'blue'
-                    } size="small">
+                    }>
                       {tip.impact === 'high' ? '高' :
                        tip.impact === 'medium' ? '中' : '低'}影响
                     </Tag>
-                    <Tag color="blue" size="small">{tip.category}</Tag>
+                    <Tag color="blue">{tip.category}</Tag>
                   </Space>
                 }
                 description={tip.description}
@@ -723,83 +725,98 @@ export const CanvasOptimizer: React.FC<CanvasOptimizerProps> = ({
         </Row>
       </div>
 
-      <Tabs defaultActiveKey="overview" size="small">
-        <TabPane tab="性能概览" key="overview">
-          {renderPerformanceOverview()}
-          <div style={{ marginTop: 24 }}>
-            {renderOptimizationTips()}
-          </div>
-        </TabPane>
-
-        <TabPane tab="渲染配置" key="rendering">
-          {renderRenderingConfig()}
-        </TabPane>
-
-        <TabPane tab="性能配置" key="performance">
-          {renderPerformanceConfig()}
-        </TabPane>
-
-        <TabPane tab="详细指标" key="metrics">
-          <Row gutter={16}>
-            <Col span={12}>
-              <Card title="基础指标" size="small">
-                <Space direction="vertical" style={{ width: '100%' }}>
-                  <div>
-                    <Text>节点数量: </Text>
-                    <Tag color="blue">{metrics.nodeCount}</Tag>
-                  </div>
-                  <div>
-                    <Text>连接数量: </Text>
-                    <Tag color="blue">{metrics.edgeCount}</Tag>
-                  </div>
-                  <div>
-                    <Text>视口节点: </Text>
-                    <Tag color="green">{metrics.viewportNodes}</Tag>
-                  </div>
-                  <div>
-                    <Text>交互延迟: </Text>
-                    <Tag color={metrics.interactionLatency > 100 ? 'orange' : 'green'}>
-                      {metrics.interactionLatency.toFixed(0)}ms
-                    </Tag>
-                  </div>
-                </Space>
-              </Card>
-            </Col>
-            <Col span={12}>
-              <Card title="缓存指标" size="small">
-                <Space direction="vertical" style={{ width: '100%' }}>
-                  <div>
-                    <Text>缓存命中率: </Text>
-                    <Progress
-                      percent={metrics.cacheHitRate}
-                      size="small"
-                      format={percent => `${percent?.toFixed(1)}%`}
-                    />
-                  </div>
-                  <div>
-                    <Text>缓存状态: </Text>
-                    <Tag color={config.performance.enableCaching ? 'green' : 'red'}>
-                      {config.performance.enableCaching ? '已启用' : '已禁用'}
-                    </Tag>
-                  </div>
-                  <div>
-                    <Text>防抖状态: </Text>
-                    <Tag color={config.performance.enableDebouncing ? 'green' : 'red'}>
-                      {config.performance.enableDebouncing ? '已启用' : '已禁用'}
-                    </Tag>
-                  </div>
-                  <div>
-                    <Text>虚拟化状态: </Text>
-                    <Tag color={config.rendering.enableVirtualization ? 'green' : 'red'}>
-                      {config.rendering.enableVirtualization ? '已启用' : '已禁用'}
-                    </Tag>
-                  </div>
-                </Space>
-              </Card>
-            </Col>
-          </Row>
-        </TabPane>
-      </Tabs>
+      <Tabs
+        defaultActiveKey="overview"
+        size="small"
+        items={[
+          {
+            key: 'overview',
+            label: '性能概览',
+            children: (
+              <>
+                {renderPerformanceOverview()}
+                <div style={{ marginTop: 24 }}>
+                  {renderOptimizationTips()}
+                </div>
+              </>
+            ),
+          },
+          {
+            key: 'rendering',
+            label: '渲染配置',
+            children: renderRenderingConfig(),
+          },
+          {
+            key: 'performance',
+            label: '性能配置',
+            children: renderPerformanceConfig(),
+          },
+          {
+            key: 'metrics',
+            label: '详细指标',
+            children: (
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Card title="基础指标" size="small">
+                    <Space direction="vertical" style={{ width: '100%' }}>
+                      <div>
+                        <Text>节点数量: </Text>
+                        <Tag color="blue">{metrics.nodeCount}</Tag>
+                      </div>
+                      <div>
+                        <Text>连接数量: </Text>
+                        <Tag color="blue">{metrics.edgeCount}</Tag>
+                      </div>
+                      <div>
+                        <Text>视口节点: </Text>
+                        <Tag color="green">{metrics.viewportNodes}</Tag>
+                      </div>
+                      <div>
+                        <Text>交互延迟: </Text>
+                        <Tag color={metrics.interactionLatency > 100 ? 'orange' : 'green'}>
+                          {metrics.interactionLatency.toFixed(0)}ms
+                        </Tag>
+                      </div>
+                    </Space>
+                  </Card>
+                </Col>
+                <Col span={12}>
+                  <Card title="缓存指标" size="small">
+                    <Space direction="vertical" style={{ width: '100%' }}>
+                      <div>
+                        <Text>缓存命中率: </Text>
+                        <Progress
+                          percent={metrics.cacheHitRate}
+                          size="small"
+                          format={percent => `${percent?.toFixed(1)}%`}
+                        />
+                      </div>
+                      <div>
+                        <Text>缓存状态: </Text>
+                        <Tag color={config.performance.enableCaching ? 'green' : 'red'}>
+                          {config.performance.enableCaching ? '已启用' : '已禁用'}
+                        </Tag>
+                      </div>
+                      <div>
+                        <Text>防抖状态: </Text>
+                        <Tag color={config.performance.enableDebouncing ? 'green' : 'red'}>
+                          {config.performance.enableDebouncing ? '已启用' : '已禁用'}
+                        </Tag>
+                      </div>
+                      <div>
+                        <Text>虚拟化状态: </Text>
+                        <Tag color={config.rendering.enableVirtualization ? 'green' : 'red'}>
+                          {config.rendering.enableVirtualization ? '已启用' : '已禁用'}
+                        </Tag>
+                      </div>
+                    </Space>
+                  </Card>
+                </Col>
+              </Row>
+            ),
+          },
+        ]}
+      />
     </div>
   );
 };

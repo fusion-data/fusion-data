@@ -3,7 +3,7 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 
 use crate::workflow::WorkflowId;
 
-use super::{ExecutionData, NodeExecutionContext, TriggerError, WorkflowNode};
+use super::{ExecutionData, NodeExecutionContext, TriggerError, NodeElement};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize_repr, Deserialize_repr)]
 #[repr(i32)]
@@ -46,7 +46,7 @@ pub trait TriggerExecutor: Send + Sync {
   async fn start_trigger(
     &self,
     workflow_id: WorkflowId,
-    node: &WorkflowNode,
+    node: &NodeElement,
     context: &TriggerContext,
   ) -> Result<TriggerHandle, TriggerError>;
 

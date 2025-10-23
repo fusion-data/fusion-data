@@ -36,12 +36,14 @@ use super::{
 /// # 输出
 /// - 无输出端口，总是抛出错误
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct StopAndErrorV1 {
   pub definition: Arc<NodeDefinition>,
 }
 
 #[async_trait]
 impl NodeExecutable for StopAndErrorV1 {
+  #[allow(unused_variables)]
   fn definition(&self) -> Arc<NodeDefinition> {
     self.definition.clone()
   }
@@ -56,7 +58,7 @@ impl NodeExecutable for StopAndErrorV1 {
     );
 
     // 获取输入数据（仅用于验证和上下文）
-    let input_items = if let Some(input_collection) = context.get_input_items(ConnectionKind::Main, 0)
+    let _input_items = if let Some(input_collection) = context.get_input_items(ConnectionKind::Main, 0)
       && let ExecutionDataItems::Items(input_data) = input_collection
     {
       log::info!("Stop And Error 节点接收到 {} 个输入项", input_data.len());
@@ -128,18 +130,18 @@ impl NodeExecutable for StopAndErrorV1 {
 impl TryFrom<NodeDefinition> for StopAndErrorV1 {
   type Error = RegistrationError;
 
-  fn try_from(mut base: NodeDefinition) -> Result<Self, Self::Error> {
+  fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
     let definition = base
-      .add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build())
+      .with_version(Version::new(1, 0, 0))
+      .add_input(InputPortConfig::new(ConnectionKind::Main, "Input"))
       .add_property(
-        NodeProperty::builder()
-          .display_name("错误类型")
-          .name("error_type")
-          .kind(NodePropertyKind::Options)
-          .required(true)
-          .description("选择错误类型")
-          .value(json!(ErrorType::ErrorMessage))
-          .options(vec![
+        NodeProperty::new(NodePropertyKind::Options)
+          .with_display_name("错误类型")
+          .with_name("error_type")
+          .with_required(true)
+          .with_description("选择错误类型")
+          .with_value(json!(ErrorType::ErrorMessage))
+          .with_options(vec![
             Box::new(NodeProperty::new_option(
               "错误消息",
               "error_message",
@@ -152,28 +154,23 @@ impl TryFrom<NodeDefinition> for StopAndErrorV1 {
               json!(ErrorType::ErrorObject),
               NodePropertyKind::String,
             )),
-          ])
-          .build(),
+          ]),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("错误消息")
-          .name("error_message")
-          .kind(NodePropertyKind::String)
-          .required(false)
-          .description("要抛出的错误消息（当错误类型为「错误消息」时使用）")
-          .placeholder("输入错误消息...")
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("错误消息")
+          .with_name("error_message")
+          .with_required(false)
+          .with_description("要抛出的错误消息（当错误类型为「错误消息」时使用）")
+          .with_placeholder("输入错误消息..."),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("错误对象")
-          .name("error_object")
-          .kind(NodePropertyKind::Json)
-          .required(false)
-          .description("结构化错误对象（当错误类型为「错误对象」时使用）")
-          .placeholder("输入 JSON 格式的错误对象...")
-          .build(),
+        NodeProperty::new(NodePropertyKind::Json)
+          .with_display_name("错误对象")
+          .with_name("error_object")
+          .with_required(false)
+          .with_description("结构化错误对象（当错误类型为「错误对象」时使用）")
+          .with_placeholder("输入 JSON 格式的错误对象..."),
       );
     Ok(Self { definition: Arc::new(definition) })
   }

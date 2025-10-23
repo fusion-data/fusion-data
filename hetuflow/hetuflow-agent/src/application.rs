@@ -106,7 +106,7 @@ impl AgentApplication {
   }
 
   pub async fn shutdown_recv(&self) -> ShutdownRecv {
-    Application::global().get_shutdown_recv().await
+    Application::global().shutdown_recv().await
   }
 
   /// 停止应用程序

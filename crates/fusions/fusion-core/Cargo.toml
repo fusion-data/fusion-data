@@ -8,7 +8,6 @@ license.workspace = true
 repository.workspace = true
 publish = true
 
-
 [lints.clippy]
 uninlined_format_args = "allow"
 
@@ -16,12 +15,12 @@ uninlined_format_args = "allow"
 default = ["opentelemetry"]
 tonic = ["dep:tonic", "dep:protobuf"]
 opentelemetry = ["logforth/append-opentelemetry"]
-with-uuid = ["dep:uuid"]
-with-ulid = ["dep:ulid"]
+with-uuid = ["dep:uuid", "utoipa/uuid", "fusion-common/with-uuid"]
+with-ulid = ["dep:ulid", "utoipa/ulid", "fusion-common/with-ulid"]
 with-openapi = ["dep:utoipa"]
 
 [dependencies]
-fusion-common.workspace = true
+fusion-common = { workspace = true }
 fusion-core-macros = { workspace = true }
 thiserror = { workspace = true }
 dashmap = { workspace = true }

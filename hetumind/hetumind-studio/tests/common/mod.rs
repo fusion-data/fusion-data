@@ -3,7 +3,7 @@
 use axum::Router;
 use axum_test::TestServer;
 use config::File;
-use fusion_core::{DataError, application::Application};
+use fusion_core::application::Application;
 use fusionsql::{ModelManager, store::DbxPostgres};
 use once_cell::sync::Lazy;
 use serde_json::json;
@@ -16,6 +16,7 @@ use hetumind_studio::{endpoint, start::app_builder};
 // 确保只初始化一次
 static ONCE: Lazy<OnceCell<Application>> = Lazy::new(OnceCell::new);
 
+#[allow(dead_code)]
 pub async fn get_server() -> TestServer {
   let context = TestContext::setup().await;
 
@@ -28,6 +29,7 @@ pub async fn get_server() -> TestServer {
 }
 
 // 清理测试数据的函数
+#[allow(dead_code)]
 async fn cleanup_test_data(dbx: &DbxPostgres) {
   let mut conn = dbx.db().acquire().await.unwrap();
 
@@ -88,4 +90,5 @@ pub fn create_test_workflow_json() -> (WorkflowId, serde_json::Value) {
   (id, workflow_json)
 }
 
+#[allow(dead_code)]
 pub const ADMIN_TOKEN: &str = "eyJ0eXAiOiJKV1QiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiYWxnIjoiZGlyIn0..03gYECTkpz9mT4yBeslZkw.hzfsYCVvvJYIC8JqQxu3w6MI2puqekcMJ0C6Q0G3FJ9lW9nCaRmUx8im7DGx8Zki.wdKF4I1iMTCFggcA7qjmug";

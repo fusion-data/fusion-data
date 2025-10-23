@@ -19,6 +19,7 @@ use super::LimitConfig;
 ///
 /// # 返回值
 /// 返回应用限制后的数据项列表
+#[allow(dead_code)]
 pub fn apply_limit_operation(input_items: &[ExecutionData], config: &LimitConfig) -> Vec<ExecutionData> {
   debug!(
     "应用限制操作 - 输入项目数: {}, 限制数: {}, 策略: {:?}",
@@ -54,6 +55,7 @@ pub fn apply_limit_operation(input_items: &[ExecutionData], config: &LimitConfig
 }
 
 /// 计算限制统计信息
+#[allow(dead_code)]
 pub struct LimitStats {
   /// 输入项目数量
   pub input_count: usize,
@@ -69,6 +71,7 @@ pub struct LimitStats {
 
 impl LimitStats {
   /// 计算限制统计信息
+  #[allow(dead_code)]
   pub fn new(input_items: &[ExecutionData], output_items: &[ExecutionData], config: &LimitConfig) -> Self {
     Self {
       input_count: input_items.len(),
@@ -80,16 +83,19 @@ impl LimitStats {
   }
 
   /// 获取限制比例 (0.0 - 1.0)
+  #[allow(dead_code)]
   pub fn limit_ratio(&self) -> f64 {
     if self.input_count == 0 { 0.0 } else { self.output_count as f64 / self.input_count as f64 }
   }
 
   /// 是否应用了限制
+  #[allow(dead_code)]
   pub fn is_limited(&self) -> bool {
     self.removed_count > 0
   }
 
   /// 记录统计信息到日志
+  #[allow(dead_code)]
   pub fn log_stats(&self) {
     if self.is_limited() {
       warn!(
@@ -110,6 +116,7 @@ impl LimitStats {
 }
 
 /// 验证限制参数的有效性
+#[allow(dead_code)]
 pub fn validate_limit_parameters(max_items: usize) -> Result<(), String> {
   if max_items == 0 {
     return Err("max_items must be greater than 0".to_string());
@@ -126,6 +133,7 @@ pub fn validate_limit_parameters(max_items: usize) -> Result<(), String> {
 ///
 /// 在大数据集场景下，这个函数可以帮助确定合适的批处理大小
 /// 以平衡内存使用和处理效率。
+#[allow(dead_code)]
 pub fn calculate_optimal_batch_size(total_items: usize, max_items: usize) -> usize {
   // 如果总项目数小于等于最大限制，直接返回总项目数
   if total_items <= max_items {

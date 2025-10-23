@@ -1,6 +1,5 @@
 use hetumind_core::{
   types::JsonValue,
-  version::Version,
   workflow::{NodeDefinition, NodeExecutionContext, NodeGroupKind, NodeProperty, NodePropertyKind},
 };
 use serde_json::json;
@@ -8,215 +7,145 @@ use serde_json::json;
 use crate::constants::ERROR_TRIGGER_NODE_KIND;
 
 pub fn create_base() -> NodeDefinition {
-  NodeDefinition::new(ERROR_TRIGGER_NODE_KIND, Version::new(1, 0, 0), "Error Trigger")
+  NodeDefinition::new(ERROR_TRIGGER_NODE_KIND, "Error Trigger")
     .add_group(NodeGroupKind::Trigger)
     .with_description("Triggers workflow when other workflows encounter errors")
     .with_max_nodes(1)
     .add_property(
-      NodeProperty::builder()
-        .display_name("Trigger Mode")
-        .name("trigger_mode")
-        .kind(NodePropertyKind::Options)
-        .options(vec![
+      NodeProperty::new(NodePropertyKind::Options)
+        .with_display_name("Trigger Mode")
+        .with_name("trigger_mode")
+        .with_options(vec![
           Box::new(NodeProperty::new_option(
             "All Workflows",
             "all_workflows",
-            JsonValue::String("all_workflows".to_string()),
+            json!("all_workflows"),
             NodePropertyKind::String,
           )),
           Box::new(NodeProperty::new_option(
             "Specific Workflows",
             "specific_workflows",
-            JsonValue::String("specific_workflows".to_string()),
+            json!("specific_workflows"),
             NodePropertyKind::String,
           )),
           Box::new(NodeProperty::new_option(
             "Internal Only",
             "internal_only",
-            JsonValue::String("internal_only".to_string()),
+            json!("internal_only"),
             NodePropertyKind::String,
           )),
         ])
-        .required(true)
-        .description("Select which workflows to monitor for errors")
-        .build(),
+        .with_required(true)
+        .with_description("Select which workflows to monitor for errors"),
     )
     .add_property(
-      NodeProperty::builder()
-        .display_name("Workflow IDs")
-        .name("workflow_ids")
-        .kind(NodePropertyKind::MultiOptions)
-        .required(false)
-        .description("Specific workflow IDs to monitor (comma-separated)")
-        .hint("Leave empty to monitor all workflows")
-        .build(),
+      NodeProperty::new(NodePropertyKind::MultiOptions)
+        .with_display_name("Workflow IDs")
+        .with_name("workflow_ids")
+        .with_required(false)
+        .with_description("Specific workflow IDs to monitor (comma-separated)")
+        .with_hint("Leave empty to monitor all workflows"),
     )
     .add_property(
-      NodeProperty::builder()
-        .display_name("Error Types")
-        .name("error_types")
-        .kind(NodePropertyKind::MultiOptions)
-        .options(vec![
+      NodeProperty::new(NodePropertyKind::MultiOptions)
+        .with_display_name("Error Types")
+        .with_name("error_types")
+        .with_options(vec![
           Box::new(NodeProperty::new_option(
             "Node Execution",
             "node_execution",
-            JsonValue::String("node_execution".to_string()),
+            json!("node_execution"),
             NodePropertyKind::String,
           )),
-          Box::new(NodeProperty::new_option(
-            "Timeout",
-            "timeout",
-            JsonValue::String("timeout".to_string()),
-            NodePropertyKind::String,
-          )),
+          Box::new(NodeProperty::new_option("Timeout", "timeout", json!("timeout"), NodePropertyKind::String)),
           Box::new(NodeProperty::new_option(
             "Resource Exhausted",
             "resource_exhausted",
-            JsonValue::String("resource_exhausted".to_string()),
+            json!("resource_exhausted"),
             NodePropertyKind::String,
           )),
           Box::new(NodeProperty::new_option(
             "External Service",
             "external_service",
-            JsonValue::String("external_service".to_string()),
+            json!("external_service"),
             NodePropertyKind::String,
           )),
-          Box::new(NodeProperty::new_option(
-            "Validation",
-            "validation",
-            JsonValue::String("validation".to_string()),
-            NodePropertyKind::String,
-          )),
+          Box::new(NodeProperty::new_option("Validation", "validation", json!("validation"), NodePropertyKind::String)),
           Box::new(NodeProperty::new_option(
             "Configuration",
             "configuration",
-            JsonValue::String("configuration".to_string()),
+            json!("configuration"),
             NodePropertyKind::String,
           )),
         ])
-        .required(false)
-        .description("Types of errors to trigger on")
-        .build(),
+        .with_required(false)
+        .with_description("Types of errors to trigger on"),
     )
     .add_property(
-      NodeProperty::builder()
-        .display_name("Node Names")
-        .name("node_names")
-        .kind(NodePropertyKind::MultiOptions)
-        .required(false)
-        .description("Specific node names to monitor (comma-separated)")
-        .hint("Leave empty to monitor all nodes")
-        .build(),
+      NodeProperty::new(NodePropertyKind::MultiOptions)
+        .with_display_name("Node Names")
+        .with_name("node_names")
+        .with_required(false)
+        .with_description("Specific node names to monitor (comma-separated)")
+        .with_hint("Leave empty to monitor all nodes"),
     )
     .add_property(
-      NodeProperty::builder()
-        .display_name("Error Severity")
-        .name("error_severity")
-        .kind(NodePropertyKind::Options)
-        .options(vec![
-          Box::new(NodeProperty::new_option(
-            "Low",
-            "low",
-            JsonValue::String("low".to_string()),
-            NodePropertyKind::String,
-          )),
-          Box::new(NodeProperty::new_option(
-            "Medium",
-            "medium",
-            JsonValue::String("medium".to_string()),
-            NodePropertyKind::String,
-          )),
-          Box::new(NodeProperty::new_option(
-            "High",
-            "high",
-            JsonValue::String("high".to_string()),
-            NodePropertyKind::String,
-          )),
-          Box::new(NodeProperty::new_option(
-            "Critical",
-            "critical",
-            JsonValue::String("critical".to_string()),
-            NodePropertyKind::String,
-          )),
+      NodeProperty::new(NodePropertyKind::Options)
+        .with_display_name("Error Severity")
+        .with_name("error_severity")
+        .with_options(vec![
+          Box::new(NodeProperty::new_option("Low", "low", json!("low"), NodePropertyKind::String)),
+          Box::new(NodeProperty::new_option("Medium", "medium", json!("medium"), NodePropertyKind::String)),
+          Box::new(NodeProperty::new_option("High", "high", json!("high"), NodePropertyKind::String)),
+          Box::new(NodeProperty::new_option("Critical", "critical", json!("critical"), NodePropertyKind::String)),
         ])
-        .required(false)
-        .description("Minimum error severity to trigger")
-        .build(),
+        .with_required(false)
+        .with_description("Minimum error severity to trigger"),
     )
     .add_property(
-      NodeProperty::builder()
-        .display_name("Enable Retry")
-        .name("enable_retry")
-        .kind(NodePropertyKind::Boolean)
-        .required(false)
-        .description("Enable automatic retry for failed executions")
-        .value(JsonValue::Bool(false))
-        .build(),
+      NodeProperty::new(NodePropertyKind::Boolean)
+        .with_display_name("Enable Retry")
+        .with_name("enable_retry")
+        .with_required(false)
+        .with_description("Enable automatic retry for failed executions")
+        .with_value(json!(false)),
     )
     .add_property(
-      NodeProperty::builder()
-        .display_name("Max Retry Count")
-        .name("max_retry_count")
-        .kind(NodePropertyKind::Number)
-        .required(false)
-        .description("Maximum number of retry attempts")
-        .value(JsonValue::Number(serde_json::Number::from(3)))
-        .build(),
+      NodeProperty::new(NodePropertyKind::Number)
+        .with_display_name("Max Retry Count")
+        .with_name("max_retry_count")
+        .with_required(false)
+        .with_description("Maximum number of retry attempts")
+        .with_value(json!(3)),
     )
     .add_property(
-      NodeProperty::builder()
-        .display_name("Retry Interval (seconds)")
-        .name("retry_interval_seconds")
-        .kind(NodePropertyKind::Number)
-        .required(false)
-        .description("Interval between retry attempts in seconds")
-        .value(JsonValue::Number(serde_json::Number::from(60)))
-        .build(),
+      NodeProperty::new(NodePropertyKind::Number)
+        .with_display_name("Retry Interval (seconds)")
+        .with_name("retry_interval_seconds")
+        .with_required(false)
+        .with_description("Interval between retry attempts in seconds")
+        .with_value(json!(60)),
     )
     .add_property(
-      NodeProperty::builder()
-        .display_name("Send Notification")
-        .name("send_notification")
-        .kind(NodePropertyKind::Boolean)
-        .required(false)
-        .description("Send notifications when errors occur")
-        .value(JsonValue::Bool(true))
-        .build(),
+      NodeProperty::new(NodePropertyKind::Boolean)
+        .with_display_name("Send Notification")
+        .with_name("send_notification")
+        .with_required(false)
+        .with_description("Send notifications when errors occur")
+        .with_value(json!(true)),
     )
     .add_property(
-      NodeProperty::builder()
-        .display_name("Notification Methods")
-        .name("notification_methods")
-        .kind(NodePropertyKind::MultiOptions)
-        .options(vec![
-          Box::new(NodeProperty::new_option(
-            "Email",
-            "email",
-            JsonValue::String("email".to_string()),
-            NodePropertyKind::String,
-          )),
-          Box::new(NodeProperty::new_option(
-            "Slack",
-            "slack",
-            JsonValue::String("slack".to_string()),
-            NodePropertyKind::String,
-          )),
-          Box::new(NodeProperty::new_option(
-            "Webhook",
-            "webhook",
-            JsonValue::String("webhook".to_string()),
-            NodePropertyKind::String,
-          )),
-          Box::new(NodeProperty::new_option(
-            "Database",
-            "database",
-            JsonValue::String("database".to_string()),
-            NodePropertyKind::String,
-          )),
+      NodeProperty::new(NodePropertyKind::MultiOptions)
+        .with_display_name("Notification Methods")
+        .with_name("notification_methods")
+        .with_options(vec![
+          Box::new(NodeProperty::new_option("Email", "email", json!("email"), NodePropertyKind::String)),
+          Box::new(NodeProperty::new_option("Slack", "slack", json!("slack"), NodePropertyKind::String)),
+          Box::new(NodeProperty::new_option("Webhook", "webhook", json!("webhook"), NodePropertyKind::String)),
+          Box::new(NodeProperty::new_option("Database", "database", json!("database"), NodePropertyKind::String)),
         ])
-        .required(false)
-        .description("Methods to send notifications")
-        .build(),
+        .with_required(false)
+        .with_description("Methods to send notifications"),
     )
 }
 

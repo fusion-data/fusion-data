@@ -12,33 +12,30 @@ import {
   Statistic,
   Progress,
   List,
-  Tooltip,
   Switch,
+  Tag,
 } from 'antd';
 import {
   ThunderboltOutlined,
   DashboardOutlined,
-  SettingOutlined,
   MonitorOutlined,
   EyeOutlined,
   DatabaseOutlined,
-  CheckCircleOutlined,
-  ExclamationCircleOutlined,
   RocketOutlined,
-  RefreshOutlined,
+  RestOutlined,
+  ExclamationCircleOutlined,
+  SettingOutlined,
 } from '@ant-design/icons';
 
 import {
   PerformanceOptimizer,
   WorkflowEngineOptimizer,
   CanvasOptimizer,
-  PerformanceMonitor,
   useMemoryMonitor,
   useFPSMonitor,
 } from './index';
 
 const { Title, Text } = Typography;
-const { TabPane } = Tabs;
 
 // 全局性能状态接口
 interface GlobalPerformanceStatus {
@@ -88,7 +85,6 @@ export const PerformanceHub: React.FC<PerformanceHubProps> = ({
 
   const memoryUsage = useMemoryMonitor();
   const fps = useFPSMonitor();
-  const monitor = PerformanceMonitor.getInstance();
 
   // 生成性能事件
   const generatePerformanceEvents = useCallback((): PerformanceEvent[] => {
@@ -322,7 +318,7 @@ export const PerformanceHub: React.FC<PerformanceHubProps> = ({
           <Button
             type="text"
             size="small"
-            icon={<RefreshOutlined />}
+            icon={<RestOutlined />}
             onClick={refreshPerformanceStatus}
           >
             刷新
@@ -348,11 +344,11 @@ export const PerformanceHub: React.FC<PerformanceHubProps> = ({
               title={
                 <Space>
                   <span>{event.title}</span>
-                  <Tag color="blue" size="small">{event.category}</Tag>
+                  <Tag color="blue">{event.category}</Tag>
                   <Tag color={
                     event.impact === 'high' ? 'red' :
                     event.impact === 'medium' ? 'orange' : 'blue'
-                  } size="small">
+                  }>
                     {event.impact === 'high' ? '高' :
                      event.impact === 'medium' ? '中' : '低'}影响
                   </Tag>
@@ -483,78 +479,92 @@ export const PerformanceHub: React.FC<PerformanceHubProps> = ({
       {renderPerformanceOverview()}
 
       <div style={{ marginTop: 24 }}>
-        <Tabs activeKey={activeTab} onChange={setActiveTab}>
-          <TabPane tab="性能监控" key="overview">
-            <Row gutter={16}>
-              <Col span={16}>
-                {renderPerformanceEvents()}
-              </Col>
-              <Col span={8}>
-                <Card title="快速优化" size="small">
-                  <Space direction="vertical" style={{ width: '100%' }}>
-                    <Button
-                      type="primary"
-                      icon={<ThunderboltOutlined />}
-                      onClick={performGlobalOptimization}
-                      loading={isOptimizing}
-                      block
-                    >
-                      执行全局优化
-                    </Button>
-                    <Button
-                      icon={<DatabaseOutlined />}
-                      onClick={() => {
-                        // 模拟内存清理
-                        console.log('清理内存缓存');
-                      }}
-                      block
-                    >
-                      清理内存缓存
-                    </Button>
-                    <Button
-                      icon={<EyeOutlined />}
-                      onClick={() => {
-                        // 模拟画布优化
-                        console.log('优化画布渲染');
-                      }}
-                      block
-                    >
-                      优化画布渲染
-                    </Button>
-                    <Button
-                      icon={<MonitorOutlined />}
-                      onClick={() => {
-                        // 模拟引擎优化
-                        console.log('优化执行引擎');
-                      }}
-                      block
-                    >
-                      优化执行引擎
-                    </Button>
-                  </Space>
+        <Tabs
+          activeKey={activeTab}
+          onChange={setActiveTab}
+          items={[
+            {
+              key: 'overview',
+              label: '性能监控',
+              children: (
+                <Row gutter={16}>
+                  <Col span={16}>
+                    {renderPerformanceEvents()}
+                  </Col>
+                  <Col span={8}>
+                    <Card title="快速优化" size="small">
+                      <Space direction="vertical" style={{ width: '100%' }}>
+                        <Button
+                          type="primary"
+                          icon={<ThunderboltOutlined />}
+                          onClick={performGlobalOptimization}
+                          loading={isOptimizing}
+                          block
+                        >
+                          执行全局优化
+                        </Button>
+                        <Button
+                          icon={<DatabaseOutlined />}
+                          onClick={() => {
+                            // 模拟内存清理
+                            console.log('清理内存缓存');
+                          }}
+                          block
+                        >
+                          清理内存缓存
+                        </Button>
+                        <Button
+                          icon={<EyeOutlined />}
+                          onClick={() => {
+                            // 模拟画布优化
+                            console.log('优化画布渲染');
+                          }}
+                          block
+                        >
+                          优化画布渲染
+                        </Button>
+                        <Button
+                          icon={<MonitorOutlined />}
+                          onClick={() => {
+                            // 模拟引擎优化
+                            console.log('优化执行引擎');
+                          }}
+                          block
+                        >
+                          优化执行引擎
+                        </Button>
+                      </Space>
+                    </Card>
+                  </Col>
+                </Row>
+              ),
+            },
+            {
+              key: 'engine',
+              label: '引擎优化',
+              children: <WorkflowEngineOptimizer />,
+            },
+            {
+              key: 'canvas',
+              label: '画布优化',
+              children: <CanvasOptimizer />,
+            },
+            {
+              key: 'system',
+              label: '系统优化',
+              children: <PerformanceOptimizer />,
+            },
+            {
+              key: 'history',
+              label: '优化历史',
+              children: (
+                <Card title="优化历史记录" size="small">
+                  {renderOptimizationHistory()}
                 </Card>
-              </Col>
-            </Row>
-          </TabPane>
-
-          <TabPane tab="引擎优化" key="engine">
-            <WorkflowEngineOptimizer />
-          </TabPane>
-
-          <TabPane tab="画布优化" key="canvas">
-            <CanvasOptimizer />
-          </TabPane>
-
-          <TabPane tab="系统优化" key="system">
-            <PerformanceOptimizer />
-          </TabPane>
-
-          <TabPane tab="优化历史" key="history">
-            <Card title="优化历史记录" size="small">
-              {renderOptimizationHistory()}
-            </Card>
-          </TabPane>
-        </Tabs>
+              ),
+            },
+          ]}
+        />
       </div>
 
       {globalStatus.overallScore < 60 && (

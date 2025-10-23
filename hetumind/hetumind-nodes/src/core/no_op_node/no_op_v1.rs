@@ -1,10 +1,13 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use hetumind_core::workflow::{
-  ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition, NodeExecutable,
-  NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig, RegistrationError,
-  make_execution_data_map,
+use hetumind_core::{
+  version::Version,
+  workflow::{
+    ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition,
+    NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig,
+    RegistrationError, make_execution_data_map,
+  },
 };
 use serde_json::json;
 
@@ -119,29 +122,26 @@ impl TryFrom<NodeDefinition> for NoOpV1 {
 
   fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
     let definition = base
-      .add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build())
-      .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build())
+      .with_version(Version::new(1, 0, 0))
+      .add_input(InputPortConfig::new(ConnectionKind::Main, "Input"))
+      .add_output(OutputPortConfig::new(ConnectionKind::Main, "Output"))
       .add_property(
         // 调试选项
-        NodeProperty::builder()
-          .display_name("Enable Logging".to_string())
-          .name("enable_logging")
-          .required(false)
-          .description("Enable detailed logging of data passing through the node".to_string())
-          .kind(NodePropertyKind::Boolean)
-          .value(json!(false))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Boolean)
+          .with_display_name("Enable Logging")
+          .with_name("enable_logging")
+          .with_required(false)
+          .with_description("Enable detailed logging of data passing through the node")
+          .with_value(json!(false)),
       )
       .add_property(
         // 性能监控选项
-        NodeProperty::builder()
-          .display_name("Enable Metrics".to_string())
-          .name("enable_metrics")
-          .required(false)
-          .description("Enable performance metrics collection".to_string())
-          .kind(NodePropertyKind::Boolean)
-          .value(json!(false))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Boolean)
+          .with_display_name("Enable Metrics")
+          .with_name("enable_metrics")
+          .with_required(false)
+          .with_description("Enable performance metrics collection")
+          .with_value(json!(false)),
       );
     Ok(Self { definition: Arc::new(definition) })
   }

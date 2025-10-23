@@ -114,6 +114,7 @@ impl MissingFieldsTracker {
   }
 
   /// 获取部分存在的字段列表
+  #[allow(dead_code)]
   pub fn get_partially_missing_fields(&self) -> Vec<String> {
     self
       .not_found_fields
@@ -127,6 +128,7 @@ impl MissingFieldsTracker {
   }
 
   /// 获取所有字段的存在情况
+  #[allow(dead_code)]
   pub fn get_field_existence_summary(&self) -> HashMap<String, FieldExistenceSummary> {
     let mut summary = HashMap::new();
 
@@ -154,6 +156,7 @@ impl MissingFieldsTracker {
 }
 
 /// 字段存在性摘要
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct FieldExistenceSummary {
   /// 总项目数
@@ -167,6 +170,7 @@ pub struct FieldExistenceSummary {
 }
 
 /// 字段存在性类型
+#[allow(dead_code)]
 #[derive(Debug, Clone, PartialEq)]
 pub enum FieldExistenceType {
   /// 从未找到
@@ -178,10 +182,12 @@ pub enum FieldExistenceType {
 }
 
 /// 数据类型分析器
+#[allow(dead_code)]
 pub struct DataTypeAnalyzer;
 
 impl DataTypeAnalyzer {
   /// 分析数据类型
+  #[allow(dead_code)]
   pub fn analyze_data_type(data: &JsonValue) -> DataTypeInfo {
     match data {
       Value::Null => {
@@ -247,6 +253,7 @@ impl DataTypeAnalyzer {
   }
 
   /// 估算拆分后的项目数量
+  #[allow(dead_code)]
   pub fn estimate_split_output_count(data: &JsonValue) -> usize {
     match data {
       Value::Array(arr) => arr.len(),
@@ -257,6 +264,7 @@ impl DataTypeAnalyzer {
   }
 
   /// 分析拆分操作的内存影响
+  #[allow(dead_code)]
   pub fn analyze_memory_impact(data: &JsonValue, field_count: usize) -> MemoryImpactAnalysis {
     let original_size = Self::estimate_memory_size(data);
     let output_count = Self::estimate_split_output_count(data);
@@ -299,6 +307,7 @@ impl DataTypeAnalyzer {
 }
 
 /// 数据类型信息
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct DataTypeInfo {
   /// 基础类型
@@ -314,6 +323,7 @@ pub struct DataTypeInfo {
 }
 
 /// 基础数据类型
+#[allow(dead_code)]
 #[derive(Debug, Clone, PartialEq)]
 pub enum BaseType {
   Null,
@@ -325,6 +335,7 @@ pub enum BaseType {
 }
 
 /// 内存影响分析
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct MemoryImpactAnalysis {
   /// 原始数据大小
@@ -340,10 +351,12 @@ pub struct MemoryImpactAnalysis {
 }
 
 /// 拆分操作验证器
+#[allow(dead_code)]
 pub struct SplitOperationValidator;
 
 impl SplitOperationValidator {
   /// 验证拆分操作的可行性
+  #[allow(dead_code)]
   pub fn validate_split_operation(
     data: &JsonValue,
     field_path: &str,
@@ -439,6 +452,7 @@ impl SplitOperationValidator {
 }
 
 /// 验证结果
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct ValidationResult {
   /// 验证问题
@@ -448,6 +462,7 @@ pub struct ValidationResult {
 }
 
 /// 验证问题
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct ValidationIssue {
   /// 严重程度
@@ -461,6 +476,7 @@ pub struct ValidationIssue {
 }
 
 /// 验证严重程度
+#[allow(dead_code)]
 #[derive(Debug, Clone, PartialEq)]
 pub enum ValidationSeverity {
   Error,

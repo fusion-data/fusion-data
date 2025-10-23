@@ -9,7 +9,7 @@ fn test_load_hetuflow_agent_setting() {
 
   // 尝试加载配置
   let config_registry = FusionConfigRegistry::builder().build().unwrap();
-  println!("{:?}", config_registry.fusion_config().app());
+  println!("{:?}", config_registry.fusion_setting().app());
 
   let setting = HetuflowAgentSetting::load(&config_registry).unwrap();
   assert_eq!(setting.agent_id, "agent001");
@@ -21,7 +21,7 @@ fn test_load_hetuflow_setting() {
 
   // 尝试加载配置
   let config_registry = FusionConfigRegistry::builder().build().unwrap();
-  println!("{:?}", config_registry.fusion_config().app());
+  println!("{:?}", config_registry.fusion_setting().app());
 
   let setting = HetuflowSetting::load(&config_registry).unwrap();
   assert_eq!(setting.server.server_id, "server01");

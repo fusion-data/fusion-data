@@ -6,11 +6,13 @@
 use chrono::{DateTime, Utc};
 use std::sync::Arc;
 
+use fusion_common::ahash::HashMap;
+use serde::{Deserialize, Serialize};
+
 use hetumind_core::{
   version::Version,
   workflow::{Node, NodeDefinition, NodeExecutor, NodeGroupKind, NodeKind, RegistrationError, ValidationError},
 };
-use serde::{Deserialize, Serialize};
 
 mod utils;
 mod wait_v1;
@@ -111,7 +113,7 @@ pub struct WebhookConfig {
   /// 响应数据
   pub response_data: Option<serde_json::Value>,
   /// 响应头
-  pub response_headers: Option<std::collections::HashMap<String, String>>,
+  pub response_headers: Option<HashMap<String, String>>,
   /// 响应状态码
   pub response_status_code: Option<u16>,
 }
@@ -442,6 +444,7 @@ impl WaitConfig {
   }
 
   /// 检查是否超过时间限制
+  #[allow(dead_code)]
   pub fn is_time_limit_exceeded(&self) -> bool {
     if let Some(ref time_limit) = self.time_limit {
       if time_limit.enabled {
@@ -525,7 +528,7 @@ impl WaitNode {
   }
 
   fn base() -> NodeDefinition {
-    NodeDefinition::new(WAIT_NODE_KIND, Version::new(1, 0, 0), "Wait")
+    NodeDefinition::new(WAIT_NODE_KIND, "Wait")
       .add_group(NodeGroupKind::Transform)
       .add_group(NodeGroupKind::Input)
       .with_description("在工作流执行过程中添加等待机制。支持时间间隔、特定时间、Webhook 触发和表单提交等待。")

@@ -5,7 +5,6 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use hetumind_core::types::JsonValue;
 use hetumind_core::version::Version;
 use hetumind_core::workflow::{
   ConnectionKind, ExecutionDataItems, ExecutionDataMap, Node, NodeDefinition, NodeExecutable, NodeExecutionContext,
@@ -14,6 +13,7 @@ use hetumind_core::workflow::{
 };
 
 use crate::constants::WEBHOOK_TRIGGER_NODE_KIND;
+use serde_json::json;
 
 pub struct WebhookTriggerNodeV1 {
   definition: Arc<NodeDefinition>,
@@ -69,129 +69,71 @@ impl WebhookTriggerNode {
 }
 
 fn create_base() -> NodeDefinition {
-  NodeDefinition::new(WEBHOOK_TRIGGER_NODE_KIND, Version::new(1, 0, 0), "Webhook Trigger")
+  NodeDefinition::new(WEBHOOK_TRIGGER_NODE_KIND, "Webhook Trigger")
     .add_group(NodeGroupKind::Trigger)
     .with_description("Triggers workflow when HTTP request is received")
     .add_property(
       // HTTP Method
-      NodeProperty::builder()
-        .display_name("HTTP Method")
-        .name("http_method")
-        .kind(NodePropertyKind::Options)
-        .options(vec![
-          Box::new(NodeProperty::new_option(
-            "GET",
-            "get",
-            JsonValue::String("GET".to_string()),
-            NodePropertyKind::String,
-
-          )),
-          Box::new(NodeProperty::new_option(
-            "POST",
-            "post",
-            JsonValue::String("POST".to_string()),
-            NodePropertyKind::String,
-          )),
-          Box::new(NodeProperty::new_option(
-            "PUT",
-            "put",
-            JsonValue::String("PUT".to_string()),
-            NodePropertyKind::String,
-          )),
-          Box::new(NodeProperty::new_option(
-            "DELETE",
-            "delete",
-            JsonValue::String("DELETE".to_string()),
-            NodePropertyKind::String,
-          )),
-          Box::new(NodeProperty::new_option(
-            "PATCH",
-            "patch",
-            JsonValue::String("PATCH".to_string()),
-            NodePropertyKind::String,
-          )),
+      NodeProperty::new(NodePropertyKind::Options)
+        .with_display_name("HTTP Method")
+        .with_name("http_method")
+        .with_options(vec![
+          Box::new(NodeProperty::new_option("GET", "get", json!("GET"), NodePropertyKind::String)),
+          Box::new(NodeProperty::new_option("POST", "post", json!("POST"), NodePropertyKind::String)),
+          Box::new(NodeProperty::new_option("PUT", "put", json!("PUT"), NodePropertyKind::String)),
+          Box::new(NodeProperty::new_option("DELETE", "delete", json!("DELETE"), NodePropertyKind::String)),
+          Box::new(NodeProperty::new_option("PATCH", "patch", json!("PATCH"), NodePropertyKind::String)),
         ])
-        .required(true)
-        .description("HTTP method for the webhook endpoint")
-        .build(),
+        .with_required(true)
+        .with_description("HTTP method for the webhook endpoint"),
     )
     .add_property(
       // Path
-      NodeProperty::builder()
-        .display_name("Path")
-        .name("path")
-        .kind(NodePropertyKind::String)
-        .required(true)
-        .description("Webhook path (e.g., /webhook/my-workflow)")
-        .hint("e.g., /webhook/my-workflow")
-        .build(),
+      NodeProperty::new(NodePropertyKind::String)
+        .with_display_name("Path")
+        .with_name("path")
+        .with_required(true)
+        .with_description("Webhook path (e.g., /webhook/my-workflow)")
+        .with_hint("e.g., /webhook/my-workflow"),
     )
     .add_property(
       // Authentication
-      NodeProperty::builder()
-        .display_name("Authentication")
-        .name("authentication")
-        .kind(NodePropertyKind::Options)
-        .options(vec![
-          Box::new(NodeProperty::new_option(
-            "None",
-            "none",
-            JsonValue::String("none".to_string()),
-            NodePropertyKind::String,
-          )),
-          Box::new(NodeProperty::new_option(
-            "Basic Auth",
-            "basic",
-            JsonValue::String("basic".to_string()),
-            NodePropertyKind::String,
-          )),
-          Box::new(NodeProperty::new_option(
-            "Bearer Token",
-            "bearer",
-            JsonValue::String("bearer".to_string()),
-            NodePropertyKind::String,
-          )),
-          Box::new(NodeProperty::new_option(
-            "Header Auth",
-            "header",
-            JsonValue::String("header".to_string()),
-            NodePropertyKind::String,
-          )),
+      NodeProperty::new(NodePropertyKind::Options)
+        .with_display_name("Authentication")
+        .with_name("authentication")
+        .with_options(vec![
+          Box::new(NodeProperty::new_option("None", "none", json!("none"), NodePropertyKind::String)),
+          Box::new(NodeProperty::new_option("Basic Auth", "basic", json!("basic"), NodePropertyKind::String)),
+          Box::new(NodeProperty::new_option("Bearer Token", "bearer", json!("bearer"), NodePropertyKind::String)),
+          Box::new(NodeProperty::new_option("Header Auth", "header", json!("header"), NodePropertyKind::String)),
         ])
-        .required(true)
-        .description("Authentication method for the webhook")
-        .build(),
+        .with_required(true)
+        .with_description("Authentication method for the webhook"),
     )
     .add_property(
       // Response Code
-      NodeProperty::builder()
-        .display_name("Response Code")
-        .name("response_code")
-        .kind(NodePropertyKind::Number)
-        .required(false)
-        .description("HTTP response code to return")
-        .value(JsonValue::Number(serde_json::Number::from(200)))
-        .build(),
+      NodeProperty::new(NodePropertyKind::Number)
+        .with_display_name("Response Code")
+        .with_name("response_code")
+        .with_required(false)
+        .with_description("HTTP response code to return")
+        .with_value(json!(200)),
     )
     .add_property(
       // Response Body
-      NodeProperty::builder()
-        .display_name("Response Body")
-        .name("response_body")
-        .kind(NodePropertyKind::String)
-        .required(false)
-        .description("Response body template (JSON)")
-        .value(JsonValue::String("{\"status\": \"success\"}".to_string()))
-        .build(),
+      NodeProperty::new(NodePropertyKind::String)
+        .with_display_name("Response Body")
+        .with_name("response_body")
+        .with_required(false)
+        .with_description("Response body template (JSON)")
+        .with_value(json!("{\"status\": \"success\"}")),
     )
     .add_property(
       // Headers
-      NodeProperty::builder()
-        .display_name("Response Headers")
-        .name("response_headers")
-        .kind(NodePropertyKind::FixedCollection)
-        .required(false)
-        .description("Additional response headers")
-        .build(),
+      NodeProperty::new(NodePropertyKind::FixedCollection)
+        .with_display_name("Response Headers")
+        .with_name("response_headers")
+        .with_required(false)
+        .with_description("Additional response headers"),
     )
 }

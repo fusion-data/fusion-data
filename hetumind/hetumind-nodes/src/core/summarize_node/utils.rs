@@ -2,9 +2,7 @@
 //!
 //! 提供数据聚合、分组和格式化的核心工具函数。
 
-use hetumind_core::workflow::{
-  ConnectionKind, ExecutionData, ExecutionDataItems, NodeExecutionError, make_execution_data_map,
-};
+use hetumind_core::workflow::{ExecutionData, NodeExecutionError};
 use serde_json::{Value, json};
 use std::collections::{HashMap, HashSet};
 
@@ -657,7 +655,7 @@ fn create_metadata(items: &[ExecutionData], config: &SummarizeConfig) -> Result<
 fn create_group_metadata(
   group_key: &Value,
   group_items: &[ExecutionData],
-  config: &SummarizeConfig,
+  _config: &SummarizeConfig,
 ) -> Result<Value, NodeExecutionError> {
   let mut metadata = serde_json::Map::new();
 
@@ -723,7 +721,6 @@ fn convert_to_table_format(data: &[Value], config: &SummarizeConfig) -> Result<V
 #[cfg(test)]
 mod tests {
   use super::*;
-  use hetumind_core::workflow::{ExecutionData, make_execution_data_map};
 
   #[test]
   fn test_field_name_conversion() {

@@ -11,6 +11,7 @@ use fusionsql::ModelManager;
 use log::{error, info};
 use mea::{mutex::Mutex, shutdown::ShutdownRecv};
 
+use crate::infra::bmc::AgentBmc;
 use crate::{
   broker::Broker,
   connection::{ConnectionManager, MessageHandler},
@@ -56,12 +57,9 @@ impl ServerApplication {
     let agent_manager =
       Arc::new(AgentManager::new(application.component(), connection_manager.clone(), setting.clone()));
 
-    let log_svc = LogSvc::new(
-      Arc::new(setting.task_log.clone()),
-      application.get_shutdown_recv().await,
-      connection_manager.clone(),
-    )
-    .await?;
+    let log_svc =
+      LogSvc::new(Arc::new(setting.task_log.clone()), application.shutdown_recv().await, connection_manager.clone())
+        .await?;
 
     let broker = Broker::new(setting.clone(), application.component());
 
@@ -91,7 +89,7 @@ impl ServerApplication {
   }
 
   pub async fn get_shutdown_recv(&self) -> ShutdownRecv {
-    Application::global().get_shutdown_recv().await
+    Application::global().shutdown_recv().await
   }
 
   /// 启动通用服务
@@ -172,9 +170,8 @@ impl ServerApplication {
     let db_size = db.db().size();
 
     // 从数据库获取在线 Agent 数量，而不是从内存连接管理器
-    use crate::infra::bmc::AgentBmc;
-    use hetuflow_core::types::AgentStatus;
-    let online_agents = AgentBmc::find_online_agents(&mm).await
+    let online_agents = AgentBmc::find_online_agents(&mm)
+      .await
       .map_err(|e| DataError::internal(500, "Failed to get online agents", Some(Box::new(e))))?;
     let agent_size = online_agents.len() as u32;
 

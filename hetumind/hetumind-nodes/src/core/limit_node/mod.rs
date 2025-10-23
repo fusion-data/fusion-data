@@ -7,10 +7,7 @@ use std::sync::Arc;
 
 use hetumind_core::{
   version::Version,
-  workflow::{
-    Node, NodeDefinition, NodeExecutionError, NodeExecutor, NodeGroupKind, NodeKind, RegistrationError,
-    ValidationError,
-  },
+  workflow::{Node, NodeDefinition, NodeExecutor, NodeGroupKind, NodeKind, RegistrationError, ValidationError},
 };
 use serde::{Deserialize, Serialize};
 
@@ -21,6 +18,8 @@ pub mod utils;
 mod tests;
 
 use limit_v1::LimitV1;
+
+use crate::constants::LIMIT_NODE_KIND;
 
 /// 保留策略
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -68,6 +67,7 @@ impl LimitConfig {
   }
 
   /// 获取配置描述
+  #[allow(dead_code)]
   pub fn get_description(&self) -> String {
     format!(
       "Limit to {} {} items",
@@ -94,7 +94,7 @@ impl LimitNode {
   }
 
   fn base() -> NodeDefinition {
-    NodeDefinition::new("hetumind_nodes::Limit", Version::new(1, 0, 0), "Limit")
+    NodeDefinition::new(LIMIT_NODE_KIND, "Limit")
       .add_group(NodeGroupKind::Transform)
       .with_description("Restrict the number of items that pass through. Keeps first or last N items.")
       .with_icon("scissors")

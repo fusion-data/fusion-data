@@ -1,10 +1,13 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use hetumind_core::workflow::{
-  ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition, NodeExecutable,
-  NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig, RegistrationError,
-  make_execution_data_map,
+use hetumind_core::{
+  version::Version,
+  workflow::{
+    ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition,
+    NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig,
+    RegistrationError, make_execution_data_map,
+  },
 };
 use serde_json::json;
 
@@ -33,7 +36,7 @@ impl CompareDatasetsV1 {
   /// 解析操作配置
   fn parse_operation_config(
     &self,
-    node: &hetumind_core::workflow::WorkflowNode,
+    node: &hetumind_core::workflow::NodeElement,
   ) -> Result<CompareDatasetsOperation, NodeExecutionError> {
     // Parse match fields
     let match_fields: Vec<serde_json::Value> = node.get_parameter("match_fields")?;
@@ -286,33 +289,31 @@ impl TryFrom<NodeDefinition> for CompareDatasetsV1 {
 
   fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
     let definition = base
-      .add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input Dataset A").build())
-      .add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input Dataset B").build())
-      .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("In A Only").build())
-      .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("In B Only").build())
-      .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Same").build())
-      .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Different").build())
+      .with_version(Version::new(1, 0, 0))
+      .add_input(InputPortConfig::new(ConnectionKind::Main, "Input Dataset A"))
+      .add_input(InputPortConfig::new(ConnectionKind::Main, "Input Dataset B"))
+      .add_output(OutputPortConfig::new(ConnectionKind::Main, "In A Only"))
+      .add_output(OutputPortConfig::new(ConnectionKind::Main, "In B Only"))
+      .add_output(OutputPortConfig::new(ConnectionKind::Main, "Same"))
+      .add_output(OutputPortConfig::new(ConnectionKind::Main, "Different"))
       .add_property(
         // Match Fields Configuration
-        NodeProperty::builder()
-          .display_name("Match Fields".to_string())
-          .name("match_fields")
-          .kind(NodePropertyKind::Collection)
-          .required(true)
-          .description("Fields to match datasets on".to_string())
-          .value(json!([]))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Collection)
+          .with_display_name("Match Fields")
+          .with_name("match_fields")
+          .with_required(true)
+          .with_description("Fields to match datasets on")
+          .with_value(json!([])),
       )
       .add_property(
         // Conflict Resolution Strategy
-        NodeProperty::builder()
-          .display_name("Conflict Resolution".to_string())
-          .name("conflict_resolution")
-          .kind(NodePropertyKind::Options)
-          .required(false)
-          .description("How to handle differences between datasets".to_string())
-          .value(json!("prefer_input_a"))
-          .options(vec![
+        NodeProperty::new(NodePropertyKind::Options)
+          .with_display_name("Conflict Resolution")
+          .with_name("conflict_resolution")
+          .with_required(false)
+          .with_description("How to handle differences between datasets")
+          .with_value(json!("prefer_input_a"))
+          .with_options(vec![
             Box::new(NodeProperty::new_option(
               "Prefer Input A",
               "prefer_input_a",
@@ -332,69 +333,56 @@ impl TryFrom<NodeDefinition> for CompareDatasetsV1 {
               json!("include_both"),
               NodePropertyKind::String,
             )),
-          ])
-          .build(),
+          ]),
       )
       .add_property(
         // Additional Options
-        NodeProperty::builder()
-          .display_name("Include All Fields".to_string())
-          .name("include_all_fields")
-          .kind(NodePropertyKind::Boolean)
-          .required(false)
-          .description("Include all fields in output results".to_string())
-          .value(json!(true))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Boolean)
+          .with_display_name("Include All Fields")
+          .with_name("include_all_fields")
+          .with_required(false)
+          .with_description("Include all fields in output results")
+          .with_value(json!(true)),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Enable Fuzzy Matching".to_string())
-          .name("enable_fuzzy_matching")
-          .kind(NodePropertyKind::Boolean)
-          .required(false)
-          .description("Enable fuzzy matching for all fields".to_string())
-          .value(json!(false))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Boolean)
+          .with_display_name("Enable Fuzzy Matching")
+          .with_name("enable_fuzzy_matching")
+          .with_required(false)
+          .with_description("Enable fuzzy matching for all fields")
+          .with_value(json!(false)),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Global Fuzzy Threshold".to_string())
-          .name("fuzzy_threshold")
-          .kind(NodePropertyKind::Number)
-          .required(false)
-          .description("Global threshold for fuzzy matching (0.0-1.0)".to_string())
-          .value(json!(0.8))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Number)
+          .with_display_name("Global Fuzzy Threshold")
+          .with_name("fuzzy_threshold")
+          .with_required(false)
+          .with_description("Global threshold for fuzzy matching (0.0-1.0)")
+          .with_value(json!(0.8)),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Max Differences".to_string())
-          .name("max_differences")
-          .kind(NodePropertyKind::Number)
-          .required(false)
-          .description("Maximum number of differences to include in output".to_string())
-          .value(json!(null))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Number)
+          .with_display_name("Max Differences")
+          .with_name("max_differences")
+          .with_required(false)
+          .with_description("Maximum number of differences to include in output")
+          .with_value(json!(null)),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Sort Results".to_string())
-          .name("sort_results")
-          .kind(NodePropertyKind::Boolean)
-          .required(false)
-          .description("Sort the output results".to_string())
-          .value(json!(false))
-          .build(),
+        NodeProperty::new(NodePropertyKind::Boolean)
+          .with_display_name("Sort Results")
+          .with_name("sort_results")
+          .with_required(false)
+          .with_description("Sort the output results")
+          .with_value(json!(false)),
       )
       .add_property(
-        NodeProperty::builder()
-          .display_name("Sort Field".to_string())
-          .name("sort_field")
-          .kind(NodePropertyKind::String)
-          .required(false)
-          .description("Field to sort results by".to_string())
-          .value(json!(""))
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("Sort Field")
+          .with_name("sort_field")
+          .with_required(false)
+          .with_description("Field to sort results by")
+          .with_value(json!("")),
       );
 
     Ok(Self { definition: Arc::new(definition) })

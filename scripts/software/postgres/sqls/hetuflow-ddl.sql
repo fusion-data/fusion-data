@@ -48,6 +48,7 @@ create table sched_job (
   environment jsonb,
   config jsonb, -- TaskConfig
   status int not null default 1, -- 见 JobStatus
+  tenant_id bigint not null,
   created_by bigint not null,
   created_at timestamptz not null default now(),
   updated_by bigint,
@@ -95,6 +96,7 @@ create table sched_task (
   locked_at timestamptz,
   lock_version int not null default 0,
   dependencies jsonb, -- 任务依赖关系
+  tenant_id bigint not null,
   created_by bigint not null,
   created_at timestamptz not null default now(),
   updated_by bigint,
@@ -103,6 +105,8 @@ create table sched_task (
 
 -- 创建索引优化查询性能
 create index if not exists idx_sched_task_status_scheduled on sched_task (status, scheduled_at);
+
+create index if not exists idx_sched_task_tenant_status on sched_task (tenant_id, status);
 
 create index if not exists idx_sched_task_lock_timeout on sched_task (locked_at)
 where

@@ -1,7 +1,6 @@
 use axum::Router;
 use fusion_core::application::Application;
-use fusion_web::middleware::web_auth::WebAuth;
-use tower_http::auth::AsyncRequireAuthorizationLayer;
+use fusion_web::middleware::WebAuth;
 
 mod credentials;
 mod executions;
@@ -14,5 +13,5 @@ pub fn v1_routes() -> Router<Application> {
     .nest("/executions", executions::routes())
     .nest("/workflows", workflows::routes())
     .nest("/users", users::routes())
-    .layer(AsyncRequireAuthorizationLayer::new(WebAuth::default()))
+    .layer(WebAuth::default().with_api_base_url("http://localhost:8080").into_layer())
 }

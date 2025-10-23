@@ -3,6 +3,8 @@ use fusion_common::time::{DateTime, FixedOffset};
 use fusionsql_core::filter::{OpValDateTime, OpValInt32, OpValInt64, OpValString};
 use serde::{Deserialize, Serialize};
 
+use super::tenant_user::TenantUserFilter;
+
 /// User status enumeration
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-db", derive(sqlx::Type))]
@@ -10,17 +12,17 @@ use serde::{Deserialize, Serialize};
 #[repr(i32)]
 pub enum UserStatus {
   #[default]
-  Unactive = 1,
+  Inactive = 1,
   Disabled = 99,
-  Actived = 100,
+  Active = 100,
 }
 
 impl From<i32> for UserStatus {
   fn from(value: i32) -> Self {
     match value {
       99 => UserStatus::Disabled,
-      100 => UserStatus::Actived,
-      _ => UserStatus::Unactive,
+      100 => UserStatus::Active,
+      _ => UserStatus::Inactive,
     }
   }
 }
@@ -48,7 +50,7 @@ impl From<i32> for Gender {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(sqlx::FromRow, fusionsql::field::Fields), sea_query::enum_def)]
+#[cfg_attr(feature = "with-db", derive(sqlx::FromRow, fusionsql::Fields), sea_query::enum_def)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct User {
   pub id: i64,
@@ -64,19 +66,19 @@ pub struct User {
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(fusionsql::field::Fields))]
+#[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct UserForCreate {
   pub email: Option<String>,
   pub phone: Option<String>,
   pub name: Option<String>,
   pub status: Option<UserStatus>,
-  #[field(skip)]
+  #[cfg_attr(feature = "with-db", field(skip))]
   pub password: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(fusionsql::field::Fields))]
+#[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct UserForUpdate {
   pub name: Option<String>,
@@ -87,7 +89,14 @@ pub struct UserForUpdate {
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct UserForPage {
   pub page: Page,
-  pub filter: Vec<UserFilter>,
+  pub filters: Vec<UserFilter>,
+}
+
+#[derive(Debug, Default, Deserialize)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
+pub struct UserForQuery {
+  pub page: Page,
+  pub filters: Vec<TenantUserFilter>,
 }
 
 #[derive(Debug, Default, Deserialize)]
@@ -106,6 +115,8 @@ pub struct UserFilter {
 
   pub gender: Option<OpValInt32>,
 
+  pub tenant_id: Option<OpValInt64>,
+
   pub created_by: Option<OpValInt64>,
 
   pub created_at: Option<OpValDateTime>,
@@ -115,28 +126,37 @@ pub struct UserFilter {
   pub updated_at: Option<OpValDateTime>,
 }
 
-#[cfg_attr(feature = "with-db", derive(sqlx::FromRow, fusionsql::field::Fields), sea_query::enum_def)]
+#[cfg_attr(feature = "with-db", derive(sqlx::FromRow, fusionsql::Fields), sea_query::enum_def)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct UserCredential {
   pub id: i64,
   pub encrypted_pwd: String,
+  pub token_seq: i32,
   pub created_by: i64,
   pub created_at: DateTime<FixedOffset>,
   pub updated_by: Option<i64>,
   pub updated_at: Option<DateTime<FixedOffset>>,
 }
 
-#[cfg_attr(feature = "with-db", derive(fusionsql::field::Fields))]
+#[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
 pub struct UserCredentialForInsert {
   pub id: i64,
   pub encrypted_pwd: String,
 }
 
 #[derive(Default)]
-#[cfg_attr(feature = "with-db", derive(fusionsql::field::Fields))]
+#[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
 pub struct UserCredentialForUpdate {
   pub id: Option<i64>,
   pub encrypted_pwd: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
+pub struct UpdatePasswordRequest {
+  pub tenant_id: i64,
+  pub old_password: Option<String>, // 自助修改必填；管理员修改他人密码不填
+  pub new_password: String,
 }
 
 #[derive(Default)]

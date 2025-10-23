@@ -11,7 +11,7 @@ mod deadlock_detector;
 pub use competition_manager::ResourceCompetitionManager;
 pub use deadlock_detector::DeadlockDetector;
 
-use std::collections::HashMap;
+use fusion_common::ahash::HashMap;
 use std::sync::Arc;
 use tokio::sync::{Mutex, Semaphore};
 use uuid::Uuid;
@@ -90,7 +90,7 @@ impl ResourcePool {
       resource_type,
       total_capacity,
       allocated_amount: 0,
-      allocations: Arc::new(Mutex::new(HashMap::new())),
+      allocations: Arc::new(Mutex::new(HashMap::default())),
     }
   }
 

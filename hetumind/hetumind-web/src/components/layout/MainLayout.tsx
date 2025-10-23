@@ -11,13 +11,16 @@ const MainLayout: React.FC = () => {
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <Sidebar collapsed={collapsed} onCollapse={setCollapsed} />
-      <Layout>
+      <Layout style={{
+        marginLeft: collapsed ? 0 : 0, // 保持不变，因为侧边栏不是固定的
+        paddingBottom: '80px', // 为底部功能区预留空间
+      }}>
         <Content style={{
           margin: '16px',
           background: 'var(--bg-primary)',
           padding: '16px',
           borderRadius: '8px',
-          height: 'calc(100vh - 32px)',
+          minHeight: 'calc(100vh - 112px)', // 调整高度以适应底部padding
           overflow: 'auto'
         }}>
           <Outlet />

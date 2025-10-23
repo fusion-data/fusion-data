@@ -354,9 +354,9 @@ npm publish --registry=https://your-registry.com
 
 ```bash
 # 更新版本号
-npm version patch  # 0.1.1 -> 0.1.2
-npm version minor  # 0.1.1 -> 0.2.0
-npm version major  # 0.1.1 -> 1.0.0
+npm version patch  # 0.1.0 -> 0.1.2
+npm version minor  # 0.1.0 -> 0.2.0
+npm version major  # 0.1.0 -> 1.0.0
 ```
 
 ## 最佳实践

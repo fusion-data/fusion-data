@@ -18,7 +18,6 @@ import {
   Switch,
   InputNumber,
   Tabs,
-  Divider,
   Tooltip,
   Badge,
   Empty,
@@ -27,14 +26,11 @@ import {
 import {
   UploadOutlined,
   DatabaseOutlined,
-  FileTextOutlined,
   ApiOutlined,
   LinkOutlined,
   EyeOutlined,
   DownloadOutlined,
   CheckCircleOutlined,
-  ExclamationCircleOutlined,
-  InfoCircleOutlined,
   PlayCircleOutlined,
   ReloadOutlined,
 } from '@ant-design/icons';
@@ -44,12 +40,11 @@ import { oneDark } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 const { Text, Title, Paragraph } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
-const { Step } = Steps;
 const { TabPane } = Tabs;
 const { Dragger } = Upload;
 
 // 数据源类型
-type DataSourceType = 'file' | 'database' | 'api' | 'url';
+type DataSourceType = 'file' | 'database' | 'api' | 'url' | 'csv' | 'xml';
 
 // 连接状态
 type ConnectionStatus = 'idle' | 'connecting' | 'connected' | 'error';

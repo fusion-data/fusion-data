@@ -262,7 +262,7 @@ impl SendEmailNode {
   }
 
   fn base() -> NodeDefinition {
-    NodeDefinition::new(SEND_EMAIL_NODE_KIND, Version::new(1, 0, 0), "Send Email")
+    NodeDefinition::new(SEND_EMAIL_NODE_KIND, "Send Email")
       .add_group(NodeGroupKind::Output)
       .with_description("Sends emails via SMTP. Supports text/HTML formats, attachments, and multiple recipients.")
       .with_icon("mail")

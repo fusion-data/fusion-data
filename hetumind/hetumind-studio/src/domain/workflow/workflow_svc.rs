@@ -96,13 +96,13 @@ impl WorkflowSvc {
   // 基础校验
   // - 工作流是否存在循环依赖
   fn validate_base(&self, workflow: &Workflow) -> Vec<ValidationError> {
-    let mut errors = Vec::new();
+    let node_registry = Application::global().component();
+    let graph = ExecutionGraph::new(workflow, &node_registry);
 
-    let graph = ExecutionGraph::new(workflow);
+    let mut errors = Vec::new();
     if graph.has_cycles() {
       errors.push(ValidationError::WorkflowHasCycles);
     }
-
     errors
   }
 
@@ -141,7 +141,7 @@ impl WorkflowSvc {
   pub async fn execute_workflow(
     &self,
     workflow_id: &WorkflowId,
-    input: ExecuteWorkflowRequest,
+    _input: ExecuteWorkflowRequest,
   ) -> Result<ExecutionIdResponse, DataError> {
     // 1. 获取并验证工作流
     let workflow = self.get_workflow(workflow_id).await?;
@@ -152,7 +152,7 @@ impl WorkflowSvc {
     }
 
     // 2. 创建执行记录
-    let created_by = self.mm.ctx_ref()?.uid();
+    let created_by = self.mm.ctx_ref()?.user_id();
     let execution_id = ExecutionId::now_v7();
     let execution_entity = ExecutionEntity {
       id: execution_id.clone(),

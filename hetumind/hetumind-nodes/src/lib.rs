@@ -7,7 +7,9 @@
 //! - AI 节点 (AI Agent、LLM 调用等)
 //! - 集成节点 (HTTP 请求、数据处理等)
 
+pub mod cluster;
 pub mod constants;
 pub mod core;
 pub mod integration;
+pub mod llm;
 pub mod trigger;

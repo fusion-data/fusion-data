@@ -9,7 +9,6 @@ import {
   Typography,
   Statistic,
   Alert,
-  Divider,
   Tabs,
   Switch,
   Select,
@@ -19,19 +18,15 @@ import {
 } from 'antd';
 import {
   ThunderboltOutlined,
-  CheckCircleOutlined,
-  ExclamationCircleOutlined,
   DashboardOutlined,
   ReloadOutlined,
   SettingOutlined,
-  MemoryOutlined,
-  ClockCircleOutlined,
   DatabaseOutlined,
-  ApiOutlined,
+  CloudOutlined,
+  ClockCircleOutlined,
 } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
-const { TabPane } = Tabs;
 
 // 性能指标接口
 interface PerformanceMetrics {
@@ -396,7 +391,7 @@ export const PerformanceOptimizer: React.FC<PerformanceOptimizerProps> = ({
               valueStyle={{
                 color: getStatusColor(metrics.system.memoryUsage, { warning: 70, error: 85 })
               }}
-              prefix={<MemoryOutlined />}
+              prefix={<CloudOutlined />}
             />
           </Card>
         </Col>
@@ -424,7 +419,7 @@ export const PerformanceOptimizer: React.FC<PerformanceOptimizerProps> = ({
                 percent={metrics.workflowEngine.cacheHitRate}
                 size="small"
                 strokeColor="#52c41a"
-                format={percent => `${percent.toFixed(1)}%`}
+                format={percent => `${(percent || 0).toFixed(1)}%`}
               />
             </div>
             <div>
@@ -540,7 +535,7 @@ export const PerformanceOptimizer: React.FC<PerformanceOptimizerProps> = ({
                   <Tag color={
                     suggestion.impact === 'high' ? 'red' :
                     suggestion.impact === 'medium' ? 'orange' : 'blue'
-                  } size="small">
+                  }>
                     {suggestion.impact === 'high' ? '高' :
                      suggestion.impact === 'medium' ? '中' : '低'}影响
                   </Tag>
@@ -585,91 +580,109 @@ export const PerformanceOptimizer: React.FC<PerformanceOptimizerProps> = ({
         </Row>
       </div>
 
-      <Tabs defaultActiveKey="overview" size="small">
-        <TabPane tab="性能概览" key="overview">
-          {renderPerformanceOverview()}
-          <div style={{ marginTop: 24 }}>
-            {renderOptimizationSuggestions()}
-          </div>
-        </TabPane>
-
-        <TabPane tab="详细指标" key="metrics">
-          {renderDetailedMetrics()}
-          <div style={{ marginTop: 24 }}>
-            <Row gutter={16}>
-              <Col span={12}>
-                <Card title="数据处理指标" size="small">
-                  <Space direction="vertical" style={{ width: '100%' }}>
-                    <div>
-                      <Text>处理时间: </Text>
-                      <Tag color={metrics.dataProcessing.processingTime > 300 ? 'orange' : 'green'}>
-                        {metrics.dataProcessing.processingTime.toFixed(0)}ms
-                      </Tag>
-                    </div>
-                    <div>
-                      <Text>吞吐量: </Text>
-                      <Tag color="green">{metrics.dataProcessing.throughput.toFixed(0)} ops/s</Tag>
-                    </div>
-                    <div>
-                      <Text>队列大小: </Text>
-                      <Tag color={metrics.dataProcessing.queueSize > 40 ? 'orange' : 'blue'}>
-                        {metrics.dataProcessing.queueSize}
-                      </Tag>
-                    </div>
-                    <div>
-                      <Text>错误率: </Text>
-                      <Tag color={metrics.dataProcessing.errorRate > 3 ? 'red' : 'green'}>
-                        {metrics.dataProcessing.errorRate.toFixed(1)}%
-                      </Tag>
-                    </div>
-                  </Space>
-                </Card>
-              </Col>
-              <Col span={12}>
-                <Card title="系统资源指标" size="small">
-                  <Space direction="vertical" style={{ width: '100%' }}>
-                    <div>
-                      <Text>CPU使用率: </Text>
-                      <Progress
-                        percent={metrics.system.cpuUsage}
-                        size="small"
-                        strokeColor={getStatusColor(metrics.system.cpuUsage, { warning: 60, error: 80 })}
-                      />
-                    </div>
-                    <div>
-                      <Text>内存使用率: </Text>
-                      <Progress
-                        percent={metrics.system.memoryUsage}
-                        size="small"
-                        strokeColor={getStatusColor(metrics.system.memoryUsage, { warning: 70, error: 85 })}
-                      />
-                    </div>
-                    <div>
-                      <Text>网络延迟: </Text>
-                      <Tag color={metrics.system.networkLatency > 100 ? 'orange' : 'green'}>
-                        {metrics.system.networkLatency.toFixed(0)}ms
-                      </Tag>
-                    </div>
-                    <div>
-                      <Text>磁盘IO: </Text>
-                      <Tag color="blue">{metrics.system.diskIO.toFixed(0)} MB/s</Tag>
-                    </div>
-                  </Space>
-                </Card>
-              </Col>
-            </Row>
-          </div>
-        </TabPane>
-
-        <TabPane tab="优化历史" key="history">
-          <Alert
-            message="优化历史记录"
-            description="系统会记录所有优化操作的历史记录和效果"
-            type="info"
-            showIcon
-          />
-        </TabPane>
-      </Tabs>
+      <Tabs
+        defaultActiveKey="overview"
+        size="small"
+        items={[
+          {
+            key: 'overview',
+            label: '性能概览',
+            children: (
+              <>
+                {renderPerformanceOverview()}
+                <div style={{ marginTop: 24 }}>
+                  {renderOptimizationSuggestions()}
+                </div>
+              </>
+            ),
+          },
+          {
+            key: 'metrics',
+            label: '详细指标',
+            children: (
+              <>
+                {renderDetailedMetrics()}
+                <div style={{ marginTop: 24 }}>
+                  <Row gutter={16}>
+                    <Col span={12}>
+                      <Card title="数据处理指标" size="small">
+                        <Space direction="vertical" style={{ width: '100%' }}>
+                          <div>
+                            <Text>处理时间: </Text>
+                            <Tag color={metrics.dataProcessing.processingTime > 300 ? 'orange' : 'green'}>
+                              {metrics.dataProcessing.processingTime.toFixed(0)}ms
+                            </Tag>
+                          </div>
+                          <div>
+                            <Text>吞吐量: </Text>
+                            <Tag color="green">{metrics.dataProcessing.throughput.toFixed(0)} ops/s</Tag>
+                          </div>
+                          <div>
+                            <Text>队列大小: </Text>
+                            <Tag color={metrics.dataProcessing.queueSize > 40 ? 'orange' : 'blue'}>
+                              {metrics.dataProcessing.queueSize}
+                            </Tag>
+                          </div>
+                          <div>
+                            <Text>错误率: </Text>
+                            <Tag color={metrics.dataProcessing.errorRate > 3 ? 'red' : 'green'}>
+                              {metrics.dataProcessing.errorRate.toFixed(1)}%
+                            </Tag>
+                          </div>
+                        </Space>
+                      </Card>
+                    </Col>
+                    <Col span={12}>
+                      <Card title="系统资源指标" size="small">
+                        <Space direction="vertical" style={{ width: '100%' }}>
+                          <div>
+                            <Text>CPU使用率: </Text>
+                            <Progress
+                              percent={metrics.system.cpuUsage}
+                              size="small"
+                              strokeColor={getStatusColor(metrics.system.cpuUsage, { warning: 60, error: 80 })}
+                            />
+                          </div>
+                          <div>
+                            <Text>内存使用率: </Text>
+                            <Progress
+                              percent={metrics.system.memoryUsage}
+                              size="small"
+                              strokeColor={getStatusColor(metrics.system.memoryUsage, { warning: 70, error: 85 })}
+                            />
+                          </div>
+                          <div>
+                            <Text>网络延迟: </Text>
+                            <Tag color={metrics.system.networkLatency > 100 ? 'orange' : 'green'}>
+                              {metrics.system.networkLatency.toFixed(0)}ms
+                            </Tag>
+                          </div>
+                          <div>
+                            <Text>磁盘IO: </Text>
+                            <Tag color="blue">{metrics.system.diskIO.toFixed(0)} MB/s</Tag>
+                          </div>
+                        </Space>
+                      </Card>
+                    </Col>
+                  </Row>
+                </div>
+              </>
+            ),
+          },
+          {
+            key: 'history',
+            label: '优化历史',
+            children: (
+              <Alert
+                message="优化历史记录"
+                description="系统会记录所有优化操作的历史记录和效果"
+                type="info"
+                showIcon
+              />
+            ),
+          },
+        ]}
+      />
     </div>
   );
 };

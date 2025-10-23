@@ -2,7 +2,7 @@
 members = [
   "crates/fusions/*",
   "jieyuan/jieyuan-core",
-  "jieyuan/jieyuan",
+  "jieyuan/jieyuan-server",
   "hetuflow/hetuflow-core",
   "hetuflow/hetuflow-server",
   "hetuflow/hetuflow-agent",
@@ -19,7 +19,7 @@ members = [
 resolver = "2"
 
 [workspace.package]
-version = "0.1.1"
+version = "0.1.0"
 edition = "2024"
 rust-version = "1.90"
 description = "A data fusion platform with scheduler, ai agent studio and core libraries"
@@ -61,23 +61,23 @@ opt-level = 3
 
 [workspace.dependencies]
 # -- projects begin
-fusion-common = { version = "0.1.1", path = "crates/fusions/fusion-common" }
-fusion-core-macros = { version = "0.1.1", path = "crates/fusions/fusion-core-macros" }
-fusion-core = { version = "0.1.1", path = "crates/fusions/fusion-core" }
-fusion-security = { version = "0.1.1", path = "crates/fusions/fusion-security" }
-fusionsql-core = { version = "0.1.1", path = "crates/fusions/fusionsql-core" }
-fusionsql-macros = { version = "0.1.1", path = "crates/fusions/fusionsql-macros" }
-fusionsql = { version = "0.1.1", path = "crates/fusions/fusionsql" }
-fusion-db = { version = "0.1.1", path = "crates/fusions/fusion-db" }
-fusion-web = { version = "0.1.1", path = "crates/fusions/fusion-web" }
-fusion-grpc = { version = "0.1.1", path = "crates/fusions/fusion-grpc" }
-fusion-ai = { version = "0.1.1", path = "crates/fusions/fusion-ai" }
-fusions = { version = "0.1.1", path = "crates/fusions/fusions" }
-jieyuan-core = { version = "0.1.1", path = "jieyuan/jieyuan-core" }
-hetuflow-core = { version = "0.1.1", path = "hetuflow/hetuflow-core" }
-hetumind-core = { version = "0.1.1", path = "hetumind/hetumind-core" }
-hetumind-context = { version = "0.1.1", path = "hetumind/hetumind-context" }
-hetumind-nodes = { version = "0.1.1", path = "hetumind/hetumind-nodes" }
+fusion-common = { version = "0.1.0", path = "crates/fusions/fusion-common" }
+fusion-core-macros = { version = "0.1.0", path = "crates/fusions/fusion-core-macros" }
+fusion-core = { version = "0.1.0", path = "crates/fusions/fusion-core" }
+fusion-security = { version = "0.1.0", path = "crates/fusions/fusion-security" }
+fusionsql-core = { version = "0.1.0", path = "crates/fusions/fusionsql-core" }
+fusionsql-macros = { version = "0.1.0", path = "crates/fusions/fusionsql-macros" }
+fusionsql = { version = "0.1.0", path = "crates/fusions/fusionsql" }
+fusion-db = { version = "0.1.0", path = "crates/fusions/fusion-db" }
+fusion-web = { version = "0.1.0", path = "crates/fusions/fusion-web" }
+fusion-grpc = { version = "0.1.0", path = "crates/fusions/fusion-grpc" }
+fusion-ai = { version = "0.1.0", path = "crates/fusions/fusion-ai" }
+fusions = { version = "0.1.0", path = "crates/fusions/fusions" }
+jieyuan-core = { version = "0.1.0", path = "jieyuan/jieyuan-core" }
+hetuflow-core = { version = "0.1.0", path = "hetuflow/hetuflow-core" }
+hetumind-core = { version = "0.1.0", path = "hetumind/hetumind-core" }
+hetumind-context = { version = "0.1.0", path = "hetumind/hetumind-context" }
+hetumind-nodes = { version = "0.1.0", path = "hetumind/hetumind-nodes" }
 # -- projects end
 mdbook = "0.4"
 mdbook-mermaid = "0.16"
@@ -121,7 +121,7 @@ config = { version = "0.15", default-features = false, features = [
   "json",
 ] }
 itertools = "0.14"
-regex = { version = "1", features = ["unicode-case"] }
+regex = { version = "1.12", features = ["unicode-case"] }
 rand = { version = "0.9", default-features = false, features = ["thread_rng"] }
 bytes = "1.10"
 ulid = { version = "1", features = ["serde", "uuid"] }
@@ -134,7 +134,7 @@ uuid = { version = "1", features = [
 ] }
 rust_decimal = { version = "1", features = ["serde-str"] }
 rust_decimal_macros = "1"
-typed-builder = "0.22"
+typed-builder = "0.23"
 derive_builder = "0.20"
 derive-getters = "0.5"
 clap = { version = "4.5", features = ["derive"] }
@@ -143,7 +143,7 @@ secrecy = { version = "0.10", features = ["serde"] }
 # 用于实现依赖注入。提供了一种方法，可以设置一个插件注册表，从任何链接到应用程序的源文件中都可以进行注册。不需要有一个所有插件的中央列表。
 inventory = { version = "0.3" }
 # Make retry like a built-in feature provided by Rust.
-backon = { version = "1.2" }
+backon = { version = "1.6" }
 # -- Helpful macros for working with enums and strings
 enum-iterator = "2"
 strum = { version = "0.27", features = ["derive"] }
@@ -342,7 +342,7 @@ opendal = { version = "0.54", features = [
 ] }
 minio = { version = "0.3" }
 # -- LLM
-rig-core = { version = "0.21", features = ["derive"] }
+rig-core = { version = "0.22", features = ["derive"] }
 rig-postgres = { version = "0.1" }
 graph-flow = { version = "0.4" }
 rmcp = { version = "0.8", features = [

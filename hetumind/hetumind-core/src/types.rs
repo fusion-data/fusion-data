@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use serde_repr::{Deserialize_repr, Serialize_repr};
 use strum::AsRefStr;
 
 pub type JsonValue = serde_json::Value;
@@ -43,8 +42,9 @@ pub enum IconColor {
   Crimson,
 }
 
-#[derive(Debug, Clone, Copy, Serialize_repr, Deserialize_repr, AsRefStr)]
-#[repr(u8)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, AsRefStr)]
+#[serde(rename_all = "lowercase")]
+#[strum(serialize_all = "lowercase")]
 pub enum CodeLanguage {
   JavaScript = 1,
   Python = 2,

@@ -1,0 +1,92 @@
+[package]
+name = "jieyuan-server"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[[bin]]
+name = "jieyuan-server"
+path = "bin/jieyuan-server.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+# -- fusions
+fusion-common = { workspace = true, features = ["with-uuid", "with-openapi"] }
+fusion-core = { workspace = true, features = ["with-uuid"] }
+
+# -- hetus
+jieyuan-core = { workspace = true, features = [
+  "with-openapi",
+  "with-db",
+  "with-web",
+] }
+
+# -- misc
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_repr = { workspace = true }
+chrono = { workspace = true }
+rust_decimal = { workspace = true }
+derive_more = { workspace = true }
+derive-getters = { workspace = true }
+typed-builder = { workspace = true }
+enum-iterator = { workspace = true }
+uuid = { workspace = true }
+semver = { workspace = true }
+
+# -- tokio & async
+tokio = { workspace = true }
+async-stream = { workspace = true }
+async-trait = { workspace = true }
+mea = { workspace = true }
+futures-util = { workspace = true }
+
+# -- log & tracing
+fastrace = { workspace = true }
+log = { workspace = true }
+
+# -- db
+fusion-db = { workspace = true, features = ["with-postgres", "with-uuid"] }
+fusionsql = { workspace = true, features = [
+  "with-postgres",
+  "with-uuid",
+  "with-openapi",
+] }
+sqlx = { workspace = true }
+sea-query = { workspace = true }
+sea-query-binder = { workspace = true }
+
+# -- Web
+fusion-web = { workspace = true, features = ["with-openapi"] }
+axum = { workspace = true, features = ["ws"] }
+axum-extra = { workspace = true }
+utoipa = { workspace = true }
+utoipa-axum = { workspace = true }
+utoipa-swagger-ui = { workspace = true }
+
+# -- qrcode
+qrcode-rs = { workspace = true }
+image = { workspace = true }
+
+# -- OAuth & HTTP client
+reqwest = { workspace = true, features = ["json"] }
+urlencoding = { workspace = true }
+base64ct = { workspace = true }
+rand = { workspace = true }
+sha2 = { workspace = true }
+
+[dev-dependencies]
+pretty_assertions.workspace = true
+hyper = { workspace = true }
+hyper-util = { workspace = true }
+tower = { workspace = true }
+fusion-core-macros = { workspace = true }
+
+[build-dependencies]
+tonic-build = { workspace = true }

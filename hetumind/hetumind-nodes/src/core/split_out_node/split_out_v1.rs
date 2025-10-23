@@ -18,12 +18,14 @@ use super::{
 };
 
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct SplitOutV1 {
   pub definition: Arc<NodeDefinition>,
 }
 
 impl SplitOutV1 {
   /// 执行数据拆分
+  #[allow(unused_variables)]
   async fn execute_split_out(
     &self,
     context: &NodeExecutionContext,
@@ -207,6 +209,7 @@ impl SplitOutV1 {
   }
 
   /// 包含二进制数据
+  #[allow(unused_variables)]
   fn include_binary_data(
     &self,
     _new_item: &mut JsonValue,
@@ -222,6 +225,7 @@ impl SplitOutV1 {
   }
 
   /// 生成执行提示
+  #[allow(unused_variables)]
   fn generate_execution_hints(&self, tracker: &utils::MissingFieldsTracker) -> Result<(), NodeExecutionError> {
     let missing_fields = tracker.get_completely_missing_fields();
 
@@ -261,6 +265,7 @@ impl SplitOutV1 {
 /// - 工作流数据预处理
 #[async_trait]
 impl NodeExecutable for SplitOutV1 {
+  #[allow(unused_variables)]
   fn definition(&self) -> Arc<NodeDefinition> {
     self.definition.clone()
   }
@@ -363,31 +368,29 @@ impl SplitOutV1 {
 impl TryFrom<NodeDefinition> for SplitOutV1 {
   type Error = RegistrationError;
 
-  fn try_from(mut base: NodeDefinition) -> Result<Self, Self::Error> {
+  fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
     let definition = base
-      .add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build())
-      .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build())
+      .with_version(Version::new(1, 0, 0))
+      .add_input(InputPortConfig::new(ConnectionKind::Main, "Input"))
+      .add_output(OutputPortConfig::new(ConnectionKind::Main, "Output"))
       .add_property(
         // 要拆分的字段
-        NodeProperty::builder()
-          .display_name("Fields to Split".to_string())
-          .name("fields_to_split")
-          .required(true)
-          .description("The fields that should be split out".to_string())
-          .placeholder("e.g. data.items, users")
-          .kind(NodePropertyKind::String)
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("Fields to Split")
+          .with_name("fields_to_split")
+          .with_required(true)
+          .with_description("The fields that should be split out")
+          .with_placeholder("e.g. data.items, users"),
       )
       .add_property(
         // 字段包含策略
-        NodeProperty::builder()
-          .display_name("Include".to_string())
-          .name("include_strategy")
-          .required(true)
-          .description("Choose which other fields the split out items should contain".to_string())
-          .kind(NodePropertyKind::Options)
-          .value(json!("noOtherFields"))
-          .options(vec![
+        NodeProperty::new(NodePropertyKind::Options)
+          .with_display_name("Include")
+          .with_name("include_strategy")
+          .with_required(true)
+          .with_description("Choose which other fields the split out items should contain")
+          .with_value(json!("noOtherFields"))
+          .with_options(vec![
             Box::new(NodeProperty::new_option(
               "No Other Fields",
               "noOtherFields",
@@ -406,29 +409,26 @@ impl TryFrom<NodeDefinition> for SplitOutV1 {
               json!("selectedOtherFields"),
               NodePropertyKind::String,
             )),
-          ])
-          .build(),
+          ]),
       )
       .add_property(
         // 选择性包含字段
-        NodeProperty::builder()
-          .display_name("Fields to Include".to_string())
-          .name("fields_to_include")
-          .required(false)
-          .description("The fields that split out items should contain".to_string())
-          .placeholder("e.g. id, timestamp, status")
-          .kind(NodePropertyKind::String)
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("Fields to Include")
+          .with_name("fields_to_include")
+          .with_required(false)
+          .with_description("The fields that split out items should contain")
+          .with_placeholder("e.g. id, timestamp, status"),
       )
       .add_property(
         // 高级选项
-        NodeProperty::builder()
-          .display_name("Options".to_string())
-          .name("options")
-          .required(false)
-          .description("Advanced options for data splitting".to_string())
-          .placeholder("Add Option")
-          .options(vec![
+        NodeProperty::new(NodePropertyKind::Options)
+          .with_display_name("Options")
+          .with_name("options")
+          .with_required(false)
+          .with_description("Advanced options for data splitting")
+          .with_placeholder("Add Option")
+          .with_options(vec![
             Box::new(NodeProperty::new_option(
               "Disable Dot Notation",
               "disable_dot_notation",
@@ -441,8 +441,7 @@ impl TryFrom<NodeDefinition> for SplitOutV1 {
               json!(false),
               NodePropertyKind::Boolean,
             )),
-          ])
-          .build(),
+          ]),
       );
     Ok(Self { definition: Arc::new(definition) })
   }

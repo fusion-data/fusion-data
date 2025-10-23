@@ -1,7 +1,6 @@
 use fusion_common::ahash::HashMap;
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use serde_repr::{Deserialize_repr, Serialize_repr};
-use typed_builder::TypedBuilder;
 
 use crate::credential::CredentialInfo;
 
@@ -141,9 +140,9 @@ impl From<(i32, i32)> for Position {
   }
 }
 
-/// Workflow Node
-#[derive(Debug, Clone, Serialize, Deserialize, TypedBuilder)]
-pub struct WorkflowNode {
+/// Node element of workflow
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NodeElement {
   pub kind: NodeKind,
 
   /// The unique identifier name of the node within the workflow. Other nodes can be accessed via this name,
@@ -151,85 +150,158 @@ pub struct WorkflowNode {
   pub name: NodeName,
 
   /// The display name of the node, shown in the UI. Uses the value of `name` if not set.
-  #[builder(default, setter(into, strip_option))]
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub display_name: Option<String>,
 
   /// Node parameters. Parameters configured when defining the workflow. For configurable parameters,
   /// see the `properties` property of NodeDefinition.
-  #[builder(default)]
   pub parameters: ParameterMap,
 
   /// 节点在画布上的位置 [x, y]
-  #[builder(default, setter(into, strip_option))]
   pub position: Option<Position>,
 
   /// Webhook ID (可选)
   #[serde(skip_serializing_if = "Option::is_none")]
-  #[builder(default, setter(into, strip_option))]
   pub webhook_id: Option<String>,
 
   /// 凭证信息 (可选)
   #[serde(skip_serializing_if = "Option::is_none")]
-  #[builder(default, setter(strip_option))]
   pub credentials: Option<HashMap<String, CredentialInfo>>,
 
   /// 始终输出数据 (可选)
   #[serde(skip_serializing_if = "Option::is_none")]
-  #[builder(default, setter(strip_option))]
   pub always_output_data: Option<bool>,
 
   #[serde(default)]
-  #[builder(default)]
   pub execute_mode: NodeExecutionMode,
 
   /// 在流程中显示备注 (可选)
   #[serde(skip_serializing_if = "Option::is_none")]
-  #[builder(default, setter(strip_option))]
   pub notes_in_flow: Option<bool>,
 
   /// 备注信息 (可选)
   #[serde(skip_serializing_if = "Option::is_none")]
-  #[builder(default, setter(strip_option))]
   pub notes: Option<String>,
 
   /// 错误处理策略，默认为 StopWorkflow
   #[serde(default)]
-  #[builder(default)]
   pub on_error: OnErrorBehavior,
 
   /// 失败时最大重试次数，默认为 0，表示不重试
   #[serde(default)]
-  #[builder(default)]
   pub max_tries: u32,
 
   /// 重试间隔（毫秒）
-  #[builder(default, setter(strip_option))]
   pub wait_between_tries: Option<u64>,
 
   /// 超时时间（秒）
-  #[builder(default, setter(strip_option))]
   pub timeout: Option<u64>,
 }
 
-impl WorkflowNode {
-  pub fn display_name(&self) -> &str {
-    self.display_name.as_deref().unwrap_or(&self.name)
+impl NodeElement {
+  pub fn new(kind: impl Into<NodeKind>, name: impl Into<NodeName>) -> Self {
+    Self {
+      kind: kind.into(),
+      name: name.into(),
+      display_name: None,
+      parameters: ParameterMap::default(),
+      position: None,
+      webhook_id: None,
+      credentials: None,
+      always_output_data: None,
+      execute_mode: NodeExecutionMode::default(),
+      notes_in_flow: None,
+      notes: None,
+      on_error: OnErrorBehavior::default(),
+      max_tries: 0,
+      wait_between_tries: None,
+      timeout: None,
+    }
   }
 
-  /// 设置凭证
-  pub fn with_credentials(&mut self, credentials: HashMap<String, CredentialInfo>) -> &Self {
+  pub fn with_display_name(mut self, display_name: impl Into<String>) -> Self {
+    self.display_name = Some(display_name.into());
+    self
+  }
+
+  pub fn with_parameters(mut self, parameters: ParameterMap) -> Self {
+    self.parameters = parameters;
+    self
+  }
+
+  pub fn with_position(mut self, position: Option<Position>) -> Self {
+    self.position = position;
+    self
+  }
+
+  pub fn with_webhook_id(mut self, webhook_id: impl Into<String>) -> Self {
+    self.webhook_id = Some(webhook_id.into());
+    self
+  }
+
+  pub fn with_credentials(mut self, credentials: HashMap<String, CredentialInfo>) -> Self {
     self.credentials = Some(credentials);
     self
   }
 
-  /// 设置备注
-  pub fn with_notes(&mut self, notes: String) -> &Self {
+  pub fn with_always_output_data(mut self, always_output_data: bool) -> Self {
+    self.always_output_data = Some(always_output_data);
+    self
+  }
+
+  pub fn with_execute_mode(mut self, execute_mode: NodeExecutionMode) -> Self {
+    self.execute_mode = execute_mode;
+    self
+  }
+
+  pub fn with_notes_in_flow(mut self, notes_in_flow: bool) -> Self {
+    self.notes_in_flow = Some(notes_in_flow);
+    self
+  }
+
+  pub fn with_notes(mut self, notes: impl Into<String>) -> Self {
+    self.notes = Some(notes.into());
+    self
+  }
+
+  pub fn with_on_error(mut self, on_error: OnErrorBehavior) -> Self {
+    self.on_error = on_error;
+    self
+  }
+
+  pub fn with_max_tries(mut self, max_tries: u32) -> Self {
+    self.max_tries = max_tries;
+    self
+  }
+
+  pub fn with_wait_between_tries(mut self, wait_between_tries: Option<u64>) -> Self {
+    self.wait_between_tries = wait_between_tries;
+    self
+  }
+
+  pub fn with_timeout(mut self, timeout: Option<u64>) -> Self {
+    self.timeout = timeout;
+    self
+  }
+
+  pub fn display_name(&self) -> &str {
+    self.display_name.as_deref().unwrap_or(&self.name)
+  }
+
+  /// 设置凭证 (legacy method for backwards compatibility)
+  pub fn set_credentials(&mut self, credentials: HashMap<String, CredentialInfo>) -> &mut Self {
+    self.credentials = Some(credentials);
+    self
+  }
+
+  /// 设置备注 (legacy method for backwards compatibility)
+  pub fn set_notes(&mut self, notes: String) -> &mut Self {
     self.notes = Some(notes);
     self
   }
 
-  /// 设置Webhook ID
-  pub fn with_webhook_id(&mut self, webhook_id: String) -> &Self {
+  /// 设置Webhook ID (legacy method for backwards compatibility)
+  pub fn set_webhook_id(&mut self, webhook_id: String) -> &mut Self {
     self.webhook_id = Some(webhook_id);
     self
   }

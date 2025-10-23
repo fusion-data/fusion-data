@@ -1,31 +1,27 @@
-use fusion_common::regex::{is_email, is_phone};
 use hetumind_core::credential::TokenType;
 use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize)]
-pub struct SigninRequest {
-  pub account: String,
-  pub password: String,
+#[derive(Serialize)]
+pub struct SigninResponse {
+  pub access_token: String,
+  pub refresh_token: Option<String>,
+  pub token_type: TokenType,
+  pub expires_in: i64, // seconds
 }
 
-impl SigninRequest {
-  pub fn as_email(&self) -> Option<&str> {
-    if is_email(&self.account) { Some(&self.account) } else { None }
-  }
-
-  pub fn as_phone(&self) -> Option<&str> {
-    if is_phone(&self.account) { Some(&self.account) } else { None }
-  }
+#[derive(Deserialize)]
+pub struct RefreshTokenRequest {
+  pub refresh_token: String,
 }
 
 #[derive(Serialize)]
-pub struct SigninResponse {
-  pub token: String,
+pub struct RefreshTokenResponse {
+  pub access_token: String,
   pub token_type: TokenType,
+  pub expires_in: i64, // seconds
 }
 
 #[derive(Deserialize)]
-pub struct SignupRequest {
-  pub email: String,
-  pub password: String,
+pub struct SignoutRequest {
+  pub token: Option<String>, // optional, if not provided, use current authenticated token
 }

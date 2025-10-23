@@ -1,10 +1,11 @@
 //! 节点执行
 use std::sync::Arc;
 
+use async_trait::async_trait;
+use chrono::{DateTime, FixedOffset};
 use fusion_common::ahash::HashMap;
-use fusion_common::time::OffsetDateTime;
-use serde::{Deserialize, Serialize};
-use typed_builder::TypedBuilder;
+use fusion_common::time::now;
+use serde::{Deserialize, Serialize, de::DeserializeOwned, ser::Error};
 use uuid::Uuid;
 
 use crate::{
@@ -12,15 +13,15 @@ use crate::{
   expression::ExpressionEvaluator,
   types::{BinaryFileKind, JsonValue},
   user::UserId,
-  workflow::{ExecutionId, GetNodeParameterOptions, ValidationError, Workflow},
+  workflow::{
+    Connection, ExecutionId, GetNodeParameterOptions, NodeDefinition, NodeRegistry, ValidationError, Workflow,
+  },
 };
 
 use super::{
-  ConnectionIndex, ConnectionKind, EngineResponse, NodeExecutionError, NodeExecutionStatus, NodeName, ParameterMap,
-  WorkflowNode,
+  ConnectionIndex, ConnectionKind, NodeElement, NodeExecutionError, NodeExecutionStatus, NodeName, ParameterMap,
 };
 
-#[derive(TypedBuilder)]
 pub struct NodeExecutionContext {
   /// 执行ID
   pub execution_id: ExecutionId,
@@ -31,22 +32,113 @@ pub struct NodeExecutionContext {
   /// 输入数据
   pub input_data: ExecutionDataMap,
   /// 执行开始时间
-  pub started_at: OffsetDateTime,
+  pub started_at: DateTime<FixedOffset>,
   /// 用户ID
   pub user_id: Option<UserId>,
   /// 环境变量
   pub env_vars: HashMap<String, String>,
   /// 表达式评估器
   pub expression_evaluator: ExpressionEvaluator,
-  /// 引擎响应（用于子节点执行）
-  #[builder(default)]
-  pub engine_response: Option<EngineResponse>,
-  /// 二进制数据管理器（可选，用于处理附件等二进制数据）
+  /// 二进制数据管理器（用于处理附件等二进制数据）
   pub binary_data_manager: BinaryDataManager,
+  /// 节点注册表
+  pub node_registry: NodeRegistry,
 }
 
 impl NodeExecutionContext {
-  pub fn current_node(&self) -> Result<&WorkflowNode, NodeExecutionError> {
+  pub fn new(
+    execution_id: ExecutionId,
+    workflow: Arc<Workflow>,
+    current_node_name: impl Into<NodeName>,
+    input_data: ExecutionDataMap,
+    binary_data_manager: BinaryDataManager,
+    node_registry: NodeRegistry,
+  ) -> Self {
+    Self {
+      execution_id,
+      workflow,
+      current_node_name: current_node_name.into(),
+      input_data,
+      started_at: now().fixed_offset(),
+      user_id: None,
+      env_vars: HashMap::default(),
+      expression_evaluator: ExpressionEvaluator::new(),
+      binary_data_manager,
+      node_registry,
+    }
+  }
+
+  pub fn current_node_name(&self) -> &NodeName {
+    &self.current_node_name
+  }
+
+  pub fn with_execution_id(mut self, execution_id: ExecutionId) -> Self {
+    self.execution_id = execution_id;
+    self
+  }
+
+  pub fn with_workflow(mut self, workflow: Arc<Workflow>) -> Self {
+    self.workflow = workflow;
+    self
+  }
+
+  pub fn with_current_node_name(mut self, current_node_name: NodeName) -> Self {
+    self.current_node_name = current_node_name;
+    self
+  }
+
+  pub fn with_input_data<I, K, V>(mut self, input_data: I) -> Self
+  where
+    I: IntoIterator<Item = (K, V)>,
+    K: Into<ConnectionKind>,
+    V: Into<Vec<ExecutionDataItems>>,
+  {
+    self.input_data = input_data.into_iter().map(|(k, v)| (k.into(), v.into())).collect();
+    self
+  }
+
+  pub fn add_input_data(mut self, key: impl Into<ConnectionKind>, value: Vec<ExecutionDataItems>) -> Self {
+    self.input_data.insert(key.into(), value);
+    self
+  }
+
+  pub fn with_started_at(mut self, started_at: DateTime<FixedOffset>) -> Self {
+    self.started_at = started_at;
+    self
+  }
+
+  pub fn with_user_id(mut self, user_id: UserId) -> Self {
+    self.user_id = Some(user_id);
+    self
+  }
+
+  pub fn with_env_vars<I, K, V>(mut self, env_vars: I) -> Self
+  where
+    I: IntoIterator<Item = (K, V)>,
+    K: Into<String>,
+    V: Into<String>,
+  {
+    self.env_vars = env_vars.into_iter().map(|(k, v)| (k.into(), v.into())).collect();
+    self
+  }
+
+  pub fn add_env_var(mut self, key: impl Into<String>, value: impl Into<String>) -> Self {
+    self.env_vars.insert(key.into(), value.into());
+    self
+  }
+
+  pub fn with_expression_evaluator(mut self, expression_evaluator: ExpressionEvaluator) -> Self {
+    self.expression_evaluator = expression_evaluator;
+    self
+  }
+
+  pub fn with_binary_data_manager(mut self, binary_data_manager: BinaryDataManager) -> Self {
+    self.binary_data_manager = binary_data_manager;
+    self
+  }
+
+  /// 获取当前工作流节点（不包含 sub node）
+  pub fn current_node(&self) -> Result<&NodeElement, NodeExecutionError> {
     match self.workflow.nodes.iter().find(|n| n.name == self.current_node_name) {
       Some(node) => Ok(node),
       None => Err(NodeExecutionError::NodeNotFound {
@@ -91,18 +183,18 @@ impl NodeExecutionContext {
   }
 
   /// 获取指定连接类型和索引的连接数据
-  pub fn get_connection_data(&self, connection_type: ConnectionKind, index: usize) -> Option<ExecutionData> {
+  pub fn get_connection_data(&self, connection_kind: ConnectionKind, index: usize) -> Option<ExecutionData> {
     self
-      .get_input_items(connection_type, index)
+      .get_input_items(connection_kind, index)
       .and_then(|items| items.get_data_items())
       .and_then(|data| data.first().cloned())
   }
 
   /// 获取指定连接类型的所有连接数据
-  pub fn get_all_connections(&self, connection_type: ConnectionKind) -> Vec<ExecutionData> {
+  pub fn get_all_connections_data(&self, connection_kind: ConnectionKind) -> Vec<ExecutionData> {
     let mut all_data = Vec::new();
 
-    if let Some(items) = self.input_data.get(&connection_type) {
+    if let Some(items) = self.input_data.get(&connection_kind) {
       for item in items {
         if let Some(data) = item.get_data_items() {
           all_data.extend(data);
@@ -113,21 +205,21 @@ impl NodeExecutionContext {
     all_data
   }
 
-  /// 获取输入数据的便捷方法
-  pub fn get_input_data(&self, port_name: &str) -> Result<ExecutionData, NodeExecutionError> {
-    let connection_type = match port_name {
-      "main" => ConnectionKind::Main,
-      "ai_agent" => ConnectionKind::AiAgent,
-      "ai_tool" => ConnectionKind::AiTool,
-      "ai_model" => ConnectionKind::AiModel,
-      "ai_memory" => ConnectionKind::AiMemory,
-      "error" => ConnectionKind::Error,
-      _ => return Err(NodeExecutionError::InvalidInput(format!("Unknown port: {}", port_name))),
-    };
+  pub fn get_all_connections(&self, kind: &ConnectionKind) -> &[Connection] {
+    if let Some(data) = self.workflow.connections.get(self.current_node_name())
+      && let Some(connections) = data.get(kind)
+    {
+      connections
+    } else {
+      &[]
+    }
+  }
 
+  /// 获取输入数据的便捷方法
+  pub fn get_input_data(&self, port_kind: ConnectionKind) -> Result<ExecutionData, NodeExecutionError> {
     self
-      .get_connection_data(connection_type, 0)
-      .ok_or_else(|| NodeExecutionError::InvalidInput(format!("No data on port: {}", port_name)))
+      .get_connection_data(port_kind, 0)
+      .ok_or_else(|| NodeExecutionError::InvalidInput(format!("No data on port: {}", port_kind)))
   }
 
   /// 获取节点参数的便捷方法
@@ -142,16 +234,6 @@ impl NodeExecutionContext {
       .get::<T>()
       .map_err(|e| NodeExecutionError::ConfigurationError(format!("Failed to parse parameters: {}", e)))
   }
-
-  /// 检查是否是子节点执行
-  pub fn is_sub_node_execution(&self) -> bool {
-    self.engine_response.is_some()
-  }
-
-  /// 获取子节点执行结果
-  pub fn get_sub_node_results(&self) -> Option<&EngineResponse> {
-    self.engine_response.as_ref()
-  }
 }
 
 /// 节点之间的执行数据（传递），是工作流中流动的基本数据单元。
@@ -165,6 +247,27 @@ pub struct ExecutionDataInner {
 
   /// 来源信息。保留了数据项在原始批次中的索引。在循环、合并等操作中，这个索引可以用来保持数据的对应关系。
   pub source: Option<DataSource>,
+}
+
+impl ExecutionDataInner {
+  pub fn new(json: JsonValue) -> Self {
+    Self { json, binary: None, source: None }
+  }
+
+  pub fn with_json(mut self, json: JsonValue) -> Self {
+    self.json = json;
+    self
+  }
+
+  pub fn with_binary(mut self, binary: impl Into<BinaryDataReference>) -> Self {
+    self.binary = Some(binary.into());
+    self
+  }
+
+  pub fn with_source(mut self, source: impl Into<DataSource>) -> Self {
+    self.source = Some(source.into());
+    self
+  }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -183,6 +286,20 @@ impl ExecutionData {
     &self.0.json
   }
 
+  /// Get serde_json::Value with key
+  pub fn get(&self, key: &str) -> Result<&JsonValue, serde_json::Error> {
+    self.json().get(key).ok_or_else(|| serde_json::Error::custom(format!("key '{}' not exists", key)))
+  }
+
+  /// Get T with key
+  pub fn get_value<T>(&self, key: &str) -> Result<T, serde_json::Error>
+  where
+    T: DeserializeOwned,
+  {
+    let value = self.get(key)?;
+    serde_json::from_value(value.clone())
+  }
+
   pub fn binary(&self) -> Option<&BinaryDataReference> {
     self.0.binary.as_ref()
   }
@@ -194,10 +311,10 @@ impl ExecutionData {
 
 /// 执行数据来源
 ///
-/// - 实现了“数据血缘”追踪，让每一条数据都携带着它的来源信息。这对于调试复杂的工作流至关重要，
+/// - 实现了"数据血缘"追踪，让每一条数据都携带着它的来源信息。这对于调试复杂的工作流至关重要，
 ///   我们可以清晰地知道一个数据项是哪个节点的哪个端口产生的。
 /// - 优势: 显式地携带 `DataSource` 让数据流变得可追溯。我们可以轻松构建一个工具来可视化任何一个
-///   `ExecutionData` 的完整生命周期。这降低了系统的“魔术性”，提高了透明度和可维护性。
+///   `ExecutionData` 的完整生命周期。这降低了系统的"魔术性"，提高了透明度和可维护性。
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DataSource {
   /// 来源节点ID
@@ -208,13 +325,34 @@ pub struct DataSource {
   pub output_index: ConnectionIndex,
 }
 
+impl DataSource {
+  pub fn new(node_name: NodeName, output_port: ConnectionKind, output_index: ConnectionIndex) -> Self {
+    Self { node_name, output_port, output_index }
+  }
+
+  pub fn with_node_name(mut self, node_name: NodeName) -> Self {
+    self.node_name = node_name;
+    self
+  }
+
+  pub fn with_output_port(mut self, output_port: ConnectionKind) -> Self {
+    self.output_port = output_port;
+    self
+  }
+
+  pub fn with_output_index(mut self, output_index: ConnectionIndex) -> Self {
+    self.output_index = output_index;
+    self
+  }
+}
+
 /// 二进制数据引用
 ///
 /// - 引用: `file_key` 是二进制数据在对象存储中的唯一标识符，（比如 S3、本地文件存储），我们只在节点间传递这个轻量级的引用。
 /// - 优势: 您的引用设计非常出色，尤其适合云原生和高性能场景。
 ///   - 内存效率: 避免了在内存中复制和持有大量二进制数据（如视频、大文件），极大地降低了执行引擎的内存占用。
 ///   - 可扩展性: 在分布式或无服务器（Lambda）环境中，无法在两个独立的函数实例之间直接传递内存中的 Buffer。而传递一个 file_id (例如 S3 object key) 是简单而高效的。这个设计为 hetumind-lambda 的实现铺平了道路。
-///   - 持久化: 它强制将二进制数据的处理流程规范化：“接收 -> 存到对象存储 -> 获取引用 ID -> 传递引用”。这使得工作流的中间状态也更容易持久化和恢复。
+///   - 持久化: 它强制将二进制数据的处理流程规范化："接收 -> 存到对象存储 -> 获取引用 ID -> 传递引用"。这使得工作流的中间状态也更容易持久化和恢复。
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BinaryDataReference {
   /// 文件对象key
@@ -231,6 +369,55 @@ pub struct BinaryDataReference {
   pub file_extension: Option<String>,
   /// 文件目录
   pub directory: Option<String>,
+}
+
+impl BinaryDataReference {
+  pub fn new(file_key: impl Into<String>, mime_kind: impl Into<String>, file_size: u64) -> Self {
+    Self {
+      file_key: file_key.into(),
+      mime_kind: mime_kind.into(),
+      file_size,
+      file_name: None,
+      file_kind: None,
+      file_extension: None,
+      directory: None,
+    }
+  }
+
+  pub fn with_file_key(mut self, file_key: impl Into<String>) -> Self {
+    self.file_key = file_key.into();
+    self
+  }
+
+  pub fn with_mime_kind(mut self, mime_kind: impl Into<String>) -> Self {
+    self.mime_kind = mime_kind.into();
+    self
+  }
+
+  pub fn with_file_size(mut self, file_size: u64) -> Self {
+    self.file_size = file_size;
+    self
+  }
+
+  pub fn with_file_name(mut self, file_name: impl Into<String>) -> Self {
+    self.file_name = Some(file_name.into());
+    self
+  }
+
+  pub fn with_file_kind(mut self, file_kind: BinaryFileKind) -> Self {
+    self.file_kind = Some(file_kind);
+    self
+  }
+
+  pub fn with_file_extension(mut self, file_extension: impl Into<String>) -> Self {
+    self.file_extension = Some(file_extension.into());
+    self
+  }
+
+  pub fn with_directory(mut self, directory: impl Into<String>) -> Self {
+    self.directory = Some(directory.into());
+    self
+  }
 }
 
 /// 多个节点的执行数据。用于聚合所有节点的执行结果，或单个节点的所有输入结果（它可能同时收到来自多个父节点的输入数据）。
@@ -258,8 +445,12 @@ impl ExecutionDataItems {
     Self::Null
   }
 
-  pub fn new_items(items: VecExecutionData) -> Self {
+  pub fn new_items(items: Vec<ExecutionData>) -> Self {
     Self::Items(items)
+  }
+
+  pub fn new_item(item: ExecutionData) -> Self {
+    Self::Items(vec![item])
   }
 
   pub fn get_data_items(&self) -> Option<VecExecutionData> {
@@ -284,19 +475,43 @@ impl ExecutionDataItems {
   }
 }
 
-#[derive(Debug, TypedBuilder)]
+#[derive(Debug)]
 pub struct NodeExecutionResult {
   /// 节点ID
   pub node_name: NodeName,
   /// 执行状态
   pub status: NodeExecutionStatus,
   /// 输出数据
-  pub output_data: ExecutionDataMap, // Vec<ExecutionDataItems>,
+  pub output_data: ExecutionDataMap,
   /// 错误信息
-  #[builder(default, setter(strip_option))]
   pub error: Option<String>,
   /// 执行时长
   pub duration_ms: u64,
+}
+
+impl NodeExecutionResult {
+  pub fn success(node_name: NodeName, duration_ms: u64, output_data: ExecutionDataMap) -> Self {
+    Self { node_name, status: NodeExecutionStatus::Success, output_data, error: None, duration_ms }
+  }
+
+  pub fn failure(node_name: NodeName, duration_ms: u64, status: NodeExecutionStatus, error: impl Into<String>) -> Self {
+    Self { node_name, status, output_data: Default::default(), error: Some(error.into()), duration_ms }
+  }
+
+  pub fn with_status(mut self, status: NodeExecutionStatus) -> Self {
+    self.status = status;
+    self
+  }
+
+  pub fn with_output_data(mut self, output_data: ExecutionDataMap) -> Self {
+    self.output_data = output_data;
+    self
+  }
+
+  pub fn with_error(mut self, error: impl Into<String>) -> Self {
+    self.error = Some(error.into());
+    self
+  }
 }
 
 /// 一次节点执行的完整记录，默认保存在内存中。
@@ -311,9 +526,9 @@ pub struct NodeExecution {
   /// 执行状态
   pub status: NodeExecutionStatus,
   /// 开始时间
-  pub started_at: OffsetDateTime,
+  pub started_at: DateTime<FixedOffset>,
   /// 结束时间
-  pub finished_at: Option<OffsetDateTime>,
+  pub finished_at: Option<DateTime<FixedOffset>>,
   /// 输入数据
   pub input_data: Option<serde_json::Value>,
   /// 输出数据
@@ -325,3 +540,104 @@ pub struct NodeExecution {
   /// 执行时长（毫秒）
   pub duration_ms: Option<u64>,
 }
+
+impl NodeExecution {
+  pub fn new(
+    id: Uuid,
+    execution_id: ExecutionId,
+    node_name: NodeName,
+    status: NodeExecutionStatus,
+    started_at: DateTime<FixedOffset>,
+  ) -> Self {
+    Self {
+      id,
+      execution_id,
+      node_name,
+      status,
+      started_at,
+      finished_at: None,
+      input_data: None,
+      output_data: None,
+      error: None,
+      retry_count: Default::default(),
+      duration_ms: None,
+    }
+  }
+
+  pub fn with_id(mut self, id: Uuid) -> Self {
+    self.id = id;
+    self
+  }
+
+  pub fn with_execution_id(mut self, execution_id: ExecutionId) -> Self {
+    self.execution_id = execution_id;
+    self
+  }
+
+  pub fn with_node_name(mut self, node_name: NodeName) -> Self {
+    self.node_name = node_name;
+    self
+  }
+
+  pub fn with_status(mut self, status: NodeExecutionStatus) -> Self {
+    self.status = status;
+    self
+  }
+
+  pub fn with_started_at(mut self, started_at: DateTime<FixedOffset>) -> Self {
+    self.started_at = started_at;
+    self
+  }
+
+  pub fn with_finished_at(mut self, finished_at: DateTime<FixedOffset>) -> Self {
+    self.finished_at = Some(finished_at);
+    self
+  }
+
+  pub fn with_input_data(mut self, input_data: impl Into<serde_json::Value>) -> Self {
+    self.input_data = Some(input_data.into());
+    self
+  }
+
+  pub fn with_output_data(mut self, output_data: impl Into<serde_json::Value>) -> Self {
+    self.output_data = Some(output_data.into());
+    self
+  }
+
+  pub fn with_error(mut self, error: impl Into<String>) -> Self {
+    self.error = Some(error.into());
+    self
+  }
+
+  pub fn with_retry_count(mut self, retry_count: i32) -> Self {
+    self.retry_count = retry_count;
+    self
+  }
+
+  pub fn with_duration_ms(mut self, duration_ms: u64) -> Self {
+    self.duration_ms = Some(duration_ms);
+    self
+  }
+}
+
+/// Normal/Root node, can be called by workflow
+#[async_trait]
+pub trait NodeExecutable {
+  /// Initialize the node. This can be used to implement node initialization logic, such as loading configuration, initializing resources, etc.
+  async fn init(&mut self, _context: &NodeExecutionContext) -> Result<(), NodeExecutionError> {
+    Ok(())
+  }
+
+  /// Execute the node
+  ///
+  /// Returns:
+  /// - On success, returns data for multiple output ports, with the first output port starting from 0
+  /// - On failure, returns an error
+  async fn execute(&self, context: &NodeExecutionContext) -> Result<ExecutionDataMap, NodeExecutionError>;
+
+  /// Get Node definition
+  fn definition(&self) -> Arc<NodeDefinition>;
+}
+
+/// Node Executor Type
+pub type NodeExecutor = Arc<dyn NodeExecutable + Send + Sync>;

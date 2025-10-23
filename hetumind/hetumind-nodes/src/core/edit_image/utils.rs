@@ -39,11 +39,11 @@ pub struct ImageInfo {
 /// 验证输入数据是否包含有效的图像数据
 pub fn validate_image_data(
   input_item: &ExecutionData,
-  data_property_name: &str,
+  _data_property_name: &str,
   item_index: usize,
 ) -> Result<Vec<u8>, NodeExecutionError> {
   // 检查是否存在二进制数据
-  let binary_data = input_item.binary().ok_or_else(|| NodeExecutionError::DataProcessingError {
+  let _binary_data = input_item.binary().ok_or_else(|| NodeExecutionError::DataProcessingError {
     message: format!("Input item {} does not contain binary data", item_index),
   })?;
 
@@ -163,7 +163,7 @@ fn apply_blur_operation(
   parameters: &Value,
   item_index: usize,
 ) -> Result<(), NodeExecutionError> {
-  let blur = parameters["blur"].as_f64().ok_or_else(|| NodeExecutionError::DataProcessingError {
+  let _blur = parameters["blur"].as_f64().ok_or_else(|| NodeExecutionError::DataProcessingError {
     message: format!("Missing or invalid 'blur' parameter for item {}", item_index),
   })? as f32;
 
@@ -212,9 +212,9 @@ fn apply_border_operation(
 
 /// 应用合成操作
 fn apply_composite_operation(
-  img: &mut DynamicImage,
-  parameters: &Value,
-  item_index: usize,
+  _img: &mut DynamicImage,
+  _parameters: &Value,
+  _item_index: usize,
 ) -> Result<(), NodeExecutionError> {
   // 注意：这里简化处理，实际实现需要获取另一个图像数据
   // 在完整实现中，需要从 ExecutionData 中获取合成图像
@@ -412,11 +412,11 @@ fn apply_rotate_operation(
 /// 应用剪切操作
 fn apply_shear_operation(
   _img: &mut DynamicImage,
-  parameters: &Value,
-  item_index: usize,
+  _parameters: &Value,
+  _item_index: usize,
 ) -> Result<(), NodeExecutionError> {
-  let _degrees_x = parameters["degrees_x"].as_f64().unwrap_or(0.0);
-  let _degrees_y = parameters["degrees_y"].as_f64().unwrap_or(0.0);
+  let _degrees_x = _parameters["degrees_x"].as_f64().unwrap_or(0.0);
+  let _degrees_y = _parameters["degrees_y"].as_f64().unwrap_or(0.0);
 
   // TODO: 实现剪切变换
   // 由于复杂性，暂时跳过剪切操作的实现
@@ -427,20 +427,20 @@ fn apply_shear_operation(
 
 /// 应用文字操作
 fn apply_text_operation(
-  img: &mut DynamicImage,
-  parameters: &Value,
-  item_index: usize,
+  _img: &mut DynamicImage,
+  _parameters: &Value,
+  _item_index: usize,
 ) -> Result<(), NodeExecutionError> {
-  let _text = parameters["text"].as_str().ok_or_else(|| NodeExecutionError::DataProcessingError {
-    message: format!("Missing or invalid 'text' parameter for item {}", item_index),
+  let _text = _parameters["text"].as_str().ok_or_else(|| NodeExecutionError::DataProcessingError {
+    message: format!("Missing or invalid 'text' parameter for item {}", _item_index),
   })?;
 
-  let font_color_str = parameters["font_color"].as_str().unwrap_or("#000000");
+  let font_color_str = _parameters["font_color"].as_str().unwrap_or("#000000");
   let _font_color = parse_color(font_color_str);
 
-  let _font_size = parameters["font_size"].as_u64().unwrap_or(24) as f32;
-  let _position_x = parameters["position_x"].as_i64().unwrap_or(10);
-  let _position_y = parameters["position_y"].as_i64().unwrap_or(50);
+  let _font_size = _parameters["font_size"].as_u64().unwrap_or(24) as f32;
+  let _position_x = _parameters["position_x"].as_i64().unwrap_or(10);
+  let _position_y = _parameters["position_y"].as_i64().unwrap_or(50);
 
   // TODO: 实现文字渲染功能
   // 由于字体处理的复杂性，这里先跳过文字渲染的实现
@@ -481,7 +481,7 @@ fn apply_transparent_operation(
 pub fn prepare_output_format(
   image_data: &[u8],
   output_options: &super::ImageOutputOptions,
-  data_property_name: &str,
+  _data_property_name: &str,
   item_index: usize,
 ) -> Result<(Vec<u8>, Option<String>), NodeExecutionError> {
   // 加载图像
@@ -553,7 +553,7 @@ fn calculate_target_size(
   original_height: u32,
   target_width: Option<u32>,
   target_height: Option<u32>,
-  resize_option: &str,
+  _resize_option: &str,
 ) -> Result<(u32, u32), NodeExecutionError> {
   match (target_width, target_height) {
     (Some(width), Some(height)) => Ok((width, height)),

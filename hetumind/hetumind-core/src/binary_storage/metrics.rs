@@ -1,7 +1,7 @@
 //! 基础指标收集
 
 use crate::binary_storage::BinaryStorageError;
-use std::collections::HashMap;
+use fusion_common::ahash::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
@@ -119,7 +119,7 @@ pub struct BasicMetricsCollector {
 impl BasicMetricsCollector {
   /// 创建新的指标收集器
   pub fn new() -> Self {
-    Self { operations: Arc::new(RwLock::new(HashMap::new())), stats: Arc::new(RwLock::new(BasicStats::default())) }
+    Self { operations: Arc::new(RwLock::new(HashMap::default())), stats: Arc::new(RwLock::new(BasicStats::default())) }
   }
 
   /// 开始操作

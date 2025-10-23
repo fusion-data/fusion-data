@@ -139,12 +139,14 @@ impl ConnectionDataManager {
   }
 
   /// 清空所有缓存
+  #[allow(dead_code)]
   pub async fn clear_cache(&self) {
     let mut cache = self.cache.write().await;
     cache.clear();
   }
 
   /// 获取缓存统计信息
+  #[allow(dead_code)]
   pub async fn get_cache_stats(&self) -> ConnectionCacheStats {
     let cache = self.cache.read().await;
     let now = chrono::Utc::now();
@@ -168,6 +170,7 @@ impl ConnectionDataManager {
 }
 
 /// 连接缓存统计信息
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct ConnectionCacheStats {
   pub total_entries: usize,
@@ -209,15 +212,13 @@ pub trait OptimizedConnectionContext {
 
 /// 为NodeExecutionContext实现优化的连接数据获取
 impl OptimizedConnectionContext for NodeExecutionContext {
-  fn get_connection_data_optimized(
+  async fn get_connection_data_optimized(
     &self,
     connection_type: ConnectionKind,
     index: usize,
-  ) -> impl std::future::Future<Output = Result<Option<ExecutionData>, NodeExecutionError>> + Send {
-    async move {
-      let manager = get_connection_manager();
-      manager.get_connection_data(self, connection_type, index).await
-    }
+  ) -> Result<Option<ExecutionData>, NodeExecutionError> {
+    let manager = get_connection_manager();
+    manager.get_connection_data(self, connection_type, index).await
   }
 
   fn get_all_connections_optimized(

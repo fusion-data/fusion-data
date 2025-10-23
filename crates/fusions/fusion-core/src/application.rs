@@ -1,6 +1,5 @@
 use std::{
   any::Any,
-  collections::HashSet,
   fmt::Display,
   future::Future,
   sync::{Arc, OnceLock},
@@ -8,6 +7,7 @@ use std::{
 
 use config::Config;
 use dashmap::DashMap;
+use fusion_common::ahash::HashSet;
 use log::{debug, info};
 use mea::{
   mutex::Mutex,
@@ -41,7 +41,7 @@ pub struct Application(pub(crate) Arc<ApplicationInner>);
 
 impl Display for Application {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-    write!(f, "Application({}|{})", self.fusion_config().app().name(), self.0.start_time)
+    write!(f, "Application({}|{})", self.fusion_setting().app().name(), self.0.start_time)
   }
 }
 
@@ -85,7 +85,7 @@ impl Application {
     self.0.shutdown.lock().await.is_none()
   }
 
-  pub async fn get_shutdown_recv(&self) -> ShutdownRecv {
+  pub async fn shutdown_recv(&self) -> ShutdownRecv {
     let maybe = self.0.shutdown.lock().await;
     let tuple = maybe.as_ref().unwrap();
     tuple.1.clone()
@@ -164,8 +164,8 @@ impl Application {
     debug!("added component: {}", component_name);
   }
 
-  pub fn fusion_config(&self) -> Arc<FusionSetting> {
-    self.0.config_registry.fusion_config()
+  pub fn fusion_setting(&self) -> Arc<FusionSetting> {
+    self.0.config_registry.fusion_setting()
   }
 
   /// Get `::config::Config` Instance
@@ -215,7 +215,7 @@ unsafe impl Sync for ApplicationBuilder {}
 
 impl ApplicationBuilder {
   pub fn get_fusion_config(&self) -> Arc<FusionSetting> {
-    self.config_registry.fusion_config()
+    self.config_registry.fusion_setting()
   }
 
   pub fn with_config_registry(&mut self, config_registry: FusionConfigRegistry) -> &Self {
@@ -352,7 +352,7 @@ impl ApplicationBuilder {
 
     let registry = std::mem::take(&mut self.plugin_registry);
     let mut to_register = registry.iter().map(|e| e.value().to_owned()).collect::<Vec<_>>();
-    let mut registered: HashSet<String> = HashSet::new();
+    let mut registered: HashSet<String> = HashSet::default();
 
     while !to_register.is_empty() {
       let mut progress = false;
@@ -384,7 +384,7 @@ impl ApplicationBuilder {
   fn build_application(&mut self) -> Application {
     let components = std::mem::take(&mut self.components);
     let configuration_state = std::mem::take(&mut self.config_registry);
-    let init_time = configuration_state.fusion_config().app().time_now();
+    let init_time = configuration_state.fusion_setting().app().time_now();
     let shutdown = Mutex::new(Some(mea::shutdown::new_pair()));
     Application(Arc::new(ApplicationInner {
       config_registry: configuration_state,
@@ -427,6 +427,6 @@ mod tests {
     .unwrap();
     Application::builder().run().await.unwrap();
     let app = Application::global();
-    assert_eq!(app.fusion_config().app().name(), "fusion");
+    assert_eq!(app.fusion_setting().app().name(), "fusion");
   }
 }

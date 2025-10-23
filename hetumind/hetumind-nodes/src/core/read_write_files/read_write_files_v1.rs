@@ -10,13 +10,11 @@ use hetumind_core::{
   version::Version,
   workflow::{
     ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition,
-    NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeGroupKind, NodeProperty, NodePropertyKind,
-    OutputPortConfig, RegistrationError,
+    NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig,
+    RegistrationError,
   },
 };
 use serde_json::json;
-
-use crate::constants::READ_WRITE_FILES_NODE_KIND;
 
 use super::utils::{FileReader, FileWriter};
 
@@ -27,6 +25,7 @@ pub struct ReadWriteFilesV1 {
 
 impl ReadWriteFilesV1 {
   /// 创建新的 ReadWriteFiles V1 执行器
+  #[allow(dead_code)]
   pub fn new(definition: NodeDefinition) -> Self {
     Self { definition: Arc::new(definition) }
   }
@@ -57,7 +56,7 @@ impl ReadWriteFilesV1 {
     let mut result_items = Vec::new();
 
     // 处理每个输入项
-    for (item_index, input_item) in input_items.iter().enumerate() {
+    for (_item_index, _input_item) in input_items.iter().enumerate() {
       // 获取文件选择器参数
       let file_selector: String = node
         .get_parameter("file_selector")
@@ -79,7 +78,7 @@ impl ReadWriteFilesV1 {
             let file_metadata = FileReader::create_file_metadata(&binary_ref, &file_path);
 
             // 创建执行数据项
-            let execution_data = ExecutionData::new_binary(
+            let _execution_data = ExecutionData::new_binary(
               binary_ref.clone(),
               Some(hetumind_core::workflow::DataSource {
                 node_name: context.current_node_name.clone(),
@@ -164,7 +163,7 @@ impl ReadWriteFilesV1 {
     let mut result_items = Vec::new();
 
     // 处理每个输入项
-    for (item_index, input_item) in input_items.iter().enumerate() {
+    for (_item_index, input_item) in input_items.iter().enumerate() {
       // 获取文件路径
       let file_path: String = node
         .get_parameter("file_path")
@@ -176,7 +175,7 @@ impl ReadWriteFilesV1 {
       let append_mode = options.get("append").and_then(|v| v.as_bool()).unwrap_or(false);
 
       // 获取文件内容，优先使用 JSON 数据而不是二进制数据
-      let file_content = if let Some(binary_ref) = input_item.binary() {
+      let file_content = if let Some(_binary_ref) = input_item.binary() {
         // 在真实实现中，这里应该从二进制数据管理器获取文件内容
         // 为了测试兼容性，尝试从 JSON 数据获取内容
         log::warn!("二进制数据引用检测到，但使用 JSON 数据进行测试兼容");
@@ -218,7 +217,7 @@ impl ReadWriteFilesV1 {
       let file_metadata = FileWriter::create_file_metadata(&updated_binary_ref, &file_path, append_mode);
 
       // 创建执行数据项
-      let execution_data = ExecutionData::new_binary(
+      let _execution_data = ExecutionData::new_binary(
         updated_binary_ref.clone(),
         Some(hetumind_core::workflow::DataSource {
           node_name: context.current_node_name.clone(),
@@ -278,59 +277,52 @@ impl TryFrom<NodeDefinition> for ReadWriteFilesV1 {
 
   fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
     let definition = base
-      .add_input(InputPortConfig::builder().kind(ConnectionKind::Main).display_name("Input").build())
-      .add_output(OutputPortConfig::builder().kind(ConnectionKind::Main).display_name("Output").build())
+      .with_version(Version::new(1, 0, 0))
+      .add_input(InputPortConfig::new(ConnectionKind::Main, "Input"))
+      .add_output(OutputPortConfig::new(ConnectionKind::Main, "Output"))
       .add_property(
         // 操作类型选择
-        NodeProperty::builder()
-          .display_name("操作类型")
-          .name("operation")
-          .kind(NodePropertyKind::Options)
-          .required(true)
-          .description("选择要执行的操作类型")
-          .value(json!("read"))
-          .options(vec![
+        NodeProperty::new(NodePropertyKind::Options)
+          .with_display_name("操作类型")
+          .with_name("operation")
+          .with_required(true)
+          .with_description("选择要执行的操作类型")
+          .with_value(json!("read"))
+          .with_options(vec![
             Box::new(NodeProperty::new_option("读取文件", "read", json!("read"), NodePropertyKind::Options)),
             Box::new(NodeProperty::new_option("写入文件", "write", json!("write"), NodePropertyKind::Options)),
-          ])
-          .build(),
+          ]),
       )
       .add_property(
         // 读操作参数
-        NodeProperty::builder()
-          .display_name("文件选择器")
-          .name("file_selector")
-          .kind(NodePropertyKind::String)
-          .required(false)
-          .description("用于匹配文件的 glob 模式，支持通配符如 * 和 **")
-          .placeholder("/path/to/files/*.txt")
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("文件选择器")
+          .with_name("file_selector")
+          .with_required(false)
+          .with_description("用于匹配文件的 glob 模式，支持通配符如 * 和 **")
+          .with_placeholder("/path/to/files/*.txt"),
       )
       .add_property(
         // 写操作参数
-        NodeProperty::builder()
-          .display_name("文件路径")
-          .name("file_path")
-          .kind(NodePropertyKind::String)
-          .required(false)
-          .description("要写入的文件路径")
-          .placeholder("/path/to/output/file.txt")
-          .build(),
+        NodeProperty::new(NodePropertyKind::String)
+          .with_display_name("文件路径")
+          .with_name("file_path")
+          .with_required(false)
+          .with_description("要写入的文件路径")
+          .with_placeholder("/path/to/output/file.txt"),
       )
       .add_property(
         // 选项参数
-        NodeProperty::builder()
-          .display_name("选项")
-          .name("options")
-          .kind(NodePropertyKind::Collection)
-          .required(false)
-          .placeholder("添加选项")
-          .options(vec![
+        NodeProperty::new(NodePropertyKind::Collection)
+          .with_display_name("选项")
+          .with_name("options")
+          .with_required(false)
+          .with_placeholder("添加选项")
+          .with_options(vec![
             Box::new(NodeProperty::new_option("继续执行", "continue_on_fail", json!(false), NodePropertyKind::Boolean)),
             Box::new(NodeProperty::new_option("追加模式", "append", json!(false), NodePropertyKind::Boolean)),
             Box::new(NodeProperty::new_option("文件名", "file_name", json!(""), NodePropertyKind::String)),
-          ])
-          .build(),
+          ]),
       );
     Ok(Self { definition: Arc::new(definition) })
   }

@@ -344,9 +344,9 @@ runs/
 ################
 # AI Codings
 ################
-.trae/
+.trae/documents/
 .claude/
-CLAUDE.md
 .qwen/
 QWEN.md
+.kilocode/
 

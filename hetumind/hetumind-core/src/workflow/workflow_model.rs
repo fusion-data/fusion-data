@@ -6,12 +6,11 @@ use fusionsql_core::field::FieldMask;
 use fusionsql_core::filter::{OpValBool, OpValInt32, OpValInt64, OpValString, OpValUuid};
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
-use typed_builder::TypedBuilder;
 
 use crate::types::JsonValue;
 
 use super::{
-  Connection, ConnectionKind, ExecutionMode, NodeName, NodeRegistry, PinData, ValidationError, WorkflowId, WorkflowNode,
+  Connection, ConnectionKind, ExecutionMode, NodeElement, NodeName, NodeRegistry, PinData, ValidationError, WorkflowId,
 };
 
 /// 工作流状态
@@ -102,54 +101,101 @@ impl WorkflowMeta {
 }
 
 /// 工作流定义
-#[derive(Debug, Clone, Serialize, Deserialize, TypedBuilder)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Workflow {
   /// 工作流唯一标识符
   pub id: WorkflowId,
 
   /// 工作流名称
-  #[builder(setter(into))]
   pub name: String,
 
   /// 工作流状态
   #[serde(default)]
-  #[builder(default)]
   pub status: WorkflowStatus,
 
   /// 版本标识符
-  #[builder(default, setter(strip_option))]
   pub version: Option<WorkflowId>,
 
   /// 工作流设置
   #[serde(default)]
-  #[builder(default)]
   pub settings: WorkflowSettings,
 
   /// 元数据
-  #[builder(default)]
   #[serde(default)]
   pub meta: WorkflowMeta,
 
   /// 节点列表
-  #[builder(default)]
-  pub nodes: Vec<WorkflowNode>,
+  #[serde(default)]
+  pub nodes: Vec<NodeElement>,
 
   /// 节点连接关系。<节点名称, <连接类型, 连接关系>>
   #[serde(default)]
-  #[builder(default)]
   pub connections: HashMap<NodeName, HashMap<ConnectionKind, Vec<Connection>>>,
 
   /// 节点固定数据
   #[serde(default)]
-  #[builder(default)]
   pub pin_data: PinData,
 
   /// 静态数据
-  #[builder(default, setter(strip_option))]
   pub static_data: Option<JsonValue>,
 }
 
 impl Workflow {
+  pub fn new(id: WorkflowId, name: impl Into<String>) -> Self {
+    Self {
+      id,
+      name: name.into(),
+      status: WorkflowStatus::default(),
+      version: None,
+      settings: WorkflowSettings::default(),
+      meta: WorkflowMeta::default(),
+      nodes: Vec::new(),
+      connections: HashMap::default(),
+      pin_data: PinData::default(),
+      static_data: None,
+    }
+  }
+
+  pub fn with_status(mut self, status: WorkflowStatus) -> Self {
+    self.status = status;
+    self
+  }
+
+  pub fn with_version(mut self, version: Option<WorkflowId>) -> Self {
+    self.version = version;
+    self
+  }
+
+  pub fn with_settings(mut self, settings: WorkflowSettings) -> Self {
+    self.settings = settings;
+    self
+  }
+
+  pub fn with_meta(mut self, meta: WorkflowMeta) -> Self {
+    self.meta = meta;
+    self
+  }
+
+  pub fn with_nodes(mut self, nodes: Vec<NodeElement>) -> Self {
+    self.nodes = nodes;
+    self
+  }
+
+  pub fn with_connections(mut self, connections: HashMap<NodeName, HashMap<ConnectionKind, Vec<Connection>>>) -> Self {
+    self.connections = connections;
+    self
+  }
+
+  pub fn with_pin_data(mut self, pin_data: PinData) -> Self {
+    self.pin_data = pin_data;
+    self
+  }
+
+  pub fn with_static_data(mut self, static_data: Option<JsonValue>) -> Self {
+    self.static_data = static_data;
+    self
+  }
+
   /// 校验所有必需的输入端口是否都已连接
   ///
   /// # Returns
@@ -216,12 +262,12 @@ impl Workflow {
   }
 
   /// 添加节点
-  pub fn add_node(&mut self, node: WorkflowNode) {
+  pub fn add_node(&mut self, node: NodeElement) {
     self.nodes.push(node);
   }
 
   /// 根据ID查找节点
-  pub fn get_node(&self, id: &NodeName) -> Option<&WorkflowNode> {
+  pub fn get_node(&self, id: &NodeName) -> Option<&NodeElement> {
     self.nodes.iter().find(|node| &node.name == id)
   }
 
@@ -254,7 +300,7 @@ impl Workflow {
 }
 
 #[derive(Clone, Deserialize)]
-#[cfg_attr(feature = "fusionsql", derive(fusionsql::field::Fields))]
+#[cfg_attr(feature = "fusionsql", derive(fusionsql::Fields))]
 pub struct WorkflowForCreate {
   pub id: Option<WorkflowId>,
   pub name: String,
@@ -321,7 +367,7 @@ impl TryFrom<WorkflowForCreate> for Workflow {
 }
 
 #[derive(Clone, Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "fusionsql", derive(fusionsql::field::Fields))]
+#[cfg_attr(feature = "fusionsql", derive(fusionsql::Fields))]
 pub struct WorkflowForUpdate {
   pub name: Option<String>,
   pub status: Option<WorkflowStatus>,

@@ -67,7 +67,7 @@ impl NoOpNode {
 
   /// 创建基础节点定义构建器
   fn base() -> NodeDefinition {
-    NodeDefinition::new(NOOP_NODE_KIND, Version::new(1, 0, 0), "No Operation")
+    NodeDefinition::new(NOOP_NODE_KIND, "No Operation")
       .add_group(NodeGroupKind::Transform)
       .with_description("Pass through data without any modifications")
       .with_icon("arrow-right")

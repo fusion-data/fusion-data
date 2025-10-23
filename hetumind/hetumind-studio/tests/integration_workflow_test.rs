@@ -7,13 +7,14 @@
 //! - Data transformation with EditFieldsNode
 //! - File I/O operations with ReadWriteFilesNode
 //! - Complete workflow execution with DefaultWorkflowEngine
+//! Run this test
+//! ```shell
+//! cargo test -p hetumind-studio --test integration_workflow_test -- --nocapture
+//! ```
 
 mod common;
 
 use common::TestContext;
-use fusion_core::application::Application;
-use hetumind_studio::runtime::workflow::WorkflowEngineService;
-use uuid::Uuid;
 
 use std::fs;
 use std::path::PathBuf;
@@ -22,11 +23,12 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use fusion_common::ahash::HashMap;
 use fusion_common::ctx::{Ctx, CtxPayload};
-use fusion_common::time::now;
+use fusion_common::time::{now, now_offset};
+use fusion_core::application::Application;
 use hetumind_core::workflow::{
   Connection, ConnectionKind, Execution, ExecutionContext, ExecutionData, ExecutionDataItems, ExecutionDataMap,
-  ExecutionId, ExecutionStatus, NodeExecutionStatus, NodeKind, NodeName, NodeRegistry, ParameterMap, PinData, Workflow,
-  WorkflowEngine, WorkflowExecutionError, WorkflowId, WorkflowMeta, WorkflowNode, WorkflowSettings, WorkflowStatus,
+  ExecutionId, ExecutionStatus, NodeElement, NodeExecutionStatus, NodeKind, NodeName, NodeRegistry, ParameterMap,
+  PinData, Workflow, WorkflowExecutionError, WorkflowId, WorkflowMeta, WorkflowSettings, WorkflowStatus,
   WorkflowTriggerData,
 };
 use hetumind_nodes::constants::{
@@ -34,13 +36,14 @@ use hetumind_nodes::constants::{
 };
 use hetumind_nodes::core::{EditFieldsNode, IfNode, ReadWriteFilesNode};
 use hetumind_nodes::trigger::ManualTriggerNode;
+use hetumind_studio::runtime::workflow::WorkflowEngineService;
 use hetumind_studio::runtime::{
   checkpoint::{CheckpointError, ExecutionCheckpoint},
   execution::ExecutionStore,
-  workflow::DefaultWorkflowEngine,
 };
 use mea::rwlock::RwLock;
 use serde_json::json;
+use uuid::Uuid;
 
 // Mock ExecutionStore for testing
 #[derive(Default)]
@@ -110,44 +113,30 @@ fn create_integration_workflow() -> Result<Workflow, Box<dyn std::error::Error>>
   let workflow_id = WorkflowId::now_v7();
 
   // Create ManualTriggerNode
-  let manual_trigger_node = WorkflowNode::builder()
-    .name(NodeName::from("manual_trigger"))
-    .kind(NodeKind::from(MANUAL_TRIGGER_NODE_KIND))
-    .display_name("Manual Trigger")
-    .parameters(create_manual_trigger_parameters())
-    .build();
+  let manual_trigger_node =
+    NodeElement::new(NodeKind::from(MANUAL_TRIGGER_NODE_KIND), NodeName::from("manual_trigger"))
+      .with_display_name("Manual Trigger")
+      .with_parameters(create_manual_trigger_parameters());
 
   // Create IfNode for conditional branching
-  let if_node = WorkflowNode::builder()
-    .name(NodeName::from("condition_check"))
-    .kind(NodeKind::from(IF_NODE_KIND))
-    .display_name("Check Condition")
-    .parameters(create_if_node_parameters())
-    .build();
+  let if_node = NodeElement::new(NodeKind::from(IF_NODE_KIND), NodeName::from("condition_check"))
+    .with_display_name("Check Condition")
+    .with_parameters(create_if_node_parameters());
 
   // Create EditFieldsNode for data transformation (true branch)
-  let set_node_true = WorkflowNode::builder()
-    .name(NodeName::from("set_data_true"))
-    .kind(NodeKind::from(EDIT_FIELDS_NODE_KIND))
-    .display_name("Set Data (True)")
-    .parameters(create_set_node_parameters_true())
-    .build();
+  let set_node_true = NodeElement::new(NodeKind::from(EDIT_FIELDS_NODE_KIND), NodeName::from("set_data_true"))
+    .with_display_name("Set Data (True)")
+    .with_parameters(create_set_node_parameters_true());
 
   // Create EditFieldsNode for data transformation (false branch)
-  let set_node_false = WorkflowNode::builder()
-    .name(NodeName::from("set_data_false"))
-    .kind(NodeKind::from(EDIT_FIELDS_NODE_KIND))
-    .display_name("Set Data (False)")
-    .parameters(create_set_node_parameters_false())
-    .build();
+  let set_node_false = NodeElement::new(NodeKind::from(EDIT_FIELDS_NODE_KIND), NodeName::from("set_data_false"))
+    .with_display_name("Set Data (False)")
+    .with_parameters(create_set_node_parameters_false());
 
   // Create ReadWriteFilesNode for file operations
-  let file_node = WorkflowNode::builder()
-    .name(NodeName::from("file_operations"))
-    .kind(NodeKind::from(READ_WRITE_FILES_NODE_KIND))
-    .display_name("File Operations")
-    .parameters(create_file_node_parameters())
-    .build();
+  let file_node = NodeElement::new(NodeKind::from(READ_WRITE_FILES_NODE_KIND), NodeName::from("file_operations"))
+    .with_display_name("File Operations")
+    .with_parameters(create_file_node_parameters());
 
   // Create connections
   let mut connections = HashMap::default();
@@ -338,7 +327,7 @@ async fn test_integration_workflow() -> Result<(), Box<dyn std::error::Error>> {
   // 4. Create execution context
   let execution_id = ExecutionId::now_v7();
   let workflow_arc = Arc::new(workflow);
-  let ctx = Ctx::try_new(CtxPayload::default(), Some(std::time::SystemTime::now()), Some(Uuid::now_v7().to_string()))?;
+  let ctx = Ctx::try_new(CtxPayload::default(), Some(now_offset()), Some(Uuid::now_v7().to_string()))?;
 
   let execution_context = ExecutionContext::new(execution_id.clone(), workflow_arc, ctx);
   println!("✅ Created execution context");
@@ -514,7 +503,7 @@ async fn test_integration_workflow_false_branch() -> Result<(), Box<dyn std::err
 
   let execution_id = ExecutionId::now_v7();
   let workflow_arc = Arc::new(create_integration_workflow()?);
-  let ctx = Ctx::try_new(CtxPayload::default(), Some(std::time::SystemTime::now()), Some(Uuid::now_v7().to_string()))?;
+  let ctx = Ctx::try_new(CtxPayload::default(), Some(now_offset()), Some(Uuid::now_v7().to_string()))?;
 
   let execution_context = ExecutionContext::new(execution_id.clone(), workflow_arc, ctx);
 
