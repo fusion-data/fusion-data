@@ -1,4 +1,4 @@
-use fusion_core::{DataError, Result};
+use fusions::core::{DataError, Result};
 use fusionsql::{ModelManager, base::DbBmc, generate_pg_bmc_common, generate_pg_bmc_filter};
 
 use jieyuan_core::model::{

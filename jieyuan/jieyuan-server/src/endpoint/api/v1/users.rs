@@ -3,9 +3,9 @@ use axum::{
   extract::{Path, State},
   http::{StatusCode, request::Parts},
 };
-use fusion_common::model::IdI64Result;
-use fusion_core::application::Application;
-use fusion_web::{WebError, WebResult, extract_ctx, ok_json};
+use fusions::common::model::IdI64Result;
+use fusions::core::application::Application;
+use fusions::web::{WebError, WebResult, extract_ctx, ok_json};
 use utoipa_axum::router::OpenApiRouter;
 
 use jieyuan_core::model::{UpdatePasswordRequest, User, UserForCreate, UserForPage, UserForUpdate};

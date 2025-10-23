@@ -1,6 +1,6 @@
-use fusion_core::{DataError, application::Application};
-use fusion_db::DbPlugin;
-use fusion_web::server::WebServerBuilder;
+use fusions::core::{DataError, application::Application};
+use fusions::db::DbPlugin;
+use fusions::web::server::WebServerBuilder;
 
 use crate::endpoint::routes;
 

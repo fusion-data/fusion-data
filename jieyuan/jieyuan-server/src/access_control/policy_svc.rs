@@ -1,7 +1,7 @@
 use axum::extract::FromRequestParts;
-use fusion_common::ctx::Ctx;
-use fusion_core::{Result, application::Application};
-use fusion_web::WebError;
+use fusions::common::ctx::Ctx;
+use fusions::core::{Result, application::Application};
+use fusions::web::WebError;
 use fusionsql::{ModelManager, page::PageResult};
 
 use jieyuan_core::model::{

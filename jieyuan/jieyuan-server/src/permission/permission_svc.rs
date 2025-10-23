@@ -1,4 +1,4 @@
-use fusion_core::Result;
+use fusions::core::Result;
 use fusionsql::{ModelManager, page::PageResult};
 
 use jieyuan_core::model::{

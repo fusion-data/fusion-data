@@ -1,4 +1,4 @@
-use fusion_core::Result;
+use fusions::core::Result;
 use fusionsql::{ModelManager, SqlError};
 use jieyuan_core::model::{PolicyEngine, PolicyEntity, TABLE_POLICY, TABLE_POLICY_ATTACHMENT};
 

@@ -1,5 +1,5 @@
-use fusion_common::ahash::HashMap;
-use fusion_common::page::PageResult;
+use fusions::common::ahash::HashMap;
+use fusions::common::page::PageResult;
 use fusionsql::{
   ModelManager, SqlError,
   base::{DbBmc, pg_page},

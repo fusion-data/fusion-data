@@ -1,5 +1,5 @@
-use fusion_core::{DataError, application::Application};
-use fusion_db::DbPlugin;
+use fusions::core::{DataError, application::Application};
+use fusions::db::DbPlugin;
 use fusionsql::filter::OpValInt64;
 
 use jieyuan_core::model::{SigninRequest, UserFilter, UserForCreate};

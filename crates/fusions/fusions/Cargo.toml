@@ -12,31 +12,43 @@ publish = true
 workspace = true
 
 [features]
-with-db = ["dep:fusion-db", "dep:fusionsql"]
+default = ["with-core"]
+with-core = ["dep:fusion-core"]
+with-db = [
+  "dep:fusion-db",
+  "dep:sqlx",
+  "fusion-common/with-db",
+  "sqlx/postgres",
+  "fusion-db/with-postgres",
+  "fusion-web/with-openapi",
+]
 with-grpc = ["dep:fusion-grpc", "dep:tonic"]
 with-web = ["dep:fusion-web", "dep:axum"]
 with-uuid = [
   "fusion-common/with-uuid",
   "fusion-core/with-uuid",
-  "fusionsql/with-uuid",
   "utoipa/uuid",
+  "sqlx/uuid",
 ]
 with-ulid = ["dep:ulid", "utoipa/ulid", "fusion-common/with-ulid"]
 with-openapi = [
   "fusion-common/with-openapi",
   "fusion-core/with-openapi",
-  "fusionsql/with-openapi",
   "dep:utoipa",
 ]
 with-ai = ["dep:fusion-ai"]
+with-security = ["dep:fusion-security"]
 
 [dependencies]
-tokio = { workspace = true }
 fusion-common = { workspace = true }
-fusion-core = { workspace = true }
+fusion-core = { workspace = true, optional = true }
+# -- security
+fusion-security = { workspace = true, optional = true }
 # -- db & fusionsql
+fusionsql-core = { workspace = true, optional = true }
 fusionsql = { workspace = true, optional = true }
 fusion-db = { workspace = true, optional = true }
+sqlx = { workspace = true, optional = true }
 # -- web & axum
 axum = { workspace = true, optional = true }
 fusion-web = { workspace = true, optional = true }

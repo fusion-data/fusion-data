@@ -1,6 +1,6 @@
 use axum::{Json, extract::State, http::request::Parts};
-use fusion_core::application::Application;
-use fusion_web::{WebResult, extract_ctx, ok_json};
+use fusions::core::application::Application;
+use fusions::web::{WebResult, extract_ctx, ok_json};
 use fusionsql::ModelManager;
 use utoipa_axum::router::OpenApiRouter;
 

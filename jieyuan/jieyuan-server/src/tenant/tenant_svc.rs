@@ -1,5 +1,5 @@
 use axum::extract::FromRequestParts;
-use fusion_core::DataError;
+use fusions::core::DataError;
 use fusionsql::page::PageResult;
 
 use jieyuan_core::model::{Tenant, TenantForCreate, TenantForPage, TenantForUpdate, TenantStatus};
@@ -139,15 +139,15 @@ impl TenantSvc {
 }
 
 // FromRequestParts implementation for Axum integration
-impl FromRequestParts<fusion_core::application::Application> for TenantSvc {
-  type Rejection = fusion_web::WebError;
+impl FromRequestParts<fusions::core::application::Application> for TenantSvc {
+  type Rejection = fusions::web::WebError;
 
   async fn from_request_parts(
     parts: &mut axum::http::request::Parts,
-    state: &fusion_core::application::Application,
+    state: &fusions::core::application::Application,
   ) -> core::result::Result<Self, Self::Rejection> {
     // Extract context and create model manager
-    let ctx = fusion_web::extract_ctx(parts, state.fusion_setting().security())?;
+    let ctx = fusions::web::extract_ctx(parts, state.fusion_setting().security())?;
     let mm = state.component::<fusionsql::ModelManager>().with_ctx(ctx);
 
     Ok(Self::new(mm))

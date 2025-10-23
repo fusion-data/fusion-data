@@ -1,5 +1,5 @@
-use fusion_common::ahash::HashMap;
-use fusion_core::{DataError, application::Application, configuration::ConfigRegistry};
+use fusions::common::ahash::HashMap;
+use fusions::core::{DataError, application::Application, configuration::ConfigRegistry};
 use fusionsql::ModelManager;
 use log::info;
 use reqwest::Client;
@@ -54,7 +54,7 @@ impl OAuthSvc {
   ///
   /// # Errors
   /// 如果 OAuth 提供商配置无效或 URL 构建失败
-  pub async fn authorize(&self, req: OAuthAuthorizeRequest) -> fusion_core::Result<OAuthAuthorizeResponse> {
+  pub async fn authorize(&self, req: OAuthAuthorizeRequest) -> fusions::core::Result<OAuthAuthorizeResponse> {
     let provider_config = self.get_provider_config(req.provider)?;
 
     // 生成 PKCE code_verifier 和 code_challenge
@@ -111,7 +111,7 @@ impl OAuthSvc {
   ///
   /// # Errors
   /// 如果令牌交换失败、用户信息获取失败或用户创建失败
-  pub async fn exchange_token(&self, req: OAuthTokenRequest) -> fusion_core::Result<OAuthTokenResponse> {
+  pub async fn exchange_token(&self, req: OAuthTokenRequest) -> fusions::core::Result<OAuthTokenResponse> {
     let provider_config = self.get_provider_config(req.provider)?;
 
     // 构建令牌交换请求
@@ -193,7 +193,7 @@ impl OAuthSvc {
   ///
   /// # Errors
   /// 如果提供商无效或配置不存在
-  fn get_provider_config(&self, provider: OAuthProvider) -> fusion_core::Result<OAuthProviderConfig> {
+  fn get_provider_config(&self, provider: OAuthProvider) -> fusions::core::Result<OAuthProviderConfig> {
     match provider {
       OAuthProvider::Unspecified => Err(DataError::bad_request("Invalid oauth provider")),
       _ => {
@@ -252,7 +252,7 @@ impl OAuthSvc {
   ///
   /// # Errors
   /// 如果请求失败或响应解析失败
-  async fn get_user_info(&self, provider: OAuthProvider, access_token: &str) -> fusion_core::Result<OAuthUserInfo> {
+  async fn get_user_info(&self, provider: OAuthProvider, access_token: &str) -> fusions::core::Result<OAuthUserInfo> {
     let provider_config = self.get_provider_config(provider)?;
 
     let response = self
@@ -289,7 +289,7 @@ impl OAuthSvc {
   ///
   /// # Errors
   /// 如果提供商不支持或信息解析失败
-  fn parse_user_info(&self, provider: OAuthProvider, user_info: &Value) -> fusion_core::Result<OAuthUserInfo> {
+  fn parse_user_info(&self, provider: OAuthProvider, user_info: &Value) -> fusions::core::Result<OAuthUserInfo> {
     match provider {
       OAuthProvider::Wechat => Ok(OAuthUserInfo {
         id: user_info.get("openid").and_then(|v| v.as_str()).unwrap_or("").to_string(),
@@ -321,7 +321,7 @@ impl OAuthSvc {
   ///
   /// # Errors
   /// 如果用户信息无效或数据库操作失败
-  async fn create_or_update_user(&self, user_info: &OAuthUserInfo) -> fusion_core::Result<i64> {
+  async fn create_or_update_user(&self, user_info: &OAuthUserInfo) -> fusions::core::Result<i64> {
     // 检查用户是否已存在（通过第三方 provider 的用户ID）
     // 这里需要在 user_entity 表中添加 provider 相关字段或创建关联表
 

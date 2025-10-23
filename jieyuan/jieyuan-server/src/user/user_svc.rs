@@ -1,11 +1,11 @@
 use axum::extract::FromRequestParts;
-use fusion_common::regex;
-use fusion_core::{
+use fusions::common::regex;
+use fusions::core::{
   DataError, Result,
   application::Application,
   security::pwd::{generate_pwd, is_strong_password, verify_pwd},
 };
-use fusion_web::WebError;
+use fusions::web::WebError;
 use fusionsql::{ModelManager, filter::OpValInt64, page::PageResult};
 
 use jieyuan_core::model::{
@@ -280,7 +280,7 @@ impl UserSvc {
   ///
   /// # Errors
   /// 如果查询失败
-  pub async fn query_user_changes(&self, req: UserChangeQueryReq) -> fusion_core::Result<UserChangeQueryResp> {
+  pub async fn query_user_changes(&self, req: UserChangeQueryReq) -> fusions::core::Result<UserChangeQueryResp> {
     UserBmc::query_user_changes(&self.mm, req).await.map_err(DataError::from)
   }
 }

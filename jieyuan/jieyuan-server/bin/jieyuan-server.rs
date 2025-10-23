@@ -1,4 +1,4 @@
-use fusion_core::{DataError, utils::wait_exit_signals};
+use fusions::core::{DataError, utils::wait_exit_signals};
 
 use jieyuan_server::start::start_jieyuan;
 

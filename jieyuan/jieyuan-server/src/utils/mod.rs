@@ -1,7 +1,7 @@
 use axum::http::request::Parts;
-use fusion_common::ctx::Ctx;
-use fusion_core::application::Application;
-use fusion_web::WebError;
+use fusions::common::ctx::Ctx;
+use fusions::core::application::Application;
+use fusions::web::WebError;
 use fusionsql::ModelManager;
 
 pub fn model_manager_from_parts(parts: &Parts, app: &Application) -> Result<ModelManager, WebError> {

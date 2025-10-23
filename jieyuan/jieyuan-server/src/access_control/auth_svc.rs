@@ -1,6 +1,6 @@
 use axum::extract::FromRequestParts;
-use fusion_core::{DataError, Result, application::Application, security::pwd::verify_pwd};
-use fusion_web::WebError;
+use fusions::core::{DataError, Result, application::Application, security::pwd::verify_pwd};
+use fusions::web::WebError;
 
 use jieyuan_core::model::{
   RefreshTokenReq, SigninRequest, SigninResponse, SignupReq, TenantUserStatus, TokenType, UserFilter, UserStatus,
@@ -205,12 +205,12 @@ impl AuthSvc {
 }
 
 /// 从请求中提取认证上下文的服务实现
-impl FromRequestParts<fusion_core::application::Application> for AuthSvc {
+impl FromRequestParts<fusions::core::application::Application> for AuthSvc {
   type Rejection = WebError;
 
   async fn from_request_parts(
     _parts: &mut axum::http::request::Parts,
-    state: &fusion_core::application::Application,
+    state: &fusions::core::application::Application,
   ) -> core::result::Result<Self, Self::Rejection> {
     let mm = state.get_component::<fusionsql::ModelManager>().unwrap();
     let user_svc = UserSvc::new(mm);

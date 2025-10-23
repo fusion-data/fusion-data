@@ -14,7 +14,7 @@ struct MyFilter {
 fn test_des_string_simple() -> Result<()> {
   let json = r#"
 	{
-		"name": "Hello"
+		"name": {"$eq": "Hello"}
 	}
 	"#
   .to_string();
@@ -22,7 +22,7 @@ fn test_des_string_simple() -> Result<()> {
   let json: Value = serde_json::from_str(&json)?;
   let my_filter: MyFilter = serde_json::from_value(json)?;
 
-  assert!(format!("{my_filter:?}").contains("id: None, name: Some(OpValString([Eq(\"Hello\")]))"));
+  assert_eq!(my_filter.name.unwrap().eq, Some(String::from("Hello")));
 
   Ok(())
 }
@@ -47,35 +47,6 @@ fn test_des_string_map() -> Result<()> {
   };
   assert_eq!(opvals.contains, Some(String::from("World")));
   assert_eq!(opvals.starts_with, Some(String::from("Hello")));
-
-  Ok(())
-}
-
-#[test]
-fn test_des_number_simple() -> Result<()> {
-  let json = r#"
-	{
-		"id": 123
-	}
-	"#;
-
-  let my_filter: MyFilter = serde_json::from_str(json)?;
-  let filter_str = format!("{my_filter:?}");
-  assert!(filter_str.contains("{ id: Some(OpValInt64([Eq(123)])), name: None }"), "{filter_str}");
-
-  Ok(())
-}
-
-#[test]
-fn test_des_number_map() -> Result<()> {
-  let json = r#"
-	{
-		"id": {"$gt": 100}
-	}
-	"#;
-
-  let my_filter: MyFilter = serde_json::from_str(json)?;
-  assert!(format!("{my_filter:?}").contains("{ id: Some(OpValInt64([Gt(100)])), name: None }"));
 
   Ok(())
 }

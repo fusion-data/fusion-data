@@ -1,6 +1,6 @@
 use axum::{Json, extract::State};
-use fusion_core::application::Application;
-use fusion_web::{WebResult, ok_json};
+use fusions::core::application::Application;
+use fusions::web::{WebResult, ok_json};
 use utoipa_axum::router::OpenApiRouter;
 
 use jieyuan_core::model::{TenantUser, TenantUserForCreate, TenantUserForUpdate, TenantUserStatus};
@@ -89,7 +89,7 @@ async fn update_user_tenant_status(
   let mm = app.get_component::<fusionsql::ModelManager>().unwrap();
   let user_svc = UserSvc::new(mm);
 
-  let status = req.status.ok_or_else(|| fusion_core::DataError::bad_request("status is required"))?;
+  let status = req.status.ok_or_else(|| fusions::core::DataError::bad_request("status is required"))?;
 
   user_svc.update_user_tenant_status(user_id, tenant_id, status).await?;
 

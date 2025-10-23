@@ -17,8 +17,12 @@ workspace = true
 
 [dependencies]
 # -- fusions
-fusion-common = { workspace = true, features = ["with-uuid", "with-openapi"] }
-fusion-core = { workspace = true, features = ["with-uuid"] }
+fusions = { workspace = true, features = [
+  "with-uuid",
+  "with-openapi",
+  "with-db",
+  "with-web",
+] }
 
 # -- hetus
 jieyuan-core = { workspace = true, features = [
@@ -52,7 +56,6 @@ fastrace = { workspace = true }
 log = { workspace = true }
 
 # -- db
-fusion-db = { workspace = true, features = ["with-postgres", "with-uuid"] }
 fusionsql = { workspace = true, features = [
   "with-postgres",
   "with-uuid",
@@ -63,7 +66,6 @@ sea-query = { workspace = true }
 sea-query-binder = { workspace = true }
 
 # -- Web
-fusion-web = { workspace = true, features = ["with-openapi"] }
 axum = { workspace = true, features = ["ws"] }
 axum-extra = { workspace = true }
 utoipa = { workspace = true }
@@ -87,6 +89,3 @@ hyper = { workspace = true }
 hyper-util = { workspace = true }
 tower = { workspace = true }
 fusion-core-macros = { workspace = true }
-
-[build-dependencies]
-tonic-build = { workspace = true }

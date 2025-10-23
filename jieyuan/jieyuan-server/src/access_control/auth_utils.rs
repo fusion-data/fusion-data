@@ -1,11 +1,7 @@
-use fusion_common::ctx::{Ctx, CtxPayload};
-use fusion_core::application::Application;
-use fusion_core::{DataError, Result, configuration::SecuritySetting, security::SecurityUtils};
-use fusionsql::common::now_offset;
-
-/// 认证工具模块
-///
-/// 提供令牌生成、验证和上下文提取等功能，支持多租户和令牌序列验证。
+use fusions::common::ctx::{Ctx, CtxPayload};
+use fusions::common::time::now_offset;
+use fusions::core::application::Application;
+use fusions::core::{DataError, Result, configuration::SecuritySetting, security::SecurityUtils};
 
 /// 生成基本访问令牌
 ///
@@ -104,7 +100,7 @@ pub async fn validate_token_seq_against_db(
 /// # Errors
 /// 如果令牌无效或解析失败
 pub fn validate_token(token: &str) -> Result<i64> {
-  let config = fusion_core::application::Application::global().fusion_setting();
+  let config = fusions::core::application::Application::global().fusion_setting();
   let (payload, _header) = SecurityUtils::decrypt_jwt(config.security().pwd(), token)
     .map_err(|_e| DataError::unauthorized("Invalid token"))?;
 
@@ -125,7 +121,7 @@ pub fn validate_token(token: &str) -> Result<i64> {
 /// # Errors
 /// 如果令牌无效或解析失败
 pub fn validate_token_with_tenant(token: &str) -> Result<(i64, i64)> {
-  let config = fusion_core::application::Application::global().fusion_setting();
+  let config = fusions::core::application::Application::global().fusion_setting();
   let (payload, _header) = SecurityUtils::decrypt_jwt(config.security().pwd(), token)
     .map_err(|_e| DataError::unauthorized("Invalid token"))?;
 
@@ -150,7 +146,7 @@ pub fn validate_token_with_tenant(token: &str) -> Result<(i64, i64)> {
 /// # Errors
 /// 如果令牌无效或解析失败
 pub fn validate_token_with_tenant_and_seq(token: &str) -> Result<(i64, i64, i32)> {
-  let config = fusion_core::application::Application::global().fusion_setting();
+  let config = fusions::core::application::Application::global().fusion_setting();
   let (payload, _header) = SecurityUtils::decrypt_jwt(config.security().pwd(), token)
     .map_err(|_e| DataError::unauthorized("Invalid token"))?;
 
@@ -180,7 +176,7 @@ pub fn validate_token_with_tenant_and_seq(token: &str) -> Result<(i64, i64, i32)
 pub async fn extract_ctx_with_token_seq_validation(
   parts: &axum::http::request::Parts,
   mm: &fusionsql::ModelManager,
-) -> Result<fusion_common::ctx::Ctx> {
+) -> Result<fusions::common::ctx::Ctx> {
   let app_config = Application::global().fusion_setting();
   let security_config = app_config.security();
 

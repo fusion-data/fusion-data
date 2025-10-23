@@ -1,7 +1,7 @@
 use axum::{Json, extract::Path, http::StatusCode};
-use fusion_common::page::PageResult;
-use fusion_core::application::Application;
-use fusion_web::{WebError, WebResult, ok_json};
+use fusions::common::page::PageResult;
+use fusions::core::application::Application;
+use fusions::web::{WebError, WebResult, ok_json};
 use utoipa_axum::router::OpenApiRouter;
 
 use jieyuan_core::model::{

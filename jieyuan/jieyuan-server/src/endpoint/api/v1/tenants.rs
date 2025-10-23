@@ -2,9 +2,9 @@ use axum::{
   extract::{Path, State},
   response::Json,
 };
-use fusion_common::model::IdI64Result;
-use fusion_core::application::Application;
-use fusion_web::{WebError, WebResult, ok_json};
+use fusions::common::model::IdI64Result;
+use fusions::core::application::Application;
+use fusions::web::{WebError, WebResult, ok_json};
 use fusionsql::page::PageResult;
 use jieyuan_core::model::{Tenant, TenantForCreate, TenantForPage, TenantForUpdate};
 use utoipa_axum::router::OpenApiRouter;

@@ -2040,9 +2040,11 @@ dependencies = [
  "fusion-core",
  "fusion-db",
  "fusion-grpc",
+ "fusion-security",
  "fusion-web",
  "fusionsql",
- "tokio",
+ "fusionsql-core",
+ "sqlx",
  "tonic",
  "ulid",
  "utoipa",
@@ -3422,11 +3424,8 @@ dependencies = [
  "derive_more",
  "enum-iterator",
  "fastrace",
- "fusion-common",
- "fusion-core",
  "fusion-core-macros",
- "fusion-db",
- "fusion-web",
+ "fusions",
  "fusionsql",
  "futures-util",
  "hyper",
@@ -3449,7 +3448,6 @@ dependencies = [
  "sha2",
  "sqlx",
  "tokio",
- "tonic-build",
  "tower",
  "typed-builder",
  "urlencoding",
@@ -4838,16 +4836,6 @@ checksum = "3ae130e2f271fbc2ac3a40fb1d07180839cdbbe443c7a27e1e3c13c5cac0116d"
 dependencies = [
  "diff",
  "yansi",
-]
-
-[[package]]
-name = "prettyplease"
-version = "0.2.37"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "479ca8adacdd7ce8f1fb39ce9ecccbfe93a3f1344b3d0d97f20bc0196208f62b"
-dependencies = [
- "proc-macro2",
- "syn 2.0.108",
 ]
 
 [[package]]
@@ -7356,18 +7344,6 @@ dependencies = [
  "tower-layer",
  "tower-service",
  "tracing",
-]
-
-[[package]]
-name = "tonic-build"
-version = "0.14.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4c40aaccc9f9eccf2cd82ebc111adc13030d23e887244bc9cfa5d1d636049de3"
-dependencies = [
- "prettyplease",
- "proc-macro2",
- "quote",
- "syn 2.0.108",
 ]
 
 [[package]]
