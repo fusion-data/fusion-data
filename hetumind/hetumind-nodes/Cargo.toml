@@ -15,9 +15,11 @@ workspace = true
 [dependencies]
 fusion-common = { workspace = true, features = ["with-uuid"] }
 fusion-core = { workspace = true, features = ["with-uuid"] }
-fusion-ai = { workspace = true }
 hetumind-core = { workspace = true }
 hetumind-context = { workspace = true }
+
+# ai
+fusion-ai = { workspace = true }
 rig-core = { workspace = true }
 
 # network
@@ -26,6 +28,8 @@ reqwest = { workspace = true }
 # async & concurrency
 async-trait = { workspace = true }
 tokio = { workspace = true }
+mea = { workspace = true}
+futures = { workspace = true }
 
 # ser & deser
 serde = { workspace = true }
@@ -58,7 +62,3 @@ base64 = "0.22"
 
 # email processing
 lettre = { version = "0.11", default-features = false, features = ["tokio1", "rustls-tls", "tokio1-rustls", "builder", "smtp-transport"] }
-
-# async utilities
-mea = { workspace = true}
-futures = { workspace = true }

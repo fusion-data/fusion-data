@@ -229,6 +229,7 @@ sonic-rs = { version = "0.5" }
 json-five = { version = "0.3" }
 serde_repr = "0.1"
 serde_json_path = { version = "0.7" }
+schemars = { version = "1.0"}
 nom = "8.0"
 # -- Web
 url = "2.5"
@@ -344,7 +345,7 @@ minio = { version = "0.3" }
 # -- LLM
 rig-core = { version = "0.22", features = ["derive"] }
 rig-postgres = { version = "0.1" }
-graph-flow = { version = "0.4" }
+graph-flow = { version = "0.4", features = ["rig"] }
 rmcp = { version = "0.8", features = [
   "client",
   "reqwest",

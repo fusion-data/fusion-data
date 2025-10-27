@@ -33,3 +33,4 @@ pub static AI_AGENT_NODE_KIND: &str = "hetumind_nodes::AiAgent";
 
 // Sub-nodes for Cluster Nodes
 pub static DEEPSEEK_MODEL_NODE_KIND: &str = "hetumind_nodes::DeepseekModel";
+pub static SIMPLE_MEMORY_NODE_KIND: &str = "hetumind_nodes::SimpleMemory";

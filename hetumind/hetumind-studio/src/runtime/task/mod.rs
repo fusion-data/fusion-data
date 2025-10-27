@@ -10,7 +10,7 @@ use ahash::{HashMap, HashSet};
 use fusion_common::time::OffsetDateTime;
 use hetumind_core::{
   task::TaskPriority,
-  workflow::{ExecutionData, ExecutionId, NodeExecutionError, NodeName, NodeElement},
+  workflow::{ExecutionData, ExecutionId, NodeElement, NodeExecutionError, NodeName},
 };
 use serde::{Deserialize, Serialize};
 

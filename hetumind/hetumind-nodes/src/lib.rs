@@ -12,4 +12,5 @@ pub mod constants;
 pub mod core;
 pub mod integration;
 pub mod llm;
+pub mod memory;
 pub mod trigger;

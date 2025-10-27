@@ -1,6 +1,6 @@
 use axum::extract::FromRequestParts;
 use fusion_common::time::now_utc;
-use fusion_core::{DataError, application::Application, configuration::KeyConf};
+use fusion_core::{DataError, application::Application};
 use fusion_web::WebError;
 use hetumind_context::utils::{make_token, verify_token};
 use hetumind_core::credential::TokenType;

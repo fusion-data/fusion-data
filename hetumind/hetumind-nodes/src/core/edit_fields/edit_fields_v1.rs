@@ -419,7 +419,7 @@ mod tests {
   use crate::constants::EDIT_FIELDS_NODE_KIND;
   use hetumind_core::{
     version::Version,
-    workflow::{NodeDefinition, NodeGroupKind, NodeKind, ParameterMap, NodeElement},
+    workflow::{NodeDefinition, NodeElement, NodeGroupKind, NodeKind, ParameterMap},
   };
   use serde_json::json;
 
