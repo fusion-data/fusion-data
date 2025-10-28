@@ -11,3 +11,8 @@ pub use fusion_grpc as grpc;
 pub use fusion_security as security;
 #[cfg(feature = "with-web")]
 pub use fusion_web as web;
+
+#[cfg(feature = "with-web")]
+pub mod web_utils;
+
+pub use core::{DataError, Result};

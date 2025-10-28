@@ -3,7 +3,7 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 
 use crate::workflow::WorkflowId;
 
-use super::{ExecutionData, NodeExecutionContext, TriggerError, NodeElement};
+use super::{ExecutionData, NodeElement, NodeExecutionContext, TriggerError};
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize_repr, Deserialize_repr)]
 #[repr(i32)]

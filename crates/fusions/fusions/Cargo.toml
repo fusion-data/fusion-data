@@ -12,8 +12,6 @@ publish = true
 workspace = true
 
 [features]
-default = ["with-core"]
-with-core = ["dep:fusion-core"]
 with-db = [
   "dep:fusion-db",
   "dep:sqlx",
@@ -41,7 +39,7 @@ with-security = ["dep:fusion-security"]
 
 [dependencies]
 fusion-common = { workspace = true }
-fusion-core = { workspace = true, optional = true }
+fusion-core = { workspace = true }
 # -- security
 fusion-security = { workspace = true, optional = true }
 # -- db & fusionsql

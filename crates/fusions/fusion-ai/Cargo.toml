@@ -11,14 +11,34 @@ publish = true
 [lints]
 workspace = true
 
+[features]
+default = ["schemars/chrono04", "with-db"]
+with-db = ["dep:sqlx", "sqlx/postgres"]
+
 [dependencies]
-fusion-common = { workspace = true }
+fusion-common = { workspace = true, features = ["with-uuid"] }
 tokio = { workspace = true }
 rig-core = { workspace = true }
-graph-flow = { workspace = true }
+thiserror = { workspace = true }
+chrono = { workspace = true }
 rmcp = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+schemars = { workspace = true }
+log = { workspace = true }
+uuid = { workspace = true }
+reqwest = { workspace = true }
+dashmap = { workspace = true }
+async-trait = { workspace = true }
+sqlx = { workspace = true, optional = true }
+# tracing log
+tracing = { version = "0.1" }
 
 [dev-dependencies]
+anyhow = { workspace = true }
 dotenvy = { workspace = true }
+logforth = { workspace = true }
+sqlx = { workspace = true, features = ["runtime-tokio", "chrono", "json", "postgres"] }
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+fastembed = "5.2"
+clap = { workspace = true }

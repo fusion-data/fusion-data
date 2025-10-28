@@ -70,6 +70,14 @@ pub fn extract_ctx(parts: &Parts, sc: &SecuritySetting) -> Result<Ctx, WebError>
   Ok(ctx)
 }
 
+pub fn extensions_2_ctx(parts: &Parts) -> Result<&Ctx, WebError> {
+  let ctx = parts
+    .extensions
+    .get()
+    .ok_or_else(|| WebError::unauthorized("The current login session does not exist, No Ctx found."))?;
+  Ok(ctx)
+}
+
 pub fn opt_to_app_result<T>(opt: Option<T>) -> WebResult<T>
 where
   T: DeserializeOwned,
