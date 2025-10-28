@@ -22,10 +22,10 @@
 //!     async fn run(&self, context: Context) -> fusion_ai::graph_flow::Result<TaskResult> {
 //!         let name: String = context.get("name").await.unwrap_or("World".to_string());
 //!         let greeting = format!("Hello, {}!", name);
-//!         
+//!
 //!         // Store result for next task
 //!         context.set("greeting", greeting.clone()).await;
-//!         
+//!
 //!         Ok(TaskResult::new(Some(greeting), NextAction::Continue))
 //!     }
 //! }
@@ -46,7 +46,7 @@
 //!
 //!     async fn run(&self, context: Context) -> fusion_ai::graph_flow::Result<TaskResult> {
 //!         let user_input: Option<String> = context.get("user_input").await;
-//!         
+//!
 //!         match user_input {
 //!             Some(input) if !input.is_empty() => {
 //!                 // Process input and continue automatically
@@ -303,7 +303,7 @@ pub enum NextAction {
 ///     async fn run(&self, context: Context) -> fusion_ai::graph_flow::Result<TaskResult> {
 ///         let name: String = context.get("name").await.unwrap_or("World".to_string());
 ///         let greeting = format!("Hello, {}!", name);
-///         
+///
 ///         Ok(TaskResult::new(Some(greeting), NextAction::Continue))
 ///     }
 /// }
@@ -319,7 +319,7 @@ pub enum NextAction {
 /// #[async_trait]
 /// impl Task for DefaultIdTask {
 ///     // id() is automatically implemented using the type name
-///     
+///
 ///     async fn run(&self, context: Context) -> fusion_ai::graph_flow::Result<TaskResult> {
 ///         Ok(TaskResult::new(None, NextAction::End))
 ///     }
@@ -344,7 +344,7 @@ pub enum NextAction {
 ///     async fn run(&self, context: Context) -> fusion_ai::graph_flow::Result<TaskResult> {
 ///         let data: Option<String> = context.get("data").await;
 ///         let retry_count: usize = context.get("retry_count").await.unwrap_or(0);
-///         
+///
 ///         match data {
 ///             Some(data) if self.validate(&data) => {
 ///                 context.set("retry_count", 0).await; // Reset counter
@@ -449,13 +449,13 @@ pub trait Task: Send + Sync {
   ///         // Read input from context
   ///         let input: String = context.get("raw_data").await
   ///             .unwrap_or_default();
-  ///         
+  ///
   ///         // Process the data
   ///         let processed = self.process_data(&input).await?;
-  ///         
+  ///
   ///         // Store result for next task
   ///         context.set("processed_data", processed.clone()).await;
-  ///         
+  ///
   ///         // Return result with next action
   ///         Ok(TaskResult::new(
   ///             Some(format!("Processed {} bytes", processed.len())),
@@ -504,7 +504,7 @@ mod tests {
   #[test]
   fn test_default_id_implementation() {
     let task = TestTaskWithDefaultId;
-    assert_eq!(task.id(), "graph_flow::task::tests::TestTaskWithDefaultId");
+    assert_eq!(task.id(), "fusion_ai::graph_flow::task::tests::TestTaskWithDefaultId");
   }
 
   #[test]

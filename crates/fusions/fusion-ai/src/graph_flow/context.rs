@@ -77,7 +77,6 @@
 //! ## LLM Integration (with `rig` feature)
 //!
 //! ```rust
-//! # #[cfg(feature = "rig")]
 //! # {
 //! use fusion_ai::graph_flow::Context;
 //!
@@ -104,7 +103,6 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::sync::{Arc, RwLock};
 
-#[cfg(feature = "rig")]
 use rig::completion::Message;
 
 /// Represents the role of a message in a conversation.
@@ -734,7 +732,6 @@ impl Context {
 
   // Rig integration methods (only available when rig feature is enabled)
 
-  #[cfg(feature = "rig")]
   /// Get all chat history messages converted to rig::completion::Message format.
   ///
   /// This method is only available when the "rig" feature is enabled.
@@ -742,7 +739,6 @@ impl Context {
   /// # Examples
   ///
   /// ```rust
-  /// # #[cfg(feature = "rig")]
   /// # {
   /// use fusion_ai::graph_flow::Context;
   ///
@@ -762,7 +758,6 @@ impl Context {
     messages.iter().map(|msg| self.to_rig_message(msg)).collect()
   }
 
-  #[cfg(feature = "rig")]
   /// Get the last N messages converted to rig::completion::Message format.
   ///
   /// This method is only available when the "rig" feature is enabled.
@@ -770,7 +765,6 @@ impl Context {
   /// # Examples
   ///
   /// ```rust
-  /// # #[cfg(feature = "rig")]
   /// # {
   /// use fusion_ai::graph_flow::Context;
   ///
@@ -791,7 +785,6 @@ impl Context {
     messages.iter().map(|msg| self.to_rig_message(msg)).collect()
   }
 
-  #[cfg(feature = "rig")]
   /// Convert a SerializableMessage to a rig::completion::Message.
   ///
   /// This method is only available when the "rig" feature is enabled.
@@ -955,7 +948,6 @@ mod tests {
     assert_eq!(deserialized.messages()[1].content, "Hi!");
   }
 
-  #[cfg(feature = "rig")]
   #[tokio::test]
   async fn test_rig_integration() {
     let context = Context::new();

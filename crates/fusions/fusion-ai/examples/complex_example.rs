@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use async_trait::async_trait;
 use fusion_ai::graph_flow::{
   Context, ExecutionStatus, FlowRunner, GraphBuilder, GraphError, GraphStorage, InMemoryGraphStorage,
@@ -6,7 +8,6 @@ use fusion_ai::graph_flow::{
 use rig::completion::Chat;
 use rig::prelude::*;
 use serde::Deserialize;
-use std::sync::Arc;
 use tracing::{Level, info};
 
 // --- Sentiment analysis helpers -------------------------------------------------------------

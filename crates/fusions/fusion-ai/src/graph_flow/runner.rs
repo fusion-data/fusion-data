@@ -35,18 +35,18 @@
 //! # Ok(())
 //! # }
 //! ```
-//! **Pros**: Most efficient, zero allocation per request  
+//! **Pros**: Most efficient, zero allocation per request
 //! **Cons**: Requires the same graph for all requests
 //!
 //! ### Pattern 2: Per-Request FlowRunner
 //! Create `FlowRunner` fresh for each request:
 //! ```rust,no_run
-//! use fusion_ai::graph_flow::{FlowRunner, Graph, InMemorySessionStorage};
+//! use fusion_ai::graph_flow::{FlowRunner, Graph, InMemorySessionStorage, SessionStorage};
 //! use std::sync::Arc;
 //!
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
 //! # let graph = Arc::new(Graph::new("my-graph"));
-//! # let storage: Arc<dyn graph_flow::SessionStorage> = Arc::new(InMemorySessionStorage::new());
+//! # let storage: Arc<dyn SessionStorage> = Arc::new(InMemorySessionStorage::new());
 //! # let session_id = "test-session";
 //! // In request handler
 //! let runner = FlowRunner::new(graph.clone(), storage.clone());
@@ -54,7 +54,7 @@
 //! # Ok(())
 //! # }
 //! ```
-//! **Pros**: Flexible, can use different graphs per request  
+//! **Pros**: Flexible, can use different graphs per request
 //! **Cons**: Tiny allocation cost per request (still very cheap)
 //!
 //! ### Pattern 3: Manual (Original)
@@ -73,7 +73,7 @@
 //! # Ok(())
 //! # }
 //! ```
-//! **Pros**: Maximum control  
+//! **Pros**: Maximum control
 //! **Cons**: More boilerplate, easy to forget session.save()
 //!
 //! ## Performance Characteristics
@@ -287,7 +287,7 @@ impl FlowRunner {
   /// ## Basic Execution
   ///
   /// ```rust,no_run
-  /// # use fusion_ai::graph_flow::{FlowRunner, Graph, InMemorySessionStorage, Session, SessionStorage};
+  /// # use fusion_ai::graph_flow::{ExecutionStatus, FlowRunner, Graph, InMemorySessionStorage, Session, SessionStorage};
   /// # use std::sync::Arc;
   /// # #[tokio::main]
   /// # async fn main() -> fusion_ai::graph_flow::Result<()> {
@@ -299,16 +299,16 @@ impl FlowRunner {
   /// let result = runner.run("test_session").await?;
   ///
   /// match result.status {
-  ///     graph_flow::ExecutionStatus::Completed => {
+  ///     ExecutionStatus::Completed => {
   ///         println!("Workflow completed: {:?}", result.response);
   ///     }
-  ///     graph_flow::ExecutionStatus::WaitingForInput => {
+  ///     ExecutionStatus::WaitingForInput => {
   ///         println!("Waiting for user input: {:?}", result.response);
   ///     }
-  ///     graph_flow::ExecutionStatus::Paused { next_task_id, reason } => {
+  ///     ExecutionStatus::Paused { next_task_id, reason } => {
   ///         println!("Paused, next task: {}, reason: {}", next_task_id, reason);
   ///     }
-  ///     graph_flow::ExecutionStatus::Error(e) => {
+  ///     ExecutionStatus::Error(e) => {
   ///         eprintln!("Error: {}", e);
   ///     }
   /// }
@@ -319,17 +319,17 @@ impl FlowRunner {
   /// ## Interactive Loop
   ///
   /// ```rust,no_run
-  /// # use fusion_ai::graph_flow::{FlowRunner, ExecutionStatus, Session, SessionStorage};
+  /// # use fusion_ai::graph_flow::{FlowRunner, Graph, ExecutionStatus, InMemorySessionStorage, Session, SessionStorage};
   /// # use std::sync::Arc;
   /// # #[tokio::main]
   /// # async fn main() -> fusion_ai::graph_flow::Result<()> {
-  /// # let storage = Arc::new(graph_flow::InMemorySessionStorage::new());
-  /// # let runner = FlowRunner::new(Arc::new(graph_flow::Graph::new("test")), storage.clone());
+  /// # let storage = Arc::new(InMemorySessionStorage::new());
+  /// # let runner = FlowRunner::new(Arc::new(Graph::new("test")), storage.clone());
   /// # let session = Session::new_from_task("session_id".to_string(), "start_task");
   /// # storage.save(session).await?;
   /// loop {
   ///     let result = runner.run("session_id").await?;
-  ///     
+  ///
   ///     match result.status {
   ///         ExecutionStatus::Completed => break,
   ///         ExecutionStatus::WaitingForInput => {
@@ -354,11 +354,11 @@ impl FlowRunner {
   /// ## Error Handling
   ///
   /// ```rust,no_run
-  /// # use fusion_ai::graph_flow::{FlowRunner, GraphError};
+  /// # use fusion_ai::graph_flow::{FlowRunner, Graph, GraphError, InMemorySessionStorage};
   /// # use std::sync::Arc;
   /// # #[tokio::main]
   /// # async fn main() {
-  /// # let runner = FlowRunner::new(Arc::new(graph_flow::Graph::new("test")), Arc::new(graph_flow::InMemorySessionStorage::new()));
+  /// # let runner = FlowRunner::new(Arc::new(Graph::new("test")), Arc::new(InMemorySessionStorage::new()));
   /// match runner.run("nonexistent_session").await {
   ///     Ok(result) => {
   ///         println!("Success: {:?}", result.response);

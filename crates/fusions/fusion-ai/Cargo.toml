@@ -12,15 +12,13 @@ publish = true
 workspace = true
 
 [features]
-default = ["schemars/chrono04", "rig", "with-db"]
-rig = ["dep:rig-core"]
+default = ["schemars/chrono04", "with-db"]
 with-db = ["dep:sqlx", "sqlx/postgres"]
 
 [dependencies]
 fusion-common = { workspace = true, features = ["with-uuid"] }
 tokio = { workspace = true }
-rig-core = { workspace = true, optional = true }
-#graph-flow = { workspace = true }
+rig-core = { workspace = true }
 thiserror = { workspace = true }
 chrono = { workspace = true }
 rmcp = { workspace = true }
