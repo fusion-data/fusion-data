@@ -155,7 +155,7 @@ impl WorkflowSvc {
     let created_by = self.mm.ctx_ref()?.user_id();
     let execution_id = ExecutionId::now_v7();
     let execution_entity = ExecutionEntity {
-      id: execution_id.clone(),
+      id: execution_id,
       workflow_id: workflow_id.clone(),
       mode: ExecutionMode::Local,
       status: ExecutionStatus::New,
@@ -181,7 +181,7 @@ impl WorkflowSvc {
     // 3. 创建执行数据记录
     let workflow_data = serde_json::to_value(&workflow)?;
     let execution_data_entity = ExecutionDataEntity {
-      execution_id: execution_id.clone(),
+      execution_id,
       workflow_data,
       data: "{}".to_string(), // 初始为空
     };

@@ -24,6 +24,12 @@ pub struct EncryptionKeys {
   pub created_at: DateTime<FixedOffset>,
 }
 
+impl Default for EncryptionKeyManager {
+  fn default() -> Self {
+    Self::new()
+  }
+}
+
 impl EncryptionKeyManager {
   /// 创建新的加密密钥管理器
   pub fn new() -> Self {

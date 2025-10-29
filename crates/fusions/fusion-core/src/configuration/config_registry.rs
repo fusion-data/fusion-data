@@ -45,13 +45,35 @@ impl FusionConfigRegistry {
     self.config.read().unwrap().clone()
   }
 
-  pub fn add_config_source<T>(&self, source: T) -> ConfigureResult<()>
+  /// Places the source at the front of the config list only if the key does not already exist,
+  /// so that when get_config is called, the source is used for configuration retrieval when the key is missing.
+  pub fn prepend_config_source<T>(&self, source: T) -> ConfigureResult<()>
+  where
+    T: config::Source + Send + Sync + 'static,
+  {
+    self.add_config_source(source, false)
+  }
+
+  /// Appends the source to the end of the config list,
+  /// so that when get_config is called, the source overrides existing configuration values.
+  pub fn append_config_source<T>(&self, source: T) -> ConfigureResult<()>
+  where
+    T: config::Source + Send + Sync + 'static,
+  {
+    self.add_config_source(source, true)
+  }
+
+  fn add_config_source<T>(&self, source: T, override_existing: bool) -> ConfigureResult<()>
   where
     T: config::Source + Send + Sync + 'static,
   {
     let mut config = self.config.write().unwrap();
     let c = config.as_ref().clone();
-    let b = Config::builder().add_source(c).add_source(source);
+    let b = if override_existing {
+      Config::builder().add_source(c).add_source(source)
+    } else {
+      Config::builder().add_source(source).add_source(c)
+    };
     let new_config = Arc::new(b.build()?);
 
     // 同时更新 fusion_setting

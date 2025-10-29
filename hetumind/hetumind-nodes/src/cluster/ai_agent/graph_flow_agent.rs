@@ -189,7 +189,7 @@ impl Task for GraphFlowMemoryStoreTask {
     let workflow_id: String = context.get_sync("workflow_id").unwrap_or_else(|| "default_workflow".to_string());
 
     // 获取要存储的消息
-    let messages: Vec<JsonValue> = context.get_sync("messages_to_store").unwrap_or_else(|| vec![]);
+    let messages: Vec<JsonValue> = context.get_sync("messages_to_store").unwrap_or_default();
 
     if messages.is_empty() {
       debug!("No messages to store");
@@ -297,19 +297,19 @@ impl Task for GraphFlowMessagePreparationTask {
     let mut messages = Vec::new();
 
     // 添加历史对话
-    if let Some(history) = memory_history {
-      if let Some(chat_history) = history.get("chat_history").and_then(|v| v.as_array()) {
-        for msg in chat_history {
-          if let (Some(role), Some(content)) =
-            (msg.get("role").and_then(|v| v.as_str()), msg.get("content").and_then(|v| v.as_str()))
-          {
-            match role {
-              "user" => messages.push(Message::user(content.to_string())),
-              "assistant" => messages.push(Message::assistant(content.to_string())),
-              _ => {
-                debug!("Unknown message role: {}", role);
-                messages.push(Message::user(content.to_string()));
-              }
+    if let Some(history) = memory_history
+      && let Some(chat_history) = history.get("chat_history").and_then(|v| v.as_array())
+    {
+      for msg in chat_history {
+        if let (Some(role), Some(content)) =
+          (msg.get("role").and_then(|v| v.as_str()), msg.get("content").and_then(|v| v.as_str()))
+        {
+          match role {
+            "user" => messages.push(Message::user(content.to_string())),
+            "assistant" => messages.push(Message::assistant(content.to_string())),
+            _ => {
+              debug!("Unknown message role: {}", role);
+              messages.push(Message::user(content.to_string()));
             }
           }
         }

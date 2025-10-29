@@ -266,7 +266,7 @@ pub fn resolve_value(value: &JsonValue, input_data: &JsonValue) -> Result<JsonVa
         Ok(results.first().unwrap().clone())
       } else {
         // 如果有多个匹配，返回数组
-        let result_array: Vec<JsonValue> = results.into_iter().map(|v| v.clone()).collect();
+        let result_array: Vec<JsonValue> = results.into_iter().cloned().collect();
         Ok(JsonValue::Array(result_array))
       }
     } else if let Some(path) = expr.strip_prefix("$.") {
@@ -644,9 +644,9 @@ pub fn parse_expression_expression(expression: &str, input_data: &JsonValue) -> 
     if let Some(expr_match) = captures.get(1) {
       let expr = expr_match.as_str().trim();
 
-      if expr.starts_with("$json.") {
+      // 移除 "$json."
+      if let Some(path) = expr.strip_prefix("$json.") {
         // JSON Path 表达式
-        let path = &expr[6..]; // 移除 "$json."
         // 直接使用 get_nested_value 而不是 resolve_value，避免双重解析
         match get_nested_value(input_data, path) {
           Some(value) => Ok(value),
@@ -665,9 +665,8 @@ pub fn parse_expression_expression(expression: &str, input_data: &JsonValue) -> 
         let mut rng = rand::rng();
         let random_value: f64 = rng.random();
         Ok(json!(random_value))
-      } else if expr.starts_with("$env.") {
+      } else if let Some(env_var) = expr.strip_prefix("$env.") {
         // 环境变量
-        let env_var = &expr[5..];
         if let Ok(value) = std::env::var(env_var) { Ok(json!(value)) } else { Ok(JsonValue::Null) }
       } else {
         // 其他表达式类型（暂时返回原值）

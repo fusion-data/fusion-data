@@ -128,7 +128,7 @@ impl ConditionConfig {
         "{} {} {}",
         format_value(&self.left),
         format_operation(&self.op),
-        self.right.as_ref().map(|v| format_value(v)).unwrap_or("null".to_string())
+        self.right.as_ref().map(format_value).unwrap_or("null".to_string())
       )
     })
   }
@@ -201,7 +201,7 @@ fn format_value(value: &Value) -> String {
     Value::Number(n) => n.to_string(),
     Value::Bool(b) => b.to_string(),
     Value::Null => "null".to_string(),
-    Value::Array(arr) => format!("[{}]", arr.iter().map(|v| format_value(v)).collect::<Vec<_>>().join(", ")),
+    Value::Array(arr) => format!("[{}]", arr.iter().map(format_value).collect::<Vec<_>>().join(", ")),
     Value::Object(obj) => {
       let pairs: Vec<String> = obj.iter().map(|(k, v)| format!("{}: {}", k, format_value(v))).collect();
       format!("{{{}}}", pairs.join(", "))

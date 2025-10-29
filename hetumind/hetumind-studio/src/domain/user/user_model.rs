@@ -58,7 +58,7 @@ pub struct UserForCreate {
   pub status: UserStatus,
 }
 
-#[derive(Clone, Deserialize, Fields)]
+#[derive(Clone, Default, Deserialize, Fields)]
 pub struct UserForUpdate {
   pub email: Option<String>,
   pub phone: Option<String>,

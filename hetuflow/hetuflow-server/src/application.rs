@@ -44,7 +44,7 @@ impl ServerApplication {
 
     if let Some(config_source) = config_source {
       let config_registry = application.config_registry();
-      config_registry.add_config_source(config_source)?;
+      config_registry.append_config_source(config_source)?;
       config_registry.reload()?;
     }
 
@@ -131,7 +131,7 @@ impl ServerApplication {
   }
 
   /// 优雅关闭
-  pub async fn shutdown(self) -> Result<(), DataError> {
+  pub async fn shutdown_and_await(self) -> Result<(), DataError> {
     // 发送关闭信号
     Application::shutdown().await;
 

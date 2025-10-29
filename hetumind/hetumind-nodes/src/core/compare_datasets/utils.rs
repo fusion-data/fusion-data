@@ -106,12 +106,14 @@ pub async fn compare_datasets(
   Ok(ComparisonResults { in_a_only, in_b_only, same, different, summary })
 }
 
+pub type TupleMap = (HashMap<String, Value>, HashMap<String, Value>);
+
 /// Create lookup maps for efficient record matching
 fn create_lookup_maps(
   data_a: &[Value],
   data_b: &[Value],
   operation: &CompareDatasetsOperation,
-) -> Result<(HashMap<String, Value>, HashMap<String, Value>), String> {
+) -> Result<TupleMap, String> {
   let mut lookup_a = HashMap::new();
   let mut lookup_b = HashMap::new();
 
@@ -360,7 +362,7 @@ fn apply_conflict_resolution(
     ConflictResolution::Mix => {
       // For mix strategy, try to intelligently combine values
       match (value_a, value_b) {
-        (Some(&Value::Array(ref arr_a)), Some(&Value::Array(ref arr_b))) => {
+        (Some(Value::Array(arr_a)), Some(Value::Array(arr_b))) => {
           // Merge arrays, avoiding duplicates
           let mut merged_arr = arr_a.clone();
           for item in arr_b {
@@ -409,10 +411,10 @@ fn get_sort_value(result: &RecordComparisonResult, sort_field: &str) -> String {
   // Try to get value from merged record first, then from record_a, then record_b
   let record = result.merged_record.as_ref().or(result.record_a.as_ref()).or(result.record_b.as_ref());
 
-  if let Some(rec) = record {
-    if let Ok(value) = extract_field_value(rec, sort_field) {
-      return value;
-    }
+  if let Some(rec) = record
+    && let Ok(value) = extract_field_value(rec, sort_field)
+  {
+    return value;
   }
 
   // Fallback to empty string for sorting

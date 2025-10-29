@@ -100,7 +100,7 @@ impl MissingFieldsTracker {
 
   /// 记录字段是否存在
   pub fn record_field_existence(&mut self, field: &str, exists: bool) {
-    self.not_found_fields.entry(field.to_string()).or_insert_with(Vec::new).push(exists);
+    self.not_found_fields.entry(field.to_string()).or_default().push(exists);
   }
 
   /// 获取完全缺失的字段列表
@@ -227,7 +227,7 @@ impl DataTypeAnalyzer {
           // 检查是否包含嵌套的数组或对象
           let has_nested = arr.iter().any(|v| matches!(v, Value::Array(_) | Value::Object(_)));
           if has_nested {
-            let max_child_depth = arr.iter().map(|v| Self::calculate_depth(v)).max().unwrap_or(1);
+            let max_child_depth = arr.iter().map(Self::calculate_depth).max().unwrap_or(1);
             1 + max_child_depth
           } else {
             1 // 简单数组，深度为1
@@ -241,7 +241,7 @@ impl DataTypeAnalyzer {
           // 检查是否包含嵌套的数组或对象
           let has_nested = obj.values().any(|v| matches!(v, Value::Array(_) | Value::Object(_)));
           if has_nested {
-            let max_child_depth = obj.values().map(|v| Self::calculate_depth(v)).max().unwrap_or(1);
+            let max_child_depth = obj.values().map(Self::calculate_depth).max().unwrap_or(1);
             1 + max_child_depth
           } else {
             1 // 简单对象，深度为1
@@ -300,7 +300,7 @@ impl DataTypeAnalyzer {
       Value::Bool(_) => 1,
       Value::Number(_) => 8,
       Value::String(s) => s.len(),
-      Value::Array(arr) => arr.iter().map(|v| Self::estimate_memory_size(v)).sum(),
+      Value::Array(arr) => arr.iter().map(Self::estimate_memory_size).sum(),
       Value::Object(obj) => obj.iter().map(|(k, v)| k.len() + Self::estimate_memory_size(v)).sum(),
     }
   }

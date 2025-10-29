@@ -326,9 +326,3 @@ impl UserSyncSvc {
     Ok(())
   }
 }
-
-impl Default for UserForUpdate {
-  fn default() -> Self {
-    Self { email: None, phone: None, name: None, status: None, update_mask: None }
-  }
-}

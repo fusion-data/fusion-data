@@ -104,7 +104,7 @@ impl NodeExecutable for LimitV1 {
     if let Err(e) = config.validate() {
       log::error!("Limit 配置验证失败: {:?}", e);
       return Err(NodeExecutionError::ExecutionFailed {
-        node_name: node.name.clone().into(),
+        node_name: node.name.clone(),
         message: Some(format!("Limit 配置验证失败: {:?}", e)),
       });
     }

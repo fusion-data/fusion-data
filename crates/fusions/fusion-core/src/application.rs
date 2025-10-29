@@ -228,7 +228,7 @@ impl ApplicationBuilder {
   where
     T: config::Source + Send + Sync + 'static,
   {
-    self.config_registry.add_config_source(source).expect("Add config source failed");
+    self.config_registry.append_config_source(source).expect("Add config source failed");
     self
   }
 

@@ -142,7 +142,7 @@ pub fn calculate_optimal_batch_size(total_items: usize, max_items: usize) -> usi
 
   // 计算批处理大小，确保不会超过内存限制
   // 这里使用启发式算法：每批最多处理 1000 项，但不超过总项目的 10%
-  let batch_size = std::cmp::min(1000, std::cmp::max(1, total_items / 10));
+  let batch_size = (total_items / 10).clamp(1, 1000);
 
   // 确保批处理大小不会超过最大限制
   std::cmp::min(batch_size, max_items)

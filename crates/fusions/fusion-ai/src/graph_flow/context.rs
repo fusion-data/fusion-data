@@ -269,10 +269,10 @@ impl ChatHistory {
   fn add_message(&mut self, message: SerializableMessage) {
     self.messages.push(message);
 
-    if let Some(max) = self.max_messages {
-      if self.messages.len() > max {
-        self.messages.drain(0..(self.messages.len() - max));
-      }
+    if let Some(max) = self.max_messages
+      && self.messages.len() > max
+    {
+      self.messages.drain(0..(self.messages.len() - max));
     }
   }
 

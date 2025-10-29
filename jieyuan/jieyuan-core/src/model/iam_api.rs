@@ -101,38 +101,34 @@ pub fn render_resource(
       }
       crate::model::policy::TenantAccessMode::Specific => {
         // 特定租户访问模式，使用指定租户ID
-        if let Some(tenant_id) = target_tenant_id.or(ac.get_tenant_id()) {
-          if !result.contains("{tenant_id}") {
-            if let Some(colon_pos) = result.find(':')
-              && let Some(second_colon_pos) = result[colon_pos + 1..].find(':')
-            {
-              let insert_pos = colon_pos + 1 + second_colon_pos + 1;
-              result.insert_str(insert_pos, &format!("{}:", tenant_id));
-            }
-          }
+        if let Some(tenant_id) = target_tenant_id.or(ac.get_tenant_id())
+          && !result.contains("{tenant_id}")
+          && let Some(colon_pos) = result.find(':')
+          && let Some(second_colon_pos) = result[colon_pos + 1..].find(':')
+        {
+          let insert_pos = colon_pos + 1 + second_colon_pos + 1;
+          result.insert_str(insert_pos, &format!("{}:", tenant_id));
         }
       }
       crate::model::policy::TenantAccessMode::Current => {
         // 当前租户模式，使用当前租户ID
-        if !result.contains("{tenant_id}") {
-          if let Some(colon_pos) = result.find(':')
-            && let Some(second_colon_pos) = result[colon_pos + 1..].find(':')
-          {
-            let insert_pos = colon_pos + 1 + second_colon_pos + 1;
-            result.insert_str(insert_pos, &format!("{}:", ac.tenant_id()));
-          }
+        if !result.contains("{tenant_id}")
+          && let Some(colon_pos) = result.find(':')
+          && let Some(second_colon_pos) = result[colon_pos + 1..].find(':')
+        {
+          let insert_pos = colon_pos + 1 + second_colon_pos + 1;
+          result.insert_str(insert_pos, &format!("{}:", ac.tenant_id()));
         }
       }
     }
   } else {
     // 普通用户：自动注入当前租户ID
-    if !result.contains("{tenant_id}") {
-      if let Some(colon_pos) = result.find(':')
-        && let Some(second_colon_pos) = result[colon_pos + 1..].find(':')
-      {
-        let insert_pos = colon_pos + 1 + second_colon_pos + 1;
-        result.insert_str(insert_pos, &format!("{}:", ac.tenant_id()));
-      }
+    if !result.contains("{tenant_id}")
+      && let Some(colon_pos) = result.find(':')
+      && let Some(second_colon_pos) = result[colon_pos + 1..].find(':')
+    {
+      let insert_pos = colon_pos + 1 + second_colon_pos + 1;
+      result.insert_str(insert_pos, &format!("{}:", ac.tenant_id()));
     }
   }
 

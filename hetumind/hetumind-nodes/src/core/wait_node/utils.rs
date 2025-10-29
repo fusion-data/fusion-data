@@ -169,34 +169,10 @@ pub fn format_wait_message(config: &WaitConfig) -> String {
     WaitMode::TimeInterval => {
       if let Some(ref interval) = config.time_interval {
         let unit_str = match interval.unit {
-          TimeUnit::Seconds => {
-            if interval.amount == 1 {
-              "秒"
-            } else {
-              "秒"
-            }
-          }
-          TimeUnit::Minutes => {
-            if interval.amount == 1 {
-              "分钟"
-            } else {
-              "分钟"
-            }
-          }
-          TimeUnit::Hours => {
-            if interval.amount == 1 {
-              "小时"
-            } else {
-              "小时"
-            }
-          }
-          TimeUnit::Days => {
-            if interval.amount == 1 {
-              "天"
-            } else {
-              "天"
-            }
-          }
+          TimeUnit::Seconds => "秒",
+          TimeUnit::Minutes => "分钟",
+          TimeUnit::Hours => "小时",
+          TimeUnit::Days => "天",
         };
         format!("等待 {} {}", interval.amount, unit_str)
       } else {
@@ -258,22 +234,14 @@ pub fn create_wait_info(config: &WaitConfig, workflow_id: &str) -> WaitInfo {
   let target_time = match config.wait_mode {
     WaitMode::SpecificTime => config.specific_time.as_ref().map(|st| st.date_time),
     WaitMode::TimeInterval => {
-      if let Some(duration) = duration_ms {
-        Some(chrono::Utc::now() + chrono::Duration::milliseconds(duration as i64))
-      } else {
-        None
-      }
+      duration_ms.map(|duration| chrono::Utc::now() + chrono::Duration::milliseconds(duration as i64))
     }
     WaitMode::Webhook | WaitMode::Form => {
       if let Some(ref time_limit) = config.time_limit {
         if time_limit.enabled {
           match time_limit.limit_type {
             LimitType::AfterTimeInterval => {
-              if let Some(duration) = duration_ms {
-                Some(chrono::Utc::now() + chrono::Duration::milliseconds(duration as i64))
-              } else {
-                None
-              }
+              duration_ms.map(|duration| chrono::Utc::now() + chrono::Duration::milliseconds(duration as i64))
             }
             LimitType::AtSpecifiedTime => time_limit.max_date_and_time,
           }
@@ -362,23 +330,21 @@ pub fn create_webhook_response(
 /// # 返回
 /// 如果验证成功返回 Ok(())，否则返回 ValidationError
 pub fn validate_form_data(form_config: &FormConfig, form_data: &Value) -> Result<(), ValidationError> {
-  if let Some(fields) = &form_config.form_fields {
-    if let Some(form_obj) = form_data.as_object() {
-      for field in fields {
-        // 检查必填字段
-        if field.required.unwrap_or(false) {
-          if !form_obj.contains_key(&field.field_id) {
-            return Err(ValidationError::invalid_field_value(
-              field.field_id.clone(),
-              format!("Field '{}' is required", field.field_label),
-            ));
-          }
-        }
+  if let Some(fields) = &form_config.form_fields
+    && let Some(form_obj) = form_data.as_object()
+  {
+    for field in fields {
+      // 检查必填字段
+      if field.required.unwrap_or(false) && !form_obj.contains_key(&field.field_id) {
+        return Err(ValidationError::invalid_field_value(
+          field.field_id.clone(),
+          format!("Field '{}' is required", field.field_label),
+        ));
+      }
 
-        // 验证字段值
-        if let Some(value) = form_obj.get(&field.field_id) {
-          validate_field_value(field, value)?;
-        }
+      // 验证字段值
+      if let Some(value) = form_obj.get(&field.field_id) {
+        validate_field_value(field, value)?;
       }
     }
   }
@@ -397,21 +363,18 @@ pub fn validate_form_data(form_config: &FormConfig, form_data: &Value) -> Result
 /// # 返回
 /// 如果验证成功返回 Ok(())，否则返回 ValidationError
 pub fn validate_field_value(field: &FormField, value: &Value) -> Result<(), ValidationError> {
-  match field.field_type {
-    // Email validation should always be performed regardless of validation config
-    FormFieldType::Email => {
-      if let Some(email) = value.as_str() {
-        // 简单的邮箱验证
-        let email_regex = regex::Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$").map_err(|_| {
-          ValidationError::invalid_field_value(field.field_id.clone(), "Invalid email regex pattern".to_string())
-        })?;
+  // Email validation should always be performed regardless of validation config
+  if field.field_type == FormFieldType::Email
+    && let Some(email) = value.as_str()
+  {
+    // 简单的邮箱验证
+    let email_regex = regex::Regex::new(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$").map_err(|_| {
+      ValidationError::invalid_field_value(field.field_id.clone(), "Invalid email regex pattern".to_string())
+    })?;
 
-        if !email_regex.is_match(email) {
-          return Err(ValidationError::invalid_field_value(field.field_id.clone(), "Invalid email format".to_string()));
-        }
-      }
+    if !email_regex.is_match(email) {
+      return Err(ValidationError::invalid_field_value(field.field_id.clone(), "Invalid email format".to_string()));
     }
-    _ => {}
   }
 
   if let Some(ref validation) = field.validation {
@@ -419,22 +382,22 @@ pub fn validate_field_value(field: &FormField, value: &Value) -> Result<(), Vali
       FormFieldType::Text | FormFieldType::Textarea => {
         if let Some(text) = value.as_str() {
           // 验证长度
-          if let Some(min_length) = validation.min_length {
-            if text.len() < min_length {
-              return Err(ValidationError::invalid_field_value(
-                field.field_id.clone(),
-                format!("Text must be at least {} characters", min_length),
-              ));
-            }
+          if let Some(min_length) = validation.min_length
+            && text.len() < min_length
+          {
+            return Err(ValidationError::invalid_field_value(
+              field.field_id.clone(),
+              format!("Text must be at least {} characters", min_length),
+            ));
           }
 
-          if let Some(max_length) = validation.max_length {
-            if text.len() > max_length {
-              return Err(ValidationError::invalid_field_value(
-                field.field_id.clone(),
-                format!("Text must be at most {} characters", max_length),
-              ));
-            }
+          if let Some(max_length) = validation.max_length
+            && text.len() > max_length
+          {
+            return Err(ValidationError::invalid_field_value(
+              field.field_id.clone(),
+              format!("Text must be at most {} characters", max_length),
+            ));
           }
 
           // 验证正则表达式
@@ -444,8 +407,7 @@ pub fn validate_field_value(field: &FormField, value: &Value) -> Result<(), Vali
             })?;
 
             if !regex.is_match(text) {
-              let error_msg =
-                validation.error_message.as_ref().map(|s| s.as_str()).unwrap_or("Field format is invalid");
+              let error_msg = validation.error_message.as_deref().unwrap_or("Field format is invalid");
               return Err(ValidationError::invalid_field_value(field.field_id.clone(), error_msg.to_string()));
             }
           }
@@ -453,36 +415,35 @@ pub fn validate_field_value(field: &FormField, value: &Value) -> Result<(), Vali
       }
       FormFieldType::Email => {
         // Email validation already handled above, but we might have additional validation rules
-        if let Some(min_length) = validation.min_length {
-          if let Some(email) = value.as_str() {
-            if email.len() < min_length {
-              return Err(ValidationError::invalid_field_value(
-                field.field_id.clone(),
-                format!("Email must be at least {} characters", min_length),
-              ));
-            }
-          }
+        if let Some(min_length) = validation.min_length
+          && let Some(email) = value.as_str()
+          && email.len() < min_length
+        {
+          return Err(ValidationError::invalid_field_value(
+            field.field_id.clone(),
+            format!("Email must be at least {} characters", min_length),
+          ));
         }
       }
       FormFieldType::Number => {
         if let Some(number) = value.as_f64() {
           // 验证数值范围
-          if let Some(min_value) = validation.min_value {
-            if number < min_value {
-              return Err(ValidationError::invalid_field_value(
-                field.field_id.clone(),
-                format!("Number must be at least {}", min_value),
-              ));
-            }
+          if let Some(min_value) = validation.min_value
+            && number < min_value
+          {
+            return Err(ValidationError::invalid_field_value(
+              field.field_id.clone(),
+              format!("Number must be at least {}", min_value),
+            ));
           }
 
-          if let Some(max_value) = validation.max_value {
-            if number > max_value {
-              return Err(ValidationError::invalid_field_value(
-                field.field_id.clone(),
-                format!("Number must be at most {}", max_value),
-              ));
-            }
+          if let Some(max_value) = validation.max_value
+            && number > max_value
+          {
+            return Err(ValidationError::invalid_field_value(
+              field.field_id.clone(),
+              format!("Number must be at most {}", max_value),
+            ));
           }
         }
       }
@@ -538,15 +499,14 @@ pub fn validate_field_value(field: &FormField, value: &Value) -> Result<(), Vali
       }
       FormFieldType::Password => {
         // 密码字段验证长度
-        if let Some(password) = value.as_str() {
-          if let Some(min_length) = validation.min_length {
-            if password.len() < min_length {
-              return Err(ValidationError::invalid_field_value(
-                field.field_id.clone(),
-                format!("Password must be at least {} characters", min_length),
-              ));
-            }
-          }
+        if let Some(password) = value.as_str()
+          && let Some(min_length) = validation.min_length
+          && password.len() < min_length
+        {
+          return Err(ValidationError::invalid_field_value(
+            field.field_id.clone(),
+            format!("Password must be at least {} characters", min_length),
+          ));
         }
       }
       FormFieldType::Time => {
@@ -558,11 +518,7 @@ pub fn validate_field_value(field: &FormField, value: &Value) -> Result<(), Vali
           })?;
 
           if !time_regex.is_match(time_str) {
-            let error_msg = validation
-              .error_message
-              .as_ref()
-              .map(|s| s.as_str())
-              .unwrap_or("Invalid time format, expected HH:MM:SS");
+            let error_msg = validation.error_message.as_deref().unwrap_or("Invalid time format, expected HH:MM:SS");
             return Err(ValidationError::invalid_field_value(field.field_id.clone(), error_msg.to_string()));
           }
         }
@@ -749,10 +705,10 @@ pub fn create_form_html(form_config: &FormConfig, form_url: &str) -> String {
           if field.required.unwrap_or(false) {
             html.push_str(" required");
           }
-          if let Some(ref default) = field.default_value {
-            if let Some(default_str) = default.as_str() {
-              html.push_str(&format!(" value=\"{}\"", escape_html_attribute(default_str)));
-            }
+          if let Some(ref default) = field.default_value
+            && let Some(default_str) = default.as_str()
+          {
+            html.push_str(&format!(" value=\"{}\"", escape_html_attribute(default_str)));
           }
           html.push_str(">\n");
         }
@@ -766,10 +722,10 @@ pub fn create_form_html(form_config: &FormConfig, form_url: &str) -> String {
             html.push_str(" required");
           }
           html.push_str(">\n");
-          if let Some(ref default) = field.default_value {
-            if let Some(default_str) = default.as_str() {
-              html.push_str(&escape_html(default_str));
-            }
+          if let Some(ref default) = field.default_value
+            && let Some(default_str) = default.as_str()
+          {
+            html.push_str(&escape_html(default_str));
           }
           html.push_str("            </textarea>\n");
         }
@@ -782,10 +738,10 @@ pub fn create_form_html(form_config: &FormConfig, form_url: &str) -> String {
           if field.required.unwrap_or(false) {
             html.push_str(" required");
           }
-          if let Some(ref default) = field.default_value {
-            if let Some(default_num) = default.as_f64() {
-              html.push_str(&format!(" value=\"{}\"", default_num));
-            }
+          if let Some(ref default) = field.default_value
+            && let Some(default_num) = default.as_f64()
+          {
+            html.push_str(&format!(" value=\"{}\"", default_num));
           }
           html.push_str(">\n");
         }

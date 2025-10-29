@@ -173,19 +173,18 @@ impl EmailTriggerConfig {
     }
 
     // 验证邮件数量限制
-    if let Some(max_emails) = self.processing.max_emails {
-      if max_emails == 0 {
-        return Err("Max emails must be greater than 0".to_string());
-      }
+    if let Some(max_emails) = self.processing.max_emails
+      && max_emails == 0
+    {
+      return Err("Max emails must be greater than 0".to_string());
     }
 
     // 验证附件大小限制
-    if let Some(attachment_options) = &self.processing.attachment_options {
-      if let Some(max_size) = attachment_options.max_attachment_size {
-        if max_size == 0 {
-          return Err("Max attachment size must be greater than 0".to_string());
-        }
-      }
+    if let Some(attachment_options) = &self.processing.attachment_options
+      && let Some(max_size) = attachment_options.max_attachment_size
+      && max_size == 0
+    {
+      return Err("Max attachment size must be greater than 0".to_string());
     }
 
     Ok(())

@@ -63,7 +63,7 @@ impl SwitchV1 {
       }
       SwitchMode::Expression => {
         let number_outputs = config.number_outputs.unwrap_or(1);
-        (0..number_outputs).map(|i| OutputPortConfig::new(ConnectionKind::Main, &i.to_string())).collect()
+        (0..number_outputs).map(|i| OutputPortConfig::new(ConnectionKind::Main, i.to_string())).collect()
       }
     }
   }

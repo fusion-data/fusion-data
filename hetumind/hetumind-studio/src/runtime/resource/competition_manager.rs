@@ -13,7 +13,7 @@ use super::{ResourceAllocation, ResourceConfig, ResourceError, ResourcePool, Res
 #[derive(Debug)]
 pub struct ResourceCompetitionManager {
   /// 资源池配置
-  config: ResourceConfig,
+  _config: ResourceConfig,
   /// 资源池映射
   resource_pools: HashMap<ResourceType, Arc<ResourcePool>>,
   /// 待处理的资源请求队列
@@ -64,7 +64,7 @@ impl ResourceCompetitionManager {
     );
 
     Self {
-      config,
+      _config: config,
       resource_pools,
       pending_requests: Arc::new(Mutex::new(VecDeque::new())),
       allocation_notify: Arc::new(Notify::new()),
@@ -146,7 +146,7 @@ impl ResourceCompetitionManager {
   /// 获取所有资源池状态
   pub async fn get_all_pool_status(&self) -> Vec<ResourcePoolStatus> {
     let mut status_vec = Vec::new();
-    for (resource_type, _pool) in &self.resource_pools {
+    for resource_type in self.resource_pools.keys() {
       if let Some(status) = self.get_pool_status(resource_type).await {
         status_vec.push(status);
       }
@@ -178,15 +178,15 @@ impl ResourceCompetitionManager {
       // 检查是否有分配结果
       {
         let queue = self.pending_requests.lock().await;
-        if let Some(request) = queue.iter().find(|r| &r.request_id == request_id) {
-          if let Some(pool) = self.resource_pools.get(&request.resource_type) {
-            match pool.acquire(request).await {
-              Ok(allocation) => return Ok(allocation),
-              Err(_) => {
-                // 继续等待
-                drop(queue);
-                self.allocation_notify.notified().await;
-              }
+        if let Some(request) = queue.iter().find(|r| &r.request_id == request_id)
+          && let Some(pool) = self.resource_pools.get(&request.resource_type)
+        {
+          match pool.acquire(request).await {
+            Ok(allocation) => return Ok(allocation),
+            Err(_) => {
+              // 继续等待
+              drop(queue);
+              self.allocation_notify.notified().await;
             }
           }
         }
@@ -200,21 +200,21 @@ impl ResourceCompetitionManager {
     let mut to_remove = Vec::new();
 
     for (index, request) in queue.iter().enumerate() {
-      if let Some(pool) = self.resource_pools.get(&request.resource_type) {
-        if pool.available_amount().await >= request.amount {
-          // 尝试分配资源
-          match pool.acquire(request).await {
-            Ok(_) => {
-              to_remove.push(index);
-              // 更新成功统计
-              let mut stats = self.stats.lock().await;
-              stats.successful_allocations += 1;
-            }
-            Err(_) => {
-              // 记录失败统计
-              let mut stats = self.stats.lock().await;
-              stats.failed_requests += 1;
-            }
+      if let Some(pool) = self.resource_pools.get(&request.resource_type)
+        && pool.available_amount().await >= request.amount
+      {
+        // 尝试分配资源
+        match pool.acquire(request).await {
+          Ok(_) => {
+            to_remove.push(index);
+            // 更新成功统计
+            let mut stats = self.stats.lock().await;
+            stats.successful_allocations += 1;
+          }
+          Err(_) => {
+            // 记录失败统计
+            let mut stats = self.stats.lock().await;
+            stats.failed_requests += 1;
           }
         }
       }
@@ -289,12 +289,12 @@ impl ResourceCompetitionManager {
     let mut to_remove = Vec::new();
 
     for (index, request) in queue.iter().enumerate() {
-      if let Some(pool) = resource_pools.get(&request.resource_type) {
-        if pool.available_amount().await >= request.amount {
-          // 尝试分配资源
-          if pool.acquire(request).await.is_ok() {
-            to_remove.push(index);
-          }
+      if let Some(pool) = resource_pools.get(&request.resource_type)
+        && pool.available_amount().await >= request.amount
+      {
+        // 尝试分配资源
+        if pool.acquire(request).await.is_ok() {
+          to_remove.push(index);
         }
       }
     }

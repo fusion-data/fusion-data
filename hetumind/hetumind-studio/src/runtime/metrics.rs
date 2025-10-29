@@ -41,7 +41,7 @@ impl ExecutionMetricsCollector {
     // 基于采样率决定是否记录
     if self.should_sample(&metrics.execution_id) {
       let mut metrics_map = self.metrics.write().await;
-      metrics_map.insert(metrics.execution_id.clone(), metrics);
+      metrics_map.insert(metrics.execution_id, metrics);
     }
   }
 
@@ -307,7 +307,7 @@ impl PerformanceMonitor {
           timestamp: chrono::Utc::now().with_timezone(
             &chrono::FixedOffset::east_opt(0).unwrap_or_else(|| chrono::FixedOffset::east_opt(0).unwrap()),
           ),
-          execution_id: metrics.execution_id.clone(),
+          execution_id: metrics.execution_id,
         })
         .await;
     }
@@ -323,7 +323,7 @@ impl PerformanceMonitor {
           timestamp: chrono::Utc::now().with_timezone(
             &chrono::FixedOffset::east_opt(0).unwrap_or_else(|| chrono::FixedOffset::east_opt(0).unwrap()),
           ),
-          execution_id: metrics.execution_id.clone(),
+          execution_id: metrics.execution_id,
         })
         .await;
     }
@@ -341,7 +341,7 @@ impl PerformanceMonitor {
             timestamp: chrono::Utc::now().with_timezone(
               &chrono::FixedOffset::east_opt(0).unwrap_or_else(|| chrono::FixedOffset::east_opt(0).unwrap()),
             ),
-            execution_id: metrics.execution_id.clone(),
+            execution_id: metrics.execution_id,
           })
           .await;
       }
@@ -358,7 +358,7 @@ impl PerformanceMonitor {
           timestamp: chrono::Utc::now().with_timezone(
             &chrono::FixedOffset::east_opt(0).unwrap_or_else(|| chrono::FixedOffset::east_opt(0).unwrap()),
           ),
-          execution_id: metrics.execution_id.clone(),
+          execution_id: metrics.execution_id,
         })
         .await;
     }
@@ -374,7 +374,7 @@ impl PerformanceMonitor {
           timestamp: chrono::Utc::now().with_timezone(
             &chrono::FixedOffset::east_opt(0).unwrap_or_else(|| chrono::FixedOffset::east_opt(0).unwrap()),
           ),
-          execution_id: metrics.execution_id.clone(),
+          execution_id: metrics.execution_id,
         })
         .await;
     }
@@ -390,7 +390,7 @@ impl PerformanceMonitor {
           timestamp: chrono::Utc::now().with_timezone(
             &chrono::FixedOffset::east_opt(0).unwrap_or_else(|| chrono::FixedOffset::east_opt(0).unwrap()),
           ),
-          execution_id: metrics.execution_id.clone(),
+          execution_id: metrics.execution_id,
         })
         .await;
     }
@@ -406,7 +406,7 @@ impl PerformanceMonitor {
           timestamp: chrono::Utc::now().with_timezone(
             &chrono::FixedOffset::east_opt(0).unwrap_or_else(|| chrono::FixedOffset::east_opt(0).unwrap()),
           ),
-          execution_id: metrics.execution_id.clone(),
+          execution_id: metrics.execution_id,
         })
         .await;
     }

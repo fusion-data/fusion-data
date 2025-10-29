@@ -6,7 +6,7 @@ pub(crate) fn expand_derive(input: syn::DeriveInput) -> syn::Result<TokenStream>
   let ident = input.ident;
 
   let output = quote! {
-      impl ::fusion_core::configuration::Configurable for #ident {
+      impl ::fusions::core::configuration::Configurable for #ident {
         fn config_prefix() -> &'static str {
           #prefix
         }

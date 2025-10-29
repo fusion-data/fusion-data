@@ -48,15 +48,15 @@ impl MergeConfig {
   pub fn validate(&self) -> Result<(), String> {
     match self.mode {
       MergeMode::MergeByKey => {
-        if self.merge_key.as_ref().map_or(true, |s| s.trim().is_empty()) {
+        if self.merge_key.as_ref().is_none_or(|s| s.trim().is_empty()) {
           return Err("Merge key is required for MergeByKey mode".to_string());
         }
       }
       MergeMode::WaitForAll => {
-        if let Some(ports) = self.input_ports {
-          if ports < 2 || ports > 10 {
-            return Err("Input ports must be between 2 and 10".to_string());
-          }
+        if let Some(ports) = self.input_ports
+          && !(2..=10).contains(&ports)
+        {
+          return Err("Input ports must be between 2 and 10".to_string());
         }
       }
       _ => {}

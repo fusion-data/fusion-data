@@ -57,12 +57,12 @@ impl NamespaceSvc {
     self.validate_tenant_access(&existing)?;
 
     // If updating name, check uniqueness
-    if let Some(ref name) = input.name {
-      if name != &existing.name {
-        let exists = NamespaceBmc::exists_by_name(&self.mm, name, existing.tenant_id).await?;
-        if exists {
-          return Err(DataError::conflicted(format!("Namespace with name '{}' already exists", name)));
-        }
+    if let Some(ref name) = input.name
+      && name != &existing.name
+    {
+      let exists = NamespaceBmc::exists_by_name(&self.mm, name, existing.tenant_id).await?;
+      if exists {
+        return Err(DataError::conflicted(format!("Namespace with name '{}' already exists", name)));
       }
     }
 

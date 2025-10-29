@@ -108,25 +108,25 @@ pub fn validate_config_with_context(config: &StopAndErrorConfig, node_name: &str
         }
 
         // 验证重试配置
-        if let Some(retryable) = error_obj.retryable {
-          if retryable {
-            // 如果可重试，建议设置重试延迟
-            if error_obj.retry_after.is_none() {
-              log::warn!("Node '{}' has retryable error but no retry_after set, using default 60 seconds", node_name);
-            } else if let Some(retry_after) = error_obj.retry_after {
-              if retry_after == 0 {
-                return Err(ValidationError::invalid_field_value(
-                  "error_object.retry_after".to_string(),
-                  "Retry delay cannot be zero when retryable is true".to_string(),
-                ));
-              }
-              if retry_after > 86400 {
-                // 24小时
-                return Err(ValidationError::invalid_field_value(
-                  "error_object.retry_after".to_string(),
-                  "Retry delay cannot exceed 24 hours (86400 seconds)".to_string(),
-                ));
-              }
+        if let Some(retryable) = error_obj.retryable
+          && retryable
+        {
+          // 如果可重试，建议设置重试延迟
+          if error_obj.retry_after.is_none() {
+            log::warn!("Node '{}' has retryable error but no retry_after set, using default 60 seconds", node_name);
+          } else if let Some(retry_after) = error_obj.retry_after {
+            if retry_after == 0 {
+              return Err(ValidationError::invalid_field_value(
+                "error_object.retry_after".to_string(),
+                "Retry delay cannot be zero when retryable is true".to_string(),
+              ));
+            }
+            if retry_after > 86400 {
+              // 24小时
+              return Err(ValidationError::invalid_field_value(
+                "error_object.retry_after".to_string(),
+                "Retry delay cannot exceed 24 hours (86400 seconds)".to_string(),
+              ));
             }
           }
         }
@@ -199,24 +199,24 @@ pub fn parse_error_object(json_value: &Value) -> Result<ErrorObject, ValidationE
 #[allow(dead_code)]
 pub fn extract_error_message(error_obj: &ErrorObject) -> String {
   // 第一优先级: message 字段
-  if let Some(ref message) = error_obj.message {
-    if !message.trim().is_empty() {
-      return message.clone();
-    }
+  if let Some(ref message) = error_obj.message
+    && !message.trim().is_empty()
+  {
+    return message.clone();
   }
 
   // 第二优先级: description 字段
-  if let Some(ref description) = error_obj.description {
-    if !description.trim().is_empty() {
-      return description.clone();
-    }
+  if let Some(ref description) = error_obj.description
+    && !description.trim().is_empty()
+  {
+    return description.clone();
   }
 
   // 第三优先级: code 字段
-  if let Some(ref code) = error_obj.code {
-    if !code.trim().is_empty() {
-      return code.clone();
-    }
+  if let Some(ref code) = error_obj.code
+    && !code.trim().is_empty()
+  {
+    return code.clone();
   }
 
   // 最后备选: 默认错误消息
@@ -263,13 +263,12 @@ pub fn build_error_metadata(error_obj: &ErrorObject, node_name: &str) -> Value {
   }
 
   // 合并自定义元数据
-  if let Some(ref custom_metadata) = error_obj.metadata {
-    if let Value::Object(custom_map) = custom_metadata {
+  if let Some(ref custom_metadata) = error_obj.metadata
+    && let Value::Object(custom_map) = custom_metadata {
       for (key, value) in custom_map {
         metadata_map.insert(key.clone(), value.clone());
       }
     }
-  }
 
   Value::Object(metadata_map.into_iter().collect())
 }

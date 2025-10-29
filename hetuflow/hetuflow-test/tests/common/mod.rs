@@ -77,7 +77,7 @@ pub async fn cleanup_test_environment(ctx: AgentTestContext) -> anyhow::Result<(
 }
 
 pub async fn cleanup_server_text_context(ctx: ServerTestContext) -> anyhow::Result<()> {
-  ctx.server.shutdown().await?;
+  ctx.server.shutdown_and_await().await?;
   Ok(())
 }
 

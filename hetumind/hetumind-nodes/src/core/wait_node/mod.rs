@@ -280,80 +280,77 @@ impl WaitConfig {
       WaitMode::TimeInterval => {
         if self.time_interval.is_none() {
           return Err(ValidationError::invalid_field_value(
-            "time_interval".to_string(),
-            "Time interval configuration is required for time interval mode".to_string(),
+            "time_interval",
+            "Time interval configuration is required for time interval mode",
           ));
         }
-        if let Some(ref interval) = self.time_interval {
-          if interval.amount == 0 {
-            return Err(ValidationError::invalid_field_value(
-              "time_interval.amount".to_string(),
-              "Wait amount must be greater than 0".to_string(),
-            ));
-          }
+        if let Some(ref interval) = self.time_interval
+          && interval.amount == 0
+        {
+          return Err(ValidationError::invalid_field_value(
+            "time_interval.amount",
+            "Wait amount must be greater than 0",
+          ));
         }
       }
       WaitMode::SpecificTime => {
         if self.specific_time.is_none() {
           return Err(ValidationError::invalid_field_value(
-            "specific_time".to_string(),
-            "Specific time configuration is required for specific time mode".to_string(),
+            "specific_time",
+            "Specific time configuration is required for specific time mode",
           ));
         }
-        if let Some(ref specific_time) = self.specific_time {
-          if specific_time.date_time <= Utc::now() {
-            return Err(ValidationError::invalid_field_value(
-              "specific_time.date_time".to_string(),
-              "Target time must be in the future".to_string(),
-            ));
-          }
+        if let Some(ref specific_time) = self.specific_time
+          && specific_time.date_time <= Utc::now()
+        {
+          return Err(ValidationError::invalid_field_value(
+            "specific_time.date_time",
+            "Target time must be in the future",
+          ));
         }
       }
       WaitMode::Webhook => {
         if self.webhook_config.is_none() {
           return Err(ValidationError::invalid_field_value(
-            "webhook_config".to_string(),
-            "Webhook configuration is required for webhook mode".to_string(),
+            "webhook_config",
+            "Webhook configuration is required for webhook mode",
           ));
         }
       }
       WaitMode::Form => {
         if self.form_config.is_none() {
           return Err(ValidationError::invalid_field_value(
-            "form_config".to_string(),
-            "Form configuration is required for form mode".to_string(),
+            "form_config",
+            "Form configuration is required for form mode",
           ));
         }
-        if let Some(ref form_config) = self.form_config {
-          if form_config.form_title.trim().is_empty() {
-            return Err(ValidationError::invalid_field_value(
-              "form_config.form_title".to_string(),
-              "Form title cannot be empty".to_string(),
-            ));
-          }
+        if let Some(ref form_config) = self.form_config
+          && form_config.form_title.trim().is_empty()
+        {
+          return Err(ValidationError::invalid_field_value("form_config.form_title", "Form title cannot be empty"));
         }
       }
     }
 
     // 验证时间限制配置
-    if let Some(ref time_limit) = self.time_limit {
-      if time_limit.enabled {
-        match time_limit.limit_type {
-          LimitType::AfterTimeInterval => {
-            if time_limit.resume_amount.is_none() || time_limit.resume_amount.unwrap() == 0 {
-              return Err(ValidationError::invalid_field_value(
-                "time_limit.resume_amount".to_string(),
-                "Resume amount must be greater than 0".to_string(),
-              ));
-            }
+    if let Some(ref time_limit) = self.time_limit
+      && time_limit.enabled
+    {
+      match time_limit.limit_type {
+        LimitType::AfterTimeInterval => {
+          if time_limit.resume_amount.is_none() || time_limit.resume_amount.unwrap() == 0 {
+            return Err(ValidationError::invalid_field_value(
+              "time_limit.resume_amount",
+              "Resume amount must be greater than 0",
+            ));
           }
-          LimitType::AtSpecifiedTime => {
-            if time_limit.max_date_and_time.is_none() {
-              return Err(ValidationError::invalid_field_value(
-                "time_limit.max_date_and_time".to_string(),
-                "Max date and time is required for at specified time limit".to_string(),
-              ));
-            }
+        }
+        LimitType::AtSpecifiedTime => {
+          if time_limit.max_date_and_time.is_none() {
+            return Err(ValidationError::invalid_field_value(
+              "time_limit.max_date_and_time",
+              "Max date and time is required for at specified time limit",
+            ));
           }
         }
       }
@@ -446,18 +443,18 @@ impl WaitConfig {
   /// 检查是否超过时间限制
   #[allow(dead_code)]
   pub fn is_time_limit_exceeded(&self) -> bool {
-    if let Some(ref time_limit) = self.time_limit {
-      if time_limit.enabled {
-        match time_limit.limit_type {
-          LimitType::AtSpecifiedTime => {
-            if let Some(max_time) = time_limit.max_date_and_time {
-              return Utc::now() > max_time;
-            }
+    if let Some(ref time_limit) = self.time_limit
+      && time_limit.enabled
+    {
+      match time_limit.limit_type {
+        LimitType::AtSpecifiedTime => {
+          if let Some(max_time) = time_limit.max_date_and_time {
+            return Utc::now() > max_time;
           }
-          LimitType::AfterTimeInterval => {
-            // 这个检查需要在 WaitTracker 中进行
-            // 因为我们需要知道等待开始的时间
-          }
+        }
+        LimitType::AfterTimeInterval => {
+          // 这个检查需要在 WaitTracker 中进行
+          // 因为我们需要知道等待开始的时间
         }
       }
     }

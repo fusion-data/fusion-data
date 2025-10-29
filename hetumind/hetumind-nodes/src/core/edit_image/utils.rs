@@ -525,8 +525,7 @@ pub fn prepare_output_format(
 /// 解析颜色字符串
 fn parse_color(color_str: &str) -> Rgba<u8> {
   // 简化的颜色解析，支持 #RRGGBB 和 #AARRGGBB 格式
-  if color_str.starts_with('#') {
-    let hex = &color_str[1..];
+  if let Some(hex) = color_str.strip_prefix('#') {
     if hex.len() == 6 {
       // #RRGGBB 格式
       let r = u8::from_str_radix(&hex[0..2], 16).unwrap_or(0);

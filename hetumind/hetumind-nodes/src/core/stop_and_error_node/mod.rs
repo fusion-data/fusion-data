@@ -80,7 +80,7 @@ impl StopAndErrorConfig {
   pub fn validate(&self) -> Result<(), ValidationError> {
     match self.error_type {
       ErrorType::ErrorMessage => {
-        if self.error_message.as_ref().map_or(true, |s| s.trim().is_empty()) {
+        if self.error_message.as_ref().is_none_or(|s| s.trim().is_empty()) {
           return Err(ValidationError::invalid_field_value(
             "error_message".to_string(),
             "Error message cannot be empty".to_string(),
@@ -95,16 +95,15 @@ impl StopAndErrorConfig {
           ));
         }
 
-        if let Some(ref error_obj) = self.error_object {
-          if error_obj.message.as_ref().map_or(true, |s| s.trim().is_empty())
-            && error_obj.description.as_ref().map_or(true, |s| s.trim().is_empty())
-            && error_obj.code.as_ref().map_or(true, |s| s.trim().is_empty())
-          {
-            return Err(ValidationError::invalid_field_value(
-              "error_object".to_string(),
-              "Error object must have at least one of: message, description, or code".to_string(),
-            ));
-          }
+        if let Some(ref error_obj) = self.error_object
+          && error_obj.message.as_ref().is_none_or(|s| s.trim().is_empty())
+          && error_obj.description.as_ref().is_none_or(|s| s.trim().is_empty())
+          && error_obj.code.as_ref().is_none_or(|s| s.trim().is_empty())
+        {
+          return Err(ValidationError::invalid_field_value(
+            "error_object".to_string(),
+            "Error object must have at least one of: message, description, or code".to_string(),
+          ));
         }
       }
     }
@@ -167,7 +166,7 @@ impl StopAndErrorConfig {
         "error_type": "simple_message",
         "message": self.error_message
       })),
-      ErrorType::ErrorObject => self.error_object.as_ref().and_then(|obj| {
+      ErrorType::ErrorObject => self.error_object.as_ref().map(|obj| {
         let mut metadata = obj.metadata.clone().unwrap_or(Value::Object(Default::default()));
 
         if let Value::Object(ref mut map) = metadata {
@@ -188,7 +187,7 @@ impl StopAndErrorConfig {
           }
         }
 
-        Some(metadata)
+        metadata
       }),
     }
   }

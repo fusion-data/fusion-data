@@ -103,7 +103,7 @@ pub fn parse_tool_call_params(json: &JsonValue) -> Result<Vec<String>, NodeExecu
 /// 格式化时间戳
 pub fn format_timestamp(timestamp: i64) -> String {
   chrono::DateTime::from_timestamp(timestamp, 0)
-    .unwrap_or_else(|| chrono::Utc::now())
+    .unwrap_or_else(chrono::Utc::now)
     .format("%Y-%m-%d %H:%M:%S UTC")
     .to_string()
 }
@@ -127,17 +127,17 @@ pub fn validate_tool_call_format(tool_call: &JsonValue) -> Result<(), NodeExecut
   validate_json_structure(tool_call, &["id", "tool_name", "parameters"])?;
 
   // 验证 ID 格式
-  if let Some(id) = tool_call.get("id") {
-    if !id.is_string() {
-      return Err(NodeExecutionError::InvalidInput("Tool call ID must be a string".to_string()));
-    }
+  if let Some(id) = tool_call.get("id")
+    && !id.is_string()
+  {
+    return Err(NodeExecutionError::InvalidInput("Tool call ID must be a string".to_string()));
   }
 
   // 验证工具名称格式
-  if let Some(name) = tool_call.get("tool_name") {
-    if !name.is_string() {
-      return Err(NodeExecutionError::InvalidInput("Tool name must be a string".to_string()));
-    }
+  if let Some(name) = tool_call.get("tool_name")
+    && !name.is_string()
+  {
+    return Err(NodeExecutionError::InvalidInput("Tool name must be a string".to_string()));
   }
 
   Ok(())

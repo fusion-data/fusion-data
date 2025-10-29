@@ -71,10 +71,10 @@ impl FieldToSplit {
       return Err("Field to split cannot be empty".to_string());
     }
 
-    if let Some(dest) = &self.destination_field {
-      if dest.trim().is_empty() {
-        return Err("Destination field cannot be empty when specified".to_string());
-      }
+    if let Some(dest) = &self.destination_field
+      && dest.trim().is_empty()
+    {
+      return Err("Destination field cannot be empty when specified".to_string());
     }
 
     Ok(())
@@ -84,7 +84,7 @@ impl FieldToSplit {
   pub fn get_destination_field(&self) -> String {
     self.destination_field.clone().unwrap_or_else(|| {
       // 从源字段路径中提取最后的字段名
-      self.field_to_split.split('.').last().unwrap_or(&self.field_to_split).to_string()
+      self.field_to_split.split('.').next_back().unwrap_or(&self.field_to_split).to_string()
     })
   }
 }

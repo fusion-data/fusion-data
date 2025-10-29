@@ -6,9 +6,8 @@ use fusion_common::ahash::HashSet;
 use std::collections::{HashMap, VecDeque};
 use std::sync::Arc;
 use tokio::sync::{Mutex, Notify};
-use uuid::Uuid;
 
-use super::{ResourceAllocation, ResourceError, ResourceRequest, ResourceType};
+use super::{ResourceError, ResourceType};
 
 /// 死锁检测器
 #[derive(Debug)]
@@ -247,10 +246,10 @@ impl DeadlockDetector {
     }
 
     // 更新资源等待队列
-    if let Some(resource) = graph.resources.get_mut(resource_type) {
-      if !resource.waiting_queue.contains(&process_id.to_string()) {
-        resource.waiting_queue.push_back(process_id.to_string());
-      }
+    if let Some(resource) = graph.resources.get_mut(resource_type)
+      && !resource.waiting_queue.contains(&process_id.to_string())
+    {
+      resource.waiting_queue.push_back(process_id.to_string());
     }
 
     // 添加请求边
@@ -348,10 +347,11 @@ impl DeadlockDetector {
 
     // 对每个等待资源的进程进行DFS
     for (process_id, process) in &graph.processes {
-      if process.status == ProcessStatus::Waiting && !visited.contains(process_id) {
-        if self.is_in_deadlock_cycle(graph, process_id, &mut visited) {
-          deadlocked.insert(process_id.clone());
-        }
+      if process.status == ProcessStatus::Waiting
+        && !visited.contains(process_id)
+        && self.is_in_deadlock_cycle(graph, process_id, &mut visited)
+      {
+        deadlocked.insert(process_id.clone());
       }
     }
 
@@ -376,10 +376,10 @@ impl DeadlockDetector {
       for resource_type in waiting_resources {
         // 找到持有该资源的其他进程
         for (other_process_id, other_process) in &graph.processes {
-          if other_process.held_resources.contains(resource_type) {
-            if self.is_in_deadlock_cycle(graph, other_process_id, visited) {
-              return true;
-            }
+          if other_process.held_resources.contains(resource_type)
+            && self.is_in_deadlock_cycle(graph, other_process_id, visited)
+          {
+            return true;
           }
         }
       }
@@ -420,11 +420,11 @@ impl DeadlockDetector {
     let mut lowest_priority = u8::MAX;
 
     for process_id in deadlocked_processes {
-      if let Some(process) = graph.processes.get(process_id) {
-        if process.priority < lowest_priority {
-          lowest_priority = process.priority;
-          lowest_priority_process = Some(process_id.clone());
-        }
+      if let Some(process) = graph.processes.get(process_id)
+        && process.priority < lowest_priority
+      {
+        lowest_priority = process.priority;
+        lowest_priority_process = Some(process_id.clone());
       }
     }
 
@@ -435,11 +435,11 @@ impl DeadlockDetector {
 
     // 建议抢占资源
     for process_id in deadlocked_processes {
-      if let Some(process) = graph.processes.get(process_id) {
-        if !process.held_resources.is_empty() {
-          let resource_type = process.held_resources.iter().next().unwrap().clone();
-          resolutions.push(DeadlockResolution::PreemptResource { process_id: process_id.clone(), resource_type });
-        }
+      if let Some(process) = graph.processes.get(process_id)
+        && !process.held_resources.is_empty()
+      {
+        let resource_type = process.held_resources.iter().next().unwrap().clone();
+        resolutions.push(DeadlockResolution::PreemptResource { process_id: process_id.clone(), resource_type });
       }
     }
 
@@ -506,11 +506,10 @@ impl DeadlockDetector {
                         log::warn!("Deadlock detected: {:?}", result);
 
                         // 自动解决死锁（可选）
-                        if let Some(first_resolution) = result.suggested_actions.first() {
-                            if let Err(e) = detector.resolve_deadlock(first_resolution).await {
+                        if let Some(first_resolution) = result.suggested_actions.first()
+                            && let Err(e) = detector.resolve_deadlock(first_resolution).await {
                                 log::error!("Failed to resolve deadlock: {:?}", e);
                             }
-                        }
                     }
                 }
             }

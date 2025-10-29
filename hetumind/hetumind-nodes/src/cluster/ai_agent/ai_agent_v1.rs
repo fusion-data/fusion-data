@@ -265,13 +265,12 @@ impl AiAgentV1 {
     mock_result.insert("timestamp".to_string(), json!(now_offset().to_rfc3339()));
 
     // 如果有内存，记录助手响应（注意：在简化架构中不能直接保存）
-    if let Some(memory) = memory_accessor {
-      if let Some(content) = mock_result.get("content") {
-        if let Some(content_str) = content.as_str() {
-          debug!("Would save assistant response to memory session {}: {}", memory.session_id, content_str);
-          // 在实际的工作流执行中，响应会在下一轮通过 SimpleMemoryNode 的输入自动保存
-        }
-      }
+    if let Some(memory) = memory_accessor
+      && let Some(content) = mock_result.get("content")
+      && let Some(content_str) = content.as_str()
+    {
+      debug!("Would save assistant response to memory session {}: {}", memory.session_id, content_str);
+      // 在实际的工作流执行中，响应会在下一轮通过 SimpleMemoryNode 的输入自动保存
     }
 
     Ok(mock_result)

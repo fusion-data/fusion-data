@@ -21,7 +21,7 @@ impl CheckpointManager {
     state: ExecutionState,
   ) -> Result<(), CheckpointError> {
     let checkpoint = ExecutionCheckpoint {
-      execution_id: execution_id.clone(),
+      execution_id: *execution_id,
       timestamp: now(),
       execution_state: state,
       completed_nodes: todo!(),

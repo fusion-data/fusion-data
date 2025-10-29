@@ -22,19 +22,14 @@ use limit_v1::LimitV1;
 use crate::constants::LIMIT_NODE_KIND;
 
 /// 保留策略
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum KeepStrategy {
   /// 保留前 N 个项目
+  #[default]
   FirstItems,
   /// 保留后 N 个项目
   LastItems,
-}
-
-impl Default for KeepStrategy {
-  fn default() -> Self {
-    KeepStrategy::FirstItems
-  }
 }
 
 /// Limit 节点配置

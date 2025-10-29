@@ -159,60 +159,60 @@ impl ImageOperationConfig {
   pub fn validate(&self) -> Result<(), String> {
     match self.operation {
       ImageOperation::Blur => {
-        if !self.parameters.get("blur").is_some() || !self.parameters.get("sigma").is_some() {
+        if self.parameters.get("blur").is_none() || self.parameters.get("sigma").is_none() {
           return Err("Blur operation requires 'blur' and 'sigma' parameters".to_string());
         }
       }
       ImageOperation::Border => {
-        if !self.parameters.get("border_color").is_some() || !self.parameters.get("border_width").is_some() {
+        if self.parameters.get("border_color").is_none() || self.parameters.get("border_width").is_none() {
           return Err("Border operation requires 'border_color' and 'border_width' parameters".to_string());
         }
       }
       ImageOperation::Create => {
-        if !self.parameters.get("background_color").is_some()
-          || !self.parameters.get("width").is_some()
-          || !self.parameters.get("height").is_some()
+        if self.parameters.get("background_color").is_none()
+          || self.parameters.get("width").is_none()
+          || self.parameters.get("height").is_none()
         {
           return Err("Create operation requires 'background_color', 'width' and 'height' parameters".to_string());
         }
       }
       ImageOperation::Crop => {
-        if !self.parameters.get("width").is_some() || !self.parameters.get("height").is_some() {
+        if self.parameters.get("width").is_none() || self.parameters.get("height").is_none() {
           return Err("Crop operation requires 'width' and 'height' parameters".to_string());
         }
       }
       ImageOperation::Resize => {
-        if !self.parameters.get("width").is_some() && !self.parameters.get("height").is_some() {
+        if self.parameters.get("width").is_none() && self.parameters.get("height").is_none() {
           return Err("Resize operation requires at least 'width' or 'height' parameter".to_string());
         }
       }
       ImageOperation::Rotate => {
-        if !self.parameters.get("degrees").is_some() {
+        if self.parameters.get("degrees").is_none() {
           return Err("Rotate operation requires 'degrees' parameter".to_string());
         }
       }
       ImageOperation::Text => {
-        if !self.parameters.get("text").is_some() {
+        if self.parameters.get("text").is_none() {
           return Err("Text operation requires 'text' parameter".to_string());
         }
       }
       ImageOperation::Transparent => {
-        if !self.parameters.get("color").is_some() {
+        if self.parameters.get("color").is_none() {
           return Err("Transparent operation requires 'color' parameter".to_string());
         }
       }
       ImageOperation::Composite => {
-        if !self.parameters.get("data_property_name").is_some() {
+        if self.parameters.get("data_property_name").is_none() {
           return Err("Composite operation requires 'data_property_name' parameter".to_string());
         }
       }
       ImageOperation::Draw => {
-        if !self.parameters.get("primitive").is_some() {
+        if self.parameters.get("primitive").is_none() {
           return Err("Draw operation requires 'primitive' parameter".to_string());
         }
       }
       ImageOperation::Shear => {
-        if !self.parameters.get("degrees_x").is_some() && !self.parameters.get("degrees_y").is_some() {
+        if self.parameters.get("degrees_x").is_none() && self.parameters.get("degrees_y").is_none() {
           return Err("Shear operation requires at least 'degrees_x' or 'degrees_y' parameter".to_string());
         }
       }
@@ -311,10 +311,10 @@ impl EditImageConfig {
     }
 
     // 验证质量参数
-    if let Some(quality) = self.output_options.quality {
-      if quality > 100 {
-        return Err("Quality cannot exceed 100".to_string());
-      }
+    if let Some(quality) = self.output_options.quality
+      && quality > 100
+    {
+      return Err("Quality cannot exceed 100".to_string());
     }
 
     Ok(())

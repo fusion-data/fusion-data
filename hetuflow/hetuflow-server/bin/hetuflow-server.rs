@@ -12,5 +12,5 @@ async fn main() -> Result<(), DataError> {
   let app = ServerApplication::new().await?;
   app.start().await?;
   wait_exit_signals().await;
-  app.shutdown().await
+  app.shutdown_and_await().await
 }

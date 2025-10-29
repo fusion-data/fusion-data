@@ -7,6 +7,7 @@
 //! - Data transformation with EditFieldsNode
 //! - File I/O operations with ReadWriteFilesNode
 //! - Complete workflow execution with DefaultWorkflowEngine
+//!
 //! Run this test
 //! ```shell
 //! cargo test -p hetumind-studio --test integration_workflow_test -- --nocapture
@@ -56,7 +57,7 @@ pub struct MockExecutionStore {
 impl ExecutionStore for MockExecutionStore {
   async fn save_execution(&self, execution: &Execution) -> Result<(), WorkflowExecutionError> {
     let mut executions = self.executions.write().await;
-    executions.insert(execution.id.clone(), execution.clone());
+    executions.insert(execution.id, execution.clone());
     Ok(())
   }
 
@@ -87,7 +88,7 @@ impl ExecutionStore for MockExecutionStore {
 
   async fn save_checkpoint(&self, checkpoint: ExecutionCheckpoint) -> Result<(), CheckpointError> {
     let mut checkpoints = self.checkpoints.write().await;
-    checkpoints.insert(checkpoint.execution_id.clone(), checkpoint);
+    checkpoints.insert(checkpoint.execution_id, checkpoint);
     Ok(())
   }
 
@@ -97,7 +98,7 @@ impl ExecutionStore for MockExecutionStore {
   ) -> Result<Option<ExecutionCheckpoint>, CheckpointError> {
     let checkpoints = self.checkpoints.read().await;
     Ok(checkpoints.get(execution_id).map(|c| ExecutionCheckpoint {
-      execution_id: c.execution_id.clone(),
+      execution_id: c.execution_id,
       timestamp: c.timestamp,
       execution_state: c.execution_state.clone(),
       completed_nodes: c.completed_nodes.clone(),
@@ -329,7 +330,7 @@ async fn test_integration_workflow() -> Result<(), Box<dyn std::error::Error>> {
   let workflow_arc = Arc::new(workflow);
   let ctx = Ctx::try_new(CtxPayload::default(), Some(now_offset()), Some(Uuid::now_v7().to_string()))?;
 
-  let execution_context = ExecutionContext::new(execution_id.clone(), workflow_arc, ctx);
+  let execution_context = ExecutionContext::new(execution_id, workflow_arc, ctx);
   println!("✅ Created execution context");
 
   // 5. Prepare trigger data
@@ -505,7 +506,7 @@ async fn test_integration_workflow_false_branch() -> Result<(), Box<dyn std::err
   let workflow_arc = Arc::new(create_integration_workflow()?);
   let ctx = Ctx::try_new(CtxPayload::default(), Some(now_offset()), Some(Uuid::now_v7().to_string()))?;
 
-  let execution_context = ExecutionContext::new(execution_id.clone(), workflow_arc, ctx);
+  let execution_context = ExecutionContext::new(execution_id, workflow_arc, ctx);
 
   // Trigger data with execution_mode = "production" to trigger false branch
   let trigger_node_name = NodeName::from("manual_trigger");

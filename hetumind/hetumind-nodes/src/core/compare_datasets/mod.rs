@@ -140,10 +140,10 @@ impl CompareDatasetsOperation {
       }
 
       // Validate fuzzy threshold for individual fields
-      if let Some(threshold) = field.fuzzy_threshold {
-        if threshold < 0.0 || threshold > 1.0 {
-          return Err(format!("Fuzzy threshold for field '{}' must be between 0.0 and 1.0", field.field_name));
-        }
+      if let Some(threshold) = field.fuzzy_threshold
+        && !(0.0..=1.0).contains(&threshold)
+      {
+        return Err(format!("Fuzzy threshold for field '{}' must be between 0.0 and 1.0", field.field_name));
       }
     }
 

@@ -35,7 +35,7 @@ impl AgentApplication {
     let application = Application::builder().add_plugin(TimerPlugin).run().await?;
     if let Some(config_source) = config_source {
       let config_registry = application.config_registry();
-      config_registry.add_config_source(config_source)?;
+      config_registry.append_config_source(config_source)?;
       config_registry.reload()?;
     }
 

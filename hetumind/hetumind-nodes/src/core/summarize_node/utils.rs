@@ -102,7 +102,7 @@ fn aggregate_by_groups(
   for item in input_items {
     let group_value = extract_field_value(item.json(), &group_config.group_field).unwrap_or(Value::Null);
 
-    groups.entry(group_value).or_insert_with(Vec::new).push(item.clone());
+    groups.entry(group_value).or_default().push(item.clone());
   }
 
   log::debug!("分组完成: 组数={}", groups.len());
@@ -232,7 +232,7 @@ fn calculate_single_aggregate(
 
 /// 提取字段值（支持 JSON 路径）
 fn extract_field_value(data: &Value, path: &str) -> Option<Value> {
-  if path == "{{ $json }}" || path == "$json" || path == "" {
+  if path == "{{ $json }}" || path == "$json" || path.is_empty() {
     return Some(data.clone());
   }
 
@@ -422,7 +422,7 @@ fn calculate_median(values: &[Value]) -> Result<Value, NodeExecutionError> {
 
   numeric_values.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
-  let median = if numeric_values.len() % 2 == 0 {
+  let median = if numeric_values.len().is_multiple_of(2) {
     let mid = numeric_values.len() / 2;
     (numeric_values[mid - 1] + numeric_values[mid]) / 2.0
   } else {
@@ -515,13 +515,13 @@ fn to_snake_case(name: &str) -> String {
 
   for (i, c) in name.chars().enumerate() {
     if c.is_uppercase() {
-      if i > 0 && !prev_char_was_upper && result.chars().last().map_or(false, |last| last != '_' && last != '-') {
+      if i > 0 && !prev_char_was_upper && result.chars().last().is_some_and(|last| last != '_' && last != '-') {
         result.push('_');
       }
       result.push(c.to_lowercase().next().unwrap_or(c));
       prev_char_was_upper = true;
     } else if c == '-' || c == ' ' {
-      if result.chars().last().map_or(true, |last| last != '_') {
+      if !result.ends_with('_') {
         result.push('_');
       }
       prev_char_was_upper = false;
@@ -579,7 +579,7 @@ fn to_kebab_case(name: &str) -> String {
 }
 
 /// 排序结果
-fn sort_results(results: &mut Vec<Value>, group_config: &GroupByConfig) -> Result<(), NodeExecutionError> {
+fn sort_results(results: &mut [Value], group_config: &GroupByConfig) -> Result<(), NodeExecutionError> {
   if let Some(sort_order) = &group_config.sort_by {
     let group_output_name = &group_config.group_output_name;
 

@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use config::{File, FileFormat};
-use fusion_core::configuration::{ConfigRegistry, Configuration};
+use fusion_core::configuration::{ConfigRegistry, Configurable};
 use fusion_core::{
   application::{Application, ApplicationBuilder},
   plugin::Plugin,
@@ -27,14 +27,19 @@ impl Plugin for MyPlugin {
   }
 }
 
-#[derive(Debug, Configuration, Deserialize)]
-#[config_prefix = "my-plugin"]
+#[derive(Debug, Deserialize)]
 struct Config {
   a: u32,
   b: bool,
   c: ConfigInner,
   d: String,
   e: ConfigEnum,
+}
+
+impl Configurable for Config {
+  fn config_prefix() -> &'static str {
+    "my-plugin"
+  }
 }
 
 #[derive(PartialEq, Debug, Deserialize)]

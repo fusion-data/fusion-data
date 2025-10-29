@@ -172,10 +172,10 @@ pub fn filter_emails(emails: Vec<EmailData>, filter: &EmailFilter) -> Vec<EmailD
     .into_iter()
     .filter(|email| {
       // 检查发件人过滤
-      if let Some(from_filter) = &filter.from_filter {
-        if !matches_pattern(&email.from.as_deref().unwrap_or(""), from_filter) {
-          return false;
-        }
+      if let Some(from_filter) = &filter.from_filter
+        && !matches_pattern(email.from.as_deref().unwrap_or(""), from_filter)
+      {
+        return false;
       }
 
       // 检查收件人过滤
@@ -190,10 +190,10 @@ pub fn filter_emails(emails: Vec<EmailData>, filter: &EmailFilter) -> Vec<EmailD
       }
 
       // 检查主题过滤
-      if let Some(subject_filter) = &filter.subject_filter {
-        if !matches_pattern(&email.subject.as_deref().unwrap_or(""), subject_filter) {
-          return false;
-        }
+      if let Some(subject_filter) = &filter.subject_filter
+        && !matches_pattern(email.subject.as_deref().unwrap_or(""), subject_filter)
+      {
+        return false;
       }
 
       // 检查内容过滤
@@ -214,10 +214,10 @@ pub fn filter_emails(emails: Vec<EmailData>, filter: &EmailFilter) -> Vec<EmailD
       }
 
       // 检查是否有附件
-      if let Some(has_attachments) = filter.has_attachments {
-        if has_attachments != email.has_attachments {
-          return false;
-        }
+      if let Some(has_attachments) = filter.has_attachments
+        && has_attachments != email.has_attachments
+      {
+        return false;
       }
 
       true
@@ -341,10 +341,10 @@ impl AttachmentProcessor {
 
     for attachment in attachments {
       // 检查文件大小限制
-      if let Some(max_size) = options.max_attachment_size {
-        if attachment.size > max_size {
-          continue; // 跳过超过大小限制的附件
-        }
+      if let Some(max_size) = options.max_attachment_size
+        && attachment.size > max_size
+      {
+        continue; // 跳过超过大小限制的附件
       }
 
       // 检查允许的文件类型

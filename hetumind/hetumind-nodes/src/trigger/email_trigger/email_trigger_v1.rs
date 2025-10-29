@@ -136,8 +136,8 @@ impl EmailTriggerV1 {
       .to_string();
 
     let mailbox = parameters.get("imap_mailbox").and_then(|v| v.as_str()).map(|s| s.to_string());
-    let connection_timeout = parameters.get("connection_timeout").and_then(|v| v.as_u64()).map(|v| v as u64);
-    let read_timeout = parameters.get("read_timeout").and_then(|v| v.as_u64()).map(|v| v as u64);
+    let connection_timeout = parameters.get("connection_timeout").and_then(|v| v.as_u64());
+    let read_timeout = parameters.get("read_timeout").and_then(|v| v.as_u64());
 
     Ok(super::ImapConnectionConfig {
       host,
@@ -214,7 +214,7 @@ impl EmailTriggerV1 {
       return Ok(None);
     }
 
-    let max_attachment_size = parameters.get("max_attachment_size").and_then(|v| v.as_u64()).map(|v| v as u64);
+    let max_attachment_size = parameters.get("max_attachment_size").and_then(|v| v.as_u64());
 
     let allowed_types = parameters
       .get("allowed_file_types")
@@ -236,15 +236,11 @@ impl EmailTriggerV1 {
 
   /// 解析轮询间隔
   fn parse_poll_interval(&self, parameters: &JsonValue) -> Result<u64, NodeExecutionError> {
-    parameters
-      .get("poll_interval")
-      .and_then(|v| v.as_u64())
-      .ok_or_else(|| {
-        NodeExecutionError::ParameterValidation(hetumind_core::workflow::ValidationError::RequiredFieldMissing {
-          field: "poll_interval".to_string(),
-        })
+    parameters.get("poll_interval").and_then(|v| v.as_u64()).ok_or_else(|| {
+      NodeExecutionError::ParameterValidation(hetumind_core::workflow::ValidationError::RequiredFieldMissing {
+        field: "poll_interval".to_string(),
       })
-      .map(|v| v as u64)
+    })
   }
 
   /// 解析启用状态

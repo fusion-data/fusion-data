@@ -138,37 +138,37 @@ impl PolicyEngine {
   /// 函数级注释：求值增强条件表达式（支持租户访问控制）
   fn evaluate_enhanced_condition(condition: &PolicyCondition, ctx: &Ctx) -> bool {
     // 求值字符串条件
-    if let Some(string_equals) = &condition.string_equals {
-      if let serde_json::Value::Object(operand_map) = string_equals {
-        for (key, expected_value) in operand_map {
-          let actual_value = Self::resolve_condition_key(key, ctx);
-          if !Self::evaluate_condition_operator("string_equals", &actual_value, expected_value) {
-            return false;
-          }
+    if let Some(string_equals) = &condition.string_equals
+      && let serde_json::Value::Object(operand_map) = string_equals
+    {
+      for (key, expected_value) in operand_map {
+        let actual_value = Self::resolve_condition_key(key, ctx);
+        if !Self::evaluate_condition_operator("string_equals", &actual_value, expected_value) {
+          return false;
         }
       }
     }
 
     // 求值数值条件
-    if let Some(numeric_equals) = &condition.numeric_equals {
-      if let serde_json::Value::Object(operand_map) = numeric_equals {
-        for (key, expected_value) in operand_map {
-          let actual_value = Self::resolve_condition_key(key, ctx);
-          if !Self::evaluate_condition_operator("numeric_equals", &actual_value, expected_value) {
-            return false;
-          }
+    if let Some(numeric_equals) = &condition.numeric_equals
+      && let serde_json::Value::Object(operand_map) = numeric_equals
+    {
+      for (key, expected_value) in operand_map {
+        let actual_value = Self::resolve_condition_key(key, ctx);
+        if !Self::evaluate_condition_operator("numeric_equals", &actual_value, expected_value) {
+          return false;
         }
       }
     }
 
     // 求值布尔条件
-    if let Some(bool_condition) = &condition.bool {
-      if let serde_json::Value::Object(operand_map) = bool_condition {
-        for (key, expected_value) in operand_map {
-          let actual_value = Self::resolve_condition_key(key, ctx);
-          if !Self::evaluate_condition_operator("bool", &actual_value, expected_value) {
-            return false;
-          }
+    if let Some(bool_condition) = &condition.bool
+      && let serde_json::Value::Object(operand_map) = bool_condition
+    {
+      for (key, expected_value) in operand_map {
+        let actual_value = Self::resolve_condition_key(key, ctx);
+        if !Self::evaluate_condition_operator("bool", &actual_value, expected_value) {
+          return false;
         }
       }
     }

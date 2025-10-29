@@ -56,7 +56,7 @@ impl ReadWriteFilesV1 {
     let mut result_items = Vec::new();
 
     // 处理每个输入项
-    for (_item_index, _input_item) in input_items.iter().enumerate() {
+    for _input_item in input_items.iter() {
       // 获取文件选择器参数
       let file_selector: String = node
         .get_parameter("file_selector")
@@ -163,7 +163,7 @@ impl ReadWriteFilesV1 {
     let mut result_items = Vec::new();
 
     // 处理每个输入项
-    for (_item_index, input_item) in input_items.iter().enumerate() {
+    for input_item in input_items.iter() {
       // 获取文件路径
       let file_path: String = node
         .get_parameter("file_path")

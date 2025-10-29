@@ -197,7 +197,7 @@ impl HetuflowAgentSetting {
   pub fn load(config_registry: &FusionConfigRegistry) -> Result<Self, DataError> {
     let default_setting = include_str!("default.toml");
     let setting_source = config::File::from_str(default_setting, config::FileFormat::Toml);
-    config_registry.add_config_source(setting_source)?;
+    config_registry.append_config_source(setting_source)?;
     let config = config_registry.config();
     // Check if server_id not exists or invalid uuid in config
     if let Err(e) = config.get::<String>(KEY_PATH_AGENT_ID) {

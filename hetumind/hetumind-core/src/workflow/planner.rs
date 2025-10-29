@@ -42,6 +42,12 @@ pub struct ExecutionPlanner {
   enable_dependency_optimization: bool,
 }
 
+impl Default for ExecutionPlanner {
+  fn default() -> Self {
+    Self::new()
+  }
+}
+
 impl ExecutionPlanner {
   /// 创建新的执行计划器
   pub fn new() -> Self {

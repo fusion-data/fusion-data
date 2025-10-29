@@ -196,7 +196,7 @@ impl AggregateField {
     }
 
     // Join 操作需要分隔符
-    if self.operation == AggregateOperation::Join && self.separator.as_ref().map_or(true, |s| s.is_empty()) {
+    if self.operation == AggregateOperation::Join && self.separator.as_ref().is_none_or(|s| s.is_empty()) {
       return Err(ValidationError::invalid_field_value(
         "separator".to_string(),
         "Separator is required for Join operation".to_string(),
@@ -213,15 +213,13 @@ impl AggregateField {
         | AggregateOperation::Median
         | AggregateOperation::StdDev
         | AggregateOperation::Variance
-    ) {
-      if let Some(ref data_type) = self.data_type {
-        if !matches!(data_type, DataType::Number | DataType::String | DataType::Date) {
-          return Err(ValidationError::invalid_field_value(
-            "data_type".to_string(),
-            "Numeric operations require Number, String, or Date data type".to_string(),
-          ));
-        }
-      }
+    ) && let Some(ref data_type) = self.data_type
+      && !matches!(data_type, DataType::Number | DataType::String | DataType::Date)
+    {
+      return Err(ValidationError::invalid_field_value(
+        "data_type".to_string(),
+        "Numeric operations require Number, String, or Date data type".to_string(),
+      ));
     }
 
     Ok(())

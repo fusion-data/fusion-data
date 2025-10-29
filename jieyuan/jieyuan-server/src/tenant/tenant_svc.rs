@@ -54,14 +54,13 @@ impl TenantSvc {
       .ok_or(DataError::not_found(format!("Tenant with id {} not found", id)))?;
 
     // If updating name, check uniqueness
-    if let Some(ref name) = input.name {
-      if name != &existing.name {
+    if let Some(ref name) = input.name
+      && name != &existing.name {
         let exists = TenantBmc::name_exists_excluding_id(&self.mm, name, id).await?;
         if exists {
           return Err(DataError::conflicted(format!("Tenant with name '{}' already exists", name)));
         }
       }
-    }
 
     // Update tenant
     TenantBmc::update_by_id(&self.mm, id, input).await?;
@@ -121,11 +120,10 @@ impl TenantSvc {
     }
 
     // Validate description length if provided
-    if let Some(ref description) = input.description {
-      if description.len() > 1000 {
+    if let Some(ref description) = input.description
+      && description.len() > 1000 {
         return Err(DataError::bad_request("Description too long, maximum 1000 characters".to_string()));
       }
-    }
 
     Ok(())
   }

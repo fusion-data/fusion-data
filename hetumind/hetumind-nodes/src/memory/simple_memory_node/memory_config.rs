@@ -59,7 +59,7 @@ impl SimpleMemoryConfig {
     }
 
     if matches!(self.session_id_type, SessionIdType::CustomKey)
-      && self.custom_session_key.as_ref().map_or(true, |s| s.is_empty())
+      && self.custom_session_key.as_ref().is_none_or(|s| s.is_empty())
     {
       return Err("custom_session_key is required when session_id_type is CustomKey".to_string());
     }

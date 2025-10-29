@@ -29,18 +29,12 @@ use crate::constants::NOOP_NODE_KIND;
 ///
 /// NoOp 节点不需要任何配置参数，因此此结构体为空。
 /// 未来可以扩展用于添加日志记录、性能监控等功能。
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct NoOpConfig {
   /// 是否启用数据传递日志
   pub enable_logging: bool,
   /// 是否记录性能指标
   pub enable_metrics: bool,
-}
-
-impl Default for NoOpConfig {
-  fn default() -> Self {
-    Self { enable_logging: false, enable_metrics: false }
-  }
 }
 
 /// NoOp 节点

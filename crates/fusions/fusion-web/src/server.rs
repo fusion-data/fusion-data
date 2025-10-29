@@ -26,7 +26,7 @@ impl WebServerBuilder {
 
   pub async fn build(self) -> Result<(), DataError> {
     let app = Application::global();
-    app.config_registry().add_config_source(File::from_str(DEFAULT_CONFIG_STR, FileFormat::Toml))?;
+    app.config_registry().prepend_config_source(File::from_str(DEFAULT_CONFIG_STR, FileFormat::Toml))?;
     let conf: WebConfig = app.get_config()?;
     self.init_server_with_config(conf).await
   }

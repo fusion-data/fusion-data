@@ -24,7 +24,7 @@ impl ExecutionStorePg {
 impl ExecutionStore for ExecutionStorePg {
   async fn save_execution(&self, execution: &Execution) -> Result<(), WorkflowExecutionError> {
     let execution_for_update = ExecutionForUpdate::from(execution.clone());
-    ExecutionBmc::update_by_id(&self.mm, execution.id.clone(), execution_for_update).await?;
+    ExecutionBmc::update_by_id(&self.mm, execution.id, execution_for_update).await?;
     Ok(())
   }
 
