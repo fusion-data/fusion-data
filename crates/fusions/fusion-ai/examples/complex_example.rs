@@ -40,7 +40,7 @@ struct SentimentAnalysisTask;
 impl Task for SentimentAnalysisTask {
   async fn run(&self, context: Context) -> fusion_ai::graph_flow::Result<TaskResult> {
     // Pull the user input we stored in the session context
-    let user_input: String = context.get_sync("user_input").unwrap_or_else(|| "".to_string());
+    let user_input: String = context.get_sync("user_input").unwrap_or_default();
 
     // Build the LLM agent
     let agent = match get_llm_agent() {

@@ -1,49 +1,65 @@
-# 腾讯位置服务 MCP 客户端示例
+# Fusion AI Examples
 
-本目录包含使用 RMCP (Rust MCP Client) 调用腾讯位置服务的示例代码。
+This directory contains example code demonstrating how to use the fusion-ai library.
 
-## 示例列表
+## OpenAI-Compatible Provider Example
 
-### tencent-map.rs
+### Overview
 
-腾讯位置服务 MCP 客户端 DEMO，演示如何连接腾讯位置服务 MCP 服务器并调用各种地理位置相关的工具。
+The `openai_compatible_example.rs` demonstrates how to use the OpenAI-compatible provider that works with various OpenAI API-compatible endpoints.
 
-**支持的功能：**
-- IP 定位：根据 IP 地址获取地理位置信息
-- 地址解析：将地址转换为经纬度坐标
-- 地点搜索：在指定城市搜索 POI 信息
-- 路线规划：计算两点间的驾车路线
+### Features
 
-## 使用前准备
+- **Multiple Provider Support**: Works with OpenAI, DeepSeek, Zhipu GLM, and other OpenAI-compatible APIs
+- **Flexible Configuration**: Supports custom base URLs and API keys
+- **Response Compatibility**: Handles responses with optional `object` field
+- **Agent Integration**: Fully integrated with the ModelAgent system
 
-1. **注册腾讯位置服务账号**
-   - 访问 [腾讯位置服务](https://lbs.qq.com/)
-   - 注册并登录控制台
+### Usage
 
-2. **创建应用并获取 API Key**
-   - 在控制台中创建新应用
-   - 开启 WebService API 功能
-   - 获取 API Key
+1. **Basic Setup with DynClientBuilder**:
+   ```rust
+   let mut dyn_builder = DynClientBuilder::new();
+   let dyn_builder = register_openai_compatible_provider(dyn_builder);
 
-3. **配置 API Key**
-   - 编辑 `tencent-map.rs` 文件
-   - 将 `YOUR_API_KEY_HERE` 替换为实际的 API Key
+   let client = dyn_builder.build_val(
+     "openai-compatible",
+     ProviderValue::Simple("your-api-key".to_string())
+   )?;
+   ```
 
-## 运行示例
+2. **Using with AgentConfig**:
+   ```rust
+   let config = AgentConfig::builder()
+     .provider("openai-compatible")
+     .model("gpt-3.5-turbo")
+     .api_key("your-api-key")
+     .base_url("https://your-openai-compatible-endpoint.com/v1")
+     .system_prompt("You are a helpful AI assistant.")
+     .build()?;
 
-```bash
-# 运行腾讯位置服务 MCP 客户端示例
-cargo run -p fusion-ai --example tencent-map
-```
+   let agent = ModelAgent::new(config)?;
+   ```
 
-## 相关文档
+### Supported Providers
 
-- [腾讯位置服务 MCP Server 用户指南](https://lbs.qq.com/service/MCPServer/MCPServerGuide/userGuide)
-- [腾讯位置服务 WebService API 概览](https://lbs.qq.com/service/webService/webServiceGuide/overview)
-- [RMCP 库文档](https://docs.rs/rmcp/)
+The OpenAI-compatible provider works with:
+- OpenAI API
+- DeepSeek API
+- Zhipu GLM API
+- Any other OpenAI API-compatible endpoints
 
-## 注意事项
+### Important Notes
 
-- 使用前请确保已获取有效的腾讯位置服务 API Key
-- 请遵守腾讯位置服务的使用条款和配额限制
-- 示例中的坐标和地址仅供演示使用
+- The provider uses OpenAI's completion API format
+- Response `object` field is handled as optional (some providers don't include it)
+- Complex configuration (like base_url) is handled through AgentConfig
+- The provider is automatically registered when creating ClientBuilderFactory
+
+### Configuration
+
+For providers that require special handling:
+- **DeepSeek**: Does not support empty `tools` arrays
+- **Zhipu GLM**: May lack the `object` field in responses
+
+The provider automatically handles these cases by making the `object` field optional in response parsing.

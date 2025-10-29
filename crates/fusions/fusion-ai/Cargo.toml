@@ -14,6 +14,8 @@ workspace = true
 [features]
 default = ["schemars/chrono04", "with-db"]
 with-db = ["dep:sqlx", "sqlx/postgres"]
+image = ["rig-core/image"]
+audio = ["rig-core/audio"]
 
 [dependencies]
 fusion-common = { workspace = true, features = ["with-uuid"] }
@@ -31,6 +33,8 @@ reqwest = { workspace = true }
 dashmap = { workspace = true }
 async-trait = { workspace = true }
 sqlx = { workspace = true, optional = true }
+derive_builder = { workspace = true }
+bytes = { workspace = true }
 # tracing log
 tracing = { version = "0.1" }
 
@@ -38,7 +42,12 @@ tracing = { version = "0.1" }
 anyhow = { workspace = true }
 dotenvy = { workspace = true }
 logforth = { workspace = true }
-sqlx = { workspace = true, features = ["runtime-tokio", "chrono", "json", "postgres"] }
+sqlx = { workspace = true, features = [
+  "runtime-tokio",
+  "chrono",
+  "json",
+  "postgres",
+] }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 fastembed = "5.2"
 clap = { workspace = true }

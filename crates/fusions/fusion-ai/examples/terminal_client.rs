@@ -53,13 +53,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("--- END RESPONSE ---\n");
 
     // Try to extract session_id from response if not set
-    if session_id.is_none() {
-      if let Ok(val) = serde_json::from_str::<serde_json::Value>(&text) {
-        if let Some(sid) = val.get("session_id").and_then(|v| v.as_str()) {
-          session_id = Some(sid.to_string());
-          println!("[Session started: {}]", sid);
-        }
-      }
+    if session_id.is_none()
+      && let Ok(val) = serde_json::from_str::<serde_json::Value>(&text)
+      && let Some(sid) = val.get("session_id").and_then(|v| v.as_str())
+    {
+      session_id = Some(sid.to_string());
+      println!("[Session started: {}]", sid);
     }
 
     // Prompt for next input

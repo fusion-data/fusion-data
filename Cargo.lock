@@ -1922,9 +1922,11 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "async-trait",
+ "bytes",
  "chrono",
  "clap",
  "dashmap",
+ "derive_builder",
  "dotenvy",
  "fastembed",
  "fusion-common",
