@@ -37,8 +37,10 @@ pub fn load_config_with(custom_config: Option<Config>) -> ConfigureResult<Config
 
   // load from file of env, if exists
   if let Ok(file) = get_env("FUSION_CONFIG_FILE") {
+    log::info!("Load config from env FUSION_CONFIG_FILE: {}", file);
     let path = Path::new(&file);
     if path.exists() {
+      log::info!("FUSION_CONFIG_FILE exists, load config from path: {}", path.display());
       b = b.add_source(File::from(path));
     }
   }

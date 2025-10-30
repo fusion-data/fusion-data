@@ -2061,6 +2061,7 @@ name = "fusion-security"
 version = "0.1.0"
 dependencies = [
  "fusion-common",
+ "fusion-core",
  "josekit",
  "serde",
  "serde_json",

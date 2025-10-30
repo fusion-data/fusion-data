@@ -183,7 +183,7 @@ impl Ctx {
   }
 
   pub fn get_user_id(&self) -> Option<i64> {
-    self.payload.get_i64(Self::SUB)
+    self.payload.get_subject().and_then(|s| s.parse().ok())
   }
 
   pub fn user_id(&self) -> i64 {

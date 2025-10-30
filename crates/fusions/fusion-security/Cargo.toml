@@ -19,6 +19,7 @@ with-uuid = ["fusion-common/with-uuid"]
 
 [dependencies]
 fusion-common = { workspace = true }
+fusion-core = { workspace = true }
 josekit = { workspace = true, optional = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
