@@ -24,9 +24,9 @@ pub mod transcription;
 
 mod client_wrapper;
 
-pub use client_wrapper::*;
-
+#[allow(ambiguous_glob_reexports)]
 pub use client::*;
+pub use client_wrapper::*;
 pub use completion::*;
 pub use embedding::*;
 

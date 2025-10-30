@@ -5,6 +5,7 @@ mod error;
 pub mod graph_flow;
 pub mod json_utils;
 pub mod providers;
+pub mod utils;
 
 pub use error::*;
 /// Re-export rig for easier access to core types

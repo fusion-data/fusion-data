@@ -23,16 +23,11 @@ impl<'a> ClientBuilder<'a> {
   pub fn new(base_url: &'a str, api_key: &'a str) -> Self {
     Self { api_key, base_url, http_client: reqwest::Client::new() }
   }
-}
 
-impl<'a> ClientBuilder<'a> {
-  pub fn base_url(mut self, base_url: &'a str) -> Self {
-    self.base_url = base_url;
+  #[allow(dead_code)]
+  pub fn with_client(mut self, http_client: reqwest::Client) -> Self {
+    self.http_client = http_client;
     self
-  }
-
-  pub fn with_client(self, http_client: reqwest::Client) -> ClientBuilder<'a> {
-    ClientBuilder { api_key: self.api_key, base_url: self.base_url, http_client }
   }
 
   pub fn build(self) -> ClientWrapper {

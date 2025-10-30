@@ -232,7 +232,7 @@ sonic-rs = { version = "0.5" }
 json-five = { version = "0.3" }
 serde_repr = "0.1"
 serde_json_path = { version = "0.7" }
-schemars = { version = "1.0"}
+schemars = { version = "1.0" }
 nom = "8.0"
 # -- Web
 url = "2.5"
@@ -269,7 +269,7 @@ reqwest = { version = "0.12", features = [
   "json",
   "gzip",
   "stream",
-  "multipart"
+  "multipart",
 ] }
 # lightweight sync http client
 ureq = { version = "3.0", features = ["json", "charset"] }

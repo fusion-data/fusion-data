@@ -4,6 +4,9 @@ use rig::image_generation::ImageGenerationError;
 
 #[derive(Debug, thiserror::Error)]
 pub enum AiError {
+  #[error("Custom error: {0}")]
+  Custom(String),
+
   #[error(transparent)]
   ClientBuilderError(#[from] ClientBuildError),
 

@@ -19,7 +19,10 @@ pub const GPT_IMAGE_1: &str = "gpt-image-1";
 
 #[derive(Debug, Deserialize)]
 pub struct ImageGenerationData {
+  #[serde(default = "String::new")]
   pub b64_json: String,
+  #[serde(default = "String::new")]
+  pub url: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -32,9 +35,20 @@ impl TryFrom<ImageGenerationResponse> for image_generation::ImageGenerationRespo
   type Error = ImageGenerationError;
 
   fn try_from(value: ImageGenerationResponse) -> Result<Self, Self::Error> {
-    let b64_json = value.data[0].b64_json.clone();
-
-    let bytes = BASE64_STANDARD.decode(&b64_json).expect("Failed to decode b64");
+    let url = value.data[0].url.as_str();
+    let bytes = if url.is_empty() {
+      BASE64_STANDARD
+        .decode(&value.data[0].b64_json)
+        .map_err(|e| ImageGenerationError::ResponseError(e.to_string()))?
+    } else {
+      log::info!("Download image from URL: {}", url);
+      ureq::get(url)
+        .call()
+        .map_err(|e| ImageGenerationError::ResponseError(e.to_string()))?
+        .into_body()
+        .read_to_vec()
+        .map_err(|e| ImageGenerationError::ResponseError(e.to_string()))?
+    };
 
     Ok(image_generation::ImageGenerationResponse { image: bytes, response: value })
   }
