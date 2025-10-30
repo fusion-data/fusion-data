@@ -1,9 +1,11 @@
 use std::fmt::Debug;
 
-use rig::{
-  client::{CompletionClient, ProviderClient, ProviderValue, builder::ClientBuildError},
-  providers::openai::{self, EmbeddingModel, TranscriptionModel, completion::CompletionModel},
+#[cfg(feature = "audio")]
+use crate::providers::openai_compatible::audio_generation::AudioGenerationModel;
+use crate::providers::openai_compatible::{
+  self, EmbeddingModel, ImageGenerationModel, TranscriptionModel, completion::CompletionModel,
 };
+use rig::client::{CompletionClient, ProviderClient, ProviderValue, builder::ClientBuildError};
 
 use crate::agents::AgentConfig;
 
@@ -34,7 +36,7 @@ impl<'a> ClientBuilder<'a> {
   }
 
   pub fn build(self) -> ClientWrapper {
-    let inner = openai::client::Client::<reqwest::Client>::builder(self.api_key)
+    let inner = openai_compatible::client::Client::<reqwest::Client>::builder(self.api_key)
       .base_url(self.base_url)
       .with_client(self.http_client)
       .build();
@@ -43,7 +45,7 @@ impl<'a> ClientBuilder<'a> {
 }
 
 #[derive(Debug, Clone)]
-pub struct ClientWrapper(openai::client::Client<reqwest::Client>);
+pub struct ClientWrapper(openai_compatible::client::Client<reqwest::Client>);
 
 impl ClientWrapper {
   /// Create a new OpenAI-compatible client.
@@ -51,8 +53,8 @@ impl ClientWrapper {
     ClientBuilder::new(base_url, api_key).build()
   }
 
-  /// Convert to OpenAI client for use with CompletionModel
-  pub fn to_openai_client(&self) -> openai::Client<reqwest::Client> {
+  /// Convert to OpenAI-compatible client for use with CompletionModel
+  pub fn to_openai_client(&self) -> openai_compatible::client::Client<reqwest::Client> {
     // openai::Client::<reqwest::Client>::builder(&self.api_key).base_url(&self.base_url).build()
     self.0.clone()
   }
@@ -89,11 +91,29 @@ impl rig::client::TranscriptionClient for ClientWrapper {
   }
 }
 
+#[cfg(feature = "image")]
+impl rig::client::ImageGenerationClient for ClientWrapper {
+  type ImageGenerationModel = ImageGenerationModel<reqwest::Client>;
+
+  fn image_generation_model(&self, model: &str) -> Self::ImageGenerationModel {
+    self.to_openai_client().image_generation_model(model)
+  }
+}
+
+#[cfg(feature = "audio")]
+impl rig::client::AudioGenerationClient for ClientWrapper {
+  type AudioGenerationModel = AudioGenerationModel<reqwest::Client>;
+
+  fn audio_generation_model(&self, model: &str) -> Self::AudioGenerationModel {
+    self.to_openai_client().audio_generation_model(model)
+  }
+}
+
 impl ProviderClient for ClientWrapper {
   fn from_env() -> Self {
     let api_key = std::env::var("OPENAI_COMPATIBLE_API_KEY")
       .unwrap_or_else(|_| std::env::var("OPENAI_API_KEY").unwrap_or_default());
-    Self(openai::client::Client::new(&api_key))
+    Self(openai_compatible::client::Client::new(&api_key))
   }
 
   fn from_val(provider_value: ProviderValue) -> Self {
@@ -102,7 +122,7 @@ impl ProviderClient for ClientWrapper {
       ProviderValue::ApiKeyWithOptionalKey(key, _) => key,
       ProviderValue::ApiKeyWithVersionAndHeader(key, _, _) => key,
     };
-    Self(openai::client::Client::new(&api_key))
+    Self(openai_compatible::client::Client::new(&api_key))
   }
 }
 

@@ -12,10 +12,11 @@ publish = true
 workspace = true
 
 [features]
-default = ["schemars/chrono04", "with-db"]
+default = ["schemars/chrono04", "with-db", "image", "audio"]
 with-db = ["dep:sqlx", "sqlx/postgres"]
 image = ["rig-core/image"]
 audio = ["rig-core/audio"]
+worker = []
 
 [dependencies]
 fusion-common = { workspace = true, features = ["with-uuid"] }
@@ -30,13 +31,19 @@ schemars = { workspace = true }
 log = { workspace = true }
 uuid = { workspace = true }
 reqwest = { workspace = true }
+http = { workspace = true }
 dashmap = { workspace = true }
 async-trait = { workspace = true }
 sqlx = { workspace = true, optional = true }
 derive_builder = { workspace = true }
 bytes = { workspace = true }
+futures = { workspace = true }
+async-stream = { workspace = true }
 # tracing log
 tracing = { version = "0.1" }
+base64 = { workspace = true }
+serde_path_to_error = { workspace = true }
+tracing-futures = { version = "0.2", features = ["futures-03"] }
 
 [dev-dependencies]
 anyhow = { workspace = true }

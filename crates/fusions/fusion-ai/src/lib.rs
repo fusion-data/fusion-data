@@ -3,6 +3,7 @@ pub mod client;
 pub mod embeddings;
 mod error;
 pub mod graph_flow;
+pub mod json_utils;
 pub mod providers;
 
 pub use error::*;

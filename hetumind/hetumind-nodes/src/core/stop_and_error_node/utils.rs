@@ -264,11 +264,12 @@ pub fn build_error_metadata(error_obj: &ErrorObject, node_name: &str) -> Value {
 
   // 合并自定义元数据
   if let Some(ref custom_metadata) = error_obj.metadata
-    && let Value::Object(custom_map) = custom_metadata {
-      for (key, value) in custom_map {
-        metadata_map.insert(key.clone(), value.clone());
-      }
+    && let Value::Object(custom_map) = custom_metadata
+  {
+    for (key, value) in custom_map {
+      metadata_map.insert(key.clone(), value.clone());
     }
+  }
 
   Value::Object(metadata_map.into_iter().collect())
 }

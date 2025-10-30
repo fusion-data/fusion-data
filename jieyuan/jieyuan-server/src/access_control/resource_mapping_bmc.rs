@@ -193,9 +193,10 @@ impl ResourceMappingBmc {
 
     // 如果找到记录，验证路径模式匹配
     if let Some(row) = entity
-      && Self::match_path_pattern(&row.path_pattern, path)?.is_some() {
-        return Ok(Some(row));
-      }
+      && Self::match_path_pattern(&row.path_pattern, path)?.is_some()
+    {
+      return Ok(Some(row));
+    }
 
     Ok(None)
   }

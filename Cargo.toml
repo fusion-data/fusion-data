@@ -158,6 +158,8 @@ proc-macro2 = "1"
 # -- Crypt & Encoding
 base16ct = { version = "0.3", features = ["alloc"] }
 base64ct = { version = "1.8", features = ["std", "alloc"] }
+# 相比 base64ct 功能特性更丰富，性能更好。但 base64ct 更注重安全性，常用于密钥
+base64 = "0.22"
 aes-gcm = "0.10"
 hmac = "0.12"
 sha2 = "0.10"
@@ -222,6 +224,7 @@ sea-query-binder = { version = "0.7", features = ["with-json", "with-chrono"] }
 pgvector = { version = "0.4", features = ["sqlx"] }
 # -- Serde
 serde = { version = "1.0", features = ["derive", "rc"] }
+serde_path_to_error = "0.1"
 serde_with = { version = "3.15", features = ["chrono_0_4"] }
 serde_json = { version = "1.0" }
 tsify = { version = "0.5", features = ["js"] }
@@ -265,6 +268,8 @@ reqwest = { version = "0.12", features = [
   # "rustls-tls-webpki-roots",
   "json",
   "gzip",
+  "stream",
+  "multipart"
 ] }
 # lightweight sync http client
 ureq = { version = "3.0", features = ["json", "charset"] }
@@ -343,7 +348,8 @@ opendal = { version = "0.54", features = [
 ] }
 minio = { version = "0.3" }
 # -- LLM
-rig-core = { version = "0.22", features = ["derive"] }
+# rig-core = { version = "0.22", features = ["derive"] }
+rig-core = { git = "https://github.com/0xPlaygrounds/rig.git", branch = "main" }
 rig-postgres = { version = "0.1" }
 graph-flow = { version = "0.4", features = ["rig"] }
 rmcp = { version = "0.8", features = [

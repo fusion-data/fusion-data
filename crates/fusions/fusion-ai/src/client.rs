@@ -3,6 +3,7 @@ use rig::client::ProviderClient;
 use rig::client::builder::{BoxAgentBuilder, ClientBuildError, DynClientBuilder};
 use rig::client::completion::CompletionModelHandle;
 use rig::embeddings::embedding::EmbeddingModelDyn;
+use rig::image_generation::ImageGenerationModelDyn;
 
 use crate::DefaultProviders;
 use crate::agents::AgentConfig;
@@ -108,5 +109,17 @@ impl ClientBuilderFactory {
       .ok_or(ClientBuildError::UnsupportedFeature(config.provider.to_string(), "embeddings".to_owned()))?;
 
     Ok(embeddings.embedding_model_with_ndims(&config.model, config.dims))
+  }
+}
+
+impl ClientBuilderFactory {
+  pub fn image(&self, config: &AgentConfig) -> Result<Box<dyn ImageGenerationModelDyn>, ClientBuildError> {
+    let client = self.client(config.provider.as_str(), config.base_url.as_deref(), config.api_key.as_deref())?;
+
+    let image = client
+      .as_image_generation()
+      .ok_or(ClientBuildError::UnsupportedFeature(config.provider.to_string(), "image".to_owned()))?;
+
+    Ok(image.image_generation_model(&config.model))
   }
 }
