@@ -275,7 +275,7 @@ Always run `cargo clippy` to catch opportunities for modernizing syntax.
 - Template engine with MiniJinja
 - Data processing capabilities
 - Cryptographic operations with modern Rust crates
-- Metrics and tracing capabilities
+- Metrics and logging capabilities with `log` crate
 - Memory optimization with tikv-jemallocator (optional)
 
 ### Configuration Files
@@ -660,10 +660,80 @@ let lookup_result = mapping_svc.lookup_by_path(&lookup_request).await?;
 - **Modular Architecture**: Clean separation of concerns with well-defined APIs
 - **Performance Optimized**: Release builds with LTO, panic=abort, and size optimizations
 - **Memory Efficient**: Optional tikv-jemallocator for better memory management
+- **Logging**: Use `log` crate for all logging operations with structured, context-aware messages
 - **Developer Friendly**: Comprehensive tooling with formatting, linting, and testing
 - **Production Ready**: Includes health checks, metrics, and graceful shutdown
 
 ## Development Guidelines
+
+### Logging Guidelines
+
+**Use `log` crate, not `tracing`**:
+
+- **Preferred crate**: Use `log` crate for all logging operations
+- **Dependency**: Already included in workspace dependencies as `log = "0.4"`
+- **Import pattern**: `use log::{debug, error, info, warn};`
+- **Rationale**: `log` provides stable, mature logging with sufficient features for our needs
+
+**Logging Levels Usage**:
+
+```rust
+use log::{debug, error, info, warn};
+
+// Debug level - Detailed diagnostic information
+debug!("Processing request for workflow: {}", workflow_id);
+
+// Info level - General operational information  
+info!("User {} authenticated successfully", username);
+
+// Warn level - Potentially problematic situations
+warn!("Connection to Redis is slow: {}ms", duration);
+
+// Error level - Failed operations and errors
+error!("Failed to save message to memory: {}", error);
+```
+
+**Logging Best Practices**:
+
+- **Structured logging**: Include relevant context in log messages
+- **Minimal performance impact**: Use appropriate log levels
+- **No sensitive data**: Avoid logging passwords, tokens, or personal information
+- **Consistent formatting**: Use clear, descriptive message formats
+
+**Configuration**:
+
+Logging is controlled via environment variables or configuration files:
+- `RUST_LOG=debug` for development (verbose)
+- `RUST_LOG=info` for production (default)
+- Component-specific log level configuration available
+
+**Examples from codebase**:
+
+```rust
+// Service layer logging
+pub async fn get_workflow(
+    workflow_svc: WorkflowSvc,
+    ctx: Ctx,
+    Path(workflow_id): Path<WorkflowId>,
+) -> WebResult<Workflow> {
+    // Business logic only - authorization handled automatically
+    let res = workflow_svc.get_workflow(&workflow_id).await?;
+    info!("Retrieved workflow: {}", workflow_id);
+    Ok(Json(res))
+}
+
+// Error handling with logging
+match risky_operation() {
+    Ok(result) => {
+        info!("Operation completed successfully");
+        result
+    }
+    Err(err) => {
+        error!("Operation failed: {}", err);
+        Err(WebError::InternalError(err.to_string()))
+    }
+}
+```
 
 ### API Development
 

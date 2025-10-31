@@ -40,7 +40,7 @@ impl ManualTriggerConfig {
             ExecutionMode::Production => "production",
         },
         "timestamp": chrono::Utc::now().timestamp(),
-        "trigger_id": uuid::Uuid::new_v4().to_string(),
+        "trigger_id": uuid::Uuid::now_v7().to_string(),
         "message": match self.execution_mode {
             ExecutionMode::Test => "工作流在测试模式下手动触发",
             ExecutionMode::Production => "工作流在生产模式下手动触发",

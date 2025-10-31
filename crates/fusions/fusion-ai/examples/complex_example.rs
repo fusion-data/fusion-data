@@ -5,8 +5,7 @@ use fusion_ai::graph_flow::{
   Context, ExecutionStatus, FlowRunner, GraphBuilder, GraphError, GraphStorage, InMemoryGraphStorage,
   InMemorySessionStorage, NextAction, Session, SessionStorage, Task, TaskResult,
 };
-use rig::completion::Chat;
-use rig::prelude::*;
+use rig::{client::CompletionClient, completion::Chat};
 use serde::Deserialize;
 use tracing::{Level, info};
 
@@ -53,8 +52,11 @@ impl Task for SentimentAnalysisTask {
       }
     };
 
-    // We are not using chat history here for simplicity, but rig expects a vector – supply an empty one.
-    let response = agent.chat(&user_input, vec![]).await.map_err(|e| GraphError::TaskExecutionFailed(e.to_string()))?;
+    // The current chat history from `context.get_rig_messages` is empty.
+    let response = agent
+      .chat(&user_input, context.get_rig_messages().await)
+      .await
+      .map_err(|e| GraphError::TaskExecutionFailed(e.to_string()))?;
 
     // Try to parse the JSON response returned by the LLM
     if let Ok(parsed) = serde_json::from_str::<SentimentResponse>(response.trim()) {

@@ -3,6 +3,7 @@ pub mod config;
 pub mod credential;
 #[doc = include_str!("./expression/mod.md")]
 pub mod expression;
+pub mod llm;
 pub mod metrics;
 pub mod task;
 pub mod types;
@@ -24,7 +25,7 @@ macro_rules! generate_uuid_newtype {
           Self(uuid::Uuid::now_v7())
         }
         pub fn new_v4() -> Self {
-          Self(uuid::Uuid::new_v4())
+          Self(uuid::Uuid::now_v7())
         }
       }
       impl std::str::FromStr for $Struct {

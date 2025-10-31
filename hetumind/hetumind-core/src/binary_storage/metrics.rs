@@ -131,7 +131,7 @@ impl BasicMetricsCollector {
   /// # 返回
   /// - `String`: 操作ID
   pub fn start_operation(&self, operation_type: &str, total_bytes: usize) -> String {
-    let operation_id = Uuid::new_v4().to_string();
+    let operation_id = Uuid::now_v7().to_string();
     let progress = OperationProgress {
       operation_id: operation_id.clone(),
       operation_type: operation_type.to_string(),
@@ -152,7 +152,7 @@ impl BasicMetricsCollector {
 
   /// 开始操作（异步版本）
   pub async fn start_operation_async(&self, operation_type: &str, total_bytes: usize) -> String {
-    let operation_id = Uuid::new_v4().to_string();
+    let operation_id = Uuid::now_v7().to_string();
     let progress = OperationProgress {
       operation_id: operation_id.clone(),
       operation_type: operation_type.to_string(),

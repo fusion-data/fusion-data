@@ -88,8 +88,8 @@ impl NodeExecutable for ChatTriggerNodeV1 {
       node.parameters.get_optional_parameter("responseFormat").unwrap_or_else(|| "json".to_string());
 
     // 构建聊天消息数据结构
-    let chat_id = uuid::Uuid::new_v4().to_string();
-    let message_id = uuid::Uuid::new_v4().to_string();
+    let chat_id = uuid::Uuid::now_v7().to_string();
+    let message_id = uuid::Uuid::now_v7().to_string();
     let timestamp = now_offset();
 
     let chat_message = ChatMessage {

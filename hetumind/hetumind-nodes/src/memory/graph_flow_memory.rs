@@ -38,7 +38,7 @@ pub struct GraphFlowMemoryConfig {
 impl Default for GraphFlowMemoryConfig {
   fn default() -> Self {
     Self {
-      session_id: Uuid::new_v4().to_string(),
+      session_id: Uuid::now_v7().to_string(),
       context_window_length: 5,
       persistence_enabled: false,
       input_key: "input".to_string(),
@@ -66,11 +66,11 @@ pub struct GraphFlowConversationMessage {
 
 impl GraphFlowConversationMessage {
   pub fn new(role: String, content: String) -> Self {
-    Self { message_id: Uuid::new_v4().to_string(), role, content, timestamp: now_offset(), metadata: None }
+    Self { message_id: Uuid::now_v7().to_string(), role, content, timestamp: now_offset(), metadata: None }
   }
 
   pub fn with_metadata(role: String, content: String, metadata: JsonValue) -> Self {
-    Self { message_id: Uuid::new_v4().to_string(), role, content, timestamp: now_offset(), metadata: Some(metadata) }
+    Self { message_id: Uuid::now_v7().to_string(), role, content, timestamp: now_offset(), metadata: Some(metadata) }
   }
 }
 

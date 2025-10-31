@@ -109,6 +109,7 @@ use rig::completion::Message;
 ///
 /// Used in chat history to distinguish between different types of messages.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "lowercase")]
 pub enum MessageRole {
   /// Message from a user/human
   User,

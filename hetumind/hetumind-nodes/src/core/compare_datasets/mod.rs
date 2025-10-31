@@ -345,7 +345,7 @@ mod tests {
   fn test_comparison_result_type_serialization() {
     let result_type = ComparisonResultType::InAOnly;
     let serialized = serde_json::to_string(&result_type).unwrap();
-    assert_eq!(serialized, "\"IN_A_ONLY\"");
+    assert_eq!(serialized, "\"in_a_only\"");
 
     let deserialized: ComparisonResultType = serde_json::from_str(&serialized).unwrap();
     assert_eq!(deserialized, ComparisonResultType::InAOnly);
@@ -355,7 +355,7 @@ mod tests {
   fn test_conflict_resolution_serialization() {
     let resolution = ConflictResolution::PreferInputA;
     let serialized = serde_json::to_string(&resolution).unwrap();
-    assert_eq!(serialized, "\"PREFER_INPUT_A\"");
+    assert_eq!(serialized, "\"prefer_input_a\"");
 
     let deserialized: ConflictResolution = serde_json::from_str(&serialized).unwrap();
     assert_eq!(deserialized, ConflictResolution::PreferInputA);

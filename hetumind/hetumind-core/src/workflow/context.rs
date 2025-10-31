@@ -1,8 +1,7 @@
 use std::sync::Arc;
 
-use chrono::{DateTime, FixedOffset};
+use chrono::{DateTime, FixedOffset, Utc};
 use fusion_common::ctx::Ctx;
-use fusionsql::common::now_offset;
 
 use crate::workflow::ExecutionId;
 
@@ -18,7 +17,7 @@ pub struct ExecutionContext {
 
 impl ExecutionContext {
   pub fn new(execution_id: ExecutionId, workflow: Arc<Workflow>, ctx: Ctx) -> Self {
-    Self { execution_id, workflow, ctx, started_at: now_offset() }
+    Self { execution_id, workflow, ctx, started_at: Utc::now().into() }
   }
 
   pub fn with_execution_id(mut self, execution_id: ExecutionId) -> Self {

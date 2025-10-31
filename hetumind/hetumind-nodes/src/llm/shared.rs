@@ -192,7 +192,7 @@ pub struct ModelCapabilities {
   pub streaming: bool,
   pub function_calling: bool,
   pub vision: bool,
-  pub max_context_length: Option<u32>,
+  pub max_context_length: Option<u64>,
   pub supported_formats: Vec<String>,
   pub json_mode: bool,
   pub system_messages: bool,

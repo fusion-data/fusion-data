@@ -108,7 +108,7 @@ impl ResourcePool {
     let permit = self.semaphore.acquire().await.map_err(|_| ResourceError::AcquisitionFailed)?;
 
     let allocation = ResourceAllocation {
-      allocation_id: Uuid::new_v4(),
+      allocation_id: Uuid::now_v7(),
       request_id: request.request_id,
       resource_type: self.resource_type.clone(),
       amount: request.amount,

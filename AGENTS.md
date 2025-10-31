@@ -1,6 +1,4 @@
-# CLAUDE.md
-
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+# AGENTS
 
 ## Repository Overview
 
@@ -164,42 +162,6 @@ The project uses Cargo workspace with the following main components:
 - Structured error types with context
 - anyhow integration for error chaining
 
-### Error Handling Best Practices
-
-**Error Conversion Patterns**:
-
-When working with different error types, implement proper conversions:
-
-```rust
-// Convert domain-specific errors to common error types
-impl From<RegistrationError> for NodeExecutionError {
-    fn from(err: RegistrationError) -> Self {
-        NodeExecutionError::ConfigurationError(err.to_string())
-    }
-}
-```
-
-**Borrow Checker Friendly Error Handling**:
-
-```rust
-// ✅ Use Ok() directly when the type is already Result<T, E>
-let result = some_operation()?;
-
-// ❌ Don't double-wrap Results
-let result = Ok(some_operation()?); // Unnecessary wrapping
-
-// ✅ Handle Option to Result conversion properly
-let registered_node = node_registry.get_executor(&node_kind)
-    .ok_or_else(|| NodeExecutionError::ConfigurationError("Node not found".to_string()))?;
-```
-
-**Error Message Best Practices**:
-
-- Include context about what operation failed
-- Use consistent error message formats
-- Avoid logging sensitive information in error messages
-- Provide actionable error information when possible
-
 **Component System**:
 
 - Dependency injection patterns with builder pattern
@@ -223,44 +185,6 @@ let registered_node = node_registry.get_executor(&node_kind)
 - HTTP webhook and time-based trigger nodes
 - Async execution with proper error handling and data lineage tracking
 
-### Cluster Node Architecture
-
-The platform implements a modern Cluster Node architecture for AI capabilities:
-
-**Core Components**:
-
-- **SubNodeProvider Pattern**: Unified interface for different AI capabilities (LLM, Memory, Agent)
-- **ClusterNodeManager**: Centralized management interface for all providers
-- **NodeRegistry Extension**: Unified registration system for SubNodeProviders
-- **GraphFlow Integration**: Task execution framework for coordinated operations
-
-**Architecture Benefits**:
-
-- **Unified Management**: Single interface for all AI capabilities
-- **Intelligent Orchestration**: AI Agents coordinate multiple providers automatically
-- **High Performance**: Native async support with resource optimization
-- **Easy Extension**: Plugin-based architecture for adding new capabilities
-- **Thread Safety**: tokio::sync::Mutex for concurrent access management
-
-**Implementation Patterns**:
-
-```rust
-// Provider registration pattern
-let registry = NodeRegistry::new();
-registry.register_subnode_provider(node_kind, provider)?;
-
-// Cluster manager usage
-let manager = ClusterNodeManager::new_default().await?;
-let response = manager.execute_task("deepseek_llm", input).await?;
-```
-
-**Development Guidelines**:
-
-- Always use `Arc<dyn SubNodeProvider>` for provider references
-- Implement proper error handling with `NodeExecutionError`
-- Use tokio::sync::Mutex for thread-safe shared state
-- Follow the trait-based design for extensibility
-
 ### Development Practices
 
 **Code Style**:
@@ -275,10 +199,6 @@ let response = manager.execute_task("deepseek_llm", input).await?;
 
 - **No audit functionality**: Do not design or implement audit features for tracking user actions or data changes
 - **No migration logic**: Do not consider historical version compatibility or database migration logic (system not yet released)
-- **Test-Driven Fixing**: When fixing test failures, ensure test expectations match actual code behavior rather than modifying working code to pass incorrect tests
-- **Serialization Consistency**: When working with serde enums, ensure test expectations match the actual `rename_all` attributes (e.g., `snake_case` → lowercase output)
-- **API Method Consistency**: Use correct method names that match the actual API (e.g., `get_executor()` not `get_supplier()` for NodeRegistry)
-- **String Replacement Completeness**: When sanitizing strings for identifiers, replace all problematic characters (dots, @ symbols, etc.) not just some of them
 
 **Modern Rust Syntax (1.90+)**:
 
@@ -330,97 +250,12 @@ Always utilize the latest Rust syntax features for cleaner, more maintainable co
 
 Always run `cargo clippy` to catch opportunities for modernizing syntax.
 
-### Rust Borrow Checker Best Practices
-
-**Arc and Clone Patterns**:
-
-```rust
-// ✅ Clone before moving into async tasks
-let provider = Arc::new(MyProvider::new());
-let provider_for_registry = provider.clone(); // Clone before registration
-registry.register(provider_for_registry).await?;
-
-// ❌ Move and then try to use again
-let provider = Arc::new(MyProvider::new());
-registry.register(provider).await?; // provider is moved
-let result = provider.do_something(); // Error: provider was moved
-```
-
-**Option and Result Handling**:
-
-```rust
-// ✅ Handle Option to Result conversion properly
-let registered_node = node_registry.get_executor(&node_kind)
-    .ok_or_else(|| NodeExecutionError::ConfigurationError("Node not found".to_string()))?;
-
-// ✅ Use ? operator for Result propagation
-let result = some_operation()?;
-
-// ❌ Don't unwrap in production code
-let result = some_operation().unwrap(); // Can panic!
-```
-
-**Borrowing Across Async Boundaries**:
-
-```rust
-// ✅ Use Arc for shared data across async tasks
-#[derive(Clone)]
-struct SharedData {
-    data: Arc<Mutex<Vec<String>>>,
-}
-
-// ✅ Clone Arc-wrapped data
-let shared = Arc::new(SharedData { data: Arc::new(Mutex::new(vec![])) });
-let shared_clone = shared.clone();
-tokio::spawn(async move {
-    // Can use shared_clone here
-});
-```
-
-**Common Borrow Checker Patterns**:
-
-- **Clone before register**: Always clone `Arc` values before registering them
-- **Handle Options properly**: Use `ok_or_else()` instead of `unwrap()` in production code
-- **Use Arc for shared state**: When data needs to be accessed across async boundaries
-- **Prefer references**: Avoid unnecessary cloning when simple references suffice
-
 **Testing Strategy**:
 
 - Unit tests in lib.rs and source files
 - Integration tests in `tests/` directories
 - Use `insta` for snapshot testing
 - Test context management with `test-context`
-
-### Testing Best Practices
-
-**Test-Driven Debugging**:
-
-When tests fail, follow this systematic approach:
-
-1. **Understand the Failure**: Run tests with `--nocapture` to see debug output
-2. **Check Expectations**: Verify if test expectations match actual behavior
-3. **Fix the Root Cause**: Address the actual issue in code or correct test expectations
-4. **Validate Fixes**: Ensure all related tests pass after changes
-
-**Common Test Patterns**:
-
-```bash
-# Run specific test with output
-cargo test -p <crate-name> <test_name> -- --nocapture
-
-# Run all tests in a package
-cargo test -p <crate-name>
-
-# Check compilation without running
-cargo test -p <crate-name> --lib --no-run
-```
-
-**Testing Anti-Patterns to Avoid**:
-
-- **Don't change working code** to make incorrect tests pass
-- **Don't ignore test failures** without understanding the root cause
-- **Don't use outdated API methods** in tests (check actual method signatures)
-- **Don't assume serialization formats** - verify them against actual serde attributes
 
 **Dependencies**:
 
@@ -959,55 +794,6 @@ pub struct WorkflowSvc {
 }
 ```
 
-### String and Identifier Handling
-
-**Identifier Sanitization**:
-
-When creating identifiers from user input, ensure comprehensive character replacement:
-
-```rust
-// ✅ Comprehensive replacement for identifiers
-fn sanitize_identifier(input: &str) -> String {
-    input.replace('.', "_")
-         .replace('@', "_")
-         .replace('#', "_")
-         .replace(' ', "_")
-         .to_lowercase()
-}
-
-// ❌ Incomplete replacement - will leave problematic characters
-fn bad_sanitization(input: &str) -> String {
-    input.replace('@', "_") // Missing dot replacement!
-}
-```
-
-**String Replacement Best Practices**:
-
-- **Chain replacements**: Use method chaining for multiple character replacements
-- **Be comprehensive**: Replace all problematic characters, not just some
-- **Consistent format**: Convert to consistent case (usually lowercase)
-- **Test thoroughly**: Verify with edge cases and real-world examples
-
-**Common Identifier Patterns**:
-
-```rust
-// Email-based identifiers
-let trigger_id = format!(
-    "email_trigger_{}_{}_{}",
-    host.replace('.', "_"),
-    port,
-    username.replace('.', "_").replace('@', "_")
-);
-
-// Resource names
-let resource_name = format!(
-    "{}_{}_{}",
-    service_name.to_lowercase(),
-    resource_type.to_lowercase(),
-    timestamp.to_string()
-);
-```
-
 ### Database Development
 
 **Database Naming Conventions**:
@@ -1083,12 +869,32 @@ impl UserBmc {
 
 **IAM Development Best Practices**:
 
-- Use modular access control architecture with specialized modules
-- **IAM Resource Mapping** (Recommended): Zero-configuration permission control through path pattern matching
-- Use unified `render_resource` function for resource template rendering
+- Use the unified `render_resource` function for resource template rendering with optional extras parameter
+- Leverage double-layer resource format: simplified format for APIs, complete format for policies
+- **IAM Resource Mapping**: Use path-based authorization for zero-configuration permission control
+  - Configure path mappings through jieyuan management interface
+  - Use simplified middleware: `path_authz_middleware` for automatic permission checking
+  - No need to manually configure RouteMeta or action/resource templates in code
+  - **即时解析 + 严格渲染**: 每次权限评估都直接从策略配置文件加载并解析，不生成持久化表示，缺失必须参数直接拒绝
+- Implement role-based access control with hierarchical permissions (viewer → editor → admin)
+- Use remote authorization middleware for centralized policy evaluation
 - Follow resource naming convention: `iam:{service}:{type}/{id}` for API calls
-- Implement role-based access control with hierarchical permissions
-- **即时解析 + 严格渲染**: Load and parse policies directly from configuration files for each authorization evaluation
+- Define policies using complete format: `iam:{service}:{tenant_id}:{type}/{id}` for unambiguous evaluation
+
+**IAM Integration Approaches**:
+
+1. **IAM Resource Mapping (Recommended approach)**:
+
+   - Zero configuration permission control through path pattern matching
+   - Centralized path mapping management via jieyuan admin interface
+   - Simplified development experience with automatic parameter extraction
+   - Implementation: `jieyuan-core/src/model/iam_resource_mapping.rs`
+
+2. **Direct Resource Template Authorization**:
+   - Manual action and resource template configuration
+   - Fine-grained control over specific endpoints
+   - Use when complex authorization logic is required
+   - Implementation: `jieyuan-core/src/model/iam_api.rs`
 
 ### Testing
 

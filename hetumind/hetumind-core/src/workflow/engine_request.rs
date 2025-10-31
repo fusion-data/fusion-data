@@ -183,7 +183,7 @@ pub struct EngineRequest<T = HashMap<String, JsonValue>> {
 impl EngineRequest {
   /// 创建新的引擎请求
   pub fn new() -> Self {
-    Self { actions: Vec::new(), metadata: HashMap::default(), request_id: Uuid::new_v4() }
+    Self { actions: Vec::new(), metadata: HashMap::default(), request_id: Uuid::now_v7() }
   }
 
   /// 添加执行节点动作
@@ -194,7 +194,7 @@ impl EngineRequest {
     connection_type: ConnectionKind,
     metadata: Option<HashMap<String, JsonValue>>,
   ) -> Uuid {
-    let action_id = Uuid::new_v4();
+    let action_id = Uuid::now_v7();
     let action = EngineAction::ExecuteNode(ExecuteNodeAction {
       node_name,
       input,
@@ -213,7 +213,7 @@ impl EngineRequest {
     connection_index: usize,
     metadata: Option<HashMap<String, JsonValue>>,
   ) -> Uuid {
-    let action_id = Uuid::new_v4();
+    let action_id = Uuid::now_v7();
     let action = EngineAction::GetConnectionData(GetConnectionDataAction {
       connection_type,
       connection_index,
@@ -238,7 +238,7 @@ impl Default for EngineRequest {
 
 impl Default for EngineResponse {
   fn default() -> Self {
-    Self::new(Uuid::new_v4())
+    Self::new(Uuid::now_v7())
   }
 }
 
@@ -296,7 +296,7 @@ mod tests {
 
   #[test]
   fn test_engine_response_creation() {
-    let request_id = Uuid::new_v4();
+    let request_id = Uuid::now_v7();
     let response = EngineResponse::new(request_id);
 
     assert_eq!(response.response_id, request_id);

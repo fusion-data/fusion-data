@@ -369,7 +369,7 @@ fn resolve_value(
       json!(random_value)
     }
     ValueSourceKind::Uuid => {
-      let uuid = Uuid::new_v4().to_string();
+      let uuid = Uuid::now_v7().to_string();
       json!(uuid)
     }
     ValueSourceKind::JsonPath => {

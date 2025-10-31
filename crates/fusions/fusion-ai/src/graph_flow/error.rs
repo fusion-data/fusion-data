@@ -27,4 +27,10 @@ pub enum GraphError {
   Other(#[from] Box<dyn core::error::Error + Send + Sync>),
 }
 
+impl GraphError {
+  pub fn execution_failed(msg: impl Into<String>) -> Self {
+    Self::TaskExecutionFailed(msg.into())
+  }
+}
+
 pub type Result<T> = std::result::Result<T, GraphError>;

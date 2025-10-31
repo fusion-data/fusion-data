@@ -82,7 +82,7 @@ impl HetuflowSetting {
     // Check if server_id not exists or invalid uuid in config
     if let Err(_e) = config.get::<String>(KEY_PATH_SERVER_ID) {
       // Generate new UUID and write to config file
-      let server_id = Uuid::new_v4().to_string();
+      let server_id = Uuid::now_v7().to_string();
       let path = match get_env("CARGO_MANIFEST_DIR") {
         Ok(dir) => PathBuf::from(dir).join("resources").join("app.toml"),
         Err(_) => PathBuf::from(get_env("HOME")?).join(".hetuflow").join("server.toml"),

@@ -196,7 +196,7 @@ impl EmailTriggerConfig {
       "email_trigger_{}_{}_{}",
       self.imap_connection.host.replace('.', "_"),
       self.imap_connection.port,
-      self.imap_connection.username.replace('@', "_")
+      self.imap_connection.username.replace('.', "_").replace('@', "_")
     )
   }
 
@@ -407,9 +407,14 @@ mod tests {
     };
 
     let trigger_id = config.generate_trigger_id();
+
+    // Debug output to see what's actually generated
+    println!("Generated trigger_id: {}", trigger_id);
+
     assert!(trigger_id.starts_with("email_trigger_"));
     assert!(!trigger_id.contains('.'));
     assert!(!trigger_id.contains('@'));
+    assert_eq!(trigger_id, "email_trigger_imap_gmail_com_993_test_gmail_com");
   }
 
   #[test]

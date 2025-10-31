@@ -340,7 +340,7 @@ async fn test_integration_workflow() -> Result<(), Box<dyn std::error::Error>> {
       "trigger_type": "manual",
       "execution_mode": "test",
       "timestamp": now().timestamp(),
-      "trigger_id": Uuid::new_v4().to_string(),
+      "trigger_id": Uuid::now_v7().to_string(),
       "message": "Integration test workflow started",
       "enabled": true,
       "test_data": {

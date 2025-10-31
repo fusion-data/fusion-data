@@ -5,6 +5,7 @@ use std::{
 
 use dashmap::DashMap;
 
+use super::sub_node_provider::{SubNodeProviderRef, SubNodeProviderType};
 use crate::workflow::{Node, NodeDefinition, NodeExecutor, NodeKind, RegistrationError};
 use crate::{version::Version, workflow::NodeSupplier};
 
@@ -13,6 +14,7 @@ pub type NodeRef = Arc<dyn Node + Send + Sync>;
 #[derive(Default)]
 pub struct InnerNodeRegistry {
   nodes: DashMap<NodeKind, NodeRef>,
+  subnode_providers: DashMap<NodeKind, SubNodeProviderRef>,
 }
 
 impl InnerNodeRegistry {
@@ -137,6 +139,83 @@ impl InnerNodeRegistry {
   /// - `bool` - True if the registry is empty, otherwise false
   pub fn is_empty(&self) -> bool {
     self.nodes.is_empty()
+  }
+
+  // ===== SubNodeProvider Management Methods =====
+
+  /// Register a SubNodeProvider for a given node kind
+  ///
+  /// Args:
+  /// - `kind` - The node kind to register the provider for
+  /// - `provider` - The SubNodeProvider to register
+  ///
+  /// Returns:
+  /// - `Result<(), RegistrationError>` - Ok if successful, Err if provider already exists
+  pub fn register_subnode_provider(
+    &self,
+    kind: NodeKind,
+    provider: SubNodeProviderRef,
+  ) -> Result<(), RegistrationError> {
+    if self.subnode_providers.contains_key(&kind) {
+      return Err(RegistrationError::NodeKindAlreadyExists { node_kind: kind });
+    }
+
+    self.subnode_providers.insert(kind, provider);
+    Ok(())
+  }
+
+  /// Get the SubNodeProvider for a given node kind
+  ///
+  /// Args:
+  /// - `kind` - The node kind to get the provider for
+  ///
+  /// Returns:
+  /// - `Option<SubNodeProviderRef>` - The provider if found, otherwise None
+  pub fn get_subnode_provider(&self, kind: &NodeKind) -> Option<SubNodeProviderRef> {
+    self.subnode_providers.get(kind).map(|provider| provider.clone())
+  }
+
+  /// Unregister a SubNodeProvider for a given node kind
+  ///
+  /// Args:
+  /// - `kind` - The node kind to unregister the provider for
+  ///
+  /// Returns:
+  /// - `Option<SubNodeProviderRef>` - The unregistered provider if found, otherwise None
+  pub fn unregister_subnode_provider(&self, kind: &NodeKind) -> Option<SubNodeProviderRef> {
+    self.subnode_providers.remove(kind).map(|(_, provider)| provider)
+  }
+
+  /// Get all registered SubNodeProvider kinds
+  ///
+  /// Returns:
+  /// - `Vec<NodeKind>` - Vector of all registered node kinds with SubNodeProviders
+  pub fn registered_subnode_provider_kinds(&self) -> Vec<NodeKind> {
+    self.subnode_providers.iter().map(|entry| entry.key().clone()).collect()
+  }
+
+  /// Check if a SubNodeProvider is registered for a given node kind
+  ///
+  /// Args:
+  /// - `kind` - The node kind to check
+  ///
+  /// Returns:
+  /// - `bool` - True if a provider is registered, otherwise false
+  pub fn has_subnode_provider(&self, kind: &NodeKind) -> bool {
+    self.subnode_providers.contains_key(kind)
+  }
+
+  /// Get the number of registered SubNodeProviders
+  ///
+  /// Returns:
+  /// - `usize` - The count of registered SubNodeProviders
+  pub fn subnode_provider_count(&self) -> usize {
+    self.subnode_providers.len()
+  }
+
+  /// Clear all registered SubNodeProviders
+  pub fn clear_subnode_providers(&self) {
+    self.subnode_providers.clear();
   }
 }
 

@@ -89,7 +89,7 @@ mod tests {
   #[test]
   fn test_ack_message_serialization() {
     let ack =
-      AckMessage { message_id: Uuid::new_v4(), status: "success".to_string(), details: Some("processed".to_string()) };
+      AckMessage { message_id: Uuid::now_v7(), status: "success".to_string(), details: Some("processed".to_string()) };
 
     let serialized = serde_json::to_string(&ack).unwrap();
     let deserialized: AckMessage = serde_json::from_str(&serialized).unwrap();

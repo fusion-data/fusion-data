@@ -84,7 +84,7 @@ mod tests {
     let node_registry = NodeRegistry::new();
     assert!(register_nodes(&node_registry).is_ok());
 
-    let registered_node = node_registry.get_supplier(&NodeKind::new(SIMPLE_MEMORY_NODE_KIND));
+    let registered_node = node_registry.get_executor(&NodeKind::new(SIMPLE_MEMORY_NODE_KIND));
     assert!(registered_node.is_some());
   }
 

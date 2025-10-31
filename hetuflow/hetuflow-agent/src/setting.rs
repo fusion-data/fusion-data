@@ -204,7 +204,7 @@ impl HetuflowAgentSetting {
       warn!("Invalid agent_id in config file, error: {:?}", e);
 
       // Generate new UUID and write to config file
-      let agent_id = Uuid::new_v4().to_string();
+      let agent_id = Uuid::now_v7().to_string();
       let path = match get_env("CARGO_MANIFEST_DIR") {
         Ok(dir) => PathBuf::from(dir).join("resources").join("app.toml"),
         Err(_) => PathBuf::from(get_env("HOME")?).join(".hetuflow").join("agent.toml"),

@@ -6,10 +6,8 @@ use hetumind_core::{
 };
 
 mod deepseek_v1;
-mod graph_flow_deepseek;
 
 use deepseek_v1::*;
-pub use graph_flow_deepseek::*;
 
 pub struct DeepseekModelNode {
   default_version: Version,

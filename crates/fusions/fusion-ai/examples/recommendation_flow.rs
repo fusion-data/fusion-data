@@ -400,7 +400,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
   info!("Graph built and saved successfully");
 
   // --- Session --------------------------------------------------------------------------
-  let session_id = Uuid::new_v4().to_string();
+  let session_id = Uuid::now_v7().to_string();
   let session = Session::new_from_task(session_id.clone(), &refine_id);
   session.context.set("user_query", user_query.clone()).await;
   session_storage.save(session.clone()).await?;

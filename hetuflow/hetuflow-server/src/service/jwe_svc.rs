@@ -145,7 +145,7 @@ impl JweSvc {
   pub fn generate_token(&self, agent_id: &str, server_id: &str, permissions: Vec<String>) -> Result<String, JweError> {
     let now = Utc::now();
     let exp = if self.config.token_ttl > 0 { now.timestamp() + self.config.token_ttl as i64 } else { i64::MAX };
-    let jti = Uuid::new_v4().to_string();
+    let jti = Uuid::now_v7().to_string();
 
     // 创建 Payload
     let payload = JweTokenPayload {
@@ -245,8 +245,8 @@ mod tests {
     };
 
     let service = JweSvc::new(config).unwrap();
-    let agent_id = Uuid::new_v4().to_string();
-    let server_id = Uuid::new_v4().to_string();
+    let agent_id = Uuid::now_v7().to_string();
+    let server_id = Uuid::now_v7().to_string();
     let permissions = vec!["read".to_string(), "write".to_string()];
 
     // 生成 Token
@@ -273,9 +273,9 @@ mod tests {
     };
 
     let service = JweSvc::new(config).unwrap();
-    let agent_id = Uuid::new_v4().to_string();
-    let different_agent_id = Uuid::new_v4().to_string();
-    let server_id = Uuid::new_v4().to_string();
+    let agent_id = Uuid::now_v7().to_string();
+    let different_agent_id = Uuid::now_v7().to_string();
+    let server_id = Uuid::now_v7().to_string();
     let permissions = vec!["read".to_string()];
 
     // 生成 Token
@@ -299,8 +299,8 @@ mod tests {
     };
 
     let service = JweSvc::new(config).unwrap();
-    let agent_id = Uuid::new_v4().to_string();
-    let server_id = Uuid::new_v4().to_string();
+    let agent_id = Uuid::now_v7().to_string();
+    let server_id = Uuid::now_v7().to_string();
     let permissions = vec!["read".to_string()];
 
     // 生成 Token
@@ -327,7 +327,7 @@ mod tests {
     };
 
     let service = JweSvc::new(config).unwrap();
-    let agent_id = Uuid::new_v4().to_string();
+    let agent_id = Uuid::now_v7().to_string();
 
     // 测试无效的 Token 格式
     let invalid_token = "invalid.token.format";
@@ -368,8 +368,8 @@ mod tests {
     };
 
     let service = JweSvc::new(config).unwrap();
-    let agent_id = Uuid::new_v4().to_string();
-    let server_id = Uuid::new_v4().to_string();
+    let agent_id = Uuid::now_v7().to_string();
+    let server_id = Uuid::now_v7().to_string();
     let permissions = vec!["read".to_string(), "write".to_string(), "execute".to_string(), "admin".to_string()];
 
     // 生成 Token

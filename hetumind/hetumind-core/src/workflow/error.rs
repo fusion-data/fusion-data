@@ -185,6 +185,12 @@ pub enum RegistrationError {
   NodeDefinitionError(String),
 }
 
+impl From<RegistrationError> for NodeExecutionError {
+  fn from(err: RegistrationError) -> Self {
+    NodeExecutionError::ConfigurationError(err.to_string())
+  }
+}
+
 // 错误工作流触发数据结构
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WorkflowErrorData {

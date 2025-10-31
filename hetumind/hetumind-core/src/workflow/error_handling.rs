@@ -575,7 +575,7 @@ pub mod predefined_rules {
     vec![
       // 网络错误重试规则
       ErrorHandlingRule {
-        rule_id: Uuid::new_v4(),
+        rule_id: Uuid::now_v7(),
         name: "Network Error Retry".to_string(),
         error_type_filter: Some("NodeExecution".to_string()),
         error_code_filter: Some("NETWORK_ERROR".to_string()),
@@ -592,7 +592,7 @@ pub mod predefined_rules {
       },
       // 超时错误重试规则
       ErrorHandlingRule {
-        rule_id: Uuid::new_v4(),
+        rule_id: Uuid::now_v7(),
         name: "Timeout Error Retry".to_string(),
         error_type_filter: Some("NodeExecution".to_string()),
         error_code_filter: Some("TIMEOUT".to_string()),
@@ -609,7 +609,7 @@ pub mod predefined_rules {
       },
       // 配置错误终止规则
       ErrorHandlingRule {
-        rule_id: Uuid::new_v4(),
+        rule_id: Uuid::now_v7(),
         name: "Configuration Error Terminate".to_string(),
         error_type_filter: Some("Configuration".to_string()),
         error_code_filter: None,
@@ -622,7 +622,7 @@ pub mod predefined_rules {
       },
       // 权限错误终止规则
       ErrorHandlingRule {
-        rule_id: Uuid::new_v4(),
+        rule_id: Uuid::now_v7(),
         name: "Permission Error Terminate".to_string(),
         error_type_filter: Some("NodeExecution".to_string()),
         error_code_filter: Some("PERMISSION_DENIED".to_string()),
@@ -635,7 +635,7 @@ pub mod predefined_rules {
       },
       // 致命错误终止规则
       ErrorHandlingRule {
-        rule_id: Uuid::new_v4(),
+        rule_id: Uuid::now_v7(),
         name: "Fatal Error Terminate".to_string(),
         error_type_filter: None,
         error_code_filter: None,

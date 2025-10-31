@@ -364,7 +364,7 @@ mod tests {
   #[async_trait]
   impl BinaryDataStorage for MockStorage {
     async fn store(&self, data: Vec<u8>, _metadata: &BinaryDataMetadata) -> Result<String, BinaryStorageError> {
-      let key = format!("{}_{}", self.name, uuid::Uuid::new_v4());
+      let key = format!("{}_{}", self.name, uuid::Uuid::now_v7());
       let mut data_map = self.data.write().await;
       data_map.insert(key.clone(), data);
       Ok(key)
