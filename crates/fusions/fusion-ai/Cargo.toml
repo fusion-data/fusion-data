@@ -9,7 +9,7 @@ repository.workspace = true
 publish = true
 
 [lints]
-workspace = true
+# workspace = true
 
 [features]
 default = ["schemars/chrono04", "with-db", "image", "audio"]

@@ -20,6 +20,9 @@ impl Default for ClientBuilderFactory {
   }
 }
 
+unsafe impl Send for ClientBuilderFactory {}
+unsafe impl Sync for ClientBuilderFactory {}
+
 impl ClientBuilderFactory {
   pub fn new() -> Self {
     let dyn_client_builder = DynClientBuilder::new();
