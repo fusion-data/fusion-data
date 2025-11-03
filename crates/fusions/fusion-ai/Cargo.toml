@@ -16,7 +16,7 @@ default = ["schemars/chrono04", "with-db", "image", "audio"]
 with-db = ["dep:sqlx", "sqlx/postgres"]
 image = ["rig-core/image"]
 audio = ["rig-core/audio"]
-worker = []
+worker = ["dep:worker"]
 docsrs = []
 
 [dependencies]
@@ -47,6 +47,7 @@ base64 = { workspace = true }
 serde_path_to_error = { workspace = true }
 tracing-futures = { version = "0.2", features = ["futures-03"] }
 regex = { workspace = true }
+worker = { version = "0.6", optional = true }
 
 [dev-dependencies]
 anyhow = { workspace = true }

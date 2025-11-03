@@ -378,8 +378,15 @@ impl AgentSubNodeProvider for AiAgentProvider {
           // 3. Add tool results back to conversation
           // 4. Continue iteration if needed
 
-          // For now, we'll break after first iteration
-          break;
+          // For now, continue only if tools are enabled and tool calls are present
+          // Otherwise, break after getting the response
+          if self.config.enable_tools && tool_calls.is_some() {
+            log::debug!("Tool calls detected, continuing to next iteration");
+            continue;
+          } else {
+            log::debug!("No tool calls or tools disabled, ending agent execution");
+            break;
+          }
         }
         Err(e) => {
           log::error!("Agent iteration failed: {}", e);
