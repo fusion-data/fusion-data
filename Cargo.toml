@@ -202,7 +202,7 @@ dashmap = { version = "6.1" }
 mea = { version = "0.4" }
 # -- Logging
 log = "0.4"
-logforth = { version = "0.28", features = ["starter-log", "append-file"] }
+logforth = { version = "0.29", features = ["starter-log", "append-file"] }
 # -- Tracing
 fastrace = { version = "0.7" }
 metrics = "0.24"
@@ -272,7 +272,7 @@ reqwest = { version = "0.12", features = [
   "multipart",
 ] }
 # lightweight sync http client
-ureq = { version = "3.0", features = ["json", "charset"] }
+ureq = { version = "3.1", features = ["json", "charset"] }
 hyper = "1"
 hyper-util = "0.1"
 tower = "0.5"
@@ -296,7 +296,7 @@ axum = { version = "0.8", features = [
   "http2",
 ] }
 axum-core = { version = "0.5" }
-axum-extra = { version = "0.10", features = ["typed-header"] }
+axum-extra = { version = "0.12", features = ["typed-header"] }
 axum-macros = { version = "0.5" }
 axum-test = { version = "18", features = ["reqwest", "typed-routing", "ws"] }
 utoipa = { version = "5.4", features = [
@@ -313,7 +313,7 @@ axum-valid = { version = "0.24", default-features = false, features = [
   "basic",
   "garde",
 ] }
-test-context = { version = "0.4" }
+test-context = { version = "0.5" }
 insta = { version = "1" }
 once_cell = { version = "1" }
 
@@ -324,15 +324,15 @@ tonic-reflection = "0.14"
 tonic-web = "0.14"
 tonic-build = { version = "0.14" }
 # -- Protocol Buffers
-protobuf = "4.32.1-release"
-protobuf-codegen = "4.32.1-release"
+protobuf = "4.33.0-release"
+protobuf-codegen = "4.33.0-release"
 protobuf-json-mapping = "3"
 protobuf-parse = "3"
 # protoc-bin-vendored = "3"
 # -- Template Engin
 minijinja = { version = "2.5" }
 # -- Data Science
-polars = "0.51"
+polars = "0.52"
 # An Excel/OpenDocument Spreadsheets reader and deserializer in pure rust
 calamine = "0.31"
 # This written in pure Rust to read and write xlsx file.
@@ -348,8 +348,8 @@ opendal = { version = "0.54", features = [
 ] }
 minio = { version = "0.3" }
 # -- LLM
-# rig-core = { version = "0.22", features = ["derive"] }
-rig-core = { git = "https://github.com/0xPlaygrounds/rig.git", branch = "main" }
+rig-core = { version = "0.23", features = ["derive"] }
+# rig-core = { git = "https://github.com/0xPlaygrounds/rig.git", branch = "main" }
 rig-postgres = { version = "0.1" }
 graph-flow = { version = "0.4", features = ["rig"] }
 rmcp = { version = "0.8", features = [
