@@ -7,8 +7,8 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use hetumind_core::version::Version;
 use hetumind_core::workflow::{
-  ConnectionKind, ExecutionDataItems, ExecutionDataMap, Node, NodeDefinition, NodeExecutable, NodeExecutionContext,
-  NodeExecutionError, NodeExecutor, NodeKind, RegistrationError, make_execution_data_map,
+  ConnectionKind, ExecutionDataItems, ExecutionDataMap, FlowNode, FlowNodeRef, Node, NodeDefinition,
+  NodeExecutionContext, NodeExecutionError, NodeKind, RegistrationError, make_execution_data_map,
 };
 
 mod parameters;
@@ -29,7 +29,7 @@ impl TryFrom<NodeDefinition> for ScheduleTriggerNodeV1 {
 }
 
 #[async_trait]
-impl NodeExecutable for ScheduleTriggerNodeV1 {
+impl FlowNode for ScheduleTriggerNodeV1 {
   fn definition(&self) -> Arc<NodeDefinition> {
     self.definition.clone()
   }
@@ -51,7 +51,7 @@ impl NodeExecutable for ScheduleTriggerNodeV1 {
 
 pub struct ScheduleTriggerNode {
   default_version: Version,
-  executors: Vec<NodeExecutor>,
+  executors: Vec<FlowNodeRef>,
 }
 
 impl Node for ScheduleTriggerNode {
@@ -59,7 +59,7 @@ impl Node for ScheduleTriggerNode {
     &self.default_version
   }
 
-  fn node_executors(&self) -> &[NodeExecutor] {
+  fn node_executors(&self) -> &[FlowNodeRef] {
     &self.executors
   }
 
@@ -71,7 +71,7 @@ impl Node for ScheduleTriggerNode {
 impl ScheduleTriggerNode {
   pub fn new() -> Result<Self, RegistrationError> {
     let base = utils::create_base();
-    let executors: Vec<NodeExecutor> = vec![Arc::new(ScheduleTriggerNodeV1::try_from(base)?)];
+    let executors: Vec<FlowNodeRef> = vec![Arc::new(ScheduleTriggerNodeV1::try_from(base)?)];
     let default_version = executors.iter().map(|node| node.definition().version.clone()).max().unwrap();
     Ok(Self { default_version, executors })
   }

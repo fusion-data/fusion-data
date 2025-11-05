@@ -326,7 +326,7 @@ use hetumind_studio::web::remote_authz_middleware::route_with_authz_and_extras;
 let router = route_with_authz_and_extras!(
     router,
     axum::routing::get,
-    "/api/v1/workflows/:id",
+    "/api/v1/workflows/{id}",
     get_workflow_handler,
     "hetumind:read",
     "iam:hetumind:workflow/{id}",
@@ -372,8 +372,8 @@ pub fn app() -> Router {
     Router::new()
         // 所有路由都自动应用权限检查
         .route("/api/v1/workflows", post(create_workflow))
-        .route("/api/v1/workflows/:id", get(get_workflow))
-        .route("/api/v1/workflows/:id/execute", post(execute_workflow))
+        .route("/api/v1/workflows/{id}", get(get_workflow))
+        .route("/api/v1/workflows/{id}/execute", post(execute_workflow))
         // 统一的权限中间件，无需额外配置
         .layer(middleware::from_fn_with_state(app.clone(), unified_authz_middleware))
 }

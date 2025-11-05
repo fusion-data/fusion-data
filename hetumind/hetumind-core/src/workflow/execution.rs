@@ -1,7 +1,6 @@
 //! 节点执行
 use std::sync::Arc;
 
-use async_trait::async_trait;
 use chrono::{DateTime, FixedOffset};
 use fusion_common::ahash::HashMap;
 use fusion_common::time::now;
@@ -13,9 +12,7 @@ use crate::{
   expression::ExpressionEvaluator,
   types::{BinaryFileKind, JsonValue},
   user::UserId,
-  workflow::{
-    Connection, ExecutionId, GetNodeParameterOptions, NodeDefinition, NodeRegistry, ValidationError, Workflow,
-  },
+  workflow::{Connection, ExecutionId, GetNodeParameterOptions, NodeRegistry, ValidationError, Workflow},
 };
 
 use super::{
@@ -619,25 +616,3 @@ impl NodeExecution {
     self
   }
 }
-
-/// Normal/Root node, can be called by workflow
-#[async_trait]
-pub trait NodeExecutable {
-  /// Initialize the node. This can be used to implement node initialization logic, such as loading configuration, initializing resources, etc.
-  async fn init(&mut self, _context: &NodeExecutionContext) -> Result<(), NodeExecutionError> {
-    Ok(())
-  }
-
-  /// Execute the node
-  ///
-  /// Returns:
-  /// - On success, returns data for multiple output ports, with the first output port starting from 0
-  /// - On failure, returns an error
-  async fn execute(&self, context: &NodeExecutionContext) -> Result<ExecutionDataMap, NodeExecutionError>;
-
-  /// Get Node definition
-  fn definition(&self) -> Arc<NodeDefinition>;
-}
-
-/// Node Executor Type
-pub type NodeExecutor = Arc<dyn NodeExecutable + Send + Sync>;

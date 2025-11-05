@@ -162,7 +162,7 @@ pub struct CreateTaskInstanceResponse {
 }
 
 /// 退避策略
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub enum BackoffStrategy {
   /// 固定间隔
   Fixed,
@@ -171,13 +171,8 @@ pub enum BackoffStrategy {
   /// 指数退避
   Exponential,
   /// 带抖动的指数退避
+  #[default]
   ExponentialWithJitter,
-}
-
-impl Default for BackoffStrategy {
-  fn default() -> Self {
-    Self::ExponentialWithJitter
-  }
 }
 
 /// 任务执行结果

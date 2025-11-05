@@ -5,7 +5,7 @@ use hetumind_core::{
   types::JsonValue,
   version::Version,
   workflow::{
-    ConnectionKind, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition, NodeExecutable,
+    ConnectionKind, ExecutionDataItems, ExecutionDataMap, FlowNode, InputPortConfig, NodeDefinition,
     NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig, RegistrationError,
     make_execution_data_map,
   },
@@ -155,7 +155,7 @@ impl SwitchV1 {
 }
 
 #[async_trait]
-impl NodeExecutable for SwitchV1 {
+impl FlowNode for SwitchV1 {
   #[allow(unused_variables)]
   fn definition(&self) -> Arc<NodeDefinition> {
     self.definition.clone()

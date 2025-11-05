@@ -4,9 +4,9 @@ use async_trait::async_trait;
 use hetumind_core::{
   version::Version,
   workflow::{
-    ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition,
-    NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig,
-    RegistrationError, make_execution_data_map,
+    ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, FlowNode, InputPortConfig, NodeDefinition,
+    NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig, RegistrationError,
+    make_execution_data_map,
   },
 };
 use serde_json::json;
@@ -64,7 +64,7 @@ impl LimitV1 {
 /// - 测试数据采样
 /// - 性能优化控制
 #[async_trait]
-impl NodeExecutable for LimitV1 {
+impl FlowNode for LimitV1 {
   fn definition(&self) -> Arc<NodeDefinition> {
     self.definition.clone()
   }

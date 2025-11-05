@@ -3,7 +3,6 @@ pub mod config;
 pub mod credential;
 #[doc = include_str!("./expression/mod.md")]
 pub mod expression;
-pub mod llm;
 pub mod metrics;
 pub mod task;
 pub mod types;

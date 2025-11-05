@@ -7,7 +7,7 @@
 
 pub mod config;
 pub mod error;
-// pub mod lifecycle;
+pub mod lifecycle;
 pub mod manager;
 pub mod metadata;
 pub mod metrics;
@@ -16,7 +16,7 @@ pub mod storage;
 // 重新导出主要类型
 pub use config::{BinaryStorageConfig, StorageKind};
 pub use error::BinaryStorageError;
-// pub use lifecycle::{BinaryDataLifecycleManager, LifecycleCleanupConfig};
+pub use lifecycle::{BinaryDataLifecycleManager, LifecycleCleanupConfig};
 pub use manager::BinaryDataManager;
 pub use metadata::BinaryDataMetadata;
 pub use metrics::{BasicMetricsCollector, BasicStats, OperationProgress};

@@ -503,4 +503,73 @@ mod tests {
     assert_eq!(manager.determine_file_kind("application/vnd.ms-powerpoint"), BinaryFileKind::Ppt);
     assert_eq!(manager.determine_file_kind("unknown/type"), BinaryFileKind::Text);
   }
+
+  /// 失败存储实现，用于测试错误传播
+  struct FailingStorage;
+
+  #[async_trait]
+  impl BinaryDataStorage for FailingStorage {
+    async fn store(&self, _data: Vec<u8>, _metadata: &BinaryDataMetadata) -> Result<String, BinaryStorageError> {
+      Err(BinaryStorageError::operation("store failed"))
+    }
+
+    async fn retrieve(&self, _key: &str) -> Result<Vec<u8>, BinaryStorageError> {
+      Err(BinaryStorageError::file_not_found("missing"))
+    }
+
+    async fn get_metadata(&self, _key: &str) -> Result<BinaryDataMetadata, BinaryStorageError> {
+      Err(BinaryStorageError::file_not_found("missing"))
+    }
+
+    async fn delete(&self, _key: &str) -> Result<(), BinaryStorageError> {
+      Err(BinaryStorageError::file_not_found("missing"))
+    }
+
+    async fn exists(&self, _key: &str) -> Result<bool, BinaryStorageError> {
+      Ok(false)
+    }
+    async fn list(&self, _prefix: &str) -> Result<Vec<String>, BinaryStorageError> {
+      Ok(vec![])
+    }
+    fn storage_type_name(&self) -> &'static str {
+      "s3"
+    }
+  }
+
+  #[tokio::test]
+  async fn test_error_propagation() {
+    let storage: Arc<dyn BinaryDataStorage> = Arc::new(FailingStorage);
+    let manager = BinaryDataManager::with_default_cache(storage).unwrap();
+
+    let err = manager
+      .store_data(vec![1, 2, 3], BinaryDataMetadata::default())
+      .await
+      .expect_err("store should fail");
+    match err {
+      BinaryStorageError::OperationError(msg) => assert!(msg.contains("store failed")),
+      _ => panic!("unexpected error type"),
+    }
+
+    let err = manager.get_data("missing").await.expect_err("retrieve should fail");
+    match err {
+      BinaryStorageError::FileNotFound(path) => assert!(path.contains("missing")),
+      _ => panic!("unexpected error type"),
+    }
+  }
+
+  #[tokio::test]
+  async fn test_cache_eviction_under_pressure() {
+    let storage = Arc::new(MockStorage::new("test"));
+    // 极小的缓存限制以触发清理
+    let manager = BinaryDataManager::new(storage, 64).unwrap();
+
+    for i in 0..100 {
+      let data = vec![i as u8; 16];
+      let metadata = BinaryDataMetadata::new(Some(format!("d{i}.bin")), "application/octet-stream".to_string(), 16);
+      let _ = manager.store_data(data, metadata).await.unwrap();
+    }
+
+    let (cache_size, cache_limit) = manager.get_cache_info().await;
+    assert!(cache_size <= cache_limit);
+  }
 }

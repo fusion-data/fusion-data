@@ -4,9 +4,9 @@ use async_trait::async_trait;
 use hetumind_core::{
   version::Version,
   workflow::{
-    ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition,
-    NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig,
-    RegistrationError, make_execution_data_map,
+    ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, FlowNode, InputPortConfig, NodeDefinition,
+    NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig, RegistrationError,
+    make_execution_data_map,
   },
 };
 use serde_json::json;
@@ -79,7 +79,7 @@ impl NoOpV1 {
 /// - 条件分支：作为占位符节点
 /// - 数据验证：检查数据流转是否正确
 #[async_trait]
-impl NodeExecutable for NoOpV1 {
+impl FlowNode for NoOpV1 {
   fn definition(&self) -> Arc<NodeDefinition> {
     self.definition.clone()
   }

@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use hetumind_core::{
   version::Version,
   workflow::{
-    ConnectionKind, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition, NodeExecutable,
+    ConnectionKind, ExecutionDataItems, ExecutionDataMap, FlowNode, InputPortConfig, NodeDefinition,
     NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, RegistrationError,
   },
 };
@@ -42,7 +42,7 @@ pub struct StopAndErrorV1 {
 }
 
 #[async_trait]
-impl NodeExecutable for StopAndErrorV1 {
+impl FlowNode for StopAndErrorV1 {
   #[allow(unused_variables)]
   fn definition(&self) -> Arc<NodeDefinition> {
     self.definition.clone()

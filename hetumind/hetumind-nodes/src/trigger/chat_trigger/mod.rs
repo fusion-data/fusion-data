@@ -11,9 +11,9 @@ use fusion_common::time::now_offset;
 use hetumind_core::types::JsonValue;
 use hetumind_core::version::Version;
 use hetumind_core::workflow::{
-  ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, Node, NodeDefinition, NodeExecutable,
-  NodeExecutionContext, NodeExecutionError, NodeExecutor, NodeGroupKind, NodeKind, NodeProperty, NodePropertyKind,
-  RegistrationError, make_execution_data_map,
+  ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, FlowNode, FlowNodeRef, Node, NodeDefinition,
+  NodeExecutionContext, NodeExecutionError, NodeGroupKind, NodeKind, NodeProperty, NodePropertyKind, RegistrationError,
+  make_execution_data_map,
 };
 
 use crate::constants::CHAT_TRIGGERN_NODE_KIND as CHAT_TRIGGER_NODE_KIND;
@@ -72,7 +72,7 @@ impl TryFrom<NodeDefinition> for ChatTriggerNodeV1 {
 }
 
 #[async_trait]
-impl NodeExecutable for ChatTriggerNodeV1 {
+impl FlowNode for ChatTriggerNodeV1 {
   fn definition(&self) -> Arc<NodeDefinition> {
     self.definition.clone()
   }
@@ -123,7 +123,7 @@ impl NodeExecutable for ChatTriggerNodeV1 {
 
 pub struct ChatTriggerNode {
   default_version: Version,
-  executors: Vec<NodeExecutor>,
+  executors: Vec<FlowNodeRef>,
 }
 
 impl Node for ChatTriggerNode {
@@ -131,7 +131,7 @@ impl Node for ChatTriggerNode {
     &self.default_version
   }
 
-  fn node_executors(&self) -> &[NodeExecutor] {
+  fn node_executors(&self) -> &[FlowNodeRef] {
     &self.executors
   }
 
@@ -143,7 +143,7 @@ impl Node for ChatTriggerNode {
 impl ChatTriggerNode {
   pub fn new() -> Result<Self, RegistrationError> {
     let base = create_base();
-    let executors: Vec<NodeExecutor> = vec![Arc::new(ChatTriggerNodeV1::try_from(base)?)];
+    let executors: Vec<FlowNodeRef> = vec![Arc::new(ChatTriggerNodeV1::try_from(base)?)];
     let default_version = executors.iter().map(|node| node.definition().version.clone()).max().unwrap();
     Ok(Self { default_version, executors })
   }

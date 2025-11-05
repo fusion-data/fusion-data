@@ -11,9 +11,29 @@ enable = true
 server_addr = "0.0.0.0:50000"
 
 [fusion.log]
-enable = true
+enable = false
 log_writers = ["stdout"]
 
 [fusion.db]
 enable = true
 url = "postgresql://fusiondata:2025.Fusiondata@localhost:5432/fusiondata_test"
+
+# 工作流引擎测试配置
+[hetumind.workflow.engine]
+max_concurrent_executions = 4
+node_timeout_seconds = 30
+workflow_timeout_seconds = 120
+memory_limit_mb = 512
+
+[hetumind.workflow.engine.retry_config]
+max_retries = 2
+retry_interval_seconds = 5
+base_delay_ms = 500
+max_delay_ms = 10000
+backoff_multiplier = 2.0
+retryable_errors = ["timeout", "network", "resource_unavailable"]
+
+[hetumind.workflow.engine.resource_management]
+cpu_core_based_scaling = true
+deadlock_detection_enabled = true
+resource_allocation_strategy = "adaptive"

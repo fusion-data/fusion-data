@@ -119,6 +119,27 @@ where
   if let Some(system_prompt) = json.get("system_prompt").and_then(|v| v.as_str()) {
     ab = ab.preamble(system_prompt);
   }
+  // 绑定可选参数：temperature 与 max_tokens（若存在）
+  if let Some(temperature) = json.get("temperature").and_then(|v| v.as_f64()) {
+    ab = ab.temperature(temperature);
+  }
+  if let Some(max_tokens) = json.get("max_tokens").and_then(|v| v.as_u64()) {
+    ab = ab.max_tokens(max_tokens);
+  }
+  // 透传 provider-specific 参数：top_p 与 stop（OpenAI 兼容字段）
+  let mut extra = serde_json::Map::new();
+  if let Some(tp) = json.get("top_p").and_then(|v| v.as_f64()) {
+    extra.insert("top_p".to_string(), json!(tp));
+  }
+  if let Some(stops) = json.get("stop_sequences").and_then(|v| v.as_array()) {
+    let arr: Vec<String> = stops.iter().filter_map(|x| x.as_str().map(|s| s.to_string())).collect();
+    if !arr.is_empty() {
+      extra.insert("stop".to_string(), json!(arr));
+    }
+  }
+  if !extra.is_empty() {
+    ab = ab.additional_params(json!(extra));
+  }
   ab
 }
 
@@ -206,11 +227,13 @@ pub fn create_llm_execution_data_map(
   node_kind: &NodeKind,
   usage_stats: UsageStats,
   capabilities: ModelCapabilities,
+  used_params: Option<serde_json::Value>,
+  history_length: Option<u64>,
 ) -> ExecutionDataMap {
   let mut map = HashMap::default();
 
   // Main response
-  let model_info = json!({
+  let mut model_info = json!({
     "content": response_content,
     "model": model_name,
     "node_kind": node_kind,
@@ -218,6 +241,13 @@ pub fn create_llm_execution_data_map(
     "streaming": false,
     "capabilities": capabilities
   });
+
+  if let Some(params) = used_params {
+    model_info["used_params"] = params;
+  }
+  if let Some(hlen) = history_length {
+    model_info["history_length"] = json!(hlen);
+  }
 
   map.insert(ConnectionKind::AiLM, vec![ExecutionDataItems::Items(vec![ExecutionData::new_json(model_info, None)])]);
 

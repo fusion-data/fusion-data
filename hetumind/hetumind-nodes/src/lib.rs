@@ -8,9 +8,10 @@
 //! - 集成节点 (HTTP 请求、数据处理等)
 
 pub mod cluster;
+pub mod common;
 pub mod constants;
 pub mod core;
 pub mod integration;
 pub mod llm;
-pub mod memory;
+pub mod store;
 pub mod trigger;

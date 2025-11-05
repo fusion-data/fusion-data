@@ -7,7 +7,7 @@ use std::sync::Arc;
 
 use hetumind_core::{
   version::Version,
-  workflow::{Node, NodeDefinition, NodeExecutor, NodeGroupKind, NodeKind, RegistrationError, ValidationError},
+  workflow::{FlowNodeRef, Node, NodeDefinition, NodeGroupKind, NodeKind, RegistrationError, ValidationError},
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -215,12 +215,14 @@ impl Default for StopAndErrorConfig {
   }
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for ErrorType {
   fn default() -> Self {
     Self::ErrorMessage
   }
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for ErrorLevel {
   fn default() -> Self {
     Self::Error
@@ -229,13 +231,13 @@ impl Default for ErrorLevel {
 
 pub struct StopAndErrorNode {
   default_version: Version,
-  executors: Vec<NodeExecutor>,
+  executors: Vec<FlowNodeRef>,
 }
 
 impl StopAndErrorNode {
   pub fn new() -> Result<Self, RegistrationError> {
     let base = Self::base();
-    let executors: Vec<NodeExecutor> = vec![Arc::new(StopAndErrorV1::try_from(base)?)];
+    let executors: Vec<FlowNodeRef> = vec![Arc::new(StopAndErrorV1::try_from(base)?)];
     let default_version = executors.iter().map(|node| node.definition().version.clone()).max().unwrap();
     Ok(Self { default_version, executors })
   }
@@ -254,7 +256,7 @@ impl Node for StopAndErrorNode {
     &self.default_version
   }
 
-  fn node_executors(&self) -> &[NodeExecutor] {
+  fn node_executors(&self) -> &[FlowNodeRef] {
     &self.executors
   }
 

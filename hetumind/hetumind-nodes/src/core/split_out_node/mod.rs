@@ -16,7 +16,7 @@ use std::sync::Arc;
 
 use hetumind_core::{
   version::Version,
-  workflow::{Node, NodeDefinition, NodeExecutor, NodeGroupKind, NodeKind, RegistrationError},
+  workflow::{FlowNodeRef, Node, NodeDefinition, NodeGroupKind, NodeKind, RegistrationError},
 };
 use serde::{Deserialize, Serialize};
 
@@ -30,6 +30,7 @@ use crate::constants::SPLIT_OUT_NODE_KIND;
 /// 字段包含策略枚举
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[allow(clippy::enum_variant_names)]
 pub enum IncludeStrategy {
   /// 仅保留拆分字段
   NoOtherFields,
@@ -39,6 +40,7 @@ pub enum IncludeStrategy {
   SelectedOtherFields,
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for IncludeStrategy {
   fn default() -> Self {
     Self::NoOtherFields
@@ -147,14 +149,14 @@ impl SplitOutConfig {
 /// - 数据清洗和格式转换
 pub struct SplitOutNode {
   default_version: Version,
-  executors: Vec<NodeExecutor>,
+  executors: Vec<FlowNodeRef>,
 }
 
 impl SplitOutNode {
   /// 创建新的 Split Out 节点实例
   pub fn new() -> Result<Self, RegistrationError> {
     let base = Self::base();
-    let executors: Vec<NodeExecutor> = vec![Arc::new(SplitOutV1::try_from(base)?)];
+    let executors: Vec<FlowNodeRef> = vec![Arc::new(SplitOutV1::try_from(base)?)];
     let default_version = executors.iter().map(|node| node.definition().version.clone()).max().unwrap();
     Ok(Self { default_version, executors })
   }
@@ -173,7 +175,7 @@ impl Node for SplitOutNode {
     &self.default_version
   }
 
-  fn node_executors(&self) -> &[NodeExecutor] {
+  fn node_executors(&self) -> &[FlowNodeRef] {
     &self.executors
   }
 

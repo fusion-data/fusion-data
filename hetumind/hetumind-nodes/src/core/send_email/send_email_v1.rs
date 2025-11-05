@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use hetumind_core::{
   version::Version,
   workflow::{
-    ConnectionKind, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition, NodeExecutable,
+    ConnectionKind, ExecutionDataItems, ExecutionDataMap, FlowNode, InputPortConfig, NodeDefinition,
     NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig, RegistrationError,
     make_execution_data_map,
   },
@@ -478,7 +478,7 @@ impl SendEmailV1 {
 /// - 原始输入数据
 /// - `email_result`: 包含发送状态、消息ID、错误信息等
 #[async_trait]
-impl NodeExecutable for SendEmailV1 {
+impl FlowNode for SendEmailV1 {
   fn definition(&self) -> Arc<NodeDefinition> {
     self.definition.clone()
   }

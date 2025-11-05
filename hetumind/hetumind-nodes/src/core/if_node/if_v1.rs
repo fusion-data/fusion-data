@@ -5,7 +5,7 @@ use hetumind_core::{
   types::JsonValue,
   version::Version,
   workflow::{
-    ConnectionKind, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition, NodeExecutable,
+    ConnectionKind, ExecutionDataItems, ExecutionDataMap, FlowNode, InputPortConfig, NodeDefinition,
     NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig, RegistrationError,
     make_execution_data_map,
   },
@@ -149,7 +149,7 @@ impl IfV1 {
 /// - greaterThanOrEqual: 大于等于
 /// - lessThanOrEqual: 小于等于
 #[async_trait]
-impl NodeExecutable for IfV1 {
+impl FlowNode for IfV1 {
   fn definition(&self) -> Arc<NodeDefinition> {
     self.definition.clone()
   }

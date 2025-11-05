@@ -375,6 +375,7 @@ impl AttachmentProcessor {
   }
 
   /// 下载附件内容（模拟实现）
+  #[allow(dead_code)]
   pub async fn download_attachment(&self, attachment: &mut EmailAttachment) -> Result<(), String> {
     // 这里应该实现实际的附件下载逻辑
     // 由于这是一个示例实现，我们使用模拟数据
@@ -385,6 +386,7 @@ impl AttachmentProcessor {
   }
 
   /// 生成模拟附件数据
+  #[allow(dead_code)]
   fn generate_mock_attachment_data(filename: &str) -> String {
     let content = match Self::get_file_extension(filename).as_str() {
       "txt" => "This is a mock text file content.",
@@ -403,26 +405,31 @@ pub struct TriggerStateManager {
 
 impl TriggerStateManager {
   /// 创建新的状态管理器
+  #[allow(dead_code)]
   pub fn new() -> Self {
     Self { states: HashMap::new() }
   }
 
   /// 获取触发器状态
+  #[allow(dead_code)]
   pub fn get_state(&self, trigger_id: &str) -> Option<&TriggerState> {
     self.states.get(trigger_id)
   }
 
   /// 更新触发器状态
+  #[allow(dead_code)]
   pub fn update_state(&mut self, trigger_id: String, state: TriggerState) {
     self.states.insert(trigger_id, state);
   }
 
   /// 删除触发器状态
+  #[allow(dead_code)]
   pub fn remove_state(&mut self, trigger_id: &str) {
     self.states.remove(trigger_id);
   }
 
   /// 清理过期状态
+  #[allow(dead_code)]
   pub fn cleanup_expired_states(&mut self, max_age_seconds: u64) {
     let current_time = SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0);
 
@@ -436,15 +443,19 @@ pub struct TriggerState {
   /// 最后处理时间戳
   pub last_updated: u64,
   /// 已处理的邮件 UID 集合
+  #[allow(dead_code)]
   pub processed_uids: HashSet<u32>,
   /// 错误计数
+  #[allow(dead_code)]
   pub error_count: u32,
   /// 最后错误信息
+  #[allow(dead_code)]
   pub last_error: Option<String>,
 }
 
 impl TriggerState {
   /// 创建新的触发器状态
+  #[allow(dead_code)]
   pub fn new() -> Self {
     Self {
       last_updated: SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_secs()).unwrap_or(0),
@@ -455,6 +466,7 @@ impl TriggerState {
   }
 
   /// 添加已处理的邮件 UID
+  #[allow(dead_code)]
   pub fn add_processed_uid(&mut self, uid: u32) {
     self.processed_uids.insert(uid);
     self.update_timestamp();
@@ -466,6 +478,7 @@ impl TriggerState {
   }
 
   /// 记录错误
+  #[allow(dead_code)]
   pub fn record_error(&mut self, error: String) {
     self.error_count += 1;
     self.last_error = Some(error);
@@ -473,6 +486,7 @@ impl TriggerState {
   }
 
   /// 重置错误计数
+  #[allow(dead_code)]
   pub fn reset_errors(&mut self) {
     self.error_count = 0;
     self.last_error = None;

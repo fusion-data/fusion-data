@@ -3,7 +3,7 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use hetumind_core::types::JsonValue;
 use hetumind_core::workflow::{
-  ConnectionKind, ExecutionDataItems, ExecutionDataMap, NodeDefinition, NodeExecutable, NodeExecutionContext,
+  ConnectionKind, ExecutionDataItems, ExecutionDataMap, FlowNode, NodeDefinition, NodeExecutionContext,
   NodeExecutionError, NodeGroupKind, NodeProperty, NodePropertyKind, RegistrationError, make_execution_data_map,
 };
 
@@ -26,7 +26,7 @@ impl TryFrom<NodeDefinition> for EmailTriggerV1 {
 }
 
 #[async_trait]
-impl NodeExecutable for EmailTriggerV1 {
+impl FlowNode for EmailTriggerV1 {
   fn definition(&self) -> Arc<NodeDefinition> {
     self.definition.clone()
   }

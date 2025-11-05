@@ -9,9 +9,8 @@ use hetumind_core::{
   types::JsonValue,
   version::Version,
   workflow::{
-    ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition,
-    NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig,
-    RegistrationError,
+    ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, FlowNode, InputPortConfig, NodeDefinition,
+    NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig, RegistrationError,
   },
 };
 use serde_json::json;
@@ -250,7 +249,7 @@ impl ReadWriteFilesV1 {
 }
 
 #[async_trait]
-impl NodeExecutable for ReadWriteFilesV1 {
+impl FlowNode for ReadWriteFilesV1 {
   fn definition(&self) -> Arc<NodeDefinition> {
     self.definition.clone()
   }

@@ -4,9 +4,9 @@ use async_trait::async_trait;
 use hetumind_core::{
   version::Version,
   workflow::{
-    ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition,
-    NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig,
-    RegistrationError, ValidationError, make_execution_data_map,
+    ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, FlowNode, InputPortConfig, NodeDefinition,
+    NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig, RegistrationError,
+    ValidationError, make_execution_data_map,
   },
 };
 use serde_json::{Value, json};
@@ -187,7 +187,7 @@ impl AggregateV1 {
 /// - 空值过滤
 /// - 字段存在性提示
 #[async_trait]
-impl NodeExecutable for AggregateV1 {
+impl FlowNode for AggregateV1 {
   fn definition(&self) -> Arc<NodeDefinition> {
     self.definition.clone()
   }

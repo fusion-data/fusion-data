@@ -5,16 +5,23 @@ use std::{
 
 use dashmap::DashMap;
 
-use super::sub_node_provider::{SubNodeProviderRef, SubNodeProviderType};
-use crate::workflow::{Node, NodeDefinition, NodeExecutor, NodeKind, RegistrationError};
-use crate::{version::Version, workflow::NodeSupplier};
+use crate::version::Version;
+use crate::workflow::{
+  AgentSubNodeProviderRef, LLMSubNodeProviderRef, MemorySubNodeProviderRef, SubNodeType, ToolSubNodeProviderRef,
+};
+use crate::workflow::{FlowNodeRef, Node, NodeDefinition, NodeKind, RegistrationError, SubNodeRef};
 
 pub type NodeRef = Arc<dyn Node + Send + Sync>;
 
 #[derive(Default)]
 pub struct InnerNodeRegistry {
   nodes: DashMap<NodeKind, NodeRef>,
-  subnode_providers: DashMap<NodeKind, SubNodeProviderRef>,
+  subnode_providers: DashMap<NodeKind, SubNodeRef>,
+  // Typed providers for safer and faster retrieval
+  llm_suppliers: DashMap<NodeKind, LLMSubNodeProviderRef>,
+  memory_suppliers: DashMap<NodeKind, MemorySubNodeProviderRef>,
+  tool_suppliers: DashMap<NodeKind, ToolSubNodeProviderRef>,
+  agent_suppliers: DashMap<NodeKind, AgentSubNodeProviderRef>,
 }
 
 impl InnerNodeRegistry {
@@ -40,7 +47,7 @@ impl InnerNodeRegistry {
   ///
   /// Returns:
   /// - `Option<NodeExecutor>` - The node executor if found, otherwise None
-  pub fn get_executor(&self, node_kind: &NodeKind) -> Option<NodeExecutor> {
+  pub fn get_executor(&self, node_kind: &NodeKind) -> Option<FlowNodeRef> {
     self.nodes.get(node_kind).and_then(|x| x.value().default_node_executor())
   }
 
@@ -52,7 +59,7 @@ impl InnerNodeRegistry {
   ///
   /// Returns:
   /// - `Option<NodeExecutor>` - The node executor if found, otherwise None
-  pub fn get_executor_by_version(&self, node_kind: &NodeKind, version: &Version) -> Option<NodeExecutor> {
+  pub fn get_executor_by_version(&self, node_kind: &NodeKind, version: &Version) -> Option<FlowNodeRef> {
     self.nodes.get(node_kind).and_then(|x| x.value().get_node_executor(version))
   }
 
@@ -63,7 +70,7 @@ impl InnerNodeRegistry {
   ///
   /// Returns:
   /// - `Option<NodeSupplier>` - The node supplier if found, otherwise None
-  pub fn get_supplier(&self, node_kind: &NodeKind) -> Option<NodeSupplier> {
+  pub fn get_supplier(&self, node_kind: &NodeKind) -> Option<SubNodeRef> {
     self.nodes.get(node_kind).and_then(|x| x.value().default_node_supplier())
   }
 
@@ -75,7 +82,7 @@ impl InnerNodeRegistry {
   ///
   /// Returns:
   /// - `Option<NodeSupplier>` - The node supplier if found, otherwise None
-  pub fn get_supplier_by_version(&self, node_kind: &NodeKind, version: &Version) -> Option<NodeSupplier> {
+  pub fn get_supplier_by_version(&self, node_kind: &NodeKind, version: &Version) -> Option<SubNodeRef> {
     self.nodes.get(node_kind).and_then(|x| x.value().get_node_supplier(version))
   }
 
@@ -151,16 +158,66 @@ impl InnerNodeRegistry {
   ///
   /// Returns:
   /// - `Result<(), RegistrationError>` - Ok if successful, Err if provider already exists
-  pub fn register_subnode_provider(
-    &self,
-    kind: NodeKind,
-    provider: SubNodeProviderRef,
-  ) -> Result<(), RegistrationError> {
+  pub fn register_subnode_provider(&self, kind: NodeKind, provider: SubNodeRef) -> Result<(), RegistrationError> {
     if self.subnode_providers.contains_key(&kind) {
       return Err(RegistrationError::NodeKindAlreadyExists { node_kind: kind });
     }
 
     self.subnode_providers.insert(kind, provider);
+    Ok(())
+  }
+
+  // ===== Typed SubNodeProvider Registration =====
+
+  /// Register a LLMSubNodeProvider for a given node kind (typed)
+  pub fn register_llm_supplier(
+    &self,
+    kind: NodeKind,
+    provider: LLMSubNodeProviderRef,
+  ) -> Result<(), RegistrationError> {
+    if self.llm_suppliers.contains_key(&kind) {
+      return Err(RegistrationError::NodeKindAlreadyExists { node_kind: kind });
+    }
+    self.llm_suppliers.insert(kind, provider);
+    Ok(())
+  }
+
+  /// Register a MemorySubNodeProvider for a given node kind (typed)
+  pub fn register_memory_supplier(
+    &self,
+    kind: NodeKind,
+    provider: MemorySubNodeProviderRef,
+  ) -> Result<(), RegistrationError> {
+    if self.memory_suppliers.contains_key(&kind) {
+      return Err(RegistrationError::NodeKindAlreadyExists { node_kind: kind });
+    }
+    self.memory_suppliers.insert(kind, provider);
+    Ok(())
+  }
+
+  /// Register a ToolSubNodeProvider for a given node kind (typed)
+  pub fn register_tool_supplier(
+    &self,
+    kind: NodeKind,
+    provider: ToolSubNodeProviderRef,
+  ) -> Result<(), RegistrationError> {
+    if self.tool_suppliers.contains_key(&kind) {
+      return Err(RegistrationError::NodeKindAlreadyExists { node_kind: kind });
+    }
+    self.tool_suppliers.insert(kind, provider);
+    Ok(())
+  }
+
+  /// Register an AgentSubNodeProvider for a given node kind (typed)
+  pub fn register_agent_supplier(
+    &self,
+    kind: NodeKind,
+    provider: AgentSubNodeProviderRef,
+  ) -> Result<(), RegistrationError> {
+    if self.agent_suppliers.contains_key(&kind) {
+      return Err(RegistrationError::NodeKindAlreadyExists { node_kind: kind });
+    }
+    self.agent_suppliers.insert(kind, provider);
     Ok(())
   }
 
@@ -171,7 +228,7 @@ impl InnerNodeRegistry {
   ///
   /// Returns:
   /// - `Option<SubNodeProviderRef>` - The provider if found, otherwise None
-  pub fn get_subnode_provider(&self, kind: &NodeKind) -> Option<SubNodeProviderRef> {
+  pub fn get_subnode_provider(&self, kind: &NodeKind) -> Option<SubNodeRef> {
     self.subnode_providers.get(kind).map(|provider| provider.clone())
   }
 
@@ -182,7 +239,7 @@ impl InnerNodeRegistry {
   ///
   /// Returns:
   /// - `Option<SubNodeProviderRef>` - The unregistered provider if found, otherwise None
-  pub fn unregister_subnode_provider(&self, kind: &NodeKind) -> Option<SubNodeProviderRef> {
+  pub fn unregister_subnode_provider(&self, kind: &NodeKind) -> Option<SubNodeRef> {
     self.subnode_providers.remove(kind).map(|(_, provider)| provider)
   }
 
@@ -216,6 +273,64 @@ impl InnerNodeRegistry {
   /// Clear all registered SubNodeProviders
   pub fn clear_subnode_providers(&self) {
     self.subnode_providers.clear();
+  }
+
+  // ===== Typed SubNodeProvider Getters (预备，后续支持 downcast) =====
+
+  /// 获取 LLM 类型的 SubNodeProvider（当前返回 SubNodeRef，后续将支持 typed 引用）
+  pub fn get_llm_supplier(&self, kind: &NodeKind) -> Option<SubNodeRef> {
+    self
+      .subnode_providers
+      .get(kind)
+      .filter(|p| p.provider_type() == SubNodeType::LLM)
+      .map(|p| p.clone())
+  }
+
+  /// 获取 LLM 类型的 SubNodeProvider（typed 引用）
+  pub fn get_llm_supplier_typed(&self, kind: &NodeKind) -> Option<LLMSubNodeProviderRef> {
+    self.llm_suppliers.get(kind).map(|p| p.clone())
+  }
+
+  /// 获取 Memory 类型的 SubNodeProvider（当前返回 SubNodeRef，后续将支持 typed 引用）
+  pub fn get_memory_supplier(&self, kind: &NodeKind) -> Option<SubNodeRef> {
+    self
+      .subnode_providers
+      .get(kind)
+      .filter(|p| p.provider_type() == SubNodeType::Memory)
+      .map(|p| p.clone())
+  }
+
+  /// 获取 Memory 类型的 SubNodeProvider（typed 引用）
+  pub fn get_memory_supplier_typed(&self, kind: &NodeKind) -> Option<MemorySubNodeProviderRef> {
+    self.memory_suppliers.get(kind).map(|p| p.clone())
+  }
+
+  /// 获取 Tool 类型的 SubNodeProvider（当前返回 SubNodeRef，后续将支持 typed 引用）
+  pub fn get_tool_supplier(&self, kind: &NodeKind) -> Option<SubNodeRef> {
+    self
+      .subnode_providers
+      .get(kind)
+      .filter(|p| p.provider_type() == SubNodeType::Tool)
+      .map(|p| p.clone())
+  }
+
+  /// 获取 Tool 类型的 SubNodeProvider（typed 引用）
+  pub fn get_tool_supplier_typed(&self, kind: &NodeKind) -> Option<ToolSubNodeProviderRef> {
+    self.tool_suppliers.get(kind).map(|p| p.clone())
+  }
+
+  /// 获取 Agent 类型的 SubNodeProvider（当前返回 SubNodeRef，后续将支持 typed 引用）
+  pub fn get_agent_supplier(&self, kind: &NodeKind) -> Option<SubNodeRef> {
+    self
+      .subnode_providers
+      .get(kind)
+      .filter(|p| p.provider_type() == SubNodeType::Agent)
+      .map(|p| p.clone())
+  }
+
+  /// 获取 Agent 类型的 SubNodeProvider（typed 引用）
+  pub fn get_agent_supplier_typed(&self, kind: &NodeKind) -> Option<AgentSubNodeProviderRef> {
+    self.agent_suppliers.get(kind).map(|p| p.clone())
   }
 }
 

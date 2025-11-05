@@ -4,8 +4,8 @@ use std::{sync::Arc, time::Duration};
 
 use async_trait::async_trait;
 use hetumind_core::workflow::{
-  ConnectionKind, DataSource, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition,
-  NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeGroupKind, NodeProperty, NodePropertyKind,
+  ConnectionKind, DataSource, ExecutionData, ExecutionDataItems, ExecutionDataMap, FlowNode, InputPortConfig,
+  NodeDefinition, NodeExecutionContext, NodeExecutionError, NodeGroupKind, NodeProperty, NodePropertyKind,
   OutputPortConfig, RegistrationError, make_execution_data_map,
 };
 use log::{debug, error, info, warn};
@@ -42,7 +42,7 @@ impl TryFrom<NodeDefinition> for HttpRequestV1 {
 }
 
 #[async_trait]
-impl NodeExecutable for HttpRequestV1 {
+impl FlowNode for HttpRequestV1 {
   fn definition(&self) -> Arc<NodeDefinition> {
     self.definition.clone()
   }

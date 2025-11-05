@@ -362,7 +362,7 @@ Hetumind 侧处理要点：
     participant DBH as Hetumind DB
     participant DBJ as Jieyuan DB
 
-    Web->>Studio: GET /api/auth/oauth/:provider/start
+    Web->>Studio: GET /api/auth/oauth/{provider}/start
     Studio->>OAuth: POST /oauth/authorize (生成授权URL，携带code_challenge)
     OAuth-->>Web: 302 Redirect to Provider (授权页)
     Web->>Provider: 用户同意授权
@@ -378,7 +378,7 @@ Hetumind 侧处理要点：
     Studio-->>Web: 200/401
 ```
 
-- Start：`/api/auth/oauth/:provider/start` 返回授权 URL，前端重定向到 Provider 授权页。
+- Start：`/api/auth/oauth/{provider}/start` 返回授权 URL，前端重定向到 Provider 授权页。
 - Callback：OAuth 模块接收 `code` 并换取 token，返回 `SigninResponse { token, token_type: Bearer }` 给 Hetumind Studio。
 - 映射：Hetumind Studio 根据 `iam_user_id` 与 Provider subject，创建或更新 `user_entity`，确保后续业务主体仍以 Hetumind 的 `hm_user_id` 为主键引用。
 - 校验：所有 `/api/v1/*` 路由通过 WebAuth 中间件使用 Jieyuan 的 JWKS 或内省接口统一校验 Token。
@@ -405,6 +405,7 @@ Hetumind 侧处理要点：
 ## 代码示例（Hetumind Studio）
 
 > 以下示例展示：
+>
 > 1. 从独立 OAuth 模块导入服务；2) 开始 OAuth 流程；3) 处理登录响应并写入映射；4) 使用 JWKS 验证 Bearer Token。
 
 ```rust
@@ -416,7 +417,7 @@ Hetumind 侧处理要点：
 
   pub fn auth_routes() -> Router<Application> {
     Router::new()
-      .route("/oauth/:provider/start", get(oauth_start))
+      .route("/oauth/{provider}/start", get(oauth_start))
       .route("/oauth/token", post(oauth_token))
       // 保留原有 signin/signup（代理或兼容）
   }
@@ -428,7 +429,7 @@ Hetumind 侧处理要点：
   ) -> WebResult<OAuthAuthorizeResponse> {
     let mm = app.get_component::<ModelManager>().unwrap();
     let oauth_svc = OAuthSvc::new(mm.clone(), app.clone());
-    
+
     let request = OAuthAuthorizeRequest {
       provider: OAuthProvider::from_str(&provider).unwrap_or_default(),
       redirect_uri: None,
@@ -436,7 +437,7 @@ Hetumind 侧处理要点：
       code_challenge: None,
       code_challenge_method: None,
     };
-    
+
     let response = oauth_svc.authorize(request).await?;
     ok_json!(response)
   }
@@ -447,7 +448,7 @@ Hetumind 侧处理要点：
   ) -> WebResult<OAuthTokenResponse> {
     let mm = app.get_component::<ModelManager>().unwrap();
     let oauth_svc = OAuthSvc::new(mm.clone(), app.clone());
-    
+
     let response = oauth_svc.exchange_token(req).await?;
     ok_json!(response)
   }
@@ -693,11 +694,13 @@ Hetumind 侧处理要点：
 ### 1. 认证体验优化
 
 #### 无密码认证
+
 - **生物识别**: 支持指纹、面部识别等生物特征认证
 - **硬件令牌**: 支持 FIDO2/WebAuthn 硬件密钥认证
 - **移动端认证**: 手机扫码、推送确认等移动认证方式
 
 #### 单点登录增强
+
 - **企业级 SSO**: 支持 SAML 2.0、CAS 等企业 SSO 协议
 - **社交登录扩展**: 支持更多第三方身份提供商
 - **跨应用 SSO**: 实现多个应用间的无缝单点登录
@@ -705,11 +708,13 @@ Hetumind 侧处理要点：
 ### 2. 安全能力提升
 
 #### 零信任架构
+
 - **持续认证**: 基于风险评分的持续身份验证
 - **设备信任**: 设备指纹识别和信任评估
 - **行为分析**: 用户行为模式分析和异常检测
 
 #### 高级威胁防护
+
 - **暴力破解防护**: 智能限流和异常登录检测
 - **会话劫持保护**: 强化会话管理和异常会话检测
 - **钓鱼攻击防护**: 邮箱验证和多因素认证
@@ -717,11 +722,13 @@ Hetumind 侧处理要点：
 ### 3. 可观测性增强
 
 #### 认证监控
+
 - **实时监控面板**: 认证成功率、延迟、错误分布等指标
 - **异常检测**: 基于机器学习的认证异常检测
 - **性能分析**: 认证流程性能瓶颈分析和优化
 
 #### 审计合规
+
 - **详细审计日志**: 完整的认证事件审计追踪
 - **合规报告**: 自动生成合规性检查报告
 - **数据治理**: 身份数据的生命周期管理
@@ -729,11 +736,13 @@ Hetumind 侧处理要点：
 ### 4. 开发体验优化
 
 #### 开发工具支持
+
 - **多语言 SDK**: 提供更多语言的客户端 SDK
 - **调试工具**: 本地开发环境的认证调试工具
 - **文档完善**: 更详细的 API 文档和最佳实践
 
 #### 管理界面增强
+
 - **可视化配置**: 图形化的 OAuth 配置界面
 - **批量管理**: 支持批量用户和应用管理
 - **自动化运维**: CI/CD 集成和自动化部署
@@ -741,11 +750,13 @@ Hetumind 侧处理要点：
 ### 5. 生态集成扩展
 
 #### 云原生支持
+
 - **Kubernetes 集成**: 支持在 K8s 环境中的服务发现和配置
 - **服务网格**: 与 Istio、Linkerd 等服务网格集成
 - **Serverless**: 支持 Serverless 架构的无服务器认证
 
 #### API 生态
+
 - **GraphQL 支持**: 提供 GraphQL 认证查询接口
 - **Webhook 事件**: 认证相关事件的 Webhook 通知
 - **开放标准**: 支持 OpenID Connect、OAuth 2.1 等新标准

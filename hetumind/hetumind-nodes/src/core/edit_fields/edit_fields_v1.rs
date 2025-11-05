@@ -4,8 +4,8 @@ use async_trait::async_trait;
 use hetumind_core::{
   version::Version,
   workflow::{
-    ConnectionKind, DataSource, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition,
-    NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig,
+    ConnectionKind, DataSource, ExecutionData, ExecutionDataItems, ExecutionDataMap, FlowNode, InputPortConfig,
+    NodeDefinition, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig,
     RegistrationError, make_execution_data_map,
   },
 };
@@ -51,7 +51,7 @@ pub struct EditFieldsV1 {
 }
 
 #[async_trait]
-impl NodeExecutable for EditFieldsV1 {
+impl FlowNode for EditFieldsV1 {
   fn definition(&self) -> Arc<NodeDefinition> {
     self.definition.clone()
   }
