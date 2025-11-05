@@ -11,9 +11,9 @@ use fusion_common::time::now_offset;
 use hetumind_core::types::JsonValue;
 use hetumind_core::version::Version;
 use hetumind_core::workflow::{
-  ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, Node, NodeDefinition, FlowNode,
-  NodeExecutionContext, NodeExecutionError, FlowNodeRef, NodeGroupKind, NodeKind, NodeProperty, NodePropertyKind,
-  RegistrationError, make_execution_data_map,
+  ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, FlowNode, FlowNodeRef, Node, NodeDefinition,
+  NodeExecutionContext, NodeExecutionError, NodeGroupKind, NodeKind, NodeProperty, NodePropertyKind, RegistrationError,
+  make_execution_data_map,
 };
 
 use crate::constants::CHAT_TRIGGERN_NODE_KIND as CHAT_TRIGGER_NODE_KIND;

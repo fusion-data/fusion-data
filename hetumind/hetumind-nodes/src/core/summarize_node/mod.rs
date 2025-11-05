@@ -8,7 +8,7 @@ use std::sync::Arc;
 use fusion_common::ahash::HashSet;
 use hetumind_core::{
   version::Version,
-  workflow::{Node, NodeDefinition, FlowNodeRef, NodeGroupKind, NodeKind, RegistrationError, ValidationError},
+  workflow::{FlowNodeRef, Node, NodeDefinition, NodeGroupKind, NodeKind, RegistrationError, ValidationError},
 };
 use serde::{Deserialize, Serialize};
 
@@ -58,6 +58,7 @@ pub enum AggregateOperation {
 /// 序列化风格
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[allow(clippy::enum_variant_names)]
 pub enum SerializationStyle {
   /// snake_case (默认)
   SnakeCase,
@@ -329,36 +330,42 @@ impl SummarizeConfig {
   }
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for AggregateOperation {
   fn default() -> Self {
     Self::Count
   }
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for SerializationStyle {
   fn default() -> Self {
     Self::SnakeCase
   }
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for OutputFormat {
   fn default() -> Self {
     Self::Json
   }
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for DataType {
   fn default() -> Self {
     Self::String
   }
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for GroupSortOrder {
   fn default() -> Self {
     Self::None
   }
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for ErrorHandlingStrategy {
   fn default() -> Self {
     Self::SkipError

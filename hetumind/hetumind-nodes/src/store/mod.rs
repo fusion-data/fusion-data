@@ -2,11 +2,9 @@
 
 use hetumind_core::workflow::{NodeRegistry, RegistrationError};
 
-pub mod graph_flow_memory;
 pub mod simple_memory_node;
 
 // Re-export for easy access
-pub use graph_flow_memory::*;
 pub use simple_memory_node::*;
 
 /// Register all memory nodes with the given registry

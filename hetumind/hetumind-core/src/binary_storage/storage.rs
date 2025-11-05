@@ -252,6 +252,60 @@ mod tests {
     assert!(available);
   }
 
+  // 负向测试：模拟错误路径
+  struct NegativeTestStorage;
+
+  #[async_trait]
+  impl BinaryDataStorage for NegativeTestStorage {
+    async fn store(&self, _data: Vec<u8>, _metadata: &BinaryDataMetadata) -> Result<String, BinaryStorageError> {
+      Err(BinaryStorageError::operation("store failed"))
+    }
+
+    async fn retrieve(&self, key: &str) -> Result<Vec<u8>, BinaryStorageError> {
+      Err(BinaryStorageError::file_not_found(key))
+    }
+
+    async fn get_metadata(&self, _key: &str) -> Result<BinaryDataMetadata, BinaryStorageError> {
+      Err(BinaryStorageError::file_not_found("missing"))
+    }
+
+    async fn delete(&self, _key: &str) -> Result<(), BinaryStorageError> {
+      Err(BinaryStorageError::file_not_found("missing"))
+    }
+
+    async fn exists(&self, _key: &str) -> Result<bool, BinaryStorageError> {
+      Err(BinaryStorageError::file_not_found("missing"))
+    }
+
+    async fn list(&self, _prefix: &str) -> Result<Vec<String>, BinaryStorageError> {
+      Ok(vec![])
+    }
+
+    fn storage_type_name(&self) -> &'static str {
+      "s3"
+    }
+  }
+
+  #[tokio::test]
+  async fn test_storage_negative_paths() {
+    let storage = NegativeTestStorage;
+    let err = storage.store(vec![1, 2, 3], &BinaryDataMetadata::default()).await.unwrap_err();
+    match err {
+      BinaryStorageError::OperationError(msg) => assert!(msg.contains("store failed")),
+      _ => panic!("unexpected"),
+    }
+
+    let err = storage.retrieve("missing").await.unwrap_err();
+    match err {
+      BinaryStorageError::FileNotFound(path) => assert!(path.contains("missing")),
+      _ => panic!("unexpected"),
+    }
+
+    // is_available 在 FileNotFound 时应返回可用
+    let available = storage.is_available().await.unwrap();
+    assert!(available);
+  }
+
   #[test]
   #[allow(clippy::field_reassign_with_default)]
   fn test_storage_capabilities() {

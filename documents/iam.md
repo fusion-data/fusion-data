@@ -252,7 +252,7 @@ pub struct PathLookupResponse {
 
 **管理端点**：`jieyuan/jieyuan/src/endpoint/api/v1/path_mappings.rs`
 
-- CRUD 操作：`POST /`, `GET /:id`, `PUT /:id`, `DELETE /:id`
+- CRUD 操作：`POST /`, `GET /{id}`, `PUT /{id}`, `DELETE /{id}`
 - 批量操作：`POST /batch`
 - 查询：`POST /query`
 

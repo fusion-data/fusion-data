@@ -121,7 +121,7 @@
 ### 前端 (`hetumind-web`)
 
 - [ ] **项目基础**
-  - [ ] 使用 `Vue Router` 设置路由 (`/signin`, `/dashboard`, `/workflows/:id`)
+  - [ ] 使用 `Vue Router` 设置路由 (`/signin`, `/dashboard`, `/workflows/{id}`)
   - [ ] 使用 `Pinia` 管理全局状态 (用户信息, Auth Token)
   - [ ] 封装一个 `axios` 实例作为 API 客户端，自动附加 Auth Token
 - [ ] **用户认证页面**

@@ -7,7 +7,7 @@ use std::sync::Arc;
 
 use hetumind_core::{
   version::Version,
-  workflow::{Node, NodeDefinition, FlowNodeRef, NodeGroupKind, NodeKind, RegistrationError, ValidationError},
+  workflow::{FlowNodeRef, Node, NodeDefinition, NodeGroupKind, NodeKind, RegistrationError, ValidationError},
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -215,12 +215,14 @@ impl Default for StopAndErrorConfig {
   }
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for ErrorType {
   fn default() -> Self {
     Self::ErrorMessage
   }
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for ErrorLevel {
   fn default() -> Self {
     Self::Error

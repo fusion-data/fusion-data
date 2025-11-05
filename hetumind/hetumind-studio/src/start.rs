@@ -14,6 +14,8 @@ use crate::{
   runtime::workflow::WorkflowEnginePlugin,
   utils::NodeRegistryPlugin,
 };
+use hetumind_context::services::memory_service::{InMemoryMemoryService, MemoryService};
+use std::sync::Arc;
 
 pub fn app_builder<T>(extra_source: Option<T>) -> ApplicationBuilder
 where
@@ -32,6 +34,9 @@ where
     .add_plugin(WorkflowEnginePlugin); // WorkflowEngineService
 
   app.add_component(EncryptionKeyManager::new());
+  // 注册默认 MemoryService 组件（InMemory + TTL 300s），供 SimpleMemorySupplier/EngineRouter 使用
+  let memory_service: Arc<dyn MemoryService> = Arc::new(InMemoryMemoryService::new(300));
+  app.add_component::<Arc<dyn MemoryService>>(memory_service);
 
   app
 }

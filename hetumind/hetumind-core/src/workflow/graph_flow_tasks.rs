@@ -10,8 +10,8 @@ use fusion_common::ahash;
 use crate::workflow::{
   NodeExecutionError, NodeKind, NodeRegistry,
   sub_node::{
-    AgentConfig, AgentSubNodeProviderRef, ClusterNodeConfig, ExecutionConfig, LLMConfig, LLMSubNodeProviderRef,
-    MemoryConfig, MemorySubNodeProviderRef, Message, SubNodeRef, SubNodeType, ToolSubNodeProviderRef,
+    AgentConfig, AgentSubNodeProviderRef, ClusterNodeConfig, LLMConfig, LLMSubNodeProviderRef, MemoryConfig,
+    MemorySubNodeProviderRef, Message, SubNodeRef, SubNodeType, ToolSubNodeProviderRef,
   },
 };
 
@@ -72,16 +72,21 @@ pub type TaskRef = Arc<dyn Task + Send + Sync>;
 /// Base GraphFlow task for SubNodeProvider execution
 pub struct SubNodeProviderTask {
   provider: SubNodeRef,
-  node_kind: NodeKind,
-  execution_config: ExecutionConfig,
   task_id: String,
 }
 
 impl SubNodeProviderTask {
-  /// Create a new SubNodeProvider task
-  pub fn new(provider: SubNodeRef, node_kind: NodeKind, execution_config: ExecutionConfig) -> Self {
+  /// 创建一个新的 SubNodeProvider 任务
+  ///
+  /// 参数：
+  /// - provider: 子节点提供者引用
+  /// - node_kind: 节点类型（仅用于生成任务 ID，不会存储）
+  ///
+  /// 返回：
+  /// - SubNodeProviderTask 实例
+  pub fn new(provider: SubNodeRef, node_kind: NodeKind) -> Self {
     let task_id = node_kind.to_string();
-    Self { provider, node_kind, execution_config, task_id }
+    Self { provider, task_id }
   }
 
   /// Get the provider type
@@ -92,7 +97,7 @@ impl SubNodeProviderTask {
 
 #[async_trait]
 impl Task for SubNodeProviderTask {
-  async fn run(&self, mut context: Context) -> Result<TaskResult, NodeExecutionError> {
+  async fn run(&self, mut _context: Context) -> Result<TaskResult, NodeExecutionError> {
     // Initialize the provider if needed
     self.provider.initialize().await?;
 
@@ -207,7 +212,7 @@ impl ToolProviderTask {
 
 #[async_trait]
 impl Task for ToolProviderTask {
-  async fn run(&self, mut context: Context) -> Result<TaskResult, NodeExecutionError> {
+  async fn run(&self, mut _context: Context) -> Result<TaskResult, NodeExecutionError> {
     // Initialize the provider
     self.tool_provider.initialize().await?;
 
@@ -226,16 +231,23 @@ impl Task for ToolProviderTask {
 /// Agent Provider GraphFlow Task
 pub struct AgentProviderTask {
   agent_provider: AgentSubNodeProviderRef,
-  node_kind: NodeKind,
   default_config: AgentConfig,
   task_id: String,
 }
 
 impl AgentProviderTask {
-  /// Create a new Agent provider task
+  /// 创建一个新的 Agent 提供者任务
+  ///
+  /// 参数：
+  /// - agent_provider: Agent 子节点提供者引用
+  /// - node_kind: 节点类型（仅用于生成任务 ID，不会存储）
+  /// - default_config: 默认 Agent 执行配置
+  ///
+  /// 返回：
+  /// - AgentProviderTask 实例
   pub fn new(agent_provider: AgentSubNodeProviderRef, node_kind: NodeKind, default_config: AgentConfig) -> Self {
     let task_id = format!("agent_{}", node_kind);
-    Self { agent_provider, node_kind, default_config, task_id }
+    Self { agent_provider, default_config, task_id }
   }
 }
 
@@ -308,7 +320,7 @@ impl ClusterNodeExecutor {
   pub fn register_subnode_provider(
     &mut self,
     kind: NodeKind,
-    config: ClusterNodeConfig,
+    _config: ClusterNodeConfig,
   ) -> Result<(), NodeExecutionError> {
     // Get the SubNodeProvider from registry
     let provider = self.node_registry.get_subnode_provider(&kind).ok_or_else(|| {
@@ -318,21 +330,17 @@ impl ClusterNodeExecutor {
     // Create appropriate task based on provider type
     let task: TaskRef = match provider.provider_type() {
       SubNodeType::LLM => {
-        // For now, create a simple placeholder task
-        // In a full implementation, this would downcast and create proper LLM tasks
-        let default_config = config.llm_config.unwrap_or_default();
-        Arc::new(SubNodeProviderTask::new(provider, kind.clone(), config.execution_config.clone()))
+        // 目前创建一个简单的占位任务；完整实现将创建具体的 LLM 任务
+        Arc::new(SubNodeProviderTask::new(provider, kind.clone()))
       }
       SubNodeType::Memory => {
-        let default_config = config.memory_config.unwrap_or_default();
-        Arc::new(SubNodeProviderTask::new(provider, kind.clone(), config.execution_config.clone()))
+        // 目前创建一个简单的占位任务；完整实现将创建具体的 Memory 任务
+        Arc::new(SubNodeProviderTask::new(provider, kind.clone()))
       }
-      SubNodeType::Tool => Arc::new(SubNodeProviderTask::new(provider, kind.clone(), config.execution_config.clone())),
+      SubNodeType::Tool => Arc::new(SubNodeProviderTask::new(provider, kind.clone())),
       SubNodeType::Agent => {
-        let default_config = config.agent_config.unwrap_or_default();
-        // For now, create a simple placeholder task
-        // In a full implementation, this would downcast and create proper Agent tasks
-        Arc::new(SubNodeProviderTask::new(provider, kind.clone(), config.execution_config.clone()))
+        // 目前创建一个简单的占位任务；完整实现将创建具体的 Agent 任务
+        Arc::new(SubNodeProviderTask::new(provider, kind.clone()))
       }
     };
 
@@ -342,7 +350,7 @@ impl ClusterNodeExecutor {
   }
 
   /// Execute a task by ID
-  pub async fn execute_task(&self, task_id: &str, mut context: Context) -> Result<TaskResult, NodeExecutionError> {
+  pub async fn execute_task(&self, task_id: &str, context: Context) -> Result<TaskResult, NodeExecutionError> {
     let task = self
       .tasks
       .get(task_id)

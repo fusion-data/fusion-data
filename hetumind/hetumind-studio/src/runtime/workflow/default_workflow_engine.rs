@@ -4,7 +4,9 @@ use async_trait::async_trait;
 use fusion_common::ahash::HashMap;
 use fusion_common::time::now;
 use fusion_core::application::Application;
+use hetumind_core::binary_storage::BinaryDataManager;
 
+use crate::runtime::workflow::EngineRouter;
 use hetumind_core::{
   expression::ExpressionEvaluator,
   workflow::{
@@ -14,6 +16,9 @@ use hetumind_core::{
     WorkflowEngineSetting, WorkflowExecutionError, WorkflowTriggerData,
   },
 };
+use hetumind_nodes::common::helpers::get_simple_memory_supplier_typed;
+use hetumind_nodes::store::simple_memory_node::SimpleMemorySupplier;
+use serde_json::json;
 
 use crate::runtime::{
   execution::ExecutionStore,
@@ -75,21 +80,102 @@ impl DefaultWorkflowEngine {
     log::debug!("找到节点执行器: {} ({})", node_name, node.kind);
 
     // 2. 汇集父节点的输出
-    let parents_results = collect_parents_results(node_name, graph, all_results);
+    let mut parents_results = collect_parents_results(node_name, graph, all_results);
+
+    // 在执行 LLM 节点前，尝试读取会话历史并注入到输入（system_prompt/messages），保持 NodeExecutionContext 不改动
+    if self.node_registry.get_llm_supplier_typed(&node.kind).is_some() {
+      // 查找输入数据（优先 AiLM，其次 Main）
+      let maybe_items = parents_results
+        .get(&ConnectionKind::AiLM)
+        .cloned()
+        .or_else(|| parents_results.get(&ConnectionKind::Main).cloned());
+
+      if let Some(items_vec) = maybe_items {
+        if let Some(first_items) = items_vec.first() {
+          if let Some(data_vec) = first_items.get_data_items() {
+            if let Some(input_data) = data_vec.first() {
+              let mut input_json = input_data.json().clone();
+              // 提取 session_id 与历史条数
+              if let Some(session_id) = input_json.get("session_id").and_then(|v| v.as_str()) {
+                let history_count = input_json.get("history_count").and_then(|v| v.as_u64()).unwrap_or(10) as usize;
+
+                if let Some(mem_supplier) = get_simple_memory_supplier_typed(&self.node_registry) {
+                  // 优先使用具体类型的 with_ctx 方法，失败则回退到 trait 方法
+                  let mem_msgs = if let Some(simple) = mem_supplier.as_any().downcast_ref::<SimpleMemorySupplier>() {
+                    simple.retrieve_messages_with_ctx(context, session_id, history_count).await.unwrap_or_default()
+                  } else {
+                    mem_supplier.retrieve_messages(session_id, history_count).await.unwrap_or_default()
+                  };
+
+                  // 构造历史上下文文本，注入到 system_prompt；同时合并到 messages（如存在）
+                  if !mem_msgs.is_empty() {
+                    let history_text = mem_msgs
+                      .iter()
+                      .map(|m| format!("- {}: {}", m.role, m.content))
+                      .collect::<Vec<String>>()
+                      .join("\n");
+
+                    let new_system_prompt = match input_json.get("system_prompt").and_then(|v| v.as_str()) {
+                      Some(sp) if !sp.is_empty() => format!("{}\n\n[History]\n{}", sp, history_text),
+                      _ => format!("[History]\n{}", history_text),
+                    };
+                    input_json["system_prompt"] = json!(new_system_prompt);
+
+                    // 合并到 messages：保留已有 messages，并追加历史
+                    let mut messages =
+                      input_json.get("messages").and_then(|v| v.as_array()).cloned().unwrap_or_default();
+                    for m in mem_msgs.iter() {
+                      messages.push(json!({"role": m.role, "content": m.content}));
+                    }
+                    input_json["messages"] = json!(messages);
+
+                    // 追加 prompt 为用户消息（若存在）
+                    if let Some(prompt) = input_json.get("prompt").and_then(|v| v.as_str()) {
+                      let mut messages =
+                        input_json.get("messages").and_then(|v| v.as_array()).cloned().unwrap_or_default();
+                      messages.push(json!({"role": "user", "content": prompt}));
+                      input_json["messages"] = json!(messages);
+                    }
+
+                    // 注入历史条数字段（用于观测与复现）
+                    input_json["history_length"] = json!(mem_msgs.len());
+
+                    // 写回修改后的输入数据
+                    let new_exec_data = ExecutionData::new_json(input_json, input_data.source().cloned());
+                    // 更新 parents_results 中对应的端口数据
+                    if parents_results.get(&ConnectionKind::AiLM).is_some() {
+                      parents_results
+                        .insert(ConnectionKind::AiLM, vec![ExecutionDataItems::new_items(vec![new_exec_data])]);
+                    } else {
+                      parents_results
+                        .insert(ConnectionKind::Main, vec![ExecutionDataItems::new_items(vec![new_exec_data])]);
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
 
     // 3. 创建节点执行上下文
-    let node_context = make_node_context(context, node_name, parents_results);
+    let node_context = make_node_context(context, node_name, parents_results, self.node_registry.clone())?;
 
     // 4. 执行节点
     log::debug!("开始执行节点: {} ({})", node_name, node.kind);
     log::debug!("节点参数: {:?}", node.parameters);
-    let output_data = executor.execute(&node_context).await.map_err(|e| {
+    let mut output_data = executor.execute(&node_context).await.map_err(|e| {
       log::debug!("节点 {} 执行失败: {:?}", node_name, e);
       log::debug!("错误类型: {}", std::any::type_name_of_val(&e));
       log::debug!("详细错误信息: {}", e);
       WorkflowExecutionError::NodeExecutionFailed { workflow_id: workflow.id.clone(), node_name: node_name.clone() }
     })?;
     log::debug!("节点 {} 执行成功", node_name);
+
+    // 5. 处理 EngineRequest（AiTool 端口），通过 EngineRouter 统一路由到对应 Tool 节点执行
+    let router = EngineRouter::new(self.node_registry.clone());
+    router.route_engine_requests(&mut output_data, context).await?;
 
     Ok(output_data)
   }
@@ -99,19 +185,27 @@ fn make_node_context(
   context: &ExecutionContext,
   node_name: &NodeName,
   parents_results: ExecutionDataMap,
-) -> NodeExecutionContext {
-  NodeExecutionContext::new(
+  node_registry: NodeRegistry,
+) -> Result<NodeExecutionContext, WorkflowExecutionError> {
+  // 获取 BinaryDataManager 组件
+  let binary_data_manager = Application::global()
+    .get_component::<BinaryDataManager>()
+    .map_err(|e| WorkflowExecutionError::InternalError { message: format!("BinaryDataManager not found: {}", e) })?;
+
+  let ctx = NodeExecutionContext::new(
     *context.execution_id(),
     context.workflow(),
     node_name.clone(),
     parents_results,
-    Application::global().component(),
-    Application::global().component(),
+    binary_data_manager,
+    node_registry,
   )
   .with_started_at(now())
   .with_user_id(context.ctx().user_id())
   .with_env_vars(std::env::vars())
-  .with_expression_evaluator(ExpressionEvaluator::new())
+  .with_expression_evaluator(ExpressionEvaluator::new());
+
+  Ok(ctx)
 }
 
 fn collect_parents_results(

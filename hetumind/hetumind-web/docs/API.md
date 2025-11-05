@@ -45,6 +45,7 @@ Authorization: Bearer <your-token>
 ### 获取访问令牌
 
 #### 请求
+
 ```http
 POST /api/v1/auth/login
 Content-Type: application/json
@@ -56,6 +57,7 @@ Content-Type: application/json
 ```
 
 #### 响应
+
 ```json
 {
   "success": true,
@@ -76,6 +78,7 @@ Content-Type: application/json
 ### 刷新令牌
 
 #### 请求
+
 ```http
 POST /api/v1/auth/refresh
 Content-Type: application/json
@@ -86,6 +89,7 @@ Content-Type: application/json
 ```
 
 #### 响应
+
 ```json
 {
   "success": true,
@@ -101,6 +105,7 @@ Content-Type: application/json
 ### 获取工作流列表
 
 #### 请求
+
 ```http
 GET /api/v1/workflows?page=1&limit=20&search=keyword&status=active
 Authorization: Bearer <token>
@@ -108,16 +113,17 @@ Authorization: Bearer <token>
 
 #### 查询参数
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| page | number | 否 | 页码，默认 1 |
-| limit | number | 否 | 每页数量，默认 20 |
-| search | string | 否 | 搜索关键词 |
-| status | string | 否 | 工作流状态 |
-| sortBy | string | 否 | 排序字段 |
-| sortOrder | string | 否 | 排序方向 (asc/desc) |
+| 参数      | 类型   | 必填 | 说明                |
+| --------- | ------ | ---- | ------------------- |
+| page      | number | 否   | 页码，默认 1        |
+| limit     | number | 否   | 每页数量，默认 20   |
+| search    | string | 否   | 搜索关键词          |
+| status    | string | 否   | 工作流状态          |
+| sortBy    | string | 否   | 排序字段            |
+| sortOrder | string | 否   | 排序方向 (asc/desc) |
 
 #### 响应
+
 ```json
 {
   "success": true,
@@ -153,12 +159,14 @@ Authorization: Bearer <token>
 ### 获取工作流详情
 
 #### 请求
+
 ```http
-GET /api/v1/workflows/:workflowId
+GET /api/v1/workflows/{workflowId}
 Authorization: Bearer <token>
 ```
 
 #### 响应
+
 ```json
 {
   "success": true,
@@ -210,6 +218,7 @@ Authorization: Bearer <token>
 ### 创建工作流
 
 #### 请求
+
 ```http
 POST /api/v1/workflows
 Authorization: Bearer <token>
@@ -230,6 +239,7 @@ Content-Type: application/json
 ```
 
 #### 响应
+
 ```json
 {
   "success": true,
@@ -247,8 +257,9 @@ Content-Type: application/json
 ### 更新工作流
 
 #### 请求
+
 ```http
-PUT /api/v1/workflows/:workflowId
+PUT /api/v1/workflows/{workflowId}
 Authorization: Bearer <token>
 Content-Type: application/json
 
@@ -262,6 +273,7 @@ Content-Type: application/json
 ```
 
 #### 响应
+
 ```json
 {
   "success": true,
@@ -277,12 +289,14 @@ Content-Type: application/json
 ### 删除工作流
 
 #### 请求
+
 ```http
-DELETE /api/v1/workflows/:workflowId
+DELETE /api/v1/workflows/{workflowId}
 Authorization: Bearer <token>
 ```
 
 #### 响应
+
 ```json
 {
   "success": true,
@@ -293,8 +307,9 @@ Authorization: Bearer <token>
 ### 复制工作流
 
 #### 请求
+
 ```http
-POST /api/v1/workflows/:workflowId/clone
+POST /api/v1/workflows/{workflowId}/clone
 Authorization: Bearer <token>
 Content-Type: application/json
 
@@ -305,6 +320,7 @@ Content-Type: application/json
 ```
 
 #### 响应
+
 ```json
 {
   "success": true,
@@ -323,12 +339,14 @@ Content-Type: application/json
 ### 获取节点类型列表
 
 #### 请求
+
 ```http
 GET /api/v1/nodes/types
 Authorization: Bearer <token>
 ```
 
 #### 响应
+
 ```json
 {
   "success": true,
@@ -376,12 +394,14 @@ Authorization: Bearer <token>
 ### 获取节点配置模板
 
 #### 请求
+
 ```http
-GET /api/v1/nodes/templates/:nodeType
+GET /api/v1/nodes/templates/{nodeType}
 Authorization: Bearer <token>
 ```
 
 #### 响应
+
 ```json
 {
   "success": true,
@@ -427,6 +447,7 @@ Authorization: Bearer <token>
 ### 验证节点配置
 
 #### 请求
+
 ```http
 POST /api/v1/nodes/validate
 Authorization: Bearer <token>
@@ -444,6 +465,7 @@ Content-Type: application/json
 ```
 
 #### 响应
+
 ```json
 {
   "success": true,
@@ -465,8 +487,9 @@ Content-Type: application/json
 ### 执行工作流
 
 #### 请求
+
 ```http
-POST /api/v1/workflows/:workflowId/execute
+POST /api/v1/workflows/{workflowId}/execute
 Authorization: Bearer <token>
 Content-Type: application/json
 
@@ -483,6 +506,7 @@ Content-Type: application/json
 ```
 
 #### 响应
+
 ```json
 {
   "success": true,
@@ -515,12 +539,14 @@ Content-Type: application/json
 ### 获取执行状态
 
 #### 请求
+
 ```http
-GET /api/v1/executions/:executionId
+GET /api/v1/executions/{executionId}
 Authorization: Bearer <token>
 ```
 
 #### 响应
+
 ```json
 {
   "success": true,
@@ -582,12 +608,14 @@ Authorization: Bearer <token>
 ### 暂停执行
 
 #### 请求
+
 ```http
-POST /api/v1/executions/:executionId/pause
+POST /api/v1/executions/{executionId}/pause
 Authorization: Bearer <token>
 ```
 
 #### 响应
+
 ```json
 {
   "success": true,
@@ -602,12 +630,14 @@ Authorization: Bearer <token>
 ### 恢复执行
 
 #### 请求
+
 ```http
-POST /api/v1/executions/:executionId/resume
+POST /api/v1/executions/{executionId}/resume
 Authorization: Bearer <token>
 ```
 
 #### 响应
+
 ```json
 {
   "success": true,
@@ -622,12 +652,14 @@ Authorization: Bearer <token>
 ### 取消执行
 
 #### 请求
+
 ```http
-POST /api/v1/executions/:executionId/cancel
+POST /api/v1/executions/{executionId}/cancel
 Authorization: Bearer <token>
 ```
 
 #### 响应
+
 ```json
 {
   "success": true,
@@ -643,12 +675,14 @@ Authorization: Bearer <token>
 ### 获取执行历史
 
 #### 请求
+
 ```http
-GET /api/v1/workflows/:workflowId/executions?page=1&limit=20&status=completed
+GET /api/v1/workflows/{workflowId}/executions?page=1&limit=20&status=completed
 Authorization: Bearer <token>
 ```
 
 #### 响应
+
 ```json
 {
   "success": true,
@@ -680,6 +714,7 @@ Authorization: Bearer <token>
 ### 获取系统指标
 
 #### 请求
+
 ```http
 GET /api/v1/monitoring/metrics?timeRange=1h&granularity=5m
 Authorization: Bearer <token>
@@ -687,13 +722,14 @@ Authorization: Bearer <token>
 
 #### 查询参数
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| timeRange | string | 否 | 时间范围 (1h, 6h, 24h, 7d) |
-| granularity | string | 否 | 数据粒度 (1m, 5m, 15m, 1h) |
-| metrics | string | 否 | 指定指标类型 |
+| 参数        | 类型   | 必填 | 说明                       |
+| ----------- | ------ | ---- | -------------------------- |
+| timeRange   | string | 否   | 时间范围 (1h, 6h, 24h, 7d) |
+| granularity | string | 否   | 数据粒度 (1m, 5m, 15m, 1h) |
+| metrics     | string | 否   | 指定指标类型               |
 
 #### 响应
+
 ```json
 {
   "success": true,
@@ -734,12 +770,14 @@ Authorization: Bearer <token>
 ### 获取工作流统计
 
 #### 请求
+
 ```http
-GET /api/v1/monitoring/workflows/:workflowId/stats?period=7d
+GET /api/v1/monitoring/workflows/{workflowId}/stats?period=7d
 Authorization: Bearer <token>
 ```
 
 #### 响应
+
 ```json
 {
   "success": true,
@@ -783,12 +821,14 @@ Authorization: Bearer <token>
 ### 获取告警列表
 
 #### 请求
+
 ```http
 GET /api/v1/monitoring/alerts?status=active&severity=high&page=1&limit=20
 Authorization: Bearer <token>
 ```
 
 #### 响应
+
 ```json
 {
   "success": true,
@@ -826,6 +866,7 @@ Authorization: Bearer <token>
 ### 创建告警规则
 
 #### 请求
+
 ```http
 POST /api/v1/monitoring/alert-rules
 Authorization: Bearer <token>
@@ -866,6 +907,7 @@ Content-Type: application/json
 ```
 
 #### 响应
+
 ```json
 {
   "success": true,
@@ -886,12 +928,14 @@ Content-Type: application/json
 ### 获取用户配置
 
 #### 请求
+
 ```http
 GET /api/v1/config/user
 Authorization: Bearer <token>
 ```
 
 #### 响应
+
 ```json
 {
   "success": true,
@@ -930,6 +974,7 @@ Authorization: Bearer <token>
 ### 更新用户配置
 
 #### 请求
+
 ```http
 PUT /api/v1/config/user
 Authorization: Bearer <token>
@@ -952,6 +997,7 @@ Content-Type: application/json
 ```
 
 #### 响应
+
 ```json
 {
   "success": true,
@@ -965,6 +1011,7 @@ Content-Type: application/json
 ### 创建 API 密钥
 
 #### 请求
+
 ```http
 POST /api/v1/config/api-keys
 Authorization: Bearer <token>
@@ -978,6 +1025,7 @@ Content-Type: application/json
 ```
 
 #### 响应
+
 ```json
 {
   "success": true,
@@ -995,12 +1043,14 @@ Content-Type: application/json
 ### 删除 API 密钥
 
 #### 请求
+
 ```http
-DELETE /api/v1/config/api-keys/:keyId
+DELETE /api/v1/config/api-keys/{keyId}
 Authorization: Bearer <token>
 ```
 
 #### 响应
+
 ```json
 {
   "success": true,
@@ -1032,16 +1082,16 @@ Authorization: Bearer <token>
 
 ### 错误代码
 
-| 错误代码 | HTTP 状态码 | 说明 |
-|----------|-------------|------|
-| VALIDATION_ERROR | 400 | 请求参数验证失败 |
-| UNAUTHORIZED | 401 | 未授权访问 |
-| FORBIDDEN | 403 | 权限不足 |
-| NOT_FOUND | 404 | 资源不存在 |
-| CONFLICT | 409 | 资源冲突 |
-| RATE_LIMIT_EXCEEDED | 429 | 请求频率超限 |
-| INTERNAL_ERROR | 500 | 服务器内部错误 |
-| SERVICE_UNAVAILABLE | 503 | 服务不可用 |
+| 错误代码            | HTTP 状态码 | 说明             |
+| ------------------- | ----------- | ---------------- |
+| VALIDATION_ERROR    | 400         | 请求参数验证失败 |
+| UNAUTHORIZED        | 401         | 未授权访问       |
+| FORBIDDEN           | 403         | 权限不足         |
+| NOT_FOUND           | 404         | 资源不存在       |
+| CONFLICT            | 409         | 资源冲突         |
+| RATE_LIMIT_EXCEEDED | 429         | 请求频率超限     |
+| INTERNAL_ERROR      | 500         | 服务器内部错误   |
+| SERVICE_UNAVAILABLE | 503         | 服务不可用       |
 
 ### 重试策略
 
@@ -1161,16 +1211,19 @@ wss://api.hetumind.com/ws/v1/realtime
 const ws = new WebSocket('wss://api.hetumind.com/ws/v1/realtime');
 ws.onopen = () => {
   // 发送认证消息
-  ws.send(JSON.stringify({
-    type: 'auth',
-    token: 'your-bearer-token'
-  }));
+  ws.send(
+    JSON.stringify({
+      type: 'auth',
+      token: 'your-bearer-token',
+    })
+  );
 };
 ```
 
 ### 消息格式
 
 #### 订阅工作流执行状态
+
 ```json
 {
   "type": "subscribe",
@@ -1180,6 +1233,7 @@ ws.onopen = () => {
 ```
 
 #### 执行状态更新
+
 ```json
 {
   "type": "execution_update",
@@ -1194,6 +1248,7 @@ ws.onopen = () => {
 ```
 
 #### 系统通知
+
 ```json
 {
   "type": "notification",
@@ -1213,23 +1268,23 @@ ws.onopen = () => {
 
 ### API 限制
 
-| 资源 | 限制 |
-|------|------|
-| 请求频率 | 1000 请求/小时 |
-| 并发连接 | 10 个 WebSocket 连接 |
-| 工作流数量 | 1000 个/用户 |
-| 执行历史 | 10000 条记录 |
-| 文件上传 | 10 MB/文件 |
+| 资源       | 限制                 |
+| ---------- | -------------------- |
+| 请求频率   | 1000 请求/小时       |
+| 并发连接   | 10 个 WebSocket 连接 |
+| 工作流数量 | 1000 个/用户         |
+| 执行历史   | 10000 条记录         |
+| 文件上传   | 10 MB/文件           |
 
 ### 数据限制
 
-| 项目 | 限制 |
-|------|------|
-| 工作流名称 | 100 字符 |
-| 节点数量 | 500 个/工作流 |
-| 变量大小 | 1 MB |
-| 日志条目 | 10000 条/执行 |
-| 执行超时 | 24 小时 |
+| 项目       | 限制          |
+| ---------- | ------------- |
+| 工作流名称 | 100 字符      |
+| 节点数量   | 500 个/工作流 |
+| 变量大小   | 1 MB          |
+| 日志条目   | 10000 条/执行 |
+| 执行超时   | 24 小时       |
 
 ## 版本控制
 
@@ -1257,21 +1312,21 @@ import { HetumindClient } from '@hetumind/web-sdk';
 
 const client = new HetumindClient({
   baseURL: 'https://api.hetumind.com',
-  token: 'your-token'
+  token: 'your-token',
 });
 
 // 创建工作流
 const workflow = await client.workflows.create({
   name: '新工作流',
   nodes: [],
-  edges: []
+  edges: [],
 });
 
 // 执行工作流
 const execution = await client.workflows.execute(workflow.id);
 
 // 监听执行状态
-client.on('execution.update', (data) => {
+client.on('execution.update', data => {
   console.log('执行状态更新:', data);
 });
 ```

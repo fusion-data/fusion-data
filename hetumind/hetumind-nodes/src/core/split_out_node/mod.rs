@@ -16,7 +16,7 @@ use std::sync::Arc;
 
 use hetumind_core::{
   version::Version,
-  workflow::{Node, NodeDefinition, FlowNodeRef, NodeGroupKind, NodeKind, RegistrationError},
+  workflow::{FlowNodeRef, Node, NodeDefinition, NodeGroupKind, NodeKind, RegistrationError},
 };
 use serde::{Deserialize, Serialize};
 
@@ -30,6 +30,7 @@ use crate::constants::SPLIT_OUT_NODE_KIND;
 /// 字段包含策略枚举
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[allow(clippy::enum_variant_names)]
 pub enum IncludeStrategy {
   /// 仅保留拆分字段
   NoOtherFields,
@@ -39,6 +40,7 @@ pub enum IncludeStrategy {
   SelectedOtherFields,
 }
 
+#[allow(clippy::derivable_impls)]
 impl Default for IncludeStrategy {
   fn default() -> Self {
     Self::NoOtherFields

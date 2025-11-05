@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 
 /// Error trigger configuration parsed from node parameters
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct ErrorTriggerParameters {
   /// 错误触发模式
   pub trigger_mode: ErrorTriggerMode,
@@ -98,6 +99,7 @@ pub enum NotificationMethod {
 }
 
 /// Parse error trigger configuration from node parameters
+#[allow(dead_code)]
 pub fn parse_error_trigger_parameters(parameters: &ParameterMap) -> Result<ErrorTriggerParameters, NodeExecutionError> {
   let config: ErrorTriggerParameters = parameters.get().map_err(|e| {
     NodeExecutionError::ParameterValidation(ValidationError::invalid_field_value(

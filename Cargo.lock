@@ -2832,6 +2832,7 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "axum",
+ "chrono",
  "dashmap",
  "fusion-common",
  "fusion-core",
@@ -2845,6 +2846,7 @@ dependencies = [
  "serde_json",
  "sqlx",
  "thiserror 2.0.17",
+ "tokio",
 ]
 
 [[package]]
@@ -2903,6 +2905,7 @@ dependencies = [
  "chrono",
  "content_inspector",
  "croner",
+ "dotenvy",
  "duration-str",
  "fusion-ai",
  "fusion-common",

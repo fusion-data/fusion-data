@@ -5,6 +5,7 @@
 use crate::workflow::{NodeDefinition, NodeExecutionError};
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
+use std::any::Any;
 use std::sync::Arc;
 
 /// Sub Node Provider 类型别名，统一使用 Arc 包装
@@ -144,6 +145,9 @@ pub trait SubNode: Send + Sync {
 
   /// 初始化 Provider
   async fn initialize(&self) -> Result<(), NodeExecutionError>;
+
+  /// 返回 Any 引用用于安全 downcast（typed 获取）
+  fn as_any(&self) -> &dyn Any;
 }
 
 /// Message placeholder type for LLM interaction
@@ -175,6 +179,8 @@ pub trait MemorySubNodeProvider: SubNode {
 pub struct Tool {
   pub name: String,
   pub description: String,
+  /// 工具参数的 JSON Schema（简化版），用于 Agent 在运行时进行参数校验
+  pub parameters: serde_json::Value,
 }
 
 /// Tool Sub Node Provider 接口

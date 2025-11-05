@@ -16,7 +16,7 @@ use std::sync::Arc;
 
 use hetumind_core::{
   version::Version,
-  workflow::{Node, FlowNodeRef, NodeKind, RegistrationError},
+  workflow::{FlowNodeRef, Node, NodeKind, RegistrationError},
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -196,11 +196,12 @@ impl EmailTriggerConfig {
       "email_trigger_{}_{}_{}",
       self.imap_connection.host.replace('.', "_"),
       self.imap_connection.port,
-      self.imap_connection.username.replace('.', "_").replace('@', "_")
+      self.imap_connection.username.replace(['.', '@'], "_")
     )
   }
 
   /// 获取默认邮箱名称
+  #[allow(dead_code)]
   pub fn get_mailbox(&self) -> String {
     self.imap_connection.mailbox.clone().unwrap_or_else(|| "INBOX".to_string())
   }

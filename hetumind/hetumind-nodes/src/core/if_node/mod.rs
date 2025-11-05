@@ -9,7 +9,7 @@ use hetumind_core::{
   types::{DataType, JsonValue},
   version::Version,
   workflow::{
-    Node, NodeDefinition, NodeExecutionError, FlowNodeRef, NodeGroupKind, NodeKind, RegistrationError, ValidationError,
+    FlowNodeRef, Node, NodeDefinition, NodeExecutionError, NodeGroupKind, NodeKind, RegistrationError, ValidationError,
   },
 };
 use serde::{Deserialize, Serialize};

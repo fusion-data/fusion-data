@@ -8,7 +8,7 @@ use std::sync::Arc;
 use fusion_common::ahash::HashSet;
 use hetumind_core::{
   version::Version,
-  workflow::{Node, NodeDefinition, FlowNodeRef, NodeGroupKind, NodeKind, RegistrationError},
+  workflow::{FlowNodeRef, Node, NodeDefinition, NodeGroupKind, NodeKind, RegistrationError},
 };
 use serde::{Deserialize, Serialize};
 

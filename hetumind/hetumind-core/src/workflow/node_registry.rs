@@ -6,7 +6,10 @@ use std::{
 use dashmap::DashMap;
 
 use crate::version::Version;
-use crate::workflow::{Node, NodeDefinition, FlowNodeRef, NodeKind, RegistrationError, SubNodeRef};
+use crate::workflow::{
+  AgentSubNodeProviderRef, LLMSubNodeProviderRef, MemorySubNodeProviderRef, SubNodeType, ToolSubNodeProviderRef,
+};
+use crate::workflow::{FlowNodeRef, Node, NodeDefinition, NodeKind, RegistrationError, SubNodeRef};
 
 pub type NodeRef = Arc<dyn Node + Send + Sync>;
 
@@ -14,6 +17,11 @@ pub type NodeRef = Arc<dyn Node + Send + Sync>;
 pub struct InnerNodeRegistry {
   nodes: DashMap<NodeKind, NodeRef>,
   subnode_providers: DashMap<NodeKind, SubNodeRef>,
+  // Typed providers for safer and faster retrieval
+  llm_suppliers: DashMap<NodeKind, LLMSubNodeProviderRef>,
+  memory_suppliers: DashMap<NodeKind, MemorySubNodeProviderRef>,
+  tool_suppliers: DashMap<NodeKind, ToolSubNodeProviderRef>,
+  agent_suppliers: DashMap<NodeKind, AgentSubNodeProviderRef>,
 }
 
 impl InnerNodeRegistry {
@@ -159,6 +167,60 @@ impl InnerNodeRegistry {
     Ok(())
   }
 
+  // ===== Typed SubNodeProvider Registration =====
+
+  /// Register a LLMSubNodeProvider for a given node kind (typed)
+  pub fn register_llm_supplier(
+    &self,
+    kind: NodeKind,
+    provider: LLMSubNodeProviderRef,
+  ) -> Result<(), RegistrationError> {
+    if self.llm_suppliers.contains_key(&kind) {
+      return Err(RegistrationError::NodeKindAlreadyExists { node_kind: kind });
+    }
+    self.llm_suppliers.insert(kind, provider);
+    Ok(())
+  }
+
+  /// Register a MemorySubNodeProvider for a given node kind (typed)
+  pub fn register_memory_supplier(
+    &self,
+    kind: NodeKind,
+    provider: MemorySubNodeProviderRef,
+  ) -> Result<(), RegistrationError> {
+    if self.memory_suppliers.contains_key(&kind) {
+      return Err(RegistrationError::NodeKindAlreadyExists { node_kind: kind });
+    }
+    self.memory_suppliers.insert(kind, provider);
+    Ok(())
+  }
+
+  /// Register a ToolSubNodeProvider for a given node kind (typed)
+  pub fn register_tool_supplier(
+    &self,
+    kind: NodeKind,
+    provider: ToolSubNodeProviderRef,
+  ) -> Result<(), RegistrationError> {
+    if self.tool_suppliers.contains_key(&kind) {
+      return Err(RegistrationError::NodeKindAlreadyExists { node_kind: kind });
+    }
+    self.tool_suppliers.insert(kind, provider);
+    Ok(())
+  }
+
+  /// Register an AgentSubNodeProvider for a given node kind (typed)
+  pub fn register_agent_supplier(
+    &self,
+    kind: NodeKind,
+    provider: AgentSubNodeProviderRef,
+  ) -> Result<(), RegistrationError> {
+    if self.agent_suppliers.contains_key(&kind) {
+      return Err(RegistrationError::NodeKindAlreadyExists { node_kind: kind });
+    }
+    self.agent_suppliers.insert(kind, provider);
+    Ok(())
+  }
+
   /// Get the SubNodeProvider for a given node kind
   ///
   /// Args:
@@ -211,6 +273,64 @@ impl InnerNodeRegistry {
   /// Clear all registered SubNodeProviders
   pub fn clear_subnode_providers(&self) {
     self.subnode_providers.clear();
+  }
+
+  // ===== Typed SubNodeProvider Getters (预备，后续支持 downcast) =====
+
+  /// 获取 LLM 类型的 SubNodeProvider（当前返回 SubNodeRef，后续将支持 typed 引用）
+  pub fn get_llm_supplier(&self, kind: &NodeKind) -> Option<SubNodeRef> {
+    self
+      .subnode_providers
+      .get(kind)
+      .filter(|p| p.provider_type() == SubNodeType::LLM)
+      .map(|p| p.clone())
+  }
+
+  /// 获取 LLM 类型的 SubNodeProvider（typed 引用）
+  pub fn get_llm_supplier_typed(&self, kind: &NodeKind) -> Option<LLMSubNodeProviderRef> {
+    self.llm_suppliers.get(kind).map(|p| p.clone())
+  }
+
+  /// 获取 Memory 类型的 SubNodeProvider（当前返回 SubNodeRef，后续将支持 typed 引用）
+  pub fn get_memory_supplier(&self, kind: &NodeKind) -> Option<SubNodeRef> {
+    self
+      .subnode_providers
+      .get(kind)
+      .filter(|p| p.provider_type() == SubNodeType::Memory)
+      .map(|p| p.clone())
+  }
+
+  /// 获取 Memory 类型的 SubNodeProvider（typed 引用）
+  pub fn get_memory_supplier_typed(&self, kind: &NodeKind) -> Option<MemorySubNodeProviderRef> {
+    self.memory_suppliers.get(kind).map(|p| p.clone())
+  }
+
+  /// 获取 Tool 类型的 SubNodeProvider（当前返回 SubNodeRef，后续将支持 typed 引用）
+  pub fn get_tool_supplier(&self, kind: &NodeKind) -> Option<SubNodeRef> {
+    self
+      .subnode_providers
+      .get(kind)
+      .filter(|p| p.provider_type() == SubNodeType::Tool)
+      .map(|p| p.clone())
+  }
+
+  /// 获取 Tool 类型的 SubNodeProvider（typed 引用）
+  pub fn get_tool_supplier_typed(&self, kind: &NodeKind) -> Option<ToolSubNodeProviderRef> {
+    self.tool_suppliers.get(kind).map(|p| p.clone())
+  }
+
+  /// 获取 Agent 类型的 SubNodeProvider（当前返回 SubNodeRef，后续将支持 typed 引用）
+  pub fn get_agent_supplier(&self, kind: &NodeKind) -> Option<SubNodeRef> {
+    self
+      .subnode_providers
+      .get(kind)
+      .filter(|p| p.provider_type() == SubNodeType::Agent)
+      .map(|p| p.clone())
+  }
+
+  /// 获取 Agent 类型的 SubNodeProvider（typed 引用）
+  pub fn get_agent_supplier_typed(&self, kind: &NodeKind) -> Option<AgentSubNodeProviderRef> {
+    self.agent_suppliers.get(kind).map(|p| p.clone())
   }
 }
 

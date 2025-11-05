@@ -454,6 +454,11 @@ pub struct LifecycleStats {
 #[cfg(test)]
 mod tests {
   use super::*;
+  use crate::binary_storage::{BinaryDataMetadata, BinaryDataStorage, BinaryStorageError};
+  use ahash::HashMap;
+  use async_trait::async_trait;
+  use std::sync::Arc;
+  use tokio::sync::RwLock;
 
   #[tokio::test]
   async fn test_cleanup_config() {
@@ -478,5 +483,121 @@ mod tests {
     assert_eq!(custom_config.cleanup_interval, Duration::from_secs(600));
     assert!(!custom_config.auto_cleanup);
     assert_eq!(custom_config.max_cleanup_per_batch, 50);
+  }
+
+  /// 简单的内存存储实现用于生命周期测试
+  struct TestMemoryStorage {
+    name: &'static str,
+    data: Arc<RwLock<HashMap<String, Vec<u8>>>>,
+  }
+
+  impl TestMemoryStorage {
+    /// 创建测试存储
+    fn new(name: &'static str) -> Self {
+      Self { name, data: Arc::new(RwLock::new(HashMap::default())) }
+    }
+  }
+
+  #[async_trait]
+  impl BinaryDataStorage for TestMemoryStorage {
+    /// 存储数据
+    async fn store(&self, data: Vec<u8>, _metadata: &BinaryDataMetadata) -> Result<String, BinaryStorageError> {
+      let key = format!("{}_{}", self.name, uuid::Uuid::now_v7());
+      let mut map = self.data.write().await;
+      map.insert(key.clone(), data);
+      Ok(key)
+    }
+
+    /// 读取数据
+    async fn retrieve(&self, key: &str) -> Result<Vec<u8>, BinaryStorageError> {
+      let map = self.data.read().await;
+      map.get(key).cloned().ok_or_else(|| BinaryStorageError::file_not_found(key))
+    }
+
+    /// 获取元数据
+    async fn get_metadata(&self, key: &str) -> Result<BinaryDataMetadata, BinaryStorageError> {
+      let map = self.data.read().await;
+      if map.contains_key(key) {
+        Ok(BinaryDataMetadata::default())
+      } else {
+        Err(BinaryStorageError::file_not_found(key))
+      }
+    }
+
+    /// 删除数据
+    async fn delete(&self, key: &str) -> Result<(), BinaryStorageError> {
+      let mut map = self.data.write().await;
+      map.remove(key).map(|_| ()).ok_or_else(|| BinaryStorageError::file_not_found(key))
+    }
+
+    /// 判断存在
+    async fn exists(&self, key: &str) -> Result<bool, BinaryStorageError> {
+      let map = self.data.read().await;
+      Ok(map.contains_key(key))
+    }
+
+    /// 列出文件
+    async fn list(&self, _prefix: &str) -> Result<Vec<String>, BinaryStorageError> {
+      let map = self.data.read().await;
+      Ok(map.keys().cloned().collect())
+    }
+
+    /// 类型名称
+    fn storage_type_name(&self) -> &'static str {
+      self.name
+    }
+  }
+
+  #[tokio::test]
+  async fn test_register_and_release_reference() {
+    // 构造数据管理器
+    let storage = Arc::new(TestMemoryStorage::new("memory"));
+    let manager = crate::binary_storage::BinaryDataManager::with_default_cache(storage).unwrap();
+    let lifecycle = BinaryDataLifecycleManager::with_default_config(manager);
+
+    // 存储数据并注册引用
+    let data = vec![1, 2, 3];
+    let key = lifecycle
+      .store_data(data, BinaryDataMetadata::new(Some("a.bin".to_string()), "application/octet-stream".to_string(), 3))
+      .await
+      .unwrap();
+
+    // 引用计数应为 1
+    assert_eq!(lifecycle.get_reference_count(&key).await, Some(1));
+
+    // 释放引用后计数为 0
+    lifecycle.release_reference(&key).await.unwrap();
+    assert_eq!(lifecycle.get_reference_count(&key).await, Some(0));
+  }
+
+  #[tokio::test]
+  async fn test_manual_cleanup_zero_retention() {
+    let storage = Arc::new(TestMemoryStorage::new("memory"));
+    let manager = crate::binary_storage::BinaryDataManager::with_default_cache(storage).unwrap();
+    // 使用结构体更新语法初始化配置，避免 Default 后再赋值的反模式
+    let config = LifecycleCleanupConfig { zero_ref_retention: Duration::from_secs(0), ..Default::default() };
+    let lifecycle = BinaryDataLifecycleManager::new(manager, config);
+
+    // 存储数据
+    let key = lifecycle.store_data(vec![1, 2, 3], BinaryDataMetadata::default()).await.unwrap();
+
+    // 释放引用（配置为零保留时间时，内部会自动清理，无需再次手动清理）
+    lifecycle.release_reference(&key).await.unwrap();
+
+    // 元数据应被清理，数据应不存在
+    assert_eq!(lifecycle.get_reference_count(&key).await, None);
+    let exists = lifecycle.data_manager.data_exists(&key).await.unwrap();
+    assert!(!exists);
+  }
+
+  #[tokio::test]
+  async fn test_start_cleanup_task_idempotent() {
+    let storage = Arc::new(TestMemoryStorage::new("memory"));
+    let manager = crate::binary_storage::BinaryDataManager::with_default_cache(storage).unwrap();
+    let lifecycle = BinaryDataLifecycleManager::with_default_config(manager);
+
+    // 重复启动不应报错
+    lifecycle.start_cleanup_task().await.unwrap();
+    lifecycle.start_cleanup_task().await.unwrap();
   }
 }

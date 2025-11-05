@@ -6,13 +6,14 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use hetumind_core::workflow::{
-  ConnectionKind, ExecutionDataMap, NodeDefinition, FlowNode, NodeExecutionContext, NodeExecutionError,
+  ConnectionKind, ExecutionDataMap, FlowNode, NodeDefinition, NodeExecutionContext, NodeExecutionError,
   RegistrationError,
 };
 use rig::{
+  OneOrMany,
   client::CompletionClient,
   completion::Completion,
-  message::{AssistantContent, Message},
+  message::{AssistantContent, Message as RigMessage, Text, UserContent},
 };
 
 use crate::constants::DEEPSEEK_MODEL_NODE_KIND;
@@ -21,6 +22,7 @@ use crate::llm::shared::{
   resolve_api_key, validate_api_key_resolved,
 };
 use crate::llm::{complation_error_2_execution_error, set_agent_builder};
+use serde_json::json;
 
 /// DeepSeek-specific configuration
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -90,14 +92,66 @@ impl FlowNode for DeepseekV1 {
     // AgentBuilder
     let mut ab = deepseek_client.agent(&config.model);
     ab = set_agent_builder(&input_data, ab);
+    // 绑定参数：优先使用节点级配置，其次使用通用配置
+    if let Some(t) = config.temperature.or(config.common.temperature) {
+      ab = ab.temperature(t);
+    }
+    if let Some(mt) = config.max_tokens.or(config.common.max_tokens).map(|v| v as u64) {
+      ab = ab.max_tokens(mt);
+    }
+    // 透传 top_p 与 stop（OpenAI 兼容字段名），采用 additional_params
+    let mut extra = serde_json::Map::new();
+    if let Some(tp) = config.top_p.map(|v| v as f64).or(config.common.top_p) {
+      extra.insert("top_p".to_string(), json!(tp));
+    }
+    if let Some(stops) = config.stop_sequences.as_ref()
+      && !stops.is_empty()
+    {
+      extra.insert("stop".to_string(), json!(stops));
+    }
+    if !extra.is_empty() {
+      ab = ab.additional_params(json!(extra));
+    }
 
     let agent = ab.build();
 
-    let prompt: Message = input_data
-      .get_value("prompt")
-      .map_err(|e| NodeExecutionError::InvalidInput(format!("Parameter prompt missing, error: {}", e)))?;
-    let completion = agent.completion(prompt, vec![]).await.map_err(|e| NodeExecutionError::ExternalServiceError {
-      service: format!("Deepseek agent completion error, error: {}", e),
+    // 构造 prompt 与 chat_history：优先从 messages 中提取；否则回退到 prompt 字段
+    let input_json = input_data.json();
+    let mut prompt_text = input_json.get("prompt").and_then(|v| v.as_str()).map(|s| s.to_string()).unwrap_or_default();
+
+    let mut chat_history: Vec<RigMessage> = Vec::new();
+    if let Some(messages) = input_json.get("messages").and_then(|v| v.as_array()) {
+      // 找到最后一条 user 消息作为 prompt
+      let last_user_index = messages.iter().rposition(|m| m.get("role").and_then(|r| r.as_str()) == Some("user"));
+
+      for (idx, m) in messages.iter().enumerate() {
+        let role = m.get("role").and_then(|r| r.as_str()).unwrap_or("");
+        let content = m.get("content").and_then(|c| c.as_str()).unwrap_or("");
+        match role {
+          "user" => {
+            if Some(idx) == last_user_index {
+              prompt_text = content.to_string();
+            } else {
+              chat_history.push(RigMessage::User {
+                content: OneOrMany::one(UserContent::Text(Text { text: content.to_string() })),
+              });
+            }
+          }
+          "assistant" => {
+            chat_history.push(RigMessage::Assistant {
+              id: Some(format!("assistant_{}", idx)),
+              content: OneOrMany::one(AssistantContent::Text(Text { text: content.to_string() })),
+            });
+          }
+          _ => {}
+        }
+      }
+    }
+
+    let prompt: RigMessage =
+      RigMessage::User { content: OneOrMany::one(UserContent::Text(Text { text: prompt_text })) };
+    let completion = agent.completion(prompt, chat_history).await.map_err(|e| {
+      NodeExecutionError::ExternalServiceError { service: format!("Deepseek agent completion error, error: {}", e) }
     })?;
 
     let completion_response = completion
@@ -130,7 +184,28 @@ impl FlowNode for DeepseekV1 {
       temperature_control: true,
     };
 
-    Ok(create_llm_execution_data_map(&response_text, &config.model, &self.definition.kind, usage_stats, capabilities))
+    // 组装 used_params 与 history_length（用于观测与复现）
+    let input_json = input_data.json();
+    let history_length = input_json.get("history_length").and_then(|v| v.as_u64());
+
+    // 参数优先级：节点级 > 通用参数 > 输入 JSON > 默认值
+    let used_params = json!({
+      "temperature": config.temperature.or(config.common.temperature),
+      "max_tokens": config.max_tokens.or(config.common.max_tokens),
+      // 修正 top_p 的优先级为节点级优先
+      "top_p": config.top_p.map(|v| v as f64).or(config.common.top_p),
+      "stop_sequences": config.stop_sequences,
+    });
+
+    Ok(create_llm_execution_data_map(
+      &response_text,
+      &config.model,
+      &self.definition.kind,
+      usage_stats,
+      capabilities,
+      Some(used_params),
+      history_length,
+    ))
   }
 
   fn definition(&self) -> Arc<NodeDefinition> {

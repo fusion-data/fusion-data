@@ -171,6 +171,7 @@ pub struct FieldExistenceSummary {
 
 /// 字段存在性类型
 #[allow(dead_code)]
+#[allow(clippy::enum_variant_names)]
 #[derive(Debug, Clone, PartialEq)]
 pub enum FieldExistenceType {
   /// 从未找到

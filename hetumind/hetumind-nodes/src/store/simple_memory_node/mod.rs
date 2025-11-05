@@ -11,12 +11,13 @@
 
 use hetumind_core::{
   version::Version,
-  workflow::{Node, FlowNodeRef, NodeKind, NodeRegistry, RegistrationError},
+  workflow::{FlowNodeRef, Node, NodeKind, NodeRegistry, RegistrationError},
 };
 use std::sync::Arc;
 
 mod memory_config;
 mod simple_memory_v1;
+mod supplier;
 
 /// Simple Memory 节点常量
 pub static SIMPLE_MEMORY_NODE_KIND: &str = "hetumind_nodes::SimpleMemory";
@@ -52,12 +53,19 @@ impl Node for SimpleMemoryNode {
 pub fn register_nodes(node_registry: &NodeRegistry) -> Result<(), RegistrationError> {
   let simple_memory_node = Arc::new(SimpleMemoryNode::new()?);
   node_registry.register_node(simple_memory_node)?;
+  // 注册 Memory Supplier（用于 Agent/其他节点通过 Provider 访问会话内存）
+  let supplier = Arc::new(supplier::SimpleMemorySupplier::new());
+  // 同时注册 typed MemorySupplier，便于后续类型安全与快速检索
+  let typed_supplier: hetumind_core::workflow::MemorySubNodeProviderRef = supplier.clone();
+  node_registry.register_subnode_provider(NodeKind::new(SIMPLE_MEMORY_NODE_KIND), supplier.clone())?;
+  node_registry.register_memory_supplier(NodeKind::new(SIMPLE_MEMORY_NODE_KIND), typed_supplier)?;
   Ok(())
 }
 
 // 重新导出主要类型
 pub use memory_config::*;
 pub use simple_memory_v1::*;
+pub use supplier::*;
 
 #[cfg(test)]
 mod tests {

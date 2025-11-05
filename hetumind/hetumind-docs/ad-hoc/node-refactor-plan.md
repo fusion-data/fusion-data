@@ -14,12 +14,12 @@
 
 ## 与 n8n 架构的对齐点
 
-1) 节点创建与注册
+1. 节点创建与注册
 
 - 现状：已具备 NodeRegistry、Node trait（聚合多版本 FlowNode 执行器 + SubNode 供应器）、注册方法（register_node/register_subnode_provider）
 - 方案：沿用现有 NodeRegistry 能力，确保每个功能模块在 mod.rs 内集中注册，同时为 AI 相关节点补齐 SubNode Provider 的注册（与 n8n 的“节点类 + 版本选择 + 供给”一致）。
 
-2) 连接类型驱动
+2. 连接类型驱动
 
 - 现状：已有 ConnectionKind（Main/Error/AiAgent/AiTool/AiLM/AiMemory/...），与 n8n 的 NodeConnectionTypes 高度对齐
 - 方案：标准化 LLM/Memory/Tool/Agent 的输出端口含义：
@@ -28,7 +28,7 @@
   - AiTool：输出“工具实例或工具集合（Toolkit 展开）”
   - AiAgent：输出“代理执行器/中间请求（EngineRequest）/最终结果”
 
-3) 执行上下文 API
+3. 执行上下文 API
 
 - 现状：NodeExecutionContext 已支持：
   - get_connection_data/get_all_connections_data/get_all_connections（基于 ConnectionKind 的数据获取）
@@ -40,7 +40,7 @@
   - get_connected_tools(context) → Vec<ToolSubNodeProviderRef>
   - 注意：这些 Helper 不改变 NodeExecutionContext 现有结构，只在 helper 内部使用 workflow.connections + NodeRegistry + 上游 NodeElement.parameters 完成映射与实例化。
 
-4) Sub Node Provider 供给机制
+4. Sub Node Provider 供给机制
 
 - 现状：已定义 trait（SubNode/LLMSubNodeProvider/MemorySubNodeProvider/ToolSubNodeProvider/AgentSubNodeProvider），但注册与具体实现尚不完整
 - 方案：为 LLM/Memory/Tool 节点补齐对应 Provider，实现“supplyData”式的供给接口：
@@ -49,7 +49,7 @@
   - Tool 节点（后续新增，如 Wikipedia/HTTP）：提供 ToolSubNodeProvider，支持单工具与 Toolkit 展开
   - Agent 节点：提供 AgentSubNodeProvider（或直接实现 FlowNode 的代理执行），统一调用模型 + 内存 + 工具
 
-5) 动态工具包装（create_node_as_tool）
+5. 动态工具包装（create_node_as_tool）
 
 - 现状：NodeProperty 类型已具备大量 UI/校验元数据；可通过附加属性生成简化的参数 Schema
 - 方案：在 hetumind-core 增加工具包装函数，将任意节点（尤其数据处理类节点）转换为 Agent 可调用的工具：
@@ -59,7 +59,7 @@
 
 ## 现有代码的复用与改造点
 
-1) NodeRegistry（hetumind-core/src/workflow/node_registry.rs）
+1. NodeRegistry（hetumind-core/src/workflow/node_registry.rs）
 
 - 已支持：
   - register_node/get_executor/get_definition
@@ -68,7 +68,7 @@
   - 在各节点模块的 register_nodes 中，同时注册 Executor 与 Provider（如 DeepseekModelNode + DeepseekModelSupplier）
   - 为 Agent 相关模块增加 Provider 注册，以便上下文检索
 
-2) NodeDefinition（hetumind-core/src/workflow/node.rs + port.rs）
+2. NodeDefinition（hetumind-core/src/workflow/node.rs + port.rs）
 
 - 已支持：
   - 输入/输出端口声明（InputPortConfig/OutputPortConfig）
@@ -77,14 +77,14 @@
   - 约定 AI 场景的端口声明：LLM/Memory/Tool/Agent 的输入/输出均使用 ConnectionKind 对齐 n8n
   - 使用 NodeProperty.additional_properties 标记 from_ai、ai_key 等，便于工具模式的参数收集
 
-3) FlowNode（hetumind-core/src/workflow/flow_node.rs）
+3. FlowNode（hetumind-core/src/workflow/flow_node.rs）
 
 - 已支持：
   - init/execute/definition 基础接口
 - 改造点：
   - 保持不变，Agent 等复杂节点以 FlowNode 形式实现执行逻辑；“供给”通过 Provider 完成（避免在 FlowNode 中夹杂对象实例化）
 
-4) SubNode Provider（hetumind-core/src/workflow/sub_node.rs）
+4. SubNode Provider（hetumind-core/src/workflow/sub_node.rs）
 
 - 已支持：
   - SubNode/LLMSubNodeProvider/MemorySubNodeProvider/ToolSubNodeProvider/AgentSubNodeProvider 接口
@@ -93,14 +93,14 @@
   - 在 SubNode trait 中增加 as_any() 以支持 downcast（或通过 provider_type 做类型分派），用于 Agent 侧进行具体 Provider 能力调用
   - 在 Provider 实现中读取上游 NodeElement.parameters，构建对应的配置（避免修改 ExecutionData 的结构）
 
-5) 连接数据管理器（hetumind-nodes/src/core/connection_manager.rs）
+5. 连接数据管理器（hetumind-nodes/src/core/connection_manager.rs）
 
 - 已支持：
   - get_connection_data_optimized/get_all_connections_optimized（带缓存）
 - 改造点：
   - 在 Helper 中复用该能力，统一在 Agent 执行流中进行数据检索与缓存
 
-6) 已有节点模块示例
+6. 已有节点模块示例
 
 - IfNode（hetumind-nodes/src/core/if_node/）：作为标准 FlowNode 执行器的代表，保持现状
 - DeepSeek（hetumind-nodes/src/llm/deepseek_node/）：
@@ -116,7 +116,7 @@
 
 ## 关键接口与示例（建议实现草案）
 
-1) 语义化子节点发现 Helper（以 LLM 为例）
+1. 语义化子节点发现 Helper（以 LLM 为例）
 
 ```rust
   /// 从当前节点的上游连接中检索 LLM 供应器（按连接逆序）
@@ -148,7 +148,7 @@
   }
 ```
 
-2) DeepSeek 供应器（LLMSubNodeProvider）
+2. DeepSeek 供应器（LLMSubNodeProvider）
 
 ```rust
   /// DeepSeek LLM 供应器示例（函数级注释已添加）
@@ -185,7 +185,7 @@
   }
 ```
 
-3) 动态工具包装（create_node_as_tool）
+3. 动态工具包装（create_node_as_tool）
 
 ```rust
   /// 将任意 FlowNode 包装为 Tool，供 Agent 调用
@@ -205,7 +205,7 @@
   }
 ```
 
-4) Agent 执行流程（ToolsAgentV1 草案）
+4. Agent 执行流程（ToolsAgentV1 草案）
 
 ```rust
   /// Agent 节点执行：发现 LLM/Memory/Tool，构建执行器并按需返回工具调用请求
@@ -298,35 +298,44 @@
 
 ## 已确认决策（合并入方案）
 
-1) LLM 的运行时对象选择：
-  - 已确认统一使用 rig-core 的 Agent/Client 作为标准模型句柄。
-  - 影响：所有 LLMSubNodeProvider 及相关执行逻辑均以 rig-core 提供的 Agent/Client 为唯一运行时对象，避免多套适配层，降低复杂度，增强一致性。
+1. LLM 的运行时对象选择：
 
-2) 动态工具参数 Schema：
-  - 已确认接受“简化版 JSON Schema”（由 NodeProperty 推导）作为第一阶段产物。
-  - 影响：create_node_as_tool 的 Schema 生成将以 NodeProperty.kind / validate_type / options 为依据，生成可用于基本校验的简化 Schema；后续可迭代接入更严格的校验库（schemars/valico）。
+- 已确认统一使用 rig-core 的 Agent/Client 作为标准模型句柄。
+- 影响：所有 LLMSubNodeProvider 及相关执行逻辑均以 rig-core 提供的 Agent/Client 为唯一运行时对象，避免多套适配层，降低复杂度，增强一致性。
 
-3) Memory 的工作流级存储：
-  - 已确认采用方案 C：独立 Memory Service 组件（在 Application 组件系统中注入）。
-  - 设计要点：
-    - 以独立服务组件形式注入到 Application（例如通过 Application::global().component 获取），由宿主统一管理生命周期与资源。
-    - 后端可插拔：支持 Redis/Valkey、本地内存 + TTL；支持跨执行共享与持久会话（按租户/工作流/会话维度隔离）。
-    - 多租户隔离策略：Memory Service API 自动注入 tenant_id 与 workflow_id；提供会话键生成策略（workflow_id + session_id）。
-    - 统一接口：get_buffer/store_messages/retrieve_messages/cleanup，供 SimpleMemorySupplier/FlowNode 使用。
-    - 与 NodeExecutionContext 的关系：上下文仅持有到 Memory Service 的引用，不负责内存存储；执行引擎负责清理策略与观测指标整合。
+2. 动态工具参数 Schema：
 
-4) Agent 的工具调用返回：
-  - 已确认采用方案 1：EngineRequest 风格（在 AiTool 端口输出请求对象，由引擎调度二次执行）。
-  - 设计要点：
-    - 数据模型：定义 EngineRequest/EngineResponse 结构（包含 nodeName、type=AiTool、id、input、metadata），与 ConnectionKind::AiTool 对齐。
-    - 调度路径：默认由工作流引擎解析 EngineRequest，路由到对应的 Tool 节点进行执行，返回 EngineResponse 或最终结果。
-    - 观测性：所有工具调用进入统一执行路径，便于 Trace/Metrics/重试策略；支持并发/串联/条件执行。
-    - 兼容性：保留简单场景下 Agent 内部直接调用工具的 fallback（仅用于 PoC 或单工具），但生产场景统一采用 EngineRequest。
+- 已确认接受“简化版 JSON Schema”（由 NodeProperty 推导）作为第一阶段产物。
+- 影响：create_node_as_tool 的 Schema 生成将以 NodeProperty.kind / validate_type / options 为依据，生成可用于基本校验的简化 Schema；后续可迭代接入更严格的校验库（jsonschema）。
+
+3. Memory 的工作流级存储：
+
+- 已确认采用方案 C：独立 Memory Service 组件（在 Application 组件系统中注入）。
+- 设计要点：
+    - 以独立服务组件形式注入到 Application（例如通过 Application::global().get_component 获取），由宿主统一管理生命周期与资源。
+ - 后端可插拔：支持 Redis/Valkey、本地内存 + TTL；支持跨执行共享与持久会话（按租户/工作流/会话维度隔离）。
+  - 多租户隔离策略：Memory Service API 自动注入 tenant_id 与 workflow_id；提供会话键生成策略（workflow_id + session_id）。
+  - 统一接口：get_buffer/store_messages/retrieve_messages/cleanup，供 SimpleMemorySupplier/FlowNode 使用。
+  - 与 NodeExecutionContext 的关系：上下文仅持有到 Memory Service 的引用，不负责内存存储；执行引擎负责清理策略与观测指标整合。
+  - 扩展方法：为 SimpleMemorySupplier 提供 with_ctx 版本（store_messages_with_ctx/retrieve_messages_with_ctx），仅在引擎/Agent 路径使用以注入 ExecutionContext（tenant/workflow）。
+  
+4. Agent 的工具调用返回：
+
+- 已确认采用方案 1：EngineRequest 风格（在 AiTool 端口输出请求对象，由引擎调度二次执行）。
+- 设计要点：
+  - 数据模型：定义 EngineRequest/EngineResponse 结构（包含 nodeName、type=AiTool、id、input、metadata），与 ConnectionKind::AiTool 对齐。
+  - 调度路径：默认由工作流引擎解析 EngineRequest，路由到对应的 Tool 节点进行执行，返回 EngineResponse 或最终结果。
+  - 观测性：所有工具调用进入统一执行路径，便于 Trace/Metrics/重试策略；支持并发/串联/条件执行。
+  - 兼容性：保留简单场景下 Agent 内部直接调用工具的 fallback（仅用于 PoC 或单工具），但生产场景统一采用 EngineRequest。
+  - 会话写入契约：引擎路由在 Tool 执行成功或失败后，若 EngineRequest.metadata.session_id 存在，则将消息以角色 "tool" 写入会话（成功写入输出内容；失败写入 "error: ..." 文本）。
+  - 幂等与重试：EngineRouter 对 (correlation_id, id) 做幂等去重；支持 RetryPolicy（max_retries、initial_backoff_ms、backoff_multiplier）实现指数退避重试。
+  - 结构化事件日志：统一输出 JSON 事件（event/status/tool_node/request_id/correlation_id/error/attempt/error_code），error_code 对应标准错误分类（parameter_validation/timeout/external_service/...）。
 
 ## 待确认问题（请回答或选择更优方案）
 
-5) Provider 的 downcast 能力：
-  - 方案建议通过 as_any + Any/downcast 实现，是否同意该设计？若不同意，可通过 provider_type 模式匹配 + trait object 切分接口实现。
+5. Provider 的 downcast 能力：
+
+- 方案建议通过 as_any + Any/downcast 实现，是否同意该设计？若不同意，可通过 provider_type 模式匹配 + trait object 切分接口实现。
 
 —
 
@@ -339,102 +348,182 @@
 - 简化 Schema 校验采用 jsonschema crate（https://crates.io/crates/jsonschema），UI 与引擎侧共享同一 schema 保证一致性
 - Memory Service 后端抽象：定义 MemoryBackend（InMemory/Redis/Hybrid），按租户/工作流策略选择后端与缓存层次，优化性能与成本
 - 执行上下文与权限：在 ctx_api 中注入租户上下文与权限校验，确保 Memory/Tool/LLM 等调用遵循 IAM 规则（参考 Jieyuan）
+- 引擎路由注入：在 EngineRouter 中接入 SimpleMemorySupplier.with_ctx（写入工具输出/错误到会话），不会改动 NodeExecutionContext 结构，减少侵入性；后续在 Agent/LLM 路径按需读取会话历史合并到模型调用。
+
+5. LLM 参数绑定与凭据解析（DeepSeek / Moonshot）
+
+- 设计要点：
+  - 参数绑定优先级：节点级配置 > 通用参数（CommonLlmParameters）> 输入 JSON（temperature/max_tokens）> 默认值。
+  - AgentBuilder 支持能力（基于 rig-core）：
+    - 已支持：preamble(system_prompt)、temperature(f64)、max_tokens(u64)
+    - 暂未直接支持：top_p、stop_sequences（待 rig-core 暴露 API 后绑定；当前不绑定或通过提示策略权宜处理）
+  - 会话历史协同：默认工作流引擎在 LLM 执行前读取会话历史，注入 system_prompt 与 messages；同时写入字段 history_length 用于观测；节点侧优先从 messages 的最后一条 role=user 提取用户消息作为 prompt。
+  - 凭据解析差异：
+    - deepseek_v1：支持 resolve_api_key（直接值、环境变量 ${env:VAR}、凭据 ${CREDENTIAL:name}），并 validate_api_key_resolved
+    - Supplier：当前支持 LLMConfig.api_key 与环境变量 DEEPSEEK_API_KEY；因接口缺少 ExecutionContext，暂不接入凭据服务；后续评估在引擎侧统一解析并传参或扩展接口
+  - 观测一致性：LLM 输出数据建议增加 used_params（temperature/max_tokens/top_p/stop_sequences）与 history_length 字段，便于复现与观测（分阶段实施）。已在 DeepSeek/Moonshot/OpenAI 节点落地。
+
+  - rig-core v0.23 绑定建议（additional_params）：
+    - 由于 AgentBuilder 暂未提供 top_p/stop_sequences 的直接方法，建议通过 AgentBuilder::additional_params 透传：
+      - top_p：浮点值，字段名为 "top_p"
+      - stop 序列：字符串数组，字段名为 "stop"（OpenAI 兼容）；对于输入字段 "stop_sequences"，在节点内转换为 "stop"
+    - 优先级规则：节点级 > 通用参数（CommonLlmParameters）> 输入 JSON > 默认值
+    - 统一 helpers：set_agent_builder 从输入透传 top_p/stop_sequences 到 additional_params；各节点（DeepSeek/Moonshot/OpenAI）从配置参数透传。
+
+  ### 参数映射速查表（rig-core v0.23）
+  - temperature
+    - 输入 JSON：`temperature: f64`
+    - 节点配置：`CommonLlmParameters.temperature: Option<f64>`、各节点 `NodeConfig.temperature: Option<f64>`
+    - 绑定：`AgentBuilder.temperature(f64)`（优先级：节点级 > 通用 > 输入 JSON > 默认）
+    - 观测：`used_params.temperature`
+  - max_tokens
+    - 输入 JSON：`max_tokens: u64`
+    - 节点配置：`CommonLlmParameters.max_tokens: Option<u32>`、各节点 `NodeConfig.max_tokens: Option<u32>`
+    - 绑定：`AgentBuilder.max_tokens(u64)`（优先级同上，节点/通用在代码中转换为 u64）
+    - 观测：`used_params.max_tokens`
+  - top_p
+    - 输入 JSON：`top_p: f64`
+    - 节点配置：`CommonLlmParameters.top_p: Option<f64>`、各节点 `NodeConfig.top_p: Option<f64>`；Supplier 路径 `LLMConfig.top_p: Option<u32>`（示例使用 1 表示 1.0）
+    - 绑定：通过 `AgentBuilder.additional_params({ "top_p": f64 })` 透传（优先级：节点级 > 通用 > 输入 JSON）
+    - 观测：`used_params.top_p`
+  - stop_sequences
+    - 输入 JSON：`stop_sequences: Array<String>`
+    - 节点配置：`NodeConfig.stop_sequences: Option<Vec<String>>`；Supplier 路径 `LLMConfig.stop_sequences: Option<Vec<String>>`
+    - 绑定：通过 `AgentBuilder.additional_params({ "stop": Array<String> })` 透传（字段映射：`stop_sequences` → `stop`）
+    - 观测：`used_params.stop_sequences`
+  - system_prompt / preamble
+    - 输入 JSON：`system_prompt: String`
+    - 绑定：`AgentBuilder.preamble(&str)`
+    - 观测：无（可从回复上下文与行为体现）
+  - messages / chat_history
+    - 输入 JSON：`messages: Array<{ role: "system"|"user"|"assistant", content: String }>`
+    - 构造：最后一条 `user` 作为 `prompt`，其余 `user` 与 `assistant` 作为 `chat_history`；`assistant` 历史要求 `id: Option<String>`（当前用 `assistant_{idx}` 生成）
+    - 观测：`history_length`（由引擎注入）、`usage`（tokens）
+  - api_key
+    - 节点配置：`CommonLlmParameters.api_key: Option<String>`（支持 `${env:VAR}` 与 `${CREDENTIAL:name}`）
+    - Supplier 路径：`LLMConfig.api_key: Option<String>`（支持 `${env:VAR}`，回退指定环境变量）
+    - 绑定：通过 provider Client 构造（如 `rig::providers::deepseek::Client::new(&api_key)`）
+    - 观测：不进入 `used_params`（避免安全风险）
+
+  - Moonshot（kimi-k2-0905-preview）节点：
+    - Provider：rig::providers::moonshot
+    - 绑定：preamble(system_prompt)、temperature、max_tokens
+    - 消息：最后一条 user 作为 prompt，其余 user 作为 chat_history（assistant 历史暂不传，待 rig 支持）
+    - 输出：统一 used_params/history_length 字段
+
+6. Registry typed 获取与 helpers 使用规范
+
+- 业务层优先使用 Registry 的 typed 获取接口（get_llm_supplier_typed/get_memory_supplier_typed/get_tool_supplier_typed/get_agent_supplier_typed）；
+- helpers 中已提供便捷函数，减少运行时 downcast，保证类型安全与一致性。
 
 ## 编码任务清单（AI Coding Prompt）
 
 请按以下任务顺序实现（无需包含周期安排）：
 
-1) Memory Service 组件（独立注入 Application）
-  - 文件建议：hetumind-context/src/services/memory_service.rs
-  - 接口定义（函数级注释必须）：
-  ```rust
-    /// 内存服务后端抽象，支持多租户隔离与持久化后端
-    pub trait MemoryService {
-      /// 获取或创建会话缓冲区
-      fn get_buffer(&self, tenant_id: &str, workflow_id: &str, session_id: &str) -> Result<WorkflowMemoryBuffer, NodeExecutionError>;
+1. Memory Service 组件（独立注入 Application）
 
-      /// 追加存储消息
-      fn store_messages(&self, tenant_id: &str, workflow_id: &str, session_id: &str, messages: Vec<Message>) -> Result<(), NodeExecutionError>;
+- 文件建议：hetumind-context/src/services/memory_service.rs
+- 接口定义（函数级注释必须）：
 
-      /// 检索最近 N 条消息
-      fn retrieve_messages(&self, tenant_id: &str, workflow_id: &str, session_id: &str, count: usize) -> Result<Vec<Message>, NodeExecutionError>;
+```rust
+  /// 内存服务后端抽象，支持多租户隔离与持久化后端
+  pub trait MemoryService {
+    /// 获取或创建会话缓冲区
+    fn get_buffer(&self, tenant_id: &str, workflow_id: &str, session_id: &str) -> Result<WorkflowMemoryBuffer, NodeExecutionError>;
 
-      /// 清理过期会话，返回统计信息
-      fn cleanup(&self, expired_before: chrono::DateTime<chrono::Utc>) -> Result<serde_json::Value, NodeExecutionError>;
-    }
-  ```
-  - 后端实现建议：
-    - InMemoryMemoryService（本地内存 + TTL）
-    - RedisMemoryService（基于 Redis/Valkey，键格式：{tenant_id}:{workflow_id}:{session_id}）
-  - Application 注入：通过 fusion_core::application::Application 注册为全局组件，并在 NodeExecutionContext 中以引用方式访问。
+    /// 追加存储消息
+    fn store_messages(&self, tenant_id: &str, workflow_id: &str, session_id: &str, messages: Vec<Message>) -> Result<(), NodeExecutionError>;
 
-2) EngineRequest/Response 统一模型
-  - 文件建议：hetumind-core/src/workflow/engine_request.rs
-  - 结构草案：
-  ```rust
-    /// 工具调用请求（由 Agent 节点输出到 AiTool 端口）
-    #[derive(Debug, Clone, Serialize, Deserialize)]
-    pub struct EngineRequest {
-      pub node_name: String,
-      pub r#type: ConnectionKind, // 固定为 AiTool
-      pub id: String,
-      pub input: serde_json::Value,
-      pub metadata: serde_json::Value,
-      pub correlation_id: Option<String>,
-      pub retry_policy: Option<RetryPolicy>,
-    }
+    /// 检索最近 N 条消息
+    fn retrieve_messages(&self, tenant_id: &str, workflow_id: &str, session_id: &str, count: usize) -> Result<Vec<Message>, NodeExecutionError>;
 
-    /// 工具调用响应（由引擎或 Tool 节点返回）
-    #[derive(Debug, Clone, Serialize, Deserialize)]
-    pub struct EngineResponse {
-      pub id: String,
-      pub output: serde_json::Value,
-      pub error: Option<String>,
-      pub correlation_id: Option<String>,
-    }
-  ```
+    /// 清理过期会话，返回统计信息
+    fn cleanup(&self, expired_before: chrono::DateTime<chrono::Utc>) -> Result<serde_json::Value, NodeExecutionError>;
+  }
+```
 
-3) Registry typed 接口增强
-  - 在 hetumind-core/src/workflow/node_registry.rs 增加：
-  ```rust
-    /// 获取指定 NodeKind 的 LLM Supplier（若存在）
-    pub fn get_llm_supplier(&self, kind: &NodeKind) -> Option<LLMSubNodeProviderRef> { /* typed 提取 */ }
-    /// Memory/Tool/Agent 同理
-  ```
+- 后端实现建议：
+  - InMemoryMemoryService（本地内存 + TTL）
+  - RedisMemoryService（基于 Redis/Valkey，键格式：{tenant_id}:{workflow_id}:{session_id}）
+- Application 注入：通过 fusion_core::application::Application 注册为全局组件，并在 NodeExecutionContext 中以引用方式访问。
 
-4) create_node_as_tool 与 JSON Schema 校验
-  - 文件建议：hetumind-core/src/workflow/tooling.rs
-  - 要点：
-    - 从 NodeDefinition.properties 中收集 additional_properties.from_ai=true 的参数，生成简化 JSON Schema
-    - 使用 jsonschema crate 做运行时校验：当 Agent 传入工具调用参数时先校验，失败则返回结构化错误
-  - 代码片段：
-  ```rust
-    /// 根据 NodeDefinition 生成简化 JSON Schema，并返回可用于校验的编译器
-    pub fn compile_tool_schema(def: &NodeDefinition) -> Result<jsonschema::CompiledSchema, NodeExecutionError> {
-      let schema = build_json_schema_from_properties(&def.properties);
-      let compiled = jsonschema::JSONSchema::compile(&schema).map_err(|e| NodeExecutionError::ConfigurationError(e.to_string()))?;
-      Ok(compiled)
-    }
-  ```
+2. EngineRequest/Response 统一模型
 
-5) Helpers（hetumind-nodes 公共模块）
-  - 文件建议：hetumind-nodes/src/common/helpers.rs
-  - 提供：get_llm_providers/get_memory_provider/get_connected_tools 三个方法，内部复用 NodeExecutionContext + NodeRegistry + connection_manager。
+- 文件建议：hetumind-core/src/workflow/engine_request.rs
+- 结构草案：
 
-6) SimpleMemorySupplier 对接 Memory Service
-  - 修改 hetumind-nodes/src/memory/simple_memory_node/，使其通过 MemoryService 读写会话缓冲，不再在节点内部维护全局 Map。
+```rust
+  /// 工具调用请求（由 Agent 节点输出到 AiTool 端口）
+  #[derive(Debug, Clone, Serialize, Deserialize)]
+  pub struct EngineRequest {
+    pub node_name: String,
+    pub r#type: ConnectionKind, // 固定为 AiTool
+    pub id: String,
+    pub input: serde_json::Value,
+    pub metadata: serde_json::Value,
+    pub correlation_id: Option<String>,
+    pub retry_policy: Option<RetryPolicy>,
+  }
 
-7) DeepSeekModelSupplier（LLM）
-  - 在 hetumind-nodes/src/llm/deepseek_node/ 新增 Supplier，实现 LLMSubNodeProvider，使用 rig-core Agent/Client，并支持 api_key 解析（resolve_api_key）。
+  /// 工具调用响应（由引擎或 Tool 节点返回）
+  #[derive(Debug, Clone, Serialize, Deserialize)]
+  pub struct EngineResponse {
+    pub id: String,
+    pub output: serde_json::Value,
+    pub error: Option<String>,
+    pub correlation_id: Option<String>,
+  }
+```
 
-8) 测试与验收
-  - 单元测试：
-    - MemoryService 后端：隔离性、TTL 清理、并发安全
-    - EngineRequest/Response：序列化/反序列化、一致性
-    - JSON Schema：工具参数校验，错误信息覆盖率
-  - 集成测试：
-    - Agent → Tool 调用链路（EngineRequest 风格），多工具并发/串联
-    - LLM + Memory 联动：会话内持续上下文（跨执行共享）
+3. Registry typed 接口增强
+
+- 在 hetumind-core/src/workflow/node_registry.rs 增加：
+
+```rust
+  /// 获取指定 NodeKind 的 LLM Supplier（若存在）
+  pub fn get_llm_supplier(&self, kind: &NodeKind) -> Option<LLMSubNodeProviderRef> { /* typed 提取 */ }
+  /// Memory/Tool/Agent 同理
+```
+
+4. create_node_as_tool 与 JSON Schema 校验
+
+- 文件建议：hetumind-core/src/workflow/tooling.rs
+- 要点：
+  - 从 NodeDefinition.properties 中收集 additional_properties.from_ai=true 的参数，生成简化 JSON Schema
+  - 使用 jsonschema crate 做运行时校验：当 Agent 传入工具调用参数时先校验，失败则返回结构化错误
+- 代码片段：
+
+```rust
+  /// 根据 NodeDefinition 生成简化 JSON Schema，并返回可用于校验的编译器
+  pub fn compile_tool_schema(def: &NodeDefinition) -> Result<jsonschema::CompiledSchema, NodeExecutionError> {
+    let schema = build_json_schema_from_properties(&def.properties);
+    let compiled = jsonschema::JSONSchema::compile(&schema).map_err(|e| NodeExecutionError::ConfigurationError(e.to_string()))?;
+    Ok(compiled)
+  }
+```
+
+5. Helpers（hetumind-nodes 公共模块）
+
+- 文件建议：hetumind-nodes/src/common/helpers.rs
+- 提供：get_llm_providers/get_memory_provider/get_connected_tools 三个方法，内部复用 NodeExecutionContext + NodeRegistry + connection_manager。
+
+6. SimpleMemorySupplier 对接 Memory Service
+
+- 修改 hetumind-nodes/src/memory/simple_memory_node/，使其通过 MemoryService 读写会话缓冲，不再在节点内部维护全局 Map。
+
+7. DeepSeekModelSupplier（LLM）
+
+- 在 hetumind-nodes/src/llm/deepseek_node/ 新增 Supplier，实现 LLMSubNodeProvider，使用 rig-core Agent/Client，并支持 api_key 解析（resolve_api_key）。
+
+8. 测试与验收
+
+- 单元测试：
+  - MemoryService 后端：隔离性、TTL 清理、并发安全
+  - EngineRequest/Response：序列化/反序列化、一致性
+  - JSON Schema：工具参数校验，错误信息覆盖率
+- 集成测试：
+  - Agent → Tool 调用链路（EngineRequest 风格），多工具并发/串联
+  - LLM + Memory 联动：会话内持续上下文（跨执行共享）
 
 ## 约束与实现规范（用于 Prompt）
 
@@ -450,3 +539,10 @@
 - rig-core（DeepSeek 等模型接入）：参考 hetumind-nodes/src/llm/deepseek_node/
 - Application 组件系统：fusion_core::application::Application
 - connection_manager：hetumind-nodes/src/core/connection_manager.rs
+- 新增节点：MoonshotModel（hetumind_nodes::MoonshotModel）与 OpenaiModel（hetumind_nodes::OpenaiModel）已注册，沿用统一 helpers 与输出规范。
+
+7. 后续推进计划（执行中）
+
+- 跟踪 rig-core：一旦 AgentBuilder 暴露 top_p/stop_sequences 的绑定能力，立即在 set_agent_builder、DeepSeek/Moonshot/Supplier 三处补齐；同时恢复 assistant 历史消息传递；
+- 推广范围：端到端联调稳定后，按统一规范在其他 LLM 节点推广 used_params/history_length 输出；
+- 引擎侧观测：必要时在 Engine 路径增强日志与错误分类展示，辅助复现场景与失效原因定位。

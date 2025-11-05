@@ -19,7 +19,7 @@ pub fn auth_routes() -> Router<Application> {
   Router::new()
     .route("/signin", get(signin_redirect))
     .route("/signup", get(signup_redirect))
-    .route("/oauth/:provider/start", get(oauth_redirect))
+    .route("/oauth/{provider}/start", get(oauth_redirect))
     .route("/token/exchange", post(token_exchange))
     .route("/refresh", post(refresh_token))
     .route("/signout", post(signout))

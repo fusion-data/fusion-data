@@ -5,7 +5,7 @@ use std::sync::Arc;
 
 use hetumind_core::{
   version::Version,
-  workflow::{Node, FlowNodeRef, NodeKind, RegistrationError},
+  workflow::{FlowNodeRef, Node, NodeKind, RegistrationError},
 };
 
 pub use http_method::*;

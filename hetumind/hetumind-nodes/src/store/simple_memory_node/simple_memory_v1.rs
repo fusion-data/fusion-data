@@ -4,10 +4,12 @@
 //! 每个工作流执行实例维护自己的内存缓冲区。
 
 use async_trait::async_trait;
+use fusion_core::application::Application;
+use hetumind_context::services::memory_service::MemoryService;
 use hetumind_core::{
   version::Version,
   workflow::{
-    ConnectionKind, ExecutionDataMap, InputPortConfig, NodeDefinition, FlowNode, NodeExecutionContext,
+    ConnectionKind, ExecutionDataMap, FlowNode, InputPortConfig, NodeDefinition, NodeExecutionContext,
     NodeExecutionError, NodeGroupKind, NodeProperty, NodePropertyKind, OutputPortConfig, RegistrationError,
   },
 };
@@ -16,9 +18,10 @@ use serde_json::json;
 use std::sync::Arc;
 
 use crate::constants::SIMPLE_MEMORY_NODE_KIND;
-use crate::memory::simple_memory_node::memory_config::{
-  ConversationMessage, MemoryStats, MessageRole, SessionIdType, SimpleMemoryConfig, WorkflowMemoryBuffer,
+use crate::store::simple_memory_node::memory_config::{
+  ConversationMessage, MemoryStats, MessageRole, SessionIdType, SimpleMemoryConfig,
 };
+use chrono::Utc;
 
 /// Simple Memory Node V1 实现
 pub struct SimpleMemoryV1 {
@@ -211,22 +214,7 @@ impl SimpleMemoryV1 {
     Ok(conversation_messages)
   }
 
-  /// 获取或创建工作流内存缓冲区
-  /// 使用工作流执行上下文中的临时存储来管理内存
-  fn get_or_create_memory_buffer(
-    &self,
-    context: &NodeExecutionContext,
-    session_id: &str,
-  ) -> Result<&mut WorkflowMemoryBuffer, NodeExecutionError> {
-    // 这里应该从工作流执行上下文中获取内存存储
-    // 由于当前的架构限制，我们先返回一个模拟的缓冲区
-    // 在实际实现中，应该使用 context.execution_context 或类似的机制
-
-    // 暂时使用一个简化的方案：返回错误，提示需要在工作流执行上下文中实现内存存储
-    Err(NodeExecutionError::ConfigurationError(
-      "Workflow-scoped memory storage not yet implemented. Please implement memory storage in workflow execution context.".to_string()
-    ))
-  }
+  // 已弃用：SimpleMemoryV1 现已改为使用 MemoryService 组件进行会话内存存储与检索
 }
 
 impl TryFrom<NodeDefinition> for SimpleMemoryV1 {
@@ -261,24 +249,56 @@ impl FlowNode for SimpleMemoryV1 {
     // 4. 从输入中提取消息
     let input_messages = self.extract_messages_from_input(context)?;
 
-    // 5. 创建或获取内存缓冲区
-    // 注意：这里需要工作流执行上下文支持内存存储
-    // 目前返回一个简化的实现
-    let mut memory_buffer = WorkflowMemoryBuffer::new(session_id.clone());
+    // 5. 从全局 Application 中获取 MemoryService 组件
+    let svc = Application::global()
+      .get_component::<Arc<dyn MemoryService>>()
+      .map_err(|e| NodeExecutionError::ConfigurationError(format!("MemoryService component not found: {}", e)))?;
 
-    // 6. 保存输入消息到内存
-    for message in input_messages {
-      memory_buffer.add_message(message);
-    }
+    // 6. 保存输入消息到会话内存（通过 MemoryService）
+    // 将 ConversationMessage 转换为通用 Message 类型
+    let to_core_msgs: Vec<hetumind_core::workflow::Message> = input_messages
+      .into_iter()
+      .map(|m| hetumind_core::workflow::Message {
+        role: match m.role {
+          MessageRole::System => "system".to_string(),
+          MessageRole::User => "user".to_string(),
+          MessageRole::Assistant => "assistant".to_string(),
+          MessageRole::Tool => "tool".to_string(),
+        },
+        content: m.content,
+      })
+      .collect();
 
-    info!("Saved {} messages to workflow memory buffer", memory_buffer.len());
+    let tenant_id = "default_tenant"; // TODO: 从执行上下文注入真实租户ID
+    let workflow_id_string = context.workflow.id.to_string();
+    let workflow_id = workflow_id_string.as_str();
+    svc.store_messages(tenant_id, workflow_id, &session_id, to_core_msgs)?;
 
     // 7. 获取最近的N条消息（滑动窗口）
-    let recent_messages = memory_buffer.get_recent_messages(config.context_window_length);
-    debug!("Retrieved {} recent messages from buffer: {}", recent_messages.len(), session_id);
+    let recent_messages_core =
+      svc.retrieve_messages(tenant_id, workflow_id, &session_id, config.context_window_length)?;
+    debug!("Retrieved {} recent messages from memory service: {}", recent_messages_core.len(), session_id);
 
-    // 8. 创建内存统计信息
-    let memory_stats = MemoryStats::new(memory_buffer.len(), session_id.clone(), config.context_window_length);
+    // 将通用 Message 映射到输出结构（补充 timestamp 字段以便UI展示）
+    let recent_messages: Vec<ConversationMessage> = recent_messages_core
+      .into_iter()
+      .map(|m| {
+        let role = match m.role.as_str() {
+          "system" => MessageRole::System,
+          "assistant" => MessageRole::Assistant,
+          "tool" => MessageRole::Tool,
+          _ => MessageRole::User,
+        };
+        let mut cm = ConversationMessage::new(role, m.content);
+        // 使用当前时间作为展示用途的时间戳（MemoryService 不保存逐条消息时间戳）
+        cm.timestamp = Utc::now();
+        cm
+      })
+      .collect();
+
+    // 8. 创建内存统计信息（使用 get_buffer.len() 作为总消息数）
+    let total_messages = svc.get_buffer(tenant_id, workflow_id, &session_id)?.len();
+    let memory_stats = MemoryStats::new(total_messages, session_id.clone(), config.context_window_length);
 
     // 9. 创建执行数据映射
     let mut data_map = ExecutionDataMap::default();
@@ -292,11 +312,11 @@ impl FlowNode for SimpleMemoryV1 {
         json!({
           "role": msg.role,
           "content": msg.content,
-          "timestamp": msg.timestamp,
+          "timestamp": msg.timestamp.to_rfc3339(),
           "message_id": msg.message_id,
           "metadata": msg.metadata,
-        })
-      }).collect::<Vec<_>>(),
+      })
+    }).collect::<Vec<_>>(),
       "stats": memory_stats,
     });
 
@@ -432,6 +452,8 @@ impl SimpleMemoryAccessor {
 #[cfg(test)]
 mod tests {
   use super::*;
+  // 引入 WorkflowMemoryBuffer 以便测试本地缓冲区逻辑
+  use crate::store::WorkflowMemoryBuffer;
 
   #[tokio::test]
   async fn test_node_creation() {
