@@ -43,18 +43,47 @@ docker-compose up -d && docker-compose logs -f
 
 **集群节点架构**:
 ```rust
-// AI 能力统一接口 - SubNodeProvider
-let registry = NodeRegistry::new();
-registry.register_subnode_provider(node_kind, provider)?;
-let manager = ClusterNodeManager::new_default().await?;
-let response = manager.execute_task("deepseek_llm", input).await?;
+// 节点注册模式
+let node_registry = NodeRegistry::new();
+let deepseek_node = Arc::new(DeepseekModelNode::new()?);
+node_registry.register_node(deepseek_node.clone())?;
+
+// 注册 SubNodeProvider
+for s in deepseek_node.node_suppliers() {
+  node_registry.register_subnode_provider(deepseek_node.kind(), s.clone())?;
+}
+
+// 类型化供应器注册
+let typed_supplier: LLMSubNodeProviderRef = Arc::new(DeepseekModelSupplier::new());
+node_registry.register_llm_supplier(deepseek_node.kind(), typed_supplier)?;
+
+// 工作流执行中的使用
+let engine = DefaultWorkflowEngine::new(node_registry, execution_store);
+let result = engine.execute_workflow(workflow_id, context).await?;
 ```
 
 **核心组件**:
-- **SubNodeProvider**: AI 能力统一接口 (LLM, Memory, Agent)
-- **ClusterNodeManager**: 集中管理
-- **NodeRegistry**: 统一注册系统
-- **GraphFlow**: 任务执行框架
+- **NodeRegistry**: 统一节点注册表，支持类型化供应器 (LLM/Memory/Tool/Agent)
+- **SubNodeProvider**: 类型化的 AI 能力接口 (LLMSubNodeProvider, MemorySubNodeProvider)
+- **DefaultWorkflowEngine**: 工作流执行引擎，集成 SubNodeProvider 调用
+- **EngineRouter**: 统一请求路由器，处理节点工具请求
+- **GraphFlow**: 任务执行框架与集群节点执行器集成
+
+**实际使用模式**:
+```rust
+// 类型安全的供应器获取
+pub fn get_llm_supplier_typed(registry: &NodeRegistry, kind: &NodeKind) -> Option<LLMSubNodeProviderRef>
+pub fn get_simple_memory_supplier_typed(registry: &NodeRegistry) -> Option<MemorySubNodeProviderRef>
+
+// 工作流执行中的内存注入
+if let Some(mem_supplier) = get_simple_memory_supplier_typed(&self.node_registry) {
+  let mem_msgs = mem_supplier.retrieve_messages(session_id, history_count).await.unwrap_or_default();
+  // 注入历史上下文到输入数据
+}
+
+// 节点产生的 EngineRequest 路由
+engine.route_engine_requests(&mut output_data, &context).await?;
+```
 
 ## 开发规范
 
