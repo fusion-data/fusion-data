@@ -2,7 +2,7 @@ use std::ops::Deref;
 
 use serde::{Deserialize, Serialize};
 
-use crate::workflow::{InputPortConfig, NodeExecutor, NodeGroupKind, NodeProperty, NodeSupplier, OutputPortConfig};
+use crate::workflow::{FlowNodeRef, InputPortConfig, NodeGroupKind, NodeProperty, OutputPortConfig, SubNodeRef};
 use crate::{types::IconColor, version::Version};
 
 /// The unique name of a node within a workflow. It is used to identify nodes configured in the workflow definition
@@ -271,11 +271,11 @@ fusionsql::generate_string_newtype_to_sea_query_value!(Struct: NodeName, Struct:
 pub trait Node {
   fn default_version(&self) -> &Version;
 
-  fn node_executors(&self) -> &[NodeExecutor] {
+  fn node_executors(&self) -> &[FlowNodeRef] {
     &[]
   }
 
-  fn node_suppliers(&self) -> &[NodeSupplier] {
+  fn node_suppliers(&self) -> &[SubNodeRef] {
     &[]
   }
 
@@ -293,19 +293,19 @@ pub trait Node {
     self.node_executors().iter().map(|node| node.definition().version.clone()).collect()
   }
 
-  fn get_node_executor(&self, version: &Version) -> Option<NodeExecutor> {
+  fn get_node_executor(&self, version: &Version) -> Option<FlowNodeRef> {
     self.node_executors().iter().find(|node| node.definition().version == *version).cloned()
   }
 
-  fn default_node_executor(&self) -> Option<NodeExecutor> {
+  fn default_node_executor(&self) -> Option<FlowNodeRef> {
     self.get_node_executor(self.default_version())
   }
 
-  fn get_node_supplier(&self, version: &Version) -> Option<NodeSupplier> {
+  fn get_node_supplier(&self, version: &Version) -> Option<SubNodeRef> {
     self.node_suppliers().iter().find(|node| node.definition().version == *version).cloned()
   }
 
-  fn default_node_supplier(&self) -> Option<NodeSupplier> {
+  fn default_node_supplier(&self) -> Option<SubNodeRef> {
     self.get_node_supplier(self.default_version())
   }
 }

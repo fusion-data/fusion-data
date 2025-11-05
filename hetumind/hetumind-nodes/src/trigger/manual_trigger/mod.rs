@@ -9,8 +9,8 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use hetumind_core::version::Version;
 use hetumind_core::workflow::{
-  ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, Node, NodeDefinition, NodeExecutable,
-  NodeExecutionContext, NodeExecutionError, NodeExecutor, NodeGroupKind, NodeKind, NodeProperty, NodePropertyKind,
+  ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, Node, NodeDefinition, FlowNode,
+  NodeExecutionContext, NodeExecutionError, FlowNodeRef, NodeGroupKind, NodeKind, NodeProperty, NodePropertyKind,
   RegistrationError, make_execution_data_map,
 };
 use serde_json::json;
@@ -67,7 +67,7 @@ pub fn create_base() -> NodeDefinition {
 }
 
 #[async_trait]
-impl NodeExecutable for ManualTriggerNodeV1 {
+impl FlowNode for ManualTriggerNodeV1 {
   fn definition(&self) -> Arc<NodeDefinition> {
     Arc::clone(&self.definition)
   }
@@ -126,7 +126,7 @@ impl ManualTriggerNodeV1 {
 
 pub struct ManualTriggerNode {
   default_version: Version,
-  executors: Vec<NodeExecutor>,
+  executors: Vec<FlowNodeRef>,
 }
 
 impl Node for ManualTriggerNode {
@@ -134,7 +134,7 @@ impl Node for ManualTriggerNode {
     &self.default_version
   }
 
-  fn node_executors(&self) -> &[NodeExecutor] {
+  fn node_executors(&self) -> &[FlowNodeRef] {
     &self.executors
   }
 
@@ -146,7 +146,7 @@ impl Node for ManualTriggerNode {
 impl ManualTriggerNode {
   pub fn new() -> Result<Self, RegistrationError> {
     let base = create_base();
-    let executors: Vec<NodeExecutor> = vec![Arc::new(ManualTriggerNodeV1::try_from(base)?)];
+    let executors: Vec<FlowNodeRef> = vec![Arc::new(ManualTriggerNodeV1::try_from(base)?)];
     Ok(Self { default_version: Version::new(1, 0, 0), executors })
   }
 }

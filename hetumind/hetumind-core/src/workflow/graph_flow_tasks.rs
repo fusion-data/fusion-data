@@ -9,9 +9,9 @@ use fusion_common::ahash;
 
 use crate::workflow::{
   NodeExecutionError, NodeKind, NodeRegistry,
-  sub_node_provider::{
+  sub_node::{
     AgentConfig, AgentSubNodeProviderRef, ClusterNodeConfig, ExecutionConfig, LLMConfig, LLMSubNodeProviderRef,
-    MemoryConfig, MemorySubNodeProviderRef, Message, SubNodeProviderRef, SubNodeProviderType, ToolSubNodeProviderRef,
+    MemoryConfig, MemorySubNodeProviderRef, Message, SubNodeRef, SubNodeType, ToolSubNodeProviderRef,
   },
 };
 
@@ -71,7 +71,7 @@ pub type TaskRef = Arc<dyn Task + Send + Sync>;
 
 /// Base GraphFlow task for SubNodeProvider execution
 pub struct SubNodeProviderTask {
-  provider: SubNodeProviderRef,
+  provider: SubNodeRef,
   node_kind: NodeKind,
   execution_config: ExecutionConfig,
   task_id: String,
@@ -79,13 +79,13 @@ pub struct SubNodeProviderTask {
 
 impl SubNodeProviderTask {
   /// Create a new SubNodeProvider task
-  pub fn new(provider: SubNodeProviderRef, node_kind: NodeKind, execution_config: ExecutionConfig) -> Self {
+  pub fn new(provider: SubNodeRef, node_kind: NodeKind, execution_config: ExecutionConfig) -> Self {
     let task_id = node_kind.to_string();
     Self { provider, node_kind, execution_config, task_id }
   }
 
   /// Get the provider type
-  fn provider_type(&self) -> SubNodeProviderType {
+  fn provider_type(&self) -> SubNodeType {
     self.provider.provider_type()
   }
 }
@@ -98,19 +98,19 @@ impl Task for SubNodeProviderTask {
 
     // Execute based on provider type
     match self.provider_type() {
-      SubNodeProviderType::LLM => {
+      SubNodeType::LLM => {
         // This will be handled by specialized LLM tasks
         Ok(TaskResult::new(Some("LLM execution handled by LLMProviderTask".to_string()), NextAction::Continue))
       }
-      SubNodeProviderType::Memory => {
+      SubNodeType::Memory => {
         // This will be handled by specialized Memory tasks
         Ok(TaskResult::new(Some("Memory execution handled by MemoryProviderTask".to_string()), NextAction::Continue))
       }
-      SubNodeProviderType::Tool => {
+      SubNodeType::Tool => {
         // This will be handled by specialized Tool tasks
         Ok(TaskResult::new(Some("Tool execution handled by ToolProviderTask".to_string()), NextAction::Continue))
       }
-      SubNodeProviderType::Agent => {
+      SubNodeType::Agent => {
         // This will be handled by specialized Agent tasks
         Ok(TaskResult::new(Some("Agent execution handled by AgentProviderTask".to_string()), NextAction::Continue))
       }
@@ -133,20 +133,20 @@ pub struct LLMProviderTask {
 impl LLMProviderTask {
   /// Create a new LLM provider task
   pub fn new(llm_provider: LLMSubNodeProviderRef, node_kind: NodeKind, default_config: LLMConfig) -> Self {
-    let task_id = format!("llm_{}", node_kind.to_string());
+    let task_id = format!("llm_{}", node_kind);
     Self { llm_provider, node_kind, default_config, task_id }
   }
 }
 
 #[async_trait]
 impl Task for LLMProviderTask {
-  async fn run(&self, mut context: Context) -> Result<TaskResult, NodeExecutionError> {
+  async fn run(&self, mut _context: Context) -> Result<TaskResult, NodeExecutionError> {
     // Initialize the provider
     self.llm_provider.initialize().await?;
 
     // For now, return a placeholder result
     // In a full implementation, this would call the LLM provider
-    let result = format!("LLM {} would execute with config: {:?}", self.node_kind.to_string(), self.default_config);
+    let result = format!("LLM {} would execute with config: {:?}", self.node_kind, self.default_config);
 
     Ok(TaskResult::new(Some(result), NextAction::Continue))
   }
@@ -174,13 +174,13 @@ impl MemoryProviderTask {
 
 #[async_trait]
 impl Task for MemoryProviderTask {
-  async fn run(&self, mut context: Context) -> Result<TaskResult, NodeExecutionError> {
+  async fn run(&self, mut _context: Context) -> Result<TaskResult, NodeExecutionError> {
     // Initialize the provider
     self.memory_provider.initialize().await?;
 
     // For now, return a placeholder result
     // In a full implementation, this would call the Memory provider
-    let result = format!("Memory {} would execute with config: {:?}", self.node_kind.to_string(), self.default_config);
+    let result = format!("Memory {} would execute with config: {:?}", self.node_kind, self.default_config);
 
     Ok(TaskResult::new(Some(result), NextAction::Continue))
   }
@@ -200,7 +200,7 @@ pub struct ToolProviderTask {
 impl ToolProviderTask {
   /// Create a new tool provider task
   pub fn new(tool_provider: ToolSubNodeProviderRef, node_kind: NodeKind) -> Self {
-    let task_id = format!("tool_{}", node_kind.to_string());
+    let task_id = format!("tool_{}", node_kind);
     Self { tool_provider, node_kind, task_id }
   }
 }
@@ -213,7 +213,7 @@ impl Task for ToolProviderTask {
 
     // For now, return a placeholder result
     // In a full implementation, this would call the Tool provider
-    let result = format!("Tool {} would execute", self.node_kind.to_string());
+    let result = format!("Tool {} would execute", self.node_kind);
 
     Ok(TaskResult::new(Some(result), NextAction::Continue))
   }
@@ -234,7 +234,7 @@ pub struct AgentProviderTask {
 impl AgentProviderTask {
   /// Create a new Agent provider task
   pub fn new(agent_provider: AgentSubNodeProviderRef, node_kind: NodeKind, default_config: AgentConfig) -> Self {
-    let task_id = format!("agent_{}", node_kind.to_string());
+    let task_id = format!("agent_{}", node_kind);
     Self { agent_provider, node_kind, default_config, task_id }
   }
 }
@@ -263,7 +263,7 @@ impl Task for AgentProviderTask {
     let response = self.agent_provider.execute_agent(input_messages, self.default_config.clone()).await?;
 
     // Store response in context for potential next steps
-    context.set("agent_response", response.content.clone());
+    context.set("agent_response", response.content.clone())?;
 
     Ok(TaskResult::new(Some(response.content), NextAction::Continue))
   }
@@ -317,20 +317,18 @@ impl ClusterNodeExecutor {
 
     // Create appropriate task based on provider type
     let task: TaskRef = match provider.provider_type() {
-      SubNodeProviderType::LLM => {
+      SubNodeType::LLM => {
         // For now, create a simple placeholder task
         // In a full implementation, this would downcast and create proper LLM tasks
         let default_config = config.llm_config.unwrap_or_default();
         Arc::new(SubNodeProviderTask::new(provider, kind.clone(), config.execution_config.clone()))
       }
-      SubNodeProviderType::Memory => {
+      SubNodeType::Memory => {
         let default_config = config.memory_config.unwrap_or_default();
         Arc::new(SubNodeProviderTask::new(provider, kind.clone(), config.execution_config.clone()))
       }
-      SubNodeProviderType::Tool => {
-        Arc::new(SubNodeProviderTask::new(provider, kind.clone(), config.execution_config.clone()))
-      }
-      SubNodeProviderType::Agent => {
+      SubNodeType::Tool => Arc::new(SubNodeProviderTask::new(provider, kind.clone(), config.execution_config.clone())),
+      SubNodeType::Agent => {
         let default_config = config.agent_config.unwrap_or_default();
         // For now, create a simple placeholder task
         // In a full implementation, this would downcast and create proper Agent tasks

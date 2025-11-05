@@ -30,7 +30,7 @@ use std::sync::Arc;
 
 use hetumind_core::{
   version::Version,
-  workflow::{Node, NodeDefinition, NodeExecutor, NodeGroupKind, NodeKind, RegistrationError},
+  workflow::{Node, NodeDefinition, FlowNodeRef, NodeGroupKind, NodeKind, RegistrationError},
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -324,14 +324,14 @@ impl EditImageConfig {
 /// Edit Image 节点实现
 pub struct EditImageNode {
   default_version: Version,
-  executors: Vec<NodeExecutor>,
+  executors: Vec<FlowNodeRef>,
 }
 
 impl EditImageNode {
   /// 创建新的 EditImage 节点
   pub fn new() -> Result<Self, RegistrationError> {
     let base = Self::base();
-    let executors: Vec<NodeExecutor> = vec![Arc::new(EditImageV1::try_from(base)?)];
+    let executors: Vec<FlowNodeRef> = vec![Arc::new(EditImageV1::try_from(base)?)];
     let default_version = executors.iter().map(|node| node.definition().version.clone()).max().unwrap();
     Ok(Self { default_version, executors })
   }
@@ -353,7 +353,7 @@ impl Node for EditImageNode {
     &self.default_version
   }
 
-  fn node_executors(&self) -> &[NodeExecutor] {
+  fn node_executors(&self) -> &[FlowNodeRef] {
     &self.executors
   }
 

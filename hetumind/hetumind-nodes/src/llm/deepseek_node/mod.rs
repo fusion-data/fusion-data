@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use hetumind_core::{
   version::Version,
-  workflow::{Node, NodeExecutor, NodeKind, NodeRegistry, RegistrationError},
+  workflow::{Node, FlowNodeRef, NodeKind, NodeRegistry, RegistrationError},
 };
 
 mod deepseek_v1;
@@ -11,12 +11,12 @@ use deepseek_v1::*;
 
 pub struct DeepseekModelNode {
   default_version: Version,
-  executors: Vec<NodeExecutor>,
+  executors: Vec<FlowNodeRef>,
 }
 
 impl DeepseekModelNode {
   pub fn new() -> Result<Self, RegistrationError> {
-    let executors: Vec<NodeExecutor> = vec![Arc::new(DeepseekV1::new()?)];
+    let executors: Vec<FlowNodeRef> = vec![Arc::new(DeepseekV1::new()?)];
     let default_version = executors.iter().map(|node| node.definition().version.clone()).max().unwrap();
     Ok(Self { default_version, executors })
   }
@@ -27,7 +27,7 @@ impl Node for DeepseekModelNode {
     &self.default_version
   }
 
-  fn node_executors(&self) -> &[NodeExecutor] {
+  fn node_executors(&self) -> &[FlowNodeRef] {
     &self.executors
   }
 

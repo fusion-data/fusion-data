@@ -6,7 +6,7 @@ use hetumind_core::{
   version::Version,
   workflow::{
     ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition,
-    NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig,
+    FlowNode, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig,
     RegistrationError, make_execution_data_map,
   },
 };
@@ -45,7 +45,7 @@ pub struct WaitV1 {
 }
 
 #[async_trait]
-impl NodeExecutable for WaitV1 {
+impl FlowNode for WaitV1 {
   #[allow(unused_variables)]
   fn definition(&self) -> Arc<NodeDefinition> {
     self.definition.clone()

@@ -6,7 +6,7 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 use hetumind_core::workflow::{
-  ConnectionKind, ExecutionDataMap, NodeDefinition, NodeExecutable, NodeExecutionContext, NodeExecutionError,
+  ConnectionKind, ExecutionDataMap, NodeDefinition, FlowNode, NodeExecutionContext, NodeExecutionError,
   RegistrationError,
 };
 use rig::{
@@ -70,7 +70,7 @@ impl TryFrom<NodeDefinition> for DeepseekV1 {
 }
 
 #[async_trait]
-impl NodeExecutable for DeepseekV1 {
+impl FlowNode for DeepseekV1 {
   async fn execute(&self, context: &NodeExecutionContext) -> Result<ExecutionDataMap, NodeExecutionError> {
     // Extract configuration
     let config: DeepSeekNodeConfig = context.get_parameters()?;

@@ -117,7 +117,6 @@ toml = "0.9"
 config = { version = "0.15", default-features = false, features = [
   "toml",
   "yaml",
-  "json5",
   "json",
 ] }
 itertools = "0.14"
@@ -229,10 +228,10 @@ serde_with = { version = "3.15", features = ["chrono_0_4"] }
 serde_json = { version = "1.0" }
 tsify = { version = "0.5", features = ["js"] }
 sonic-rs = { version = "0.5" }
-json-five = { version = "0.3" }
 serde_repr = "0.1"
 serde_json_path = { version = "0.7" }
 schemars = { version = "1.0" }
+jsonschema = { version = "0.33" }
 nom = "8.0"
 # -- Web
 url = "2.5"

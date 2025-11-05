@@ -5,16 +5,15 @@ use std::{
 
 use dashmap::DashMap;
 
-use super::sub_node_provider::{SubNodeProviderRef, SubNodeProviderType};
-use crate::workflow::{Node, NodeDefinition, NodeExecutor, NodeKind, RegistrationError};
-use crate::{version::Version, workflow::NodeSupplier};
+use crate::version::Version;
+use crate::workflow::{Node, NodeDefinition, FlowNodeRef, NodeKind, RegistrationError, SubNodeRef};
 
 pub type NodeRef = Arc<dyn Node + Send + Sync>;
 
 #[derive(Default)]
 pub struct InnerNodeRegistry {
   nodes: DashMap<NodeKind, NodeRef>,
-  subnode_providers: DashMap<NodeKind, SubNodeProviderRef>,
+  subnode_providers: DashMap<NodeKind, SubNodeRef>,
 }
 
 impl InnerNodeRegistry {
@@ -40,7 +39,7 @@ impl InnerNodeRegistry {
   ///
   /// Returns:
   /// - `Option<NodeExecutor>` - The node executor if found, otherwise None
-  pub fn get_executor(&self, node_kind: &NodeKind) -> Option<NodeExecutor> {
+  pub fn get_executor(&self, node_kind: &NodeKind) -> Option<FlowNodeRef> {
     self.nodes.get(node_kind).and_then(|x| x.value().default_node_executor())
   }
 
@@ -52,7 +51,7 @@ impl InnerNodeRegistry {
   ///
   /// Returns:
   /// - `Option<NodeExecutor>` - The node executor if found, otherwise None
-  pub fn get_executor_by_version(&self, node_kind: &NodeKind, version: &Version) -> Option<NodeExecutor> {
+  pub fn get_executor_by_version(&self, node_kind: &NodeKind, version: &Version) -> Option<FlowNodeRef> {
     self.nodes.get(node_kind).and_then(|x| x.value().get_node_executor(version))
   }
 
@@ -63,7 +62,7 @@ impl InnerNodeRegistry {
   ///
   /// Returns:
   /// - `Option<NodeSupplier>` - The node supplier if found, otherwise None
-  pub fn get_supplier(&self, node_kind: &NodeKind) -> Option<NodeSupplier> {
+  pub fn get_supplier(&self, node_kind: &NodeKind) -> Option<SubNodeRef> {
     self.nodes.get(node_kind).and_then(|x| x.value().default_node_supplier())
   }
 
@@ -75,7 +74,7 @@ impl InnerNodeRegistry {
   ///
   /// Returns:
   /// - `Option<NodeSupplier>` - The node supplier if found, otherwise None
-  pub fn get_supplier_by_version(&self, node_kind: &NodeKind, version: &Version) -> Option<NodeSupplier> {
+  pub fn get_supplier_by_version(&self, node_kind: &NodeKind, version: &Version) -> Option<SubNodeRef> {
     self.nodes.get(node_kind).and_then(|x| x.value().get_node_supplier(version))
   }
 
@@ -151,11 +150,7 @@ impl InnerNodeRegistry {
   ///
   /// Returns:
   /// - `Result<(), RegistrationError>` - Ok if successful, Err if provider already exists
-  pub fn register_subnode_provider(
-    &self,
-    kind: NodeKind,
-    provider: SubNodeProviderRef,
-  ) -> Result<(), RegistrationError> {
+  pub fn register_subnode_provider(&self, kind: NodeKind, provider: SubNodeRef) -> Result<(), RegistrationError> {
     if self.subnode_providers.contains_key(&kind) {
       return Err(RegistrationError::NodeKindAlreadyExists { node_kind: kind });
     }
@@ -171,7 +166,7 @@ impl InnerNodeRegistry {
   ///
   /// Returns:
   /// - `Option<SubNodeProviderRef>` - The provider if found, otherwise None
-  pub fn get_subnode_provider(&self, kind: &NodeKind) -> Option<SubNodeProviderRef> {
+  pub fn get_subnode_provider(&self, kind: &NodeKind) -> Option<SubNodeRef> {
     self.subnode_providers.get(kind).map(|provider| provider.clone())
   }
 
@@ -182,7 +177,7 @@ impl InnerNodeRegistry {
   ///
   /// Returns:
   /// - `Option<SubNodeProviderRef>` - The unregistered provider if found, otherwise None
-  pub fn unregister_subnode_provider(&self, kind: &NodeKind) -> Option<SubNodeProviderRef> {
+  pub fn unregister_subnode_provider(&self, kind: &NodeKind) -> Option<SubNodeRef> {
     self.subnode_providers.remove(kind).map(|(_, provider)| provider)
   }
 

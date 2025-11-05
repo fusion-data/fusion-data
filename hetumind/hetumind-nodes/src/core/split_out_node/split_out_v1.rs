@@ -6,7 +6,7 @@ use hetumind_core::{
   version::Version,
   workflow::{
     ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition,
-    NodeExecutable, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig,
+    FlowNode, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig,
     RegistrationError, ValidationError, make_execution_data_map,
   },
 };
@@ -264,7 +264,7 @@ impl SplitOutV1 {
 /// - 数据结构转换
 /// - 工作流数据预处理
 #[async_trait]
-impl NodeExecutable for SplitOutV1 {
+impl FlowNode for SplitOutV1 {
   #[allow(unused_variables)]
   fn definition(&self) -> Arc<NodeDefinition> {
     self.definition.clone()

@@ -7,7 +7,7 @@ use async_trait::async_trait;
 use hetumind_core::{
   version::Version,
   workflow::{
-    ConnectionKind, ExecutionDataMap, InputPortConfig, NodeDefinition, NodeExecutable, NodeExecutionContext,
+    ConnectionKind, ExecutionDataMap, InputPortConfig, NodeDefinition, FlowNode, NodeExecutionContext,
     NodeExecutionError, NodeGroupKind, NodeProperty, NodePropertyKind, OutputPortConfig, RegistrationError,
   },
 };
@@ -239,7 +239,7 @@ impl TryFrom<NodeDefinition> for SimpleMemoryV1 {
 }
 
 #[async_trait]
-impl NodeExecutable for SimpleMemoryV1 {
+impl FlowNode for SimpleMemoryV1 {
   async fn execute(&self, context: &NodeExecutionContext) -> Result<ExecutionDataMap, NodeExecutionError> {
     // 1. 提取配置
     let config: SimpleMemoryConfig = context.get_parameters()?;

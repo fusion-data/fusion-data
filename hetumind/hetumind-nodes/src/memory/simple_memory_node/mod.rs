@@ -11,7 +11,7 @@
 
 use hetumind_core::{
   version::Version,
-  workflow::{Node, NodeExecutor, NodeKind, NodeRegistry, RegistrationError},
+  workflow::{Node, FlowNodeRef, NodeKind, NodeRegistry, RegistrationError},
 };
 use std::sync::Arc;
 
@@ -23,12 +23,12 @@ pub static SIMPLE_MEMORY_NODE_KIND: &str = "hetumind_nodes::SimpleMemory";
 
 pub struct SimpleMemoryNode {
   default_version: Version,
-  executors: Vec<NodeExecutor>,
+  executors: Vec<FlowNodeRef>,
 }
 
 impl SimpleMemoryNode {
   pub fn new() -> Result<Self, RegistrationError> {
-    let executors: Vec<NodeExecutor> = vec![Arc::new(simple_memory_v1::SimpleMemoryV1::new()?)];
+    let executors: Vec<FlowNodeRef> = vec![Arc::new(simple_memory_v1::SimpleMemoryV1::new()?)];
     let default_version = executors.iter().map(|node| node.definition().version.clone()).max().unwrap();
     Ok(Self { default_version, executors })
   }
@@ -39,7 +39,7 @@ impl Node for SimpleMemoryNode {
     &self.default_version
   }
 
-  fn node_executors(&self) -> &[NodeExecutor] {
+  fn node_executors(&self) -> &[FlowNodeRef] {
     &self.executors
   }
 

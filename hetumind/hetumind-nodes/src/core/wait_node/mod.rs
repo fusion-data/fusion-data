@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 
 use hetumind_core::{
   version::Version,
-  workflow::{Node, NodeDefinition, NodeExecutor, NodeGroupKind, NodeKind, RegistrationError, ValidationError},
+  workflow::{Node, NodeDefinition, FlowNodeRef, NodeGroupKind, NodeKind, RegistrationError, ValidationError},
 };
 
 mod utils;
@@ -513,13 +513,13 @@ impl Default for WaitConfig {
 
 pub struct WaitNode {
   default_version: Version,
-  executors: Vec<NodeExecutor>,
+  executors: Vec<FlowNodeRef>,
 }
 
 impl WaitNode {
   pub fn new() -> Result<Self, RegistrationError> {
     let base = Self::base();
-    let executors: Vec<NodeExecutor> = vec![Arc::new(WaitV1::try_from(base)?)];
+    let executors: Vec<FlowNodeRef> = vec![Arc::new(WaitV1::try_from(base)?)];
     let default_version = executors.iter().map(|node| node.definition().version.clone()).max().unwrap();
     Ok(Self { default_version, executors })
   }
@@ -538,7 +538,7 @@ impl Node for WaitNode {
     &self.default_version
   }
 
-  fn node_executors(&self) -> &[NodeExecutor] {
+  fn node_executors(&self) -> &[FlowNodeRef] {
     &self.executors
   }
 

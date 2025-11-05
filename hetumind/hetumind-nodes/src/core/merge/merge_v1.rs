@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use hetumind_core::{
   version::Version,
   workflow::{
-    ConnectionKind, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition, NodeExecutable,
+    ConnectionKind, ExecutionDataItems, ExecutionDataMap, InputPortConfig, NodeDefinition, FlowNode,
     NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig, RegistrationError,
     make_execution_data_map,
   },
@@ -35,7 +35,7 @@ pub struct MergeV1 {
 }
 
 #[async_trait]
-impl NodeExecutable for MergeV1 {
+impl FlowNode for MergeV1 {
   fn definition(&self) -> Arc<NodeDefinition> {
     self.definition.clone()
   }

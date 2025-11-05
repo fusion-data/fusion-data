@@ -25,6 +25,7 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 serde_repr = { workspace = true }
 serde_json_path = { workspace = true }
+jsonschema = { workspace = true }
 nom = { workspace = true }
 ahash = { workspace = true }
 regex = { workspace = true }

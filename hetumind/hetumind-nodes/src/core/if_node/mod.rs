@@ -9,7 +9,7 @@ use hetumind_core::{
   types::{DataType, JsonValue},
   version::Version,
   workflow::{
-    Node, NodeDefinition, NodeExecutionError, NodeExecutor, NodeGroupKind, NodeKind, RegistrationError, ValidationError,
+    Node, NodeDefinition, NodeExecutionError, FlowNodeRef, NodeGroupKind, NodeKind, RegistrationError, ValidationError,
   },
 };
 use serde::{Deserialize, Serialize};
@@ -349,13 +349,13 @@ impl Default for IfNodeOptions {
 
 pub struct IfNode {
   default_version: Version,
-  executors: Vec<NodeExecutor>,
+  executors: Vec<FlowNodeRef>,
 }
 
 impl IfNode {
   pub fn new() -> Result<Self, RegistrationError> {
     let base = Self::base();
-    let executors: Vec<NodeExecutor> = vec![Arc::new(IfV1::try_from(base)?)];
+    let executors: Vec<FlowNodeRef> = vec![Arc::new(IfV1::try_from(base)?)];
     let default_version = executors.iter().map(|node| node.definition().version.clone()).max().unwrap();
     Ok(Self { default_version, executors })
   }
@@ -377,7 +377,7 @@ impl Node for IfNode {
     &self.default_version
   }
 
-  fn node_executors(&self) -> &[NodeExecutor] {
+  fn node_executors(&self) -> &[FlowNodeRef] {
     &self.executors
   }
 
