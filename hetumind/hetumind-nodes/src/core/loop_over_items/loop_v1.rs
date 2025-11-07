@@ -4,7 +4,7 @@ use async_trait::async_trait;
 use hetumind_core::{
   version::Version,
   workflow::{
-    ConnectionKind, ExecutionDataItems, ExecutionDataMap, FlowNode, InputPortConfig, NodeDefinition,
+    ExecutionDataItems, ExecutionDataMap, FlowNode, InputPortConfig, NodeConnectionKind, NodeDescription,
     NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig, RegistrationError,
     make_execution_data_map,
   },
@@ -31,33 +31,33 @@ use super::{LoopConfig, LoopMode, utils::process_loop};
 /// - 单个主输出端口，包含所有循环执行的结果
 #[derive(Debug)]
 pub struct LoopV1 {
-  pub definition: Arc<NodeDefinition>,
+  pub definition: Arc<NodeDescription>,
 }
 
 #[async_trait]
 impl FlowNode for LoopV1 {
-  fn definition(&self) -> Arc<NodeDefinition> {
+  fn description(&self) -> Arc<NodeDescription> {
     self.definition.clone()
   }
 
   async fn execute(&self, context: &NodeExecutionContext) -> Result<ExecutionDataMap, NodeExecutionError> {
     let node = context.current_node()?;
     log::info!(
-      "开始执行 Loop Over Items 节点 workflow_id:{}, node_name:{}, node_kind:{}",
+      "开始执行 Loop Over Items 节点 workflow_id:{}, node_name:{}, node_type:{}",
       context.workflow.id,
       node.name,
       node.kind
     );
 
     // 获取输入数据
-    let input_items = if let Some(input_collection) = context.get_input_items(ConnectionKind::Main, 0)
+    let input_items = if let Some(input_collection) = context.get_input_items(NodeConnectionKind::Main, 0)
       && let ExecutionDataItems::Items(input_data) = input_collection
     {
       input_data
     } else {
       log::warn!("Loop Over Items 节点没有接收到输入数据");
       return Ok(make_execution_data_map(vec![(
-        ConnectionKind::Main,
+        NodeConnectionKind::Main,
         vec![ExecutionDataItems::new_items(Default::default())],
       )]));
     };
@@ -91,18 +91,18 @@ impl FlowNode for LoopV1 {
 
     log::info!("Loop Over Items 节点执行完成: 输入 {} 项，输出 {} 项", input_items.len(), processed_data.len());
 
-    Ok(make_execution_data_map(vec![(ConnectionKind::Main, vec![ExecutionDataItems::new_items(processed_data)])]))
+    Ok(make_execution_data_map(vec![(NodeConnectionKind::Main, vec![ExecutionDataItems::new_items(processed_data)])]))
   }
 }
 
-impl TryFrom<NodeDefinition> for LoopV1 {
+impl TryFrom<NodeDescription> for LoopV1 {
   type Error = RegistrationError;
 
-  fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
+  fn try_from(base: NodeDescription) -> Result<Self, Self::Error> {
     let definition = base
       .with_version(Version::new(1, 0, 0))
-      .add_input(InputPortConfig::new(ConnectionKind::Main, "Input"))
-      .add_output(OutputPortConfig::new(ConnectionKind::Main, "Output"))
+      .add_input(InputPortConfig::new(NodeConnectionKind::Main, "Input"))
+      .add_output(OutputPortConfig::new(NodeConnectionKind::Main, "Output"))
       .add_property(
         NodeProperty::new(NodePropertyKind::Options)
           .with_display_name("循环模式")

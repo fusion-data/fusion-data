@@ -9,7 +9,7 @@ use crate::{
   workflow::{ExecutionId, ExecutionMode},
 };
 
-use super::{ConnectionIndex, ConnectionKind, ExecutionData, NodeKind, NodeName, WorkflowId};
+use super::{ConnectionIndex, ExecutionData, NodeConnectionKind, NodeName, NodeType, WorkflowId};
 
 #[derive(Debug, Error, Serialize, Deserialize)]
 #[serde(tag = "type")]
@@ -21,7 +21,12 @@ pub enum ValidationError {
   InvalidFieldValue { field: String, message: String, detail: Option<Box<JsonValue>> },
 
   #[error("连接无效: 从 {src_name}|{src_kind} 到 {dst_name}|{dst_kind}")]
-  InvalidConnectionKind { src_name: NodeName, src_kind: ConnectionKind, dst_name: NodeName, dst_kind: ConnectionKind },
+  InvalidConnectionKind {
+    src_name: NodeName,
+    src_kind: NodeConnectionKind,
+    dst_name: NodeName,
+    dst_kind: NodeConnectionKind,
+  },
 
   #[error("工作流结构无效: {0}")]
   InvalidWorkflowStructure(String),
@@ -30,16 +35,21 @@ pub enum ValidationError {
   NodePropertyValidation(String),
 
   #[error("输入节点 {src_name}|{src_kind} 未连接")]
-  UnconnectedInputPort { src_name: NodeName, src_kind: ConnectionKind },
+  UnconnectedInputPort { src_name: NodeName, src_kind: NodeConnectionKind },
 
   #[error("输出节点 {src_name}|{src_kind} -> {dst_name}|{dst_kind} 存在重复连接")]
-  DuplicateConnection { src_name: NodeName, src_kind: ConnectionKind, dst_name: NodeName, dst_kind: ConnectionKind },
+  DuplicateConnection {
+    src_name: NodeName,
+    src_kind: NodeConnectionKind,
+    dst_name: NodeName,
+    dst_kind: NodeConnectionKind,
+  },
 
   #[error("工作流存在循环依赖")]
   WorkflowHasCycles,
 
-  #[error("节点定义未找到: {node_kind}")]
-  NodeDefinitionNotFound { node_kind: NodeKind },
+  #[error("节点定义未找到: {node_type}")]
+  NodeDefinitionNotFound { node_type: NodeType },
 
   #[error("JSON 解析失败: {0}")]
   JsonParseError(String),
@@ -122,10 +132,10 @@ pub enum NodeExecutionError {
   InitFailed { message: String, cause: Option<Box<dyn std::error::Error + Send + Sync>> },
 
   #[error("输入数据无效, {connection_kind}|{port_index}")]
-  InvalidInputData { connection_kind: ConnectionKind, port_index: ConnectionIndex },
+  InvalidInputData { connection_kind: NodeConnectionKind, port_index: ConnectionIndex },
 
-  #[error("节点类型不支持: {node_kind}")]
-  UnsupportedNodeKind { node_kind: NodeKind },
+  #[error("节点类型不支持: {node_type}")]
+  UnsupportedNodeKind { node_type: NodeType },
 
   #[error("外部服务错误: {service}")]
   ExternalServiceError { service: String },
@@ -178,8 +188,8 @@ pub enum TriggerError {
 
 #[derive(Debug, Error)]
 pub enum RegistrationError {
-  #[error("节点类型已存在: {node_kind}")]
-  NodeKindAlreadyExists { node_kind: NodeKind },
+  #[error("节点类型已存在: {node_type}")]
+  NodeKindAlreadyExists { node_type: NodeType },
 
   #[error("节点定义错误: {0}")]
   NodeDefinitionError(String),

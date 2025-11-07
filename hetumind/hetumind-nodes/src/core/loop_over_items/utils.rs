@@ -49,7 +49,7 @@ fn process_items(
       loop_data,
       Some(DataSource {
         node_name: current_node_name.clone(),
-        output_port: hetumind_core::workflow::ConnectionKind::Main,
+        output_port: hetumind_core::workflow::NodeConnectionKind::Main,
         output_index: index,
       }),
     ));
@@ -103,7 +103,7 @@ fn process_times(
       loop_data,
       Some(DataSource {
         node_name: current_node_name.clone(),
-        output_port: hetumind_core::workflow::ConnectionKind::Main,
+        output_port: hetumind_core::workflow::NodeConnectionKind::Main,
         output_index: index as usize,
       }),
     ));
@@ -161,7 +161,7 @@ fn process_while(
       loop_data.clone(),
       Some(DataSource {
         node_name: current_node_name.clone(),
-        output_port: hetumind_core::workflow::ConnectionKind::Main,
+        output_port: hetumind_core::workflow::NodeConnectionKind::Main,
         output_index: iteration as usize,
       }),
     ));
@@ -231,7 +231,7 @@ fn process_batch(
       batch_json,
       Some(DataSource {
         node_name: current_node_name.clone(),
-        output_port: hetumind_core::workflow::ConnectionKind::Main,
+        output_port: hetumind_core::workflow::NodeConnectionKind::Main,
         output_index: batch_index as usize,
       }),
     ));

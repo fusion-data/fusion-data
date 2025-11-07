@@ -7,8 +7,8 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use hetumind_core::version::Version;
 use hetumind_core::workflow::{
-  ConnectionKind, ExecutionDataItems, ExecutionDataMap, FlowNode, FlowNodeRef, Node, NodeDefinition,
-  NodeExecutionContext, NodeExecutionError, NodeGroupKind, NodeKind, NodeProperty, NodePropertyKind, RegistrationError,
+  ExecutionDataItems, ExecutionDataMap, FlowNode, FlowNodeRef, Node, NodeConnectionKind, NodeDescription,
+  NodeExecutionContext, NodeExecutionError, NodeGroupKind, NodeProperty, NodePropertyKind, NodeType, RegistrationError,
   make_execution_data_map,
 };
 
@@ -16,27 +16,27 @@ use crate::constants::WEBHOOK_TRIGGER_NODE_KIND;
 use serde_json::json;
 
 pub struct WebhookTriggerNodeV1 {
-  definition: Arc<NodeDefinition>,
+  definition: Arc<NodeDescription>,
 }
 
-impl TryFrom<NodeDefinition> for WebhookTriggerNodeV1 {
+impl TryFrom<NodeDescription> for WebhookTriggerNodeV1 {
   type Error = RegistrationError;
 
-  fn try_from(definition: NodeDefinition) -> Result<Self, Self::Error> {
+  fn try_from(definition: NodeDescription) -> Result<Self, Self::Error> {
     Ok(Self { definition: Arc::new(definition) })
   }
 }
 
 #[async_trait]
 impl FlowNode for WebhookTriggerNodeV1 {
-  fn definition(&self) -> Arc<NodeDefinition> {
+  fn description(&self) -> Arc<NodeDescription> {
     self.definition.clone()
   }
 
   async fn execute(&self, _context: &NodeExecutionContext) -> Result<ExecutionDataMap, NodeExecutionError> {
     // Webhook 触发器作为入口点，返回空数据
     // 实际的 webhook 数据处理在触发器框架层面完成
-    Ok(make_execution_data_map(vec![(ConnectionKind::Main, vec![ExecutionDataItems::new_items(vec![])])]))
+    Ok(make_execution_data_map(vec![(NodeConnectionKind::Main, vec![ExecutionDataItems::new_items(vec![])])]))
   }
 }
 
@@ -54,8 +54,8 @@ impl Node for WebhookTriggerNode {
     &self.executors
   }
 
-  fn kind(&self) -> NodeKind {
-    self.executors[0].definition().kind.clone()
+  fn node_type(&self) -> NodeType {
+    self.executors[0].description().node_type.clone()
   }
 }
 
@@ -63,13 +63,13 @@ impl WebhookTriggerNode {
   pub fn new() -> Result<Self, RegistrationError> {
     let base = create_base();
     let executors: Vec<FlowNodeRef> = vec![Arc::new(WebhookTriggerNodeV1::try_from(base)?)];
-    let default_version = executors.iter().map(|node| node.definition().version.clone()).max().unwrap();
+    let default_version = executors.iter().map(|node| node.description().version.clone()).max().unwrap();
     Ok(Self { default_version, executors })
   }
 }
 
-fn create_base() -> NodeDefinition {
-  NodeDefinition::new(WEBHOOK_TRIGGER_NODE_KIND, "Webhook Trigger")
+fn create_base() -> NodeDescription {
+  NodeDescription::new(WEBHOOK_TRIGGER_NODE_KIND, "Webhook Trigger")
     .add_group(NodeGroupKind::Trigger)
     .with_description("Triggers workflow when HTTP request is received")
     .add_property(

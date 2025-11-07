@@ -8,7 +8,7 @@
 use jsonschema::Validator;
 use serde_json::json;
 
-use crate::workflow::{NodeDefinition, NodeExecutionError, NodeProperty, NodePropertyKind, Tool};
+use crate::workflow::{NodeDescription, NodeExecutionError, NodeProperty, NodePropertyKind, Tool};
 
 /// 根据 NodeDefinition.properties 构建简化 JSON Schema
 /// 规则：
@@ -54,7 +54,7 @@ pub fn build_json_schema_from_properties(properties: &[NodeProperty]) -> serde_j
 }
 
 /// 根据 NodeDefinition 生成简化 JSON Schema，并返回可用于校验的编译器
-pub fn compile_tool_schema(def: &NodeDefinition) -> Result<Validator, NodeExecutionError> {
+pub fn compile_tool_schema(def: &NodeDescription) -> Result<Validator, NodeExecutionError> {
   let schema = build_json_schema_from_properties(&def.properties);
   let validator = jsonschema::validator_for(&schema)
     .map_err(|e| NodeExecutionError::ConfigurationError(format!("JSON Schema compile error: {}", e)))?;
@@ -65,10 +65,10 @@ pub fn compile_tool_schema(def: &NodeDefinition) -> Result<Validator, NodeExecut
 /// - 名称使用 NodeKind（kind.as_str()）
 /// - 描述优先使用 definition.description，否则回退到 display_name
 /// - 参数使用从 properties 构建的简化 JSON Schema
-pub fn create_node_as_tool(def: &NodeDefinition) -> Tool {
+pub fn create_node_as_tool(def: &NodeDescription) -> Tool {
   let schema = build_json_schema_from_properties(&def.properties);
   Tool {
-    name: def.kind.as_str().to_string(),
+    name: def.node_type.as_str().to_string(),
     description: def.description.clone().unwrap_or_else(|| def.display_name.clone()),
     parameters: schema,
   }
@@ -78,7 +78,7 @@ pub fn create_node_as_tool(def: &NodeDefinition) -> Tool {
 mod tests {
   use semver::Version;
 
-  use crate::workflow::{NodeDefinition, NodeProperty, NodePropertyKind};
+  use crate::workflow::{NodeDescription, NodeProperty, NodePropertyKind};
 
   use super::*;
 
@@ -86,7 +86,7 @@ mod tests {
   #[test]
   fn test_build_and_validate_schema_required() {
     // 构建节点定义，收集 from_ai 参数
-    let mut def = NodeDefinition::new("tool::http", "HTTP Tool").with_version(Version::new(1, 0, 0));
+    let mut def = NodeDescription::new("tool::http", "HTTP Tool").with_version(Version::new(1, 0, 0));
 
     let p_query = NodeProperty::new(NodePropertyKind::String)
       .with_name("query")
@@ -119,7 +119,7 @@ mod tests {
   /// 基于 NodeDefinition 创建 Tool，并确认参数 schema 中包含 from_ai 字段
   #[test]
   fn test_create_node_as_tool() {
-    let def = NodeDefinition::new("tool::kv", "KV Tool")
+    let def = NodeDescription::new("tool::kv", "KV Tool")
       .add_property(
         NodeProperty::new(NodePropertyKind::String)
           .with_name("key")

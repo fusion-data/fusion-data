@@ -4,8 +4,8 @@
 
 use crate::store::simple_memory_node::SIMPLE_MEMORY_NODE_KIND;
 use hetumind_core::workflow::{
-  AgentSubNodeProviderRef, ConnectionKind, LLMSubNodeProviderRef, MemorySubNodeProviderRef, NodeExecutionContext,
-  NodeExecutionError, NodeKind, NodeRegistry, SubNodeRef, SubNodeType, ToolSubNodeProviderRef,
+  LLMSubNodeProviderRef, MemorySubNodeProviderRef, NodeConnectionKind, NodeExecutionContext, NodeExecutionError,
+  NodeType, NodeRegistry, SubNodeRef, SubNodeType, ToolSubNodeProviderRef,
 };
 
 /// 从当前节点的上游连接中检索 LLM 供应器（按连接逆序）
@@ -13,7 +13,7 @@ pub async fn get_llm_providers(
   ctx: &NodeExecutionContext,
   index: usize,
 ) -> Result<Vec<SubNodeRef>, NodeExecutionError> {
-  let parents = ctx.get_all_connections(&ConnectionKind::AiLM);
+  let parents = ctx.get_all_connections(&NodeConnectionKind::AiLanguageModel);
   let mut providers = Vec::new();
 
   for (i, conn) in parents.iter().rev().enumerate() {
@@ -44,7 +44,7 @@ pub async fn get_memory_provider(
   ctx: &NodeExecutionContext,
   index: usize,
 ) -> Result<Option<SubNodeRef>, NodeExecutionError> {
-  let parents = ctx.get_all_connections(&ConnectionKind::AiMemory);
+  let parents = ctx.get_all_connections(&NodeConnectionKind::AiMemory);
   let target = parents.iter().rev().nth(index);
   if let Some(conn) = target {
     let node =
@@ -68,7 +68,7 @@ pub async fn get_memory_provider(
 
 /// 获取所有连接的工具供应器（扁平化）
 pub async fn get_connected_tools(ctx: &NodeExecutionContext) -> Result<Vec<SubNodeRef>, NodeExecutionError> {
-  let parents = ctx.get_all_connections(&ConnectionKind::AiTool);
+  let parents = ctx.get_all_connections(&NodeConnectionKind::AiTool);
   let mut providers = Vec::new();
   for conn in parents.iter().rev() {
     let node =
@@ -92,21 +92,16 @@ pub async fn get_connected_tools(ctx: &NodeExecutionContext) -> Result<Vec<SubNo
 
 /// 获取 SimpleMemory 的 typed 供应器（直接按 NodeKind）
 pub fn get_simple_memory_supplier_typed(registry: &NodeRegistry) -> Option<MemorySubNodeProviderRef> {
-  let kind = NodeKind::new(SIMPLE_MEMORY_NODE_KIND);
+  let kind = NodeType::new(SIMPLE_MEMORY_NODE_KIND);
   registry.get_memory_supplier_typed(&kind)
 }
 
 /// 获取指定 NodeKind 的 typed LLM 供应器
-pub fn get_llm_supplier_typed(registry: &NodeRegistry, kind: &NodeKind) -> Option<LLMSubNodeProviderRef> {
+pub fn get_llm_supplier_typed(registry: &NodeRegistry, kind: &NodeType) -> Option<LLMSubNodeProviderRef> {
   registry.get_llm_supplier_typed(kind)
 }
 
 /// 获取指定 NodeKind 的 typed Tool 供应器
-pub fn get_tool_supplier_typed(registry: &NodeRegistry, kind: &NodeKind) -> Option<ToolSubNodeProviderRef> {
+pub fn get_tool_supplier_typed(registry: &NodeRegistry, kind: &NodeType) -> Option<ToolSubNodeProviderRef> {
   registry.get_tool_supplier_typed(kind)
-}
-
-/// 获取指定 NodeKind 的 typed Agent 供应器
-pub fn get_agent_supplier_typed(registry: &NodeRegistry, kind: &NodeKind) -> Option<AgentSubNodeProviderRef> {
-  registry.get_agent_supplier_typed(kind)
 }

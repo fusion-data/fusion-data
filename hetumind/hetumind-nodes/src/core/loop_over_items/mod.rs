@@ -7,7 +7,7 @@ use std::sync::Arc;
 
 use hetumind_core::{
   version::Version,
-  workflow::{FlowNodeRef, Node, NodeDefinition, NodeGroupKind, NodeKind, RegistrationError},
+  workflow::{FlowNodeRef, Node, NodeDescription, NodeGroupKind, NodeType, RegistrationError},
 };
 use serde::{Deserialize, Serialize};
 
@@ -98,12 +98,12 @@ impl LoopOverItemsNode {
   pub fn new() -> Result<Self, RegistrationError> {
     let base = Self::base();
     let executors: Vec<FlowNodeRef> = vec![Arc::new(LoopV1::try_from(base)?)];
-    let default_version = executors.iter().map(|node| node.definition().version.clone()).max().unwrap();
+    let default_version = executors.iter().map(|node| node.description().version.clone()).max().unwrap();
     Ok(Self { default_version, executors })
   }
 
-  fn base() -> NodeDefinition {
-    NodeDefinition::new(LOOP_OVER_ITEMS_NODE_KIND, "Loop Over Items")
+  fn base() -> NodeDescription {
+    NodeDescription::new(LOOP_OVER_ITEMS_NODE_KIND, "Loop Over Items")
       .add_group(NodeGroupKind::Transform)
       .add_group(NodeGroupKind::Input)
       .add_group(NodeGroupKind::Output)
@@ -121,23 +121,23 @@ impl Node for LoopOverItemsNode {
     &self.executors
   }
 
-  fn kind(&self) -> NodeKind {
-    self.executors[0].definition().kind.clone()
+  fn node_type(&self) -> NodeType {
+    self.executors[0].description().node_type.clone()
   }
 }
 
 #[cfg(test)]
 mod tests {
-  use hetumind_core::workflow::{ConnectionKind, NodeGroupKind};
+  use hetumind_core::workflow::{NodeConnectionKind, NodeGroupKind};
 
   use super::*;
 
   #[test]
   fn test_node_metadata() {
     let node = LoopOverItemsNode::new().unwrap();
-    let definition = node.default_node_executor().unwrap().definition();
+    let definition = node.default_node_executor().unwrap().description();
 
-    assert_eq!(definition.kind.as_ref(), "hetumind_nodes::LoopOverItems");
+    assert_eq!(definition.node_type.as_ref(), "hetumind_nodes::LoopOverItems");
     assert_eq!(&definition.groups, &[NodeGroupKind::Transform, NodeGroupKind::Input, NodeGroupKind::Output]);
     assert_eq!(&definition.display_name, "Loop Over Items");
     assert_eq!(definition.inputs.len(), 1);
@@ -147,15 +147,15 @@ mod tests {
   #[test]
   fn test_node_ports() {
     let node = LoopOverItemsNode::new().unwrap();
-    let definition = node.default_node_executor().unwrap().definition();
+    let definition = node.default_node_executor().unwrap().description();
 
     let input_ports = &definition.inputs[..];
     assert_eq!(input_ports.len(), 1);
-    assert_eq!(input_ports[0].kind, ConnectionKind::Main);
+    assert_eq!(input_ports[0].kind, NodeConnectionKind::Main);
 
     let output_ports = &definition.outputs[..];
     assert_eq!(output_ports.len(), 1);
-    assert_eq!(output_ports[0].kind, ConnectionKind::Main);
+    assert_eq!(output_ports[0].kind, NodeConnectionKind::Main);
   }
 
   #[test]

@@ -10,7 +10,7 @@ use crate::runtime::workflow::EngineRouter;
 use hetumind_core::{
   expression::ExpressionEvaluator,
   workflow::{
-    ConnectionKind, ExecutionContext, ExecutionData, ExecutionDataItems, ExecutionDataMap, ExecutionGraph, ExecutionId,
+    NodeConnectionKind, ExecutionContext, ExecutionData, ExecutionDataItems, ExecutionDataMap, ExecutionGraph, ExecutionId,
     ExecutionMetrics, ExecutionPlanner, ExecutionResult, ExecutionStatus, ExecutionTrace, NodeExecutionContext,
     NodeExecutionResult, NodeExecutionStatus, NodeName, NodeRegistry, NodesExecutionMap, TriggerType, WorkflowEngine,
     WorkflowEngineSetting, WorkflowExecutionError, WorkflowTriggerData,
@@ -86,72 +86,64 @@ impl DefaultWorkflowEngine {
     if self.node_registry.get_llm_supplier_typed(&node.kind).is_some() {
       // 查找输入数据（优先 AiLM，其次 Main）
       let maybe_items = parents_results
-        .get(&ConnectionKind::AiLM)
+        .get(&NodeConnectionKind::AiLanguageModel)
         .cloned()
-        .or_else(|| parents_results.get(&ConnectionKind::Main).cloned());
+        .or_else(|| parents_results.get(&NodeConnectionKind::Main).cloned());
 
-      if let Some(items_vec) = maybe_items {
-        if let Some(first_items) = items_vec.first() {
-          if let Some(data_vec) = first_items.get_data_items() {
-            if let Some(input_data) = data_vec.first() {
-              let mut input_json = input_data.json().clone();
-              // 提取 session_id 与历史条数
-              if let Some(session_id) = input_json.get("session_id").and_then(|v| v.as_str()) {
-                let history_count = input_json.get("history_count").and_then(|v| v.as_u64()).unwrap_or(10) as usize;
+      if let Some(items_vec) = maybe_items
+        && let Some(first_items) = items_vec.first()
+        && let Some(data_vec) = first_items.get_data_items()
+        && let Some(input_data) = data_vec.first()
+      {
+        let mut input_json = input_data.json().clone();
+        // 提取 session_id 与历史条数
+        if let Some(session_id) = input_json.get("session_id").and_then(|v| v.as_str()) {
+          let history_count = input_json.get("history_count").and_then(|v| v.as_u64()).unwrap_or(10) as usize;
 
-                if let Some(mem_supplier) = get_simple_memory_supplier_typed(&self.node_registry) {
-                  // 优先使用具体类型的 with_ctx 方法，失败则回退到 trait 方法
-                  let mem_msgs = if let Some(simple) = mem_supplier.as_any().downcast_ref::<SimpleMemorySupplier>() {
-                    simple.retrieve_messages_with_ctx(context, session_id, history_count).await.unwrap_or_default()
-                  } else {
-                    mem_supplier.retrieve_messages(session_id, history_count).await.unwrap_or_default()
-                  };
+          if let Some(mem_supplier) = get_simple_memory_supplier_typed(&self.node_registry) {
+            // 优先使用具体类型的 with_ctx 方法，失败则回退到 trait 方法
+            let mem_msgs = if let Some(simple) = mem_supplier.as_any().downcast_ref::<SimpleMemorySupplier>() {
+              simple.retrieve_messages_with_ctx(context, session_id, history_count).await.unwrap_or_default()
+            } else {
+              mem_supplier.retrieve_messages(session_id, history_count).await.unwrap_or_default()
+            };
 
-                  // 构造历史上下文文本，注入到 system_prompt；同时合并到 messages（如存在）
-                  if !mem_msgs.is_empty() {
-                    let history_text = mem_msgs
-                      .iter()
-                      .map(|m| format!("- {}: {}", m.role, m.content))
-                      .collect::<Vec<String>>()
-                      .join("\n");
+            // 构造历史上下文文本，注入到 system_prompt；同时合并到 messages（如存在）
+            if !mem_msgs.is_empty() {
+              let history_text =
+                mem_msgs.iter().map(|m| format!("- {}: {}", m.role, m.content)).collect::<Vec<String>>().join("\n");
 
-                    let new_system_prompt = match input_json.get("system_prompt").and_then(|v| v.as_str()) {
-                      Some(sp) if !sp.is_empty() => format!("{}\n\n[History]\n{}", sp, history_text),
-                      _ => format!("[History]\n{}", history_text),
-                    };
-                    input_json["system_prompt"] = json!(new_system_prompt);
+              let new_system_prompt = match input_json.get("system_prompt").and_then(|v| v.as_str()) {
+                Some(sp) if !sp.is_empty() => format!("{}\n\n[History]\n{}", sp, history_text),
+                _ => format!("[History]\n{}", history_text),
+              };
+              input_json["system_prompt"] = json!(new_system_prompt);
 
-                    // 合并到 messages：保留已有 messages，并追加历史
-                    let mut messages =
-                      input_json.get("messages").and_then(|v| v.as_array()).cloned().unwrap_or_default();
-                    for m in mem_msgs.iter() {
-                      messages.push(json!({"role": m.role, "content": m.content}));
-                    }
-                    input_json["messages"] = json!(messages);
+              // 合并到 messages：保留已有 messages，并追加历史
+              let mut messages = input_json.get("messages").and_then(|v| v.as_array()).cloned().unwrap_or_default();
+              for m in mem_msgs.iter() {
+                messages.push(json!({"role": m.role, "content": m.content}));
+              }
+              input_json["messages"] = json!(messages);
 
-                    // 追加 prompt 为用户消息（若存在）
-                    if let Some(prompt) = input_json.get("prompt").and_then(|v| v.as_str()) {
-                      let mut messages =
-                        input_json.get("messages").and_then(|v| v.as_array()).cloned().unwrap_or_default();
-                      messages.push(json!({"role": "user", "content": prompt}));
-                      input_json["messages"] = json!(messages);
-                    }
+              // 追加 prompt 为用户消息（若存在）
+              if let Some(prompt) = input_json.get("prompt").and_then(|v| v.as_str()) {
+                let mut messages = input_json.get("messages").and_then(|v| v.as_array()).cloned().unwrap_or_default();
+                messages.push(json!({"role": "user", "content": prompt}));
+                input_json["messages"] = json!(messages);
+              }
 
-                    // 注入历史条数字段（用于观测与复现）
-                    input_json["history_length"] = json!(mem_msgs.len());
+              // 注入历史条数字段（用于观测与复现）
+              input_json["history_length"] = json!(mem_msgs.len());
 
-                    // 写回修改后的输入数据
-                    let new_exec_data = ExecutionData::new_json(input_json, input_data.source().cloned());
-                    // 更新 parents_results 中对应的端口数据
-                    if parents_results.get(&ConnectionKind::AiLM).is_some() {
-                      parents_results
-                        .insert(ConnectionKind::AiLM, vec![ExecutionDataItems::new_items(vec![new_exec_data])]);
-                    } else {
-                      parents_results
-                        .insert(ConnectionKind::Main, vec![ExecutionDataItems::new_items(vec![new_exec_data])]);
-                    }
-                  }
-                }
+              // 写回修改后的输入数据
+              let new_exec_data = ExecutionData::new_json(input_json, input_data.source().cloned());
+              // 更新 parents_results 中对应的端口数据
+              if parents_results.contains_key(&NodeConnectionKind::AiLanguageModel) {
+                parents_results
+                  .insert(NodeConnectionKind::AiLanguageModel, vec![ExecutionDataItems::new_items(vec![new_exec_data])]);
+              } else {
+                parents_results.insert(NodeConnectionKind::Main, vec![ExecutionDataItems::new_items(vec![new_exec_data])]);
               }
             }
           }
@@ -255,7 +247,7 @@ impl WorkflowEngine for DefaultWorkflowEngine {
             message: format!("Failed to convert WorkflowErrorData to ExecutionData: {}", e),
           })?;
         let mut execution_data_map = HashMap::default();
-        execution_data_map.insert(ConnectionKind::Main, vec![ExecutionDataItems::Items(vec![error_execution_data])]);
+        execution_data_map.insert(NodeConnectionKind::Main, vec![ExecutionDataItems::Items(vec![error_execution_data])]);
 
         // 使用默认的起始节点名称，或者可以从错误数据中推断
         let start_node = NodeName::from("start");

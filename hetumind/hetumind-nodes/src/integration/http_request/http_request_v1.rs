@@ -4,8 +4,8 @@ use std::{sync::Arc, time::Duration};
 
 use async_trait::async_trait;
 use hetumind_core::workflow::{
-  ConnectionKind, DataSource, ExecutionData, ExecutionDataItems, ExecutionDataMap, FlowNode, InputPortConfig,
-  NodeDefinition, NodeExecutionContext, NodeExecutionError, NodeGroupKind, NodeProperty, NodePropertyKind,
+  DataSource, ExecutionData, ExecutionDataItems, ExecutionDataMap, FlowNode, InputPortConfig, NodeConnectionKind,
+  NodeDescription, NodeExecutionContext, NodeExecutionError, NodeGroupKind, NodeProperty, NodePropertyKind,
   OutputPortConfig, RegistrationError, make_execution_data_map,
 };
 use log::{debug, error, info, warn};
@@ -30,27 +30,27 @@ use super::HttpMethod;
 /// - `max_redirects`: Maximum number of redirects (optional, default 10)
 #[derive(Debug, Clone)]
 pub struct HttpRequestV1 {
-  definition: Arc<NodeDefinition>,
+  definition: Arc<NodeDescription>,
 }
 
-impl TryFrom<NodeDefinition> for HttpRequestV1 {
+impl TryFrom<NodeDescription> for HttpRequestV1 {
   type Error = RegistrationError;
 
-  fn try_from(definition: NodeDefinition) -> Result<Self, Self::Error> {
+  fn try_from(definition: NodeDescription) -> Result<Self, Self::Error> {
     Ok(Self { definition: Arc::new(definition) })
   }
 }
 
 #[async_trait]
 impl FlowNode for HttpRequestV1 {
-  fn definition(&self) -> Arc<NodeDefinition> {
+  fn description(&self) -> Arc<NodeDescription> {
     self.definition.clone()
   }
 
   async fn execute(&self, context: &NodeExecutionContext) -> Result<ExecutionDataMap, NodeExecutionError> {
     let node = context.current_node()?;
     info!(
-      "Starting HTTP request node workflow_id:{}, node_name:{}, node_kind:{}",
+      "Starting HTTP request node workflow_id:{}, node_name:{}, node_type:{}",
       context.workflow.id, node.name, node.kind
     );
 
@@ -176,28 +176,28 @@ impl FlowNode for HttpRequestV1 {
       result_data,
       Some(DataSource {
         node_name: context.current_node_name.clone(),
-        output_port: ConnectionKind::Main,
+        output_port: NodeConnectionKind::Main,
         output_index: 0,
       }),
     )];
 
-    Ok(make_execution_data_map(vec![(ConnectionKind::Main, vec![ExecutionDataItems::new_items(result)])]))
+    Ok(make_execution_data_map(vec![(NodeConnectionKind::Main, vec![ExecutionDataItems::new_items(result)])]))
   }
 }
 
 /// Create node definition
-pub(super) fn create_definition() -> Result<NodeDefinition, RegistrationError> {
-  let mut definition = NodeDefinition::new(HTTP_REQUEST_NODE_KIND, "HTTP Request")
+pub(super) fn create_definition() -> Result<NodeDescription, RegistrationError> {
+  let mut definition = NodeDescription::new(HTTP_REQUEST_NODE_KIND, "HTTP Request")
     .add_group(NodeGroupKind::Input)
     .add_group(NodeGroupKind::Output)
     .with_description("发送HTTP请求并获取响应数据。支持GET、POST、PUT、DELETE等方法。")
     .with_icon("globe");
 
   // Add input port
-  definition = definition.add_input(InputPortConfig::new(ConnectionKind::Main, "Input"));
+  definition = definition.add_input(InputPortConfig::new(NodeConnectionKind::Main, "Input"));
 
   // Add output port
-  definition = definition.add_output(OutputPortConfig::new(ConnectionKind::Main, "Output"));
+  definition = definition.add_output(OutputPortConfig::new(NodeConnectionKind::Main, "Output"));
 
   // Add properties
   definition = definition.add_property(
@@ -269,7 +269,7 @@ mod tests {
   #[test]
   fn test_node_definition() {
     let definition = create_definition().unwrap();
-    assert_eq!(definition.kind.as_ref(), "hetumind_nodes::HttpRequest");
+    assert_eq!(definition.node_type.as_ref(), "hetumind_nodes::HttpRequest");
     assert_eq!(definition.version, Version::new(1, 0, 0));
     assert_eq!(definition.groups, [NodeGroupKind::Input, NodeGroupKind::Output]);
     assert_eq!(definition.display_name, "HTTP Request");
@@ -280,12 +280,12 @@ mod tests {
   fn test_node_ports() {
     let node = HttpRequestV1::try_from(create_definition().unwrap()).unwrap();
 
-    let input_ports = &node.definition().inputs[..];
+    let input_ports = &node.description().inputs[..];
     assert_eq!(input_ports.len(), 1);
-    assert_eq!(input_ports[0].kind, ConnectionKind::Main);
+    assert_eq!(input_ports[0].kind, NodeConnectionKind::Main);
 
-    let output_ports = &node.definition().outputs[..];
+    let output_ports = &node.description().outputs[..];
     assert_eq!(output_ports.len(), 1);
-    assert_eq!(output_ports[0].kind, ConnectionKind::Main);
+    assert_eq!(output_ports[0].kind, NodeConnectionKind::Main);
   }
 }

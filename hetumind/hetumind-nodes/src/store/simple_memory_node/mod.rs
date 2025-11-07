@@ -11,7 +11,7 @@
 
 use hetumind_core::{
   version::Version,
-  workflow::{FlowNodeRef, Node, NodeKind, NodeRegistry, RegistrationError},
+  workflow::{FlowNodeRef, Node, NodeRegistry, NodeType, RegistrationError},
 };
 use std::sync::Arc;
 
@@ -30,7 +30,7 @@ pub struct SimpleMemoryNode {
 impl SimpleMemoryNode {
   pub fn new() -> Result<Self, RegistrationError> {
     let executors: Vec<FlowNodeRef> = vec![Arc::new(simple_memory_v1::SimpleMemoryV1::new()?)];
-    let default_version = executors.iter().map(|node| node.definition().version.clone()).max().unwrap();
+    let default_version = executors.iter().map(|node| node.description().version.clone()).max().unwrap();
     Ok(Self { default_version, executors })
   }
 }
@@ -44,8 +44,8 @@ impl Node for SimpleMemoryNode {
     &self.executors
   }
 
-  fn kind(&self) -> NodeKind {
-    self.executors[0].definition().kind.clone()
+  fn node_type(&self) -> NodeType {
+    self.executors[0].description().node_type.clone()
   }
 }
 
@@ -57,8 +57,8 @@ pub fn register_nodes(node_registry: &NodeRegistry) -> Result<(), RegistrationEr
   let supplier = Arc::new(supplier::SimpleMemorySupplier::new());
   // 同时注册 typed MemorySupplier，便于后续类型安全与快速检索
   let typed_supplier: hetumind_core::workflow::MemorySubNodeProviderRef = supplier.clone();
-  node_registry.register_subnode_provider(NodeKind::new(SIMPLE_MEMORY_NODE_KIND), supplier.clone())?;
-  node_registry.register_memory_supplier(NodeKind::new(SIMPLE_MEMORY_NODE_KIND), typed_supplier)?;
+  node_registry.register_subnode_provider(NodeType::new(SIMPLE_MEMORY_NODE_KIND), supplier.clone())?;
+  node_registry.register_memory_supplier(NodeType::new(SIMPLE_MEMORY_NODE_KIND), typed_supplier)?;
   Ok(())
 }
 
@@ -70,21 +70,21 @@ pub use supplier::*;
 #[cfg(test)]
 mod tests {
   use super::*;
-  use hetumind_core::workflow::{ConnectionKind, NodeGroupKind};
+  use hetumind_core::workflow::{NodeConnectionKind, NodeGroupKind};
   use serde_json::json;
 
   #[test]
   fn test_node_metadata() {
     let node = SimpleMemoryNode::new().unwrap();
-    let definition = node.default_node_executor().unwrap().definition();
+    let definition = node.default_node_executor().unwrap().description();
 
-    assert_eq!(definition.kind.as_ref(), SIMPLE_MEMORY_NODE_KIND);
+    assert_eq!(definition.node_type.as_ref(), SIMPLE_MEMORY_NODE_KIND);
     assert!(definition.groups.contains(&NodeGroupKind::Transform));
     assert_eq!(&definition.display_name, "Simple Memory");
     assert_eq!(definition.inputs.len(), 1); // AiLM input
     assert_eq!(definition.outputs.len(), 2); // AiMemory + Error output
-    assert_eq!(definition.inputs[0].kind, ConnectionKind::AiLM);
-    assert_eq!(definition.outputs[0].kind, ConnectionKind::AiMemory);
+    assert_eq!(definition.inputs[0].kind, NodeConnectionKind::AiLanguageModel);
+    assert_eq!(definition.outputs[0].kind, NodeConnectionKind::AiMemory);
   }
 
   #[test]
@@ -92,7 +92,7 @@ mod tests {
     let node_registry = NodeRegistry::new();
     assert!(register_nodes(&node_registry).is_ok());
 
-    let registered_node = node_registry.get_executor(&NodeKind::new(SIMPLE_MEMORY_NODE_KIND));
+    let registered_node = node_registry.get_executor(&NodeType::new(SIMPLE_MEMORY_NODE_KIND));
     assert!(registered_node.is_some());
   }
 

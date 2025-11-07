@@ -16,7 +16,7 @@ use std::sync::Arc;
 
 use hetumind_core::{
   version::Version,
-  workflow::{FlowNodeRef, Node, NodeKind, RegistrationError},
+  workflow::{FlowNodeRef, Node, NodeType, RegistrationError},
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -272,7 +272,7 @@ impl EmailTriggerNode {
   pub fn new() -> Result<Self, RegistrationError> {
     let base = EmailTriggerV1::create_base();
     let executors: Vec<FlowNodeRef> = vec![Arc::new(EmailTriggerV1::try_from(base)?)];
-    let default_version = executors.iter().map(|node| node.definition().version.clone()).max().unwrap();
+    let default_version = executors.iter().map(|node| node.description().version.clone()).max().unwrap();
     Ok(Self { default_version, executors })
   }
 }
@@ -286,8 +286,8 @@ impl Node for EmailTriggerNode {
     &self.executors
   }
 
-  fn kind(&self) -> NodeKind {
-    self.executors[0].definition().kind.clone()
+  fn node_type(&self) -> NodeType {
+    self.executors[0].description().node_type.clone()
   }
 }
 

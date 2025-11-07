@@ -2,7 +2,7 @@
 //!
 //! 此模块定义了 Cluster Node 架构中的核心接口，支持 LLM、Memory、Tool 等不同类型的 Sub Node Provider。
 
-use crate::workflow::{NodeDefinition, NodeExecutionError};
+use crate::workflow::{NodeDescription, NodeExecutionError};
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use std::any::Any;
@@ -13,7 +13,7 @@ pub type SubNodeRef = Arc<dyn SubNode + Sync + Send>;
 pub type LLMSubNodeProviderRef = Arc<dyn LLMSubNodeProvider + Sync + Send>;
 pub type MemorySubNodeProviderRef = Arc<dyn MemorySubNodeProvider + Sync + Send>;
 pub type ToolSubNodeProviderRef = Arc<dyn ToolSubNodeProvider + Sync + Send>;
-pub type AgentSubNodeProviderRef = Arc<dyn AgentSubNodeProvider + Sync + Send>;
+// pub type AgentSubNodeProviderRef = Arc<dyn AgentSubNodeProvider + Sync + Send>;
 
 /// Sub Node Provider 类型
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -141,7 +141,7 @@ pub trait SubNode: Send + Sync {
   fn provider_type(&self) -> SubNodeType;
 
   /// 获取节点定义
-  fn definition(&self) -> Arc<NodeDefinition>;
+  fn description(&self) -> Arc<NodeDescription>;
 
   /// 初始化 Provider
   async fn initialize(&self) -> Result<(), NodeExecutionError>;
@@ -190,16 +190,16 @@ pub trait ToolSubNodeProvider: SubNode {
   async fn as_tool(&self) -> Result<Tool, NodeExecutionError>;
 }
 
-/// Agent Sub Node Provider 接口
-#[async_trait]
-pub trait AgentSubNodeProvider: SubNode {
-  /// 执行 Agent 任务
-  async fn execute_agent(
-    &self,
-    messages: Vec<Message>,
-    config: AgentConfig,
-  ) -> Result<AgentResponse, NodeExecutionError>;
-}
+// /// Agent Sub Node Provider 接口
+// #[async_trait]
+// pub trait AgentSubNodeProvider: SubNode {
+//   /// 执行 Agent 任务
+//   async fn execute_agent(
+//     &self,
+//     messages: Vec<Message>,
+//     config: AgentConfig,
+//   ) -> Result<AgentResponse, NodeExecutionError>;
+// }
 
 /// Cluster Node 执行配置
 #[derive(Debug, Clone, Serialize, Deserialize)]

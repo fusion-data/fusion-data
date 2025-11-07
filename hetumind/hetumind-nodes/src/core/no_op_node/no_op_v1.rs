@@ -4,9 +4,9 @@ use async_trait::async_trait;
 use hetumind_core::{
   version::Version,
   workflow::{
-    ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, FlowNode, InputPortConfig, NodeDefinition,
-    NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig, RegistrationError,
-    make_execution_data_map,
+    ExecutionData, ExecutionDataItems, ExecutionDataMap, FlowNode, InputPortConfig, NodeConnectionKind,
+    NodeDescription, NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig,
+    RegistrationError, make_execution_data_map,
   },
 };
 use serde_json::json;
@@ -15,7 +15,7 @@ use super::{NoOpConfig, utils};
 
 #[derive(Debug)]
 pub struct NoOpV1 {
-  pub definition: Arc<NodeDefinition>,
+  pub definition: Arc<NodeDescription>,
 }
 
 impl NoOpV1 {
@@ -28,7 +28,7 @@ impl NoOpV1 {
   ) -> Result<ExecutionDataMap, NodeExecutionError> {
     let node = context.current_node()?;
     log::info!(
-      "[DEBUG] 开始执行 NoOp 节点 workflow_id:{}, node_name:{}, node_kind:{}",
+      "[DEBUG] 开始执行 NoOp 节点 workflow_id:{}, node_name:{}, node_type:{}",
       context.workflow.id,
       node.name,
       node.kind
@@ -59,7 +59,7 @@ impl NoOpV1 {
     log::info!("NoOp 节点执行完成 - 输入项: {}, 输出项: {}", input_items.len(), output_items.len());
 
     // 返回原样的数据
-    Ok(make_execution_data_map(vec![(ConnectionKind::Main, vec![ExecutionDataItems::new_items(output_items)])]))
+    Ok(make_execution_data_map(vec![(NodeConnectionKind::Main, vec![ExecutionDataItems::new_items(output_items)])]))
   }
 }
 
@@ -80,28 +80,31 @@ impl NoOpV1 {
 /// - 数据验证：检查数据流转是否正确
 #[async_trait]
 impl FlowNode for NoOpV1 {
-  fn definition(&self) -> Arc<NodeDefinition> {
+  fn description(&self) -> Arc<NodeDescription> {
     self.definition.clone()
   }
 
   async fn execute(&self, context: &NodeExecutionContext) -> Result<ExecutionDataMap, NodeExecutionError> {
     let node = context.current_node()?;
     log::info!(
-      "[DEBUG] 开始执行 NoOp 节点 workflow_id:{}, node_name:{}, node_kind:{}",
+      "[DEBUG] 开始执行 NoOp 节点 workflow_id:{}, node_name:{}, node_type:{}",
       context.workflow.id,
       node.name,
       node.kind
     );
 
     // 获取输入数据
-    let input_items = if let Some(input_collection) = context.get_input_items(ConnectionKind::Main, 0)
+    let input_items = if let Some(input_collection) = context.get_input_items(NodeConnectionKind::Main, 0)
       && let ExecutionDataItems::Items(input_data) = input_collection
     {
       log::info!("NoOp 节点接收到 {} 个输入项", input_data.len());
       input_data
     } else {
       log::warn!("NoOp 节点没有接收到输入数据");
-      return Ok(make_execution_data_map(vec![(ConnectionKind::Main, vec![ExecutionDataItems::new_items(vec![])])]));
+      return Ok(make_execution_data_map(vec![(
+        NodeConnectionKind::Main,
+        vec![ExecutionDataItems::new_items(vec![])],
+      )]));
     };
 
     // 获取配置参数
@@ -117,14 +120,14 @@ impl FlowNode for NoOpV1 {
   }
 }
 
-impl TryFrom<NodeDefinition> for NoOpV1 {
+impl TryFrom<NodeDescription> for NoOpV1 {
   type Error = RegistrationError;
 
-  fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
+  fn try_from(base: NodeDescription) -> Result<Self, Self::Error> {
     let definition = base
       .with_version(Version::new(1, 0, 0))
-      .add_input(InputPortConfig::new(ConnectionKind::Main, "Input"))
-      .add_output(OutputPortConfig::new(ConnectionKind::Main, "Output"))
+      .add_input(InputPortConfig::new(NodeConnectionKind::Main, "Input"))
+      .add_output(OutputPortConfig::new(NodeConnectionKind::Main, "Output"))
       .add_property(
         // 调试选项
         NodeProperty::new(NodePropertyKind::Boolean)

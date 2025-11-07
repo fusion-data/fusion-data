@@ -9,9 +9,9 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use hetumind_core::version::Version;
 use hetumind_core::workflow::{
-  ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, FlowNode, FlowNodeRef, Node, NodeDefinition,
-  NodeExecutionContext, NodeExecutionError, NodeGroupKind, NodeKind, NodeProperty, NodePropertyKind, RegistrationError,
-  make_execution_data_map,
+  ExecutionData, ExecutionDataItems, ExecutionDataMap, FlowNode, FlowNodeRef, Node, NodeConnectionKind,
+  NodeDescription, NodeExecutionContext, NodeExecutionError, NodeGroupKind, NodeProperty, NodePropertyKind, NodeType,
+  RegistrationError, make_execution_data_map,
 };
 use serde_json::json;
 
@@ -21,20 +21,20 @@ use parameters::ManualTriggerConfig;
 mod parameters;
 
 pub struct ManualTriggerNodeV1 {
-  definition: Arc<NodeDefinition>,
+  definition: Arc<NodeDescription>,
 }
 
-impl TryFrom<NodeDefinition> for ManualTriggerNodeV1 {
+impl TryFrom<NodeDescription> for ManualTriggerNodeV1 {
   type Error = RegistrationError;
 
-  fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
+  fn try_from(base: NodeDescription) -> Result<Self, Self::Error> {
     let definition = base;
     Ok(Self { definition: Arc::new(definition) })
   }
 }
 
-pub fn create_base() -> NodeDefinition {
-  NodeDefinition::new(MANUAL_TRIGGER_NODE_KIND, "Manual Trigger")
+pub fn create_base() -> NodeDescription {
+  NodeDescription::new(MANUAL_TRIGGER_NODE_KIND, "Manual Trigger")
     .add_group(NodeGroupKind::Trigger)
     .with_description("手动触发工作流执行，支持执行模式和启用状态配置")
     .add_property(
@@ -68,7 +68,7 @@ pub fn create_base() -> NodeDefinition {
 
 #[async_trait]
 impl FlowNode for ManualTriggerNodeV1 {
-  fn definition(&self) -> Arc<NodeDefinition> {
+  fn description(&self) -> Arc<NodeDescription> {
     Arc::clone(&self.definition)
   }
 
@@ -102,7 +102,7 @@ impl FlowNode for ManualTriggerNodeV1 {
     );
 
     // 7. 返回执行数据映射
-    Ok(make_execution_data_map(vec![(ConnectionKind::Main, vec![data_items])]))
+    Ok(make_execution_data_map(vec![(NodeConnectionKind::Main, vec![data_items])]))
   }
 }
 
@@ -138,8 +138,8 @@ impl Node for ManualTriggerNode {
     &self.executors
   }
 
-  fn kind(&self) -> NodeKind {
-    self.executors[0].definition().kind.clone()
+  fn node_type(&self) -> NodeType {
+    self.executors[0].description().node_type.clone()
   }
 }
 

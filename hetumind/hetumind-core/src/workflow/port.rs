@@ -1,7 +1,7 @@
 use fusion_common::helper::{default_bool_true, default_u32_1};
 use serde::{Deserialize, Serialize};
 
-use super::{ConnectionKind, NodeName};
+use super::{NodeConnectionKind, NodeName};
 
 /// 节点输入过滤器
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -53,7 +53,7 @@ impl PortInputFilter {
 /// 节点输入连接
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct InputPortConfig {
-  pub kind: ConnectionKind,
+  pub kind: NodeConnectionKind,
 
   /// 显示名称。在UI渲染时，系统会根据以下逻辑确定显示的标签
   pub display_name: String,
@@ -70,11 +70,11 @@ pub struct InputPortConfig {
 }
 
 impl InputPortConfig {
-  pub fn new(kind: ConnectionKind, display_name: impl Into<String>) -> Self {
+  pub fn new(kind: NodeConnectionKind, display_name: impl Into<String>) -> Self {
     Self { kind, display_name: display_name.into(), required: true, filter: None, max_connections: 1, category: None }
   }
 
-  pub fn with_kind(mut self, kind: ConnectionKind) -> Self {
+  pub fn with_kind(mut self, kind: NodeConnectionKind) -> Self {
     self.kind = kind;
     self
   }
@@ -108,7 +108,7 @@ impl InputPortConfig {
 /// 节点输出配置
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct OutputPortConfig {
-  pub kind: ConnectionKind,
+  pub kind: NodeConnectionKind,
 
   /// 显示名称。在UI渲染时，系统会根据以下逻辑确定显示的标签
   pub display_name: String,
@@ -123,11 +123,11 @@ pub struct OutputPortConfig {
 }
 
 impl OutputPortConfig {
-  pub fn new(kind: ConnectionKind, display_name: impl Into<String>) -> Self {
+  pub fn new(kind: NodeConnectionKind, display_name: impl Into<String>) -> Self {
     Self { kind, display_name: display_name.into(), required: true, max_connections: 1, category: None }
   }
 
-  pub fn with_kind(mut self, kind: ConnectionKind) -> Self {
+  pub fn with_kind(mut self, kind: NodeConnectionKind) -> Self {
     self.kind = kind;
     self
   }

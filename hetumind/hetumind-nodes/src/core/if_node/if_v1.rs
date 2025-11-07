@@ -5,7 +5,7 @@ use hetumind_core::{
   types::JsonValue,
   version::Version,
   workflow::{
-    ConnectionKind, ExecutionDataItems, ExecutionDataMap, FlowNode, InputPortConfig, NodeDefinition,
+    ExecutionDataItems, ExecutionDataMap, FlowNode, InputPortConfig, NodeConnectionKind, NodeDescription,
     NodeExecutionContext, NodeExecutionError, NodeProperty, NodePropertyKind, OutputPortConfig, RegistrationError,
     make_execution_data_map,
   },
@@ -19,7 +19,7 @@ use super::{
 
 #[derive(Debug)]
 pub struct IfV1 {
-  pub definition: Arc<NodeDefinition>,
+  pub definition: Arc<NodeDescription>,
 }
 
 impl IfV1 {
@@ -150,19 +150,19 @@ impl IfV1 {
 /// - lessThanOrEqual: 小于等于
 #[async_trait]
 impl FlowNode for IfV1 {
-  fn definition(&self) -> Arc<NodeDefinition> {
+  fn description(&self) -> Arc<NodeDescription> {
     self.definition.clone()
   }
 
   async fn execute(&self, context: &NodeExecutionContext) -> Result<ExecutionDataMap, NodeExecutionError> {
     let node = context.current_node()?;
     println!(
-      "[DEBUG] 开始执行 If 条件判断节点 workflow_id:{}, node_name:{}, node_kind:{}",
+      "[DEBUG] 开始执行 If 条件判断节点 workflow_id:{}, node_name:{}, node_type:{}",
       context.workflow.id, node.name, node.kind
     );
 
     // 获取输入数据
-    let input_items = if let Some(input_collection) = context.get_input_items(ConnectionKind::Main, 0)
+    let input_items = if let Some(input_collection) = context.get_input_items(NodeConnectionKind::Main, 0)
       && let ExecutionDataItems::Items(input_data) = input_collection
     {
       log::info!("If 节点接收到 {} 个输入项", input_data.len());
@@ -174,7 +174,7 @@ impl FlowNode for IfV1 {
       log::error!("If 节点没有接收到输入数据");
       // 如果没有输入数据，默认走 false 分支
       return Ok(make_execution_data_map(vec![(
-        ConnectionKind::Main,
+        NodeConnectionKind::Main,
         vec![ExecutionDataItems::new_null(), ExecutionDataItems::new_items(Default::default())],
       )]));
     };
@@ -296,19 +296,19 @@ impl FlowNode for IfV1 {
       ExecutionDataItems::new_items(false_items), // false 分支
     ];
 
-    Ok(make_execution_data_map(vec![(ConnectionKind::Main, res)]))
+    Ok(make_execution_data_map(vec![(NodeConnectionKind::Main, res)]))
   }
 }
 
-impl TryFrom<NodeDefinition> for IfV1 {
+impl TryFrom<NodeDescription> for IfV1 {
   type Error = RegistrationError;
 
-  fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
+  fn try_from(base: NodeDescription) -> Result<Self, Self::Error> {
     let definition = base
       .with_version(Version::new(1, 0, 0))
-      .add_input(InputPortConfig::new(ConnectionKind::Main, "Input"))
-      .add_output(OutputPortConfig::new(ConnectionKind::Main, "True"))
-      .add_output(OutputPortConfig::new(ConnectionKind::Main, "False"))
+      .add_input(InputPortConfig::new(NodeConnectionKind::Main, "Input"))
+      .add_output(OutputPortConfig::new(NodeConnectionKind::Main, "True"))
+      .add_output(OutputPortConfig::new(NodeConnectionKind::Main, "False"))
       .add_property(
         NodeProperty::new(NodePropertyKind::Filter)
           .with_display_name("条件")

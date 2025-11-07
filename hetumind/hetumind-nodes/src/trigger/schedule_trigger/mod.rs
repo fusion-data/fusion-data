@@ -7,8 +7,8 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use hetumind_core::version::Version;
 use hetumind_core::workflow::{
-  ConnectionKind, ExecutionDataItems, ExecutionDataMap, FlowNode, FlowNodeRef, Node, NodeDefinition,
-  NodeExecutionContext, NodeExecutionError, NodeKind, RegistrationError, make_execution_data_map,
+  ExecutionDataItems, ExecutionDataMap, FlowNode, FlowNodeRef, Node, NodeConnectionKind, NodeDescription,
+  NodeExecutionContext, NodeExecutionError, NodeType, RegistrationError, make_execution_data_map,
 };
 
 mod parameters;
@@ -17,20 +17,20 @@ mod utils;
 use parameters::*;
 
 pub struct ScheduleTriggerNodeV1 {
-  definition: Arc<NodeDefinition>,
+  definition: Arc<NodeDescription>,
 }
 
-impl TryFrom<NodeDefinition> for ScheduleTriggerNodeV1 {
+impl TryFrom<NodeDescription> for ScheduleTriggerNodeV1 {
   type Error = RegistrationError;
 
-  fn try_from(definition: NodeDefinition) -> Result<Self, Self::Error> {
+  fn try_from(definition: NodeDescription) -> Result<Self, Self::Error> {
     Ok(Self { definition: Arc::new(definition) })
   }
 }
 
 #[async_trait]
 impl FlowNode for ScheduleTriggerNodeV1 {
-  fn definition(&self) -> Arc<NodeDefinition> {
+  fn description(&self) -> Arc<NodeDescription> {
     self.definition.clone()
   }
 
@@ -45,7 +45,7 @@ impl FlowNode for ScheduleTriggerNodeV1 {
     // 1. 如果是 cron 表达式，解析并设置 cron 调度
     // 2. 如果是 interval 表达式，解析并设置固定时间间隔调度
 
-    Ok(make_execution_data_map(vec![(ConnectionKind::Main, vec![ExecutionDataItems::new_items(vec![])])]))
+    Ok(make_execution_data_map(vec![(NodeConnectionKind::Main, vec![ExecutionDataItems::new_items(vec![])])]))
   }
 }
 
@@ -63,8 +63,8 @@ impl Node for ScheduleTriggerNode {
     &self.executors
   }
 
-  fn kind(&self) -> NodeKind {
-    self.executors[0].definition().kind.clone()
+  fn node_type(&self) -> NodeType {
+    self.executors[0].description().node_type.clone()
   }
 }
 
@@ -72,7 +72,7 @@ impl ScheduleTriggerNode {
   pub fn new() -> Result<Self, RegistrationError> {
     let base = utils::create_base();
     let executors: Vec<FlowNodeRef> = vec![Arc::new(ScheduleTriggerNodeV1::try_from(base)?)];
-    let default_version = executors.iter().map(|node| node.definition().version.clone()).max().unwrap();
+    let default_version = executors.iter().map(|node| node.description().version.clone()).max().unwrap();
     Ok(Self { default_version, executors })
   }
 }

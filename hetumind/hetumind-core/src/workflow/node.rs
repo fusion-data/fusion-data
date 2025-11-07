@@ -47,11 +47,11 @@ impl std::fmt::Display for NodeName {
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, derive_more::Into)]
 #[serde(transparent)]
 #[cfg_attr(feature = "with-db", derive(sqlx::Type), sqlx(transparent))]
-pub struct NodeKind(String);
+pub struct NodeType(String);
 
-impl NodeKind {
-  pub fn new(kind: impl Into<String>) -> Self {
-    Self(kind.into())
+impl NodeType {
+  pub fn new(node_type: impl Into<String>) -> Self {
+    Self(node_type.into())
   }
 
   pub fn as_str(&self) -> &str {
@@ -59,42 +59,42 @@ impl NodeKind {
   }
 }
 
-impl Deref for NodeKind {
+impl Deref for NodeType {
   type Target = str;
   fn deref(&self) -> &Self::Target {
     &self.0
   }
 }
 
-impl AsRef<str> for NodeKind {
+impl AsRef<str> for NodeType {
   fn as_ref(&self) -> &str {
     &self.0
   }
 }
 
-impl From<String> for NodeKind {
+impl From<String> for NodeType {
   fn from(id: String) -> Self {
     Self(id)
   }
 }
 
-impl From<&str> for NodeKind {
+impl From<&str> for NodeType {
   fn from(id: &str) -> Self {
     Self(id.to_string())
   }
 }
 
-impl std::fmt::Display for NodeKind {
+impl std::fmt::Display for NodeType {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
     f.write_str(&self.0)
   }
 }
 
-/// Node 定义
+/// Node 描述
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct NodeDefinition {
-  /// 唯一标识一种类型的节点，可以存在多个不同的版本。PK
-  pub kind: NodeKind,
+pub struct NodeDescription {
+  /// 唯一标识一种类型的节点，可以存在多个不同的版本。PrimaryKey
+  pub node_type: NodeType,
 
   /// 版本号
   pub version: Version,
@@ -142,11 +142,11 @@ pub struct NodeDefinition {
   pub badge_icon_url: Option<String>,
 }
 
-impl NodeDefinition {
+impl NodeDescription {
   /// Create a new NodeDefinition with required fields
-  pub fn new(kind: impl Into<NodeKind>, display_name: impl Into<String>) -> Self {
+  pub fn new(kind: impl Into<NodeType>, display_name: impl Into<String>) -> Self {
     Self {
-      kind: kind.into(),
+      node_type: kind.into(),
       version: Version::new(1, 0, 0),
       groups: Vec::new(),
       display_name: display_name.into(),
@@ -266,7 +266,7 @@ impl NodeDefinition {
 }
 
 #[cfg(feature = "with-db")]
-fusionsql::generate_string_newtype_to_sea_query_value!(Struct: NodeName, Struct: NodeKind);
+fusionsql::generate_string_newtype_to_sea_query_value!(Struct: NodeName, Struct: NodeType);
 
 pub trait Node {
   fn default_version(&self) -> &Version;
@@ -287,14 +287,14 @@ pub trait Node {
     !self.node_suppliers().is_empty()
   }
 
-  fn kind(&self) -> NodeKind;
+  fn node_type(&self) -> NodeType;
 
   fn versions(&self) -> Vec<Version> {
-    self.node_executors().iter().map(|node| node.definition().version.clone()).collect()
+    self.node_executors().iter().map(|node| node.description().version.clone()).collect()
   }
 
   fn get_node_executor(&self, version: &Version) -> Option<FlowNodeRef> {
-    self.node_executors().iter().find(|node| node.definition().version == *version).cloned()
+    self.node_executors().iter().find(|node| node.description().version == *version).cloned()
   }
 
   fn default_node_executor(&self) -> Option<FlowNodeRef> {
@@ -302,7 +302,7 @@ pub trait Node {
   }
 
   fn get_node_supplier(&self, version: &Version) -> Option<SubNodeRef> {
-    self.node_suppliers().iter().find(|node| node.definition().version == *version).cloned()
+    self.node_suppliers().iter().find(|node| node.description().version == *version).cloned()
   }
 
   fn default_node_supplier(&self) -> Option<SubNodeRef> {

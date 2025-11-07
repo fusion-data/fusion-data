@@ -4,7 +4,7 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 
 use crate::credential::CredentialInfo;
 
-use super::{NodeKind, NodeName, ParameterMap, ValidationError, VecExecutionData};
+use super::{NodeType, NodeName, ParameterMap, ValidationError, VecExecutionData};
 
 /// 节点执行状态
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize_repr, Deserialize_repr)]
@@ -143,7 +143,7 @@ impl From<(i32, i32)> for Position {
 /// Node element of workflow
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NodeElement {
-  pub kind: NodeKind,
+  pub kind: NodeType,
 
   /// The unique identifier name of the node within the workflow. Other nodes can be accessed via this name,
   /// for example, accessing other node's data through `$node(name)` in expressions.
@@ -199,7 +199,7 @@ pub struct NodeElement {
 }
 
 impl NodeElement {
-  pub fn new(kind: impl Into<NodeKind>, name: impl Into<NodeName>) -> Self {
+  pub fn new(kind: impl Into<NodeType>, name: impl Into<NodeName>) -> Self {
     Self {
       kind: kind.into(),
       name: name.into(),

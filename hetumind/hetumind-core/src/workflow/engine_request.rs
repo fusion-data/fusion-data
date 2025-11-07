@@ -3,14 +3,10 @@
 //! 统一的工具调用中间态结构，供 Agent 节点与引擎/Tool 节点之间传递。
 //! - 请求通过 AiTool 端口输出，由引擎路由到对应 Tool 节点执行
 //! - 响应由引擎或 Tool 节点返回，携带输出或错误信息
-//!
-//! 约束：
-//! - 不引入审计或迁移逻辑（遵循 CLAUDE.md）
-//! - 函数级注释，Rust 2024，2 空格缩进
 
 use serde::{Deserialize, Serialize};
 
-use crate::workflow::ConnectionKind;
+use crate::workflow::NodeConnectionKind;
 
 /// 重试策略
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -35,7 +31,7 @@ pub struct EngineRequest {
   /// 目标 Tool 节点名称（工作流内唯一）
   pub node_name: String,
   /// 连接类型（固定为 AiTool）
-  pub r#type: ConnectionKind,
+  pub kind: NodeConnectionKind,
   /// 请求唯一 ID（关联响应）
   pub id: String,
   /// 工具输入参数（已按 JSON Schema 校验）
@@ -70,7 +66,7 @@ mod tests {
   fn test_engine_request_response_serde_roundtrip() {
     let req = EngineRequest {
       node_name: "tool_wiki".to_string(),
-      r#type: ConnectionKind::AiTool,
+      kind: NodeConnectionKind::AiTool,
       id: "call-1".to_string(),
       input: serde_json::json!({ "query": "Rust" }),
       metadata: serde_json::json!({ "itemIndex": 0 }),
@@ -81,7 +77,7 @@ mod tests {
     let s = serde_json::to_string(&req).unwrap();
     let back: EngineRequest = serde_json::from_str(&s).unwrap();
     assert_eq!(back.node_name, req.node_name);
-    assert_eq!(back.r#type, req.r#type);
+    assert_eq!(back.kind, req.kind);
     assert_eq!(back.id, req.id);
     assert_eq!(back.correlation_id, req.correlation_id);
 

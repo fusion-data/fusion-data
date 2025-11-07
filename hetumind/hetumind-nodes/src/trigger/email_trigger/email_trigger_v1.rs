@@ -3,7 +3,7 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use hetumind_core::types::JsonValue;
 use hetumind_core::workflow::{
-  ConnectionKind, ExecutionDataItems, ExecutionDataMap, FlowNode, NodeDefinition, NodeExecutionContext,
+  ExecutionDataItems, ExecutionDataMap, FlowNode, NodeConnectionKind, NodeDescription, NodeExecutionContext,
   NodeExecutionError, NodeGroupKind, NodeProperty, NodePropertyKind, RegistrationError, make_execution_data_map,
 };
 
@@ -14,20 +14,20 @@ use serde_json::json;
 use super::{EmailProcessingConfig, EmailReadFormat, EmailTriggerConfig, ImapAuthentication, ImapSecurity};
 
 pub struct EmailTriggerV1 {
-  definition: Arc<NodeDefinition>,
+  definition: Arc<NodeDescription>,
 }
 
-impl TryFrom<NodeDefinition> for EmailTriggerV1 {
+impl TryFrom<NodeDescription> for EmailTriggerV1 {
   type Error = RegistrationError;
 
-  fn try_from(definition: NodeDefinition) -> Result<Self, Self::Error> {
+  fn try_from(definition: NodeDescription) -> Result<Self, Self::Error> {
     Ok(Self { definition: Arc::new(definition) })
   }
 }
 
 #[async_trait]
 impl FlowNode for EmailTriggerV1 {
-  fn definition(&self) -> Arc<NodeDefinition> {
+  fn description(&self) -> Arc<NodeDescription> {
     self.definition.clone()
   }
 
@@ -43,7 +43,7 @@ impl FlowNode for EmailTriggerV1 {
 
     // Email 触发器作为入口点，返回空数据
     // 实际的邮件监控和处理在触发器框架层面完成
-    Ok(make_execution_data_map(vec![(ConnectionKind::Main, vec![ExecutionDataItems::new_items(vec![])])]))
+    Ok(make_execution_data_map(vec![(NodeConnectionKind::Main, vec![ExecutionDataItems::new_items(vec![])])]))
   }
 }
 
@@ -251,8 +251,8 @@ impl EmailTriggerV1 {
 
 impl EmailTriggerV1 {
   /// 创建基础的节点定义
-  pub fn create_base() -> NodeDefinition {
-    NodeDefinition::new(EMAIL_TRIGGER_NODE_KIND, "Email Trigger")
+  pub fn create_base() -> NodeDescription {
+    NodeDescription::new(EMAIL_TRIGGER_NODE_KIND, "Email Trigger")
       .add_group(NodeGroupKind::Trigger)
       .with_description("Triggers workflow when new emails are received via IMAP")
       .add_property(

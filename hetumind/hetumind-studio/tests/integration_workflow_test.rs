@@ -27,15 +27,15 @@ use fusion_common::ctx::{Ctx, CtxPayload};
 use fusion_common::time::{now, now_offset};
 use fusion_core::application::Application;
 use hetumind_core::workflow::{
-  Connection, ConnectionKind, Execution, ExecutionContext, ExecutionData, ExecutionDataItems, ExecutionDataMap,
-  ExecutionId, ExecutionStatus, NodeElement, NodeExecutionStatus, NodeKind, NodeName, NodeRegistry, ParameterMap,
-  PinData, Workflow, WorkflowExecutionError, WorkflowId, WorkflowMeta, WorkflowSettings, WorkflowStatus,
+  Connection, Execution, ExecutionContext, ExecutionData, ExecutionDataItems, ExecutionDataMap, ExecutionId,
+  ExecutionStatus, NodeConnectionKind, NodeElement, NodeExecutionStatus, NodeName, NodeRegistry, NodeType,
+  ParameterMap, PinData, Workflow, WorkflowExecutionError, WorkflowId, WorkflowMeta, WorkflowSettings, WorkflowStatus,
   WorkflowTriggerData,
 };
 use hetumind_nodes::constants::{
   EDIT_FIELDS_NODE_KIND, IF_NODE_KIND, MANUAL_TRIGGER_NODE_KIND, READ_WRITE_FILES_NODE_KIND,
 };
-use hetumind_nodes::core::{EditFieldsNode, IfNode, ReadWriteFilesNode};
+use hetumind_nodes::core::IfNode;
 use hetumind_nodes::trigger::ManualTriggerNode;
 use hetumind_studio::runtime::workflow::WorkflowEngineService;
 use hetumind_studio::runtime::{
@@ -115,27 +115,27 @@ fn create_integration_workflow() -> Result<Workflow, Box<dyn std::error::Error>>
 
   // Create ManualTriggerNode
   let manual_trigger_node =
-    NodeElement::new(NodeKind::from(MANUAL_TRIGGER_NODE_KIND), NodeName::from("manual_trigger"))
+    NodeElement::new(NodeType::from(MANUAL_TRIGGER_NODE_KIND), NodeName::from("manual_trigger"))
       .with_display_name("Manual Trigger")
       .with_parameters(create_manual_trigger_parameters());
 
   // Create IfNode for conditional branching
-  let if_node = NodeElement::new(NodeKind::from(IF_NODE_KIND), NodeName::from("condition_check"))
+  let if_node = NodeElement::new(NodeType::from(IF_NODE_KIND), NodeName::from("condition_check"))
     .with_display_name("Check Condition")
     .with_parameters(create_if_node_parameters());
 
   // Create EditFieldsNode for data transformation (true branch)
-  let set_node_true = NodeElement::new(NodeKind::from(EDIT_FIELDS_NODE_KIND), NodeName::from("set_data_true"))
+  let set_node_true = NodeElement::new(NodeType::from(EDIT_FIELDS_NODE_KIND), NodeName::from("set_data_true"))
     .with_display_name("Set Data (True)")
     .with_parameters(create_set_node_parameters_true());
 
   // Create EditFieldsNode for data transformation (false branch)
-  let set_node_false = NodeElement::new(NodeKind::from(EDIT_FIELDS_NODE_KIND), NodeName::from("set_data_false"))
+  let set_node_false = NodeElement::new(NodeType::from(EDIT_FIELDS_NODE_KIND), NodeName::from("set_data_false"))
     .with_display_name("Set Data (False)")
     .with_parameters(create_set_node_parameters_false());
 
   // Create ReadWriteFilesNode for file operations
-  let file_node = NodeElement::new(NodeKind::from(READ_WRITE_FILES_NODE_KIND), NodeName::from("file_operations"))
+  let file_node = NodeElement::new(NodeType::from(READ_WRITE_FILES_NODE_KIND), NodeName::from("file_operations"))
     .with_display_name("File Operations")
     .with_parameters(create_file_node_parameters());
 
@@ -143,28 +143,28 @@ fn create_integration_workflow() -> Result<Workflow, Box<dyn std::error::Error>>
   let mut connections = HashMap::default();
 
   // Manual trigger -> If node
-  let trigger_connections = vec![Connection::new(NodeName::from("condition_check"), ConnectionKind::Main, 0)];
+  let trigger_connections = vec![Connection::new(NodeName::from("condition_check"), NodeConnectionKind::Main, 0)];
   let mut trigger_connection_map = HashMap::default();
-  trigger_connection_map.insert(ConnectionKind::Main, trigger_connections);
+  trigger_connection_map.insert(NodeConnectionKind::Main, trigger_connections);
   connections.insert(NodeName::from("manual_trigger"), trigger_connection_map);
 
   // If node -> Set nodes (true and false branches)
-  let if_connections_true = vec![Connection::new(NodeName::from("set_data_true"), ConnectionKind::Main, 0)];
-  let if_connections_false = vec![Connection::new(NodeName::from("set_data_false"), ConnectionKind::Main, 0)];
+  let if_connections_true = vec![Connection::new(NodeName::from("set_data_true"), NodeConnectionKind::Main, 0)];
+  let if_connections_false = vec![Connection::new(NodeName::from("set_data_false"), NodeConnectionKind::Main, 0)];
   let mut if_connection_map = HashMap::default();
-  if_connection_map.insert(ConnectionKind::Main, if_connections_true);
-  if_connection_map.insert(ConnectionKind::Main, if_connections_false);
+  if_connection_map.insert(NodeConnectionKind::Main, if_connections_true);
+  if_connection_map.insert(NodeConnectionKind::Main, if_connections_false);
   connections.insert(NodeName::from("condition_check"), if_connection_map);
 
   // Set nodes -> File node (both branches converge)
-  let set_true_connections = vec![Connection::new(NodeName::from("file_operations"), ConnectionKind::Main, 0)];
+  let set_true_connections = vec![Connection::new(NodeName::from("file_operations"), NodeConnectionKind::Main, 0)];
   let mut set_true_connection_map = HashMap::default();
-  set_true_connection_map.insert(ConnectionKind::Main, set_true_connections);
+  set_true_connection_map.insert(NodeConnectionKind::Main, set_true_connections);
   connections.insert(NodeName::from("set_data_true"), set_true_connection_map);
 
-  let set_false_connections = vec![Connection::new(NodeName::from("file_operations"), ConnectionKind::Main, 0)];
+  let set_false_connections = vec![Connection::new(NodeName::from("file_operations"), NodeConnectionKind::Main, 0)];
   let mut set_false_connection_map = HashMap::default();
-  set_false_connection_map.insert(ConnectionKind::Main, set_false_connections);
+  set_false_connection_map.insert(NodeConnectionKind::Main, set_false_connections);
   connections.insert(NodeName::from("set_data_false"), set_false_connection_map);
 
   let workflow = Workflow {
@@ -309,12 +309,6 @@ async fn test_integration_workflow() -> Result<(), Box<dyn std::error::Error>> {
   let if_node = IfNode::new()?;
   node_registry.register_node(Arc::new(if_node))?;
 
-  let set_node = EditFieldsNode::new()?;
-  node_registry.register_node(Arc::new(set_node))?;
-
-  let file_node = ReadWriteFilesNode::new()?;
-  node_registry.register_node(Arc::new(file_node))?;
-
   println!("✅ Registered {} node types", node_registry.len());
 
   // 2. Create the integration workflow
@@ -352,7 +346,7 @@ async fn test_integration_workflow() -> Result<(), Box<dyn std::error::Error>> {
   );
 
   let mut trigger_data_map = ExecutionDataMap::default();
-  trigger_data_map.insert(ConnectionKind::Main, vec![ExecutionDataItems::Items(vec![initial_data])]);
+  trigger_data_map.insert(NodeConnectionKind::Main, vec![ExecutionDataItems::Items(vec![initial_data])]);
 
   let trigger_data = WorkflowTriggerData::normal(trigger_node_name, trigger_data_map);
   println!("✅ Prepared trigger data");
@@ -494,12 +488,6 @@ async fn test_integration_workflow_false_branch() -> Result<(), Box<dyn std::err
   let if_node = IfNode::new()?;
   node_registry.register_node(Arc::new(if_node))?;
 
-  let set_node = EditFieldsNode::new()?;
-  node_registry.register_node(Arc::new(set_node))?;
-
-  let file_node = ReadWriteFilesNode::new()?;
-  node_registry.register_node(Arc::new(file_node))?;
-
   let workflow_engine: WorkflowEngineService = Application::global().component();
 
   let execution_id = ExecutionId::now_v7();
@@ -523,7 +511,7 @@ async fn test_integration_workflow_false_branch() -> Result<(), Box<dyn std::err
   );
 
   let mut trigger_data_map = ExecutionDataMap::default();
-  trigger_data_map.insert(ConnectionKind::Main, vec![ExecutionDataItems::Items(vec![initial_data])]);
+  trigger_data_map.insert(NodeConnectionKind::Main, vec![ExecutionDataItems::Items(vec![initial_data])]);
 
   let trigger_data = WorkflowTriggerData::normal(trigger_node_name, trigger_data_map);
 

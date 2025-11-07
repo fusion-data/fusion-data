@@ -12,6 +12,6 @@ pub mod common;
 pub mod constants;
 pub mod core;
 pub mod integration;
-pub mod llm;
+pub mod lm;
 pub mod store;
 pub mod trigger;

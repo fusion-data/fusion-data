@@ -9,7 +9,7 @@ use hetumind_context::services::memory_service::MemoryService;
 use hetumind_core::{
   version::Version,
   workflow::{
-    ConnectionKind, ExecutionDataMap, FlowNode, InputPortConfig, NodeDefinition, NodeExecutionContext,
+    ExecutionDataMap, FlowNode, InputPortConfig, NodeConnectionKind, NodeDescription, NodeExecutionContext,
     NodeExecutionError, NodeGroupKind, NodeProperty, NodePropertyKind, OutputPortConfig, RegistrationError,
   },
 };
@@ -25,7 +25,7 @@ use chrono::Utc;
 
 /// Simple Memory Node V1 实现
 pub struct SimpleMemoryV1 {
-  pub definition: Arc<NodeDefinition>,
+  pub definition: Arc<NodeDescription>,
 }
 
 impl SimpleMemoryV1 {
@@ -36,8 +36,8 @@ impl SimpleMemoryV1 {
   }
 
   /// 创建节点定义
-  fn create_node_definition() -> NodeDefinition {
-    NodeDefinition::new(SIMPLE_MEMORY_NODE_KIND, "Simple Memory")
+  fn create_node_definition() -> NodeDescription {
+    NodeDescription::new(SIMPLE_MEMORY_NODE_KIND, "Simple Memory")
       .with_version(Version::new(1, 0, 0))
       .with_description(
         "Lightweight in-memory storage for AI workflows with sliding window memory management. \
@@ -46,10 +46,9 @@ impl SimpleMemoryV1 {
       .add_group(NodeGroupKind::Transform)
       .with_icon("database")
       // Sub-nodes don't have main inputs
-      .add_input(InputPortConfig::new(ConnectionKind::AiLM, "LLM连接"))
+      .add_input(InputPortConfig::new(NodeConnectionKind::AiLanguageModel, "LLM连接"))
       // Output ports for memory supply
-      .add_output(OutputPortConfig::new(ConnectionKind::AiMemory, "内存供应"))
-      .add_output(OutputPortConfig::new(ConnectionKind::Error, "错误输出"))
+      .add_output(OutputPortConfig::new(NodeConnectionKind::AiMemory, "内存供应"))
       // Configuration properties
       .add_property(NodeProperty::new(NodePropertyKind::String)
           .with_name("session_id_type")
@@ -101,7 +100,7 @@ impl SimpleMemoryV1 {
       SessionIdType::FromInput => {
         // 尝试从输入数据中获取sessionId
         let session_id = context
-          .get_input_data(ConnectionKind::AiLM)
+          .get_input_data(NodeConnectionKind::AiLanguageModel)
           .ok()
           .and_then(|data| data.json().get("session_id").and_then(|v| v.as_str()).map(|s| s.to_string()));
 
@@ -139,7 +138,7 @@ impl SimpleMemoryV1 {
     &self,
     context: &NodeExecutionContext,
   ) -> Result<Vec<ConversationMessage>, NodeExecutionError> {
-    let input_data = context.get_input_data(ConnectionKind::AiLM)?;
+    let input_data = context.get_input_data(NodeConnectionKind::AiLanguageModel)?;
     let input_json = input_data.json();
 
     debug!("Extracting messages from input: {}", serde_json::to_string_pretty(input_json).unwrap_or_default());
@@ -217,10 +216,10 @@ impl SimpleMemoryV1 {
   // 已弃用：SimpleMemoryV1 现已改为使用 MemoryService 组件进行会话内存存储与检索
 }
 
-impl TryFrom<NodeDefinition> for SimpleMemoryV1 {
+impl TryFrom<NodeDescription> for SimpleMemoryV1 {
   type Error = RegistrationError;
 
-  fn try_from(base: NodeDefinition) -> Result<Self, Self::Error> {
+  fn try_from(base: NodeDescription) -> Result<Self, Self::Error> {
     let definition = base.with_version(Version::new(1, 0, 0));
     Ok(Self { definition: Arc::new(definition) })
   }
@@ -321,13 +320,13 @@ impl FlowNode for SimpleMemoryV1 {
     });
 
     data_map.insert(
-      ConnectionKind::AiMemory,
+      NodeConnectionKind::AiMemory,
       vec![hetumind_core::workflow::ExecutionDataItems::new_item(
         hetumind_core::workflow::ExecutionData::new_json(
           memory_supply_data,
           Some(hetumind_core::workflow::DataSource::new(
             context.current_node_name().clone(),
-            ConnectionKind::AiMemory,
+            NodeConnectionKind::AiMemory,
             0,
           )),
         ),
@@ -340,7 +339,7 @@ impl FlowNode for SimpleMemoryV1 {
     Ok(data_map)
   }
 
-  fn definition(&self) -> Arc<NodeDefinition> {
+  fn description(&self) -> Arc<NodeDescription> {
     Arc::clone(&self.definition)
   }
 }
@@ -458,9 +457,9 @@ mod tests {
   #[tokio::test]
   async fn test_node_creation() {
     let node = SimpleMemoryV1::new().unwrap();
-    let definition = node.definition();
+    let definition = node.description();
 
-    assert_eq!(definition.kind.as_ref(), SIMPLE_MEMORY_NODE_KIND);
+    assert_eq!(definition.node_type.as_ref(), SIMPLE_MEMORY_NODE_KIND);
     assert_eq!(definition.display_name, "Simple Memory");
     assert_eq!(definition.version, Version::new(1, 0, 0));
   }

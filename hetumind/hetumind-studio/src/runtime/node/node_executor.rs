@@ -28,7 +28,7 @@ impl NodeExecutableImpl {
     let executor = self
       .node_kinds
       .get_executor(&node.kind)
-      .ok_or_else(|| NodeExecutionError::UnsupportedNodeKind { node_kind: node.kind.clone() })?;
+      .ok_or_else(|| NodeExecutionError::UnsupportedNodeKind { node_type: node.kind.clone() })?;
 
     // TODO 检验参数
 

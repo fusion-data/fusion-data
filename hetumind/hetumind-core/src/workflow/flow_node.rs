@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 
-use crate::workflow::{ExecutionDataMap, NodeDefinition, NodeExecutionContext, NodeExecutionError};
+use crate::workflow::{ExecutionDataMap, NodeDescription, NodeExecutionContext, NodeExecutionError};
 
 /// Can be called by workflow
 #[async_trait]
@@ -20,7 +20,7 @@ pub trait FlowNode {
   async fn execute(&self, context: &NodeExecutionContext) -> Result<ExecutionDataMap, NodeExecutionError>;
 
   /// Get Node definition
-  fn definition(&self) -> Arc<NodeDefinition>;
+  fn description(&self) -> Arc<NodeDescription>;
 }
 
 /// Node Executor Type

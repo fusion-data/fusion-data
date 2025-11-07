@@ -10,7 +10,8 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 use crate::types::JsonValue;
 
 use super::{
-  Connection, ConnectionKind, ExecutionMode, NodeElement, NodeName, NodeRegistry, PinData, ValidationError, WorkflowId,
+  Connection, ExecutionMode, NodeConnectionKind, NodeElement, NodeName, NodeRegistry, PinData, ValidationError,
+  WorkflowId,
 };
 
 /// 工作流状态
@@ -130,7 +131,7 @@ pub struct Workflow {
 
   /// 节点连接关系。<节点名称, <连接类型, 连接关系>>
   #[serde(default)]
-  pub connections: HashMap<NodeName, HashMap<ConnectionKind, Vec<Connection>>>,
+  pub connections: HashMap<NodeName, HashMap<NodeConnectionKind, Vec<Connection>>>,
 
   /// 节点固定数据
   #[serde(default)]
@@ -181,7 +182,10 @@ impl Workflow {
     self
   }
 
-  pub fn with_connections(mut self, connections: HashMap<NodeName, HashMap<ConnectionKind, Vec<Connection>>>) -> Self {
+  pub fn with_connections(
+    mut self,
+    connections: HashMap<NodeName, HashMap<NodeConnectionKind, Vec<Connection>>>,
+  ) -> Self {
     self.connections = connections;
     self
   }
@@ -205,7 +209,7 @@ impl Workflow {
     let mut errors = Vec::new();
 
     // <目标节点, Vec<(源节点, 连接类型)>>
-    let mut dst_map_src: HashMap<&NodeName, Vec<(&NodeName, ConnectionKind)>> = HashMap::default();
+    let mut dst_map_src: HashMap<&NodeName, Vec<(&NodeName, NodeConnectionKind)>> = HashMap::default();
 
     for (source_name, kind_map) in &self.connections {
       for (kind, connections) in kind_map {
@@ -232,7 +236,7 @@ impl Workflow {
       let node_definition = if let Some(node_definition) = node_registry.get_definition(&node.kind) {
         node_definition
       } else {
-        errors.push(ValidationError::NodeDefinitionNotFound { node_kind: node.kind.clone() });
+        errors.push(ValidationError::NodeDefinitionNotFound { node_type: node.kind.clone() });
         continue;
       };
 
@@ -275,7 +279,7 @@ impl Workflow {
   pub fn add_connection(
     &mut self,
     node_name: &NodeName,
-    kind: &ConnectionKind,
+    kind: &NodeConnectionKind,
     connections: Vec<Connection>,
   ) -> &mut Self {
     if !self.connections.contains_key(node_name) {

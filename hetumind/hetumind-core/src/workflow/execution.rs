@@ -16,7 +16,7 @@ use crate::{
 };
 
 use super::{
-  ConnectionIndex, ConnectionKind, NodeElement, NodeExecutionError, NodeExecutionStatus, NodeName, ParameterMap,
+  ConnectionIndex, NodeConnectionKind, NodeElement, NodeExecutionError, NodeExecutionStatus, NodeName, ParameterMap,
 };
 
 pub struct NodeExecutionContext {
@@ -87,14 +87,14 @@ impl NodeExecutionContext {
   pub fn with_input_data<I, K, V>(mut self, input_data: I) -> Self
   where
     I: IntoIterator<Item = (K, V)>,
-    K: Into<ConnectionKind>,
+    K: Into<NodeConnectionKind>,
     V: Into<Vec<ExecutionDataItems>>,
   {
     self.input_data = input_data.into_iter().map(|(k, v)| (k.into(), v.into())).collect();
     self
   }
 
-  pub fn add_input_data(mut self, key: impl Into<ConnectionKind>, value: Vec<ExecutionDataItems>) -> Self {
+  pub fn add_input_data(mut self, key: impl Into<NodeConnectionKind>, value: Vec<ExecutionDataItems>) -> Self {
     self.input_data.insert(key.into(), value);
     self
   }
@@ -147,7 +147,7 @@ impl NodeExecutionContext {
 
   pub fn get_input_items(
     &self,
-    connection_kind: ConnectionKind,
+    connection_kind: NodeConnectionKind,
     input_index: ConnectionIndex,
   ) -> Option<ExecutionDataItems> {
     let input_items = self.input_data.get(&connection_kind)?;
@@ -180,7 +180,7 @@ impl NodeExecutionContext {
   }
 
   /// 获取指定连接类型和索引的连接数据
-  pub fn get_connection_data(&self, connection_kind: ConnectionKind, index: usize) -> Option<ExecutionData> {
+  pub fn get_connection_data(&self, connection_kind: NodeConnectionKind, index: usize) -> Option<ExecutionData> {
     self
       .get_input_items(connection_kind, index)
       .and_then(|items| items.get_data_items())
@@ -188,7 +188,7 @@ impl NodeExecutionContext {
   }
 
   /// 获取指定连接类型的所有连接数据
-  pub fn get_all_connections_data(&self, connection_kind: ConnectionKind) -> Vec<ExecutionData> {
+  pub fn get_all_connections_data(&self, connection_kind: NodeConnectionKind) -> Vec<ExecutionData> {
     let mut all_data = Vec::new();
 
     if let Some(items) = self.input_data.get(&connection_kind) {
@@ -202,7 +202,7 @@ impl NodeExecutionContext {
     all_data
   }
 
-  pub fn get_all_connections(&self, kind: &ConnectionKind) -> &[Connection] {
+  pub fn get_all_connections(&self, kind: &NodeConnectionKind) -> &[Connection] {
     if let Some(data) = self.workflow.connections.get(self.current_node_name())
       && let Some(connections) = data.get(kind)
     {
@@ -213,7 +213,7 @@ impl NodeExecutionContext {
   }
 
   /// 获取输入数据的便捷方法
-  pub fn get_input_data(&self, port_kind: ConnectionKind) -> Result<ExecutionData, NodeExecutionError> {
+  pub fn get_input_data(&self, port_kind: NodeConnectionKind) -> Result<ExecutionData, NodeExecutionError> {
     self
       .get_connection_data(port_kind, 0)
       .ok_or_else(|| NodeExecutionError::InvalidInput(format!("No data on port: {}", port_kind)))
@@ -317,13 +317,13 @@ pub struct DataSource {
   /// 来源节点ID
   pub node_name: NodeName,
   /// 来源输出端口
-  pub output_port: ConnectionKind,
+  pub output_port: NodeConnectionKind,
   /// 数据索引
   pub output_index: ConnectionIndex,
 }
 
 impl DataSource {
-  pub fn new(node_name: NodeName, output_port: ConnectionKind, output_index: ConnectionIndex) -> Self {
+  pub fn new(node_name: NodeName, output_port: NodeConnectionKind, output_index: ConnectionIndex) -> Self {
     Self { node_name, output_port, output_index }
   }
 
@@ -332,7 +332,7 @@ impl DataSource {
     self
   }
 
-  pub fn with_output_port(mut self, output_port: ConnectionKind) -> Self {
+  pub fn with_output_port(mut self, output_port: NodeConnectionKind) -> Self {
     self.output_port = output_port;
     self
   }
@@ -422,7 +422,7 @@ pub type NodesExecutionMap = HashMap<NodeName, ExecutionDataMap>;
 
 /// 单个节点的所有 **输入/输出** 连接的数据。 (key: 连接类型, value: 多个连接的数据)
 /// 相同类型（[ConnectionKind]）的多个连接数据，以数组形式存储。
-pub type ExecutionDataMap = HashMap<ConnectionKind, Vec<ExecutionDataItems>>;
+pub type ExecutionDataMap = HashMap<NodeConnectionKind, Vec<ExecutionDataItems>>;
 
 /// 一个连接的 **输出/输入** 数据
 pub type VecExecutionData = Vec<ExecutionData>;

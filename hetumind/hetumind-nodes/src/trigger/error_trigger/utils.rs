@@ -1,13 +1,13 @@
 use hetumind_core::{
   types::JsonValue,
-  workflow::{NodeDefinition, NodeExecutionContext, NodeGroupKind, NodeProperty, NodePropertyKind},
+  workflow::{NodeDescription, NodeExecutionContext, NodeGroupKind, NodeProperty, NodePropertyKind},
 };
 use serde_json::json;
 
 use crate::constants::ERROR_TRIGGER_NODE_KIND;
 
-pub fn create_base() -> NodeDefinition {
-  NodeDefinition::new(ERROR_TRIGGER_NODE_KIND, "Error Trigger")
+pub fn create_base() -> NodeDescription {
+  NodeDescription::new(ERROR_TRIGGER_NODE_KIND, "Error Trigger")
     .add_group(NodeGroupKind::Trigger)
     .with_description("Triggers workflow when other workflows encounter errors")
     .with_max_nodes(1)

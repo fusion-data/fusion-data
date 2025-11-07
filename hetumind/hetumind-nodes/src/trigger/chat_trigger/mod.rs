@@ -11,9 +11,9 @@ use fusion_common::time::now_offset;
 use hetumind_core::types::JsonValue;
 use hetumind_core::version::Version;
 use hetumind_core::workflow::{
-  ConnectionKind, ExecutionData, ExecutionDataItems, ExecutionDataMap, FlowNode, FlowNodeRef, Node, NodeDefinition,
-  NodeExecutionContext, NodeExecutionError, NodeGroupKind, NodeKind, NodeProperty, NodePropertyKind, RegistrationError,
-  make_execution_data_map,
+  ExecutionData, ExecutionDataItems, ExecutionDataMap, FlowNode, FlowNodeRef, Node, NodeConnectionKind,
+  NodeDescription, NodeExecutionContext, NodeExecutionError, NodeGroupKind, NodeProperty, NodePropertyKind, NodeType,
+  RegistrationError, make_execution_data_map,
 };
 
 use crate::constants::CHAT_TRIGGERN_NODE_KIND as CHAT_TRIGGER_NODE_KIND;
@@ -60,20 +60,20 @@ pub enum AuthenticationMethod {
 }
 
 pub struct ChatTriggerNodeV1 {
-  definition: Arc<NodeDefinition>,
+  definition: Arc<NodeDescription>,
 }
 
-impl TryFrom<NodeDefinition> for ChatTriggerNodeV1 {
+impl TryFrom<NodeDescription> for ChatTriggerNodeV1 {
   type Error = RegistrationError;
 
-  fn try_from(definition: NodeDefinition) -> Result<Self, Self::Error> {
+  fn try_from(definition: NodeDescription) -> Result<Self, Self::Error> {
     Ok(Self { definition: Arc::new(definition) })
   }
 }
 
 #[async_trait]
 impl FlowNode for ChatTriggerNodeV1 {
-  fn definition(&self) -> Arc<NodeDefinition> {
+  fn description(&self) -> Arc<NodeDescription> {
     self.definition.clone()
   }
 
@@ -117,7 +117,7 @@ impl FlowNode for ChatTriggerNodeV1 {
     let execution_data = ExecutionData::new_json(message_json, None);
     let execution_data_items = ExecutionDataItems::new_items(vec![execution_data]);
 
-    Ok(make_execution_data_map(vec![(ConnectionKind::Main, vec![execution_data_items])]))
+    Ok(make_execution_data_map(vec![(NodeConnectionKind::Main, vec![execution_data_items])]))
   }
 }
 
@@ -135,8 +135,8 @@ impl Node for ChatTriggerNode {
     &self.executors
   }
 
-  fn kind(&self) -> NodeKind {
-    self.executors[0].definition().kind.clone()
+  fn node_type(&self) -> NodeType {
+    self.executors[0].description().node_type.clone()
   }
 }
 
@@ -144,13 +144,13 @@ impl ChatTriggerNode {
   pub fn new() -> Result<Self, RegistrationError> {
     let base = create_base();
     let executors: Vec<FlowNodeRef> = vec![Arc::new(ChatTriggerNodeV1::try_from(base)?)];
-    let default_version = executors.iter().map(|node| node.definition().version.clone()).max().unwrap();
+    let default_version = executors.iter().map(|node| node.description().version.clone()).max().unwrap();
     Ok(Self { default_version, executors })
   }
 }
 
-fn create_base() -> NodeDefinition {
-  NodeDefinition::new(CHAT_TRIGGER_NODE_KIND, "Chat Trigger")
+fn create_base() -> NodeDescription {
+  NodeDescription::new(CHAT_TRIGGER_NODE_KIND, "Chat Trigger")
     .add_group(NodeGroupKind::Trigger)
     .with_description("Use the Chat Trigger node when building AI workflows for chatbots and other chat interfaces.")
     .add_property(
@@ -252,18 +252,18 @@ mod tests {
   fn test_chat_trigger_node_registration() {
     let registry = NodeRegistry::new();
     let node = ChatTriggerNode::new().unwrap();
-    let node_kind = node.kind();
+    let node_type = node.node_type();
     registry.register_node(Arc::new(node)).unwrap();
 
     // 验证节点已注册
-    assert!(registry.contains(&node_kind));
+    assert!(registry.contains(&node_type));
   }
 
   #[test]
   fn test_chat_trigger_node_definition() {
     let node = ChatTriggerNode::new().unwrap();
     let executor = &node.node_executors()[0];
-    let definition = executor.definition();
+    let definition = executor.description();
 
     assert_eq!(definition.display_name.as_str(), "Chat Trigger");
     assert!(definition.description.as_deref().is_some_and(|s| s.contains("chatbots")));

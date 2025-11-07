@@ -7,28 +7,28 @@ use std::sync::Arc;
 use async_trait::async_trait;
 use hetumind_core::version::Version;
 use hetumind_core::workflow::{
-  ConnectionKind, ExecutionDataItems, ExecutionDataMap, FlowNode, FlowNodeRef, Node, NodeDefinition,
-  NodeExecutionContext, NodeExecutionError, NodeKind, RegistrationError, make_execution_data_map,
+  ExecutionDataItems, ExecutionDataMap, FlowNode, FlowNodeRef, Node, NodeConnectionKind, NodeDescription,
+  NodeExecutionContext, NodeExecutionError, NodeType, RegistrationError, make_execution_data_map,
 };
 
 mod parameters;
 mod utils;
 
 pub struct ErrorTriggerNodeV1 {
-  definition: Arc<NodeDefinition>,
+  definition: Arc<NodeDescription>,
 }
 
-impl TryFrom<NodeDefinition> for ErrorTriggerNodeV1 {
+impl TryFrom<NodeDescription> for ErrorTriggerNodeV1 {
   type Error = RegistrationError;
 
-  fn try_from(definition: NodeDefinition) -> Result<Self, Self::Error> {
+  fn try_from(definition: NodeDescription) -> Result<Self, Self::Error> {
     Ok(Self { definition: Arc::new(definition) })
   }
 }
 
 #[async_trait]
 impl FlowNode for ErrorTriggerNodeV1 {
-  fn definition(&self) -> Arc<NodeDefinition> {
+  fn description(&self) -> Arc<NodeDescription> {
     self.definition.clone()
   }
 
@@ -43,12 +43,12 @@ impl FlowNode for ErrorTriggerNodeV1 {
       let error_data = utils::generate_sample_error_data();
       let execution_data = hetumind_core::workflow::ExecutionData::new_json(error_data, None);
       let items = vec![ExecutionDataItems::new_items(vec![execution_data])];
-      return Ok(make_execution_data_map(vec![(ConnectionKind::Main, items)]));
+      return Ok(make_execution_data_map(vec![(NodeConnectionKind::Main, items)]));
     }
 
     // 在实际错误触发场景中，错误数据由触发器框架提供
     // 这里返回空数据，实际错误数据通过上下文传入
-    Ok(make_execution_data_map(vec![(ConnectionKind::Main, vec![ExecutionDataItems::new_items(vec![])])]))
+    Ok(make_execution_data_map(vec![(NodeConnectionKind::Main, vec![ExecutionDataItems::new_items(vec![])])]))
   }
 }
 
@@ -66,8 +66,8 @@ impl Node for ErrorTriggerNode {
     &self.executors
   }
 
-  fn kind(&self) -> NodeKind {
-    self.executors[0].definition().kind.clone()
+  fn node_type(&self) -> NodeType {
+    self.executors[0].description().node_type.clone()
   }
 }
 
@@ -75,7 +75,7 @@ impl ErrorTriggerNode {
   pub fn new() -> Result<Self, RegistrationError> {
     let base = utils::create_base();
     let executors: Vec<FlowNodeRef> = vec![Arc::new(ErrorTriggerNodeV1::try_from(base)?)];
-    let default_version = executors.iter().map(|node| node.definition().version.clone()).max().unwrap();
+    let default_version = executors.iter().map(|node| node.description().version.clone()).max().unwrap();
     Ok(Self { default_version, executors })
   }
 }

@@ -34,7 +34,7 @@ fn test_manual_trigger_node_creation() {
   assert!(!executors.is_empty(), "No node executors found");
 
   // Verify node kind
-  let kind = node.kind();
+  let kind = node.node_type();
   assert_eq!(kind, "hetumind_nodes::ManualTrigger".into());
 }
 
@@ -44,7 +44,7 @@ fn test_manual_trigger_node_properties() {
   let node = ManualTriggerNode::new().unwrap();
   let executors = node.node_executors();
   let executor = &executors[0];
-  let definition = executor.definition();
+  let definition = executor.description();
 
   // Verify node properties
   assert!(!definition.properties.is_empty(), "No properties defined");
@@ -68,7 +68,7 @@ fn test_manual_trigger_parameter_parsing() {
   let node = ManualTriggerNode::new().unwrap();
   let executors = node.node_executors();
   let executor = &executors[0];
-  let definition = executor.definition();
+  let definition = executor.description();
 
   // Test execution_mode option values
   let execution_mode_property = definition
@@ -101,7 +101,7 @@ fn test_manual_trigger_version_compatibility() {
 
   let executors = node.node_executors();
   for executor in executors {
-    assert_eq!(executor.definition().version, expected_version, "All executors should have version 1.0.0");
+    assert_eq!(executor.description().version, expected_version, "All executors should have version 1.0.0");
   }
 }
 
@@ -115,14 +115,14 @@ fn test_manual_trigger_integration() {
   assert!(registration_result.is_ok(), "Failed to register nodes: {:?}", registration_result.err());
 
   // Verify ManualTriggerNode can be retrieved from registry
-  use hetumind_core::workflow::NodeKind;
-  let manual_trigger_kind = NodeKind::from("hetumind_nodes::ManualTrigger");
+  use hetumind_core::workflow::NodeType;
+  let manual_trigger_kind = NodeType::from("hetumind_nodes::ManualTrigger");
   let executor = registry.get_executor(&manual_trigger_kind);
   assert!(executor.is_some(), "ManualTriggerNode should be registered in registry");
 
   // Verify executor properties
   let executor = executor.unwrap();
-  let definition = executor.definition();
+  let definition = executor.description();
   assert_eq!(definition.display_name, "Manual Trigger");
   assert!(definition.groups.iter().any(|g| g.is_trigger()));
 }
@@ -136,10 +136,10 @@ fn test_manual_trigger_basic_functionality() {
   let node = ManualTriggerNode::new().unwrap();
   let executors = node.node_executors();
   let executor = &executors[0];
-  let definition = executor.definition();
+  let definition = executor.description();
 
   // Verify the node has the correct definition structure
-  assert_eq!(definition.kind, "hetumind_nodes::ManualTrigger".into());
+  assert_eq!(definition.node_type, "hetumind_nodes::ManualTrigger".into());
   assert_eq!(definition.version, Version::new(1, 0, 0));
   assert!(!definition.properties.is_empty());
 

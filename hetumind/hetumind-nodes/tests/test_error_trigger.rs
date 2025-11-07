@@ -33,7 +33,7 @@ fn test_error_trigger_node_creation() {
   assert!(!executors.is_empty(), "No node executors found");
 
   // Verify node kind
-  let kind = node.kind();
+  let kind = node.node_type();
   assert_eq!(kind, "hetumind_nodes::ErrorTrigger".into());
 }
 
@@ -43,7 +43,7 @@ fn test_error_trigger_node_properties() {
   let node = ErrorTriggerNode::new().unwrap();
   let executors = node.node_executors();
   let executor = &executors[0];
-  let definition = executor.definition();
+  let definition = executor.description();
 
   // Verify node properties
   assert!(!definition.properties.is_empty(), "No properties defined");

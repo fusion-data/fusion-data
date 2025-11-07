@@ -23,32 +23,29 @@ pub type ConnectionIndex = usize;
 )]
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
-pub enum ConnectionKind {
+pub enum NodeConnectionKind {
   /// 传统工作流的主要数据流
   /// - 特点：最常用的连接类型，用于节点间传递业务数据
   /// - 示例：HTTP请求 → 数据处理 → 数据库写入
   Main,
-
-  /// 错误端口
-  Error,
 
   /// AI 工作流的主要数据流
   /// - 特点：用于复杂AI工作流的控制和协调
   /// - 示例：多步骤AI推理、决策链
   AiAgent,
 
-  /// 为AI代理提供可调用的工具
+  /// 为AI代理提供可调用的工具 Req/Resp 模式
   /// - 特点：AI代理可以动态调用这些工具来完成任务
   /// - 示例：计算器工具、API调用工具、数据查询工具
   AiTool,
 
   // AI 模型和解析连接
-  /// Large Language Model
-  AiLM,
+  /// Large Language Model Req/Resp 模式
+  AiLanguageModel,
+  /// 记忆模块，用于存储和检索AI代理的记忆 Req/Resp 模式
+  AiMemory,
   /// 输出解析器
   AiOutputParser,
-  /// 记忆模块，用于存储和检索AI代理的记忆
-  AiMemory,
 
   // AI 数据处理连接
   /// 文档加载器
@@ -65,9 +62,9 @@ pub enum ConnectionKind {
   AiTextSplitter,
 }
 
-impl ConnectionKind {
+impl NodeConnectionKind {
   pub fn can_used_workflow(&self) -> bool {
-    matches!(self, ConnectionKind::Main | ConnectionKind::Error)
+    matches!(self, NodeConnectionKind::Main)
   }
 }
 
@@ -103,7 +100,7 @@ pub struct Connection {
   pub node_name: NodeName,
 
   /// 端口类型
-  pub kind: ConnectionKind,
+  pub kind: NodeConnectionKind,
 
   /// 端口索引
   #[serde(default = "default_usize_0")]
@@ -123,7 +120,7 @@ pub struct Connection {
 }
 
 impl Connection {
-  pub fn new(node_name: impl Into<NodeName>, kind: ConnectionKind, index: ConnectionIndex) -> Self {
+  pub fn new(node_name: impl Into<NodeName>, kind: NodeConnectionKind, index: ConnectionIndex) -> Self {
     Self { node_name: node_name.into(), kind, index, condition: None, weight: None, enabled: true }
   }
 
@@ -146,7 +143,7 @@ impl Connection {
     &self.node_name
   }
 
-  pub fn kind(&self) -> ConnectionKind {
+  pub fn kind(&self) -> NodeConnectionKind {
     self.kind
   }
 

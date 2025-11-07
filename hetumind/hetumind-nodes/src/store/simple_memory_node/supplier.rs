@@ -6,14 +6,14 @@ use hetumind_context::services::memory_service::MemoryService;
 use hetumind_core::version::Version;
 use hetumind_core::workflow::ExecutionContext;
 use hetumind_core::workflow::{
-  MemorySubNodeProvider, Message, NodeDefinition, NodeExecutionError, NodeGroupKind, SubNode, SubNodeType,
+  MemorySubNodeProvider, Message, NodeDescription, NodeExecutionError, NodeGroupKind, SubNode, SubNodeType,
 };
 
 use crate::store::simple_memory_node::SIMPLE_MEMORY_NODE_KIND;
 
 /// Simple Memory Supplier 提供 MemorySubNodeProvider 能力，基于独立 Memory Service 存储/检索消息
 pub struct SimpleMemorySupplier {
-  definition: Arc<NodeDefinition>,
+  definition: Arc<NodeDescription>,
 }
 
 impl Default for SimpleMemorySupplier {
@@ -28,18 +28,14 @@ impl SimpleMemorySupplier {
   }
 
   /// 创建 Supplier 的节点定义
-  fn create_definition() -> NodeDefinition {
-    NodeDefinition::new(SIMPLE_MEMORY_NODE_KIND, "Simple Memory Supplier")
+  fn create_definition() -> NodeDescription {
+    NodeDescription::new(SIMPLE_MEMORY_NODE_KIND, "Simple Memory Supplier")
       .with_version(Version::new(1, 0, 0))
       .add_group(NodeGroupKind::Transform)
       .with_description("Provide memory store/retrieve via Memory Service component")
       .add_output(hetumind_core::workflow::OutputPortConfig::new(
-        hetumind_core::workflow::ConnectionKind::AiMemory,
+        hetumind_core::workflow::NodeConnectionKind::AiMemory,
         "Memory",
-      ))
-      .add_output(hetumind_core::workflow::OutputPortConfig::new(
-        hetumind_core::workflow::ConnectionKind::Error,
-        "Error",
       ))
   }
 }
@@ -52,7 +48,7 @@ impl SubNode for SimpleMemorySupplier {
   }
 
   /// Supplier 的节点定义
-  fn definition(&self) -> Arc<NodeDefinition> {
+  fn description(&self) -> Arc<NodeDescription> {
     self.definition.clone()
   }
 
