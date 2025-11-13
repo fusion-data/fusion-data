@@ -1,4 +1,4 @@
-use fusion_common::page::OrderBys;
+use fusionsql_core::page::OrderBys;
 use fusionsql_core::sea_utils::SIden;
 use sea_query::{IntoIden, TableRef};
 

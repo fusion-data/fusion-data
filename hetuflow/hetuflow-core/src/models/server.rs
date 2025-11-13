@@ -1,5 +1,5 @@
 use chrono::{DateTime, FixedOffset};
-use fusion_common::page::Page;
+use fusionsql_core::page::Page;
 use fusionsql_core::{
   field::FieldMask,
   filter::{OpValDateTime, OpValInt32, OpValString},

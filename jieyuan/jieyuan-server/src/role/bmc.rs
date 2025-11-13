@@ -1,4 +1,4 @@
-use fusions::common::page::{Page, PageResult};
+use fusionsql::page::{Page, PageResult};
 use fusionsql::{
   ModelManager, Result,
   base::{self, DbBmc, compute_page},

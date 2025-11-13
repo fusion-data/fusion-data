@@ -1,8 +1,7 @@
 use axum::extract::FromRequestParts;
 use fusions::common::ahash::HashMap;
-use fusions::common::page::PageResult;
 use fusions::web::WebError;
-use fusionsql::{ModelManager, SqlError};
+use fusionsql::{ModelManager, SqlError, page::PageResult};
 use jieyuan_core::model::{
   IamResourceMappingEntity, IamResourceMappingForCreateWithService, IamResourceMappingForQuery,
   IamResourceMappingForUpdate, MappingParam, ResourceMappingLookupRequest, ResourceMappingLookupResponse,

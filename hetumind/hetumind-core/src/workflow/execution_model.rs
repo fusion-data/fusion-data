@@ -1,6 +1,6 @@
 use fusion_common::ahash::HashMap;
-use fusion_common::page::Page;
 use fusion_common::time::OffsetDateTime;
+use fusionsql_core::page::Page;
 use fusionsql_core::{
   field::FieldMask,
   filter::{OpValDateTime, OpValInt32, OpValUuid},

@@ -3,6 +3,7 @@ pub mod component;
 pub mod concurrent;
 pub mod configuration;
 mod data_error;
+pub mod file;
 pub mod log;
 pub mod metas;
 pub mod plugin;

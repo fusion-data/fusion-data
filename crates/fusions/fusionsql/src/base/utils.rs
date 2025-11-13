@@ -1,5 +1,5 @@
 use fusion_common::ctx::Ctx;
-use fusion_common::page::Page;
+use fusionsql_core::page::Page;
 use sea_query::{DeleteStatement, Expr, InsertStatement, IntoIden, SelectStatement, UpdateStatement, WithQuery};
 #[cfg(any(feature = "with-postgres", feature = "with-sqlite"))]
 use sea_query_binder::{SqlxBinder, SqlxValues};

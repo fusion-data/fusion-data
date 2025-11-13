@@ -1,7 +1,7 @@
 use chrono::{DateTime, FixedOffset};
 use fusion_common::model::sensitive::SensitiveString;
-use fusion_common::page::Page;
 use fusionsql::generate_enum_i32_to_sea_query_value;
+use fusionsql::page::Page;
 use fusionsql::{
   field::{FieldMask, Fields},
   filter::{FilterNodes, OpValDateTime, OpValInt32, OpValString, OpValUuid},

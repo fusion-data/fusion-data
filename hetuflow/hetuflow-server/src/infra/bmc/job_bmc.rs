@@ -1,4 +1,4 @@
-use fusion_common::page::OrderBys;
+use fusionsql::page::OrderBys;
 use fusionsql::{
   ModelManager, SqlError,
   base::DbBmc,

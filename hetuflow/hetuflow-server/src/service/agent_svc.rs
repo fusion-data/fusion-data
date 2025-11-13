@@ -1,6 +1,6 @@
-use fusion_common::page::Page;
 use fusion_common::time::{now_epoch_millis, now_offset};
 use fusion_core::DataError;
+use fusionsql::page::Page;
 use fusionsql::{
   ModelManager,
   filter::{OpValDateTime, OpValInt32, OpValString},

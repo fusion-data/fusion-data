@@ -1,9 +1,11 @@
 //! MIME 类型检测器 - 提供文件类型检测功能
 //!
 //! 特性：
-//! - 扩展名推断为主
+//! - 内容检测优先，扩展名推断作为回退
 //! - 支持异步操作，避免阻塞
 //! - 高精度检测，避免文件扩展名错误导致的误判
+//! - 使用 content_inspector 进行二进制文件检测
+use content_inspector::{inspect, ContentType};
 use mime_guess::from_path;
 use std::path::Path;
 use thiserror::Error;
@@ -35,29 +37,48 @@ impl MimeTypeDetector {
   /// 检测到的 MIME 类型字符串
   ///
   /// # 检测策略
-  /// 1. 如果有内容样本，进行基本内容检测
-  /// 2. 使用 mime_guess 扩展名推断作为主要方式
+  /// 1. 如果有内容样本，优先进行内容检测
+  ///    - 使用 content_inspector 检测二进制文件
+  ///    - 对文本内容进行更具体的检测（JSON、HTML、XML、CSV、YAML）
+  /// 2. 如果内容检测失败或没有内容样本，使用扩展名推断作为回退
   pub async fn detect_mime_type(
     file_path: &str,
     content_sample: Option<&[u8]>,
   ) -> Result<String, MimeTypeDetectorError> {
-    // 1. 如果有内容样本，进行基本内容检测
+    // 1. 如果有内容样本，优先进行内容检测
     if let Some(content) = content_sample {
-      // 对文本内容进行更具体的检测
-      if Self::looks_like_json(content) {
-        return Ok("application/json".to_string());
-      } else if Self::looks_like_html(content) {
-        return Ok("text/html".to_string());
-      } else if Self::looks_like_xml(content) {
-        return Ok("application/xml".to_string());
-      } else if Self::looks_like_csv(content) {
-        return Ok("text/csv".to_string());
-      } else if Self::looks_like_yaml(content) {
-        return Ok("application/x-yaml".to_string());
+      // 使用 content_inspector 进行初步检测
+      let content_type = inspect(content);
+      
+      match content_type {
+        ContentType::BINARY => {
+          // 二进制文件，回退到扩展名检测
+          return Ok(from_path(file_path).first_or_octet_stream().to_string());
+        }
+        ContentType::UTF_8 | ContentType::UTF_8_BOM => {
+          // 文本文件，进行更具体的检测
+          if Self::looks_like_json(content) {
+            return Ok("application/json".to_string());
+          } else if Self::looks_like_html(content) {
+            return Ok("text/html".to_string());
+          } else if Self::looks_like_xml(content) {
+            return Ok("application/xml".to_string());
+          } else if Self::looks_like_csv(content) {
+            return Ok("text/csv".to_string());
+          } else if Self::looks_like_yaml(content) {
+            return Ok("application/x-yaml".to_string());
+          }
+          
+          // 纯文本文件
+          return Ok("text/plain".to_string());
+        }
+        _ => {
+          // 其他情况继续下面的检测
+        }
       }
     }
 
-    // 2. 使用扩展名检测作为主要方式
+    // 2. 如果内容检测失败或没有内容样本，使用扩展名推断作为回退
     Ok(from_path(file_path).first_or_octet_stream().to_string())
   }
 
@@ -71,6 +92,7 @@ impl MimeTypeDetector {
   /// - 只读取文件头部进行检测（默认 1KB）
   /// - 支持自定义采样大小
   /// - 流式处理，减少内存占用
+  /// - 优先内容检测，失败时回退到扩展名
   pub async fn detect_mime_type_from_stream<R: std::io::Read + Unpin>(
     file_path: &str,
     mut stream: R,
@@ -85,16 +107,47 @@ impl MimeTypeDetector {
     }
 
     buffer.truncate(bytes_read);
+    
+    // 优先使用内容检测，失败时回退到扩展名
     Self::detect_mime_type(file_path, Some(&buffer)).await
   }
 
   /// 检测代码文件的具体语言类型
   ///
   /// 基于文件扩展名和内容特征的代码语言检测
+  /// 优先进行内容验证，失败时回退到扩展名推断
   pub fn detect_code_language(file_path: &str, content: Option<&[u8]>) -> Option<String> {
     let extension = Path::new(file_path).extension().and_then(|ext| ext.to_str())?;
 
-    let mime_type = match extension {
+    // 如果有内容样本，优先进行内容验证
+    if let Some(content) = content {
+      // 使用 content_inspector 检测内容类型
+      let content_type = inspect(content);
+      
+      match content_type {
+        ContentType::BINARY => {
+          // 二进制文件，直接返回 None
+          return None;
+        }
+        ContentType::UTF_8 | ContentType::UTF_8_BOM => {
+          // 文本文件，进行更精确的检测
+          match extension {
+            "json" if Self::looks_like_json(content) => return Some("application/json".to_string()),
+            "html" | "htm" if Self::looks_like_html(content) => return Some("text/html".to_string()),
+            "xml" if Self::looks_like_xml(content) => return Some("application/xml".to_string()),
+            _ => {
+              // 继续扩展名检测
+            }
+          }
+        }
+        _ => {
+          // 其他情况继续扩展名检测
+        }
+      }
+    }
+
+    // 扩展名映射表
+    match extension {
       "rs" => Some("text/x-rust".to_string()),
       "js" | "mjs" => Some("application/javascript".to_string()),
       "ts" => Some("application/typescript".to_string()),
@@ -122,24 +175,7 @@ impl MimeTypeDetector {
       "toml" => Some("application/toml".to_string()),
       "md" => Some("text/markdown".to_string()),
       _ => None,
-    };
-
-    // 如果有内容样本，可以进行更精确的检测
-    if let (Some(mime_type), Some(content)) = (&mime_type, content) {
-      // 对于文本文件，验证内容是否符合预期的类型
-      if mime_type.contains("text/") || mime_type.contains("application/") {
-        match extension {
-          "json" if Self::looks_like_json(content) => return Some(mime_type.clone()),
-          "html" | "htm" if Self::looks_like_html(content) => return Some(mime_type.clone()),
-          "xml" if Self::looks_like_xml(content) => return Some(mime_type.clone()),
-          _ => return Some(mime_type.clone()),
-        }
-      } else {
-        return Some(mime_type.clone());
-      }
     }
-
-    mime_type
   }
 
   /// 根据文件类型确定 BinaryFileKind
@@ -173,7 +209,7 @@ impl MimeTypeDetector {
       return false;
     }
 
-    let start = String::from_utf8_lossy(&trimmed[..4]).to_lowercase();
+    let start = String::from_utf8_lossy(&trimmed[..std::cmp::min(10, trimmed.len())]).to_lowercase();
     start.starts_with("<!do") || start.starts_with("<html") || start.starts_with("<head") || start.starts_with("<body")
   }
 
@@ -234,6 +270,44 @@ mod tests {
   fn test_code_language_detection() {
     assert_eq!(MimeTypeDetector::detect_code_language("main.rs", None), Some("text/x-rust".to_string()));
     assert_eq!(MimeTypeDetector::detect_code_language("script.py", None), Some("text/x-python".to_string()));
+  }
+
+  #[test]
+  fn test_code_language_detection_with_content() {
+    // 测试有效的 JSON 内容
+    let json_content = r#"{"name": "test", "value": 123}"#;
+    assert_eq!(
+      MimeTypeDetector::detect_code_language("test.json", Some(json_content.as_bytes())),
+      Some("application/json".to_string())
+    );
+    
+    // 测试无效的 JSON 内容（应该仍然返回扩展名推断结果）
+    let invalid_json = "not json content";
+    assert_eq!(
+      MimeTypeDetector::detect_code_language("test.json", Some(invalid_json.as_bytes())),
+      Some("application/json".to_string())
+    );
+    
+    // 测试二进制内容
+    let binary_content = vec![0x89, 0x50, 0x4E, 0x47]; // PNG 文件头
+    assert_eq!(
+      MimeTypeDetector::detect_code_language("test.json", Some(&binary_content)),
+      None
+    );
+  }
+
+  #[tokio::test]
+  async fn test_content_detection_with_content_inspector() {
+    // 测试二进制文件检测
+    let binary_content = vec![0x89, 0x50, 0x4E, 0x47]; // PNG 文件头
+    let mime_type = MimeTypeDetector::detect_mime_type("test.png", Some(&binary_content)).await.unwrap();
+    // 二进制文件应该回退到扩展名检测
+    assert_eq!(mime_type, "image/png");
+    
+    // 测试 UTF-8 文本文件
+    let text_content = "Hello, World!".as_bytes();
+    let mime_type = MimeTypeDetector::detect_mime_type("test.txt", Some(text_content)).await.unwrap();
+    assert_eq!(mime_type, "text/plain");
   }
 
   #[tokio::test]

@@ -1,5 +1,5 @@
-use fusion_common::page::OrderBys;
 use fusion_common::time::now_offset;
+use fusionsql::page::OrderBys;
 use fusionsql::{
   ModelManager, SqlError,
   base::DbBmc,

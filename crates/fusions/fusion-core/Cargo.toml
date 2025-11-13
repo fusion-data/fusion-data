@@ -51,7 +51,8 @@ utoipa = { workspace = true, optional = true }
 tonic = { workspace = true, optional = true }
 protobuf = { workspace = true, optional = true }
 fusionsql = { workspace = true, optional = true }
-jiff = "0.2"
+content_inspector = { workspace = true }
+mime_guess = { workspace = true }
 
 
 [dev-dependencies]

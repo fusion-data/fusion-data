@@ -1,8 +1,8 @@
 use std::ops::Deref;
 
-use fusion_common::page::{OrderBy, OrderBys, Page};
 use sea_query::{IntoColumnRef, SelectStatement};
 
+use crate::page::{OrderBy, OrderBys, Page};
 use crate::sea_utils::StringIden;
 
 pub fn apply_to_sea_query(page: &Page, select_query: &mut SelectStatement) {

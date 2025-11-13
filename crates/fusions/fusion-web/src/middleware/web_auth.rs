@@ -1,8 +1,13 @@
 use std::sync::Arc;
 
 use axum::body::Body;
+use axum::extract::Query;
 use fusion_common::time::now_offset;
 use fusion_core::log::get_trace_id;
+use fusion_core::security::AccessToken;
+use headers::{Authorization, Cookie, HeaderMapExt, SetCookie};
+use http::HeaderValue;
+use http::header::SET_COOKIE;
 use http::request::Parts;
 use http::{Request, header::AUTHORIZATION, header::CONTENT_TYPE};
 use tower_http::auth::{AsyncAuthorizeRequest, AsyncRequireAuthorizationLayer};
@@ -100,15 +105,21 @@ impl AsyncAuthorizeRequest<Body> for WebAuth {
 
 /// Call remote API to validate token and extract context
 async fn validate_token_remote(url: &str, client: &reqwest::Client, parts: &Parts) -> Result<Ctx, WebError> {
-  let header_value = parts
-    .headers
-    .get(AUTHORIZATION)
-    .ok_or_else(|| WebError::new_with_code(401, "Missing authentication token"))?;
+  let mut req_builder = client.post(url).header(CONTENT_TYPE, "application/json");
 
-  let response = client
-    .post(url)
-    .header(AUTHORIZATION, header_value)
-    .header(CONTENT_TYPE, "application/json")
+  if let Some(authorization_value) = parts.headers.get(AUTHORIZATION) {
+    req_builder = req_builder.header(AUTHORIZATION, authorization_value);
+  } else if let Some(cookie) = parts.headers.typed_get::<Cookie>()
+    && let Some(token) = cookie.get("access_token")
+  {
+    req_builder = req_builder.bearer_auth(token);
+  } else if let Ok(ac) = Query::<AccessToken>::try_from_uri(&parts.uri) {
+    req_builder = req_builder.bearer_auth(ac.access_token.as_str());
+  } else {
+    return Err(WebError::unauthorized("Authentication failed, missing token"));
+  }
+
+  let response = req_builder
     .send()
     .await
     .map_err(|e| WebError::new_with_code(401, format!("Failed to call auth API: {}", e)))?;

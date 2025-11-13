@@ -2,8 +2,8 @@ use sea_query::{Condition, Query, SelectStatement};
 use sea_query_binder::SqlxBinder;
 use sqlx::{FromRow, postgres::PgRow};
 
-use fusion_common::page::Page;
 use fusionsql_core::filter::{FilterGroups, apply_to_sea_query};
+use fusionsql_core::page::Page;
 
 use crate::{
   ModelManager, Result, SqlError,

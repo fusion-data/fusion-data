@@ -3,7 +3,7 @@ use axum::extract::Query;
 use axum::http::StatusCode;
 use axum::http::request::Parts;
 use headers::authorization::Bearer;
-use headers::{Authorization, HeaderMapExt};
+use headers::{Authorization, Cookie, HeaderMapExt};
 use serde::de::DeserializeOwned;
 #[cfg(feature = "with-ulid")]
 use ulid::Ulid;
@@ -50,18 +50,25 @@ pub fn unauthorized_app_error(msg: impl Into<String>) -> (StatusCode, Json<WebEr
   (StatusCode::UNAUTHORIZED, Json(WebError::new_with_msg(msg).with_err_code(401)))
 }
 
+pub fn extract_token(parts: &Parts) -> Result<String, WebError> {
+  if let Some(Authorization(bearer)) = parts.headers.typed_get::<Authorization<Bearer>>() {
+    Ok(bearer.token().to_string())
+  } else if let Some(cookie) = parts.headers.typed_get::<Cookie>()
+    && let Some(value) = cookie.get("access_token")
+  {
+    Ok(value.to_string())
+  } else if let Ok(at) = Query::<AccessToken>::try_from_uri(&parts.uri) {
+    Ok(at.0.access_token)
+  } else {
+    Err(WebError::new_with_code(401, "Missing token"))
+  }
+}
+
 /// 从 Http Request Authorization Header 或 access_token query 中获取 [Ctx]
 pub fn extract_ctx(parts: &Parts, sc: &SecuritySetting) -> Result<Ctx, WebError> {
   let req_time = now_offset();
 
-  let token = if let Some(Authorization(bearer)) = parts.headers.typed_get::<Authorization<Bearer>>() {
-    bearer.token().to_string()
-  } else if let Ok(at) = Query::<AccessToken>::try_from_uri(&parts.uri) {
-    at.0.access_token
-  } else {
-    return Err(WebError::new_with_code(401, "Missing token"));
-  };
-
+  let token = extract_token(parts)?;
   let (payload, _) =
     SecurityUtils::decrypt_jwt(sc.pwd(), &token).map_err(|_e| WebError::new_with_code(401, "Failed decode jwt"))?;
 
