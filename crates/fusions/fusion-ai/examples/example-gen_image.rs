@@ -1,3 +1,13 @@
+// Respond url
+// .base_url("https://api.siliconflow.cn/v1")
+// .api_key(std::env::var("SILICONFLOW_API_KEY").unwrap())
+// .model("Kwai-Kolors/Kolors")
+
+// Respond url
+// .base_url("https://open.bigmodel.cn/api/coding/paas/v4")
+// .api_key(std::env::var("ZAI_API_KEY").unwrap())
+// .model("cogview-4-250304")
+
 use fusion_ai::{
   AiError, DefaultProviders, agents::AgentConfigBuilder, client::ClientBuilderFactory, utils::vec_to_image_file,
 };
@@ -14,16 +24,6 @@ async fn main() -> Result<(), AiError> {
 
   let config = AgentConfigBuilder::default()
     .provider(DefaultProviders::OPENAI_COMPATIBLE)
-
-    // Respond url
-    // .base_url("https://api.siliconflow.cn/v1")
-    // .api_key(std::env::var("SILICONFLOW_API_KEY").unwrap())
-    // .model("Kwai-Kolors/Kolors")
-
-    // Respond url
-    // .base_url("https://open.bigmodel.cn/api/coding/paas/v4")
-    // .api_key(std::env::var("ZAI_API_KEY").unwrap())
-    // .model("cogview-4-250304")
 
     // Respond url or b64_json (when response_format is b64_json)
     .base_url("https://ai.gitee.com/v1")

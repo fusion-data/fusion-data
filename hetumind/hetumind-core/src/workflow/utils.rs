@@ -1,6 +1,6 @@
 use fusion_common::ahash::HashMap;
 
-use super::{NodeConnectionKind, ExecutionDataItems, ExecutionDataMap};
+use super::{ExecutionDataItems, ExecutionDataMap, NodeConnectionKind};
 
 pub fn make_execution_data_map<T>(iter: T) -> ExecutionDataMap
 where

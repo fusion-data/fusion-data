@@ -301,6 +301,7 @@ impl From<fusionsql::SqlError> for DataError {
       e @ fusionsql::SqlError::IntoSeaError(_) => DataError::server_error(e.to_string()),
       e @ fusionsql::SqlError::SeaQueryError(_) => DataError::server_error(e.to_string()),
       e @ fusionsql::SqlError::JsonError(_) => DataError::server_error(e.to_string()),
+      fusionsql::SqlError::Custom(msg) => DataError::server_error(msg),
       fusionsql::SqlError::DbxError(e) => {
         // Convert to a compatible error that implements Send + Sync
         let error_msg = e.to_string();

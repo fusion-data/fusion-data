@@ -57,6 +57,9 @@ pub enum SqlError {
   #[error(transparent)]
   IntoSeaError(#[from] IntoSeaError),
 
+  #[error("Custom error: {0}")]
+  Custom(String),
+
   // -- Externals
   #[error(transparent)]
   SeaQueryError(#[from] sea_query::error::Error),

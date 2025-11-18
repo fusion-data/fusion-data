@@ -6,6 +6,8 @@ pub mod graph_flow;
 pub mod json_utils;
 pub mod providers;
 pub mod utils;
+#[cfg(feature = "video")]
+pub mod video_generation;
 
 pub use error::*;
 /// Re-export rig for easier access to core types

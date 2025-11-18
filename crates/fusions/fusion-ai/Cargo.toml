@@ -12,10 +12,11 @@ publish = true
 # workspace = true
 
 [features]
-default = ["schemars/chrono04", "with-db", "image", "audio"]
+default = ["schemars/chrono04", "with-db", "image", "audio", "video"]
 with-db = ["dep:sqlx", "sqlx/postgres"]
 image = ["rig-core/image"]
 audio = ["rig-core/audio"]
+video = []
 worker = ["dep:worker"]
 docsrs = []
 
@@ -41,6 +42,7 @@ derive_builder = { workspace = true }
 bytes = { workspace = true }
 futures = { workspace = true }
 async-stream = { workspace = true }
+ahash = { workspace = true }
 # tracing log
 tracing = { version = "0.1" }
 base64 = { workspace = true }

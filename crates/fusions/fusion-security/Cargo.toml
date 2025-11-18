@@ -12,15 +12,41 @@ publish = true
 [lints]
 workspace = true
 
+[[example]]
+name = "github-async"
+path = "examples/github-async.rs"
+required-features = ["with-oauth"]
+
+[[example]]
+name = "example-oauth2-gitee"
+path = "examples/example-oauth2-gitee.rs"
+required-features = ["with-oauth"]
+
+[[example]]
+name = "example-oauth2-github"
+path = "examples/example-oauth2-github.rs"
+required-features = ["with-oauth"]
+
+
 [features]
-with-oauth = ["with-jwt"]
+default = ["with-uuid"]
+with-uuid = ["fusion-common/with-uuid", "fusion-core/with-uuid"]
 with-jwt = ["josekit"]
-with-uuid = ["fusion-common/with-uuid"]
+with-oauth = ["with-jwt", "dep:oauth2"]
+with-openid = ["with-jwt", "dep:openidconnect"]
 
 [dependencies]
 fusion-common = { workspace = true }
 fusion-core = { workspace = true }
+url = { workspace = true }
+tokio = { workspace = true }
 josekit = { workspace = true, optional = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
+oauth2 = { workspace = true, optional = true }
+openidconnect = { workspace = true, optional = true }
+reqwest = { workspace = true }
+
+[dev-dependencies]
+dotenvy = { workspace = true }

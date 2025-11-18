@@ -21,9 +21,13 @@ async fn main() -> Result<(), AiError> {
     // .api_key(std::env::var("DEEPSEEK_API_KEY").unwrap())
     // .model("deepseek-chat")
 
-    .base_url("https://api.siliconflow.cn/v1")
-    .api_key(std::env::var("SILICONFLOW_API_KEY").unwrap())
-    .model("deepseek-ai/DeepSeek-OCR")
+    // .base_url("https://api.siliconflow.cn/v1")
+    // .api_key(std::env::var("SILICONFLOW_API_KEY").unwrap())
+    // .model("deepseek-ai/DeepSeek-OCR")
+
+    .base_url("https://ai.gitee.com/v1")
+    .api_key(std::env::var("GITEE_AI_API_KEY").unwrap())
+    .model("Kimi-K2-Thinking")
 
     .description("使用 Fusion AI 的示例 AI Agent")
     .system_prompt("你是一个 AI 助手")

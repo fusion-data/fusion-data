@@ -4,7 +4,7 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 
 use crate::credential::CredentialInfo;
 
-use super::{NodeType, NodeName, ParameterMap, ValidationError, VecExecutionData};
+use super::{NodeName, NodeType, ParameterMap, ValidationError, VecExecutionData};
 
 /// 节点执行状态
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize_repr, Deserialize_repr)]

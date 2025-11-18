@@ -5,7 +5,7 @@
 //! - 支持异步操作，避免阻塞
 //! - 高精度检测，避免文件扩展名错误导致的误判
 //! - 使用 content_inspector 进行二进制文件检测
-use content_inspector::{inspect, ContentType};
+use content_inspector::{ContentType, inspect};
 use mime_guess::from_path;
 use std::path::Path;
 use thiserror::Error;
@@ -49,7 +49,7 @@ impl MimeTypeDetector {
     if let Some(content) = content_sample {
       // 使用 content_inspector 进行初步检测
       let content_type = inspect(content);
-      
+
       match content_type {
         ContentType::BINARY => {
           // 二进制文件，回退到扩展名检测
@@ -68,7 +68,7 @@ impl MimeTypeDetector {
           } else if Self::looks_like_yaml(content) {
             return Ok("application/x-yaml".to_string());
           }
-          
+
           // 纯文本文件
           return Ok("text/plain".to_string());
         }
@@ -107,7 +107,7 @@ impl MimeTypeDetector {
     }
 
     buffer.truncate(bytes_read);
-    
+
     // 优先使用内容检测，失败时回退到扩展名
     Self::detect_mime_type(file_path, Some(&buffer)).await
   }
@@ -123,7 +123,7 @@ impl MimeTypeDetector {
     if let Some(content) = content {
       // 使用 content_inspector 检测内容类型
       let content_type = inspect(content);
-      
+
       match content_type {
         ContentType::BINARY => {
           // 二进制文件，直接返回 None
@@ -280,20 +280,17 @@ mod tests {
       MimeTypeDetector::detect_code_language("test.json", Some(json_content.as_bytes())),
       Some("application/json".to_string())
     );
-    
+
     // 测试无效的 JSON 内容（应该仍然返回扩展名推断结果）
     let invalid_json = "not json content";
     assert_eq!(
       MimeTypeDetector::detect_code_language("test.json", Some(invalid_json.as_bytes())),
       Some("application/json".to_string())
     );
-    
+
     // 测试二进制内容
     let binary_content = vec![0x89, 0x50, 0x4E, 0x47]; // PNG 文件头
-    assert_eq!(
-      MimeTypeDetector::detect_code_language("test.json", Some(&binary_content)),
-      None
-    );
+    assert_eq!(MimeTypeDetector::detect_code_language("test.json", Some(&binary_content)), None);
   }
 
   #[tokio::test]
@@ -303,7 +300,7 @@ mod tests {
     let mime_type = MimeTypeDetector::detect_mime_type("test.png", Some(&binary_content)).await.unwrap();
     // 二进制文件应该回退到扩展名检测
     assert_eq!(mime_type, "image/png");
-    
+
     // 测试 UTF-8 文本文件
     let text_content = "Hello, World!".as_bytes();
     let mime_type = MimeTypeDetector::detect_mime_type("test.txt", Some(text_content)).await.unwrap();

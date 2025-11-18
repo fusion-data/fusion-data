@@ -5,7 +5,7 @@
 use crate::store::simple_memory_node::SIMPLE_MEMORY_NODE_KIND;
 use hetumind_core::workflow::{
   LLMSubNodeProviderRef, MemorySubNodeProviderRef, NodeConnectionKind, NodeExecutionContext, NodeExecutionError,
-  NodeType, NodeRegistry, SubNodeRef, SubNodeType, ToolSubNodeProviderRef,
+  NodeRegistry, NodeType, SubNodeRef, SubNodeType, ToolSubNodeProviderRef,
 };
 
 /// 从当前节点的上游连接中检索 LLM 供应器（按连接逆序）

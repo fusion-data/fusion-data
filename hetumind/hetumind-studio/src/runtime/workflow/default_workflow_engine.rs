@@ -10,10 +10,10 @@ use crate::runtime::workflow::EngineRouter;
 use hetumind_core::{
   expression::ExpressionEvaluator,
   workflow::{
-    NodeConnectionKind, ExecutionContext, ExecutionData, ExecutionDataItems, ExecutionDataMap, ExecutionGraph, ExecutionId,
-    ExecutionMetrics, ExecutionPlanner, ExecutionResult, ExecutionStatus, ExecutionTrace, NodeExecutionContext,
-    NodeExecutionResult, NodeExecutionStatus, NodeName, NodeRegistry, NodesExecutionMap, TriggerType, WorkflowEngine,
-    WorkflowEngineSetting, WorkflowExecutionError, WorkflowTriggerData,
+    ExecutionContext, ExecutionData, ExecutionDataItems, ExecutionDataMap, ExecutionGraph, ExecutionId,
+    ExecutionMetrics, ExecutionPlanner, ExecutionResult, ExecutionStatus, ExecutionTrace, NodeConnectionKind,
+    NodeExecutionContext, NodeExecutionResult, NodeExecutionStatus, NodeName, NodeRegistry, NodesExecutionMap,
+    TriggerType, WorkflowEngine, WorkflowEngineSetting, WorkflowExecutionError, WorkflowTriggerData,
   },
 };
 use hetumind_nodes::common::helpers::get_simple_memory_supplier_typed;
@@ -140,10 +140,13 @@ impl DefaultWorkflowEngine {
               let new_exec_data = ExecutionData::new_json(input_json, input_data.source().cloned());
               // 更新 parents_results 中对应的端口数据
               if parents_results.contains_key(&NodeConnectionKind::AiLanguageModel) {
-                parents_results
-                  .insert(NodeConnectionKind::AiLanguageModel, vec![ExecutionDataItems::new_items(vec![new_exec_data])]);
+                parents_results.insert(
+                  NodeConnectionKind::AiLanguageModel,
+                  vec![ExecutionDataItems::new_items(vec![new_exec_data])],
+                );
               } else {
-                parents_results.insert(NodeConnectionKind::Main, vec![ExecutionDataItems::new_items(vec![new_exec_data])]);
+                parents_results
+                  .insert(NodeConnectionKind::Main, vec![ExecutionDataItems::new_items(vec![new_exec_data])]);
               }
             }
           }
@@ -247,7 +250,8 @@ impl WorkflowEngine for DefaultWorkflowEngine {
             message: format!("Failed to convert WorkflowErrorData to ExecutionData: {}", e),
           })?;
         let mut execution_data_map = HashMap::default();
-        execution_data_map.insert(NodeConnectionKind::Main, vec![ExecutionDataItems::Items(vec![error_execution_data])]);
+        execution_data_map
+          .insert(NodeConnectionKind::Main, vec![ExecutionDataItems::Items(vec![error_execution_data])]);
 
         // 使用默认的起始节点名称，或者可以从错误数据中推断
         let start_node = NodeName::from("start");
