@@ -32,14 +32,14 @@ where
   E: HasSeaFields,
   F: Into<FilterGroups>,
 {
-  let bmc_config = MC::_static_config();
+  let bmc_config = MC::_bmc_config();
 
   // -- Build the query
   let mut query = Query::select();
   query.from(bmc_config.table_ref()).columns(E::sea_column_refs());
 
   // condition from filter
-  let filters: FilterGroups = filter.into();
+  let filters: FilterGroups = mm.apply_filter_interceptor(bmc_config, filter.into())?;
   let cond: Condition = filters.try_into()?;
   query.cond_where(cond);
   fill_select_statement(bmc_config, &mut query);
@@ -68,7 +68,7 @@ where
   E: HasSeaFields,
   F: FnOnce(&mut SelectStatement) -> Result<()>,
 {
-  let bmc_config = MC::_static_config();
+  let bmc_config = MC::_bmc_config();
 
   // -- Build the query
   let mut query = Query::select();
@@ -98,7 +98,7 @@ where
   E: HasSeaFields,
 {
   let res = pg_get_by_id::<MC, E>(mm, id.clone()).await?;
-  let bmc_config = MC::_static_config();
+  let bmc_config = MC::_bmc_config();
   match res {
     Some(entity) => Ok(entity),
     None => Err(SqlError::EntityNotFound { schema: bmc_config.schema, entity: bmc_config.table, id }),
@@ -112,14 +112,14 @@ where
   E: for<'r> FromRow<'r, PgRow> + Unpin + Send,
   E: HasSeaFields,
 {
-  let bmc_config = MC::_static_config();
+  let bmc_config = MC::_bmc_config();
 
   // -- Build the query
   let mut query = Query::select();
   query.from(bmc_config.table_ref()).columns(E::sea_column_refs());
 
   // condition from filter
-  let filters: FilterGroups = filter.into();
+  let filters: FilterGroups = mm.apply_filter_interceptor(bmc_config, filter.into())?;
   let cond: Condition = filters.try_into()?;
   query.cond_where(cond);
   fill_select_statement(bmc_config, &mut query);
@@ -143,7 +143,7 @@ where
   E: for<'r> FromRow<'r, PgRow> + Unpin + Send,
   E: HasSeaFields,
 {
-  let bmc_config = MC::_static_config();
+  let bmc_config = MC::_bmc_config();
 
   // -- Build the query
   let mut query = Query::select();
@@ -175,14 +175,14 @@ where
   E: HasSeaFields,
   F: Into<FilterGroups>,
 {
-  let bmc_config = MC::_static_config();
+  let bmc_config = MC::_bmc_config();
 
   // -- Build the query
   let mut query = Query::select();
   query.from(bmc_config.table_ref()).columns(E::sea_column_refs());
 
   // condition from filter
-  let filters: FilterGroups = filter.into();
+  let filters: FilterGroups = mm.apply_filter_interceptor(bmc_config, filter.into())?;
   let cond: Condition = filters.try_into()?;
   query.cond_where(cond);
   fill_select_statement(bmc_config, &mut query);
@@ -208,7 +208,8 @@ where
   E: for<'r> FromRow<'r, PgRow> + Unpin + Send,
   E: HasSeaFields,
 {
-  let filter: FilterGroups = filter.into();
+  let bmc_config = MC::_bmc_config();
+  let filter: FilterGroups = mm.apply_filter_interceptor(bmc_config, filter.into())?;
   let total = count::<MC, _>(mm, filter.clone()).await?;
   let result = pg_find_many::<MC, E, _>(mm, filter, Some(page)).await?;
 

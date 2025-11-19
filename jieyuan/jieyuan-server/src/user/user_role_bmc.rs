@@ -9,7 +9,7 @@ use jieyuan_core::model::{TABLE_USER_ROLE, UserRole, UserRoleForCreate, UserRole
 
 pub struct UserRoleBmc;
 impl DbBmc for UserRoleBmc {
-  fn _static_config() -> &'static BmcConfig {
+  fn _bmc_config() -> &'static BmcConfig {
     static CONFIG: OnceLock<BmcConfig> = OnceLock::new();
     CONFIG.get_or_init(|| BmcConfig::new_table(TABLE_USER_ROLE))
   }

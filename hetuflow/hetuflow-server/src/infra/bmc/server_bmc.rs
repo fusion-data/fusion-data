@@ -15,7 +15,7 @@ use hetuflow_core::types::ServerStatus;
 pub struct ServerBmc;
 
 impl DbBmc for ServerBmc {
-  fn _static_config() -> &'static BmcConfig {
+  fn _bmc_config() -> &'static BmcConfig {
     static CONFIG: OnceLock<BmcConfig> = OnceLock::new();
     CONFIG.get_or_init(|| {
       BmcConfig::new_table("sched_server")
@@ -75,7 +75,7 @@ impl ServerBmc {
       Ok(())
     } else {
       Err(SqlError::ExecuteError {
-        table: Self::_static_config().qualified_table_name(),
+        table: Self::_bmc_config().qualified_table_name(),
         message: format!("Register server error, id: {}, name: {}", server.id, server.name),
       })
     }

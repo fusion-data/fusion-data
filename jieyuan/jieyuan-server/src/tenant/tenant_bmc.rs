@@ -12,7 +12,7 @@ use jieyuan_core::model::{TABLE_TENANT, Tenant, TenantFilter, TenantForCreate, T
 pub struct TenantBmc;
 
 impl DbBmc for TenantBmc {
-  fn _static_config() -> &'static BmcConfig {
+  fn _bmc_config() -> &'static BmcConfig {
     static CONFIG: OnceLock<BmcConfig> = OnceLock::new();
     CONFIG.get_or_init(|| {
       BmcConfig::new_table(TABLE_TENANT).with_use_logical_deletion(false) // 不使用逻辑删除，使用状态管理

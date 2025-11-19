@@ -15,7 +15,7 @@ use super::RolePermissionBmc;
 
 pub struct RoleBmc;
 impl DbBmc for RoleBmc {
-  fn _static_config() -> &'static BmcConfig {
+  fn _bmc_config() -> &'static BmcConfig {
     static CONFIG: OnceLock<BmcConfig> = OnceLock::new();
     CONFIG.get_or_init(|| BmcConfig::new_table("iam_role").with_use_logical_deletion(true))
   }
@@ -59,14 +59,14 @@ impl RoleBmc {
       if !sub_cond.is_empty() {
         query.and_where(Expr::col(RoleIden::Id).in_subquery({
           let mut q = Query::select();
-          q.from(RolePermissionBmc::_static_config().table_ref()).column(RolePermissionIden::RoleId);
+          q.from(RolePermissionBmc::_bmc_config().table_ref()).column(RolePermissionIden::RoleId);
           q.cond_where(sub_cond);
           q
         }));
       }
     }
 
-    let list_options = compute_page(RoleBmc::_static_config(), list_options)?;
+    let list_options = compute_page(RoleBmc::_bmc_config(), list_options)?;
     apply_to_sea_query(&list_options, query);
 
     Ok(())

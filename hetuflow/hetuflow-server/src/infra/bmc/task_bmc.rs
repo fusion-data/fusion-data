@@ -18,7 +18,7 @@ use hetuflow_core::models::{SchedTask, TaskFilter, TaskForCreate, TaskForUpdate}
 pub struct TaskBmc;
 
 impl DbBmc for TaskBmc {
-  fn _static_config() -> &'static BmcConfig {
+  fn _bmc_config() -> &'static BmcConfig {
     static CONFIG: OnceLock<BmcConfig> = OnceLock::new();
     CONFIG.get_or_init(|| BmcConfig::new_table("sched_task").with_id_generated_by_db(false))
   }

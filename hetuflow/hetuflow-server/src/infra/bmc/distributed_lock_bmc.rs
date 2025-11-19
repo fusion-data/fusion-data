@@ -12,7 +12,7 @@ use crate::model::{DistributedLockEntity, DistributedLockFilter, DistributedLock
 pub struct DistributedLockBmc;
 
 impl DbBmc for DistributedLockBmc {
-  fn _static_config() -> &'static BmcConfig {
+  fn _bmc_config() -> &'static BmcConfig {
     static CONFIG: OnceLock<BmcConfig> = OnceLock::new();
     CONFIG.get_or_init(|| BmcConfig::new_table("distributed_lock").with_id_generated_by_db(false))
   }

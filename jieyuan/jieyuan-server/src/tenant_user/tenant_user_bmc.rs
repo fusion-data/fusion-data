@@ -16,7 +16,7 @@ use jieyuan_core::model::{
 
 pub struct TenantUserBmc;
 impl DbBmc for TenantUserBmc {
-  fn _static_config() -> &'static BmcConfig {
+  fn _bmc_config() -> &'static BmcConfig {
     static CONFIG: OnceLock<BmcConfig> = OnceLock::new();
     CONFIG.get_or_init(|| BmcConfig::new_table(TABLE_TENANT_USER).with_has_updated_by(false).with_has_created_by(false))
   }
@@ -135,7 +135,7 @@ impl TenantUserBmc {
       stmt.cond_where(cond);
     }
 
-    let list_options = compute_page(Self::_static_config(), Some(req.page))?;
+    let list_options = compute_page(Self::_bmc_config(), Some(req.page))?;
     apply_to_sea_query(&list_options, stmt);
 
     Ok(())

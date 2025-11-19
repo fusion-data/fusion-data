@@ -21,7 +21,7 @@ where
   MC: DbBmc,
   E: HasSeaFields,
 {
-  let bmc_config = MC::_static_config();
+  let bmc_config = MC::_bmc_config();
 
   let ctx = mm.ctx_ref()?;
   // -- Extract fields (name / sea-query value expression)
@@ -47,7 +47,7 @@ where
   MC: DbBmc,
   E: HasSeaFields,
 {
-  let bmc_config = MC::_static_config();
+  let bmc_config = MC::_bmc_config();
   let ctx = mm.ctx_ref()?;
 
   // Prepare insert query
@@ -74,7 +74,7 @@ where
   MC: DbBmc,
   E: HasSeaFields,
 {
-  let bmc_config = MC::_static_config();
+  let bmc_config = MC::_bmc_config();
   let ctx = mm.ctx_ref()?;
 
   // -- Extract fields (name / sea-query value expression)
@@ -100,7 +100,7 @@ where
   MC: DbBmc,
   E: HasSeaFields,
 {
-  let bmc_config = MC::_static_config();
+  let bmc_config = MC::_bmc_config();
   let ctx = mm.ctx_ref()?;
 
   // Prepare insert query
@@ -125,14 +125,14 @@ where
   MC: DbBmc,
   F: Into<FilterGroups>,
 {
-  let bmc_config = MC::_static_config();
+  let bmc_config = MC::_bmc_config();
 
   // -- Build the query
   let mut stmt = Query::select();
   stmt.from(bmc_config.table_ref()).expr_as(Expr::col(sea_query::Asterisk).count(), "count");
 
   // condition from filter
-  let filters: FilterGroups = filter.into();
+  let filters: FilterGroups = mm.apply_filter_interceptor(bmc_config, filter.into())?;
   let cond: Condition = filters.try_into()?;
   stmt.cond_where(cond);
   fill_select_statement(bmc_config, &mut stmt);
@@ -169,7 +169,7 @@ where
   MC: DbBmc,
   F: FnOnce(&mut SelectStatement) -> Result<()>,
 {
-  let bmc_config = MC::_static_config();
+  let bmc_config = MC::_bmc_config();
 
   // -- Build the query
   let mut stmt = Query::select();
@@ -214,7 +214,7 @@ where
   MC: DbBmc,
   E: HasSeaFields,
 {
-  let bmc_config = MC::_static_config();
+  let bmc_config = MC::_bmc_config();
   let ctx = mm.ctx_ref()?;
 
   // -- Prep Fields
@@ -259,7 +259,7 @@ where
   F: Into<FilterGroups>,
   E: HasSeaFields,
 {
-  let bmc_config = MC::_static_config();
+  let bmc_config = MC::_bmc_config();
   let ctx = mm.ctx_ref()?;
 
   // -- Prep Fields
@@ -272,7 +272,7 @@ where
   let fields = fields.for_sea_update();
   let mut stmt = Query::update();
   stmt.table(bmc_config.table_ref()).values(fields);
-  let filters: FilterGroups = filter.into();
+  let filters: FilterGroups = mm.apply_filter_interceptor(bmc_config, filter.into())?;
   let cond: Condition = filters.try_into()?;
   stmt.cond_where(cond);
 
@@ -299,7 +299,7 @@ pub async fn delete_by_id<MC>(mm: &ModelManager, id: Id) -> Result<()>
 where
   MC: DbBmc,
 {
-  let bmc_config = MC::_static_config();
+  let bmc_config = MC::_bmc_config();
   let ctx = mm.ctx_ref()?;
 
   // -- Build query
@@ -345,7 +345,7 @@ pub async fn delete_by_ids<MC>(mm: &ModelManager, ids: Vec<Id>) -> Result<u64>
 where
   MC: DbBmc,
 {
-  let bmc_config = MC::_static_config();
+  let bmc_config = MC::_bmc_config();
   let ctx: &fusion_common::ctx::Ctx = mm.ctx_ref()?;
 
   if ids.is_empty() {
@@ -394,10 +394,10 @@ where
   MC: DbBmc,
   F: Into<FilterGroups>,
 {
-  let bmc_config = MC::_static_config();
+  let bmc_config = MC::_bmc_config();
   let ctx: &fusion_common::ctx::Ctx = mm.ctx_ref()?;
 
-  let filters: FilterGroups = filter.into();
+  let filters: FilterGroups = mm.apply_filter_interceptor(bmc_config, filter.into())?;
   let cond: Condition = filters.try_into()?;
 
   // -- Build query
@@ -440,7 +440,7 @@ fn _check_result<MC>(count: u64, id: Id) -> Result<()>
 where
   MC: DbBmc,
 {
-  let bmc_config = MC::_static_config();
+  let bmc_config = MC::_bmc_config();
   if count == 0 {
     Err(SqlError::EntityNotFound { schema: bmc_config.schema, entity: bmc_config.table, id })
   } else {

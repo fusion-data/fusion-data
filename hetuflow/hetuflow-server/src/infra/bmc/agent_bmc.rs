@@ -15,7 +15,7 @@ use hetuflow_core::{protocol::RegisterAgentRequest, types::AgentStatus};
 pub struct AgentBmc;
 
 impl DbBmc for AgentBmc {
-  fn _static_config() -> &'static BmcConfig {
+  fn _bmc_config() -> &'static BmcConfig {
     static CONFIG: OnceLock<BmcConfig> = OnceLock::new();
     CONFIG.get_or_init(|| {
       BmcConfig::new_table("sched_agent")

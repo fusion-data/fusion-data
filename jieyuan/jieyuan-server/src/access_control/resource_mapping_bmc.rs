@@ -15,7 +15,7 @@ use jieyuan_core::model::{
 pub struct ResourceMappingBmc;
 
 impl DbBmc for ResourceMappingBmc {
-  fn _static_config() -> &'static BmcConfig {
+  fn _bmc_config() -> &'static BmcConfig {
     static CONFIG: OnceLock<BmcConfig> = OnceLock::new();
     CONFIG.get_or_init(|| BmcConfig::new_table(TABLE_IAM_RESOURCE_MAPPING))
   }

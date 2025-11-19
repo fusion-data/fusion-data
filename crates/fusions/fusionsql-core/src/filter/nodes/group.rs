@@ -3,11 +3,31 @@ use crate::filter::{FilterNode, IntoFilterNodes};
 // region:    --- Filter Group
 /// A FilterGroup is a vector of FilterNode that are intended to be interpreted as AND.
 #[derive(Clone)]
-pub struct FilterGroup(Vec<FilterNode>);
+pub struct FilterGroup(pub Vec<FilterNode>);
 
 impl FilterGroup {
   pub fn nodes(&self) -> &Vec<FilterNode> {
     &self.0
+  }
+
+  pub fn into_vec(self) -> Vec<FilterNode> {
+    self.0
+  }
+
+  pub fn prepend(&mut self, node: FilterNode) {
+    self.0.insert(0, node);
+  }
+
+  pub fn append(&mut self, node: FilterNode) {
+    self.insert(0, node);
+  }
+
+  pub fn insert(&mut self, index: usize, node: FilterNode) {
+    self.0.insert(index, node);
+  }
+
+  pub fn remove(&mut self, index: usize) {
+    self.0.remove(index);
   }
 }
 
@@ -39,7 +59,7 @@ impl From<FilterNode> for FilterGroup {
 /// A FilterGroups is a vector of FilterGroup, and each groups are intended to be OR between them,
 ///  and inside the group, that will be the And
 #[derive(Clone)]
-pub struct FilterGroups(Vec<FilterGroup>);
+pub struct FilterGroups(pub Vec<FilterGroup>);
 
 impl FilterGroups {
   /// Add a new or group (`Vec<FilterNode>`).
@@ -69,6 +89,12 @@ impl From<Vec<Vec<FilterNode>>> for FilterGroups {
 impl From<Vec<FilterNode>> for FilterGroups {
   fn from(val: Vec<FilterNode>) -> Self {
     FilterGroups(vec![val.into()])
+  }
+}
+
+impl From<Vec<FilterGroup>> for FilterGroups {
+  fn from(groups: Vec<FilterGroup>) -> Self {
+    FilterGroups(groups)
   }
 }
 

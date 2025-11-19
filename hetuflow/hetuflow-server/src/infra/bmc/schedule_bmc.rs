@@ -16,7 +16,7 @@ use hetuflow_core::models::{SchedSchedule, ScheduleFilter, ScheduleForCreate, Sc
 pub struct ScheduleBmc;
 
 impl DbBmc for ScheduleBmc {
-  fn _static_config() -> &'static BmcConfig {
+  fn _bmc_config() -> &'static BmcConfig {
     static CONFIG: OnceLock<BmcConfig> = OnceLock::new();
     CONFIG.get_or_init(|| BmcConfig::new_table("sched_schedule").with_id_generated_by_db(false))
   }

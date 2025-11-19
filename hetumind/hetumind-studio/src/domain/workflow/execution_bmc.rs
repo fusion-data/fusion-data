@@ -12,7 +12,7 @@ use super::ExecutionEntity;
 
 pub struct ExecutionBmc;
 impl DbBmc for ExecutionBmc {
-  fn _static_config() -> &'static BmcConfig {
+  fn _bmc_config() -> &'static BmcConfig {
     static CONFIG: OnceLock<BmcConfig> = OnceLock::new();
     CONFIG.get_or_init(|| BmcConfig::new_table("execution_entity"))
   }
@@ -32,7 +32,7 @@ generate_pg_bmc_filter!(
 
 pub struct ExecutionDataBmc;
 impl DbBmc for ExecutionDataBmc {
-  fn _static_config() -> &'static BmcConfig {
+  fn _bmc_config() -> &'static BmcConfig {
     static CONFIG: OnceLock<BmcConfig> = OnceLock::new();
     CONFIG.get_or_init(|| BmcConfig::new_table("execution_data"))
   }

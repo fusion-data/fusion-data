@@ -9,7 +9,7 @@ use jieyuan_core::model::{PolicyEntity, PolicyFilter, PolicyForCreate, PolicyFor
 
 pub struct PolicyBmc;
 impl DbBmc for PolicyBmc {
-  fn _static_config() -> &'static BmcConfig {
+  fn _bmc_config() -> &'static BmcConfig {
     static CONFIG: OnceLock<BmcConfig> = OnceLock::new();
     CONFIG.get_or_init(|| BmcConfig::new_table(TABLE_POLICY).with_use_logical_deletion(true))
   }

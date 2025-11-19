@@ -9,7 +9,7 @@ use jieyuan_core::model::{RolePermissionForCreate, TABLE_ROLE_PERMISSION};
 
 pub struct RolePermissionBmc;
 impl DbBmc for RolePermissionBmc {
-  fn _static_config() -> &'static BmcConfig {
+  fn _bmc_config() -> &'static BmcConfig {
     static CONFIG: OnceLock<BmcConfig> = OnceLock::new();
     CONFIG.get_or_init(|| BmcConfig::new_table(TABLE_ROLE_PERMISSION).with_has_updated_at(false))
   }

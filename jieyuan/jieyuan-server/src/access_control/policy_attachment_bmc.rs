@@ -13,7 +13,7 @@ use jieyuan_core::model::{
 pub struct PolicyAttachmentBmc;
 
 impl DbBmc for PolicyAttachmentBmc {
-  fn _static_config() -> &'static BmcConfig {
+  fn _bmc_config() -> &'static BmcConfig {
     static CONFIG: OnceLock<BmcConfig> = OnceLock::new();
     CONFIG.get_or_init(|| BmcConfig::new_table(TABLE_POLICY_ATTACHMENT))
   }
