@@ -1,16 +1,17 @@
+use std::sync::OnceLock;
+
 use fusionsql::{
   ModelManager, SqlError,
-  base::{self, DbBmc},
+  base::{self, BmcConfig, DbBmc},
 };
 
 use jieyuan_core::model::{RolePermissionForCreate, TABLE_ROLE_PERMISSION};
 
 pub struct RolePermissionBmc;
 impl DbBmc for RolePermissionBmc {
-  const TABLE: &'static str = TABLE_ROLE_PERMISSION;
-
-  fn _has_updated_at() -> bool {
-    false
+  fn _static_config() -> &'static BmcConfig {
+    static CONFIG: OnceLock<BmcConfig> = OnceLock::new();
+    CONFIG.get_or_init(|| BmcConfig::new_table(TABLE_ROLE_PERMISSION).with_has_updated_at(false))
   }
 }
 

@@ -147,3 +147,22 @@ macro_rules! generate_sqlite_bmc_filter {
 		}
 	};
 }
+
+#[macro_export]
+macro_rules! generate_sqlite_bmc_filter_x {
+  (
+		Bmc: $struct_name:ident,
+		Entity: $entity:ty,
+		Filter: $filter:ty,
+		$(ForUpdate: $update:ty,)?
+	) => {
+    impl $struct_name {
+      pub async fn get_filter(
+        mm: &fusionsql::ModelManager,
+        filter: Vec<$filter>,
+      ) -> fusionsql::Result<Option<$filter>> {
+        fusionsql::base::sqlite_get_filter::<Self, _, _>(mm, filter).await
+      }
+    }
+  };
+}

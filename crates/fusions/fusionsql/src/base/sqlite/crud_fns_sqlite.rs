@@ -30,9 +30,11 @@ where
   E: HasSeaFields,
   F: Into<FilterGroups>,
 {
+  let bmc_config = MC::_static_config();
+
   // -- Build the query
   let mut query = Query::select();
-  query.from(MC::table_ref()).columns(E::sea_column_refs());
+  query.from(bmc_config.table_ref()).columns(E::sea_column_refs());
 
   // condition from filter
   let filters: FilterGroups = filter.into();
@@ -40,7 +42,7 @@ where
   query.cond_where(cond);
 
   // page
-  let page = compute_page::<MC>(page)?;
+  let page = compute_page(bmc_config, page)?;
   apply_to_sea_query(&page, &mut query);
 
   // -- Execute the query
@@ -63,9 +65,11 @@ where
   E: HasSeaFields,
   F: FnOnce(&mut SelectStatement) -> Result<()>,
 {
+  let bmc_config = MC::_static_config();
+
   // -- Build the query
   let mut query = Query::select();
-  query.from(MC::table_ref()).columns(E::sea_column_refs());
+  query.from(bmc_config.table_ref()).columns(E::sea_column_refs());
 
   // condition from filter and list options
   f(&mut query)?;
@@ -90,9 +94,41 @@ where
   E: HasSeaFields,
 {
   let res = sqlite_get_by_id::<MC, E>(mm, id.clone()).await?;
+  let bmc_config = MC::_static_config();
   match res {
     Some(entity) => Ok(entity),
-    None => Err(SqlError::EntityNotFound { schema: MC::SCHEMA, entity: MC::TABLE, id }),
+    None => Err(SqlError::EntityNotFound { schema: bmc_config.schema, entity: bmc_config.table, id }),
+  }
+}
+
+pub async fn sqlite_get_filter<MC, F, E>(mm: &ModelManager, filter: F) -> Result<Option<E>>
+where
+  MC: DbBmc,
+  F: FilterGroups,
+  E: for<'r> FromRow<'r, SqliteRow> + Unpin + Send,
+  E: HasSeaFields,
+{
+  let bmc_config = MC::_static_config();
+
+  // -- Build the query
+  let mut query = Query::select();
+  query.from(bmc_config.table_ref()).columns(E::sea_column_refs());
+
+  // condition from filter
+  let filters: FilterGroups = filter.into();
+  let cond: Condition = filters.try_into()?;
+  query.cond_where(cond);
+
+  // -- Execute the query
+  match mm.dbx() {
+    Dbx::Sqlite(dbx) => {
+      let (sql, values) = query.build_sqlx(SqliteQueryBuilder);
+      let sqlx_query = sqlx::query_as_with::<_, E, _>(&sql, values);
+      let res = dbx.fetch_optional(sqlx_query).await?;
+      Ok(res)
+    }
+    #[allow(unreachable_patterns)]
+    _ => Err(SqlError::InvalidDatabase("Need sqlite database")),
   }
 }
 
@@ -102,12 +138,14 @@ where
   E: for<'r> FromRow<'r, SqliteRow> + Unpin + Send,
   E: HasSeaFields,
 {
+  let bmc_config = MC::_static_config();
+
   // -- Build the query
   let mut query = Query::select();
-  query.from(MC::table_ref()).columns(E::sea_column_refs());
+  query.from(bmc_config.table_ref()).columns(E::sea_column_refs());
 
   // condition from filter
-  let filters: FilterGroups = id.to_filter_node(MC::COLUMN_ID).into();
+  let filters: FilterGroups = id.to_filter_node(bmc_config.column_id).into();
   let cond: Condition = filters.try_into()?;
   query.cond_where(cond);
 
@@ -131,9 +169,11 @@ where
   E: HasSeaFields,
   F: Into<FilterGroups>,
 {
+  let bmc_config = MC::_static_config();
+
   // -- Build the query
   let mut query = Query::select();
-  query.from(MC::table_ref()).columns(E::sea_column_refs());
+  query.from(bmc_config.table_ref()).columns(E::sea_column_refs());
 
   // condition from filter
   let filters: FilterGroups = filter.into();

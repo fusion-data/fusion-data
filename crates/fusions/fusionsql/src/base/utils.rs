@@ -6,7 +6,7 @@ use sea_query_binder::{SqlxBinder, SqlxValues};
 
 use crate::{
   Result, SqlError,
-  base::{CommonIden, DbBmc, TimestampIden},
+  base::{BmcConfig, CommonIden, TimestampIden},
   field::{SeaField, SeaFields},
   store::dbx::DbxProvider,
 };
@@ -87,83 +87,64 @@ pub fn build_sqlx_for_insert(dbx_type: &DbxProvider, query: InsertStatement) -> 
 }
 
 /// This method must be called when a model controller intends to create its entity.
-pub fn prep_fields_for_create<MC>(mut fields: SeaFields, ctx: &Ctx) -> SeaFields
-where
-  MC: DbBmc,
-{
-  fill_creations::<MC>(&mut fields, ctx);
-
-  if MC::ID_GENERATED_BY_DB {
-    fields = SeaFields::new(fields.into_iter().filter(|f| f.iden.to_string() != MC::COLUMN_ID).collect());
+pub fn prep_fields_for_create(bmc_config: &BmcConfig, mut fields: SeaFields, ctx: &Ctx) -> SeaFields {
+  fill_creations(bmc_config, &mut fields, ctx);
+  if bmc_config.id_generated_by_db {
+    fields = SeaFields::new(fields.into_iter().filter(|f| f.iden.to_string() != bmc_config.column_id).collect());
   }
 
   fields
 }
 
 /// This method must be called when a Model Controller plans to update its entity.
-pub fn prep_fields_for_update<MC>(mut fields: SeaFields, ctx: &Ctx) -> SeaFields
-where
-  MC: DbBmc,
-{
-  fill_modifications::<MC>(&mut fields, ctx);
+pub fn prep_fields_for_update(bmc_config: &BmcConfig, mut fields: SeaFields, ctx: &Ctx) -> SeaFields {
+  fill_modifications(bmc_config, &mut fields, ctx);
   fields
 }
 
-pub fn clear_id_from_fields<MC>(fields: SeaFields) -> SeaFields
-where
-  MC: DbBmc,
-{
+pub fn clear_id_from_fields(bmc_config: &BmcConfig, fields: SeaFields) -> SeaFields {
   let mut fields = fields.into_vec();
-  fields.retain(|f| f.iden != MC::COLUMN_ID.into_iden());
+  fields.retain(|f| f.iden != bmc_config.column_id.into_iden());
   SeaFields::new(fields)
 }
 
 /// Update the creations info for create
 /// (e.g., created_by, created_at, and updated_by, updated_at will be updated with the same values)
-fn fill_creations<MC>(fields: &mut SeaFields, ctx: &Ctx)
-where
-  MC: DbBmc,
-{
-  if MC::_has_owner_id() {
+fn fill_creations(bmc_config: &BmcConfig, fields: &mut SeaFields, ctx: &Ctx) {
+  if bmc_config.has_owner_id {
     fields.push(SeaField::new(CommonIden::OwnerId.into_iden(), ctx.user_id()));
   }
-  if MC::_has_created_by() && !fields.exists(TimestampIden::CreatedBy.into_iden()) {
+  if bmc_config.has_created_by && !fields.exists(TimestampIden::CreatedBy.into_iden()) {
     fields.push(SeaField::new(TimestampIden::CreatedBy, ctx.user_id()));
   }
-  if MC::_has_created_at() && !fields.exists(TimestampIden::CreatedAt.into_iden()) {
+  if bmc_config.has_created_at && !fields.exists(TimestampIden::CreatedAt.into_iden()) {
     fields.push(SeaField::new(TimestampIden::CreatedAt, *ctx.req_time()));
   }
 }
 
 /// Update the modifications info only for update.
 /// (.e.g., only updated_by, updated_at will be updated)
-fn fill_modifications<MC>(fields: &mut SeaFields, ctx: &Ctx)
-where
-  MC: DbBmc,
-{
-  if MC::_has_updated_by() && !fields.exists(TimestampIden::UpdatedBy.into_iden()) {
+fn fill_modifications(bmc_config: &BmcConfig, fields: &mut SeaFields, ctx: &Ctx) {
+  if bmc_config.has_updated_by && !fields.exists(TimestampIden::UpdatedBy.into_iden()) {
     fields.push(SeaField::new(TimestampIden::UpdatedBy, ctx.user_id()));
   }
-  if MC::_has_updated_at() && !fields.exists(TimestampIden::UpdatedAt.into_iden()) {
+  if bmc_config.has_updated_at && !fields.exists(TimestampIden::UpdatedAt.into_iden()) {
     fields.push(SeaField::new(TimestampIden::UpdatedAt, *ctx.req_time()));
   }
 }
 
-pub fn compute_page<MC>(page: Option<Page>) -> Result<Page>
-where
-  MC: DbBmc,
-{
+pub fn compute_page(bmc_config: &BmcConfig, page: Option<Page>) -> Result<Page> {
   if let Some(mut page) = page {
     // Validate the limit.
     if let Some(limit) = page.limit {
-      if limit > MC::LIST_LIMIT_MAX {
-        return Err(SqlError::ListLimitOverMax { max: MC::LIST_LIMIT_MAX, actual: limit });
+      if limit > bmc_config.list_limit_max {
+        return Err(SqlError::ListLimitOverMax { max: bmc_config.list_limit_max, actual: limit });
       } else if limit < 1 {
         return Err(SqlError::ListLimitUnderMin { min: 1, actual: limit });
       }
     } else {
       // Set the default limit if no limit
-      page.limit = Some(MC::LIST_LIMIT_DEFAULT);
+      page.limit = Some(bmc_config.list_limit_default);
     }
     if let Some(page) = page.page
       && page < 1
@@ -171,25 +152,26 @@ where
       return Err(SqlError::ListPageUnderMin { min: 1, actual: page });
     }
     if page.order_bys.is_none() || page.order_bys.iter().any(|o| o.is_empty()) {
-      page.order_bys = MC::_default_order_bys();
+      page.order_bys = bmc_config.order_bys.as_ref().map(Into::into);
     }
     Ok(page)
   } else {
     // When None, return default
-    Ok(Page { limit: Some(MC::LIST_LIMIT_DEFAULT), order_bys: MC::_default_order_bys(), ..Default::default() })
+    Ok(Page {
+      limit: Some(bmc_config.list_limit_default),
+      order_bys: bmc_config.order_bys.as_ref().map(Into::into),
+      ..Default::default()
+    })
   }
 }
 
 /// 检查 sql execute 语句后受影响的数量
-pub fn check_number_of_affected<MC>(expect_n: usize, return_n: u64) -> Result<u64>
-where
-  MC: DbBmc,
-{
+pub fn check_number_of_affected(bmc_config: &BmcConfig, expect_n: usize, return_n: u64) -> Result<u64> {
   // -- Check result
   if return_n as usize != expect_n {
     Err(SqlError::EntityNotFound {
-      schema: MC::SCHEMA,
-      entity: MC::TABLE,
+      schema: bmc_config.schema,
+      entity: bmc_config.table,
       id: 0.into(), // Using 0 because multiple IDs could be not found, you may want to improve error handling here
     })
   } else {
@@ -197,29 +179,20 @@ where
   }
 }
 
-pub fn fill_update_statement<MC>(stmt: &mut UpdateStatement)
-where
-  MC: DbBmc,
-{
-  if MC::_use_logical_deletion() {
+pub fn fill_update_statement(bmc_config: &BmcConfig, stmt: &mut UpdateStatement) {
+  if bmc_config.use_logical_deletion {
     stmt.and_where(Expr::col(CommonIden::LogicalDeletion).is_null());
   }
 }
 
-pub fn fill_select_statement<MC>(stmt: &mut SelectStatement)
-where
-  MC: DbBmc,
-{
-  if MC::_use_logical_deletion() {
+pub fn fill_select_statement(bmc_config: &BmcConfig, stmt: &mut SelectStatement) {
+  if bmc_config.use_logical_deletion {
     stmt.and_where(Expr::col(CommonIden::LogicalDeletion).is_null());
   }
 }
 
-pub fn fill_delete_statement<MC>(stmt: &mut DeleteStatement)
-where
-  MC: DbBmc,
-{
-  if MC::_use_logical_deletion() {
+pub fn fill_delete_statement(bmc_config: &BmcConfig, stmt: &mut DeleteStatement) {
+  if bmc_config.use_logical_deletion {
     stmt.and_where(Expr::col(CommonIden::LogicalDeletion).is_null());
   }
 }

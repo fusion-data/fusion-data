@@ -1,14 +1,21 @@
+use std::sync::OnceLock;
 use std::time::Duration;
 
-use fusionsql::{ModelManager, SqlError, base::DbBmc, generate_pg_bmc_common, generate_pg_bmc_filter};
+use fusionsql::{
+  ModelManager, SqlError,
+  base::{BmcConfig, DbBmc},
+  generate_pg_bmc_common, generate_pg_bmc_filter,
+};
 
 use crate::model::{DistributedLockEntity, DistributedLockFilter, DistributedLockForInsert, DistributedLockForUpdate};
 
 pub struct DistributedLockBmc;
 
 impl DbBmc for DistributedLockBmc {
-  const TABLE: &str = "distributed_lock";
-  const ID_GENERATED_BY_DB: bool = false;
+  fn _static_config() -> &'static BmcConfig {
+    static CONFIG: OnceLock<BmcConfig> = OnceLock::new();
+    CONFIG.get_or_init(|| BmcConfig::new_table("distributed_lock").with_id_generated_by_db(false))
+  }
 }
 
 generate_pg_bmc_common!(

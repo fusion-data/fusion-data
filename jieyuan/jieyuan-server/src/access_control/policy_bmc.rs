@@ -1,12 +1,17 @@
-use fusionsql::{base::DbBmc, generate_pg_bmc_common, generate_pg_bmc_filter};
+use std::sync::OnceLock;
+
+use fusionsql::{
+  base::{BmcConfig, DbBmc},
+  generate_pg_bmc_common, generate_pg_bmc_filter,
+};
 
 use jieyuan_core::model::{PolicyEntity, PolicyFilter, PolicyForCreate, PolicyForUpdate, TABLE_POLICY};
 
 pub struct PolicyBmc;
 impl DbBmc for PolicyBmc {
-  const TABLE: &'static str = TABLE_POLICY;
-  fn _use_logical_deletion() -> bool {
-    true
+  fn _static_config() -> &'static BmcConfig {
+    static CONFIG: OnceLock<BmcConfig> = OnceLock::new();
+    CONFIG.get_or_init(|| BmcConfig::new_table(TABLE_POLICY).with_use_logical_deletion(true))
   }
 }
 

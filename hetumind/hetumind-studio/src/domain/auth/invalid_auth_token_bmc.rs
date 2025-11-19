@@ -1,5 +1,10 @@
+use std::sync::OnceLock;
+
 use fusion_common::time::{OffsetDateTime, now_utc};
-use fusionsql::{ModelManager, base::DbBmc};
+use fusionsql::{
+  ModelManager,
+  base::{BmcConfig, DbBmc},
+};
 use sea_query::{Expr, Query};
 use sea_query_binder::SqlxBinder;
 
@@ -8,8 +13,10 @@ use super::InvalidAuthTokenIden;
 pub struct InvalidAuthTokenBmc;
 
 impl DbBmc for InvalidAuthTokenBmc {
-  const TABLE: &'static str = "invalid_auth_token";
-  const ID_GENERATED_BY_DB: bool = false;
+  fn _static_config() -> &'static BmcConfig {
+    static CONFIG: OnceLock<BmcConfig> = OnceLock::new();
+    CONFIG.get_or_init(|| BmcConfig::new_table("invalid_auth_token").with_id_generated_by_db(false))
+  }
 }
 
 impl InvalidAuthTokenBmc {

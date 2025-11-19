@@ -6,7 +6,7 @@ use jieyuan_core::model::{CreateRoleDto, Role, RoleFilters, RoleForUpdate, RoleP
 
 use super::{RolePermissionBmc, bmc::RoleBmc};
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct RoleSvc {
   mm: ModelManager,
 }

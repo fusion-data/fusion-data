@@ -43,6 +43,30 @@ impl Deref for OrderBy {
 // endregion: --- OrderBy
 
 // region:    --- OrderBys
+#[derive(Debug, Clone, Serialize)]
+#[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
+#[cfg_attr(target_arch = "wasm32", derive(tsify::Tsify), tsify(into_wasm_abi, from_wasm_abi))]
+#[serde(transparent)]
+pub struct StaticOrderBys(pub &'static [&'static str]);
+
+impl From<&'static [&'static str]> for StaticOrderBys {
+  fn from(value: &'static [&'static str]) -> Self {
+    Self(value)
+  }
+}
+
+impl From<StaticOrderBys> for OrderBys {
+  fn from(value: StaticOrderBys) -> Self {
+    Self(value.0.iter().map(|s| OrderBy::from(*s)).collect())
+  }
+}
+
+impl From<&StaticOrderBys> for OrderBys {
+  fn from(value: &StaticOrderBys) -> Self {
+    Self(value.0.iter().map(|s| OrderBy::from(*s)).collect())
+  }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 #[cfg_attr(target_arch = "wasm32", derive(tsify::Tsify), tsify(into_wasm_abi, from_wasm_abi))]

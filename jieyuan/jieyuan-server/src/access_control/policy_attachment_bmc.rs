@@ -1,4 +1,9 @@
-use fusionsql::{base::DbBmc, generate_pg_bmc_common, generate_pg_bmc_filter};
+use std::sync::OnceLock;
+
+use fusionsql::{
+  base::{BmcConfig, DbBmc},
+  generate_pg_bmc_common, generate_pg_bmc_filter,
+};
 use jieyuan_core::model::{
   PolicyAttachmentEntity, PolicyAttachmentFilter, PolicyAttachmentForCreate, PolicyAttachmentForUpdate,
   TABLE_POLICY_ATTACHMENT,
@@ -8,7 +13,10 @@ use jieyuan_core::model::{
 pub struct PolicyAttachmentBmc;
 
 impl DbBmc for PolicyAttachmentBmc {
-  const TABLE: &'static str = TABLE_POLICY_ATTACHMENT;
+  fn _static_config() -> &'static BmcConfig {
+    static CONFIG: OnceLock<BmcConfig> = OnceLock::new();
+    CONFIG.get_or_init(|| BmcConfig::new_table(TABLE_POLICY_ATTACHMENT))
+  }
 }
 
 generate_pg_bmc_common!(

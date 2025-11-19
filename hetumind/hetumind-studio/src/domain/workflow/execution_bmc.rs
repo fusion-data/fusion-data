@@ -1,4 +1,9 @@
-use fusionsql::{base::DbBmc, generate_pg_bmc_common, generate_pg_bmc_filter};
+use std::sync::OnceLock;
+
+use fusionsql::{
+  base::{BmcConfig, DbBmc},
+  generate_pg_bmc_common, generate_pg_bmc_filter,
+};
 use hetumind_core::workflow::{ExecutionFilter, ExecutionForUpdate};
 
 use crate::domain::workflow::ExecutionDataEntity;
@@ -7,7 +12,10 @@ use super::ExecutionEntity;
 
 pub struct ExecutionBmc;
 impl DbBmc for ExecutionBmc {
-  const TABLE: &'static str = "execution_entity";
+  fn _static_config() -> &'static BmcConfig {
+    static CONFIG: OnceLock<BmcConfig> = OnceLock::new();
+    CONFIG.get_or_init(|| BmcConfig::new_table("execution_entity"))
+  }
 }
 generate_pg_bmc_common!(
   Bmc: ExecutionBmc,
@@ -24,7 +32,10 @@ generate_pg_bmc_filter!(
 
 pub struct ExecutionDataBmc;
 impl DbBmc for ExecutionDataBmc {
-  const TABLE: &'static str = "execution_data";
+  fn _static_config() -> &'static BmcConfig {
+    static CONFIG: OnceLock<BmcConfig> = OnceLock::new();
+    CONFIG.get_or_init(|| BmcConfig::new_table("execution_data"))
+  }
 }
 generate_pg_bmc_common!(
   Bmc: ExecutionDataBmc,

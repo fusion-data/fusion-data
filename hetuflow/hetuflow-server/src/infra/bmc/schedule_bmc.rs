@@ -1,6 +1,8 @@
+use std::sync::OnceLock;
+
 use fusionsql::{
   ModelManager, SqlError,
-  base::DbBmc,
+  base::{BmcConfig, DbBmc},
   filter::{OpValInt32, OpValUuid},
   generate_pg_bmc_common, generate_pg_bmc_filter,
 };
@@ -14,8 +16,10 @@ use hetuflow_core::models::{SchedSchedule, ScheduleFilter, ScheduleForCreate, Sc
 pub struct ScheduleBmc;
 
 impl DbBmc for ScheduleBmc {
-  const TABLE: &str = "sched_schedule";
-  const ID_GENERATED_BY_DB: bool = false;
+  fn _static_config() -> &'static BmcConfig {
+    static CONFIG: OnceLock<BmcConfig> = OnceLock::new();
+    CONFIG.get_or_init(|| BmcConfig::new_table("sched_schedule").with_id_generated_by_db(false))
+  }
 }
 
 generate_pg_bmc_common!(

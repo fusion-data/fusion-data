@@ -1,8 +1,9 @@
+use std::sync::OnceLock;
+
 use fusion_common::time::{OffsetDateTime, now_offset};
-use fusionsql::page::OrderBys;
 use fusionsql::{
   ModelManager, SqlError,
-  base::DbBmc,
+  base::{BmcConfig, DbBmc},
   field::FieldMask,
   filter::{OpValDateTime, OpValInt32, OpValString, OpValUuid},
   generate_pg_bmc_common, generate_pg_bmc_filter,
@@ -17,10 +18,9 @@ use hetuflow_core::models::{SchedTask, TaskFilter, TaskForCreate, TaskForUpdate}
 pub struct TaskBmc;
 
 impl DbBmc for TaskBmc {
-  const TABLE: &str = "sched_task";
-  const ID_GENERATED_BY_DB: bool = false;
-  fn _default_order_bys() -> Option<OrderBys> {
-    Some("!id".into())
+  fn _static_config() -> &'static BmcConfig {
+    static CONFIG: OnceLock<BmcConfig> = OnceLock::new();
+    CONFIG.get_or_init(|| BmcConfig::new_table("sched_task").with_id_generated_by_db(false))
   }
 }
 

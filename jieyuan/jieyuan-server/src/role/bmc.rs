@@ -1,7 +1,9 @@
+use std::sync::OnceLock;
+
 use fusionsql::page::{Page, PageResult};
 use fusionsql::{
   ModelManager, Result,
-  base::{self, DbBmc, compute_page},
+  base::{self, BmcConfig, DbBmc, compute_page},
   filter::{FilterGroups, apply_to_sea_query},
   generate_pg_bmc_common,
 };
@@ -13,9 +15,9 @@ use super::RolePermissionBmc;
 
 pub struct RoleBmc;
 impl DbBmc for RoleBmc {
-  const TABLE: &'static str = "iam_role";
-  fn _use_logical_deletion() -> bool {
-    true
+  fn _static_config() -> &'static BmcConfig {
+    static CONFIG: OnceLock<BmcConfig> = OnceLock::new();
+    CONFIG.get_or_init(|| BmcConfig::new_table("iam_role").with_use_logical_deletion(true))
   }
 }
 
@@ -57,14 +59,14 @@ impl RoleBmc {
       if !sub_cond.is_empty() {
         query.and_where(Expr::col(RoleIden::Id).in_subquery({
           let mut q = Query::select();
-          q.from(RolePermissionBmc::table_ref()).column(RolePermissionIden::RoleId);
+          q.from(RolePermissionBmc::_static_config().table_ref()).column(RolePermissionIden::RoleId);
           q.cond_where(sub_cond);
           q
         }));
       }
     }
 
-    let list_options = compute_page::<RoleBmc>(list_options)?;
+    let list_options = compute_page(RoleBmc::_static_config(), list_options)?;
     apply_to_sea_query(&list_options, query);
 
     Ok(())

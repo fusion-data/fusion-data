@@ -1,5 +1,11 @@
+use std::sync::OnceLock;
+
 use fusions::core::{DataError, Result};
-use fusionsql::{ModelManager, base::DbBmc, generate_pg_bmc_common, generate_pg_bmc_filter};
+use fusionsql::{
+  ModelManager,
+  base::{BmcConfig, DbBmc},
+  generate_pg_bmc_common, generate_pg_bmc_filter,
+};
 
 use jieyuan_core::model::{
   TABLE_USER_CREDENTIAL, UserCredential, UserCredentialFilter, UserCredentialForInsert, UserCredentialForUpdate,
@@ -7,7 +13,10 @@ use jieyuan_core::model::{
 
 pub struct UserCredentialBmc;
 impl DbBmc for UserCredentialBmc {
-  const TABLE: &'static str = TABLE_USER_CREDENTIAL;
+  fn _static_config() -> &'static BmcConfig {
+    static CONFIG: OnceLock<BmcConfig> = OnceLock::new();
+    CONFIG.get_or_init(|| BmcConfig::new_table(TABLE_USER_CREDENTIAL))
+  }
 }
 
 generate_pg_bmc_common!(

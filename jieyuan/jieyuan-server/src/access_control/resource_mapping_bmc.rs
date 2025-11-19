@@ -1,8 +1,10 @@
+use std::sync::OnceLock;
+
 use fusions::common::ahash::HashMap;
 use fusionsql::page::PageResult;
 use fusionsql::{
   ModelManager, SqlError,
-  base::{DbBmc, pg_page},
+  base::{BmcConfig, DbBmc, pg_page},
   generate_pg_bmc_common, generate_pg_bmc_filter,
 };
 use jieyuan_core::model::{
@@ -13,7 +15,10 @@ use jieyuan_core::model::{
 pub struct ResourceMappingBmc;
 
 impl DbBmc for ResourceMappingBmc {
-  const TABLE: &'static str = TABLE_IAM_RESOURCE_MAPPING;
+  fn _static_config() -> &'static BmcConfig {
+    static CONFIG: OnceLock<BmcConfig> = OnceLock::new();
+    CONFIG.get_or_init(|| BmcConfig::new_table(TABLE_IAM_RESOURCE_MAPPING))
+  }
 }
 
 generate_pg_bmc_common!(

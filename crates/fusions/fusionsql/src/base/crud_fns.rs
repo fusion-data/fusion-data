@@ -21,19 +21,21 @@ where
   MC: DbBmc,
   E: HasSeaFields,
 {
+  let bmc_config = MC::_static_config();
+
   let ctx = mm.ctx_ref()?;
   // -- Extract fields (name / sea-query value expression)
   let mut fields = data.not_none_sea_fields();
-  fields = prep_fields_for_create::<MC>(fields, ctx);
+  fields = prep_fields_for_create(bmc_config, fields, ctx);
 
   // -- Build query
   let (columns, sea_values) = fields.for_sea_insert();
   let mut stmt = Query::insert();
   stmt
-    .into_table(MC::table_ref())
+    .into_table(bmc_config.table_ref())
     .columns(columns)
     .values(sea_values)?
-    .returning(Query::returning().columns([MC::COLUMN_ID]));
+    .returning(Query::returning().columns([bmc_config.column_id]));
 
   // -- Exec query
   let id = mm.dbx().create(stmt).await?;
@@ -45,6 +47,7 @@ where
   MC: DbBmc,
   E: HasSeaFields,
 {
+  let bmc_config = MC::_static_config();
   let ctx = mm.ctx_ref()?;
 
   // Prepare insert query
@@ -52,14 +55,14 @@ where
 
   for item in data {
     let mut fields = item.not_none_sea_fields();
-    fields = prep_fields_for_create::<MC>(fields, ctx);
+    fields = prep_fields_for_create(bmc_config, fields, ctx);
     let (columns, sea_values) = fields.for_sea_insert();
 
     // Append values for each item
-    stmt.into_table(MC::table_ref()).columns(columns).values(sea_values)?;
+    stmt.into_table(bmc_config.table_ref()).columns(columns).values(sea_values)?;
   }
 
-  stmt.returning(Query::returning().columns([MC::COLUMN_ID]));
+  stmt.returning(Query::returning().columns([bmc_config.column_id]));
 
   // Execute query
   let ids = mm.dbx().create_many(stmt).await?;
@@ -71,23 +74,24 @@ where
   MC: DbBmc,
   E: HasSeaFields,
 {
+  let bmc_config = MC::_static_config();
   let ctx = mm.ctx_ref()?;
 
   // -- Extract fields (name / sea-query value expression)
   let mut fields = data.not_none_sea_fields();
-  fields = prep_fields_for_create::<MC>(fields, ctx);
+  fields = prep_fields_for_create(bmc_config, fields, ctx);
 
   // -- Build query
   let (columns, sea_values) = fields.for_sea_insert();
   let mut stmt = Query::insert();
-  stmt.into_table(MC::table_ref()).columns(columns).values(sea_values)?;
+  stmt.into_table(bmc_config.table_ref()).columns(columns).values(sea_values)?;
   // .returning(Query::returning().columns([CommonIden::Id]));
 
   // -- Exec query
   if mm.dbx().execute(stmt).await? == 1 {
     Ok(())
   } else {
-    Err(SqlError::ExecuteFail { schema: MC::SCHEMA, table: MC::TABLE })
+    Err(SqlError::ExecuteFail { schema: bmc_config.schema, table: bmc_config.table })
   }
 }
 
@@ -96,6 +100,7 @@ where
   MC: DbBmc,
   E: HasSeaFields,
 {
+  let bmc_config = MC::_static_config();
   let ctx = mm.ctx_ref()?;
 
   // Prepare insert query
@@ -103,11 +108,11 @@ where
 
   for item in data {
     let mut fields = item.not_none_sea_fields();
-    fields = prep_fields_for_create::<MC>(fields, ctx);
+    fields = prep_fields_for_create(bmc_config, fields, ctx);
     let (columns, sea_values) = fields.for_sea_insert();
 
     // Append values for each item
-    stmt.into_table(MC::table_ref()).columns(columns).values(sea_values)?;
+    stmt.into_table(bmc_config.table_ref()).columns(columns).values(sea_values)?;
   }
 
   // Execute query
@@ -120,15 +125,17 @@ where
   MC: DbBmc,
   F: Into<FilterGroups>,
 {
+  let bmc_config = MC::_static_config();
+
   // -- Build the query
   let mut stmt = Query::select();
-  stmt.from(MC::table_ref()).expr_as(Expr::col(sea_query::Asterisk).count(), "count");
+  stmt.from(bmc_config.table_ref()).expr_as(Expr::col(sea_query::Asterisk).count(), "count");
 
   // condition from filter
   let filters: FilterGroups = filter.into();
   let cond: Condition = filters.try_into()?;
   stmt.cond_where(cond);
-  fill_select_statement::<MC>(&mut stmt);
+  fill_select_statement(bmc_config, &mut stmt);
 
   match mm.dbx() {
     #[cfg(feature = "with-postgres")]
@@ -137,7 +144,7 @@ where
 
       let result = sqlx::query(&query_str).fetch_one(dbx_postgres.db()).await.map_err(|e| {
         log::error!("count fail: {:?}", e);
-        SqlError::CountFail { schema: MC::SCHEMA, table: MC::TABLE }
+        SqlError::CountFail { schema: bmc_config.schema, table: bmc_config.table }
       })?;
       let count: i64 = result.try_get("count")?;
       Ok(count as u64)
@@ -148,9 +155,10 @@ where
       let result = sqlx::query(&query_str)
         .fetch_one(dbx_sqlite.db())
         .await
-        .map_err(|_| SqlError::CountFail { schema: MC::SCHEMA, table: MC::TABLE })?;
-      let count: i64 =
-        result.try_get("count").map_err(|_| SqlError::CountFail { schema: MC::SCHEMA, table: MC::TABLE })?;
+        .map_err(|_| SqlError::CountFail { schema: bmc_config.schema, table: bmc_config.table })?;
+      let count: i64 = result
+        .try_get("count")
+        .map_err(|_| SqlError::CountFail { schema: bmc_config.schema, table: bmc_config.table })?;
       Ok(count as u64)
     }
   }
@@ -161,14 +169,16 @@ where
   MC: DbBmc,
   F: FnOnce(&mut SelectStatement) -> Result<()>,
 {
+  let bmc_config = MC::_static_config();
+
   // -- Build the query
   let mut stmt = Query::select();
-  stmt.from(MC::table_ref());
+  stmt.from(bmc_config.table_ref());
   stmt.expr(Expr::col(sea_query::Asterisk).count());
 
   // -- condition from filter
   f(&mut stmt)?;
-  fill_select_statement::<MC>(&mut stmt);
+  fill_select_statement(bmc_config, &mut stmt);
 
   match mm.dbx() {
     #[cfg(feature = "with-postgres")]
@@ -177,10 +187,11 @@ where
 
       let result = sqlx::query(&query_str).fetch_one(dbx_postgres.db()).await.map_err(|e| {
         log::error!("count_on fail: {:?}", e);
-        SqlError::CountFail { schema: MC::SCHEMA, table: MC::TABLE }
+        SqlError::CountFail { schema: bmc_config.schema, table: bmc_config.table }
       })?;
-      let count: i64 =
-        result.try_get("count").map_err(|_| SqlError::CountFail { schema: MC::SCHEMA, table: MC::TABLE })?;
+      let count: i64 = result
+        .try_get("count")
+        .map_err(|_| SqlError::CountFail { schema: bmc_config.schema, table: bmc_config.table })?;
       Ok(count as u64)
     }
     #[cfg(feature = "with-sqlite")]
@@ -189,9 +200,10 @@ where
       let result = sqlx::query(&query_str)
         .fetch_one(dbx_sqlite.db())
         .await
-        .map_err(|_| SqlError::CountFail { schema: MC::SCHEMA, table: MC::TABLE })?;
-      let count: i64 =
-        result.try_get("count").map_err(|_| SqlError::CountFail { schema: MC::SCHEMA, table: MC::TABLE })?;
+        .map_err(|_| SqlError::CountFail { schema: bmc_config.schema, table: bmc_config.table })?;
+      let count: i64 = result
+        .try_get("count")
+        .map_err(|_| SqlError::CountFail { schema: bmc_config.schema, table: bmc_config.table })?;
       Ok(count as u64)
     }
   }
@@ -202,19 +214,23 @@ where
   MC: DbBmc,
   E: HasSeaFields,
 {
+  let bmc_config = MC::_static_config();
   let ctx = mm.ctx_ref()?;
 
   // -- Prep Fields
   let mut fields = data.not_none_sea_fields();
-  if MC::_has_updated_at() {
-    fields = prep_fields_for_update::<MC>(fields, ctx);
+  if bmc_config.has_updated_at {
+    fields = prep_fields_for_update(bmc_config, fields, ctx);
   }
 
   // -- Build query
   let fields = fields.for_sea_update();
   let mut stmt = Query::update();
-  stmt.table(MC::table_ref()).values(fields).and_where(Expr::col(MC::COLUMN_ID).eq(id.clone()));
-  fill_update_statement::<MC>(&mut stmt);
+  stmt
+    .table(bmc_config.table_ref())
+    .values(fields)
+    .and_where(Expr::col(bmc_config.column_id).eq(id.clone()));
+  fill_update_statement(bmc_config, &mut stmt);
 
   // -- Execute query
   let count = match mm.dbx() {
@@ -243,18 +259,19 @@ where
   F: Into<FilterGroups>,
   E: HasSeaFields,
 {
+  let bmc_config = MC::_static_config();
   let ctx = mm.ctx_ref()?;
 
   // -- Prep Fields
   let mut fields = data.not_none_sea_fields();
-  if MC::_has_updated_at() {
-    fields = prep_fields_for_update::<MC>(fields, ctx);
+  if bmc_config.has_updated_at {
+    fields = prep_fields_for_update(bmc_config, fields, ctx);
   }
 
   // -- Build query
   let fields = fields.for_sea_update();
   let mut stmt = Query::update();
-  stmt.table(MC::table_ref()).values(fields);
+  stmt.table(bmc_config.table_ref()).values(fields);
   let filters: FilterGroups = filter.into();
   let cond: Condition = filters.try_into()?;
   stmt.cond_where(cond);
@@ -282,23 +299,27 @@ pub async fn delete_by_id<MC>(mm: &ModelManager, id: Id) -> Result<()>
 where
   MC: DbBmc,
 {
+  let bmc_config = MC::_static_config();
   let ctx = mm.ctx_ref()?;
 
   // -- Build query
-  let (sql, values) = if MC::_use_logical_deletion() {
+  let (sql, values) = if bmc_config.use_logical_deletion {
     // -- Prep Fields
     let mut fields = SeaFields::new(vec![SeaField::new(CommonIden::LogicalDeletion, now_offset())]);
-    if MC::_has_updated_at() {
-      fields = prep_fields_for_update::<MC>(fields, ctx);
+    if bmc_config.has_updated_at {
+      fields = prep_fields_for_update(bmc_config, fields, ctx);
     }
 
     let fields = fields.for_sea_update();
     let mut stmt = Query::update();
-    stmt.table(MC::table_ref()).values(fields).and_where(Expr::col(MC::COLUMN_ID).eq(id.clone()));
+    stmt
+      .table(bmc_config.table_ref())
+      .values(fields)
+      .and_where(Expr::col(bmc_config.column_id).eq(id.clone()));
     stmt.build_sqlx(sea_query::PostgresQueryBuilder)
   } else {
     let mut query = Query::delete();
-    query.from_table(MC::table_ref()).and_where(Expr::col(MC::COLUMN_ID).eq(id.clone()));
+    query.from_table(bmc_config.table_ref()).and_where(Expr::col(bmc_config.column_id).eq(id.clone()));
     query.build_sqlx(sea_query::PostgresQueryBuilder)
   };
 
@@ -324,6 +345,7 @@ pub async fn delete_by_ids<MC>(mm: &ModelManager, ids: Vec<Id>) -> Result<u64>
 where
   MC: DbBmc,
 {
+  let bmc_config = MC::_static_config();
   let ctx: &fusion_common::ctx::Ctx = mm.ctx_ref()?;
 
   if ids.is_empty() {
@@ -331,19 +353,22 @@ where
   }
 
   // -- Build query
-  let (sql, values) = if MC::_use_logical_deletion() {
+  let (sql, values) = if bmc_config.use_logical_deletion {
     // -- Prep Fields
     let mut fields = SeaFields::new(vec![SeaField::new(CommonIden::LogicalDeletion, now_offset())]);
-    if MC::_has_updated_at() {
-      fields = prep_fields_for_update::<MC>(fields, ctx);
+    if bmc_config.has_updated_at {
+      fields = prep_fields_for_update(bmc_config, fields, ctx);
     }
     let fields = fields.for_sea_update();
     let mut stmt = Query::update();
-    stmt.table(MC::table_ref()).values(fields).and_where(Expr::col(MC::COLUMN_ID).is_in(ids));
+    stmt
+      .table(bmc_config.table_ref())
+      .values(fields)
+      .and_where(Expr::col(bmc_config.column_id).is_in(ids));
     build_sqlx_for_update(mm.dbx().provider(), stmt)
   } else {
     let mut stmt = Query::delete();
-    stmt.from_table(MC::table_ref()).and_where(Expr::col(MC::COLUMN_ID).is_in(ids));
+    stmt.from_table(bmc_config.table_ref()).and_where(Expr::col(bmc_config.column_id).is_in(ids));
     build_sqlx_for_delete(mm.dbx().provider(), stmt)
   };
 
@@ -369,25 +394,26 @@ where
   MC: DbBmc,
   F: Into<FilterGroups>,
 {
+  let bmc_config = MC::_static_config();
   let ctx: &fusion_common::ctx::Ctx = mm.ctx_ref()?;
 
   let filters: FilterGroups = filter.into();
   let cond: Condition = filters.try_into()?;
 
   // -- Build query
-  let (sql, values) = if MC::_use_logical_deletion() {
+  let (sql, values) = if bmc_config.use_logical_deletion {
     // -- Prep Fields
     let mut fields = SeaFields::new(vec![SeaField::new(CommonIden::LogicalDeletion, now_offset())]);
-    if MC::_has_updated_at() {
-      fields = prep_fields_for_update::<MC>(fields, ctx);
+    if bmc_config.has_updated_at {
+      fields = prep_fields_for_update(bmc_config, fields, ctx);
     }
     let fields = fields.for_sea_update();
     let mut stmt = Query::update();
-    stmt.table(MC::table_ref()).values(fields).cond_where(cond);
+    stmt.table(bmc_config.table_ref()).values(fields).cond_where(cond);
     build_sqlx_for_update(mm.dbx().provider(), stmt)
   } else {
     let mut stmt = Query::delete();
-    stmt.from_table(MC::table_ref());
+    stmt.from_table(bmc_config.table_ref());
     stmt.cond_where(cond);
     build_sqlx_for_delete(mm.dbx().provider(), stmt)
   };
@@ -414,5 +440,10 @@ fn _check_result<MC>(count: u64, id: Id) -> Result<()>
 where
   MC: DbBmc,
 {
-  if count == 0 { Err(SqlError::EntityNotFound { schema: MC::SCHEMA, entity: MC::TABLE, id }) } else { Ok(()) }
+  let bmc_config = MC::_static_config();
+  if count == 0 {
+    Err(SqlError::EntityNotFound { schema: bmc_config.schema, entity: bmc_config.table, id })
+  } else {
+    Ok(())
+  }
 }

@@ -1,6 +1,8 @@
+use std::sync::OnceLock;
+
 use fusionsql::{
   ModelManager, SqlError,
-  base::DbBmc,
+  base::{BmcConfig, DbBmc},
   filter::{OpValInt32, OpValInt64, OpValString},
   generate_pg_bmc_common, generate_pg_bmc_filter,
 };
@@ -10,9 +12,11 @@ use jieyuan_core::model::{TABLE_TENANT, Tenant, TenantFilter, TenantForCreate, T
 pub struct TenantBmc;
 
 impl DbBmc for TenantBmc {
-  const TABLE: &'static str = TABLE_TENANT;
-  fn _use_logical_deletion() -> bool {
-    false // 不使用逻辑删除，使用状态管理
+  fn _static_config() -> &'static BmcConfig {
+    static CONFIG: OnceLock<BmcConfig> = OnceLock::new();
+    CONFIG.get_or_init(|| {
+      BmcConfig::new_table(TABLE_TENANT).with_use_logical_deletion(false) // 不使用逻辑删除，使用状态管理
+    })
   }
 }
 

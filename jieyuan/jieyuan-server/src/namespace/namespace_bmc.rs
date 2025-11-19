@@ -1,6 +1,8 @@
+use std::sync::OnceLock;
+
 use fusionsql::{
   ModelManager, SqlError,
-  base::DbBmc,
+  base::{BmcConfig, DbBmc},
   filter::{OpValInt32, OpValInt64, OpValString},
   generate_pg_bmc_common, generate_pg_bmc_filter,
 };
@@ -9,7 +11,10 @@ use jieyuan_core::model::{NamespaceEntity, NamespaceFilter, NamespaceForCreate, 
 
 pub struct NamespaceBmc;
 impl DbBmc for NamespaceBmc {
-  const TABLE: &'static str = TABLE_NAMESPACE;
+  fn _static_config() -> &'static BmcConfig {
+    static CONFIG: OnceLock<BmcConfig> = OnceLock::new();
+    CONFIG.get_or_init(|| BmcConfig::new_table(TABLE_NAMESPACE))
+  }
 }
 
 // Generate common BMC functions (create, update, get, list, delete, etc.)

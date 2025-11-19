@@ -1,7 +1,8 @@
-use fusionsql::page::OrderBys;
+use std::sync::OnceLock;
+
 use fusionsql::{
   ModelManager, SqlError,
-  base::DbBmc,
+  base::{BmcConfig, DbBmc},
   filter::{OpValInt32, OpValString, OpValUuid},
   generate_pg_bmc_common, generate_pg_bmc_filter,
 };
@@ -15,16 +16,14 @@ use hetuflow_core::models::{JobFilter, JobForCreate, JobForUpdate, SchedJob};
 pub struct JobBmc;
 
 impl DbBmc for JobBmc {
-  const TABLE: &str = "sched_job";
-  const ID_GENERATED_BY_DB: bool = false;
-  fn _has_created_by() -> bool {
-    false
-  }
-  fn _has_updated_by() -> bool {
-    false
-  }
-  fn _default_order_bys() -> Option<OrderBys> {
-    Some("!id".into())
+  fn _static_config() -> &'static BmcConfig {
+    static CONFIG: OnceLock<BmcConfig> = OnceLock::new();
+    CONFIG.get_or_init(|| {
+      BmcConfig::new_table("sched_job")
+        .with_id_generated_by_db(false)
+        .with_has_created_by(false)
+        .with_has_updated_by(false)
+    })
   }
 }
 

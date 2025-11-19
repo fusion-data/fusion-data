@@ -1,6 +1,8 @@
+use std::sync::OnceLock;
+
 use fusionsql::{
   ModelManager, SqlError,
-  base::{DbBmc, pg_page},
+  base::{BmcConfig, DbBmc, pg_page},
   generate_pg_bmc_common, generate_pg_bmc_filter,
 };
 
@@ -10,9 +12,9 @@ use jieyuan_core::model::{
 
 pub struct UserBmc;
 impl DbBmc for UserBmc {
-  const TABLE: &'static str = TABLE_USER;
-  fn _use_logical_deletion() -> bool {
-    true
+  fn _static_config() -> &'static BmcConfig {
+    static CONFIG: OnceLock<BmcConfig> = OnceLock::new();
+    CONFIG.get_or_init(|| BmcConfig::new_table(TABLE_USER).with_use_logical_deletion(true))
   }
 }
 

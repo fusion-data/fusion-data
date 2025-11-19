@@ -1,7 +1,9 @@
+use std::sync::OnceLock;
+
 use fusion_common::time::now_offset;
 use fusionsql::{
   ModelManager, SqlError,
-  base::DbBmc,
+  base::{BmcConfig, DbBmc},
   filter::{OpValDateTime, OpValInt32},
   generate_pg_bmc_common, generate_pg_bmc_filter,
 };
@@ -13,16 +15,15 @@ use hetuflow_core::{protocol::RegisterAgentRequest, types::AgentStatus};
 pub struct AgentBmc;
 
 impl DbBmc for AgentBmc {
-  const TABLE: &str = "sched_agent";
-  const ID_GENERATED_BY_DB: bool = false;
-  fn _has_created_by() -> bool {
-    false
-  }
-  fn _has_updated_at() -> bool {
-    false
-  }
-  fn _has_updated_by() -> bool {
-    false
+  fn _static_config() -> &'static BmcConfig {
+    static CONFIG: OnceLock<BmcConfig> = OnceLock::new();
+    CONFIG.get_or_init(|| {
+      BmcConfig::new_table("sched_agent")
+        .with_id_generated_by_db(false)
+        .with_has_created_by(false)
+        .with_has_updated_by(false)
+        .with_has_updated_at(false)
+    })
   }
 }
 
@@ -110,8 +111,8 @@ impl AgentBmc {
   ) -> Result<(), SqlError> {
     // 由于 AgentForUpdate 没有 statistics 字段，我们需要直接使用 SQL 更新
     let sql = r#"
-      UPDATE sched_agent 
-      SET statistics = $1 
+      UPDATE sched_agent
+      SET statistics = $1
       WHERE id = $2"#;
 
     let query = sqlx::query(sql).bind(serde_json::to_value(statistics).unwrap()).bind(agent_id);

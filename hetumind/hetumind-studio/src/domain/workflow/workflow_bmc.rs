@@ -1,11 +1,19 @@
-use fusionsql::{base::DbBmc, generate_pg_bmc_common, generate_pg_bmc_filter};
+use std::sync::OnceLock;
+
+use fusionsql::{
+  base::{BmcConfig, DbBmc},
+  generate_pg_bmc_common, generate_pg_bmc_filter,
+};
 use hetumind_core::workflow::{WorkflowFilter, WorkflowForCreate, WorkflowForUpdate};
 
 use super::WorkflowEntity;
 
 pub struct WorkflowBmc;
 impl DbBmc for WorkflowBmc {
-  const TABLE: &'static str = "workflow_entity";
+  fn _static_config() -> &'static BmcConfig {
+    static CONFIG: OnceLock<BmcConfig> = OnceLock::new();
+    CONFIG.get_or_init(|| BmcConfig::new_table("workflow_entity"))
+  }
 }
 generate_pg_bmc_common!(
   Bmc: WorkflowBmc,

@@ -1,7 +1,11 @@
+use std::sync::OnceLock;
+
 use fusion_common::time::now_offset;
-use fusionsql::page::OrderBys;
 use fusionsql::{
-  ModelManager, SqlError, base::DbBmc, filter::OpValInt32, generate_pg_bmc_common, generate_pg_bmc_filter,
+  ModelManager, SqlError,
+  base::{BmcConfig, DbBmc},
+  filter::OpValInt32,
+  generate_pg_bmc_common, generate_pg_bmc_filter,
 };
 
 use hetuflow_core::models::{SchedServer, ServerFilter, ServerForRegister, ServerForUpdate};
@@ -11,19 +15,15 @@ use hetuflow_core::types::ServerStatus;
 pub struct ServerBmc;
 
 impl DbBmc for ServerBmc {
-  const TABLE: &str = "sched_server";
-  const ID_GENERATED_BY_DB: bool = false;
-  fn _has_created_by() -> bool {
-    false
-  }
-  fn _has_updated_at() -> bool {
-    false
-  }
-  fn _has_updated_by() -> bool {
-    false
-  }
-  fn _default_order_bys() -> Option<OrderBys> {
-    Some("!id".into())
+  fn _static_config() -> &'static BmcConfig {
+    static CONFIG: OnceLock<BmcConfig> = OnceLock::new();
+    CONFIG.get_or_init(|| {
+      BmcConfig::new_table("sched_server")
+        .with_id_generated_by_db(false)
+        .with_has_created_by(false)
+        .with_has_updated_at(false)
+        .with_has_updated_by(false)
+    })
   }
 }
 
@@ -75,7 +75,7 @@ impl ServerBmc {
       Ok(())
     } else {
       Err(SqlError::ExecuteError {
-        table: Self::qualified_table_name(),
+        table: Self::_static_config().qualified_table_name(),
         message: format!("Register server error, id: {}, name: {}", server.id, server.name),
       })
     }
