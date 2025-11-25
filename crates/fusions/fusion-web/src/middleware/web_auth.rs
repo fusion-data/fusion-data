@@ -3,7 +3,7 @@ use std::sync::Arc;
 use axum::body::Body;
 use axum::extract::Query;
 use fusion_common::time::now_offset;
-use fusion_core::log::get_trace_id;
+use fusion_core::logforth::get_trace_id;
 use fusion_core::security::AccessToken;
 use headers::{Cookie, HeaderMapExt};
 use http::request::Parts;

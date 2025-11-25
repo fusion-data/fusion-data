@@ -23,7 +23,7 @@ hetumind-context = { workspace = true }
 hetumind-nodes = { workspace = true }
 
 fusion-common = { workspace = true, features = ["with-uuid", "with-db"] }
-fusion-core = { workspace = true, features = ["with-uuid"] }
+fusion-core = { workspace = true, features = ["with-uuid", "with-tracing"] }
 jieyuan-core = { workspace = true, features = ["with-web"] }
 
 async-trait = { workspace = true }

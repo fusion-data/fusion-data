@@ -23,6 +23,8 @@ use super::transcription::TranscriptionModel;
 use super::audio_generation::AudioGenerationModel;
 
 #[cfg(feature = "image")]
+use super::image_edit::ImageEditModel;
+#[cfg(feature = "image")]
 use super::image_generation::ImageGenerationModel;
 
 // ================================================================
@@ -251,6 +253,27 @@ where
   /// ```
   fn image_generation_model(&self, model: &str) -> Self::ImageGenerationModel {
     ImageGenerationModel::new(self.clone(), model)
+  }
+}
+
+impl<T> Client<T>
+where
+  T: HttpClientExt + Clone + std::fmt::Debug + Default + Send + 'static,
+{
+  /// Create an image edit model with the given name.
+  ///
+  /// # Example
+  /// ```
+  /// use rig::providers::openai::{Client, self};
+  ///
+  /// // Initialize the OpenAI client
+  /// let openai = Client::new("your-open-ai-api-key");
+  ///
+  /// let dalle2 = openai.image_edit_model(openai::DALL_E_2);
+  /// ```
+  #[cfg(feature = "image")]
+  pub fn image_edit_model(&self, model: &str) -> ImageEditModel<T> {
+    ImageEditModel::new(self.clone(), model)
   }
 }
 

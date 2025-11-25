@@ -8,6 +8,7 @@ use std::{
 use config::Config;
 use dashmap::DashMap;
 use fusion_common::ahash::HashSet;
+use fusion_common::time::OffsetDateTime;
 use log::{debug, info};
 use mea::{
   mutex::Mutex,
@@ -15,13 +16,10 @@ use mea::{
 };
 use serde::de::DeserializeOwned;
 
-use fusion_common::time::OffsetDateTime;
-
 use crate::{
   Result,
   component::{ComponentArc, ComponentError, ComponentResult, DynComponentArc, auto_inject_component},
   configuration::{ConfigRegistry, Configurable, ConfigureResult, FusionConfigRegistry, FusionSetting},
-  log::LogPlugin,
   plugin::{Plugin, PluginRef},
 };
 
@@ -348,8 +346,6 @@ impl ApplicationBuilder {
 
   /// Initialize tracing for Application
   async fn build_plugins(&mut self) -> Result<()> {
-    self.add_plugin(LogPlugin);
-
     let registry = std::mem::take(&mut self.plugin_registry);
     let mut to_register = registry.iter().map(|e| e.value().to_owned()).collect::<Vec<_>>();
     let mut registered: HashSet<String> = HashSet::default();

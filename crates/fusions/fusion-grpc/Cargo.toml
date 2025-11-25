@@ -8,14 +8,11 @@ license.workspace = true
 repository.workspace = true
 publish = true
 
-[lints]
-# workspace = true
 [lints.rust]
 unsafe_code = "allow"
 
 [features]
-default = ["opentelemetry"]
-opentelemetry = ["fusion-core/opentelemetry"]
+default = []
 
 [dependencies]
 fusion-common = { workspace = true }

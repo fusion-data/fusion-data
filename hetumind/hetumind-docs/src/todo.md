@@ -32,7 +32,7 @@
   - [x] 配置根 `Cargo.toml` 和各个 crate 的依赖（如 `tokio`, `serde`, `uuid`, `chrono` 等）
   - [x] 在 `hetumind-web` 中初始化 `package.json` 并添加 Vue, Vue Flow, OpenTiny, Pinia, Vue Router 等依赖
 - [x] **配置管理**
-  - [x] 设计并实现统一的配置加载机制（支持 `app.toml` 文件和环境变量），由 [UltimateConfig](../../crates/ultimates/ultimate-core/src/configuration/model/ultimate_config.rs) 实现
+  - [x] 设计并实现统一的配置加载机制（支持 `app.toml` 文件和环境变量），由 [FusionSetting](../../crates/ultimates/ultimate-core/src/configuration/model/ultimate_config.rs) 实现
 - [x] **构建**
   - [x] 设置 `rust-toolchain.toml`，统一 Rust 版本
   - [x] 配置 Dockerfile 用于后端服务的容器化

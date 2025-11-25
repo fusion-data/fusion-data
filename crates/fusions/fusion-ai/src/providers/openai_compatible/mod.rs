@@ -20,6 +20,10 @@ pub mod audio_generation;
 #[cfg_attr(docsrs, doc(cfg(feature = "image")))]
 pub mod image_generation;
 
+#[cfg(feature = "image")]
+#[cfg_attr(docsrs, doc(cfg(feature = "image")))]
+pub mod image_edit;
+
 pub mod transcription;
 
 mod client_wrapper;
@@ -33,6 +37,8 @@ pub use embedding::*;
 #[cfg(feature = "audio")]
 pub use audio_generation::{TTS_1, TTS_1_HD};
 
+#[cfg(feature = "image")]
+pub use image_edit::{ImageEditModel, Usage as ImageEditUsage};
 #[cfg(feature = "image")]
 pub use image_generation::*;
 pub use streaming::*;

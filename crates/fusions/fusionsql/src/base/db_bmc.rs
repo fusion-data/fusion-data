@@ -1,8 +1,8 @@
-use fusionsql_core::page::{OrderBys, StaticOrderBys};
+use fusionsql_core::page::StaticOrderBys;
 use fusionsql_core::sea_utils::SIden;
 use sea_query::{IntoIden, TableRef};
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct BmcConfig {
   pub list_limit_default: u64,
   pub list_limit_max: u64,

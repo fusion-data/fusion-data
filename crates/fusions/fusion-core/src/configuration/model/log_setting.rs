@@ -1,3 +1,4 @@
+use init_tracing_opentelemetry::OtelConfig;
 use log::Level;
 use serde::{
   Deserialize, Deserializer, Serialize,
@@ -30,11 +31,11 @@ pub struct LogSetting {
   /// 目标文件名，默认为 <app name>.log
   pub log_name: Option<String>,
 
-  pub otel: OtelConfig,
+  pub otel: OtelSetting,
 }
 
 impl LogSetting {
-  pub fn otel(&self) -> &OtelConfig {
+  pub fn otel(&self) -> &OtelSetting {
     &self.otel
   }
 
@@ -44,19 +45,25 @@ impl LogSetting {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct OtelConfig {
+pub struct OtelSetting {
   pub enable: bool,
   pub traces_sample: String,
   pub exporter_otlp_endpoint: String,
 }
 
-impl Default for OtelConfig {
+impl Default for OtelSetting {
   fn default() -> Self {
     Self {
       enable: Default::default(),
       traces_sample: String::from("always_on"),
       exporter_otlp_endpoint: String::from("http://localhost:4317"),
     }
+  }
+}
+
+impl From<&OtelSetting> for OtelConfig {
+  fn from(value: &OtelSetting) -> Self {
+    Self { enabled: value.enable, ..Default::default() }
   }
 }
 

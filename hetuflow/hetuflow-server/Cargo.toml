@@ -23,7 +23,7 @@ hetuflow-core = { workspace = true, features = [
   "with-openapi",
 ] }
 fusion-common = { workspace = true, features = ["with-uuid"] }
-fusion-core = { workspace = true, features = ["with-uuid", "with-openapi"] }
+fusion-core = { workspace = true, features = ["with-uuid", "with-openapi", "with-logforth"] }
 fusion-web = { workspace = true, features = ["with-uuid", "with-openapi"] }
 fusion-db = { workspace = true, features = ["with-postgres", "with-uuid"] }
 fusionsql = { workspace = true, features = ["with-uuid", "with-openapi"] }

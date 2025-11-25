@@ -3,7 +3,7 @@
 use std::time::Duration;
 
 use fusion_core::configuration::{LogSetting, LogWriterType};
-use fusion_core::log::init_log;
+use fusion_core::logforth::init_log;
 use log::Level;
 
 fn main() {

@@ -1,6 +1,7 @@
 use fusion_core::{
   DataError,
   application::{Application, ApplicationBuilder},
+  tracing::TracingPlugin,
 };
 use fusion_db::DbPlugin;
 
@@ -26,7 +27,7 @@ where
   if let Some(source) = extra_source {
     app.add_config_source(source);
   }
-  app.add_plugin(DbPlugin) // ModelManager
+  app.add_plugin(TracingPlugin).add_plugin(DbPlugin) // ModelManager
     .add_plugin(NodeRegistryPlugin) // NodeRegistry
     .add_plugin(ExecutionStorePlugin) // ExecutionStoreService
     .add_plugin(QueueProviderPlugin) // QueueProvider

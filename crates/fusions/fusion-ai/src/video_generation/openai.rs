@@ -8,6 +8,7 @@ const STATUS_URL: &str = "https://api.openai.com/v1/videos";
 #[derive(Debug, Deserialize)]
 struct OpenAISubmitResp {
   pub id: String,
+  #[allow(dead_code)]
   pub status: Option<String>,
 }
 

@@ -1,7 +1,9 @@
 [project]
 name = "fusion-data"
 version = "0.1.0"
-description = "Add your description here"
+description = "Fusion Data"
 readme = "README.md"
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "pillow>=12.0.0",
+]

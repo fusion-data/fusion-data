@@ -4,6 +4,7 @@ use fusion_core::{
   DataError,
   application::Application,
   concurrent::{ServiceHandle, ServiceTask, TaskResult, TaskServiceHandle},
+  logforth::LogforthPlugin,
 };
 use fusion_db::DbPlugin;
 use fusion_web::server::WebServerBuilder;
@@ -40,7 +41,7 @@ impl ServerApplication {
   where
     S: config::Source + Send + Sync + 'static,
   {
-    let application = Application::builder().add_plugin(DbPlugin).run().await?;
+    let application = Application::builder().add_plugin(LogforthPlugin).add_plugin(DbPlugin).run().await?;
 
     if let Some(config_source) = config_source {
       let config_registry = application.config_registry();
