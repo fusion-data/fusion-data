@@ -58,27 +58,9 @@ pub struct ImageEditRequest {
 }
 
 impl ImageEditRequest {
-  /// Create a new basic image edit request with one image
-  pub fn new(image_data: Vec<u8>, prompt: String, size: String) -> Self {
-    Self {
-      images: vec![image_data],
-      mask_data: None,
-      prompt,
-      size,
-      n: Some(1),
-      user: None,
-      quality: None,
-      background: None,
-      output_format: None,
-      output_compression: None,
-      input_fidelity: None,
-      partial_images: None,
-      stream: None,
-    }
-  }
-
-  /// Create a new image edit request with multiple images (gpt-image-1 only)
-  pub fn new_with_images(images: Vec<Vec<u8>>, prompt: String, size: String) -> Self {
+  /// Create a new image edit request with images
+  /// Accepts either a single image or multiple images for gpt-image-1
+  pub fn new(images: Vec<Vec<u8>>, prompt: String, size: String) -> Self {
     Self {
       images,
       mask_data: None,
@@ -94,6 +76,11 @@ impl ImageEditRequest {
       partial_images: None,
       stream: None,
     }
+  }
+
+  /// Create a new image edit request with a single image (convenience method)
+  pub fn new_single(image_data: Vec<u8>, prompt: String, size: String) -> Self {
+    Self::new(vec![image_data], prompt, size)
   }
 
   /// Set the mask data (for DALL-E 2 single image editing)
@@ -340,8 +327,13 @@ where
   }
 
   /// Create a builder for image edit requests
-  pub fn edit_request(&self, image_data: Vec<u8>, prompt: String, size: String) -> ImageEditRequest {
-    ImageEditRequest::new(image_data, prompt, size)
+  pub fn edit_request(&self, images: Vec<Vec<u8>>, prompt: String, size: String) -> ImageEditRequest {
+    ImageEditRequest::new(images, prompt, size)
+  }
+
+  /// Create a builder for single image edit requests (convenience method)
+  pub fn edit_request_single(&self, image_data: Vec<u8>, prompt: String, size: String) -> ImageEditRequest {
+    ImageEditRequest::new_single(image_data, prompt, size)
   }
 }
 
@@ -351,16 +343,31 @@ mod tests {
 
   #[test]
   fn test_image_edit_request_builder() {
-    let request = ImageEditRequest::new(vec![1, 2, 3, 4], "test prompt".to_string(), "1024x1024".to_string())
-      .with_quality("high".to_string())
-      .with_background("transparent".to_string())
-      .with_n(2);
+    // Test single image with new_single method
+    let request_single =
+      ImageEditRequest::new_single(vec![1, 2, 3, 4], "test prompt".to_string(), "1024x1024".to_string())
+        .with_quality("high".to_string())
+        .with_background("transparent".to_string())
+        .with_n(2);
 
-    assert_eq!(request.images[0], vec![1, 2, 3, 4]);
-    assert_eq!(request.prompt, "test prompt");
-    assert_eq!(request.size, "1024x1024");
-    assert_eq!(request.quality, Some("high".to_string()));
-    assert_eq!(request.background, Some("transparent".to_string()));
-    assert_eq!(request.n, Some(2));
+    assert_eq!(request_single.images[0], vec![1, 2, 3, 4]);
+    assert_eq!(request_single.prompt, "test prompt");
+    assert_eq!(request_single.size, "1024x1024");
+    assert_eq!(request_single.quality, Some("high".to_string()));
+    assert_eq!(request_single.background, Some("transparent".to_string()));
+    assert_eq!(request_single.n, Some(2));
+
+    // Test multiple images with new method
+    let request_multi = ImageEditRequest::new(
+      vec![vec![1, 2, 3, 4], vec![5, 6, 7, 8]],
+      "test prompt".to_string(),
+      "1024x1024".to_string(),
+    );
+
+    assert_eq!(request_multi.images.len(), 2);
+    assert_eq!(request_multi.images[0], vec![1, 2, 3, 4]);
+    assert_eq!(request_multi.images[1], vec![5, 6, 7, 8]);
+    assert_eq!(request_multi.prompt, "test prompt");
+    assert_eq!(request_multi.size, "1024x1024");
   }
 }

@@ -99,7 +99,7 @@ async fn basic_image_edit(config: &ImageEditConfig) -> Result<(), Box<dyn std::e
   let image_data = load_image_bytes(&config.image_path)?;
 
   // Create request using the builder pattern
-  let request = ImageEditRequest::new(
+  let request = ImageEditRequest::new_single(
     image_data,
     "Change the background to a beautiful beach at sunset, keep the main subject unchanged".to_string(),
     "1024x1024".to_string(),
@@ -128,7 +128,7 @@ async fn style_transfer_edit(config: &ImageEditConfig) -> Result<(), Box<dyn std
   let image_data = load_image_bytes(&config.image_path)?;
 
   // Create request with optional parameters
-  let request = ImageEditRequest::new(
+  let request = ImageEditRequest::new_single(
     image_data,
     "Transform this image into a cyberpunk style with neon lights, futuristic elements, and dramatic lighting"
       .to_string(),
@@ -198,7 +198,7 @@ async fn multi_image_edit(config: &ImageEditConfig) -> Result<(), Box<dyn std::e
 
   let model = client.image_edit_model(model_name);
 
-  let request = ImageEditRequest::new_with_images(
+  let request = ImageEditRequest::new(
     images,
     "Create a beautiful collage arrangement with these images, blending them harmoniously".to_string(),
     "1536x1024".to_string(), // Landscape orientation for collage
@@ -236,7 +236,7 @@ async fn advanced_edit_example(config: &ImageEditConfig) -> Result<(), Box<dyn s
   let image_data = load_image_bytes(&config.image_path)?;
 
   // Create request with all optional parameters (gpt-image-1 only)
-  let request = ImageEditRequest::new(
+  let request = ImageEditRequest::new_single(
     image_data,
     "Remove the background and enhance the main subject with ultra high quality".to_string(),
     "1024x1024".to_string(),

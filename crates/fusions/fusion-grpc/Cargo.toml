@@ -13,6 +13,7 @@ unsafe_code = "allow"
 
 [features]
 default = []
+opentelemetry = []
 
 [dependencies]
 fusion-common = { workspace = true }
