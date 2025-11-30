@@ -12,10 +12,9 @@ publish = true
 uninlined_format_args = "allow"
 
 [features]
-default = ["with-logforth", "with-tracing"]
-with-uuid = ["dep:uuid", "utoipa/uuid", "fusion-common/with-uuid"]
+default = ["fusion-common/with-uuid", "with-logforth", "with-tracing"]
 with-ulid = ["dep:ulid", "utoipa/ulid", "fusion-common/with-ulid"]
-with-openapi = ["dep:utoipa"]
+with-openapi = ["dep:utoipa", "utoipa/uuid"]
 with-logforth = ["dep:logforth", "dep:fastrace", "logforth/append-opentelemetry"]
 with-tracing = ["dep:tracing", "dep:tracing-log", "dep:tracing-appender", "dep:tracing-subscriber", "dep:init-tracing-opentelemetry", "dep:tracing-opentelemetry-instrumentation-sdk"]
 tonic = ["dep:tonic", "dep:protobuf"]
@@ -35,7 +34,7 @@ toml.workspace = true
 config.workspace = true
 zeroize.workspace = true
 strum.workspace = true
-uuid = { workspace = true, optional = true }
+uuid = { workspace = true }
 ulid = { workspace = true, optional = true }
 hierarchical_hash_wheel_timer = { workspace = true }
 log.workspace = true

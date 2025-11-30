@@ -162,7 +162,6 @@ impl From<CtxError> for DataError {
   }
 }
 
-#[cfg(feature = "with-uuid")]
 impl From<uuid::Error> for DataError {
   fn from(value: uuid::Error) -> Self {
     DataError::internal(500, value.to_string(), None)

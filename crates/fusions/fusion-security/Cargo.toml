@@ -29,8 +29,7 @@ required-features = ["with-oauth"]
 
 
 [features]
-default = ["with-uuid"]
-with-uuid = ["fusion-common/with-uuid", "fusion-core/with-uuid"]
+default = ["fusion-common/with-uuid"]
 with-jwt = ["josekit"]
 with-oauth = ["with-jwt", "dep:oauth2"]
 with-openid = ["with-jwt", "dep:openidconnect"]

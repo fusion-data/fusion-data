@@ -12,6 +12,11 @@ publish = true
 workspace = true
 
 [features]
+default = [
+  "fusion-common/with-uuid",
+  "utoipa/uuid",
+  "sqlx/uuid",
+]
 with-db = [
   "dep:fusion-db",
   "dep:sqlx",
@@ -22,12 +27,6 @@ with-db = [
 ]
 with-grpc = ["dep:fusion-grpc", "dep:tonic"]
 with-web = ["dep:fusion-web", "dep:axum"]
-with-uuid = [
-  "fusion-common/with-uuid",
-  "fusion-core/with-uuid",
-  "utoipa/uuid",
-  "sqlx/uuid",
-]
 with-ulid = ["dep:ulid", "utoipa/ulid", "fusion-common/with-ulid"]
 with-openapi = [
   "fusion-common/with-openapi",

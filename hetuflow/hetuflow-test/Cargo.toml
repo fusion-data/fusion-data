@@ -14,7 +14,7 @@ workspace = true
 
 [dependencies]
 fusion-common = { workspace = true, features = ["with-uuid"] }
-fusion-core = { workspace = true, features = ["with-uuid"] }
+fusion-core = { workspace = true }
 hetuflow-core = { workspace = true }
 hetuflow-agent = { path = "../hetuflow-agent" }
 hetuflow-server = { path = "../hetuflow-server" }

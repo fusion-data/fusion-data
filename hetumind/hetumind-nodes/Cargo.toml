@@ -14,7 +14,7 @@ workspace = true
 
 [dependencies]
 fusion-common = { workspace = true, features = ["with-uuid"] }
-fusion-core = { workspace = true, features = ["with-uuid"] }
+fusion-core = { workspace = true }
 hetumind-core = { workspace = true }
 hetumind-context = { workspace = true }
 

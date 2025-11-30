@@ -17,9 +17,8 @@ workspace = true
 
 [dependencies]
 # -- fusions
-fusion-core = { workspace = true, features = ["with-uuid", "with-openapi", "with-logforth"] }
+fusion-core = { workspace = true, features = ["with-openapi", "with-logforth"] }
 fusions = { workspace = true, features = [
-  "with-uuid",
   "with-openapi",
   "with-db",
   "with-web",
