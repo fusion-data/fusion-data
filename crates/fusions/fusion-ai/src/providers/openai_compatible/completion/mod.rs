@@ -16,85 +16,25 @@ use tracing::{Instrument, info_span};
 
 use crate::json_utils;
 
+// 复用 rig 的模型常量
+pub use rig::providers::openai::completion::{
+  GPT_4, GPT_4_1, GPT_4_1_2025_04_14, GPT_4_1_MINI, GPT_4_1_NANO, GPT_4_5_PREVIEW, GPT_4_5_PREVIEW_2025_02_27,
+  GPT_4_32K, GPT_4_32K_0613, GPT_4_0125_PREVIEW, GPT_4_0613, GPT_4_1106_PREVIEW, GPT_4_1106_VISION_PREVIEW,
+  GPT_4_TURBO, GPT_4_TURBO_2024_04_09, GPT_4_TURBO_PREVIEW, GPT_4_VISION_PREVIEW, GPT_4O, GPT_4O_2024_05_13,
+  GPT_4O_2024_11_20, GPT_4O_MINI, O1, O1_2024_12_17, O1_MINI, O1_MINI_2024_09_12, O1_PREVIEW, O1_PREVIEW_2024_09_12,
+  O1_PRO, O3, O3_MINI, O3_MINI_2025_01_31, O4_MINI, O4_MINI_2025_04_16,
+};
+
+// 复用 rig 的类型（用于转换和兼容）
+pub use rig::providers::openai::completion::{
+  AssistantContent as RigAssistantContent, AudioAssistant as RigAudioAssistant, Function as RigFunction,
+  ImageUrl as RigImageUrl, InputAudio as RigInputAudio, SystemContent as RigSystemContent,
+  SystemContentType as RigSystemContentType, ToolChoice as RigToolChoice, ToolType as RigToolType,
+};
+
 use super::{ApiErrorResponse, ApiResponse, Client, streaming::StreamingCompletionResponse};
 
 pub mod streaming;
-
-/// `o4-mini-2025-04-16` completion model
-pub const O4_MINI_2025_04_16: &str = "o4-mini-2025-04-16";
-/// `o4-mini` completion model
-pub const O4_MINI: &str = "o4-mini";
-/// `o3` completion model
-pub const O3: &str = "o3";
-/// `o3-mini` completion model
-pub const O3_MINI: &str = "o3-mini";
-/// `o3-mini-2025-01-31` completion model
-pub const O3_MINI_2025_01_31: &str = "o3-mini-2025-01-31";
-/// `o1-pro` completion model
-pub const O1_PRO: &str = "o1-pro";
-/// `o1`` completion model
-pub const O1: &str = "o1";
-/// `o1-2024-12-17` completion model
-pub const O1_2024_12_17: &str = "o1-2024-12-17";
-/// `o1-preview` completion model
-pub const O1_PREVIEW: &str = "o1-preview";
-/// `o1-preview-2024-09-12` completion model
-pub const O1_PREVIEW_2024_09_12: &str = "o1-preview-2024-09-12";
-/// `o1-mini completion model
-pub const O1_MINI: &str = "o1-mini";
-/// `o1-mini-2024-09-12` completion model
-pub const O1_MINI_2024_09_12: &str = "o1-mini-2024-09-12";
-
-/// `gpt-4.1-mini` completion model
-pub const GPT_4_1_MINI: &str = "gpt-4.1-mini";
-/// `gpt-4.1-nano` completion model
-pub const GPT_4_1_NANO: &str = "gpt-4.1-nano";
-/// `gpt-4.1-2025-04-14` completion model
-pub const GPT_4_1_2025_04_14: &str = "gpt-4.1-2025-04-14";
-/// `gpt-4.1` completion model
-pub const GPT_4_1: &str = "gpt-4.1";
-/// `gpt-4.5-preview` completion model
-pub const GPT_4_5_PREVIEW: &str = "gpt-4.5-preview";
-/// `gpt-4.5-preview-2025-02-27` completion model
-pub const GPT_4_5_PREVIEW_2025_02_27: &str = "gpt-4.5-preview-2025-02-27";
-/// `gpt-4o-2024-11-20` completion model (this is newer than 4o)
-pub const GPT_4O_2024_11_20: &str = "gpt-4o-2024-11-20";
-/// `gpt-4o` completion model
-pub const GPT_4O: &str = "gpt-4o";
-/// `gpt-4o-mini` completion model
-pub const GPT_4O_MINI: &str = "gpt-4o-mini";
-/// `gpt-4o-2024-05-13` completion model
-pub const GPT_4O_2024_05_13: &str = "gpt-4o-2024-05-13";
-/// `gpt-4-turbo` completion model
-pub const GPT_4_TURBO: &str = "gpt-4-turbo";
-/// `gpt-4-turbo-2024-04-09` completion model
-pub const GPT_4_TURBO_2024_04_09: &str = "gpt-4-turbo-2024-04-09";
-/// `gpt-4-turbo-preview` completion model
-pub const GPT_4_TURBO_PREVIEW: &str = "gpt-4-turbo-preview";
-/// `gpt-4-0125-preview` completion model
-pub const GPT_4_0125_PREVIEW: &str = "gpt-4-0125-preview";
-/// `gpt-4-1106-preview` completion model
-pub const GPT_4_1106_PREVIEW: &str = "gpt-4-1106-preview";
-/// `gpt-4-vision-preview` completion model
-pub const GPT_4_VISION_PREVIEW: &str = "gpt-4-vision-preview";
-/// `gpt-4-1106-vision-preview` completion model
-pub const GPT_4_1106_VISION_PREVIEW: &str = "gpt-4-1106-vision-preview";
-/// `gpt-4` completion model
-pub const GPT_4: &str = "gpt-4";
-/// `gpt-4-0613` completion model
-pub const GPT_4_0613: &str = "gpt-4-0613";
-/// `gpt-4-32k` completion model
-pub const GPT_4_32K: &str = "gpt-4-32k";
-/// `gpt-4-32k-0613` completion model
-pub const GPT_4_32K_0613: &str = "gpt-4-32k-0613";
-/// `gpt-3.5-turbo` completion model
-pub const GPT_35_TURBO: &str = "gpt-3.5-turbo";
-/// `gpt-3.5-turbo-0125` completion model
-pub const GPT_35_TURBO_0125: &str = "gpt-3.5-turbo-0125";
-/// `gpt-3.5-turbo-1106` completion model
-pub const GPT_35_TURBO_1106: &str = "gpt-3.5-turbo-1106";
-/// `gpt-3.5-turbo-instruct` completion model
-pub const GPT_35_TURBO_INSTRUCT: &str = "gpt-3.5-turbo-instruct";
 
 impl From<ApiErrorResponse> for CompletionError {
   fn from(err: ApiErrorResponse) -> Self {
@@ -237,6 +177,8 @@ pub struct ToolCall {
   #[serde(default)]
   pub r#type: ToolType,
   pub function: Function,
+  pub signature: Option<String>,
+  pub additional_params: Option<serde_json::Value>,
 }
 
 #[derive(Default, Debug, Serialize, Deserialize, PartialEq, Clone)]
@@ -396,6 +338,7 @@ pub fn try_from_message_to_vec_input_item(message: message::Message) -> Result<V
             message::AssistantContent::Reasoning(_) => {
               unimplemented!("The OpenAI Completions API doesn't support reasoning!");
             }
+            message::AssistantContent::Image(image) => todo!(),
           }
           (texts, tools)
         });
@@ -419,6 +362,8 @@ impl From<message::ToolCall> for ToolCall {
       id: tool_call.id,
       r#type: ToolType::default(),
       function: Function { name: tool_call.function.name, arguments: tool_call.function.arguments },
+      signature: tool_call.signature,
+      additional_params: tool_call.additional_params,
     }
   }
 }
@@ -429,6 +374,8 @@ impl From<ToolCall> for message::ToolCall {
       id: tool_call.id,
       call_id: None,
       function: message::ToolFunction { name: tool_call.function.name, arguments: tool_call.function.arguments },
+      signature: tool_call.signature,
+      additional_params: tool_call.additional_params,
     }
   }
 }
@@ -818,6 +765,11 @@ impl CompletionModel<reqwest::Client> {
 impl completion::CompletionModel for CompletionModel<reqwest::Client> {
   type Response = CompletionResponse;
   type StreamingResponse = StreamingCompletionResponse;
+  type Client = Client<reqwest::Client>;
+
+  fn make(client: &Self::Client, model: impl Into<String>) -> Self {
+    Self::new(client.clone(), &model.into())
+  }
 
   #[cfg_attr(feature = "worker", worker::send)]
   async fn completion(

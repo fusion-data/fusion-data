@@ -111,6 +111,7 @@
     "reranker",
     "retryable",
     "rmcp",
+    "rposition",
     "rustc",
     "rwlock",
     "sched",

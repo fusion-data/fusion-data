@@ -200,12 +200,10 @@ where
                                         continue;
                                     };
 
-                                    yield Ok(streaming::RawStreamingChoice::ToolCall {
-                                        id,
-                                        name,
-                                        arguments,
-                                        call_id: None,
-                                    });
+                                    yield Ok(streaming::RawStreamingChoice::ToolCall(
+                                        streaming::RawStreamingToolCall::new(id, name, arguments)
+                                            .with_call_id(tool_call.id.clone().unwrap_or_default()),
+                                    ));
                                 }
                             }
                         }
@@ -250,14 +248,13 @@ where
                 function: super::Function {
                     name: name.clone(), arguments: arguments.clone()
                 },
+                signature: None,
+                additional_params: None,
             });
 
-            yield Ok(RawStreamingChoice::ToolCall {
-                id,
-                name,
-                arguments,
-                call_id: None,
-            });
+            yield Ok(RawStreamingChoice::ToolCall(
+                streaming::RawStreamingToolCall::new(id, name, arguments),
+            ));
         }
 
         let message_output = super::Message::Assistant {

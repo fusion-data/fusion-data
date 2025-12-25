@@ -1,41 +1,72 @@
+//! # Embeddings Module
+//!
+//! This module provides embedding configuration and utilities.
+//! For the recommended rig 0.27+ pattern, use [`factory::EmbeddingConfig`] instead.
+
 use derive_builder::Builder;
-use rig::{client::builder::ClientBuildError, embeddings::embedding::EmbeddingModelDyn};
+use rig::embeddings::EmbeddingModel;
 use serde::{Deserialize, Serialize};
 
-use crate::client::ClientBuilderFactory;
+use crate::factory::{ClientFactory, EmbeddingConfig as FactoryEmbeddingConfig, FactoryError};
 
+/// Embedding configuration for creating embedding models.
+/// This is a simpler config that uses the factory pattern internally.
+///
+/// For more control, use [`factory::EmbeddingConfig`] directly.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Builder)]
 pub struct EmbeddingConfig {
   #[builder(setter(into))]
   pub provider: String,
+
   #[builder(setter(into))]
   pub model: String,
+
   pub dims: usize,
+
   #[builder(default, setter(into, strip_option))]
   pub base_url: Option<String>,
+
   #[builder(default, setter(into, strip_option))]
   pub api_key: Option<String>,
 }
 
-#[derive(Clone)]
-pub struct Embeddings {
-  pub config: EmbeddingConfig,
+impl From<EmbeddingConfig> for FactoryEmbeddingConfig {
+  fn from(config: EmbeddingConfig) -> Self {
+    FactoryEmbeddingConfig {
+      provider: config.provider,
+      model: config.model,
+      dims: config.dims,
+      base_url: config.base_url,
+      api_key: config.api_key,
+    }
+  }
 }
 
-impl Embeddings {
+/// Embeddings wrapper that provides a simple interface for generating embeddings.
+#[derive(Clone)]
+pub struct Embeddings<M: rig::embeddings::EmbeddingModel> {
+  config: EmbeddingConfig,
+  _model: std::marker::PhantomData<M>,
+}
+
+impl<M: rig::embeddings::EmbeddingModel> Embeddings<M> {
+  /// Create new Embeddings wrapper
   pub fn new(config: EmbeddingConfig) -> Self {
-    Self { config }
+    Self { config, _model: std::marker::PhantomData }
   }
 
-  pub fn embeddings(&self) -> Result<Box<dyn EmbeddingModelDyn>, ClientBuildError> {
-    let factory = ClientBuilderFactory::new();
-    let client =
-      factory.client(&self.config.provider, self.config.base_url.as_deref(), self.config.api_key.as_deref())?;
+  /// Generate embeddings for the given documents
+  pub async fn embed(&self, documents: Vec<String>) -> Result<Vec<Vec<f64>>, FactoryError> {
+    let factory = ClientFactory::new();
+    let config = self.config.clone().into();
+    let embeddings = factory.embeddings(&config, documents).await?;
+    let embeddings = embeddings.into_iter().map(|e| e.vec).collect();
+    Ok(embeddings)
+  }
+}
 
-    let embeddings = client
-      .as_embeddings()
-      .ok_or(ClientBuildError::UnsupportedFeature(self.config.provider.to_string(), "embeddings".to_owned()))?;
-
-    Ok(embeddings.embedding_model_with_ndims(&self.config.model, self.config.dims))
+impl From<&EmbeddingConfig> for Embeddings<rig::providers::openai::EmbeddingModel<reqwest::Client>> {
+  fn from(config: &EmbeddingConfig) -> Self {
+    Self::new(config.clone())
   }
 }

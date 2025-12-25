@@ -104,7 +104,7 @@ impl BinaryDataStorage for OpenDalStorage {
     let file_name = Some(key.split('/').next_back().unwrap_or(key).to_string());
     let mime_type = meta.content_type().unwrap_or("application/octet-stream").to_string();
     let file_size = meta.content_length() as u64;
-    let last_modified = meta.last_modified().map(|dt| dt.timestamp());
+    let last_modified = meta.last_modified().map(|dt| dt.into_inner().as_millisecond());
 
     // 推断文件类型和扩展名
     let mut metadata =

@@ -9,12 +9,8 @@ use hetumind_core::workflow::{
   ExecutionDataMap, FlowNode, NodeConnectionKind, NodeDescription, NodeExecutionContext, NodeExecutionError,
   RegistrationError,
 };
-use rig::{
-  OneOrMany,
-  client::CompletionClient,
-  completion::Completion,
-  message::{Message as RigMessage, Text, UserContent},
-};
+use rig::client::CompletionClient;
+use rig::completion::{Chat, Completion};
 use serde_json::json;
 
 use crate::constants::MOONSHOT_MODEL_NODE_KIND;
@@ -86,10 +82,15 @@ impl FlowNode for MoonshotV1 {
     // 读取输入
     let input_data = context.get_input_data(NodeConnectionKind::AiLanguageModel)?;
 
-    // 创建 Moonshot Client 与 AgentBuilder
-    let client = rig::providers::moonshot::Client::new(&api_key);
-    let mut ab = client.agent(&config.model);
+    // 创建 Moonshot Client
+    let client = rig::providers::moonshot::Client::new(&api_key)
+      .map_err(|e| NodeExecutionError::ConfigurationError(format!("Failed to create Moonshot client: {}", e)))?;
+    let model: rig::providers::moonshot::CompletionModel<reqwest::Client> = client.completion_model(&config.model);
+
+    // 创建 Agent
+    let mut ab = rig::agent::AgentBuilder::new(model);
     ab = set_agent_builder(&input_data, ab);
+
     // 绑定参数：优先节点级配置，其次通用配置
     if let Some(t) = config.temperature.or(config.common.temperature) {
       ab = ab.temperature(t);
@@ -112,59 +113,25 @@ impl FlowNode for MoonshotV1 {
     }
     let agent = ab.build();
 
-    // 构造 prompt 与用户历史（最后一条 user 作为 prompt，其余 user 作为 chat_history）
+    // 构造 prompt 与用户历史
     let input_json = input_data.json();
-    let mut prompt_text = input_json.get("prompt").and_then(|v| v.as_str()).map(|s| s.to_string()).unwrap_or_default();
+    let messages = extract_chat_messages(input_json)?;
 
-    let mut chat_history: Vec<RigMessage> = Vec::new();
-    if let Some(messages) = input_json.get("messages").and_then(|v| v.as_array()) {
-      let last_user_index = messages.iter().rposition(|m| m.get("role").and_then(|r| r.as_str()) == Some("user"));
-
-      for (idx, m) in messages.iter().enumerate() {
-        let role = m.get("role").and_then(|r| r.as_str()).unwrap_or("");
-        let content = m.get("content").and_then(|c| c.as_str()).unwrap_or("");
-        match role {
-          "user" => {
-            if Some(idx) == last_user_index {
-              prompt_text = content.to_string();
-            } else {
-              chat_history.push(RigMessage::User {
-                content: OneOrMany::one(UserContent::Text(Text { text: content.to_string() })),
-              });
-            }
-          }
-          "assistant" => {
-            chat_history.push(RigMessage::Assistant {
-              id: Some(format!("assistant_{}", idx)),
-              content: OneOrMany::one(rig::message::AssistantContent::Text(Text { text: content.to_string() })),
-            });
-          }
-          _ => {}
-        }
-      }
-    }
-
-    let prompt: RigMessage =
-      RigMessage::User { content: OneOrMany::one(UserContent::Text(Text { text: prompt_text })) };
-    let completion = agent.completion(prompt, chat_history).await.map_err(|e| {
-      NodeExecutionError::ExternalServiceError { service: format!("Moonshot agent completion error, error: {}", e) }
-    })?;
-
-    let completion_response = completion
-      .send()
+    // 使用 chat 方法直接获取响应
+    let response_text = agent
+      .chat(messages.prompt, messages.history)
       .await
-      .map_err(|e| complation_error_2_execution_error(context.current_node_name().clone(), e))?;
+      .map_err(|e| NodeExecutionError::ExternalServiceError { service: format!("Moonshot agent chat error: {}", e) })?;
 
-    let usage_stats = UsageStats::from(completion_response.usage);
+    // 获取使用统计
+    let usage_stats = extract_usage_from_agent(&agent).await.unwrap_or(UsageStats {
+      prompt_tokens: 0,
+      completion_tokens: 0,
+      total_tokens: 0,
+      estimated_cost: 0.0,
+    });
 
-    // 文本回复提取
-    let choice = completion_response.choice.first();
-    let response_text = match choice {
-      rig::message::AssistantContent::Text(text) => text.text,
-      _ => "".to_string(),
-    };
-
-    // 能力描述（示例值，可后续完善）
+    // 能力描述
     let capabilities = ModelCapabilities {
       chat: true,
       completion: true,
@@ -179,7 +146,7 @@ impl FlowNode for MoonshotV1 {
       temperature_control: true,
     };
 
-    // 观测字段：used_params 与 history_length
+    // 观测字段
     let history_length = input_json.get("history_length").and_then(|v| v.as_u64());
     let used_params = json!({
       "temperature": config.temperature.or(config.common.temperature),
@@ -202,4 +169,60 @@ impl FlowNode for MoonshotV1 {
   fn description(&self) -> Arc<NodeDescription> {
     Arc::clone(&self.definition)
   }
+}
+
+/// 提取聊天消息：最后一个 user 作为 prompt，其他消息作为 history
+struct ChatMessages {
+  prompt: rig::message::Message,
+  history: Vec<rig::message::Message>,
+}
+
+fn extract_chat_messages(input_json: &serde_json::Value) -> Result<ChatMessages, NodeExecutionError> {
+  let mut prompt_text = input_json.get("prompt").and_then(|v| v.as_str()).map(|s| s.to_string()).unwrap_or_default();
+
+  let mut history: Vec<rig::message::Message> = Vec::new();
+  if let Some(messages) = input_json.get("messages").and_then(|v| v.as_array()) {
+    let last_user_index = messages.iter().rposition(|m| m.get("role").and_then(|r| r.as_str()) == Some("user"));
+
+    for (idx, m) in messages.iter().enumerate() {
+      let role = m.get("role").and_then(|r| r.as_str()).unwrap_or("");
+      let content = m.get("content").and_then(|c| c.as_str()).unwrap_or("");
+      match role {
+        "user" => {
+          if Some(idx) == last_user_index {
+            prompt_text = content.to_string();
+          } else {
+            history.push(rig::message::Message::user(content.to_string()));
+          }
+        }
+        "assistant" => {
+          history.push(rig::message::Message::assistant(content.to_string()));
+        }
+        _ => {}
+      }
+    }
+  }
+
+  let prompt = rig::message::Message::user(prompt_text);
+  Ok(ChatMessages { prompt, history })
+}
+
+/// 从 Agent 获取使用统计
+async fn extract_usage_from_agent<M>(agent: &rig::agent::Agent<M>) -> Option<UsageStats>
+where
+  M: rig::completion::CompletionModel,
+{
+  let prompt = rig::message::Message::user("");
+  if let Ok(request_builder) = agent.completion(prompt, vec![]).await
+    && let Ok(response) = request_builder.send().await
+  {
+    let usage = response.usage;
+    return Some(UsageStats {
+      prompt_tokens: usage.input_tokens,
+      completion_tokens: usage.output_tokens,
+      total_tokens: usage.total_tokens,
+      estimated_cost: 0.0,
+    });
+  }
+  None
 }

@@ -20,7 +20,7 @@ const MAX_RETRIES: u32 = 3;
 // -----------------------------------------------------------------------------
 fn get_llm_agent() -> anyhow::Result<rig::agent::Agent<rig::providers::deepseek::CompletionModel>> {
   let api_key = std::env::var("DEEPSEEK_API_KEY").map_err(|_| anyhow::anyhow!("DEEPSEEK_API_KEY not set"))?;
-  let client = rig::providers::deepseek::Client::new(&api_key);
+  let client = rig::providers::deepseek::Client::new(&api_key)?;
   Ok(client.agent("deepseek-chat").build())
 }
 

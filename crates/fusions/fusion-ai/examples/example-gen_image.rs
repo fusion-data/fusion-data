@@ -9,8 +9,11 @@
 // .model("cogview-4-250304")
 
 use fusion_ai::{
-  AiError, DefaultProviders, agents::AgentConfigBuilder, client::ClientBuilderFactory, utils::vec_to_image_file,
+  AiError, DefaultProviders,
+  client::{AgentConfigBuilder, ClientFactory},
+  utils::vec_to_image_file,
 };
+use rig::{client::image_generation::ImageGenerationClient, image_generation::ImageGenerationRequestBuilder};
 #[allow(unused_imports)]
 use serde_json::json;
 
@@ -33,10 +36,10 @@ async fn main() -> Result<(), AiError> {
     .build()
     .unwrap();
 
-  let factory = ClientBuilderFactory::new();
-  let agent = factory.image(&config)?;
+  let factory = ClientFactory::new().openai_compatible(&config.base_url.unwrap(), &config.api_key.unwrap());
+  let image_model = factory.to_inner().image_generation_model(&config.model);
 
-  let request = agent.image_generation_request()
+  let request = ImageGenerationRequestBuilder::new(image_model)
     .prompt("使用 Rust, Python, Typescript 这 3 门编程语言的 logo 合成一个新的 logo。要求新 logo 能够让专业人士明确的分辨出包含有这 3 门编程语言的元素")
     .width(1024)
     .height(1024);

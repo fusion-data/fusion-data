@@ -35,6 +35,7 @@ uuid = { workspace = true }
 reqwest = { workspace = true }
 ureq = { workspace = true }
 http = { workspace = true }
+mime = { workspace = true }
 dashmap = { workspace = true }
 async-trait = { workspace = true }
 sqlx = { workspace = true, optional = true }

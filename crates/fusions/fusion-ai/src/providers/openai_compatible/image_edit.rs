@@ -1,17 +1,28 @@
+use std::str::FromStr;
+
 use bytes::Bytes;
-use reqwest::multipart::Part;
-use rig::http_client::HttpClientExt;
+use mime::Mime;
+use rig::http_client::multipart::Part;
+use rig::http_client::{HttpClientExt, MultipartForm};
 use rig::image_generation::ImageGenerationError;
 use serde::{Deserialize, Serialize};
 
 use crate::providers::openai_compatible::{ApiResponse, Client};
 
-// Re-use from image_generation module
-use super::image_generation::ImageGenerationData;
-
 // ================================================================
 // OpenAI Image Edit API
 // ================================================================
+
+/// Image edit response data (supports both URL and base64 formats)
+#[derive(Debug, Deserialize)]
+pub struct ImageEditData {
+  /// URL to the generated image (optional, some providers return base64 instead)
+  #[serde(default)]
+  pub url: String,
+  /// Base64 encoded image data
+  #[serde(default)]
+  pub b64_json: String,
+}
 
 // Model constants are exported from image_generation module
 pub use super::image_generation::{DALL_E_2, GPT_IMAGE_1};
@@ -158,7 +169,7 @@ pub struct InputTokensDetails {
 #[derive(Debug, Deserialize)]
 pub struct ImageEditResponse {
   pub created: i64,
-  pub data: Vec<ImageGenerationData>,
+  pub data: Vec<ImageEditData>,
   /// The background parameter used for the image generation (gpt-image-1 only)
   #[serde(default)]
   pub background: Option<String>,
@@ -223,8 +234,8 @@ impl<T> ImageEditModel<T> {
   /// - OpenAI API (gpt-image-1, which supports up to 16 images)
   /// - Gitee AI API (various models, typically single image)
   /// - DALL-E 2 (single image only)
-  fn build_form(&self, request: &ImageEditRequest) -> Result<reqwest::multipart::Form, ImageGenerationError> {
-    let mut body = reqwest::multipart::Form::new()
+  fn build_form(&self, request: &ImageEditRequest) -> Result<MultipartForm, ImageGenerationError> {
+    let mut body = MultipartForm::new()
       .text("model", self.model.clone())
       .text("prompt", request.prompt.clone())
       .text("size", request.size.clone());
@@ -235,22 +246,18 @@ impl<T> ImageEditModel<T> {
       let file_name = if request.images.len() == 1 { "image.png".to_string() } else { format!("image_{}.png", idx) };
 
       body = body.part(
-        "image",
-        Part::bytes(image_data.clone())
-          .file_name(file_name)
-          .mime_str("image/png")
-          .map_err(|e| ImageGenerationError::RequestError(format!("Invalid mime type: {}", e).into()))?,
+        Part::bytes("image", image_data.clone())
+          .filename(file_name)
+          .content_type(Mime::from_str("image/png").unwrap()),
       );
     }
 
     // Add optional mask (only for DALL-E 2 single image)
     if let Some(mask_data) = &request.mask_data {
       body = body.part(
-        "mask",
-        Part::bytes(mask_data.clone())
-          .file_name("mask.png")
-          .mime_str("image/png")
-          .map_err(|e| ImageGenerationError::RequestError(format!("Invalid mime type: {}", e).into()))?,
+        Part::bytes("mask", mask_data.clone())
+          .filename("mask.png")
+          .content_type(Mime::from_str("image/png").unwrap()),
       );
     }
 
@@ -308,7 +315,11 @@ where
     let body = self.build_form(&request)?;
 
     // Send request
-    let req = self.client.post("/images/edits")?.body(body).unwrap();
+    let req = self
+      .client
+      .post("/images/edits")?
+      .body(body)
+      .map_err(|e| ImageGenerationError::RequestError(Box::new(e)))?;
     let response = self.client.http_client.send_multipart::<Bytes>(req).await?;
 
     let status = response.status();

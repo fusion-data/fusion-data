@@ -28,3 +28,6 @@ pub enum DbxError {
   #[error(transparent)]
   Sqlx(#[from] sqlx::Error),
 }
+
+// unsafe impl Send for DbxError {}
+// unsafe impl Sync for DbxError {}

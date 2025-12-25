@@ -27,7 +27,7 @@ If you are not sure, ask a short clarifying question **instead** of returning JS
 /// Very small wrapper around `rig` to obtain an agent that can answer our prompt.
 fn get_llm_agent() -> anyhow::Result<rig::agent::Agent<rig::providers::deepseek::CompletionModel>> {
   let api_key = std::env::var("DEEPSEEK_API_KEY").map_err(|_| anyhow::anyhow!("DEEPSEEK_API_KEY not set"))?;
-  let client = rig::providers::deepseek::Client::new(&api_key);
+  let client = rig::providers::deepseek::Client::new(&api_key)?;
 
   Ok(client.agent("deepseek-chat").preamble(SENTIMENT_PROMPT).build())
 }

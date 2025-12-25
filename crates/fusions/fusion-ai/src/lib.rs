@@ -9,9 +9,17 @@ pub mod utils;
 #[cfg(feature = "video")]
 pub mod video_generation;
 
-pub use error::*;
 /// Re-export rig for easier access to core types
 pub use rig;
+
+pub use error::*;
+
+/// New factory module (rig 0.27+ explicit provider pattern)
+pub mod factory {
+  pub use super::client::{
+    AgentConfig, ClientFactory, EmbeddingConfig, FactoryError, ProviderClientEnum, ProviderConfig,
+  };
+}
 
 pub struct DefaultProviders;
 impl DefaultProviders {

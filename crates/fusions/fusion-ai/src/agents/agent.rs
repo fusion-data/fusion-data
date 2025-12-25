@@ -1,14 +1,17 @@
 use derive_builder::Builder;
 use rig::{
-  client::{builder::FinalCompletionResponse, completion::CompletionModelHandle},
-  completion::{Completion, CompletionRequestBuilder, CompletionResponse},
+  completion::{CompletionRequestBuilder, CompletionResponse},
   message::Message,
   streaming::StreamingCompletionResponse,
 };
 use serde::{Deserialize, Serialize};
 
-use crate::{agents::AgentError, factory::ClientBuilderFactory};
+use crate::factory::{AgentConfig as FactoryAgentConfig, ClientFactory, FactoryError};
 
+/// Agent configuration for creating agents.
+/// This is a simpler config that uses the factory pattern internally.
+///
+/// For more control, use [`factory::AgentConfig`] directly.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Builder)]
 pub struct AgentConfig {
   #[builder(setter(into))]
@@ -48,44 +51,57 @@ pub struct AgentConfig {
   /// Additional parameters to be passed to the model
   #[builder(default, setter(into, strip_option))]
   pub additional_params: Option<serde_json::Value>,
-  // /// List of vector store, with the sample number
-  // dynamic_context: Vec<(usize, Box<dyn VectorStoreIndexDyn>)>,
-  // /// Dynamic tools
-  // dynamic_tools: Vec<(usize, Box<dyn VectorStoreIndexDyn>)>,
-
-  // /// Actual tool implementations
-  // tools: ToolSet,
-  // /// Whether or not the underlying LLM should be forced to use a tool before providing a response.
-  // #[builder(default, setter(strip_option))]
-  // pub tool_choice: Option<ToolChoice>,
 }
 
+impl From<AgentConfig> for FactoryAgentConfig {
+  fn from(config: AgentConfig) -> Self {
+    FactoryAgentConfig {
+      provider: config.provider,
+      model: config.model,
+      base_url: config.base_url,
+      api_key: config.api_key,
+      name: config.name,
+      description: config.description,
+      system_prompt: config.system_prompt,
+      static_context: config.static_context,
+      max_tokens: config.max_tokens,
+      temperature: config.temperature,
+      additional_params: config.additional_params,
+    }
+  }
+}
+
+/// A model agent that can invoke completions with a specific configuration.
+/// The generic parameter `M` represents the underlying completion model type.
 #[derive(Clone)]
-pub struct ModelAgent {
-  pub config: AgentConfig,
+pub struct ModelAgent<M: rig::completion::CompletionModel> {
+  config: AgentConfig,
+  _model: std::marker::PhantomData<M>,
 }
 
-impl ModelAgent {
+impl<M: rig::completion::CompletionModel> ModelAgent<M> {
   /// Create a new ModelAgent from the given configuration.
   pub fn new(config: AgentConfig) -> Self {
-    Self { config }
+    Self { config, _model: std::marker::PhantomData }
   }
 
   /// Invoke the agent with the given prompt and chat history, returning the full completion response.
-  pub async fn invoke(&self, prompt: &str, chat_history: Vec<Message>) -> Result<CompletionResponse<()>, AgentError> {
-    let request = self.completion(prompt, chat_history).await?;
-    let response: CompletionResponse<()> = request.send().await?;
+  pub async fn invoke(&self, prompt: &str, chat_history: Vec<Message>) -> Result<CompletionResponse<M::Response>, FactoryError> {
+    let factory = ClientFactory::new();
+    let agent = factory.agent(&self.config.clone().into())?;
+    let request = agent.completion(prompt, chat_history).await?;
+    let response = request.send().await?;
     Ok(response)
   }
 
   /// Create a completion request builder for the given prompt and chat history.
-  async fn completion(
+  pub async fn completion(
     &self,
     prompt: &str,
     chat_history: Vec<Message>,
-  ) -> Result<CompletionRequestBuilder<CompletionModelHandle<'_>>, AgentError> {
-    let factory = ClientBuilderFactory::new();
-    let agent = factory.agent(&self.config)?;
+  ) -> Result<CompletionRequestBuilder<M>, FactoryError> {
+    let factory = ClientFactory::new();
+    let agent = factory.agent(&self.config.clone().into())?;
     let request = agent.completion(prompt, chat_history).await?;
     Ok(request)
   }
@@ -95,16 +111,16 @@ impl ModelAgent {
     &self,
     prompt: &str,
     chat_history: Vec<Message>,
-  ) -> Result<StreamingCompletionResponse<FinalCompletionResponse>, AgentError> {
-    let factory = ClientBuilderFactory::new();
-    let agent = factory.agent(&self.config)?;
+  ) -> Result<StreamingCompletionResponse<M::StreamingResponse>, FactoryError> {
+    let factory = ClientFactory::new();
+    let agent = factory.agent(&self.config.clone().into())?;
     let request = agent.completion(prompt, chat_history).await?;
     let response = request.stream().await?;
     Ok(response)
   }
 }
 
-impl From<&AgentConfig> for ModelAgent {
+impl From<&AgentConfig> for ModelAgent<rig::providers::openai::CompletionModel> {
   fn from(config: &AgentConfig) -> Self {
     Self::new(config.clone())
   }

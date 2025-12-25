@@ -1,13 +1,74 @@
 use std::fmt::Debug;
 
-#[cfg(feature = "audio")]
-use crate::providers::openai_compatible::audio_generation::AudioGenerationModel;
-use crate::providers::openai_compatible::{
-  self, EmbeddingModel, ImageGenerationModel, TranscriptionModel, completion::CompletionModel,
-};
-use rig::client::{CompletionClient, ProviderClient, ProviderValue, builder::ClientBuildError};
+use rig::client::CompletionClient;
+use rig::completion::{CompletionError, CompletionRequest, CompletionResponse, GetTokenUsage};
+use rig::streaming::StreamingCompletionResponse;
 
+use super::client::Client as OpenAIClient;
+use super::completion::{CompletionModel, CompletionResponse as InnerCompletionResponse};
+use super::streaming::StreamingCompletionResponse as InnerStreamingCompletionResponse;
+
+use crate::FactoryError;
 use crate::agents::AgentConfig;
+
+// ================================================================
+// OpenAI-Compatible Client Completion Model for ClientWrapper
+// ================================================================
+
+/// CompletionModel wrapper for ClientWrapper that implements CompletionModel trait
+#[derive(Clone, Debug)]
+pub struct ClientWrapperCompletionModel {
+  client: ClientWrapper,
+  model: String,
+}
+
+impl ClientWrapperCompletionModel {
+  pub fn new(client: ClientWrapper, model: impl Into<String>) -> Self {
+    Self { client, model: model.into() }
+  }
+
+  pub fn into_agent_builder(self) -> rig::agent::AgentBuilder<Self> {
+    rig::agent::AgentBuilder::new(self)
+  }
+}
+
+impl rig::completion::CompletionModel for ClientWrapperCompletionModel {
+  type Response = InnerCompletionResponse;
+  type StreamingResponse = InnerStreamingCompletionResponse;
+  type Client = ClientWrapper;
+
+  fn make(client: &Self::Client, model: impl Into<String>) -> Self {
+    Self::new(client.clone(), model.into())
+  }
+
+  #[cfg_attr(feature = "worker", worker::send)]
+  async fn completion(
+    &self,
+    request: CompletionRequest,
+  ) -> Result<CompletionResponse<Self::Response>, CompletionError> {
+    self.client.completion_model(&self.model).completion(request).await
+  }
+
+  #[cfg_attr(feature = "worker", worker::send)]
+  async fn stream(
+    &self,
+    request: CompletionRequest,
+  ) -> Result<StreamingCompletionResponse<Self::StreamingResponse>, CompletionError> {
+    self.client.completion_model(&self.model).stream(request).await
+  }
+}
+
+impl GetTokenUsage for InnerCompletionResponse {
+  fn token_usage(&self) -> Option<rig::completion::Usage> {
+    self.usage.as_ref().map(|usage| {
+      let mut token_usage = rig::completion::Usage::new();
+      token_usage.input_tokens = usage.prompt_tokens as u64;
+      token_usage.output_tokens = (usage.total_tokens - usage.prompt_tokens) as u64;
+      token_usage.total_tokens = usage.total_tokens as u64;
+      token_usage
+    })
+  }
+}
 
 // ================================================================
 // OpenAI-Compatible Client using Completion API
@@ -31,7 +92,7 @@ impl<'a> ClientBuilder<'a> {
   }
 
   pub fn build(self) -> ClientWrapper {
-    let inner = openai_compatible::client::Client::<reqwest::Client>::builder(self.api_key)
+    let inner = OpenAIClient::<reqwest::Client>::builder(self.api_key)
       .base_url(self.base_url)
       .with_client(self.http_client)
       .build();
@@ -40,7 +101,7 @@ impl<'a> ClientBuilder<'a> {
 }
 
 #[derive(Debug, Clone)]
-pub struct ClientWrapper(openai_compatible::client::Client<reqwest::Client>);
+pub struct ClientWrapper(OpenAIClient<reqwest::Client>);
 
 impl ClientWrapper {
   /// Create a new OpenAI-compatible client.
@@ -48,93 +109,39 @@ impl ClientWrapper {
     ClientBuilder::new(base_url, api_key).build()
   }
 
-  /// Convert to OpenAI-compatible client for use with CompletionModel
-  pub fn to_openai_client(&self) -> openai_compatible::client::Client<reqwest::Client> {
-    // openai::Client::<reqwest::Client>::builder(&self.api_key).base_url(&self.base_url).build()
+  /// Get the inner OpenAI-compatible client
+  pub fn to_inner(&self) -> &OpenAIClient<reqwest::Client> {
+    &self.0
+  }
+
+  /// Get the inner OpenAI-compatible client (cloned)
+  pub fn to_inner_cloned(&self) -> OpenAIClient<reqwest::Client> {
     self.0.clone()
   }
+
+  /// Create a completion model
+  pub fn completion_model(&self, model: &str) -> CompletionModel<reqwest::Client> {
+    CompletionModel::new(self.0.clone(), model)
+  }
 }
 
-// Implement CompletionClient using completion API (not responses API)
+/// Create an OpenAI-compatible client from config
+pub fn create_client(config: &AgentConfig) -> Result<ClientWrapper, FactoryError> {
+  let base_url = config
+    .base_url
+    .as_ref()
+    .ok_or_else(|| FactoryError::MissingBaseUrl("base_url is required for openai-compatible provider".to_string()))?;
+  let api_key = config
+    .api_key
+    .as_ref()
+    .ok_or_else(|| FactoryError::MissingApiKey("api_key is required for openai-compatible provider".to_string()))?;
+  Ok(ClientWrapper::new(base_url, api_key))
+}
+
 impl CompletionClient for ClientWrapper {
-  type CompletionModel = CompletionModel<reqwest::Client>;
+  type CompletionModel = ClientWrapperCompletionModel;
 
-  fn completion_model(&self, model: &str) -> Self::CompletionModel {
-    let openai_client = self.to_openai_client();
-    CompletionModel::new(openai_client, model)
+  fn completion_model(&self, model: impl Into<String>) -> Self::CompletionModel {
+    ClientWrapperCompletionModel::new(self.clone(), model.into())
   }
-}
-
-// Implement other required traits with not supported functionality
-impl rig::client::EmbeddingsClient for ClientWrapper {
-  type EmbeddingModel = EmbeddingModel<reqwest::Client>;
-
-  fn embedding_model(&self, model: &str) -> Self::EmbeddingModel {
-    self.to_openai_client().embedding_model(model)
-  }
-
-  fn embedding_model_with_ndims(&self, model: &str, ndims: usize) -> Self::EmbeddingModel {
-    self.to_openai_client().embedding_model_with_ndims(model, ndims)
-  }
-}
-
-impl rig::client::TranscriptionClient for ClientWrapper {
-  type TranscriptionModel = TranscriptionModel<reqwest::Client>;
-
-  fn transcription_model(&self, model: &str) -> Self::TranscriptionModel {
-    self.to_openai_client().transcription_model(model)
-  }
-}
-
-#[cfg(feature = "image")]
-impl rig::client::ImageGenerationClient for ClientWrapper {
-  type ImageGenerationModel = ImageGenerationModel<reqwest::Client>;
-
-  fn image_generation_model(&self, model: &str) -> Self::ImageGenerationModel {
-    self.to_openai_client().image_generation_model(model)
-  }
-}
-
-#[cfg(feature = "audio")]
-impl rig::client::AudioGenerationClient for ClientWrapper {
-  type AudioGenerationModel = AudioGenerationModel<reqwest::Client>;
-
-  fn audio_generation_model(&self, model: &str) -> Self::AudioGenerationModel {
-    self.to_openai_client().audio_generation_model(model)
-  }
-}
-
-impl ProviderClient for ClientWrapper {
-  fn from_env() -> Self {
-    let api_key = std::env::var("OPENAI_COMPATIBLE_API_KEY")
-      .unwrap_or_else(|_| std::env::var("OPENAI_API_KEY").unwrap_or_default());
-    Self(openai_compatible::client::Client::new(&api_key))
-  }
-
-  fn from_val(provider_value: ProviderValue) -> Self {
-    let api_key = match provider_value {
-      ProviderValue::Simple(key) => key,
-      ProviderValue::ApiKeyWithOptionalKey(key, _) => key,
-      ProviderValue::ApiKeyWithVersionAndHeader(key, _, _) => key,
-    };
-    Self(openai_compatible::client::Client::new(&api_key))
-  }
-}
-
-pub fn create_client(config: &AgentConfig) -> Result<Box<dyn ProviderClient>, ClientBuildError> {
-  if let Some(base_url) = config.base_url.as_deref()
-    && let Some(api_key) = config.api_key.as_deref()
-  {
-    Ok(Box::new(ClientWrapper::new(base_url, api_key)))
-  } else {
-    Err(ClientBuildError::FactoryError("base_url or api_key".to_string()))
-  }
-}
-
-pub fn func_env() -> Box<dyn ProviderClient> {
-  Box::new(ClientWrapper::from_env())
-}
-
-pub fn func_val(provider_value: ProviderValue) -> Box<dyn ProviderClient> {
-  Box::new(ClientWrapper::from_val(provider_value))
 }

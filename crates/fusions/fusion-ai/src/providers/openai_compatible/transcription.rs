@@ -1,29 +1,20 @@
 use bytes::Bytes;
 
-use reqwest::multipart::Part;
 use rig::http_client::HttpClientExt;
+use rig::http_client::multipart::{MultipartForm, Part};
 use rig::transcription::{self, TranscriptionError};
-use serde::Deserialize;
 
 use crate::providers::openai_compatible::{ApiResponse, Client};
 
 // ================================================================
 // OpenAI Transcription API
 // ================================================================
-pub const WHISPER_1: &str = "whisper-1";
 
-#[derive(Debug, Deserialize)]
-pub struct TranscriptionResponse {
-  pub text: String,
-}
+// 复用 rig 的常量
+pub use rig::providers::openai::transcription::WHISPER_1;
 
-impl TryFrom<TranscriptionResponse> for transcription::TranscriptionResponse<TranscriptionResponse> {
-  type Error = TranscriptionError;
-
-  fn try_from(value: TranscriptionResponse) -> Result<Self, Self::Error> {
-    Ok(transcription::TranscriptionResponse { text: value.text.clone(), response: value })
-  }
-}
+// 复用 rig 的类型定义
+pub use rig::providers::openai::transcription::TranscriptionResponse;
 
 #[derive(Clone)]
 pub struct TranscriptionModel<T = reqwest::Client> {
@@ -43,6 +34,11 @@ where
   T: HttpClientExt + Clone + std::fmt::Debug + Default + Send + 'static,
 {
   type Response = TranscriptionResponse;
+  type Client = Client<T>;
+
+  fn make(client: &Self::Client, model: impl Into<String>) -> Self {
+    Self::new(client.clone(), &model.into())
+  }
 
   #[cfg_attr(feature = "worker", worker::send)]
   async fn transcription(
@@ -51,9 +47,9 @@ where
   ) -> Result<transcription::TranscriptionResponse<Self::Response>, transcription::TranscriptionError> {
     let data = request.data;
 
-    let mut body = reqwest::multipart::Form::new()
+    let mut body = MultipartForm::new()
       .text("model", self.model.clone())
-      .part("file", Part::bytes(data).file_name(request.filename.clone()));
+      .part(Part::bytes("file", data).filename(request.filename));
 
     if let Some(language) = request.language {
       body = body.text("language", language);
@@ -76,9 +72,13 @@ where
       }
     }
 
-    let req = self.client.post("/audio/transcriptions")?.body(body).unwrap();
+    let req = self
+      .client
+      .post("/audio/transcriptions")?
+      .body(body)
+      .map_err(|e| TranscriptionError::RequestError(Box::new(e)))?;
 
-    let response = self.client.http_client.send_multipart::<Bytes>(req).await.unwrap();
+    let response = self.client.http_client.send_multipart::<Bytes>(req).await?;
 
     let status = response.status();
     let response_body = response.into_body().into_future().await?.to_vec();

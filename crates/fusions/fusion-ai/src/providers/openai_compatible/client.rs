@@ -2,30 +2,30 @@ use std::fmt::Debug;
 
 use bytes::Bytes;
 use rig::{
-  client::{CompletionClient, EmbeddingsClient, ProviderClient, TranscriptionClient, VerifyClient, VerifyError},
+  client::transcription::TranscriptionClient,
+  client::{CompletionClient, EmbeddingsClient, VerifyClient, VerifyError},
   extractor::ExtractorBuilder,
   http_client::{self, HttpClientExt},
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-#[cfg(feature = "audio")]
-use rig::client::AudioGenerationClient;
-#[cfg(feature = "image")]
-use rig::client::ImageGenerationClient;
-
 use crate::providers::openai_compatible::CompletionModel;
 
 use super::embedding::{EmbeddingModel, TEXT_EMBEDDING_3_LARGE, TEXT_EMBEDDING_3_SMALL, TEXT_EMBEDDING_ADA_002};
 use super::transcription::TranscriptionModel;
 
-#[cfg(feature = "audio")]
-use super::audio_generation::AudioGenerationModel;
-
 #[cfg(feature = "image")]
 use super::image_edit::ImageEditModel;
 #[cfg(feature = "image")]
 use super::image_generation::ImageGenerationModel;
+#[cfg(feature = "image")]
+use rig::client::image_generation::ImageGenerationClient;
+
+#[cfg(feature = "audio")]
+use super::audio_generation::AudioGenerationModel;
+#[cfg(feature = "audio")]
+use rig::client::audio_generation::AudioGenerationClient;
 
 // ================================================================
 // Main OpenAI Client
@@ -106,8 +106,16 @@ impl Client<reqwest::Client> {
     Self::builder(api_key).build()
   }
 
+  /// Create a new OpenAI client from environment variables.
+  /// Panics if OPENAI_API_KEY is not set.
   pub fn from_env() -> Self {
-    <Self as ProviderClient>::from_env()
+    let base_url: Option<String> = std::env::var("OPENAI_BASE_URL").ok();
+    let api_key = std::env::var("OPENAI_API_KEY").expect("OPENAI_API_KEY not set");
+
+    match base_url {
+      Some(url) => ClientBuilder::new(&api_key).base_url(&url).build(),
+      None => ClientBuilder::new(&api_key).build(),
+    }
   }
 }
 
@@ -150,29 +158,6 @@ where
   }
 }
 
-impl<T> ProviderClient for Client<T>
-where
-  T: HttpClientExt + Clone + std::fmt::Debug + Default + Send + 'static,
-{
-  /// Create a new OpenAI client from the `OPENAI_API_KEY` environment variable.
-  /// Panics if the environment variable is not set.
-  fn from_env() -> Self {
-    let base_url: Option<String> = std::env::var("OPENAI_BASE_URL").ok();
-    let api_key = std::env::var("OPENAI_API_KEY").expect("OPENAI_API_KEY not set");
-
-    match base_url {
-      Some(url) => ClientBuilder::<T>::new(&api_key).base_url(&url).build(),
-      None => ClientBuilder::<T>::new(&api_key).build(),
-    }
-  }
-
-  fn from_val(input: rig::client::ProviderValue) -> Self {
-    let rig::client::ProviderValue::Simple(api_key) = input else { panic!("Incorrect provider value type") };
-
-    ClientBuilder::<T>::new(&api_key).build()
-  }
-}
-
 impl<T> CompletionClient for Client<T>
 where
   T: HttpClientExt + std::fmt::Debug + Clone + Default + Send + 'static,
@@ -189,8 +174,9 @@ where
   ///
   /// let gpt4 = openai.completion_model(openai::GPT_4);
   /// ```
-  fn completion_model(&self, model: &str) -> Self::CompletionModel {
-    super::responses_api::ResponsesCompletionModel::new(self.clone(), model)
+  fn completion_model(&self, model: impl Into<String>) -> Self::CompletionModel {
+    let model = model.into();
+    super::responses_api::ResponsesCompletionModel::new(self.clone(), &model)
   }
 }
 
@@ -199,17 +185,18 @@ where
   T: HttpClientExt + std::fmt::Debug + Clone + Default + Send + 'static,
 {
   type EmbeddingModel = EmbeddingModel<T>;
-  fn embedding_model(&self, model: &str) -> Self::EmbeddingModel {
-    let ndims = match model {
+  fn embedding_model(&self, model: impl Into<String>) -> Self::EmbeddingModel {
+    let model_str = model.into();
+    let ndims = match model_str.as_str() {
       TEXT_EMBEDDING_3_LARGE => 3072,
       TEXT_EMBEDDING_3_SMALL | TEXT_EMBEDDING_ADA_002 => 1536,
       _ => 0,
     };
-    EmbeddingModel::new(self.clone(), model, ndims)
+    EmbeddingModel::new(self.clone(), &model_str, ndims)
   }
 
-  fn embedding_model_with_ndims(&self, model: &str, ndims: usize) -> Self::EmbeddingModel {
-    EmbeddingModel::new(self.clone(), model, ndims)
+  fn embedding_model_with_ndims(&self, model: impl Into<String>, ndims: usize) -> Self::EmbeddingModel {
+    EmbeddingModel::new(self.clone(), model.into().as_str(), ndims)
   }
 }
 
@@ -229,8 +216,9 @@ where
   ///
   /// let gpt4 = openai.transcription_model(openai::WHISPER_1);
   /// ```
-  fn transcription_model(&self, model: &str) -> Self::TranscriptionModel {
-    TranscriptionModel::new(self.clone(), model)
+  fn transcription_model(&self, model: impl Into<String>) -> Self::TranscriptionModel {
+    let model = model.into();
+    TranscriptionModel::new(self.clone(), &model)
   }
 }
 
@@ -251,8 +239,9 @@ where
   ///
   /// let gpt4 = openai.image_generation_model(openai::DALL_E_3);
   /// ```
-  fn image_generation_model(&self, model: &str) -> Self::ImageGenerationModel {
-    ImageGenerationModel::new(self.clone(), model)
+  fn image_generation_model(&self, model: impl Into<String>) -> Self::ImageGenerationModel {
+    let model = model.into();
+    ImageGenerationModel::new(self.clone(), &model)
   }
 }
 
@@ -294,8 +283,9 @@ where
   ///
   /// let gpt4 = openai.audio_generation_model(openai::TTS_1);
   /// ```
-  fn audio_generation_model(&self, model: &str) -> Self::AudioGenerationModel {
-    AudioGenerationModel::new(self.clone(), model)
+  fn audio_generation_model(&self, model: impl Into<String>) -> Self::AudioGenerationModel {
+    let model = model.into();
+    AudioGenerationModel::new(self.clone(), &model)
   }
 }
 
@@ -471,6 +461,8 @@ mod tests {
             id: "call_h89ipqYUjEpCPI6SxspMnoUU".to_string(),
             r#type: ToolType::Function,
             function: Function { name: "subtract".to_string(), arguments: serde_json::json!({"x": 2, "y": 5}) },
+            signature: None,
+            additional_params: None,
           }
         );
       }

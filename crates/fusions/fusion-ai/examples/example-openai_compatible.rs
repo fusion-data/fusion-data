@@ -1,4 +1,8 @@
-use fusion_ai::{AiError, DefaultProviders, agents::AgentConfigBuilder, client::ClientBuilderFactory};
+use fusion_ai::{
+  AiError, DefaultProviders,
+  client::{AgentConfigBuilder, ClientFactory},
+  providers::openai_compatible::CompletionModel,
+};
 use rig::completion::Completion;
 
 /// 示例：使用 OpenAI 兼容 API 调用模型
@@ -36,8 +40,9 @@ async fn main() -> Result<(), AiError> {
     .build()
     .unwrap();
 
-  let factory = ClientBuilderFactory::new();
-  let agent = factory.agent(&config)?;
+  let factory =
+    ClientFactory::new().openai_compatible(config.base_url.as_ref().unwrap(), config.api_key.as_ref().unwrap());
+  let agent = CompletionModel::new(factory.to_inner_cloned(), &config.model).into_agent_builder().build();
 
   let request = agent.completion("你是谁？", vec![]).await?;
   let response = request.send().await?;

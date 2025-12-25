@@ -6,12 +6,8 @@ use hetumind_core::workflow::{
   LLMConfig, LLMResponse, LLMSubNodeProvider, Message, NodeConnectionKind, NodeDescription, NodeExecutionError,
   NodeGroupKind, OutputPortConfig, SubNode, SubNodeType,
 };
-use rig::{
-  OneOrMany,
-  client::CompletionClient,
-  completion::Completion,
-  message::{AssistantContent, Message as RigMessage, Text, UserContent},
-};
+use rig::client::CompletionClient;
+use rig::completion::{Chat, Completion};
 use serde_json::json;
 
 use crate::constants::DEEPSEEK_MODEL_NODE_KIND;
@@ -62,9 +58,9 @@ impl SubNode for DeepseekModelV1 {
 
 #[async_trait]
 impl LLMSubNodeProvider for DeepseekModelV1 {
-  /// 调用 LLM（占位实现）：返回固定响应，后续接入 rig-core Agent/Client
+  /// 调用 LLM：使用 rig 0.27 API
   async fn call_llm(&self, messages: Vec<Message>, config: LLMConfig) -> Result<LLMResponse, NodeExecutionError> {
-    // 解析 API Key：优先使用配置中的 api_key；支持 ${env:VAR} 引用；否则回退到环境变量 DEEPSEEK_API_KEY
+    // 解析 API Key
     let api_key = match config.api_key.as_ref() {
       Some(k) if k.starts_with("${env:") && k.ends_with('}') => {
         let env_var = &k[6..k.len() - 1];
@@ -78,18 +74,22 @@ impl LLMSubNodeProvider for DeepseekModelV1 {
       })?,
     };
 
-    // 创建 DeepSeek 客户端与 Agent
-    let client = rig::providers::deepseek::Client::new(&api_key);
-    let model_name = config.model.clone();
-    let mut ab = client.agent(&model_name);
-    // 绑定参数：temperature / max_tokens
+    // 创建 DeepSeek 客户端
+    let client = rig::providers::deepseek::Client::new(&api_key)
+      .map_err(|e| NodeExecutionError::ConfigurationError(format!("Failed to create DeepSeek client: {}", e)))?;
+    let model: rig::providers::deepseek::CompletionModel<reqwest::Client> = client.completion_model(&config.model);
+
+    // 创建 Agent
+    let mut ab = rig::agent::AgentBuilder::new(model);
+
+    // 绑定参数
     if let Some(t) = config.temperature {
       ab = ab.temperature(t);
     }
     if let Some(mt) = config.max_tokens.map(|v| v as u64) {
       ab = ab.max_tokens(mt);
     }
-    // 透传 top_p 与 stop（OpenAI 兼容字段名），采用 additional_params
+    // 透传 top_p 与 stop
     let mut extra = serde_json::Map::new();
     if let Some(tp) = config.top_p.map(|v| v as f64) {
       extra.insert("top_p".to_string(), json!(tp));
@@ -115,54 +115,84 @@ impl LLMSubNodeProvider for DeepseekModelV1 {
     }
     let agent = ab.build();
 
-    // 构造 prompt 与 chat_history：最后一条 user 作为 prompt，其余 user/assistant 作为历史
-    let last_user_index = messages.iter().rposition(|m| m.role == "user");
-    let mut chat_history: Vec<RigMessage> = Vec::new();
-    let mut prompt_text = String::new();
-    for (idx, m) in messages.iter().enumerate() {
-      match m.role.as_str() {
-        "user" => {
-          if Some(idx) == last_user_index {
-            prompt_text = m.content.clone();
-          } else {
-            chat_history
-              .push(RigMessage::User { content: OneOrMany::one(UserContent::Text(Text { text: m.content.clone() })) });
-          }
-        }
-        "assistant" => {
-          chat_history.push(RigMessage::Assistant {
-            id: Some(format!("assistant_{}", idx)),
-            content: OneOrMany::one(AssistantContent::Text(Text { text: m.content.clone() })),
-          });
-        }
-        _ => {}
-      }
-    }
-    let prompt = RigMessage::User { content: OneOrMany::one(UserContent::Text(Text { text: prompt_text })) };
+    // 构造 prompt 与 chat_history
+    let (prompt, chat_history) = convert_messages_to_rig_format(messages)?;
 
-    // 执行补全并发送
-    let completion = agent.completion(prompt, chat_history).await.map_err(|e| {
-      NodeExecutionError::ExternalServiceError { service: format!("Deepseek agent completion error: {}", e) }
-    })?;
-    let resp = completion.send().await.map_err(|e| NodeExecutionError::ExternalServiceError {
-      service: format!("Deepseek completion send error: {}", e),
-    })?;
+    // 使用 chat 方法直接获取响应
+    let response_text = agent
+      .chat(prompt, chat_history)
+      .await
+      .map_err(|e| NodeExecutionError::ExternalServiceError { service: format!("DeepSeek agent chat error: {}", e) })?;
 
-    // 提取文本回复
-    let choice = resp.choice.first();
-    let response_text = match choice {
-      AssistantContent::Text(text) => text.text,
-      _ => String::new(),
-    };
-
-    // 提取使用统计
-    let usage = resp.usage;
-    let usage_stats = hetumind_core::workflow::UsageStats {
-      prompt_tokens: usage.input_tokens as u32,
-      completion_tokens: usage.output_tokens as u32,
-      total_tokens: usage.total_tokens as u32,
-    };
+    // 获取使用统计
+    let usage_stats = extract_usage_from_agent(&agent)
+      .await
+      .map(|u| hetumind_core::workflow::UsageStats {
+        prompt_tokens: u.prompt_tokens as u32,
+        completion_tokens: u.completion_tokens as u32,
+        total_tokens: u.total_tokens as u32,
+      })
+      .unwrap_or_else(|| hetumind_core::workflow::UsageStats {
+        prompt_tokens: 0,
+        completion_tokens: 0,
+        total_tokens: 0,
+      });
 
     Ok(LLMResponse { content: response_text, role: "assistant".to_string(), usage: Some(usage_stats) })
   }
+}
+
+/// 转换消息到 rig 格式
+fn convert_messages_to_rig_format(
+  messages: Vec<Message>,
+) -> Result<(rig::message::Message, Vec<rig::message::Message>), NodeExecutionError> {
+  let last_user_index = messages.iter().rposition(|m| m.role == "user");
+  let mut prompt_text = String::new();
+  let mut history: Vec<rig::message::Message> = Vec::new();
+
+  for (idx, m) in messages.iter().enumerate() {
+    match m.role.as_str() {
+      "user" => {
+        if Some(idx) == last_user_index {
+          prompt_text = m.content.clone();
+        } else {
+          history.push(rig::message::Message::user(m.content.clone()));
+        }
+      }
+      "assistant" => {
+        history.push(rig::message::Message::assistant(m.content.clone()));
+      }
+      _ => {}
+    }
+  }
+
+  let prompt = rig::message::Message::user(prompt_text);
+  Ok((prompt, history))
+}
+
+/// 从 Agent 获取使用统计
+async fn extract_usage_from_agent<M>(agent: &rig::agent::Agent<M>) -> Option<UsageStats>
+where
+  M: rig::completion::CompletionModel,
+{
+  let prompt = rig::message::Message::user("");
+  if let Ok(request_builder) = agent.completion(prompt, vec![]).await
+    && let Ok(response) = request_builder.send().await
+  {
+    let usage = response.usage;
+    return Some(UsageStats {
+      prompt_tokens: usage.input_tokens,
+      completion_tokens: usage.output_tokens,
+      total_tokens: usage.total_tokens,
+      estimated_cost: 0.0,
+    });
+  }
+  None
+}
+
+struct UsageStats {
+  prompt_tokens: u64,
+  completion_tokens: u64,
+  total_tokens: u64,
+  estimated_cost: f64,
 }

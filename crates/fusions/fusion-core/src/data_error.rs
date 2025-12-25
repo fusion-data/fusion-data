@@ -301,20 +301,8 @@ impl From<fusionsql::SqlError> for DataError {
       e @ fusionsql::SqlError::SeaQueryError(_) => DataError::server_error(e.to_string()),
       e @ fusionsql::SqlError::JsonError(_) => DataError::server_error(e.to_string()),
       fusionsql::SqlError::Custom(msg) => DataError::server_error(msg),
-      fusionsql::SqlError::DbxError(e) => {
-        // Convert to a compatible error that implements Send + Sync
-        let error_msg = e.to_string();
-        let compatible_error: Box<dyn std::error::Error + Send + Sync + 'static> =
-          Box::new(std::io::Error::other(error_msg));
-        DataError::internal(500, "Dbx Error", Some(compatible_error))
-      }
-      fusionsql::SqlError::Sqlx(e) => {
-        // Convert to a compatible error that implements Send + Sync
-        let error_msg = e.to_string();
-        let compatible_error: Box<dyn std::error::Error + Send + Sync + 'static> =
-          Box::new(std::io::Error::other(error_msg));
-        DataError::internal(500, "Sqlx Error", Some(compatible_error))
-      }
+      fusionsql::SqlError::DbxError(e) => DataError::internal(500, e.to_string(), Some(Box::new(e))),
+      fusionsql::SqlError::Sqlx(e) => DataError::internal(500, e.to_string(), Some(Box::new(e))),
     }
   }
 }

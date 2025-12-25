@@ -35,6 +35,8 @@ with-openapi = [
 ]
 with-ai = ["dep:fusion-ai"]
 with-security = ["dep:fusion-security"]
+with-logforth = ["fusion-core/with-logforth"]
+with-tracing = ["fusion-core/with-tracing"]
 
 [dependencies]
 fusion-common = { workspace = true }

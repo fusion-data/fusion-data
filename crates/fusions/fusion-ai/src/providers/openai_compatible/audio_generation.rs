@@ -4,8 +4,12 @@ use rig::audio_generation::{self, AudioGenerationError, AudioGenerationRequest, 
 use rig::http_client::{self, HttpClientExt};
 use serde_json::json;
 
-pub const TTS_1: &str = "tts-1";
-pub const TTS_1_HD: &str = "tts-1-hd";
+// ================================================================
+// OpenAI Audio Generation API
+// ================================================================
+
+// 复用 rig 的常量
+pub use rig::providers::openai::audio_generation::{TTS_1, TTS_1_HD};
 
 #[derive(Clone)]
 pub struct AudioGenerationModel<T = reqwest::Client> {
@@ -24,6 +28,11 @@ where
   T: HttpClientExt + Clone + std::fmt::Debug + Default + 'static,
 {
   type Response = Bytes;
+  type Client = Client<T>;
+
+  fn make(client: &Self::Client, model: impl Into<String>) -> Self {
+    Self::new(client.clone(), &model.into())
+  }
 
   #[cfg_attr(feature = "worker", worker::send)]
   async fn audio_generation(

@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
-use ::log::Level;
 use fusion_common::time::{self, FixedOffset};
 use init_tracing_opentelemetry::{Guard, TracingConfig};
+use log::Level;
 use tracing::{Subscriber, debug, info, subscriber::DefaultGuard};
 use tracing_subscriber::{
   Registry,
@@ -94,7 +94,7 @@ pub fn build_loglevel_filter_layer(c: &LogSetting) -> (EnvFilter, Option<String>
 
   let value = [
     if c.log_targets.is_empty() { None } else { Some(c.log_targets.join(",")) },
-    rust_log.ok().or_else(|| Some(c.log_level.to_string())),
+    original_rust_log.clone().or_else(|| Some(c.log_level.to_string())),
   ]
   .into_iter()
   .flatten()
@@ -102,7 +102,7 @@ pub fn build_loglevel_filter_layer(c: &LogSetting) -> (EnvFilter, Option<String>
   .join(",");
 
   // let value = format!("{},{},{}", rust_log.unwrap_or_else(|_| c.log_level.to_string()), otel, libraries);
-  let log_value = if value.ends_with(',') { &value[..value.len() - 1] } else { &value[..] };
+  let log_value = if value.ends_with(',') { &value[..value.len() - 1] } else { value.as_str() };
 
   debug!("ORIGINAL RUST_LOG: {:?}; NEW RUST_LOG: {}", original_rust_log, log_value);
   unsafe {

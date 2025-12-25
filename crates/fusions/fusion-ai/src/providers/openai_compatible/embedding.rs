@@ -1,28 +1,19 @@
 use rig::embeddings::EmbeddingError;
 use rig::http_client::HttpClientExt;
 use rig::{embeddings, http_client};
-use serde::Deserialize;
 use serde_json::json;
 
-use super::{ApiErrorResponse, ApiResponse, Client, completion::Usage};
+// 复用 rig 的常量
+pub use rig::providers::openai::embedding::{TEXT_EMBEDDING_3_LARGE, TEXT_EMBEDDING_3_SMALL, TEXT_EMBEDDING_ADA_002};
+
+// 复用 rig 的类型定义
+pub use rig::providers::openai::embedding::{EmbeddingData, EmbeddingResponse};
+
+use super::{ApiErrorResponse, ApiResponse, Client};
 
 // ================================================================
-// OpenAI Embedding API
+// OpenAI Embedding API - 使用 rig 的 EmbeddingModel
 // ================================================================
-/// `text-embedding-3-large` embedding model
-pub const TEXT_EMBEDDING_3_LARGE: &str = "text-embedding-3-large";
-/// `text-embedding-3-small` embedding model
-pub const TEXT_EMBEDDING_3_SMALL: &str = "text-embedding-3-small";
-/// `text-embedding-ada-002` embedding model
-pub const TEXT_EMBEDDING_ADA_002: &str = "text-embedding-ada-002";
-
-#[derive(Debug, Deserialize)]
-pub struct EmbeddingResponse {
-  pub object: String,
-  pub data: Vec<EmbeddingData>,
-  pub model: String,
-  pub usage: Usage,
-}
 
 impl From<ApiErrorResponse> for EmbeddingError {
   fn from(err: ApiErrorResponse) -> Self {
@@ -39,13 +30,6 @@ impl From<ApiResponse<EmbeddingResponse>> for Result<EmbeddingResponse, Embeddin
   }
 }
 
-#[derive(Debug, Deserialize)]
-pub struct EmbeddingData {
-  pub object: String,
-  pub embedding: Vec<f64>,
-  pub index: usize,
-}
-
 #[derive(Clone)]
 pub struct EmbeddingModel<T = reqwest::Client> {
   client: Client<T>,
@@ -58,6 +42,18 @@ where
   T: HttpClientExt + Clone + std::fmt::Debug + Default + Send + 'static,
 {
   const MAX_DOCUMENTS: usize = 1024;
+
+  type Client = Client<T>;
+
+  fn make(client: &Self::Client, model: impl Into<String>, dims: Option<usize>) -> Self {
+    let model_str = model.into();
+    let ndims = dims.unwrap_or_else(|| match model_str.as_str() {
+      TEXT_EMBEDDING_3_LARGE => 3072,
+      TEXT_EMBEDDING_3_SMALL | TEXT_EMBEDDING_ADA_002 => 1536,
+      _ => 0,
+    });
+    Self::new(client.clone(), &model_str, ndims)
+  }
 
   fn ndims(&self) -> usize {
     self.ndims

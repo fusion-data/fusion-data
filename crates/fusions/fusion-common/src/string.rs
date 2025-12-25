@@ -13,7 +13,7 @@ pub fn repeat_str(s: &str, n: usize) -> String {
 }
 
 pub fn repeat_char(c: char, n: usize) -> String {
-  let mut v = String::with_capacity(n);
+  let mut v = String::with_capacity(c.len_utf8() * n);
   for _ in 0..n {
     v.push(c);
   }

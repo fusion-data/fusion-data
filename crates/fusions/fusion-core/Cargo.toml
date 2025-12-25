@@ -12,7 +12,7 @@ publish = true
 uninlined_format_args = "allow"
 
 [features]
-default = ["fusion-common/with-uuid", "with-logforth", "with-tracing"]
+default = ["fusion-common/with-uuid"]
 with-ulid = ["dep:ulid", "utoipa/ulid", "fusion-common/with-ulid"]
 with-openapi = ["dep:utoipa", "utoipa/uuid"]
 with-logforth = ["dep:logforth", "dep:fastrace", "logforth/append-opentelemetry"]
