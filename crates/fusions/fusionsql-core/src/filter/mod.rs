@@ -17,9 +17,11 @@ pub use nodes::group::*;
 pub use nodes::node::*;
 pub use ops::op_val_array::*;
 pub use ops::op_val_bool::*;
+pub use ops::op_val_date::*;
 pub use ops::op_val_datetime::*;
 pub use ops::op_val_nums::*;
 pub use ops::op_val_string::*;
+pub use ops::op_val_time::*;
 #[cfg(feature = "with-uuid")]
 pub use ops::op_val_uuid::*;
 pub use ops::op_val_value::*;

@@ -2,9 +2,11 @@ use super::*;
 
 pub mod op_val_array;
 pub mod op_val_bool;
+pub mod op_val_date;
 pub mod op_val_datetime;
 pub mod op_val_nums;
 pub mod op_val_string;
+pub mod op_val_time;
 #[cfg(feature = "with-uuid")]
 pub mod op_val_uuid;
 pub mod op_val_value;
@@ -37,6 +39,8 @@ pub enum OpVal {
   String(Box<OpValString>),
   ArrayString(Box<OpValArrayString>),
   DateTime(OpValDateTime),
+  Date(OpValDate),
+  Time(OpValTime),
   #[cfg(feature = "with-uuid")]
   Uuid(OpValUuid),
   Value(Box<OpValValue>),
@@ -60,6 +64,8 @@ mod with_sea_query {
     ) -> SeaResult<Vec<ConditionExpression>> {
       match self {
         Self::DateTime(op_vals) => op_vals.to_condition_expressions(col, node_options, for_sea_condition),
+        Self::Date(op_vals) => op_vals.to_condition_expressions(col, node_options, for_sea_condition),
+        Self::Time(op_vals) => op_vals.to_condition_expressions(col, node_options, for_sea_condition),
         Self::String(op_vals) => op_vals.to_condition_expressions(col, node_options, for_sea_condition),
         Self::ArrayString(op_vals) => op_vals.to_condition_expressions(col, node_options, for_sea_condition),
         Self::Int32(op_vals) => op_vals.to_condition_expressions(col, node_options, for_sea_condition),
