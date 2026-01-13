@@ -11,11 +11,6 @@ use logforth::starter_log::LogStarterBuilder;
 
 use crate::configuration::{LogSetting, LogWriterType};
 
-pub fn get_trace_id() -> Option<String> {
-  // TODO:
-  None
-}
-
 pub fn init_log(conf: &LogSetting) {
   // If the log is not enabled, do not enable it.
   if !conf.enable() {

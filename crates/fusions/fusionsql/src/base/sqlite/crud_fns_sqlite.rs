@@ -1,8 +1,9 @@
-use fusion_common::page::{Page, PageResult};
-use fusionsql_core::filter::{FilterGroups, apply_to_sea_query};
 use sea_query::{Condition, Query, SelectStatement, SqliteQueryBuilder};
 use sea_query_binder::SqlxBinder;
 use sqlx::{FromRow, sqlite::SqliteRow};
+
+use fusionsql_core::filter::{FilterGroups, apply_to_sea_query};
+use fusionsql_core::page::{Page, PageResult};
 
 use crate::{
   ModelManager, Result, SqlError,
@@ -104,7 +105,7 @@ where
 pub async fn sqlite_get_filter<MC, F, E>(mm: &ModelManager, filter: F) -> Result<Option<E>>
 where
   MC: DbBmc,
-  F: FilterGroups,
+  F: Into<FilterGroups>,
   E: for<'r> FromRow<'r, SqliteRow> + Unpin + Send,
   E: HasSeaFields,
 {

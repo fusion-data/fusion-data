@@ -38,3 +38,8 @@ pub async fn wait_exit_signals() {
     ctrl_c.await.unwrap();
   }
 }
+
+pub fn get_trace_id() -> Option<String> {
+  // TODO:
+  None
+}

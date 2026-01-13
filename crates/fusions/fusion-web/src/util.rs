@@ -12,8 +12,8 @@ use fusion_common::ctx::Ctx;
 use fusion_common::model::IdI64Result;
 use fusion_common::time::now_offset;
 use fusion_core::configuration::SecuritySetting;
-use fusion_core::logforth::get_trace_id;
 use fusion_core::security::{AccessToken, SecurityUtils};
+use fusion_core::utils::get_trace_id;
 
 use crate::WebResult;
 use crate::error::WebError;

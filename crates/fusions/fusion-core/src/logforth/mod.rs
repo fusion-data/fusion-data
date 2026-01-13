@@ -1,7 +1,7 @@
 mod utils;
 
 use async_trait::async_trait;
-pub use utils::{get_trace_id, init_log};
+pub use utils::init_log;
 
 use crate::{application::ApplicationBuilder, plugin::Plugin};
 
