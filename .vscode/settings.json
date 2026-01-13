@@ -93,6 +93,7 @@
     "ollama",
     "oneshot",
     "opendal",
+    "openidconnect",
     "openrouter",
     "oper",
     "opval",

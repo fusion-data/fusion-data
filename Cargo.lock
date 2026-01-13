@@ -2193,7 +2193,7 @@ dependencies = [
  "reqwest",
  "rig-core",
  "rmcp",
- "schemars 1.1.0",
+ "schemars 1.2.0",
  "serde",
  "serde_json",
  "serde_path_to_error",
@@ -2444,6 +2444,7 @@ dependencies = [
  "chrono",
  "fusion-common",
  "fusionsql-macros",
+ "rust_decimal",
  "sea-query",
  "sea-query-binder",
  "serde",
@@ -4483,9 +4484,9 @@ dependencies = [
 
 [[package]]
 name = "mea"
-version = "0.5.3"
+version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ef98beae251f03af02d54d7964b1f5fbc1a042bbf7e2296e5261d2962a762dda"
+checksum = "3f82706fffb3377912ed97a1d16c085bd3d8eec49ca07d61b80149118c178c79"
 dependencies = [
  "slab",
 ]
@@ -5700,9 +5701,9 @@ dependencies = [
 
 [[package]]
 name = "protobuf"
-version = "4.33.2-release"
+version = "4.33.3-release"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fcd11cb75027dda228fcfdc4930894e633cca716aba4aaca204752cf165578a6"
+checksum = "e369cb927a4eb8960f0002035ab7cda4727e654e5e16f489dd9f4cbf8b337f55"
 dependencies = [
  "cc",
  "paste",
@@ -5711,15 +5712,15 @@ dependencies = [
 
 [[package]]
 name = "protobuf-codegen"
-version = "4.33.2-release"
+version = "4.33.3-release"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "eedbd23e7eed06f36f9c66bfd92d0d9091328deed313bd55dab7977929149cb9"
+checksum = "201047a1813faa8bc4e1e62c206463dbf0eaa8f724499568a8b479653e04a8f2"
 
 [[package]]
 name = "protobuf-macros"
-version = "4.33.2-release"
+version = "4.33.3-release"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "abf57b761a75520b3953e0e295e7ac8cd63a65bf90984e790ce83dfd065060c9"
+checksum = "d11ca98651264532fb3c46b82a184807599b4f663c927a4248306bae90e89104"
 dependencies = [
  "quote",
  "syn 2.0.111",
@@ -6334,9 +6335,9 @@ checksum = "0c6a884d2998352bb4daf0183589aec883f16a6da1f4dde84d8e2e9a5409a1ce"
 
 [[package]]
 name = "rig-core"
-version = "0.27.0"
+version = "0.28.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3799afd8ba38d90d9886be5bf596b0159043f88598b40e1f5aa08aad488f2223"
+checksum = "5b1a48121c1ecd6f6ce59d64ec353c791aac6fc07bf4aa353380e8185659e6eb"
 dependencies = [
  "as-any",
  "async-stream",
@@ -6354,7 +6355,7 @@ dependencies = [
  "pin-project-lite",
  "reqwest",
  "rig-derive",
- "schemars 1.1.0",
+ "schemars 1.2.0",
  "serde",
  "serde_json",
  "thiserror 2.0.17",
@@ -6439,7 +6440,7 @@ dependencies = [
  "process-wrap",
  "reqwest",
  "rmcp-macros",
- "schemars 1.1.0",
+ "schemars 1.2.0",
  "serde",
  "serde_json",
  "sse-stream",
@@ -6705,9 +6706,9 @@ dependencies = [
 
 [[package]]
 name = "schemars"
-version = "1.1.0"
+version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9558e172d4e8533736ba97870c4b2cd63f84b382a3d6eb063da41b91cce17289"
+checksum = "54e910108742c57a770f492731f99be216a52fadd361b06c8fb59d74ccc267d2"
 dependencies = [
  "chrono",
  "dyn-clone",
@@ -6719,9 +6720,9 @@ dependencies = [
 
 [[package]]
 name = "schemars_derive"
-version = "1.1.0"
+version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "301858a4023d78debd2353c7426dc486001bddc91ae31a76fb1f55132f7e2633"
+checksum = "4908ad288c5035a8eb12cfdf0d49270def0a268ee162b75eeee0f85d155a7c45"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -7064,7 +7065,7 @@ dependencies = [
  "indexmap 1.9.3",
  "indexmap 2.12.1",
  "schemars 0.9.0",
- "schemars 1.1.0",
+ "schemars 1.2.0",
  "serde_core",
  "serde_json",
  "serde_with_macros",
@@ -7972,9 +7973,9 @@ dependencies = [
 
 [[package]]
 name = "tokio"
-version = "1.48.0"
+version = "1.49.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ff360e02eab121e0bc37a2d3b4d4dc622e6eda3a8e5253d5435ecf5bd4c68408"
+checksum = "72a2903cd7736441aac9df9d7688bd0ce48edccaadf181c3b90be801e81d3d86"
 dependencies = [
  "bytes",
  "libc",

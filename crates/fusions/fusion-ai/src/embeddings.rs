@@ -4,7 +4,6 @@
 //! For the recommended rig 0.27+ pattern, use [`factory::EmbeddingConfig`] instead.
 
 use derive_builder::Builder;
-use rig::embeddings::EmbeddingModel;
 use serde::{Deserialize, Serialize};
 
 use crate::factory::{ClientFactory, EmbeddingConfig as FactoryEmbeddingConfig, FactoryError};

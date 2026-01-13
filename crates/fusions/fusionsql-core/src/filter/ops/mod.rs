@@ -4,6 +4,8 @@ pub mod op_val_array;
 pub mod op_val_bool;
 pub mod op_val_date;
 pub mod op_val_datetime;
+#[cfg(feature = "with-decimal")]
+pub mod op_val_decimal;
 pub mod op_val_nums;
 pub mod op_val_string;
 pub mod op_val_time;
@@ -13,6 +15,9 @@ pub mod op_val_value;
 
 #[cfg(feature = "with-sea-query")]
 use sea_query::{ConditionExpression, Expr};
+
+#[cfg(feature = "with-decimal")]
+use self::op_val_decimal::OpValDecimal;
 
 pub trait OpValTrait: Clone {
   #[cfg(feature = "with-sea-query")]
@@ -40,6 +45,8 @@ pub enum OpVal {
   ArrayString(Box<OpValArrayString>),
   DateTime(OpValDateTime),
   Date(OpValDate),
+  #[cfg(feature = "with-decimal")]
+  Decimal(OpValDecimal),
   Time(OpValTime),
   #[cfg(feature = "with-uuid")]
   Uuid(OpValUuid),
@@ -65,6 +72,8 @@ mod with_sea_query {
       match self {
         Self::DateTime(op_vals) => op_vals.to_condition_expressions(col, node_options, for_sea_condition),
         Self::Date(op_vals) => op_vals.to_condition_expressions(col, node_options, for_sea_condition),
+        #[cfg(feature = "with-decimal")]
+        Self::Decimal(op_vals) => op_vals.to_condition_expressions(col, node_options, for_sea_condition),
         Self::Time(op_vals) => op_vals.to_condition_expressions(col, node_options, for_sea_condition),
         Self::String(op_vals) => op_vals.to_condition_expressions(col, node_options, for_sea_condition),
         Self::ArrayString(op_vals) => op_vals.to_condition_expressions(col, node_options, for_sea_condition),

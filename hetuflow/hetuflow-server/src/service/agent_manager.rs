@@ -112,7 +112,7 @@ impl ServiceTask<()> for AgentEventRunner {
           break;
         }
         event = self.event_rx.recv() => {
-          if let Some(event) = event {
+          if let Ok(event) = event {
             self.process_event(&agent_svc, event).await;
           } else {
             info!("AgentEventRunner event channel closed, stopping loop.");

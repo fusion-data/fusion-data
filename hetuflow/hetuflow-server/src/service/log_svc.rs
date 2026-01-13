@@ -234,7 +234,7 @@ impl LogWriterRunner {
   pub async fn run_loop(&mut self) -> Result<(), DataError> {
     loop {
       tokio::select! {
-        Some(event) = self.event_rx.recv() => {
+        Ok(event) = self.event_rx.recv() => {
           if let AgentEvent::TaskLog { agent_id, payload } = event
             && let Err(e) = self.process_log_payload(agent_id, payload).await
           {

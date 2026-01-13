@@ -338,7 +338,7 @@ pub fn try_from_message_to_vec_input_item(message: message::Message) -> Result<V
             message::AssistantContent::Reasoning(_) => {
               unimplemented!("The OpenAI Completions API doesn't support reasoning!");
             }
-            message::AssistantContent::Image(image) => todo!(),
+            message::AssistantContent::Image(_image) => todo!(),
           }
           (texts, tools)
         });

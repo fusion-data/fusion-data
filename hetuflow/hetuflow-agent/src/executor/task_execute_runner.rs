@@ -28,8 +28,8 @@ impl ServiceTask<()> for TaskExecuteRunner {
 
     loop {
       match self.scheduled_task_rx.recv().await {
-        Some(task) => self.execute_task(task).await,
-        None => {
+        Ok(task) => self.execute_task(task).await,
+        Err(_) => {
           info!("The scheduled_task_rx channel closed");
           break;
         }

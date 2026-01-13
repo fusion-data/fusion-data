@@ -184,7 +184,7 @@ where
                                         // Emit the delta so UI can show progress
                                         yield Ok(streaming::RawStreamingChoice::ToolCallDelta {
                                           id: id.clone(),
-                                          delta: new_arguments.clone(),
+                                          content: streaming::ToolCallDeltaContent::Delta(new_arguments.clone()),
                                         });
                                     } else {
                                         debug!("Partial tool call received but tool call was never started.");

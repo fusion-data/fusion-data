@@ -40,7 +40,6 @@ pub fn ok_ulid(id: Ulid) -> WebResult<fusion_common::model::IdUlidResult> {
   Ok(fusion_common::model::IdUlidResult::new(id).into())
 }
 
-#[cfg(feature = "with-uuid")]
 #[inline]
 pub fn ok_uuid(id: uuid::Uuid) -> WebResult<fusion_common::model::IdUuidResult> {
   Ok(fusion_common::model::IdUuidResult::new(id).into())

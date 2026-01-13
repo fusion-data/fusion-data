@@ -2,7 +2,6 @@
 use chrono::{Duration, NaiveTime};
 use fusion_common::ahash::HashMap;
 use fusion_common::time::now;
-use log::error;
 use regex::Regex;
 use serde_json_path::JsonPath;
 

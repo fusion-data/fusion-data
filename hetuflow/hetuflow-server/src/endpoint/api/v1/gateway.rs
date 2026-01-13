@@ -96,7 +96,7 @@ async fn handle_websocket_connection(
   // Start an independent task responsible for receiving messages from MPSC (agent_rx) channel and sending them to WebSocket (peer)
   let agent_id2 = agent_id.clone();
   let sender_task = tokio::spawn(async move {
-    while let Some(msg) = command_rx.recv().await {
+    while let Ok(msg) = command_rx.recv().await {
       let msg = serde_json::to_string(&msg).unwrap();
       if let Err(e) = ws_tx.send(Message::Text(msg.into())).await {
         error!("Failed to send message to WebSocket: {:?}", e);
