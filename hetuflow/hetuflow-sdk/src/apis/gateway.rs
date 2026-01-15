@@ -5,7 +5,7 @@ use crate::{
   error::{SdkError, SdkResult},
   platform::Response,
 };
-use fusion_common::model::IdUuidResult;
+use fusions::common::model::IdUuidResult;
 use serde::de::DeserializeOwned;
 use serde_json::Value;
 

@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use fusion_common::ahash::HashMap;
+use fusions::common::ahash::HashMap;
 use fusionsql_core::field::FieldMask;
 use fusionsql_core::filter::{OpValBool, OpValInt32, OpValInt64, OpValString, OpValUuid};
 use fusionsql_core::page::Page;

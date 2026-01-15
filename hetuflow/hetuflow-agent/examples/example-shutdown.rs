@@ -1,6 +1,6 @@
 use std::time::{Duration, Instant};
 
-use fusion_core::DataError;
+use fusions::core::DataError;
 
 #[tokio::main]
 async fn main() -> Result<(), DataError> {

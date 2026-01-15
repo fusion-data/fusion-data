@@ -1,8 +1,8 @@
 use std::{path::PathBuf, time::Duration};
 
 use duration_str::deserialize_duration;
-use fusion_common::env::get_env;
-use fusion_core::{DataError, configuration::FusionConfigRegistry};
+use fusions::common::env::get_env;
+use fusions::core::{DataError, configuration::FusionConfigRegistry};
 use hetuflow_core::utils::setting::write_app_setting;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;

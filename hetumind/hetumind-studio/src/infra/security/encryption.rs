@@ -1,5 +1,5 @@
 use chrono::{DateTime, FixedOffset, Utc};
-use fusion_core::{DataError, Result};
+use fusions::core::{DataError, Result};
 use openssl::{
   ec::{EcGroup, EcKey},
   nid::Nid,

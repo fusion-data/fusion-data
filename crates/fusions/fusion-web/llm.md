@@ -50,7 +50,8 @@ WebServerBuilder::new(router)
   .await?;
 ```
 
-### 配置项 (fusion.web.*)
+### 配置项 (fusion.web.\*)
+
 ```toml
 [fusion.web]
 enable = true
@@ -63,6 +64,7 @@ enable_remote_addr = true  # 启用远程地址获取
 ## WebError 错误处理
 
 ### 创建错误
+
 ```rust
 use fusion_web::{WebError, WebResult};
 
@@ -86,6 +88,7 @@ WebError::server_error_with_detail("错误", serde_json::json!({ "field": "detai
 ```
 
 ### 错误响应
+
 ```rust
 // WebResult 类型
 type WebResult<T> = Result<Json<T>, WebError>;
@@ -102,6 +105,7 @@ impl IntoResponse for WebError {
 ```
 
 ### From 转换
+
 ```rust
 impl From<DataError> for WebError {
   fn from(err: DataError) -> Self {
@@ -120,6 +124,7 @@ impl From<serde_json::Error> for WebError {}
 ## 提取器 (Extractors)
 
 ### JsonOrForm
+
 ```rust
 use fusion_web::extract::JsonOrForm;
 
@@ -137,8 +142,9 @@ async fn create_user(JsonOrForm(req): JsonOrForm<CreateUserRequest>) -> WebResul
 ```
 
 ### Ctx 提取
+
 ```rust
-use fusion_common::ctx::Ctx;
+use fusions::common::ctx::Ctx;
 use fusion_core::application::Application;
 
 async fn get_user(
@@ -158,6 +164,7 @@ async fn get_user(
 ## 中间件
 
 ### WebAuth 认证中间件
+
 ```rust
 use fusion_web::middleware::WebAuth;
 
@@ -177,6 +184,7 @@ let router = Router::new()
 ## 工具函数
 
 ### extract_ctx (从请求提取 Ctx)
+
 ```rust
 use fusion_web::extract_ctx;
 use fusion_core::application::Application;
@@ -190,6 +198,7 @@ parts.extensions.insert(ctx);
 ## 使用模式
 
 ### 完整 HTTP 服务启动
+
 ```rust
 use fusion_core::{DataError, application::Application, logforth::LogforthPlugin};
 use fusion_db::DbPlugin;

@@ -23,6 +23,7 @@ fusion-common/
 ## 核心类型
 
 ### Error 枚举
+
 ```rust
 pub enum Error {
   FailToB64uDecode(String),      // Base64Url 解码失败
@@ -37,6 +38,7 @@ pub enum Error {
 ```
 
 ### DataError Trait
+
 ```rust
 pub trait DataError: Error + Debug + Display + Serialize {
   fn code(&self) -> i32;
@@ -47,6 +49,7 @@ pub trait DataError: Error + Debug + Display + Serialize {
 ```
 
 ### Result 类型
+
 ```rust
 pub type Result<T> = core::result::Result<T, Error>;
 ```
@@ -56,6 +59,7 @@ pub type Result<T> = core::result::Result<T, Error>;
 ## Ctx (会话上下文)
 
 ### CtxPayload
+
 ```rust
 #[derive(Clone, Default, Serialize, Deserialize)]
 pub struct CtxPayload(Map<String, Value>);
@@ -75,6 +79,7 @@ let permissions: Option<Vec<&str>> = payload.get_strings("permissions");
 ```
 
 ### Ctx
+
 ```rust
 #[derive(Clone, Debug)]
 pub struct Ctx(Arc<CtxInner>);
@@ -102,8 +107,9 @@ impl Ctx {
 ```
 
 ### 使用示例
+
 ```rust
-use fusion_common::ctx::{Ctx, CtxPayload};
+use fusions::common::ctx::{Ctx, CtxPayload};
 
 let mut payload = CtxPayload::default();
 payload.set_subject("12345");
@@ -119,8 +125,9 @@ let tenant_id = ctx.tenant_id();       // 1
 ## 摘要与加密
 
 ### SHA256
+
 ```rust
-use fusion_common::digest::{sha256, sha256_string};
+use fusions::common::digest::{sha256, sha256_string};
 
 // 二进制
 let hash = sha256(b"data");
@@ -130,16 +137,18 @@ let hash_str = sha256_string(b"data");
 ```
 
 ### HMAC-SHA256
+
 ```rust
-use fusion_common::digest::{hmac_sha256, hmac_sha256_string};
+use fusions::common::digest::{hmac_sha256, hmac_sha256_string};
 
 let mac = hmac_sha256(b"secret", b"data")?;
 let mac_str = hmac_sha256_string(b"secret", b"data")?;
 ```
 
 ### Base64Url
+
 ```rust
-use fusion_common::digest::{b64u_encode, b64u_decode, b64u_decode_to_string};
+use fusions::common::digest::{b64u_encode, b64u_decode, b64u_decode_to_string};
 
 let encoded = b64u_encode(b"hello world");
 let decoded = b64u_decode(&encoded)?;
@@ -151,8 +160,9 @@ let decoded_str = b64u_decode_to_string(&encoded)?;
 ## UUID 工具
 
 ### ExtraUuid
+
 ```rust
-use fusion_common::uuid::ExtraUuid;
+use fusions::common::uuid::ExtraUuid;
 
 let uuid = ExtraUuid::new();
 let short_id = uuid.short_id();           // 12字符短 ID
@@ -161,8 +171,9 @@ let string = uuid.to_string();
 ```
 
 ### ExtraBase64
+
 ```rust
-use fusion_common::uuid::ExtraBase64;
+use fusions::common::uuid::ExtraBase64;
 
 let uuid = ExtraBase64::new();
 let b64 = uuid.to_b64();                  // Base64 编码
@@ -174,6 +185,7 @@ let short_b64 = uuid.to_short_b64();      // 22字符
 ## 时间处理
 
 ### 时间类型别名
+
 ```rust
 pub type OffsetDateTime = DateTime<FixedOffset>;
 pub type UtcDateTime = DateTime<Utc>;
@@ -181,8 +193,9 @@ pub type LocalDateTime = DateTime<Local>;
 ```
 
 ### 时间函数
+
 ```rust
-use fusion_common::time::{now, now_utc, now_offset, now_epoch_millis, now_epoch_seconds};
+use fusions::common::time::{now, now_utc, now_offset, now_epoch_millis, now_epoch_seconds};
 
 let now = now();                   // 本地时间
 let utc = now_utc();              // UTC 时间
@@ -191,8 +204,9 @@ let secs = now_epoch_seconds();   // 秒时间戳
 ```
 
 ### 时间转换
+
 ```rust
-use fusion_common::time::{parse_utc, format_time, utc_from_millis, datetime_from_millis};
+use fusions::common::time::{parse_utc, format_time, utc_from_millis, datetime_from_millis};
 
 let dt = parse_utc("2024-01-01T00:00:00Z")?;
 let formatted = format_time(dt)?;
@@ -201,8 +215,9 @@ let local = datetime_from_millis(1704067200000);
 ```
 
 ### chrono 导出
+
 ```rust
-use fusion_common::time::{DateTime, Duration, FixedOffset, Local, Utc, OffsetDateTime};
+use fusions::common::time::{DateTime, Duration, FixedOffset, Local, Utc, OffsetDateTime};
 ```
 
 ---
@@ -210,16 +225,18 @@ use fusion_common::time::{DateTime, Duration, FixedOffset, Local, Utc, OffsetDat
 ## 敏感数据处理
 
 ### SensitiveString
+
 ```rust
-use fusion_common::model::sensitive::SensitiveString;
+use fusions::common::model::sensitive::SensitiveString;
 
 let secret = SensitiveString::new("my-secret-key");
 let masked = secret.mask();           // "********"
 ```
 
 ### UriString
+
 ```rust
-use fusion_common::model::sensitive::UriString;
+use fusions::common::model::sensitive::UriString;
 
 let uri = UriString::new("https://api.example.com");
 let sanitized = uri.sanitize();       // 移除敏感信息
@@ -230,8 +247,9 @@ let sanitized = uri.sanitize();       // 移除敏感信息
 ## 辅助函数
 
 ### 默认值
+
 ```rust
-use fusion_common::helper::{default_bool_true, default_bool_false, default_i64_0, default_i64_1};
+use fusions::common::helper::{default_bool_true, default_bool_false, default_i64_0, default_i64_1};
 
 #[derive(Default)]
 struct Config {

@@ -1,4 +1,4 @@
-use fusion_core::logforth::LogforthPlugin;
+use fusions::core::logforth::LogforthPlugin;
 use fusions::core::{DataError, application::Application};
 use fusions::db::DbPlugin;
 use fusions::web::server::WebServerBuilder;

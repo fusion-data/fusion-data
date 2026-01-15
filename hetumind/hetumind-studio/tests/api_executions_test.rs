@@ -1,6 +1,6 @@
 //! tests/api_executions_test.rs
 
-use fusion_common::model::IdResult;
+use fusions::common::model::IdResult;
 use fusionsql::filter::OpValUuid;
 use fusionsql::page::{Page, PageResult};
 use hetumind_core::workflow::{Execution, ExecutionFilter, ExecutionForQuery, WorkflowId};

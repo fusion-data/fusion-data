@@ -169,7 +169,7 @@ Hetumind 侧处理要点：
 示例：在 Handler 中使用 `fusion_web::extract_ctx` 从请求提取 `Ctx`（通过 `payload: Map<String, Value>` 存放上下文字段）
 
 ```rust
-  use fusion_common::ctx::Ctx;
+  use fusions::common::ctx::Ctx;
   use fusion_web::{WebResult, ok_json, extract_ctx};
   use fusion_core::application::Application;
   use http::request::Parts; // 或 axum::http::request::Parts
@@ -281,7 +281,7 @@ Hetumind 侧处理要点：
 示例：资源层权限判定（伪代码，使用 Ctx 与 CtxPayload 便捷方法）
 
 ```rust
-  use fusion_common::ctx::Ctx;
+  use fusions::common::ctx::Ctx;
   use jieyuan_core::model::role_permission::RolePermission; // 示例，引入统一模型
 
   /* 函数级注释：判断用户是否具备某资源某动作的权限 */

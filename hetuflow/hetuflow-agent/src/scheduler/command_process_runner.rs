@@ -1,8 +1,8 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use fusion_common::time::now_offset;
-use fusion_core::{DataError, concurrent::ServiceTask, timer::TimerRef};
+use fusions::common::time::now_offset;
+use fusions::core::{DataError, concurrent::ServiceTask, timer::TimerRef};
 use log::{debug, error, info, warn};
 use mea::mpsc;
 use mea::shutdown::ShutdownRecv;
@@ -87,7 +87,7 @@ impl CommandProcessRunner {
           error!("Agent registration failed, agent_id: {}, response: {:?}", self.setting.agent_id, resp);
           // Send SIGTERM signal to self to terminate the process
           #[cfg(any(unix, windows))]
-          fusion_common::process::send_sigterm_to_self();
+          fusions::common::process::send_sigterm_to_self();
           #[cfg(not(any(unix, windows)))]
           panic!("Exit");
         }

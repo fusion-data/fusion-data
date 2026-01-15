@@ -7,7 +7,7 @@ use uuid::Uuid;
 
 use std::sync::atomic::{AtomicI64, Ordering};
 
-use fusion_common::time::now_epoch_millis;
+use fusions::common::time::now_epoch_millis;
 use mea::mpsc;
 use serde::{Deserialize, Serialize};
 

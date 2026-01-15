@@ -1,4 +1,4 @@
-use fusion_common::time::OffsetDateTime;
+use fusions::common::time::OffsetDateTime;
 
 #[derive(Debug)]
 #[cfg_attr(feature = "with-db", derive(sqlx::FromRow, fusionsql::Fields), sea_query::enum_def)]

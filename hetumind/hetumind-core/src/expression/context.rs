@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use fusion_common::ahash::HashMap;
+use fusions::common::ahash::HashMap;
 use serde::{Deserialize, Serialize};
 
 use crate::workflow::{Execution, Workflow};

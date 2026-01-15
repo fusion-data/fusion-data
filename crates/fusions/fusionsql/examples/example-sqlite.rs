@@ -1,7 +1,7 @@
 use anyhow::{Result, anyhow};
 use chrono::{DateTime, FixedOffset};
-use fusion_common::ctx::Ctx;
-use fusion_common::page::{Page, PageResult};
+use fusions::common::ctx::Ctx;
+use fusions::common::page::{Page, PageResult};
 use fusionsql::base::DbBmc;
 use fusionsql::store::Dbx;
 use fusionsql::{DbConfig, ModelManager, generate_sqlite_bmc_common, generate_sqlite_bmc_filter};

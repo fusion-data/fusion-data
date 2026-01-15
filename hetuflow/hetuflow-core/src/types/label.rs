@@ -1,6 +1,6 @@
 use std::ops::{Deref, DerefMut};
 
-use fusion_common::ahash::HashMap;
+use fusions::common::ahash::HashMap;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]

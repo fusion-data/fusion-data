@@ -1,4 +1,4 @@
-use fusion_common::time::OffsetDateTime;
+use fusions::common::time::OffsetDateTime;
 use fusionsql::Fields;
 use hetumind_core::{credential::CredentialId, workflow::CredentialKind};
 use sea_query::enum_def;

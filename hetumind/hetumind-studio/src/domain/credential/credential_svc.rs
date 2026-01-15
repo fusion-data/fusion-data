@@ -1,9 +1,9 @@
 use axum::extract::FromRequestParts;
-use fusion_core::application::Application;
-use fusion_core::security::jose::{decrypt_jwe_ecdh_es, encrypt_jwe_ecdh_es};
-use fusion_core::{DataError, Result};
-use fusion_db::ModelManager;
-use fusion_web::{WebError, extract_ctx};
+use fusions::core::application::Application;
+use fusions::core::security::jose::{decrypt_jwe_ecdh_es, encrypt_jwe_ecdh_es};
+use fusions::core::{DataError, Result};
+use fusions::db::ModelManager;
+use fusions::web::{WebError, extract_ctx};
 use fusionsql::common::now_offset;
 use fusionsql::page::PageResult;
 use hetumind_core::workflow::CredentialKind;

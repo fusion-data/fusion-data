@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-use fusion_common::ahash::HashMap;
+use fusions::common::ahash::HashMap;
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use strum::Display;

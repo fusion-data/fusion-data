@@ -1,9 +1,9 @@
-use fusion_core::{
+use fusions::core::{
   DataError,
   application::{Application, ApplicationBuilder},
   tracing::TracingPlugin,
 };
-use fusion_db::DbPlugin;
+use fusions::db::DbPlugin;
 
 use crate::{
   domain::user::UserSyncSvc,

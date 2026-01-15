@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use fusion_core::application::Application;
+use fusions::core::application::Application;
 use hetumind_context::services::memory_service::MemoryService;
 use hetumind_core::version::Version;
 use hetumind_core::workflow::ExecutionContext;

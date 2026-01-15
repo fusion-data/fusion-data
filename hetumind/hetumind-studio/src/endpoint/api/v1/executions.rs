@@ -7,8 +7,8 @@ use axum::{
   response::{Json, Sse, sse::Event},
   routing::{get, post},
 };
-use fusion_core::application::Application;
-use fusion_web::{WebResult, ok_json};
+use fusions::core::application::Application;
+use fusions::web::{WebResult, ok_json};
 use fusionsql::page::PageResult;
 use futures::stream::Stream;
 use hetumind_core::workflow::{Execution, ExecutionData, ExecutionForQuery, ExecutionId, ExecutionStatus};
@@ -44,9 +44,9 @@ pub struct ExecutionStatusResponse {
   /// 执行状态
   pub status: ExecutionStatus,
   /// 开始时间
-  pub started_at: Option<fusion_common::time::OffsetDateTime>,
+  pub started_at: Option<fusions::common::time::OffsetDateTime>,
   /// 结束时间
-  pub finished_at: Option<fusion_common::time::OffsetDateTime>,
+  pub finished_at: Option<fusions::common::time::OffsetDateTime>,
   /// 错误信息（如果有）
   pub error: Option<String>,
   /// 执行进度（可选）

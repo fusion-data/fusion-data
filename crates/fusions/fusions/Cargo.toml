@@ -34,13 +34,15 @@ with-openapi = [
   "dep:utoipa",
 ]
 with-ai = ["dep:fusion-ai"]
-with-security = ["dep:fusion-security"]
-with-logforth = ["fusion-core/with-logforth"]
+with-security = ["dep:fusion-security", "fusion-security/with-jwt"]
+with-oauth = ["with-security", "fusion-security/with-oauth"]
+with-logforth = ["fusion-core/with-logforth", "logforth"]
 with-tracing = ["fusion-core/with-tracing"]
 
 [dependencies]
 fusion-common = { workspace = true }
 fusion-core = { workspace = true }
+fusion-core-macros = { workspace = true }
 # -- security
 fusion-security = { workspace = true, optional = true }
 # -- db & fusionsql
@@ -59,3 +61,22 @@ tonic = { workspace = true, optional = true }
 fusion-ai = { workspace = true, optional = true }
 # -- misc
 ulid = { workspace = true, optional = true }
+rig-core = { workspace = true }
+rmcp = { workspace = true }
+clap = { workspace = true }
+tracing = { workspace = true }
+url = { workspace = true }
+serde = { workspace = true }
+async-trait = { workspace = true }
+reqwest = { workspace = true }
+log = { workspace = true }
+regex = { workspace = true }
+anyhow = { workspace = true }
+inventory = { version = "0.3" }
+logforth = { workspace = true, optional = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["full"] }
+serde_json = { workspace = true }
+dotenvy = { workspace = true }
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }

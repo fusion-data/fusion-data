@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use fusion_core::{application::ApplicationBuilder, configuration::ConfigRegistry, plugin::Plugin};
+use fusions::core::{application::ApplicationBuilder, configuration::ConfigRegistry, plugin::Plugin};
 use hetumind_core::workflow::{NodeRegistry, WorkflowEngineSetting};
 
 use crate::{

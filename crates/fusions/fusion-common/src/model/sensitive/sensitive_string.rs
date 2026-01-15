@@ -26,7 +26,7 @@ impl SensitiveString {
   /// # Examples
   ///
   /// ```rust
-  /// use fusion_common::model::sensitive::*;
+  /// use fusions::common::model::sensitive::*;
   /// let ss = SensitiveString::new("13883712048", 4, '*');
   /// let text = serde_json::to_string(&ss).unwrap();
   /// assert_eq!(text, "\"138****2048\"");

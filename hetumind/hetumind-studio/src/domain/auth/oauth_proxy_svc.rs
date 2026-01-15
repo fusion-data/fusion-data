@@ -1,6 +1,6 @@
 use axum::extract::FromRequestParts;
-use fusion_core::application::Application;
-use fusion_web::WebError;
+use fusions::core::application::Application;
+use fusions::web::WebError;
 use http::request::Parts;
 
 /// OAuth 代理服务 - 简化版，只做重定向到 Jieyuan

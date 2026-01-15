@@ -4,9 +4,9 @@ use axum::{
   response::Json,
   routing::{get, post},
 };
-use fusion_common::model::IdUuidResult;
-use fusion_core::application::Application;
-use fusion_web::{WebResult, ok_json};
+use fusions::common::model::IdUuidResult;
+use fusions::core::application::Application;
+use fusions::web::{WebResult, ok_json};
 use fusionsql::page::PageResult;
 use hetumind_core::workflow::WorkflowId;
 use serde::{Deserialize, Serialize};

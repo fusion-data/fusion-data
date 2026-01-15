@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use fusion_core::{application::ApplicationBuilder, configuration::ConfigRegistry, plugin::Plugin};
+use fusions::core::{application::ApplicationBuilder, configuration::ConfigRegistry, plugin::Plugin};
 use hetumind_core::binary_storage::BinaryStorageConfig;
 
 use crate::binary_storage::BinaryDataManagerFactory;

@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use fusion_core::DataError;
+use fusions::core::DataError;
 use mea::rwlock::RwLock;
 use tokio::sync::{broadcast, mpsc};
 

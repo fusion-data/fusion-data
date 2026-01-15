@@ -1,0 +1,22 @@
+[package]
+name = "fusions-common-example"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = true
+
+[[bin]]
+name = "example-metas"
+path = "src/main.rs"
+
+[[bin]]
+name = "example-json"
+path = "src/example-json.rs"
+
+[dependencies]
+fusions = { workspace = true, features = [] }
+serde = { workspace = true }
+serde_json = { workspace = true }

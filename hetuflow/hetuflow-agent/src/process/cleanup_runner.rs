@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
-use fusion_common::process::is_zombie_process;
-use fusion_common::time::now_epoch_millis;
-use fusion_core::{DataError, concurrent::ServiceTask};
+use fusions::common::process::is_zombie_process;
+use fusions::common::time::now_epoch_millis;
+use fusions::core::{DataError, concurrent::ServiceTask};
 use hetuflow_core::protocol::{ProcessEvent, ProcessEventKind, ProcessStatus};
 use log::{info, warn};
 use mea::shutdown::ShutdownRecv;

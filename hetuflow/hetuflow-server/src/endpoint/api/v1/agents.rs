@@ -1,6 +1,6 @@
 use axum::{Json, extract::Path};
-use fusion_common::model::IdStringResult;
-use fusion_web::{WebResult, ok_json};
+use fusions::common::model::IdStringResult;
+use fusions::web::{WebResult, ok_json};
 use fusionsql::page::PageResult;
 use serde_json::Value;
 

@@ -8,8 +8,8 @@ use axum::{
   },
   response::Response,
 };
-use fusion_common::model::IdUuidResult;
-use fusion_web::{WebResult, ok_json};
+use fusions::common::model::IdUuidResult;
+use fusions::web::{WebResult, ok_json};
 use futures_util::{SinkExt, StreamExt};
 use log::{error, info};
 use mea::mpsc;

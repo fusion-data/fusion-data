@@ -1,5 +1,5 @@
 use axum::Router;
-use fusion_core::application::Application;
+use fusions::core::application::Application;
 
 pub mod auth;
 pub mod v1;

@@ -1,13 +1,13 @@
 use std::{sync::Arc, time::Duration};
 
-use fusion_core::{
+use fusions::core::{
   DataError,
   application::Application,
   concurrent::{ServiceHandle, ServiceTask, TaskResult, TaskServiceHandle},
   logforth::LogforthPlugin,
 };
-use fusion_db::DbPlugin;
-use fusion_web::server::WebServerBuilder;
+use fusions::db::DbPlugin;
+use fusions::web::server::WebServerBuilder;
 use fusionsql::ModelManager;
 use log::{error, info};
 use mea::{mutex::Mutex, shutdown::ShutdownRecv};

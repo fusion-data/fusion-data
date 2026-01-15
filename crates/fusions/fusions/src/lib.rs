@@ -12,6 +12,8 @@ pub use fusion_security as security;
 #[cfg(feature = "with-web")]
 pub use fusion_web as web;
 
+pub use fusion_core_macros as macros;
+
 #[cfg(feature = "with-web")]
 pub mod web_utils;
 

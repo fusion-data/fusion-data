@@ -1,6 +1,6 @@
 use axum::extract::FromRequestParts;
-use fusion_core::{DataError, application::Application};
-use fusion_web::WebError;
+use fusions::core::{DataError, application::Application};
+use fusions::web::WebError;
 use fusionsql::{ModelManager, page::PageResult};
 use hetumind_context::utils::get_mm_from_parts;
 use hetumind_core::workflow::{Execution, ExecutionData, ExecutionForQuery, ExecutionForUpdate, ExecutionId};

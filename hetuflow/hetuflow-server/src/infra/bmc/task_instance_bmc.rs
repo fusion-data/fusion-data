@@ -1,6 +1,6 @@
 use std::sync::OnceLock;
 
-use fusion_common::time::now_offset;
+use fusions::common::time::now_offset;
 use fusionsql::{
   ModelManager, SqlError,
   base::{BmcConfig, DbBmc},

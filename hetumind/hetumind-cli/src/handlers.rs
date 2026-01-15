@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use fusion_common::ahash::HashMap;
+use fusions::common::ahash::HashMap;
 use hetumind_core::workflow::{Workflow, WorkflowId, WorkflowStatus};
 
 use crate::{

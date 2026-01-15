@@ -1,7 +1,7 @@
 use std::{collections::VecDeque, sync::Arc, time::Duration};
 
 use ahash::HashMap;
-use fusion_common::time::now;
+use fusions::common::time::now;
 use hetumind_core::workflow::{
   ExecutionData, ExecutionId, NodeExecutionError, NodeName, WorkflowEngineSetting, WorkflowExecutionError,
 };

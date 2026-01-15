@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use fusion_core::{DataError, concurrent::ServiceTask};
+use fusions::core::{DataError, concurrent::ServiceTask};
 use hetuflow_core::{
   protocol::{EventMessage, ProcessEvent, ProcessEventKind, TaskInstanceChanged},
   types::TaskInstanceStatus,

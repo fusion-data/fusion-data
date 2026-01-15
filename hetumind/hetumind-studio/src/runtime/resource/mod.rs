@@ -11,7 +11,7 @@ mod deadlock_detector;
 pub use competition_manager::ResourceCompetitionManager;
 pub use deadlock_detector::DeadlockDetector;
 
-use fusion_common::ahash::HashMap;
+use fusions::common::ahash::HashMap;
 use std::sync::Arc;
 use tokio::sync::{Mutex, Semaphore};
 use uuid::Uuid;

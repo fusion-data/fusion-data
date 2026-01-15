@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use fusion_common::time::{OffsetDateTime, now_offset};
-use fusion_core::DataError;
+use fusions::common::time::{OffsetDateTime, now_offset};
+use fusions::core::DataError;
 use fusionsql::ModelManager;
 use log::{debug, info, warn};
 

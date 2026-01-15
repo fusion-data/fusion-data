@@ -1,4 +1,4 @@
-use fusion_core::DataError;
+use fusions::core::DataError;
 use tokio::process::Command;
 
 #[tokio::main]

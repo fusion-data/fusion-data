@@ -1,4 +1,4 @@
-use fusion_common::helper::{default_bool_true, default_usize_0, is_true};
+use fusions::common::helper::{default_bool_true, default_usize_0, is_true};
 use serde::{Deserialize, Serialize};
 
 use super::NodeName;

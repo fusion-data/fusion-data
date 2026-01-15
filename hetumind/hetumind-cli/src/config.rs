@@ -121,7 +121,7 @@ impl CliConfig {
 #[cfg(test)]
 mod tests {
   use super::*;
-  use fusion_common::env::set_env;
+  use fusions::common::env::set_env;
   use tempfile::tempdir;
 
   #[test]

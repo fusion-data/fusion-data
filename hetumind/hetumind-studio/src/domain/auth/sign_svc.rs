@@ -1,7 +1,7 @@
 use axum::extract::FromRequestParts;
-use fusion_common::time::now_utc;
-use fusion_core::{DataError, application::Application};
-use fusion_web::WebError;
+use fusions::common::time::now_utc;
+use fusions::core::{DataError, application::Application};
+use fusions::web::WebError;
 use hetumind_context::utils::{make_token, verify_token};
 use hetumind_core::credential::TokenType;
 use http::request::Parts;
@@ -66,7 +66,7 @@ impl SignSvc {
           // 如果没有过期时间，设置24小时后过期
           (now_utc().timestamp() + 24 * 60 * 60) as i64
         });
-        let expires_at = fusion_common::time::datetime_from_millis(exp_timestamp * 1000);
+        let expires_at = fusions::common::time::datetime_from_millis(exp_timestamp * 1000);
 
         InvalidAuthTokenBmc::add_token(&self.mm, &token_to_invalidate, expires_at).await?;
         info!("Token added to blacklist: {}", &token_to_invalidate[..8.min(token_to_invalidate.len())]);

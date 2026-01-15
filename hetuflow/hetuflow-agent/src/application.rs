@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
-use fusion_core::DataError;
-use fusion_core::application::Application;
-use fusion_core::concurrent::{ServiceTask, TaskServiceHandle};
-use fusion_core::timer::{Timer, TimerPlugin};
+use fusions::core::DataError;
+use fusions::core::application::Application;
+use fusions::core::concurrent::{ServiceTask, TaskServiceHandle};
+use fusions::core::timer::{Timer, TimerPlugin};
 use log::info;
 use mea::mutex::Mutex;
 use mea::shutdown::ShutdownRecv;

@@ -55,7 +55,6 @@ impl Visitor<'_> for StrToApiValidEffect {
 
 #[cfg(test)]
 mod tests {
-
   use fusion_common::env::set_env;
 
   use crate::configuration::{FusionSetting, load_config, model::KeyConf};

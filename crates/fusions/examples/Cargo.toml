@@ -1,0 +1,8 @@
+[workspace]
+members = [
+    "fusions-common-example",
+    "fusions-core-example",
+    "fusions-db-example",
+    "fusions-ai-example",
+    "fusions-security-example",
+]

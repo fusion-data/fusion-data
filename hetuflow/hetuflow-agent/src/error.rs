@@ -1,4 +1,4 @@
-use fusion_core::DataError;
+use fusions::core::DataError;
 use thiserror::Error;
 
 /// 任务执行错误类型

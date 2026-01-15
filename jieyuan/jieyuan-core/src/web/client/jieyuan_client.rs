@@ -1,6 +1,6 @@
-use fusion_common::ctx::Ctx;
-use fusion_core::DataError;
-use fusion_web::WebError;
+use fusions::common::ctx::Ctx;
+use fusions::core::DataError;
+use fusions::web::WebError;
 use serde::Serialize;
 
 use crate::model::{AuthorizeRequest, AuthorizeResponse, path_authz::MatchedMapping};

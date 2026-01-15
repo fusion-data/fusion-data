@@ -1,4 +1,4 @@
-use fusion_core::DataError;
+use fusions::core::DataError;
 use fusionsql::ModelManager;
 use fusionsql::field::FieldMask;
 use fusionsql::filter::OpValUuid;

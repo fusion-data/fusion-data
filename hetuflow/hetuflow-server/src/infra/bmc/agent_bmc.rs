@@ -1,6 +1,6 @@
 use std::sync::OnceLock;
 
-use fusion_common::time::now_offset;
+use fusions::common::time::now_offset;
 use fusionsql::{
   ModelManager, SqlError,
   base::{BmcConfig, DbBmc},
@@ -141,7 +141,7 @@ impl AgentBmc {
       } else {
         stats.failure_tasks += 1;
         stats.consecutive_failures += 1;
-        stats.last_failure_ms = fusion_common::time::now_epoch_millis();
+        stats.last_failure_ms = fusions::common::time::now_epoch_millis();
       }
 
       // 更新平均响应时间（简单移动平均）

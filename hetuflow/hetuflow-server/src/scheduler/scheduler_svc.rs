@@ -1,12 +1,12 @@
 use std::time::Duration;
 
-use fusion_core::DataError;
+use fusions::core::DataError;
 use fusionsql::ModelManager;
 use log::{debug, info, warn};
 use uuid::Uuid;
 
 use croner::Cron;
-use fusion_common::time::{OffsetDateTime, now_offset};
+use fusions::common::time::{OffsetDateTime, now_offset};
 use serde_json::json;
 use std::str::FromStr;
 

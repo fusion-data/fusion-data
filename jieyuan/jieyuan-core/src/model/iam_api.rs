@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use fusion_common::ctx::Ctx;
+use fusions::common::ctx::Ctx;
 use serde::{Deserialize, Serialize};
 
 use crate::model::{CtxExt, DecisionEffect};

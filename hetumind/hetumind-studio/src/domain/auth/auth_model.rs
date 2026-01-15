@@ -1,4 +1,4 @@
-use fusion_common::time::OffsetDateTime;
+use fusions::common::time::OffsetDateTime;
 use fusionsql::{field::Fields, generate_enum_i32_to_sea_query_value};
 use sea_query::enum_def;
 use serde::{Deserialize, Serialize};

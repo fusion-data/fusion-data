@@ -1,7 +1,7 @@
 //! 基础指标收集
 
 use crate::binary_storage::BinaryStorageError;
-use fusion_common::ahash::HashMap;
+use fusions::common::ahash::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::RwLock;

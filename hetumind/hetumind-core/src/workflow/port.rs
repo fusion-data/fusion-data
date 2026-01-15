@@ -1,4 +1,4 @@
-use fusion_common::helper::{default_bool_true, default_u32_1};
+use fusions::common::helper::{default_bool_true, default_u32_1};
 use serde::{Deserialize, Serialize};
 
 use super::{NodeConnectionKind, NodeName};

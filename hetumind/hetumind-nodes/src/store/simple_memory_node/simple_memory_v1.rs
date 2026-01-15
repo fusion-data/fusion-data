@@ -4,7 +4,7 @@
 //! 每个工作流执行实例维护自己的内存缓冲区。
 
 use async_trait::async_trait;
-use fusion_core::application::Application;
+use fusions::core::application::Application;
 use hetumind_context::services::memory_service::MemoryService;
 use hetumind_core::{
   version::Version,

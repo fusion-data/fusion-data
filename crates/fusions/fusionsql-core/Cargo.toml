@@ -19,15 +19,8 @@ with-sea-query = [
   "sea-query-binder/postgres-array",
   "sea-query/postgres-array",
 ]
-with-uuid = [
-  "dep:uuid",
-  "sea-query-binder/with-uuid",
-  "fusion-common/with-uuid",
-]
-with-decimal = [
-  "dep:rust_decimal",
-  "sea-query-binder/with-rust_decimal"
-]
+with-uuid = ["dep:uuid", "sea-query-binder/with-uuid"]
+with-decimal = ["dep:rust_decimal", "sea-query-binder/with-rust_decimal"]
 with-ilike = []
 with-openapi = ["dep:utoipa"]
 with-wasm = ["fusion-common/with-wasm"]

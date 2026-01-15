@@ -114,7 +114,7 @@ impl ToTokens for Injectable {
         }
       }),
       InjectableType::ConfigArc(type_path) => tokens.extend(quote! {
-        #field_name: ::fusion_core::config::ConfigArc::new(app.get_config::<#type_path>()?)
+        #field_name: ::fusions::core::config::ConfigArc::new(app.get_config::<#type_path>()?)
       }),
       InjectableType::Default => tokens.extend(quote! {
         #field_name: Default::default()
@@ -171,9 +171,9 @@ pub(crate) fn expand_derive(input: syn::DeriveInput) -> syn::Result<TokenStream>
   // println!("\nComponent Name: {}, dependencies: {:?}", ident, dependencies);
 
   let token_stream = quote! {
-    impl ::fusion_core::component::Component for #ident {
-      fn build(app: &::fusion_core::application::ApplicationBuilder) -> ::fusion_core::Result<Self> {
-        use ::fusion_core::configuration::ConfigRegistry;
+    impl ::fusions::core::component::Component for #ident {
+      fn build(app: &::fusions::core::application::ApplicationBuilder) -> ::fusions::core::Result<Self> {
+        use ::fusions::core::configuration::ConfigRegistry;
         Ok(#component)
       }
     }
@@ -186,19 +186,19 @@ pub(crate) fn expand_derive(input: syn::DeriveInput) -> syn::Result<TokenStream>
     #[allow(non_camel_case_types)]
     struct #component_registrar;
 
-    impl ::fusion_core::component::ComponentInstaller for #component_registrar {
+    impl ::fusions::core::component::ComponentInstaller for #component_registrar {
       fn dependencies(&self) -> Vec<&str> {
         vec![#(std::any::type_name::<#dependencies>()),*]
         // static_component_registrar.to_vec()
       }
 
-      fn install_component(&self, app: &mut ::fusion_core::application::ApplicationBuilder)->::fusion_core::Result<()> {
-        use ::fusion_core::component::Component;
+      fn install_component(&self, app: &mut ::fusions::core::application::ApplicationBuilder)->::fusions::core::Result<()> {
+        use ::fusions::core::component::Component;
         app.add_component(#ident::build(app).unwrap());
         Ok(())
       }
     }
-    ::fusion_core::submit_component!(#component_registrar);
+    ::fusions::core::submit_component!(#component_registrar);
   };
 
   let output = token_stream;

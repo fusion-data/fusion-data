@@ -1,7 +1,7 @@
 use std::{sync::Arc, time::Duration};
 
-use fusion_common::time::now_offset;
-use fusion_core::{DataError, concurrent::ServiceTask};
+use fusions::common::time::now_offset;
+use fusions::core::{DataError, concurrent::ServiceTask};
 use hetuflow_core::protocol::{AcquireTaskRequest, EventMessage};
 use log::{debug, error, info};
 use mea::shutdown::ShutdownRecv;

@@ -22,8 +22,12 @@ hetumind-core = { workspace = true, features = ["with-db"] }
 hetumind-context = { workspace = true }
 hetumind-nodes = { workspace = true }
 
-fusion-common = { workspace = true, features = ["with-uuid", "with-db"] }
-fusion-core = { workspace = true, features = ["with-tracing"] }
+fusions = { workspace = true, features = [
+  "with-tracing",
+  "with-web",
+  "with-db",
+] }
+fusion-core-macros = { workspace = true }
 jieyuan-core = { workspace = true, features = ["with-web"] }
 
 async-trait = { workspace = true }
@@ -45,7 +49,6 @@ opendal = { workspace = true, features = [
 ] }
 
 # -- db
-fusion-db = { workspace = true, features = ["with-postgres", "with-uuid"] }
 fusionsql = { workspace = true, features = [
   "with-postgres",
   "with-uuid",
@@ -71,8 +74,6 @@ sea-query-binder = { workspace = true, features = [
   "with-rust_decimal",
 ] }
 
-# -- Web
-fusion-web = { workspace = true }
 http = { workspace = true }
 tower = { workspace = true }
 tower-http = { workspace = true }

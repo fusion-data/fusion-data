@@ -5,8 +5,8 @@ use crate::{
   error::{SdkError, SdkResult},
   platform::Response,
 };
-use fusion_common::model::IdUuidResult;
-use fusion_common::page::PageResult;
+use fusions::common::model::IdUuidResult;
+use fusions::common::page::PageResult;
 use fusionsql_core::filter::{OpValInt32, OpValUuid};
 use hetuflow_core::models::{SchedTask, TaskForCreate, TaskForQuery, TaskForUpdate};
 use hetuflow_core::types::TaskStatus;

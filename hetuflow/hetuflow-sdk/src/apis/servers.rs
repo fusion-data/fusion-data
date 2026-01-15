@@ -5,7 +5,7 @@ use crate::{
   error::{SdkError, SdkResult},
   platform::Response,
 };
-use fusion_common::page::PageResult;
+use fusions::common::page::PageResult;
 use hetuflow_core::models::{SchedServer, ServerForQuery, ServerForUpdate};
 use serde::de::DeserializeOwned;
 

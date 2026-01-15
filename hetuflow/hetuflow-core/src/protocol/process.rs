@@ -1,4 +1,4 @@
-use fusion_common::time::now_epoch_millis;
+use fusions::common::time::now_epoch_millis;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 

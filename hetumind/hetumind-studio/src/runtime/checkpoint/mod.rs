@@ -7,7 +7,7 @@ pub use error::CheckpointError;
 pub use state::{ExecutionState, NodeExecutionState};
 
 use ahash::{HashMap, HashSet};
-use fusion_common::time::OffsetDateTime;
+use fusions::common::time::OffsetDateTime;
 use hetumind_core::workflow::{ExecutionData, ExecutionId, NodeName};
 use serde::{Deserialize, Serialize};
 

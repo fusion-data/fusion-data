@@ -28,7 +28,7 @@ impl SecurityUtils {
 
 ```rust
 use fusion_web::extract_ctx;
-use fusion_common::ctx::Ctx;
+use fusions::common::ctx::Ctx;
 use http::request::Parts;
 
 async fn handler(
@@ -46,7 +46,7 @@ async fn handler(
 
 ```rust
 use fusion_core::security::SecurityUtils;
-use fusion_common::ctx::CtxPayload;
+use fusions::common::ctx::CtxPayload;
 
 fn issue_token(key_conf: &dyn KeyConf, user_id: i64, scopes: &[&str]) -> Result<String, Error> {
   let mut payload = CtxPayload::default();

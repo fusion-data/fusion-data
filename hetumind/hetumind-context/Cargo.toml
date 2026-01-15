@@ -13,9 +13,7 @@ publish = false
 workspace = true
 
 [dependencies]
-fusion-common = { workspace = true, features = ["with-uuid"] }
-fusion-core = { workspace = true, features = ["fusionsql"] }
-fusion-web = { workspace = true }
+fusions = { workspace = true, features = ["with-web"] }
 hetumind-core = { workspace = true, features = ["with-db"] }
 tokio = { workspace = true }
 chrono = { workspace = true }

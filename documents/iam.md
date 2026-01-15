@@ -335,7 +335,7 @@ pub struct PathLookupResponse {
 
 ```rust
 // 当前实现：直接使用 Ctx 和 CtxExt
-use fusion_common::ctx::Ctx;
+use fusions::common::ctx::Ctx;
 use crate::model::CtxExt;
 
 // 在策略评估中直接使用
@@ -789,7 +789,7 @@ pub fn routes(policy_svc: PolicySvc) -> Router {
 ````rust
 use axum::{http::Request, middleware::Next, response::Response};
 use axum::extract::State;
-use fusion_common::ctx::Ctx;
+use fusions::common::ctx::Ctx;
 use fusion_web::WebError;
 use fusion_core::application::Application;
 use fusion_core::model::{auth_ctx::build_auth_context, PolicySvc};

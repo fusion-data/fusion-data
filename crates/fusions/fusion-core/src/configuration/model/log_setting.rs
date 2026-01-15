@@ -1,3 +1,4 @@
+#[cfg(feature = "with-tracing")]
 use init_tracing_opentelemetry::OtelConfig;
 use log::Level;
 use serde::{
@@ -61,6 +62,7 @@ impl Default for OtelSetting {
   }
 }
 
+#[cfg(feature = "with-tracing")]
 impl From<&OtelSetting> for OtelConfig {
   fn from(value: &OtelSetting) -> Self {
     Self { enabled: value.enable, ..Default::default() }

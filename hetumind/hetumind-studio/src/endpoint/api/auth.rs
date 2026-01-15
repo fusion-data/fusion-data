@@ -4,11 +4,11 @@ use axum::{
   response::Redirect,
   routing::{get, post},
 };
-use fusion_core::application::Application;
+use fusions::core::application::Application;
 use serde::Deserialize;
 
 use crate::domain::auth::{OAuthProxySvc, RefreshTokenRequest, RefreshTokenResponse, SignSvc, SignoutRequest};
-use fusion_web::{WebResult, extract::JsonOrForm, ok_json};
+use fusions::web::{WebResult, extract::JsonOrForm, ok_json};
 
 #[derive(Debug, Deserialize)]
 struct RedirectQuery {

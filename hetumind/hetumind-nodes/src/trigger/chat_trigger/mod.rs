@@ -7,7 +7,7 @@ use std::sync::Arc;
 use ahash::HashMap;
 use async_trait::async_trait;
 use chrono::{DateTime, FixedOffset};
-use fusion_common::time::now_offset;
+use fusions::common::time::now_offset;
 use hetumind_core::types::JsonValue;
 use hetumind_core::version::Version;
 use hetumind_core::workflow::{

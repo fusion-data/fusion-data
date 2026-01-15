@@ -3,8 +3,8 @@ use axum::{
   extract::Path,
   routing::{get, post},
 };
-use fusion_core::application::Application;
-use fusion_web::{Router, WebResult, ok_json};
+use fusions::core::application::Application;
+use fusions::web::{Router, WebResult, ok_json};
 use fusionsql::page::PageResult;
 
 use crate::domain::user::{UserEntity, UserForPage, UserForUpdate, UserSvc};

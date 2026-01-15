@@ -5,8 +5,8 @@ use crate::{
   error::{SdkError, SdkResult},
   platform::Response,
 };
-use fusion_common::model::IdUuidResult;
-use fusion_common::page::PageResult;
+use fusions::common::model::IdUuidResult;
+use fusions::common::page::PageResult;
 use hetuflow_core::models::{SchedSchedule, ScheduleForCreate, ScheduleForQuery, ScheduleForUpdate};
 use serde::de::DeserializeOwned;
 use uuid::Uuid;

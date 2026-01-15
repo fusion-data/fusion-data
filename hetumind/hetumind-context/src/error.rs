@@ -1,4 +1,4 @@
-use fusion_core::DataError;
+use fusions::core::DataError;
 use hetumind_core::workflow::{NodeExecutionError, TriggerError, ValidationError, WorkflowExecutionError};
 use thiserror::Error;
 

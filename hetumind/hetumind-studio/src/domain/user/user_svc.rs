@@ -1,10 +1,10 @@
 use axum::{extract::FromRequestParts, http::request::Parts};
-use fusion_core::{
+use fusions::core::{
   DataError,
   application::Application,
   security::pwd::{generate_pwd, verify_pwd},
 };
-use fusion_web::WebError;
+use fusions::web::WebError;
 use fusionsql::{ModelManager, page::PageResult};
 use hetumind_context::utils::get_mm_from_parts;
 

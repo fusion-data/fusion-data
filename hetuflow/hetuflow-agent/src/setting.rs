@@ -1,8 +1,8 @@
 use std::{env::consts, path::PathBuf, sync::Arc, time::Duration};
 
 use duration_str::deserialize_duration;
-use fusion_common::{ahash::HashMap, env::get_env};
-use fusion_core::{DataError, configuration::FusionConfigRegistry};
+use fusions::common::{ahash::HashMap, env::get_env};
+use fusions::core::{DataError, configuration::FusionConfigRegistry};
 use hetuflow_core::{types::Labels, utils::setting::write_app_setting};
 use log::{info, warn};
 use serde::{Deserialize, Serialize};

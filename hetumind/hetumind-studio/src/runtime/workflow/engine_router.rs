@@ -5,8 +5,8 @@
 //! - 将 Tool 执行结果封装为 EngineResponse，写回到 AiTool 端口
 
 use ahash::HashSet;
-use fusion_common::time::now;
-use fusion_core::application::Application;
+use fusions::common::time::now;
+use fusions::core::application::Application;
 use hetumind_core::binary_storage::BinaryDataManager;
 use hetumind_core::expression::ExpressionEvaluator;
 use hetumind_core::workflow::{

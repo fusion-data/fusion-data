@@ -1,4 +1,4 @@
-use fusion_common::time::OffsetDateTime;
+use fusions::common::time::OffsetDateTime;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 

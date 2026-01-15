@@ -1,5 +1,5 @@
-use fusion_common::time::OffsetDateTime;
-use fusion_core::DataError;
+use fusions::common::time::OffsetDateTime;
+use fusions::core::DataError;
 use fusionsql::{field::Fields, postgres::PgRowType};
 use hetumind_core::workflow::{Workflow, WorkflowId, WorkflowStatus};
 use sea_query::enum_def;

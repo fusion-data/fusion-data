@@ -5,8 +5,8 @@ use crate::{
   error::{SdkError, SdkResult},
   platform::Response,
 };
-use fusion_common::model::IdStringResult;
-use fusion_common::page::PageResult;
+use fusions::common::model::IdStringResult;
+use fusions::common::page::PageResult;
 use fusionsql_core::filter::{OpValInt32, OpValString};
 use hetuflow_core::models::{AgentFilter, AgentForCreate, AgentForQuery, AgentForUpdate, SchedAgent};
 use hetuflow_core::types::AgentStatus;

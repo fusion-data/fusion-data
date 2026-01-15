@@ -1,6 +1,6 @@
 //! Integration tests for the Hetuflow SDK
 
-use fusion_common::page::Page;
+use fusions::common::page::Page;
 use hetuflow_core::models::{
   AgentCapabilities, AgentFilter, AgentForCreate, AgentForQuery, ExecuteCommand, JobForCreate, TaskConfig,
 };

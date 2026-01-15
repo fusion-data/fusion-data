@@ -24,14 +24,13 @@ with-wasm = [
   "uuid/js",
   "hetuflow-core/with-wasm",
   "fusionsql-core/with-wasm",
-  "fusion-common/with-wasm",
 ]
 # WASM optimization features
 wee_alloc = ["dep:wee_alloc"]
 
 
 [dependencies]
-fusion-common = { workspace = true, features = ["with-uuid"] }
+fusions = { workspace = true }
 fusionsql-core = { workspace = true, features = ["with-uuid"] }
 hetuflow-core = { workspace = true }
 

@@ -12,22 +12,6 @@ publish = true
 [lints]
 workspace = true
 
-[[example]]
-name = "github-async"
-path = "examples/github-async.rs"
-required-features = ["with-oauth"]
-
-[[example]]
-name = "example-oauth2-gitee"
-path = "examples/example-oauth2-gitee.rs"
-required-features = ["with-oauth"]
-
-[[example]]
-name = "example-oauth2-github"
-path = "examples/example-oauth2-github.rs"
-required-features = ["with-oauth"]
-
-
 [features]
 default = ["fusion-common/with-uuid"]
 with-jwt = ["josekit"]

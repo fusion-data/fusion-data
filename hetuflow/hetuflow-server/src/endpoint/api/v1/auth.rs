@@ -10,7 +10,7 @@ use axum::{
   response::Json,
 };
 use chrono::Utc;
-use fusion_web::WebError;
+use fusions::web::WebError;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use utoipa_axum::router::OpenApiRouter;

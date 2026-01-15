@@ -1,6 +1,6 @@
 use axum::{Json, extract::Path};
-use fusion_common::model::IdUuidResult;
-use fusion_web::{WebResult, ok_json};
+use fusions::common::model::IdUuidResult;
+use fusions::web::{WebResult, ok_json};
 use fusionsql::page::PageResult;
 use utoipa_axum::router::OpenApiRouter;
 use uuid::Uuid;

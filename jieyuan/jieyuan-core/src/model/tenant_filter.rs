@@ -1,4 +1,4 @@
-use fusion_common::ctx::Ctx;
+use fusions::common::ctx::Ctx;
 use fusionsql::{Fields, filter::OpValInt64};
 
 use crate::model::CtxExt;
@@ -174,16 +174,16 @@ pub enum TenantAccessError {
   InvalidConfiguration(String),
 }
 
-impl From<TenantAccessError> for fusion_core::DataError {
+impl From<TenantAccessError> for fusions::core::DataError {
   fn from(err: TenantAccessError) -> Self {
-    fusion_core::DataError::BadRequest(err.to_string())
+    fusions::core::DataError::BadRequest(err.to_string())
   }
 }
 
 #[cfg(test)]
 mod tests {
   use super::*;
-  use fusion_common::ctx::{Ctx, CtxPayload};
+  use fusions::common::ctx::{Ctx, CtxPayload};
   use std::collections::HashMap;
 
   fn create_test_ctx(

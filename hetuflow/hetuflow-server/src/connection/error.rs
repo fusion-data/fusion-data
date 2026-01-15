@@ -1,5 +1,5 @@
-use fusion_core::DataError;
-use fusion_web::WebError;
+use fusions::core::DataError;
+use fusions::web::WebError;
 use fusionsql::SqlError;
 use log::{error, warn};
 use thiserror::Error;
@@ -78,7 +78,7 @@ impl GatewayError {
   }
 }
 
-/// 与 fusion_core::DataError 的兼容性转换
+/// 与 fusions::core::DataError 的兼容性转换
 impl From<GatewayError> for DataError {
   fn from(err: GatewayError) -> Self {
     match err {
@@ -92,7 +92,7 @@ impl From<GatewayError> for DataError {
   }
 }
 
-/// 与 fusion_web::WebError 的兼容性置换
+/// 与 fusions::web::WebError 的兼容性置换
 impl From<GatewayError> for WebError {
   fn from(err: GatewayError) -> Self {
     match err {

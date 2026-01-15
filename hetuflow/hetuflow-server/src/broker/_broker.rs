@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
-use fusion_core::{DataError, application::Application, configuration::ConfigRegistry};
-use fusion_web::config::WebConfig;
+use fusions::core::{DataError, application::Application, configuration::ConfigRegistry};
+use fusions::web::config::WebConfig;
 use fusionsql::ModelManager;
 use hetuflow_core::{models::ServerForRegister, types::ServerStatus};
 use log::{error, info};

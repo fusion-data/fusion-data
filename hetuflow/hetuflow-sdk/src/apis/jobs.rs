@@ -5,8 +5,8 @@ use crate::{
   error::{SdkError, SdkResult},
   platform::Response,
 };
-use fusion_common::model::IdUuidResult;
-use fusion_common::page::PageResult;
+use fusions::common::model::IdUuidResult;
+use fusions::common::page::PageResult;
 use fusionsql_core::filter::OpValString;
 use hetuflow_core::models::{JobForCreate, JobForQuery, JobForUpdate, SchedJob};
 use serde::de::DeserializeOwned;

@@ -1,5 +1,5 @@
 use axum::{Json, extract::Path};
-use fusion_web::{WebResult, ok_json};
+use fusions::web::{WebResult, ok_json};
 use fusionsql::page::PageResult;
 use serde_json::Value;
 

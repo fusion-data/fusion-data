@@ -1,4 +1,4 @@
-use fusion_common::ctx::Ctx;
+use fusions::common::ctx::Ctx;
 
 use crate::model::{CtxExt, DecisionEffect, PolicyCondition, PolicyDocument, PolicyEntity, TenantAccessCondition};
 

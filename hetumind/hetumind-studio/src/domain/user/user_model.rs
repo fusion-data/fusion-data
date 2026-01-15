@@ -1,5 +1,5 @@
 use chrono::{DateTime, FixedOffset};
-use fusion_common::model::sensitive::SensitiveString;
+use fusions::common::model::sensitive::SensitiveString;
 use fusionsql::generate_enum_i32_to_sea_query_value;
 use fusionsql::page::Page;
 use fusionsql::{

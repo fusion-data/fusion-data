@@ -1,7 +1,7 @@
 mod _helper;
 pub mod api;
 
-use fusion_web::Router;
+use fusions::web::Router;
 use hetuflow_core::models::{SchedTask, SchedTaskInstance};
 use utoipa::OpenApi;
 use utoipa_axum::router::OpenApiRouter;

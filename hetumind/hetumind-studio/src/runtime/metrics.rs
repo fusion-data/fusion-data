@@ -2,8 +2,8 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use async_trait::async_trait;
-use fusion_common::ahash::HashMap;
-use fusion_common::ahash::HashMapExt;
+use fusions::common::ahash::HashMap;
+use fusions::common::ahash::HashMapExt;
 use log::{error, info, warn};
 use serde::{Deserialize, Serialize};
 use tokio::sync::RwLock;

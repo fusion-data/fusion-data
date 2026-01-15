@@ -23,15 +23,15 @@ with-db = [
 with-cli = ["clap"]
 with-openapi = [
   "utoipa",
-  "fusion-common/with-openapi",
+  "fusions/with-openapi",
   "fusionsql/with-openapi",
   "fusionsql-core/with-openapi",
 ]
 # WASM compatibility features
-with-wasm = ["fusion-common/with-wasm", "uuid/js"]
+with-wasm = ["uuid/js"]
 
 [dependencies]
-fusion-common = { workspace = true, features = ["with-uuid"] }
+fusions = { workspace = true }
 hierarchical_hash_wheel_timer = { workspace = true }
 croner = { workspace = true }
 thiserror = { workspace = true }

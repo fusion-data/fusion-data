@@ -2390,20 +2390,103 @@ dependencies = [
 name = "fusions"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
+ "async-trait",
  "axum",
+ "clap",
+ "dotenvy",
  "fusion-ai",
  "fusion-common",
  "fusion-core",
+ "fusion-core-macros",
  "fusion-db",
  "fusion-grpc",
  "fusion-security",
  "fusion-web",
  "fusionsql",
  "fusionsql-core",
+ "inventory",
+ "log",
+ "logforth",
+ "regex",
+ "reqwest",
+ "rig-core",
+ "rmcp",
+ "serde",
+ "serde_json",
  "sqlx",
+ "tokio",
  "tonic",
+ "tracing",
+ "tracing-subscriber",
  "ulid",
+ "url",
  "utoipa",
+]
+
+[[package]]
+name = "fusions-ai-example"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "clap",
+ "dotenvy",
+ "fusions",
+ "logforth",
+ "reqwest",
+ "rig-core",
+ "rmcp",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "uuid",
+]
+
+[[package]]
+name = "fusions-common-example"
+version = "0.1.0"
+dependencies = [
+ "fusions",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "fusions-core-example"
+version = "0.1.0"
+dependencies = [
+ "fusions",
+ "inventory",
+ "log",
+ "regex",
+ "tokio",
+]
+
+[[package]]
+name = "fusions-db-example"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "dotenvy",
+ "fusions",
+ "log",
+ "sqlx",
+ "tokio",
+]
+
+[[package]]
+name = "fusions-security-example"
+version = "0.1.0"
+dependencies = [
+ "dotenvy",
+ "fusions",
+ "reqwest",
+ "tokio",
+ "url",
 ]
 
 [[package]]
@@ -2856,9 +2939,7 @@ dependencies = [
  "croner",
  "dirs",
  "duration-str",
- "fusion-common",
- "fusion-core",
- "fusion-web",
+ "fusions",
  "futures-util",
  "hetuflow-core",
  "hierarchical_hash_wheel_timer",
@@ -2885,7 +2966,7 @@ dependencies = [
  "config",
  "croner",
  "duration-str",
- "fusion-common",
+ "fusions",
  "fusionsql",
  "fusionsql-core",
  "garde",
@@ -2931,10 +3012,7 @@ dependencies = [
  "croner",
  "duration-str",
  "fastrace",
- "fusion-common",
- "fusion-core",
- "fusion-db",
- "fusion-web",
+ "fusions",
  "fusionsql",
  "futures-util",
  "garde",
@@ -2967,6 +3045,7 @@ dependencies = [
  "fusion-common",
  "fusion-core",
  "fusion-db",
+ "fusions",
  "fusionsql",
  "futures-util",
  "hetuflow-agent",
@@ -2991,8 +3070,7 @@ dependencies = [
  "clap",
  "config",
  "dirs",
- "fusion-common",
- "fusion-core",
+ "fusions",
  "fusionsql",
  "hetumind-core",
  "reqwest",
@@ -3013,9 +3091,7 @@ dependencies = [
  "axum",
  "chrono",
  "dashmap",
- "fusion-common",
- "fusion-core",
- "fusion-web",
+ "fusions",
  "fusionsql",
  "hetumind-core",
  "http",
@@ -3042,7 +3118,7 @@ dependencies = [
  "derive_more",
  "dotenvy",
  "duration-str",
- "fusion-common",
+ "fusions",
  "fusionsql",
  "fusionsql-core",
  "jsonschema",
@@ -3086,9 +3162,7 @@ dependencies = [
  "croner",
  "dotenvy",
  "duration-str",
- "fusion-ai",
- "fusion-common",
- "fusion-core",
+ "fusions",
  "futures",
  "glob",
  "hetumind-context",
@@ -3131,10 +3205,8 @@ dependencies = [
  "croner",
  "dirs",
  "fastrace",
- "fusion-common",
- "fusion-core",
- "fusion-db",
- "fusion-web",
+ "fusion-core-macros",
+ "fusions",
  "fusionsql",
  "futures",
  "hetumind-context",
@@ -3793,9 +3865,7 @@ version = "0.1.0"
 dependencies = [
  "axum",
  "chrono",
- "fusion-common",
- "fusion-core",
- "fusion-web",
+ "fusions",
  "fusionsql",
  "fusionsql-core",
  "futures",
@@ -3829,7 +3899,6 @@ dependencies = [
  "derive_more",
  "enum-iterator",
  "fastrace",
- "fusion-core",
  "fusion-core-macros",
  "fusions",
  "fusionsql",

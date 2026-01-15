@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 pub use execution_store_pg::ExecutionStorePg;
-use fusion_core::{application::ApplicationBuilder, plugin::Plugin};
+use fusions::core::{application::ApplicationBuilder, plugin::Plugin};
 
 use crate::runtime::execution::ExecutionStore;
 
@@ -20,6 +20,6 @@ impl Plugin for ExecutionStorePlugin {
   }
 
   fn dependencies(&self) -> Vec<&str> {
-    vec![std::any::type_name::<fusion_db::DbPlugin>()]
+    vec![std::any::type_name::<fusions::db::DbPlugin>()]
   }
 }

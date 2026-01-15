@@ -17,12 +17,13 @@ workspace = true
 
 [dependencies]
 # -- fusions
-fusion-core = { workspace = true, features = ["with-openapi", "with-logforth"] }
 fusions = { workspace = true, features = [
   "with-openapi",
   "with-db",
   "with-web",
+  "with-logforth",
 ] }
+fusion-core-macros = { workspace = true }
 
 # -- hetus
 jieyuan-core = { workspace = true, features = [

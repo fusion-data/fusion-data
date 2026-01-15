@@ -1,5 +1,5 @@
 use axum::extract::State;
-use fusion_web::{WebResult, ok_json};
+use fusions::web::{WebResult, ok_json};
 use utoipa_axum::router::OpenApiRouter;
 
 use crate::{application::ServerApplication, model::SystemStatus};

@@ -1,4 +1,4 @@
-use fusion_common::time::OffsetDateTime;
+use fusions::common::time::OffsetDateTime;
 use log::{debug, error, info, warn};
 use regex::Regex;
 use serde_json::json;
@@ -657,7 +657,7 @@ pub fn parse_expression_expression(expression: &str, input_data: &JsonValue) -> 
         }
       } else if expr == "$now" {
         // 当前时间
-        let now = fusion_common::time::now();
+        let now = fusions::common::time::now();
         Ok(json!(now.to_string()))
       } else if expr == "$random" {
         // 随机数

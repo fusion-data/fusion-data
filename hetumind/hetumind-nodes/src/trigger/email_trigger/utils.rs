@@ -2,7 +2,7 @@
 //!
 //! 提供邮件处理、IMAP 连接管理、邮件解析等核心功能
 
-use fusion_common::ahash::{HashMap, HashMapExt, HashSet};
+use fusions::common::ahash::{HashMap, HashMapExt, HashSet};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use base64::{Engine as _, engine::general_purpose};

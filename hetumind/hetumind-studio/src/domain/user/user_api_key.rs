@@ -1,4 +1,4 @@
-use fusion_common::time::OffsetDateTime;
+use fusions::common::time::OffsetDateTime;
 use fusionsql::{field::Fields, postgres::PgRowType};
 use sea_query::enum_def;
 use serde::Serialize;

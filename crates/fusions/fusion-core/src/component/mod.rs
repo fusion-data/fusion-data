@@ -78,8 +78,8 @@ inventory::collect!(&'static dyn ComponentInstaller);
 #[macro_export]
 macro_rules! submit_component {
   ($ty:tt) => {
-    ::fusion_core::component::submit! {
-      &($ty) as &dyn ::fusion_core::component::ComponentInstaller
+    ::fusions::core::component::submit! {
+      &($ty) as &dyn ::fusions::core::component::ComponentInstaller
     }
   };
 }

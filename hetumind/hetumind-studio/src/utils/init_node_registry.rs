@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use fusion_core::{application::ApplicationBuilder, plugin::Plugin};
+use fusions::core::{application::ApplicationBuilder, plugin::Plugin};
 use hetumind_core::workflow::{NodeRegistry, RegistrationError};
 use hetumind_nodes::{core, integration, lm, trigger};
 

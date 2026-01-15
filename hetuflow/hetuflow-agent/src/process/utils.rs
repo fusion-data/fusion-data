@@ -1,5 +1,5 @@
-use fusion_common::time::now_epoch_millis;
-use fusion_core::DataError;
+use fusions::common::time::now_epoch_millis;
+use fusions::core::DataError;
 use log::{debug, error, info, warn};
 use uuid::Uuid;
 

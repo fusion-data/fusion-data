@@ -1,5 +1,5 @@
-use fusion_common::ahash::HashMap;
-use fusion_common::time::OffsetDateTime;
+use fusions::common::ahash::HashMap;
+use fusions::common::time::OffsetDateTime;
 #[cfg(feature = "with-db")]
 use fusionsql::generate_enum_i32_to_sea_query_value;
 use serde::{Deserialize, Serialize};

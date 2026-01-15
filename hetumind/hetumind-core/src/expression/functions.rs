@@ -1,7 +1,7 @@
 // src/functions.rs
 use chrono::{Duration, NaiveTime};
-use fusion_common::ahash::HashMap;
-use fusion_common::time::now;
+use fusions::common::ahash::HashMap;
+use fusions::common::time::now;
 use regex::Regex;
 use serde_json_path::JsonPath;
 

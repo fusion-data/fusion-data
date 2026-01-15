@@ -1,6 +1,6 @@
 use std::{sync::Arc, time::Duration};
 
-use fusion_common::{ahash::HashMap, time::now_epoch_millis};
+use fusions::common::{ahash::HashMap, time::now_epoch_millis};
 use hetuflow_core::protocol::CommandMessage;
 use log::{debug, error, info};
 use mea::{mpsc, rwlock::RwLock};

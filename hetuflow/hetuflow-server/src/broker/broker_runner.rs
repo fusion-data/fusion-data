@@ -1,7 +1,7 @@
 use std::{sync::Arc, time::Duration};
 
-use fusion_common::time::now_offset;
-use fusion_core::DataError;
+use fusions::common::time::now_offset;
+use fusions::core::DataError;
 use fusionsql::{
   ModelManager,
   filter::{OpValDateTime, OpValInt32},

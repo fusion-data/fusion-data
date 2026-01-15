@@ -14,8 +14,7 @@ publish = false
 
 [dependencies]
 hetumind-core = { workspace = true, features = ["with-db"] }
-fusion-common = { workspace = true }
-fusion-core = { workspace = true }
+fusions = { workspace = true }
 clap = { workspace = true }
 tokio = { workspace = true }
 reqwest = { workspace = true }

@@ -1,4 +1,4 @@
-use fusion_common::ahash::HashMap;
+use fusions::common::ahash::HashMap;
 use hetuflow_core::protocol::ProcessInfo;
 use mea::rwlock::RwLock;
 use std::{ops::Deref, sync::Arc};
