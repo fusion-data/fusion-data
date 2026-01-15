@@ -7,27 +7,28 @@ use serde_json::json;
 
 use crate::{configuration::ConfigureError, security::Error as SecurityError};
 
+/// 数据（业务）错误，兼容 jsonrpc error
 #[derive(Debug, Serialize)]
 pub struct DataError {
   pub code: i32,
-  pub msg: String,
+  pub message: String,
   #[serde(skip_serializing_if = "Option::is_none")]
-  pub data: Option<serde_json::Value>,
+  pub detail: Option<serde_json::Value>,
   #[serde(skip)]
   pub source: Option<Box<dyn core::error::Error + Send + Sync>>,
 }
 
-impl fusion_common::DataError for DataError {
+impl fusion_common::error::DataError for DataError {
   fn code(&self) -> i32 {
     self.code
   }
 
   fn msg(&self) -> &str {
-    &self.msg
+    &self.message
   }
 
   fn data(&self) -> Option<&serde_json::Value> {
-    self.data.as_ref()
+    self.detail.as_ref()
   }
 
   fn source(&self) -> Option<&(dyn core::error::Error + 'static)> {
@@ -43,37 +44,37 @@ impl core::error::Error for DataError {
 
 impl core::fmt::Display for DataError {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-    write!(f, "{}:{}", self.code, self.msg)
+    write!(f, "{}:{}", self.code, self.message)
   }
 }
 
 impl DataError {
   pub fn bad_request(msg: impl Into<String>) -> Self {
-    Self { code: 400, msg: msg.into(), data: None, source: None }
+    Self { code: 400, message: msg.into(), detail: None, source: None }
   }
 
   pub fn not_found(msg: impl Into<String>) -> Self {
-    Self { code: 404, msg: msg.into(), data: None, source: None }
+    Self { code: 404, message: msg.into(), detail: None, source: None }
   }
 
   pub fn conflicted(msg: impl Into<String>) -> Self {
-    Self { code: 409, msg: msg.into(), data: None, source: None }
+    Self { code: 409, message: msg.into(), detail: None, source: None }
   }
 
   pub fn unauthorized(msg: impl Into<String>) -> Self {
-    Self { code: 401, msg: msg.into(), data: None, source: None }
+    Self { code: 401, message: msg.into(), detail: None, source: None }
   }
 
   pub fn forbidden(msg: impl Into<String>) -> Self {
-    Self { code: 403, msg: msg.into(), data: None, source: None }
+    Self { code: 403, message: msg.into(), detail: None, source: None }
   }
 
   pub fn server_error(msg: impl Into<String>) -> Self {
-    Self { code: 500, msg: msg.into(), data: None, source: None }
+    Self { code: 500, message: msg.into(), detail: None, source: None }
   }
 
   pub fn biz_error(code: i32, msg: impl Into<String>, data: Option<serde_json::Value>) -> Self {
-    Self { code, msg: msg.into(), data, source: None }
+    Self { code, message: msg.into(), detail: data, source: None }
   }
 
   pub fn internal(
@@ -81,17 +82,17 @@ impl DataError {
     msg: impl Into<String>,
     source: Option<Box<dyn core::error::Error + Send + Sync>>,
   ) -> Self {
-    Self { code, msg: msg.into(), data: None, source }
+    Self { code, message: msg.into(), detail: None, source }
   }
 
   pub fn retry_limit(msg: impl Into<String>, retry_limit: u32) -> Self {
     let detail = json!({ "retry_limit": retry_limit });
-    Self { code: 1429, msg: msg.into(), data: Some(detail), source: None }
+    Self { code: 1429, message: msg.into(), detail: Some(detail), source: None }
   }
 }
 
-impl From<fusion_common::Error> for DataError {
-  fn from(value: fusion_common::Error) -> Self {
+impl From<fusion_common::error::Error> for DataError {
+  fn from(value: fusion_common::error::Error) -> Self {
     DataError::server_error(value.to_string())
   }
 }
@@ -244,7 +245,7 @@ impl From<DataError> for tonic::Status {
       0 | (200..=299) => tonic::Code::Ok,
       _ => tonic::Code::Unknown,
     };
-    let mut status = tonic::Status::new(code, value.msg);
+    let mut status = tonic::Status::new(code, value.message);
     // if let Some(detail) = value.detail {
     //   status.set_details(detail);
     // }

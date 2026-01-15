@@ -1,8 +1,8 @@
 use std::env;
 use std::str::FromStr;
 
-use crate::Error;
 use crate::digest::b64u_decode;
+use crate::error::Error;
 
 pub fn get_env(name: &str) -> Result<String, Error> {
   env::var(name).map_err(|_| Error::MissingEnv(name.to_string()))

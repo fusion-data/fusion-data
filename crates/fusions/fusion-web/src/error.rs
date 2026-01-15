@@ -7,7 +7,7 @@ use serde_json::Value;
 
 pub type WebResult<T> = core::result::Result<Json<T>, WebError>;
 
-/// A default error response for most API errors.
+/// A default error response for most Web errors.
 #[derive(Debug, Serialize, Deserialize)]
 #[cfg_attr(
   feature = "with-openapi",
@@ -20,10 +20,10 @@ pub struct WebError {
   // pub err_id: Ulid,
 
   /// A unique error code.
-  pub err_code: i32,
+  pub code: i32,
 
   /// An error message.
-  pub err_msg: String,
+  pub message: String,
 
   /// Optional Additional error details.
   #[serde(skip_serializing_if = "Option::is_none")]
@@ -32,7 +32,7 @@ pub struct WebError {
 
 impl WebError {
   pub fn new(err_code: i32, err_msg: impl Into<String>, detail: Option<Value>) -> Self {
-    Self { err_code, err_msg: err_msg.into(), detail }
+    Self { code: err_code, message: err_msg.into(), detail }
   }
 
   pub fn new_with_msg(err_msg: impl Into<String>) -> Self {
@@ -48,7 +48,7 @@ impl WebError {
   }
 
   pub fn with_err_code(mut self, err_code: i32) -> Self {
-    self.err_code = err_code;
+    self.code = err_code;
     self
   }
 
@@ -62,7 +62,7 @@ impl WebError {
   }
 
   pub fn with_err_msg(mut self, err_msg: impl Into<String>) -> Self {
-    self.err_msg = err_msg.into();
+    self.message = err_msg.into();
     self
   }
 
@@ -227,7 +227,7 @@ impl WebError {
 
 impl IntoResponse for WebError {
   fn into_response(self) -> axum::response::Response {
-    let status = StatusCode::from_u16(self.err_code as u16).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
+    let status = StatusCode::from_u16(self.code as u16).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
     let mut res = axum::Json(self).into_response();
     *res.status_mut() = status;
     res
@@ -238,13 +238,13 @@ impl From<DataError> for WebError {
   fn from(err: DataError) -> Self {
     // Log the source error if present
     if let Some(source) = err.source.as_ref() {
-      log::error!("DataError with code {}, msg {} has source: {:?}", err.code, err.msg, source);
+      log::error!("DataError with code {}, msg {} has source: {:?}", err.code, err.message, source);
     }
 
-    let mut web_error = Self::new_with_msg(err.msg.clone()).with_err_code(err.code);
+    let mut web_error = Self::new_with_msg(err.message.clone()).with_err_code(err.code);
 
     // Add details if present
-    if let Some(data) = err.data.as_ref() {
+    if let Some(data) = err.detail.as_ref() {
       web_error = web_error.with_details(data.clone());
     }
 
@@ -274,57 +274,57 @@ mod tests {
   fn test_http_error_functions() {
     // Test 4xx client errors
     let error = WebError::bad_request("Invalid request");
-    assert_eq!(error.err_code, 400);
-    assert_eq!(error.err_msg, "Invalid request");
+    assert_eq!(error.code, 400);
+    assert_eq!(error.message, "Invalid request");
 
     let error = WebError::unauthorized("Unauthorized access");
-    assert_eq!(error.err_code, 401);
-    assert_eq!(error.err_msg, "Unauthorized access");
+    assert_eq!(error.code, 401);
+    assert_eq!(error.message, "Unauthorized access");
 
     let error = WebError::forbidden("Access forbidden");
-    assert_eq!(error.err_code, 403);
-    assert_eq!(error.err_msg, "Access forbidden");
+    assert_eq!(error.code, 403);
+    assert_eq!(error.message, "Access forbidden");
 
     let error = WebError::not_found("Resource not found");
-    assert_eq!(error.err_code, 404);
-    assert_eq!(error.err_msg, "Resource not found");
+    assert_eq!(error.code, 404);
+    assert_eq!(error.message, "Resource not found");
 
     let error = WebError::method_not_allowed("Method not allowed");
-    assert_eq!(error.err_code, 405);
-    assert_eq!(error.err_msg, "Method not allowed");
+    assert_eq!(error.code, 405);
+    assert_eq!(error.message, "Method not allowed");
 
     let error = WebError::conflict("Resource conflict");
-    assert_eq!(error.err_code, 409);
-    assert_eq!(error.err_msg, "Resource conflict");
+    assert_eq!(error.code, 409);
+    assert_eq!(error.message, "Resource conflict");
 
     let error = WebError::unprocessable_entity("Unprocessable entity");
-    assert_eq!(error.err_code, 422);
-    assert_eq!(error.err_msg, "Unprocessable entity");
+    assert_eq!(error.code, 422);
+    assert_eq!(error.message, "Unprocessable entity");
 
     let error = WebError::too_many_requests("Rate limit exceeded");
-    assert_eq!(error.err_code, 429);
-    assert_eq!(error.err_msg, "Rate limit exceeded");
+    assert_eq!(error.code, 429);
+    assert_eq!(error.message, "Rate limit exceeded");
 
     // Test 5xx server errors
     let error = WebError::server_error("Internal server error");
-    assert_eq!(error.err_code, 500);
-    assert_eq!(error.err_msg, "Internal server error");
+    assert_eq!(error.code, 500);
+    assert_eq!(error.message, "Internal server error");
 
     let error = WebError::not_implemented("Feature not implemented");
-    assert_eq!(error.err_code, 501);
-    assert_eq!(error.err_msg, "Feature not implemented");
+    assert_eq!(error.code, 501);
+    assert_eq!(error.message, "Feature not implemented");
 
     let error = WebError::bad_gateway("Bad gateway");
-    assert_eq!(error.err_code, 502);
-    assert_eq!(error.err_msg, "Bad gateway");
+    assert_eq!(error.code, 502);
+    assert_eq!(error.message, "Bad gateway");
 
     let error = WebError::service_unavailable("Service unavailable");
-    assert_eq!(error.err_code, 503);
-    assert_eq!(error.err_msg, "Service unavailable");
+    assert_eq!(error.code, 503);
+    assert_eq!(error.message, "Service unavailable");
 
     let error = WebError::gateway_timeout("Gateway timeout");
-    assert_eq!(error.err_code, 504);
-    assert_eq!(error.err_msg, "Gateway timeout");
+    assert_eq!(error.code, 504);
+    assert_eq!(error.message, "Gateway timeout");
   }
 
   #[test]

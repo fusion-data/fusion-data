@@ -2,7 +2,7 @@ use base64ct::{Base64UrlUnpadded, Encoding};
 use rand::{Rng, distr::Alphanumeric, rng};
 use serde::{Deserializer, Serializer, de::Visitor};
 
-use crate::{Error, Result};
+use crate::error::{Error, Result};
 
 pub fn repeat_str(s: &str, n: usize) -> String {
   let mut v = String::with_capacity(s.len() * n);

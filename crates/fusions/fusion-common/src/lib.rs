@@ -4,7 +4,7 @@
 pub mod ctx;
 pub mod digest;
 pub mod env;
-mod error;
+pub mod error;
 pub mod helper;
 pub mod meta;
 pub mod model;
@@ -19,4 +19,3 @@ pub mod uuid;
 pub mod ahash {
   pub use ::ahash::*;
 }
-pub use error::{DataError, Error, Result};
