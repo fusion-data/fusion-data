@@ -94,6 +94,7 @@ fn from(vs: &$nt) -> Self {
 impl_array_op_val!(
   (OpValArrayInt64, Vec<i64>, OpVal::ArrayInt64),
   (OpValArrayInt32, Vec<i32>, OpVal::ArrayInt32),
+  (OpValArrayInt16, Vec<i16>, OpVal::ArrayInt16),
   (OpValArrayFloat64, Vec<f64>, OpVal::ArrayFloat64),
   (OpValArrayFloat32, Vec<f32>, OpVal::ArrayFloat32),
   (OpValArrayString, Vec<String>, OpVal::ArrayString)
@@ -142,5 +143,12 @@ mod with_sea_query {
 		};
 	}
 
-  impl_into_sea_op_val!(OpValArrayInt32, OpValArrayInt64, OpValArrayFloat32, OpValArrayFloat64, OpValArrayString);
+  impl_into_sea_op_val!(
+    OpValArrayInt32,
+    OpValArrayInt64,
+    OpValArrayInt16,
+    OpValArrayFloat32,
+    OpValArrayFloat64,
+    OpValArrayString
+  );
 }

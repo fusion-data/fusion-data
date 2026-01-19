@@ -84,7 +84,7 @@ pub fn extensions_2_ctx(parts: &Parts) -> Result<&Ctx, WebError> {
   Ok(ctx)
 }
 
-pub fn opt_to_app_result<T>(opt: Option<T>) -> WebResult<T>
+pub fn opt_to_web_result<T>(opt: Option<T>) -> WebResult<T>
 where
   T: DeserializeOwned,
 {

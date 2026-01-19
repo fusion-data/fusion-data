@@ -28,14 +28,12 @@ pub trait KeyConf {
 
 #[derive(Clone, Deserialize, Serialize, ZeroizeOnDrop)]
 pub struct PwdConf {
+  /// 用于 JWT 的加密码和解密
   #[serde(deserialize_with = "deser_str_to_vec_u8", serialize_with = "ser_vec_u8_to_str")]
   secret_key: Vec<u8>,
 
   /// 密码过期秒数
   expires_in: i64,
-
-  #[serde(deserialize_with = "deser_str_to_vec_u8", serialize_with = "ser_vec_u8_to_str")]
-  pwd_key: Vec<u8>,
 
   /// 创建新用户时的默认密码
   default_pwd: String,
@@ -44,10 +42,6 @@ pub struct PwdConf {
 impl PwdConf {
   pub fn expires_in(&self) -> i64 {
     self.expires_in
-  }
-
-  pub fn pwd_key(&self) -> &[u8] {
-    &self.pwd_key
   }
 
   pub fn default_pwd(&self) -> &str {

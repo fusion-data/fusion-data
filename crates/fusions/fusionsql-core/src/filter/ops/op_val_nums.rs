@@ -136,6 +136,7 @@ impl_op_val!(
   // (OpValUInt32, u32, OpVal::UInt32),
   (OpValInt64, i64, OpVal::Int64),
   (OpValInt32, i32, OpVal::Int32),
+  (OpValInt16, i16, OpVal::Int16),
   (OpValFloat64, f64, OpVal::Float64),
   (OpValFloat32, f32, OpVal::Float32)
 );
@@ -226,6 +227,7 @@ mod with_sea_query {
     // OpValUInt32,
     OpValInt64,
     OpValInt32,
+    OpValInt16,
     OpValFloat64,
     OpValFloat32
   );
