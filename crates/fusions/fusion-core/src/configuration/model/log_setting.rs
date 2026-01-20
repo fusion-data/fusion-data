@@ -70,6 +70,7 @@ impl From<&OtelSetting> for OtelConfig {
 }
 
 #[derive(Debug, Clone, Default, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum LogWriterType {
   #[default]
   Stdout,

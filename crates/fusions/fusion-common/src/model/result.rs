@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize, de::DeserializeOwned};
 
 /// 能用包装结果，将可 Serialize 的类型包裹在 `data` 字段中
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct WrapperResult<T> {
   pub data: T,
@@ -20,6 +21,7 @@ impl<T: Serialize> From<T> for WrapperResult<T> {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct IdResult {
   pub id: serde_json::Value,
@@ -47,6 +49,7 @@ impl IdResult {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct IdI64Result {
   pub id: i64,
@@ -58,6 +61,7 @@ impl IdI64Result {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct IdStringResult {
   pub id: String,
@@ -70,6 +74,7 @@ impl IdStringResult {
 
 #[cfg(feature = "with-uuid")]
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct IdUuidResult {
   pub id: uuid::Uuid,
@@ -91,6 +96,7 @@ impl From<uuid::Uuid> for IdUuidResult {
 
 #[cfg(feature = "with-ulid")]
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct IdUlidResult {
   pub id: ulid::Ulid,

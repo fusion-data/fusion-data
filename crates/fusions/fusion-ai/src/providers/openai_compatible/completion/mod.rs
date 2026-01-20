@@ -81,11 +81,13 @@ impl Message {
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct AudioAssistant {
   pub id: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct SystemContent {
   #[serde(default)]
   pub r#type: SystemContentType,
@@ -131,6 +133,7 @@ pub enum UserContent {
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct ImageUrl {
   pub url: String,
   #[serde(default)]
@@ -138,12 +141,14 @@ pub struct ImageUrl {
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct InputAudio {
   pub data: String,
   pub format: AudioMediaType,
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct ToolResultContent {
   #[serde(default)]
   r#type: ToolResultContentType,
@@ -172,6 +177,7 @@ impl From<String> for ToolResultContent {
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct ToolCall {
   pub id: String,
   #[serde(default)]
@@ -189,6 +195,7 @@ pub enum ToolType {
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct ToolDefinition {
   pub r#type: String,
   pub function: completion::ToolDefinition,
@@ -226,6 +233,7 @@ impl TryFrom<rig::message::ToolChoice> for ToolChoice {
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct Function {
   pub name: String,
   #[serde(with = "json_utils::stringified_json")]
@@ -509,6 +517,7 @@ impl FromStr for SystemContent {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CompletionResponse {
   pub id: String,
   pub object: Option<String>,
@@ -605,6 +614,7 @@ impl ProviderResponseExt for CompletionResponse {
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Choice {
   pub index: usize,
   pub message: Message,
@@ -614,13 +624,17 @@ pub struct Choice {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Usage {
+  #[serde(default)]
   pub prompt_tokens: usize,
+  #[serde(default)]
+  pub completion_tokens: usize,
+  #[serde(default)]
   pub total_tokens: usize,
 }
 
 impl Usage {
   pub fn new() -> Self {
-    Self { prompt_tokens: 0, total_tokens: 0 }
+    Self { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }
   }
 }
 
@@ -632,7 +646,7 @@ impl Default for Usage {
 
 impl fmt::Display for Usage {
   fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-    let Usage { prompt_tokens, total_tokens } = self;
+    let Usage { prompt_tokens, completion_tokens: _, total_tokens } = self;
     write!(f, "Prompt tokens: {prompt_tokens} Total tokens: {total_tokens}")
   }
 }
@@ -665,6 +679,7 @@ where
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct CompletionRequest {
   model: String,
   messages: Vec<Message>,

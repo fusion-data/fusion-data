@@ -7,6 +7,7 @@ use crate::graph_flow::{Context, error::Result, graph::Graph};
 
 /// Session information
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct Session {
   pub id: String,
   pub graph_id: String,

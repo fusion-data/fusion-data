@@ -13,6 +13,7 @@ use crate::factory::{ClientFactory, EmbeddingConfig as FactoryEmbeddingConfig, F
 ///
 /// For more control, use [`factory::EmbeddingConfig`] directly.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Builder)]
+#[serde(rename_all = "camelCase")]
 pub struct EmbeddingConfig {
   #[builder(setter(into))]
   pub provider: String,

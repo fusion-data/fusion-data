@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use crate::filter::FilterNode;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(untagged)]
+#[serde(rename_all = "camelCase", untagged)]
 pub enum Id {
   I32(i32),
   I64(i64),

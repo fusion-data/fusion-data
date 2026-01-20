@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 
 // region:    --- OrderBy
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 #[cfg_attr(target_arch = "wasm32", derive(tsify::Tsify), tsify(into_wasm_abi, from_wasm_abi))]
 #[serde(transparent)]
@@ -68,6 +69,7 @@ impl From<&StaticOrderBys> for OrderBys {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 #[cfg_attr(target_arch = "wasm32", derive(tsify::Tsify), tsify(into_wasm_abi, from_wasm_abi))]
 #[serde(transparent)]

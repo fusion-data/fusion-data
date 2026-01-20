@@ -2,6 +2,7 @@ use serde::de::{Unexpected, Visitor};
 use serde::{Deserialize, Deserializer, Serialize};
 
 #[derive(Debug, Clone, Serialize, PartialEq)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum ApiValidEffect {
   Allow,
   Deny,

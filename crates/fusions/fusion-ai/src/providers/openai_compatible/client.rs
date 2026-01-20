@@ -315,6 +315,7 @@ where
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ApiErrorResponse {
   pub(crate) message: String,
 }

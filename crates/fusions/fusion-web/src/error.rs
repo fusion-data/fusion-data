@@ -9,6 +9,7 @@ pub type WebResult<T> = core::result::Result<Json<T>, WebError>;
 
 /// A default error response for most Web errors.
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 #[cfg_attr(
   feature = "with-openapi",
   derive(utoipa::ToSchema, utoipa::ToResponse),

@@ -109,7 +109,7 @@ use rig::completion::Message;
 ///
 /// Used in chat history to distinguish between different types of messages.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum MessageRole {
   /// Message from a user/human
   User,
@@ -139,6 +139,7 @@ pub enum MessageRole {
 /// assert_eq!(user_msg.content, "Hello!");
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct SerializableMessage {
   /// The role of the message sender
   pub role: MessageRole,
@@ -324,6 +325,7 @@ impl ChatHistory {
 
 /// Helper struct for serializing/deserializing Context
 #[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 struct ContextData {
   data: std::collections::HashMap<String, Value>,
   chat_history: ChatHistory,

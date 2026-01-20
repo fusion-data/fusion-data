@@ -5,6 +5,7 @@ use serde::{
 use strum::AsRefStr;
 
 #[derive(Debug, Clone, PartialEq, Serialize, AsRefStr)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum RunMode {
   DEV,
   TEST,

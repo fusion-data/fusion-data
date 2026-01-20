@@ -13,6 +13,7 @@ use crate::factory::{AgentConfig as FactoryAgentConfig, ClientFactory, FactoryEr
 ///
 /// For more control, use [`factory::AgentConfig`] directly.
 #[derive(Clone, Debug, Default, Deserialize, Serialize, Builder)]
+#[serde(rename_all = "camelCase")]
 pub struct AgentConfig {
   #[builder(setter(into))]
   pub provider: String,

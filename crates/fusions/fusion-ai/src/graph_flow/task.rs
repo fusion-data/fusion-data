@@ -101,6 +101,7 @@ use crate::graph_flow::{context::Context, error::Result};
 /// let result = TaskResult::move_to_next_direct(); // Continue and execute immediately
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct TaskResult {
   /// Response to send to the user
   pub response: Option<String>,
@@ -216,6 +217,7 @@ impl TaskResult {
 /// );
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum NextAction {
   /// Continue to the next task in the default path (step-by-step execution).
   ///

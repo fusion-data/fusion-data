@@ -9,6 +9,7 @@ use crate::{configuration::ConfigureError, security::Error as SecurityError};
 
 /// 数据（业务）错误，兼容 jsonrpc error
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DataError {
   pub code: i32,
   pub message: String,

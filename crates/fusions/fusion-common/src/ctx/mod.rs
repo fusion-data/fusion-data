@@ -120,6 +120,7 @@ impl From<Map<String, Value>> for CtxPayload {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct CtxInner {
   payload: CtxPayload,

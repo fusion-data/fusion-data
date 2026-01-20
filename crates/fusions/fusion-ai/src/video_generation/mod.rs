@@ -33,6 +33,7 @@ pub enum VideoGenerationError {
 /// Request: includes model, prompt, optional duration and a `provider` hint.
 /// The `provider` field can be used by Router to pick a provider; if omitted Router uses default.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct VideoGenerationRequest {
   pub model: String,
   pub prompt: String,
@@ -46,6 +47,7 @@ pub struct VideoGenerationRequest {
 
 /// Response from status check.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct VideoGenerationResponse {
   pub ready: bool,
   pub video_url: Option<String>,
