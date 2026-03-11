@@ -203,7 +203,7 @@ pub enum EventKind {
 }
 
 #[cfg(feature = "with-db")]
-ultimatesql::generate_enum_i32_to_sea_query_value!(
+hetusql::generate_enum_i32_to_sea_query_value!(
   Enum: ScheduleKind,
   Enum: JobStatus,
   Enum: ScheduleStatus,

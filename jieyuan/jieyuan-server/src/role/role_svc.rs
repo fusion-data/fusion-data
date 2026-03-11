@@ -1,6 +1,6 @@
-use ultimates::core::Result;
-use ultimatesql::ModelManager;
-use ultimatesql::page::{Page, PageResult};
+use hetus::core::Result;
+use hetusql::ModelManager;
+use hetusql::page::{Page, PageResult};
 
 use jieyuan_core::model::{CreateRoleDto, Role, RoleFilters, RoleForUpdate, RolePermissionForCreate};
 

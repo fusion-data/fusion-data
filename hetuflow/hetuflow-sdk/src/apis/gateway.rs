@@ -5,7 +5,7 @@ use crate::{
   error::{SdkError, SdkResult},
   platform::Response,
 };
-use ultimates::common::model::IdUuidResult;
+use hetus::common::model::IdUuidResult;
 use serde::de::DeserializeOwned;
 use serde_json::Value;
 

@@ -1,6 +1,6 @@
 use axum::{Json, extract::State};
-use ultimates::core::application::Application;
-use ultimates::web::{WebResult, ok_json};
+use hetus::core::application::Application;
+use hetus::web::{WebResult, ok_json};
 use utoipa_axum::router::OpenApiRouter;
 
 use jieyuan_core::model::{TenantUser, TenantUserForCreate, TenantUserForUpdate, TenantUserStatus};
@@ -31,7 +31,7 @@ async fn link_user_to_tenant(
   State(app): State<Application>,
   Json(req): Json<TenantUserForCreate>,
 ) -> WebResult<serde_json::Value> {
-  let mm = app.get_component::<ultimatesql::ModelManager>().unwrap();
+  let mm = app.get_component::<hetusql::ModelManager>().unwrap();
   let user_svc = UserSvc::new(mm);
 
   let status = req.status.unwrap_or(TenantUserStatus::Active);
@@ -58,7 +58,7 @@ async fn unlink_user_from_tenant(
   State(app): State<Application>,
   axum::extract::Path((user_id, tenant_id)): axum::extract::Path<(i64, i64)>,
 ) -> WebResult<serde_json::Value> {
-  let mm = app.get_component::<ultimatesql::ModelManager>().unwrap();
+  let mm = app.get_component::<hetusql::ModelManager>().unwrap();
   let user_svc = UserSvc::new(mm);
 
   user_svc.unlink_user_from_tenant(user_id, tenant_id).await?;
@@ -86,10 +86,10 @@ async fn update_user_tenant_status(
   axum::extract::Path((user_id, tenant_id)): axum::extract::Path<(i64, i64)>,
   Json(req): Json<TenantUserForUpdate>,
 ) -> WebResult<serde_json::Value> {
-  let mm = app.get_component::<ultimatesql::ModelManager>().unwrap();
+  let mm = app.get_component::<hetusql::ModelManager>().unwrap();
   let user_svc = UserSvc::new(mm);
 
-  let status = req.status.ok_or_else(|| ultimates::core::DataError::bad_request("status is required"))?;
+  let status = req.status.ok_or_else(|| hetus::core::DataError::bad_request("status is required"))?;
 
   user_svc.update_user_tenant_status(user_id, tenant_id, status).await?;
 
@@ -113,7 +113,7 @@ async fn get_user_active_tenants(
   State(app): State<Application>,
   axum::extract::Path(user_id): axum::extract::Path<i64>,
 ) -> WebResult<Vec<TenantUser>> {
-  let mm = app.get_component::<ultimatesql::ModelManager>().unwrap();
+  let mm = app.get_component::<hetusql::ModelManager>().unwrap();
   let user_svc = UserSvc::new(mm);
 
   let tenants = user_svc.get_user_active_tenants(user_id).await?;

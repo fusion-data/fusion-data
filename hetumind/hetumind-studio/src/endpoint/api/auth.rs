@@ -5,10 +5,10 @@ use axum::{
   routing::{get, post},
 };
 use serde::Deserialize;
-use ultimates::core::application::Application;
+use hetus::core::application::Application;
 
 use crate::domain::auth::{OAuthProxySvc, RefreshTokenRequest, RefreshTokenResponse, SignSvc, SignoutRequest};
-use ultimates::web::{WebResult, extract::JsonOrForm, ok_json};
+use hetus::web::{WebResult, extract::JsonOrForm, ok_json};
 
 #[derive(Debug, Deserialize)]
 struct RedirectQuery {

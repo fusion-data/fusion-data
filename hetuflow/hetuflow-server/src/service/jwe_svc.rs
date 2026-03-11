@@ -13,7 +13,7 @@ use josekit::{
 };
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
-use ultimates::core::DataError;
+use hetus::core::DataError;
 use uuid::Uuid;
 
 /// JWE 配置结构

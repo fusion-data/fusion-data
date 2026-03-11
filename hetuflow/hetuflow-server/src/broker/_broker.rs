@@ -4,9 +4,9 @@ use hetuflow_core::{models::ServerForRegister, types::ServerStatus};
 use log::{error, info};
 use mea::shutdown::ShutdownRecv;
 use tokio::task::JoinHandle;
-use ultimates::core::{DataError, application::Application, configuration::ConfigRegistry};
-use ultimates::web::config::WebConfig;
-use ultimatesql::ModelManager;
+use hetus::core::{DataError, application::Application, configuration::ConfigRegistry};
+use hetus::web::config::WebConfig;
+use hetusql::ModelManager;
 
 use crate::{
   infra::bmc::{DistributedLockBmc, ServerBmc},

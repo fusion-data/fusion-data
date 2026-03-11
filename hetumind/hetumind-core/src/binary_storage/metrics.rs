@@ -4,7 +4,7 @@ use crate::binary_storage::BinaryStorageError;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
-use ultimates::common::ahash::HashMap;
+use hetus::common::ahash::HashMap;
 use uuid::Uuid;
 
 /// 操作进度

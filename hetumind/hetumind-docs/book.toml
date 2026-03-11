@@ -1,6 +1,6 @@
 [book]
 title = "河图智思项目文档"
-authors = ["fusion-data Team"]
+authors = ["hetu-data Team"]
 language = "zh"
 multilingual = false
 src = "src"
@@ -20,8 +20,8 @@ smart-punctuation = true
 mathjax-support = true
 copy-fonts = true
 no-section-label = false
-git-repository-url = "https://github.com/fusion-data/fusion-data"
-edit-url-template = "https://github.com/fusion-data/fusion-data/edit/main/hetumind/hetumind-docs/{path}"
+git-repository-url = "https://github.com/hetu-data/hetu-data"
+edit-url-template = "https://github.com/hetu-data/hetu-data/edit/main/hetumind/hetumind-docs/{path}"
 site-url = "/hetumind-docs/"
 additional-js = ["mermaid.min.js", "mermaid-init.js"]
 

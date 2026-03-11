@@ -1,4 +1,4 @@
-use ultimatesql::generate_uuid_newtype_to_sea_query_value;
+use hetusql::generate_uuid_newtype_to_sea_query_value;
 
 use crate::credential::CredentialId;
 

@@ -1,8 +1,8 @@
 use axum::extract::FromRequestParts;
-use ultimates::common::ctx::Ctx;
-use ultimates::core::{Result, application::Application};
-use ultimates::web::WebError;
-use ultimatesql::{ModelManager, page::PageResult};
+use hetus::common::ctx::Ctx;
+use hetus::core::{Result, application::Application};
+use hetus::web::WebError;
+use hetusql::{ModelManager, page::PageResult};
 
 use jieyuan_core::model::{
   CtxExt, Decision, DecisionEffect, PolicyEngine, PolicyEntity, PolicyForCreate, PolicyForPage, PolicyForUpdate,

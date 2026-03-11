@@ -1,9 +1,9 @@
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
-use ultimates::common::ahash::HashMap;
-use ultimates::common::time::OffsetDateTime;
-use ultimatesql_core::page::Page;
-use ultimatesql_core::{
+use hetus::common::ahash::HashMap;
+use hetus::common::time::OffsetDateTime;
+use hetusql_core::page::Page;
+use hetusql_core::{
   field::FieldMask,
   filter::{OpValDateTime, OpValInt32, OpValUuid},
 };
@@ -56,7 +56,7 @@ pub enum ExecutionStatus {
 }
 
 #[cfg(feature = "with-db")]
-ultimatesql::generate_enum_i32_to_sea_query_value!(Enum: ExecutionStatus, Enum: ExecutionMode);
+hetusql::generate_enum_i32_to_sea_query_value!(Enum: ExecutionStatus, Enum: ExecutionMode);
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Execution {
@@ -173,7 +173,7 @@ impl ExecutionResult {
 }
 
 #[derive(Deserialize)]
-#[cfg_attr(feature = "ultimatesql", derive(ultimatesql::Fields))]
+#[cfg_attr(feature = "hetusql", derive(hetusql::Fields))]
 pub struct ExecutionForUpdate {
   pub status: Option<ExecutionStatus>,
   pub finished_at: Option<OffsetDateTime>,
@@ -182,7 +182,7 @@ pub struct ExecutionForUpdate {
   pub retry_success_id: Option<ExecutionId>,
   pub started_at: Option<OffsetDateTime>,
   pub logical_deletion: Option<OffsetDateTime>,
-  #[cfg_attr(feature = "ultimatesql", field(skip))]
+  #[cfg_attr(feature = "hetusql", field(skip))]
   pub field_mask: Option<FieldMask>,
 }
 
@@ -202,7 +202,7 @@ impl From<Execution> for ExecutionForUpdate {
 }
 
 #[derive(Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "ultimatesql", derive(ultimatesql::filter::FilterNodes))]
+#[cfg_attr(feature = "hetusql", derive(hetusql::filter::FilterNodes))]
 pub struct ExecutionFilter {
   pub workflow_id: Option<OpValUuid>,
   pub status: Option<OpValInt32>,

@@ -12,7 +12,7 @@ use axum::{
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use ultimates::web::WebError;
+use hetus::web::WebError;
 use utoipa_axum::router::OpenApiRouter;
 
 use crate::{

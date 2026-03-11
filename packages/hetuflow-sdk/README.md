@@ -5,7 +5,7 @@
 ## 安装
 
 ```bash
-pnpm add @fusion-data/hetuflow-sdk
+pnpm add @hetu-data/hetuflow-sdk
 ```
 
 ## 快速开始
@@ -13,7 +13,7 @@ pnpm add @fusion-data/hetuflow-sdk
 ### 基础用法
 
 ```typescript
-import { HetuflowSDK } from '@fusion-data/hetuflow-sdk';
+import { HetuflowSDK } from '@hetu-data/hetuflow-sdk';
 
 // 创建 SDK 实例
 const sdk = new HetuflowSDK({
@@ -167,7 +167,7 @@ const metrics = await sdk.system.getMetrics();
 ## 错误处理
 
 ```typescript
-import { HetuflowError } from '@fusion-data/hetuflow-sdk';
+import { HetuflowError } from '@hetu-data/hetuflow-sdk';
 
 try {
   const agent = await sdk.agents.getAgent('invalid-id');
@@ -190,7 +190,7 @@ try {
 SDK 提供完整的 TypeScript 类型定义：
 
 ```typescript
-import type { SchedAgent, SchedJob, TaskStatus, PageResult } from '@fusion-data/hetuflow-sdk';
+import type { SchedAgent, SchedJob, TaskStatus, PageResult } from '@hetu-data/hetuflow-sdk';
 
 const agent: SchedAgent = await sdk.agents.getAgent('id');
 const jobs: PageResult<SchedJob> = await sdk.jobs.queryJobs({});

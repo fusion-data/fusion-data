@@ -1,8 +1,8 @@
 use std::sync::OnceLock;
 
 use sea_query::{Condition, Expr, Query, SelectStatement};
-use ultimatesql::page::{Page, PageResult};
-use ultimatesql::{
+use hetusql::page::{Page, PageResult};
+use hetusql::{
   ModelManager, Result,
   base::{self, BmcConfig, DbBmc, compute_page},
   filter::{FilterGroups, apply_to_sea_query},

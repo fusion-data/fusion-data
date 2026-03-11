@@ -1,0 +1,28 @@
+[hetu.app]
+run_mode = "DEV"
+name = "hetu"
+
+[hetu.security.pwd]
+expires_in = 604800
+default_pwd = "2024.Ultimate"
+
+[hetu.web]
+enable = true
+server_addr = "0.0.0.0:8888"
+
+[hetu.log]
+enable = true
+log_writers = ["stdout", "file"]
+
+# [hetu.log.otel]
+# exporter_otlp_endpoint = "http://localhost:4317"
+# traces_sample = "always_on"
+
+[hetu.grpc]
+enable = true
+server_addr = "0.0.0.0:8889"
+plaintext = true
+
+[hetu.db]
+enable = true
+url = "postgres://fusiondata:2025.Fusiondata@localhost:5432/fusiondata"

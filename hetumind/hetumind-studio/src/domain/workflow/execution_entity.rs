@@ -5,9 +5,9 @@ use hetumind_core::{
 use sea_query::enum_def;
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
-use ultimates::common::time::OffsetDateTime;
-use ultimates::core::DataError;
-use ultimatesql::{field::Fields, postgres::PgRowType};
+use hetus::common::time::OffsetDateTime;
+use hetus::core::DataError;
+use hetusql::{field::Fields, postgres::PgRowType};
 use uuid::Uuid;
 
 /// Workflow 执行实体主表,存储一次执行的宏观状态和生命周期信息。

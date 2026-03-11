@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Button, Table, Space, Spin, Tag } from 'antd';
-import { HetuflowSDK, type SchedAgent, type HealthStatus } from '@fusion-data/hetuflow-sdk';
+import { HetuflowSDK, type SchedAgent, type HealthStatus } from '@hetu-data/hetuflow-sdk';
 import { useMessage } from '@/hooks/useMessage';
 
 // 创建 SDK 实例
@@ -174,7 +174,7 @@ const HetuflowDemo: React.FC = () => {
                 <strong>基础URL:</strong> 通过 Vite 代理转发到 http://localhost:9500
               </p>
               <p>
-                <strong>SDK版本:</strong> @fusion-data/hetuflow-sdk v1.0.0
+                <strong>SDK版本:</strong> @hetu-data/hetuflow-sdk v1.0.0
               </p>
               <p>
                 <strong>功能模块:</strong>

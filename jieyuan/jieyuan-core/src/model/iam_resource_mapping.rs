@@ -1,12 +1,12 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use ultimates::common::ahash::HashMap;
-use ultimatesql_core::filter::{OpValBool, OpValInt64, OpValString};
-use ultimatesql_core::page::Page;
+use hetus::common::ahash::HashMap;
+use hetusql_core::filter::{OpValBool, OpValInt64, OpValString};
+use hetusql_core::page::Page;
 
 /// IAM 资源映射实体
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(sqlx::FromRow, ultimatesql::Fields))]
+#[cfg_attr(feature = "with-db", derive(sqlx::FromRow, hetusql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 #[serde(rename_all = "snake_case")]
 pub struct IamResourceMappingEntity {
@@ -41,7 +41,7 @@ pub struct MappingParam {
 
 /// 创建 IAM 资源映射请求
 #[derive(Debug, Clone, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(ultimatesql::Fields))]
+#[cfg_attr(feature = "with-db", derive(hetusql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 #[serde(rename_all = "snake_case")]
 pub struct IamResourceMappingForCreate {
@@ -58,7 +58,7 @@ pub struct IamResourceMappingForCreate {
 
 /// 插入 IAM 资源映射请求
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(ultimatesql::Fields))]
+#[cfg_attr(feature = "with-db", derive(hetusql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 #[serde(rename_all = "snake_case")]
 pub struct IamResourceMappingForInsert {
@@ -76,7 +76,7 @@ pub struct IamResourceMappingForInsert {
 
 /// 创建 IAM 资源映射请求（带服务名）
 #[derive(Debug, Clone, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(ultimatesql::Fields))]
+#[cfg_attr(feature = "with-db", derive(hetusql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 #[serde(rename_all = "snake_case")]
 pub struct IamResourceMappingForCreateWithService {
@@ -127,7 +127,7 @@ impl From<IamResourceMappingForCreateWithService> for IamResourceMappingForCreat
 
 /// 更新 IAM 资源映射请求
 #[derive(Debug, Clone, Deserialize, Default)]
-#[cfg_attr(feature = "with-db", derive(ultimatesql::Fields))]
+#[cfg_attr(feature = "with-db", derive(hetusql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 #[serde(rename_all = "snake_case")]
 pub struct IamResourceMappingForUpdate {
@@ -144,7 +144,7 @@ pub struct IamResourceMappingForUpdate {
 
 /// IAM 资源映射查询过滤器
 #[derive(Debug, Clone, Default, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(ultimatesql::filter::FilterNodes))]
+#[cfg_attr(feature = "with-db", derive(hetusql::filter::FilterNodes))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 #[serde(rename_all = "snake_case")]
 pub struct IamResourceMappingFilter {

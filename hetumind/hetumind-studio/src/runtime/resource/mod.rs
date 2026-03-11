@@ -13,7 +13,7 @@ pub use deadlock_detector::DeadlockDetector;
 
 use std::sync::Arc;
 use tokio::sync::{Mutex, Semaphore};
-use ultimates::common::ahash::HashMap;
+use hetus::common::ahash::HashMap;
 use uuid::Uuid;
 
 /// 资源类型

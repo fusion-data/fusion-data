@@ -1,6 +1,6 @@
 use std::sync::OnceLock;
 
-use ultimatesql::{
+use hetusql::{
   ModelManager, SqlError,
   base::{BmcConfig, DbBmc, pg_page},
   generate_pg_bmc_common, generate_pg_bmc_filter,

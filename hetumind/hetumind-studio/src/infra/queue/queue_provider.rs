@@ -1,7 +1,7 @@
 use std::{ops::Deref, sync::Arc};
 
 use hetumind_core::task::{QueueError, TaskQueue};
-use ultimatesql::ModelManager;
+use hetusql::ModelManager;
 
 use super::{PostgresQueue, QueueConfig};
 

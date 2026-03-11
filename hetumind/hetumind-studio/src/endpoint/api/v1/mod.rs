@@ -1,6 +1,6 @@
 use axum::Router;
-use ultimates::core::application::Application;
-use ultimates::web::middleware::WebAuth;
+use hetus::core::application::Application;
+use hetus::web::middleware::WebAuth;
 
 mod credentials;
 mod executions;

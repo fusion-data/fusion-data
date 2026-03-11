@@ -30,7 +30,7 @@
 
 ### Coding
 
-- 复用 fusion-xxx 库功能，如： fusion-common, fusion-core, fusion-web, fusion-db, fusionsql 等
+- 复用 hetu-xxx 库功能，如： hetu-common, hetu-core, hetu-web, hetu-db, hetusql 等
 - 复用现有的错误处理模式
 - 遵循当前项目 Rust 编程最佳实践，对参数使用 snake_case 风格命名，对于 serde 序列化使用 `#[serde(rename_all = "snake_case")]` 注解
 - 注意 Arc 的使用以支持并发访问
@@ -212,7 +212,7 @@ API 接口规范：
 4. POST /api/auth/extract_token 令牌解析接口
    - 请求参数：无（从 Authorization 头中提取 token）
    - 响应：
-     - 成功：返回 ultimate_common::ctx::Ctx 的 JSON 格式数据（使用 extract_ctx 函数解析 token）
+     - 成功：返回 hetu_common::ctx::Ctx 的 JSON 格式数据（使用 extract_ctx 函数解析 token）
      - 失败：HTTP 401 状态码，返回包含错误信息的 WebError 结构体
 
 开发要求：
@@ -235,7 +235,7 @@ API 接口规范：
 ### 提示词 5 - 实现 WebAuth 中间件，通过调用 jieyuan 的 /api/auth/extract_token 接口校验 token 并获取 Ctx 上下文
 
 ```markdown
-任务：在 @jieyuan/jieyuan-core/src/web/middleware 目录下实现 WebAuth 中间件，通过调用 jieyuan 的 /api/auth/extract_token 接口进行 token 校验并获取 Ctx 上下文。需严格参照 @crates/fusions/fusion-web/src/middleware/web_auth.rs 文件的 Axum 中间件实现方式，具体要求如下：
+任务：在 @jieyuan/jieyuan-core/src/web/middleware 目录下实现 WebAuth 中间件，通过调用 jieyuan 的 /api/auth/extract_token 接口进行 token 校验并获取 Ctx 上下文。需严格参照 @crates/hetu-web/src/middleware/web_auth.rs 文件的 Axum 中间件实现方式，具体要求如下：
 
 开发规范：
 

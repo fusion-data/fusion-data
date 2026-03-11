@@ -15,7 +15,7 @@ use hetumind_core::{
 use log::{debug, info, warn};
 use serde_json::json;
 use std::sync::Arc;
-use ultimates::core::application::Application;
+use hetus::core::application::Application;
 
 use crate::constants::SIMPLE_MEMORY_NODE_KIND;
 use crate::store::simple_memory_node::memory_config::{

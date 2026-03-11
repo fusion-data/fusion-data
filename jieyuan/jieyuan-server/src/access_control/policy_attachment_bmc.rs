@@ -4,7 +4,7 @@ use jieyuan_core::model::{
   PolicyAttachmentEntity, PolicyAttachmentFilter, PolicyAttachmentForCreate, PolicyAttachmentForUpdate,
   TABLE_POLICY_ATTACHMENT,
 };
-use ultimatesql::{
+use hetusql::{
   base::{BmcConfig, DbBmc},
   generate_pg_bmc_common, generate_pg_bmc_filter,
 };

@@ -1,0 +1,16 @@
+mod utils;
+
+use async_trait::async_trait;
+pub use utils::init_log;
+
+use crate::{application::ApplicationBuilder, plugin::Plugin};
+
+pub struct LogforthPlugin;
+
+#[async_trait]
+impl Plugin for LogforthPlugin {
+  async fn build(&self, app: &mut ApplicationBuilder) {
+    let setting = app.get_hetu_config();
+    init_log(setting.log());
+  }
+}

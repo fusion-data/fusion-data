@@ -1,7 +1,7 @@
 pub mod auth;
 pub mod v1;
 
-use ultimates::core::application::Application;
+use hetus::core::application::Application;
 use utoipa_axum::router::OpenApiRouter;
 
 pub fn routes() -> OpenApiRouter<Application> {

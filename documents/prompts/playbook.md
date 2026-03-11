@@ -9,7 +9,8 @@
 ## 超级 Prompt 模型（摘）
 
 你是资深全栈工程师，根据《XXX 开发指南》完成如下任务：
-- 技术栈：Auxm + fusionsql/sqlx/sea-query + PostgreSQL（见文档）
+
+- 技术栈：Auxm + hetusql/sqlx/sea-query + PostgreSQL（见文档）
 - 输出：完整代码库、README.md、环境变量示例、seed 脚本、部署脚本
 - 评审标准：可运行、无重大 lint/clippy 错误、端到端流程可用
 - 约束：保持模块化、提供测试样例、关键设计附注释

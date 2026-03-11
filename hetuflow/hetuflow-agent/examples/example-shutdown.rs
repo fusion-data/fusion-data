@@ -1,6 +1,6 @@
 use std::time::{Duration, Instant};
 
-use ultimates::core::DataError;
+use hetus::core::DataError;
 
 #[tokio::main]
 async fn main() -> Result<(), DataError> {

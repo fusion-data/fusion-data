@@ -3,8 +3,8 @@ use std::sync::Arc;
 
 use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize, de::DeserializeOwned, ser::Error};
-use ultimates::common::ahash::HashMap;
-use ultimates::common::time::now;
+use hetus::common::ahash::HashMap;
+use hetus::common::time::now;
 use uuid::Uuid;
 
 use crate::{

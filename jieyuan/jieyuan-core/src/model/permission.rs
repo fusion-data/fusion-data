@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
-use ultimates::common::time::{DateTime, FixedOffset};
-use ultimatesql_core::filter::{OpValInt64, OpValString};
-use ultimatesql_core::page::Page;
+use hetus::common::time::{DateTime, FixedOffset};
+use hetusql_core::filter::{OpValInt64, OpValString};
+use hetusql_core::page::Page;
 
 use super::RolePermissionFilter;
 
@@ -9,7 +9,7 @@ use super::RolePermissionFilter;
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 #[cfg_attr(
   feature = "with-db",
-  derive(sqlx::FromRow, ultimatesql::Fields),
+  derive(sqlx::FromRow, hetusql::Fields),
   sea_query::enum_def(table_name = "iam_permission")
 )]
 pub struct Permission {
@@ -25,7 +25,7 @@ pub struct Permission {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(ultimatesql::Fields))]
+#[cfg_attr(feature = "with-db", derive(hetusql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct PermissionForCreate {
   pub code: String,
@@ -35,7 +35,7 @@ pub struct PermissionForCreate {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(ultimatesql::Fields))]
+#[cfg_attr(feature = "with-db", derive(hetusql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct PermissionForUpdate {
   pub code: Option<String>,
@@ -45,7 +45,7 @@ pub struct PermissionForUpdate {
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(ultimatesql::filter::FilterNodes))]
+#[cfg_attr(feature = "with-db", derive(hetusql::filter::FilterNodes))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct PermissionFilter {
   pub id: Option<OpValInt64>,

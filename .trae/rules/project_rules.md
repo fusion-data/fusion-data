@@ -5,7 +5,8 @@
 ## 项目架构
 
 **核心模块**:
-- **fusionsql**: sea-query/sqlx ORM 数据库抽象层
+
+- **hetusql**: sea-query/sqlx ORM 数据库抽象层
 - **hetuflow**: 分布式任务调度和工作流编排 ("河图流动")
 - **hetumind**: AI Agent/Flow 平台 ("河图智思")
 - **jieyuan**: 模块化 IAM 访问控制 ("界垣")
@@ -40,24 +41,28 @@ docker-compose up -d && docker-compose logs -f
 ### 何时使用 Skills
 
 **skill: rust-backend** - Rust 后端开发
+
 - 编写新的 Rust 服务、API 接口、业务逻辑
 - 内存管理、错误处理、性能优化
 - 组件架构、依赖注入、配置管理
 - 使用时机: 修改 `crates/` 下任何 Rust 代码
 
 **skill: sql-database** - 数据库 ORM 开发
+
 - 创建新的数据库实体、查询接口
 - 实现 BMC/Service 层数据操作
 - 多租户数据隔离、分页查询
 - 使用时机: 修改数据库 schema 或数据访问代码
 
 **skill: web-frontend** - React/TypeScript 前端开发
+
 - 开发 React 19 组件、状态管理
 - Ant Design UI 集成、工作流画布
 - API 客户端、实时数据同步
 - 使用时机: 修改 `hetuflow-web/` 或 `hetumind-web/`
 
 **skill: cluster-node** - AI 节点集群架构
+
 - 实现 LLM/Memory/Tool 供应商
 - 工作流引擎集成、请求路由
 - 集群节点注册与发现

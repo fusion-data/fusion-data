@@ -3,7 +3,7 @@ revision = 3
 requires-python = ">=3.14"
 
 [[package]]
-name = "fusion-data"
+name = "hetu-data"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

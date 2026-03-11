@@ -6,7 +6,7 @@ use openssl::{
 };
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
-use ultimates::core::{DataError, Result};
+use hetus::core::{DataError, Result};
 use zeroize::Zeroize;
 
 /// 加密密钥管理器

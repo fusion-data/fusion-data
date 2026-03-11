@@ -1,35 +1,35 @@
 /**
- * Test file to verify fusionsql imports work correctly
+ * Test file to verify hetusql imports work correctly
  */
 
-import { PageResult } from '@fusion-data/fusionsql';
-import { OpValString, OpValNumber, OpValBool } from '@fusion-data/fusionsql';
+import { PageResult } from '@hetu-data/hetusql';
+import { OpValString, OpValNumber, OpValBool } from '@hetu-data/hetusql';
 import { HetumindSDK } from './dist/index.js';
 
-// Test that fusionsql types are working
+// Test that hetusql types are working
 const testPage: PageResult<string> = {
   page: { total: 10 },
-  result: ['test']
+  result: ['test'],
 };
 
 const testFilter: OpValString = {
   $eq: 'test',
-  $contains: 'value'
+  $contains: 'value',
 };
 
 const testNumberFilter: OpValNumber = {
   $eq: 100,
-  $gt: 50
+  $gt: 50,
 };
 
 const testBoolFilter: OpValBool = {
-  $eq: true
+  $eq: true,
 };
 
-// Test that SDK works with fusionsql types
+// Test that SDK works with hetusql types
 const sdk = new HetumindSDK({
   baseURL: 'http://localhost:3000',
-  token: 'test-token'
+  token: 'test-token',
 });
 
 // Test API methods
@@ -38,19 +38,19 @@ const workflowQuery = {
   filter: {
     name: { $eq: 'test-workflow' },
     status: { $eq: 100 },
-    is_archived: { $eq: false }
-  }
+    is_archived: { $eq: false },
+  },
 };
 
 const executionQuery = {
   options: { page: 1, limit: 10 },
   filter: {
     status: { $eq: 100 },
-    started_at: { $gte: '2023-01-01T00:00:00Z' }
-  }
+    started_at: { $gte: '2023-01-01T00:00:00Z' },
+  },
 };
 
-console.log('✅ All fusionsql imports successful!');
+console.log('✅ All hetusql imports successful!');
 console.log('✅ Types working correctly:', testPage, testFilter, testNumberFilter, testBoolFilter);
 console.log('✅ SDK available:', typeof HetumindSDK);
 console.log('✅ API queries working:', workflowQuery, executionQuery);

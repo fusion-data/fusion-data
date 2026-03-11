@@ -8,7 +8,7 @@
  *
  * @example
  * ```typescript
- * import { HetumindSDK } from '@fusion-data/hetumind-sdk';
+ * import { HetumindSDK } from '@hetu-data/hetumind-sdk';
  *
  * const sdk = new HetumindSDK({
  *   baseURL: 'http://localhost:3000',

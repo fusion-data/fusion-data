@@ -18,7 +18,7 @@ path = "bin/hetuflow-agent.rs"
 
 [dependencies]
 hetuflow-core = { workspace = true }
-ultimates = { workspace = true, features = ["with-web"] }
+hetus = { workspace = true, features = ["with-web"] }
 tokio = { workspace = true }
 tokio-tungstenite = { workspace = true }
 mea = { workspace = true }

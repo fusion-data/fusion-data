@@ -1,5 +1,5 @@
-use ultimates::core::Result;
-use ultimatesql::{ModelManager, page::PageResult};
+use hetus::core::Result;
+use hetusql::{ModelManager, page::PageResult};
 
 use jieyuan_core::model::{
   Permission, PermissionForCreate, PermissionForPage, PermissionForUpdate, RolePermissionForCreate,

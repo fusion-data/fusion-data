@@ -1,6 +1,6 @@
-use ultimates::core::{DataError, application::Application};
-use ultimates::db::DbPlugin;
-use ultimatesql::filter::OpValInt64;
+use hetus::core::{DataError, application::Application};
+use hetus::db::DbPlugin;
+use hetusql::filter::OpValInt64;
 
 use jieyuan_core::model::{SigninRequest, UserFilter, UserForCreate};
 use jieyuan_server::{access_control::AuthSvc, user::UserSvc};

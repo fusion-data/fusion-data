@@ -1,7 +1,7 @@
 use std::sync::OnceLock;
 
-use ultimates::core::{DataError, Result};
-use ultimatesql::{
+use hetus::core::{DataError, Result};
+use hetusql::{
   ModelManager,
   base::{BmcConfig, DbBmc},
   generate_pg_bmc_common, generate_pg_bmc_filter,

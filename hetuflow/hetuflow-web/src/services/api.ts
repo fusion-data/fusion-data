@@ -1,4 +1,4 @@
-import { HetuflowSDK } from '@fusion-data/hetuflow-sdk';
+import { HetuflowSDK } from '@hetu-data/hetuflow-sdk';
 
 /**
  * HetuFlow API 服务配置
@@ -85,4 +85,4 @@ class APIService {
 export const apiService = new APIService();
 
 // 导出类型定义
-export * from '@fusion-data/hetuflow-sdk';
+export * from '@hetu-data/hetuflow-sdk';

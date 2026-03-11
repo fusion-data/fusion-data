@@ -1,7 +1,7 @@
 use std::sync::OnceLock;
 
 use sea_query::{Condition, Expr, Query, SelectStatement};
-use ultimatesql::{
+use hetusql::{
   ModelManager, Result,
   base::{self, BmcConfig, DbBmc, compute_page},
   filter::{FilterGroups, apply_to_sea_query},

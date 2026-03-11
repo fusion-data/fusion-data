@@ -1,8 +1,8 @@
-use ultimates::common::ctx::Ctx;
+use hetus::common::ctx::Ctx;
 
 use crate::model::policy::TenantAccessMode;
 
-/// Context 扩展 trait，为 fusion-common::Ctx 提供 IAM 相关的便捷方法
+/// Context 扩展 trait，为 hetu-common::Ctx 提供 IAM 相关的便捷方法
 /// 直接使用 Ctx 和 ctx.payload() 方法，避免与内置方法冲突
 ///
 /// 注意：直接从用户登录的会话 tokon(jwe) 中只能获取到此 trait 定义的 token_seq, request_timestamp 数据，

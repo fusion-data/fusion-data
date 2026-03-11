@@ -1,0 +1,78 @@
+[package]
+name = "hetus"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = true
+
+[lints]
+workspace = true
+
+[features]
+default = ["hetu-common/with-uuid", "utoipa/uuid", "sqlx/uuid"]
+with-db = [
+  "dep:hetu-db",
+  "dep:sqlx",
+  "hetu-common/with-db",
+  "sqlx/postgres",
+  "hetu-db/with-postgres",
+  "hetu-web/with-openapi",
+]
+with-grpc = ["dep:hetu-grpc", "dep:tonic"]
+with-web = ["dep:hetu-web", "dep:axum"]
+with-ulid = ["dep:ulid", "utoipa/ulid", "hetu-common/with-ulid"]
+with-openapi = [
+  "hetu-common/with-openapi",
+  "hetu-core/with-openapi",
+  "dep:utoipa",
+]
+with-ai = ["dep:hetu-ai"]
+with-security = ["dep:hetu-security", "hetu-security/with-jwt"]
+with-oauth = ["with-security", "hetu-security/with-oauth"]
+with-logforth = ["hetu-core/with-logforth", "logforth"]
+with-tracing = ["hetu-core/with-tracing"]
+
+[dependencies]
+hetu-common = { workspace = true }
+hetu-core = { workspace = true }
+hetu-core-macros = { workspace = true }
+# -- security
+hetu-security = { workspace = true, optional = true }
+# -- db & hetusql
+hetusql-core = { workspace = true, optional = true }
+hetusql = { workspace = true, optional = true }
+hetu-db = { workspace = true, optional = true }
+sqlx = { workspace = true, optional = true }
+# -- web & axum
+axum = { workspace = true, optional = true }
+hetu-web = { workspace = true, optional = true }
+utoipa = { workspace = true, optional = true }
+# -- grpc & tonic
+hetu-grpc = { workspace = true, optional = true }
+tonic = { workspace = true, optional = true }
+# -- ai
+hetu-ai = { workspace = true, optional = true }
+# -- misc
+ulid = { workspace = true, optional = true }
+rig-core = { workspace = true }
+rmcp = { workspace = true }
+clap = { workspace = true }
+tracing = { workspace = true }
+url = { workspace = true }
+serde = { workspace = true }
+async-trait = { workspace = true }
+reqwest = { workspace = true }
+log = { workspace = true }
+regex = { workspace = true }
+anyhow = { workspace = true }
+inventory = { version = "0.3" }
+logforth = { workspace = true, optional = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["full"] }
+serde_json = { workspace = true }
+dotenvy = { workspace = true }
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }

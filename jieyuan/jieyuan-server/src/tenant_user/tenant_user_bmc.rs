@@ -1,7 +1,7 @@
 use std::sync::OnceLock;
 
 use sea_query::{Condition, SelectStatement};
-use ultimatesql::{
+use hetusql::{
   ModelManager, SqlError,
   base::{self, BmcConfig, DbBmc, compute_page},
   filter::OpValInt64,
@@ -115,7 +115,7 @@ impl TenantUserBmc {
   /// Get user's active tenant count
   pub async fn get_user_active_tenant_count(mm: &ModelManager, user_id: i64) -> Result<i64, SqlError> {
     let req = UserForQuery {
-      page: ultimatesql::page::Page::default(),
+      page: hetusql::page::Page::default(),
       filters: vec![
         TenantUserFilter { user_id: Some(OpValInt64::eq(user_id)), ..Default::default() },
         TenantUserFilter { status: Some(OpValInt64::eq(TenantUserStatus::Active as i64)), ..Default::default() },

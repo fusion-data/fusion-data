@@ -14,7 +14,7 @@ use hetumind_core::workflow::{
   NodeDescription, NodeExecutionContext, NodeExecutionError, NodeGroupKind, NodeProperty, NodePropertyKind, NodeType,
   RegistrationError, make_execution_data_map,
 };
-use ultimates::common::time::now_offset;
+use hetus::common::time::now_offset;
 
 use crate::constants::CHAT_TRIGGERN_NODE_KIND as CHAT_TRIGGER_NODE_KIND;
 use serde_json::json;

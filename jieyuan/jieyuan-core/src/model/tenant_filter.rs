@@ -1,5 +1,5 @@
-use ultimates::common::ctx::Ctx;
-use ultimatesql::{Fields, filter::OpValInt64};
+use hetus::common::ctx::Ctx;
+use hetusql::{Fields, filter::OpValInt64};
 
 use crate::model::CtxExt;
 
@@ -174,9 +174,9 @@ pub enum TenantAccessError {
   InvalidConfiguration(String),
 }
 
-impl From<TenantAccessError> for ultimates::core::DataError {
+impl From<TenantAccessError> for hetus::core::DataError {
   fn from(err: TenantAccessError) -> Self {
-    ultimates::core::DataError::BadRequest(err.to_string())
+    hetus::core::DataError::BadRequest(err.to_string())
   }
 }
 
@@ -184,7 +184,7 @@ impl From<TenantAccessError> for ultimates::core::DataError {
 mod tests {
   use super::*;
   use std::collections::HashMap;
-  use ultimates::common::ctx::{Ctx, CtxPayload};
+  use hetus::common::ctx::{Ctx, CtxPayload};
 
   fn create_test_ctx(
     user_id: i64,

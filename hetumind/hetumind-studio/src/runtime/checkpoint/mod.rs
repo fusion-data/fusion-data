@@ -9,7 +9,7 @@ pub use state::{ExecutionState, NodeExecutionState};
 use ahash::{HashMap, HashSet};
 use hetumind_core::workflow::{ExecutionData, ExecutionId, NodeName};
 use serde::{Deserialize, Serialize};
-use ultimates::common::time::OffsetDateTime;
+use hetus::common::time::OffsetDateTime;
 
 use crate::runtime::task::ExecutionTask;
 

@@ -1,7 +1,7 @@
 use serde::Serialize;
-use ultimates::common::ctx::Ctx;
-use ultimates::core::DataError;
-use ultimates::web::WebError;
+use hetus::common::ctx::Ctx;
+use hetus::core::DataError;
+use hetus::web::WebError;
 
 use crate::model::{AuthorizeRequest, AuthorizeResponse, path_authz::MatchedMapping};
 

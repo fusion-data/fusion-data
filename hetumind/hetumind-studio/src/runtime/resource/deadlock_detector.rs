@@ -5,7 +5,7 @@
 use std::collections::{HashMap, VecDeque};
 use std::sync::Arc;
 use tokio::sync::{Mutex, Notify};
-use ultimates::common::ahash::HashSet;
+use hetus::common::ahash::HashSet;
 
 use super::{ResourceError, ResourceType};
 

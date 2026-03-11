@@ -2,7 +2,7 @@ use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 #[cfg(feature = "with-db")]
-use ultimatesql::SqlError;
+use hetusql::SqlError;
 
 use crate::{
   types::JsonValue,

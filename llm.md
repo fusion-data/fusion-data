@@ -4,14 +4,14 @@
 
 ## 核心库速查
 
-| 库 | 路径 | 用途 |
-|---|---|---|
-| [fusion-common](./crates/fusions/fusion-common/llm.md) | `fusion-common/` | 基础工具: Ctx, 加密, UUID, 时间 |
-| [fusion-core](./crates/fusions/fusion-core/llm.md) | `fusion-core/` | 核心框架: Application, DI, Plugin, 配置 |
-| [fusion-db](./crates/fusions/fusion-db/llm.md) | `fusion-db/` | 数据库层: ModelManager, DbPlugin |
-| [fusion-web](./crates/fusions/fusion-web/llm.md) | `fusion-web/` | Web 层: Axum, Router, WebError |
-| [fusion-ai](./crates/fusions/fusion-ai/llm.md) | `fusion-ai/` | AI 集成: LLM Provider, Agent, GraphFlow |
-| [fusionsql](./crates/fusions/fusionsql/llm.md) | `fusionsql/` | ORM: BMC/Service, Filter, Pagination |
+| 库                                         | 路径           | 用途                                    |
+| ------------------------------------------ | -------------- | --------------------------------------- |
+| [hetu-common](./crates/hetu-common/llm.md) | `hetu-common/` | 基础工具: Ctx, 加密, UUID, 时间         |
+| [hetu-core](./crates/hetu-core/llm.md)     | `hetu-core/`   | 核心框架: Application, DI, Plugin, 配置 |
+| [hetu-db](./crates/hetu-db/llm.md)         | `hetu-db/`     | 数据库层: ModelManager, DbPlugin        |
+| [hetu-web](./crates/hetu-web/llm.md)       | `hetu-web/`    | Web 层: Axum, Router, WebError          |
+| [hetu-ai](./crates/hetu-ai/llm.md)         | `hetu-ai/`     | AI 集成: LLM Provider, Agent, GraphFlow |
+| [hetusql](./crates/hetusql/llm.md)         | `hetusql/`     | ORM: BMC/Service, Filter, Pagination    |
 
 ## 启动入口
 
@@ -52,8 +52,8 @@ endpoint/        # API 路由 (api/mod.rs, api/v1/users.rs)
 
 ## 快速导航
 
-- 配置: `fusion-core/src/configuration/model/`
-- 组件: `fusion-core/src/component/mod.rs`
-- 插件: `fusion-core/src/plugin/mod.rs`
-- 安全: `fusion-core/src/security/`
-- 工作流: `fusion-ai/src/graph_flow/`
+- 配置: `hetu-core/src/configuration/model/`
+- 组件: `hetu-core/src/component/mod.rs`
+- 插件: `hetu-core/src/plugin/mod.rs`
+- 安全: `hetu-core/src/security/`
+- 工作流: `hetu-ai/src/graph_flow/`

@@ -2,15 +2,15 @@ use std::sync::Arc;
 
 use log::{error, info, warn};
 use mea::{mpsc, shutdown::ShutdownRecv};
-use ultimates::common::{
+use hetus::common::{
   ahash::{HashMap, HashSet},
   time::datetime_from_millis,
 };
-use ultimates::core::{
+use hetus::core::{
   DataError,
   concurrent::{ServiceHandle, ServiceTask, TaskResult},
 };
-use ultimatesql::{ModelManager, filter::OpValUuid};
+use hetusql::{ModelManager, filter::OpValUuid};
 
 use hetuflow_core::{
   models::*,

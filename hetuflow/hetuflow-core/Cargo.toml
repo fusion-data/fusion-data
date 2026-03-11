@@ -14,24 +14,24 @@ workspace = true
 
 [features]
 with-db = [
-  "ultimatesql",
+  "hetusql",
   "sqlx",
   "sqlx/postgres",
   "sea-query",
-  "ultimatesql-core/with-sea-query",
+  "hetusql-core/with-sea-query",
 ]
 with-cli = ["clap"]
 with-openapi = [
   "utoipa",
-  "ultimates/with-openapi",
-  "ultimatesql/with-openapi",
-  "ultimatesql-core/with-openapi",
+  "hetus/with-openapi",
+  "hetusql/with-openapi",
+  "hetusql-core/with-openapi",
 ]
 # WASM compatibility features
 with-wasm = ["uuid/js"]
 
 [dependencies]
-ultimates = { workspace = true }
+hetus = { workspace = true }
 hierarchical_hash_wheel_timer = { workspace = true }
 croner = { workspace = true }
 thiserror = { workspace = true }
@@ -42,11 +42,11 @@ uuid = { workspace = true }
 chrono = { workspace = true }
 strum = { workspace = true }
 log = { workspace = true }
-ultimatesql = { workspace = true, optional = true, features = [
+hetusql = { workspace = true, optional = true, features = [
   "with-uuid",
   "with-postgres",
 ] }
-ultimatesql-core = { workspace = true, features = ["with-uuid"] }
+hetusql-core = { workspace = true, features = ["with-uuid"] }
 sqlx = { workspace = true, optional = true }
 sea-query = { workspace = true, optional = true }
 clap = { workspace = true, optional = true, features = ["derive", "string"] }

@@ -3,10 +3,10 @@ use sea_query::enum_def;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use sqlx::FromRow;
-use ultimates::common::model::sensitive::SensitiveString;
-use ultimatesql::generate_enum_i32_to_sea_query_value;
-use ultimatesql::page::Page;
-use ultimatesql::{
+use hetus::common::model::sensitive::SensitiveString;
+use hetusql::generate_enum_i32_to_sea_query_value;
+use hetusql::page::Page;
+use hetusql::{
   field::{FieldMask, Fields},
   filter::{FilterNodes, OpValDateTime, OpValInt32, OpValString, OpValUuid},
   postgres::PgRowType,
@@ -73,9 +73,9 @@ pub struct UserForUpdate {
 /// 3. old_password 和 code 都为空，则需要验证当前用户是否是管理人。
 #[derive(Debug, Deserialize, Fields)]
 pub struct UserForUpdatePassword {
-  #[ultimatesql(skip)]
+  #[hetusql(skip)]
   pub old_password: Option<String>,
-  #[ultimatesql(skip)]
+  #[hetusql(skip)]
   pub code: Option<String>,
   pub password: String,
 }

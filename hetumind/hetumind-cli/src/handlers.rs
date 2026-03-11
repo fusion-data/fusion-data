@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use hetumind_core::workflow::{Workflow, WorkflowId, WorkflowStatus};
-use ultimates::common::ahash::HashMap;
+use hetus::common::ahash::HashMap;
 
 use crate::{
   api::ApiClient,

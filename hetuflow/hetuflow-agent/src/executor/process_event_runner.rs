@@ -7,7 +7,7 @@ use hetuflow_core::{
 use log::{error, info, warn};
 use mea::shutdown::ShutdownRecv;
 use tokio::sync::broadcast;
-use ultimates::core::{DataError, concurrent::ServiceTask};
+use hetus::core::{DataError, concurrent::ServiceTask};
 
 use crate::{connection::ConnectionManager, process::ProcessManager, setting::HetuflowAgentSetting};
 

@@ -1,6 +1,6 @@
 use axum::extract::FromRequestParts;
-use ultimates::core::DataError;
-use ultimatesql::page::PageResult;
+use hetus::core::DataError;
+use hetusql::page::PageResult;
 
 use jieyuan_core::model::{NamespaceEntity, NamespaceForCreate, NamespaceForPage, NamespaceForUpdate, NamespaceStatus};
 
@@ -8,12 +8,12 @@ use super::NamespaceBmc;
 
 #[derive(Clone)]
 pub struct NamespaceSvc {
-  mm: ultimatesql::ModelManager,
+  mm: hetusql::ModelManager,
 }
 
 impl NamespaceSvc {
   /// Create new namespace service instance
-  pub fn new(mm: ultimatesql::ModelManager) -> Self {
+  pub fn new(mm: hetusql::ModelManager) -> Self {
     Self { mm }
   }
 
@@ -147,16 +147,16 @@ impl NamespaceSvc {
 }
 
 // FromRequestParts implementation for Axum integration
-impl FromRequestParts<ultimates::core::application::Application> for NamespaceSvc {
-  type Rejection = ultimates::web::WebError;
+impl FromRequestParts<hetus::core::application::Application> for NamespaceSvc {
+  type Rejection = hetus::web::WebError;
 
   async fn from_request_parts(
     parts: &mut axum::http::request::Parts,
-    state: &ultimates::core::application::Application,
+    state: &hetus::core::application::Application,
   ) -> core::result::Result<Self, Self::Rejection> {
     // Extract context and create model manager
-    let ctx = ultimates::web::extract_ctx(parts, state.ultimate_setting().security())?;
-    let mm = state.component::<ultimatesql::ModelManager>().with_ctx(ctx);
+    let ctx = hetus::web::extract_ctx(parts, state.hetu_setting().security())?;
+    let mm = state.component::<hetusql::ModelManager>().with_ctx(ctx);
 
     Ok(Self::new(mm))
   }

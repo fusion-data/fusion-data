@@ -15,18 +15,14 @@ workspace = true
 [features]
 with-openapi = [
   "dep:utoipa",
-  "ultimates/with-openapi",
-  "ultimatesql-core/with-openapi",
-  "ultimatesql/with-openapi",
+  "hetus/with-openapi",
+  "hetusql-core/with-openapi",
+  "hetusql/with-openapi",
 ]
-with-db = [
-  "dep:sqlx",
-  "dep:ultimatesql",
-  "dep:sea-query",
-]
+with-db = ["dep:sqlx", "dep:hetusql", "dep:sea-query"]
 with-web = [
   "with-openapi",
-  "ultimates/with-web",
+  "hetus/with-web",
   "dep:axum",
   "dep:tower-http",
   "dep:http",
@@ -36,7 +32,7 @@ with-web = [
 ]
 
 [dependencies]
-ultimates = { workspace = true }
+hetus = { workspace = true }
 uuid = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -45,8 +41,8 @@ strum = { workspace = true }
 utoipa = { workspace = true, optional = true }
 sqlx = { workspace = true, optional = true }
 sea-query = { workspace = true, optional = true }
-ultimatesql = { workspace = true, optional = true }
-ultimatesql-core = { workspace = true }
+hetusql = { workspace = true, optional = true }
+hetusql-core = { workspace = true }
 axum = { workspace = true, optional = true }
 tower-http = { workspace = true, optional = true }
 futures = { workspace = true, optional = true }

@@ -2,9 +2,9 @@ use axum::{
   Json,
   extract::{Path, State},
 };
-use ultimates::core::application::Application;
-use ultimates::web::{WebResult, ok_json};
-use ultimatesql::ModelManager;
+use hetus::core::application::Application;
+use hetus::web::{WebResult, ok_json};
+use hetusql::ModelManager;
 use utoipa_axum::router::OpenApiRouter;
 
 use jieyuan_core::model::{Permission, PermissionForCreate, PermissionForPage, PermissionForUpdate};
@@ -109,7 +109,7 @@ async fn delete_permission(State(app): State<Application>, Path(id): Path<i64>) 
   path = "/page",
   request_body = PermissionForPage,
   responses(
-    (status = 200, description = "查询成功", body = ultimatesql::page::PageResult<Permission>),
+    (status = 200, description = "查询成功", body = hetusql::page::PageResult<Permission>),
     (status = 400, description = "请求参数错误")
   ),
   tag = "权限管理"
@@ -117,7 +117,7 @@ async fn delete_permission(State(app): State<Application>, Path(id): Path<i64>) 
 async fn list_permissions(
   State(app): State<Application>,
   Json(req): Json<PermissionForPage>,
-) -> WebResult<ultimatesql::page::PageResult<Permission>> {
+) -> WebResult<hetusql::page::PageResult<Permission>> {
   let mm = app.get_component::<ModelManager>().unwrap();
   let permission_svc = PermissionSvc::new(mm);
   let result = permission_svc.page(req).await?;

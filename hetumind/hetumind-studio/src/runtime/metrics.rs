@@ -5,8 +5,8 @@ use async_trait::async_trait;
 use log::{error, info, warn};
 use serde::{Deserialize, Serialize};
 use tokio::sync::RwLock;
-use ultimates::common::ahash::HashMap;
-use ultimates::common::ahash::HashMapExt;
+use hetus::common::ahash::HashMap;
+use hetus::common::ahash::HashMapExt;
 
 use hetumind_core::{
   workflow::MonitoringConfig,

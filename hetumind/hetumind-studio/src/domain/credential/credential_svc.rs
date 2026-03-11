@@ -3,13 +3,13 @@ use hetumind_core::workflow::CredentialKind;
 use http::request::Parts;
 use josekit::jwt::JwtPayload;
 use serde_json;
-use ultimates::core::application::Application;
-use ultimates::core::security::jose::{decrypt_jwe_ecdh_es, encrypt_jwe_ecdh_es};
-use ultimates::core::{DataError, Result};
-use ultimates::db::ModelManager;
-use ultimates::web::{WebError, extract_ctx};
-use ultimatesql::common::now_offset;
-use ultimatesql::page::PageResult;
+use hetus::core::application::Application;
+use hetus::core::security::jose::{decrypt_jwe_ecdh_es, encrypt_jwe_ecdh_es};
+use hetus::core::{DataError, Result};
+use hetus::db::ModelManager;
+use hetus::web::{WebError, extract_ctx};
+use hetusql::common::now_offset;
+use hetusql::page::PageResult;
 use uuid::Uuid;
 
 use crate::domain::credential::{
@@ -170,7 +170,7 @@ impl FromRequestParts<Application> for CredentialSvc {
   type Rejection = WebError;
 
   async fn from_request_parts(parts: &mut Parts, state: &Application) -> core::result::Result<Self, Self::Rejection> {
-    let ctx = extract_ctx(parts, state.ultimate_setting().security())?;
+    let ctx = extract_ctx(parts, state.hetu_setting().security())?;
     let mm = state.component::<ModelManager>().with_ctx(ctx);
     let key_manager = state.component();
     Ok(CredentialSvc { mm, key_manager })

@@ -1,6 +1,6 @@
 //! Integration tests for the Hetuflow SDK
 
-use ultimates::common::page::Page;
+use hetus::common::page::Page;
 use hetuflow_core::models::{
   AgentCapabilities, AgentFilter, AgentForCreate, AgentForQuery, ExecuteCommand, JobForCreate, TaskConfig,
 };

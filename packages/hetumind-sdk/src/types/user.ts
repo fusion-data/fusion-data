@@ -2,7 +2,7 @@
  * User related types based on backend API
  */
 
-import { OpValBool, OpValDateTime, OpValString } from '@fusion-data/fusionsql';
+import { OpValBool, OpValDateTime, OpValString } from '@hetu-data/hetusql';
 
 /**
  * User entity

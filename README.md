@@ -1,28 +1,27 @@
-# fusion-data
+# hetu-data
 
 ## 项目介绍
 
-fusion-data 是一个基于 Rust 生态开发的 **融合数据** 平台，当前版本 0.1.0，采用 Rust 2024 Edition 构建。平台包含以下核心项目：
+hetu-data 是一个基于 Rust 生态开发的 **融合数据** 平台，当前版本 0.1.0，采用 Rust 2024 Edition 构建。平台包含以下核心项目：
 
-### 核心库 (crates/fusions/)
+### 核心库 (hetu)
 
-- **fusion-core**: 应用程序框架，提供组件系统、配置管理、异步运行时等核心功能
-- **fusion-web**: 基于 Axum 的 HTTP 服务器框架
-- **fusion-db**: 数据库访问层
-- **fusion-grpc**: gRPC 工具库
-- **fusion-security**: 安全组件
-- **fusion-common**: 共享工具库
-- **fusion-ai**: AI 集成工具
-- **fusion-core-macros**: 核心派生宏
-- **fusionsql**: 基于 [sea-query](https://github.com/SeaQL/sea-query/) 开发的数据库 ORM
-- **fusionsql-core**: 核心类型、特性和数据库抽象
-- **fusionsql-macros**: 模型定义派生宏
+- **hetu-core**: 应用程序框架，提供组件系统、配置管理、异步运行时等核心功能
+- **hetu-web**: 基于 Axum 的 HTTP 服务器框架
+- **hetu-db**: 数据库访问层
+- **hetu-grpc**: gRPC 工具库
+- **hetu-security**: 安全组件
+- **hetu-common**: 共享工具库
+- **hetu-ai**: AI 集成工具
+- **hetu-core-macros**: 核心派生宏
+- **hetusql**: 基于 [sea-query](https://github.com/SeaQL/sea-query/) 开发的数据库 ORM
+- **hetusql-core**: 核心类型、特性和数据库抽象
+- **hetusql-macros**: 模型定义派生宏
 - **fusions**: 所有 fusion 库的元包
 
 ### 应用项目
 
 - **[hetuflow](hetuflow/)**: **河图流动** 分布式任务调度系统
-
   - `hetuflow-core`: 共享模型、协议和作业定义
   - `hetuflow-server`: 中央调度服务器，提供 gRPC/Web API
   - `hetuflow-agent`: 分布式执行代理，带任务运行器
@@ -31,7 +30,6 @@ fusion-data 是一个基于 Rust 生态开发的 **融合数据** 平台，当�
   - `hetuflow-docs`: 文档和示例
 
 - **[hetumind](hetumind/)**: **河图智思** 和流程编排、AI Agent 平台，集成 LLM 功能
-
   - `hetumind-core`: 核心 AI 功能和代理编排
   - `hetumind-nodes`: 节点执行框架，提供全面的工作流节点
   - `hetumind-context`: 上下文管理和状态持久化
@@ -95,8 +93,8 @@ fusion-data 是一个基于 Rust 生态开发的 **融合数据** 平台，当�
 
 ```bash
 # 克隆项目
-git clone https://github.com/fusion-data/fusion-data.git
-cd fusion-data
+git clone https://github.com/hetu-data/hetu-data.git
+cd hetu-data
 
 # 启动数据库服务
 docker-compose up -d
@@ -159,12 +157,12 @@ docker-compose restart postgres
 ## 项目结构
 
 ```
-fusion-data/
-├── crates/fusions/          # 核心库
-│   ├── fusion-core/         # 应用程序框架
-│   ├── fusion-web/          # Web 框架
-│   ├── fusion-db/           # 数据库访问层
-│   ├── fusionsql/           # ORM 实现
+hetu-data/
+├── crates/          # 核心库
+│   ├── hetu-core/         # 应用程序框架
+│   ├── hetu-web/          # Web 框架
+│   ├── hetu-db/           # 数据库访问层
+│   ├── hetusql/           # ORM 实现
 │   └── ...
 ├── hetuflow/                # 分布式任务调度
 │   ├── hetuflow-core/       # 核心模型和协议

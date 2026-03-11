@@ -1,22 +1,22 @@
 [workspace]
 members = [
-  "crates/ultimate-common",
-  "crates/ultimate-core",
-  "crates/ultimate-core-macros",
-  "crates/ultimate-db",
-  "crates/ultimate-web",
-  "crates/ultimate-grpc",
-  "crates/ultimate-security",
-  "crates/ultimate-ai",
-  "crates/ultimates",
-  "crates/ultimatesql",
-  "crates/ultimatesql-core",
-  "crates/ultimatesql-macros",
-  "crates/examples/ultimates-common-example",
-  "crates/examples/ultimates-core-example",
-  "crates/examples/ultimates-db-example",
-  "crates/examples/ultimates-security-example",
-  "crates/examples/ultimates-ai-example",
+  "crates/hetu-common",
+  "crates/hetu-core",
+  "crates/hetu-core-macros",
+  "crates/hetu-db",
+  "crates/hetu-web",
+  "crates/hetu-grpc",
+  "crates/hetu-security",
+  "crates/hetu-ai",
+  "crates/hetus",
+  "crates/hetusql",
+  "crates/hetusql-core",
+  "crates/hetusql-macros",
+  "crates/examples/hetus-common-example",
+  "crates/examples/hetus-core-example",
+  "crates/examples/hetus-db-example",
+  "crates/examples/hetus-security-example",
+  "crates/examples/hetus-ai-example",
   "jieyuan/jieyuan-core",
   "jieyuan/jieyuan-server",
   "hetuflow/hetuflow-core",
@@ -67,18 +67,18 @@ opt-level = 3
 
 [workspace.dependencies]
 # -- projects begin
-ultimate-common = { version = "0.1.0", path = "crates/ultimate-common" }
-ultimate-core-macros = { version = "0.1.0", path = "crates/ultimate-core-macros" }
-ultimate-core = { version = "0.1.0", path = "crates/ultimate-core" }
-ultimate-security = { version = "0.1.0", path = "crates/ultimate-security" }
-ultimatesql-core = { version = "0.1.0", path = "crates/ultimatesql-core" }
-ultimatesql-macros = { version = "0.1.0", path = "crates/ultimatesql-macros" }
-ultimatesql = { version = "0.1.0", path = "crates/ultimatesql" }
-ultimate-db = { version = "0.1.0", path = "crates/ultimate-db" }
-ultimate-web = { version = "0.1.0", path = "crates/ultimate-web" }
-ultimate-grpc = { version = "0.1.0", path = "crates/ultimate-grpc" }
-ultimate-ai = { version = "0.1.0", path = "crates/ultimate-ai" }
-ultimates = { version = "0.1.0", path = "crates/ultimates" }
+hetu-common = { version = "0.1.0", path = "crates/hetu-common" }
+hetu-core-macros = { version = "0.1.0", path = "crates/hetu-core-macros" }
+hetu-core = { version = "0.1.0", path = "crates/hetu-core" }
+hetu-security = { version = "0.1.0", path = "crates/hetu-security" }
+hetusql-core = { version = "0.1.0", path = "crates/hetusql-core" }
+hetusql-macros = { version = "0.1.0", path = "crates/hetusql-macros" }
+hetusql = { version = "0.1.0", path = "crates/hetusql" }
+hetu-db = { version = "0.1.0", path = "crates/hetu-db" }
+hetu-web = { version = "0.1.0", path = "crates/hetu-web" }
+hetu-grpc = { version = "0.1.0", path = "crates/hetu-grpc" }
+hetu-ai = { version = "0.1.0", path = "crates/hetu-ai" }
+hetus = { version = "0.1.0", path = "crates/hetus" }
 jieyuan-core = { version = "0.1.0", path = "jieyuan/jieyuan-core" }
 hetuflow-core = { version = "0.1.0", path = "hetuflow/hetuflow-core" }
 hetumind-core = { version = "0.1.0", path = "hetumind/hetumind-core" }
@@ -350,16 +350,6 @@ protobuf-codegen = "4.33.5-release"
 protobuf-json-mapping = "3"
 protobuf-parse = "3"
 # protoc-bin-vendored = "3"
-# -- Template Engin
-minijinja = { version = "2.5" }
-# -- Data Science
-polars = "0.53"
-# An Excel/OpenDocument Spreadsheets reader and deserializer in pure rust
-calamine = "0.34"
-# This written in pure Rust to read and write xlsx file.
-umya-spreadsheet = "2.3"
-# -- Redis & Valkey client
-fred = { version = "10" }
 # -- cloud storage access
 opendal = { version = "0.55", features = [
   "services-oss",
@@ -367,7 +357,6 @@ opendal = { version = "0.55", features = [
   "services-s3",
   "services-fs",
 ] }
-minio = { version = "0.3" }
 # -- LLM
 rig-core = { version = "0.32", features = ["derive"] }
 # rig-core = { git = "https://github.com/0xPlaygrounds/rig.git", branch = "main" }
@@ -380,9 +369,6 @@ rmcp = { version = "1.1", features = [
   "tower",
   "auth",
 ] }
-# -- Plugins
-extism = { version = "1.11" }
-
 # -- Dev/Test
 pretty_assertions = "1.4"
 asserhttp = { version = "0.7", features = ["reqwest"] }

@@ -5,9 +5,9 @@ use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use std::time::Duration;
-use ultimates::common::env::get_env;
-use ultimates::core::DataError;
-use ultimatesql::ModelManager;
+use hetus::common::env::get_env;
+use hetus::core::DataError;
+use hetusql::ModelManager;
 use url::Url;
 
 use super::{UserBmc, UserForUpdate, UserStatus};

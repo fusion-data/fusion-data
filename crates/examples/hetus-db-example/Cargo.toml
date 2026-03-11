@@ -1,0 +1,29 @@
+[package]
+name = "hetus-db-example"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = true
+
+[[bin]]
+name = "example-app-db"
+path = "src/example-app-db.rs"
+
+[[bin]]
+name = "example-sqlx"
+path = "src/example-sqlx.rs"
+
+[[bin]]
+name = "lookup"
+path = "src/lookup.rs"
+
+[dependencies]
+hetus = { workspace = true, features = ["with-db"] }
+tokio = { workspace = true, features = ["full"] }
+dotenvy = { workspace = true }
+sqlx = { workspace = true }
+log = { workspace = true }
+anyhow = { workspace = true }

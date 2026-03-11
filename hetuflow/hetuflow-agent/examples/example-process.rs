@@ -1,5 +1,5 @@
 use tokio::process::Command;
-use ultimates::core::DataError;
+use hetus::core::DataError;
 
 #[tokio::main]
 async fn main() -> Result<(), DataError> {

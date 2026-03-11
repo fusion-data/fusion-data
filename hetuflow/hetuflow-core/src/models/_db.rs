@@ -6,7 +6,7 @@ use sqlx::error::BoxDynError;
 use sqlx::postgres::{PgArgumentBuffer, PgHasArrayType, PgTypeInfo, PgValueRef};
 use sqlx::types::Json;
 use sqlx::{Decode, Encode, Postgres, Type};
-use ultimatesql::postgres::PgRowType;
+use hetusql::postgres::PgRowType;
 
 use crate::types::Labels;
 

@@ -8,15 +8,16 @@
 
 ```
 packages/
-├── fusion-core/      # 核心共享工具库
-├── fusionsql/        # FusionSQL 数据库工具库
+├── hetu-core/      # 核心共享工具库
+├── hetusql/        # FusionSQL 数据库工具库
 ├── hetuflow-sdk/     # Hetuflow 工作流调度 SDK
 └── hetumind-sdk/     # Hetumind AI 代理/流程 SDK
 ```
 
 ## 包详情
 
-### @fusion-data/fusion-core
+### @hetu-data/hetu-core
+
 - **描述**: Fusion Data 项目的核心共享工具库
 - **版本**: 1.0.0
 - **主要功能**:
@@ -25,7 +26,8 @@ packages/
   - 类型定义
 - **依赖**: 无外部依赖
 
-### @fusion-data/fusionsql
+### @hetu-data/hetusql
+
 - **描述**: FusionSQL 数据库工具库
 - **版本**: 1.0.0
 - **主要功能**:
@@ -34,9 +36,10 @@ packages/
   - 操作符定义 (`./op` 导出)
 - **依赖**:
   - `dayjs` - 时间处理
-  - `@fusion-data/fusion-core` - 核心工具
+  - `@hetu-data/hetu-core` - 核心工具
 
-### @fusion-data/hetuflow-sdk
+### @hetu-data/hetuflow-sdk
+
 - **描述**: Hetuflow TypeScript SDK，用于工作流调度 API 访问
 - **版本**: 1.0.0
 - **主要功能**:
@@ -45,11 +48,12 @@ packages/
   - 任务调度接口
 - **依赖**:
   - `axios` - HTTP 客户端
-  - `@fusion-data/fusion-core`
-  - `@fusion-data/fusionsql`
+  - `@hetu-data/hetu-core`
+  - `@hetu-data/hetusql`
 - **开发工具**: OpenAPI 类型生成
 
-### @fusion-data/hetumind-sdk
+### @hetu-data/hetumind-sdk
+
 - **描述**: Hetumind AI 代理/流程平台 TypeScript SDK
 - **版本**: 1.0.0
 - **主要功能**:
@@ -59,14 +63,16 @@ packages/
 - **依赖**:
   - `axios` - HTTP 客户端
   - `dayjs` - 时间处理
-  - `@fusion-data/fusion-core`
-  - `@fusion-data/fusionsql`
+  - `@hetu-data/hetu-core`
+  - `@hetu-data/hetusql`
 - **开发工具**: OpenAPI 类型生成、ESLint 配置
 
 ## 开发指南
 
 ### 构建命令
+
 所有包都支持以下标准命令：
+
 ```bash
 pnpm build        # 构建 TypeScript
 pnpm dev          # 开发模式（监听文件变化）
@@ -87,16 +93,19 @@ pnpm init
 ```
 
 ### 包命名规范
-- 使用 `@fusion-data/` 命名空间
+
+- 使用 `@hetu-data/` 命名空间
 - 包名使用 kebab-case 格式
-- 示例: `@fusion-data/my-new-sdk`
+- 示例: `@hetu-data/my-new-sdk`
 
 ### 依赖管理
+
 - 内部包依赖使用 `workspace:*` 版本
 - 外部依赖指定具体版本号
 - 开发依赖统一管理在 devDependencies 中
 
 ### 构建输出
+
 - 所有包输出到 `dist/` 目录
 - 支持 ESM 模块格式
 - 包含 TypeScript 类型定义文件

@@ -1,8 +1,8 @@
 use std::sync::OnceLock;
 
 use sqlx::Row;
-use ultimates::common::time::now_offset;
-use ultimatesql::{
+use hetus::common::time::now_offset;
+use hetusql::{
   ModelManager, SqlError,
   base::{BmcConfig, DbBmc},
   field::FieldMask,

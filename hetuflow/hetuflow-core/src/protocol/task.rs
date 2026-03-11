@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use ultimates::common::time::OffsetDateTime;
+use hetus::common::time::OffsetDateTime;
 use uuid::Uuid;
 
 use crate::{

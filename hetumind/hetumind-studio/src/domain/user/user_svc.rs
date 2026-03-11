@@ -1,12 +1,12 @@
 use axum::{extract::FromRequestParts, http::request::Parts};
 use hetumind_context::utils::get_mm_from_parts;
-use ultimates::core::{
+use hetus::core::{
   DataError,
   application::Application,
   security::pwd::{generate_pwd, verify_pwd},
 };
-use ultimates::web::WebError;
-use ultimatesql::{ModelManager, page::PageResult};
+use hetus::web::WebError;
+use hetusql::{ModelManager, page::PageResult};
 
 use crate::domain::user::UserForPage;
 

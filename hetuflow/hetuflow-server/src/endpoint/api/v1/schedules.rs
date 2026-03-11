@@ -1,7 +1,7 @@
 use axum::{Json, extract::Path};
-use ultimates::common::model::IdUuidResult;
-use ultimates::web::{WebResult, ok_json};
-use ultimatesql::page::PageResult;
+use hetus::common::model::IdUuidResult;
+use hetus::web::{WebResult, ok_json};
+use hetusql::page::PageResult;
 use utoipa_axum::router::OpenApiRouter;
 use uuid::Uuid;
 

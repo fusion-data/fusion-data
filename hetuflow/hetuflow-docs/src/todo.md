@@ -38,7 +38,7 @@
 
 ### 2.1 应用容器架构
 
-- [*] **ServerApplication 实现** - 基于 ultimate-core::Application 的应用容器，管理所有服务依赖
+- [*] **ServerApplication 实现** - 基于 hetu-core::Application 的应用容器，管理所有服务依赖
 - [*] **服务注册与启动** - 实现服务的依赖注入、生命周期管理和优雅关闭
 - [*] **配置管理** - 实现基于 app.toml 的配置加载和验证
 
@@ -112,7 +112,7 @@
 
 ### 3.1 应用容器架构
 
-- [*] **AgentApplication 实现** - 基于 ultimate-core::Application 的 Agent 应用容器
+- [*] **AgentApplication 实现** - 基于 hetu-core::Application 的 Agent 应用容器
 - [*] **配置管理** - 实现 Agent 配置加载和验证
 - [*] **服务启动** - 实现 Agent 各组件的启动和生命周期管理
 

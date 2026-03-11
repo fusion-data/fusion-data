@@ -6,10 +6,10 @@ use axum::{
 };
 use hetumind_core::workflow::WorkflowId;
 use serde::{Deserialize, Serialize};
-use ultimates::common::model::IdUuidResult;
-use ultimates::core::application::Application;
-use ultimates::web::{WebResult, ok_json};
-use ultimatesql::page::PageResult;
+use hetus::common::model::IdUuidResult;
+use hetus::core::application::Application;
+use hetus::web::{WebResult, ok_json};
+use hetusql::page::PageResult;
 use uuid::Uuid;
 
 use crate::domain::credential::{

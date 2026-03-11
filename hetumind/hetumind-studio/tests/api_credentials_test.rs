@@ -3,9 +3,9 @@
 
 use hetumind_core::{credential::CredentialId, workflow::CredentialKind};
 use hetumind_studio::domain::credential::CredentialVerifyResult;
+use hetus::common::model::IdUuidResult;
 use http::StatusCode;
 use serde_json::json;
-use ultimates::common::model::IdUuidResult;
 use uuid::Uuid;
 
 mod common;

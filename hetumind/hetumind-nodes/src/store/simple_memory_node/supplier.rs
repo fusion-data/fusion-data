@@ -7,7 +7,7 @@ use hetumind_core::workflow::ExecutionContext;
 use hetumind_core::workflow::{
   MemorySubNodeProvider, Message, NodeDescription, NodeExecutionError, NodeGroupKind, SubNode, SubNodeType,
 };
-use ultimates::core::application::Application;
+use hetus::core::application::Application;
 
 use crate::store::simple_memory_node::SIMPLE_MEMORY_NODE_KIND;
 

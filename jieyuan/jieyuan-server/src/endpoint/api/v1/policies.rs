@@ -2,9 +2,9 @@ use axum::{
   Json,
   extract::{Path, State},
 };
-use ultimates::core::application::Application;
-use ultimates::web::{WebResult, ok_json};
-use ultimatesql::{ModelManager, page::PageResult};
+use hetus::core::application::Application;
+use hetus::web::{WebResult, ok_json};
+use hetusql::{ModelManager, page::PageResult};
 use utoipa_axum::router::OpenApiRouter;
 
 use jieyuan_core::model::{PolicyEntity, PolicyForCreate, PolicyForPage, PolicyForUpdate};
@@ -109,7 +109,7 @@ async fn delete_policy(State(app): State<Application>, Path(id): Path<i64>) -> W
   path = "/page",
   request_body = PolicyForPage,
   responses(
-    (status = 200, description = "查询成功", body = ultimatesql::page::PageResult<PolicyEntity>),
+    (status = 200, description = "查询成功", body = hetusql::page::PageResult<PolicyEntity>),
     (status = 400, description = "请求参数错误")
   ),
   tag = "策略管理"

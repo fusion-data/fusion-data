@@ -8,10 +8,10 @@ use hetumind_core::workflow::{
   ExecuteWorkflowRequest, ExecutionIdResponse, ValidateWorkflowRequest, ValidateWorkflowResponse, Workflow,
   WorkflowForCreate, WorkflowForQuery, WorkflowForUpdate, WorkflowId, WorkflowStatus,
 };
-use ultimates::common::model::IdUuidResult;
-use ultimates::core::application::Application;
-use ultimates::web::{WebResult, ok_json};
-use ultimatesql::page::PageResult;
+use hetus::common::model::IdUuidResult;
+use hetus::core::application::Application;
+use hetus::web::{WebResult, ok_json};
+use hetusql::page::PageResult;
 
 use crate::domain::workflow::WorkflowSvc;
 

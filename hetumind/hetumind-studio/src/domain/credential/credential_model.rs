@@ -1,6 +1,6 @@
 use hetumind_core::workflow::CredentialKind;
 use serde::Deserialize;
-use ultimatesql::{
+use hetusql::{
   FilterNodes,
   field::Fields,
   filter::{OpValBool, OpValDateTime, OpValInt32, OpValInt64, OpValString},

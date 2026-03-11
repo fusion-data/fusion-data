@@ -1,9 +1,9 @@
 use sea_query::enum_def;
 use serde::Deserialize;
 use sqlx::FromRow;
-use ultimates::common::time::OffsetDateTime;
-use ultimatesql::page::Page;
-use ultimatesql::{
+use hetus::common::time::OffsetDateTime;
+use hetusql::page::Page;
+use hetusql::{
   Fields, FilterNodes,
   field::FieldMask,
   filter::{OpValDateTime, OpValInt64, OpValString},

@@ -5,8 +5,8 @@ use hetumind_core::{
 use sea_query::enum_def;
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
-use ultimates::common::time::OffsetDateTime;
-use ultimatesql::{field::Fields, postgres::PgRowType};
+use hetus::common::time::OffsetDateTime;
+use hetusql::{field::Fields, postgres::PgRowType};
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow, Fields)]

@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use mea::rwlock::RwLock;
 use tokio::sync::{broadcast, mpsc};
-use ultimates::core::DataError;
+use hetus::core::DataError;
 
 use hetuflow_core::protocol::{AcquireTaskResponse, CommandMessage, EventMessage};
 

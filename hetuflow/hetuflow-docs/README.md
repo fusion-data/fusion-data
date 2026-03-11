@@ -18,7 +18,7 @@ Fusion Docs 是一个使用 mdBook 构建的文档系统，用于管理和展示
 ## 项目结构
 
 ```
-fusion-docs/
+hetu-docs/
 ├── Cargo.toml          # Rust 项目配置
 ├── book.toml           # mdBook 配置文件
 ├── src/                # 文档源文件
@@ -54,7 +54,7 @@ cargo binstall mdbook-mermaid
 配置 mdBook 使用 mdbook-mermaid 插件。首次添加 mdbook-mermaid 时，让它添加所需的文件和配置：
 
 ```shell
-mdbook-mermaid install fusion/fusion-docs
+mdbook-mermaid install fusion/hetu-docs
 ```
 
 这将在你的 book.toml 中添加以下配置：
@@ -71,7 +71,7 @@ additional-js = ["mermaid.min.js", "mermaid-init.js"]
 
 ```bash
 # 进入项目目录
-cd fusion/fusion-docs
+cd fusion/hetu-docs
 
 # 安装
 mdbook-mermaid install
@@ -182,7 +182,7 @@ jobs:
       - name: Setup mdBook
         uses: peaceiris/actions-mdbook@v1
         with:
-          mdbook-version: "latest"
+          mdbook-version: 'latest'
       - name: Build
         run: mdbook build
       - name: Deploy

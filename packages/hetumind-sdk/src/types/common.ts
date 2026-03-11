@@ -2,7 +2,7 @@
  * Common types and interfaces
  */
 
-// Re-export page and operation types from fusionsql
+// Re-export page and operation types from hetusql
 export type {
   Page,
   PageResult,
@@ -13,7 +13,7 @@ export type {
   OpValNumber,
   OpValDateTime,
   OpValUuid,
-} from '@fusion-data/fusionsql';
+} from '@hetu-data/hetusql';
 
 // Custom ID types (as used in the backend)
 export type WorkflowId = string;

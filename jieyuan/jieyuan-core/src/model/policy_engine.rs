@@ -1,4 +1,4 @@
-use ultimates::common::ctx::Ctx;
+use hetus::common::ctx::Ctx;
 
 use crate::model::{CtxExt, DecisionEffect, PolicyCondition, PolicyDocument, PolicyEntity, TenantAccessCondition};
 

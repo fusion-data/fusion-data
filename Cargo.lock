@@ -2612,6 +2612,225 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fc0fef456e4baa96da950455cd02c081ca953b141298e41db3fc7e36b1da849c"
 
 [[package]]
+name = "hetu-ai"
+version = "0.1.0"
+dependencies = [
+ "ahash 0.8.12",
+ "anyhow",
+ "async-stream",
+ "async-trait",
+ "base64 0.22.1",
+ "bytes",
+ "chrono",
+ "clap",
+ "dashmap",
+ "derive_builder",
+ "dotenvy",
+ "fastembed",
+ "futures",
+ "hetu-common",
+ "http",
+ "log",
+ "logforth",
+ "mime",
+ "regex",
+ "reqwest 0.13.2",
+ "rig-core",
+ "rmcp",
+ "schemars 1.2.1",
+ "serde",
+ "serde_json",
+ "serde_path_to_error",
+ "sqlx",
+ "thiserror 2.0.18",
+ "tokio",
+ "tracing",
+ "tracing-futures",
+ "tracing-subscriber",
+ "ureq 3.2.0",
+ "uuid",
+ "worker",
+]
+
+[[package]]
+name = "hetu-common"
+version = "0.1.0"
+dependencies = [
+ "ahash 0.8.12",
+ "base16ct 1.0.0",
+ "base64ct",
+ "chrono",
+ "dotenvy",
+ "duration-str",
+ "getrandom 0.4.2",
+ "hmac",
+ "js-sys",
+ "libc",
+ "log",
+ "rand 0.10.0",
+ "regex",
+ "sea-query",
+ "serde",
+ "serde_json",
+ "sha2",
+ "sqlx",
+ "thiserror 2.0.18",
+ "tsify",
+ "ulid",
+ "utoipa",
+ "uuid",
+ "wasm-bindgen",
+ "windows-sys 0.61.2",
+]
+
+[[package]]
+name = "hetu-core"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "argon2",
+ "async-trait",
+ "config",
+ "content_inspector",
+ "dashmap",
+ "dotenvy",
+ "fastrace",
+ "futures",
+ "hetu-common",
+ "hetu-core-macros",
+ "hetusql",
+ "hierarchical_hash_wheel_timer",
+ "init-tracing-opentelemetry",
+ "inventory",
+ "josekit",
+ "log",
+ "logforth",
+ "mea",
+ "mime_guess",
+ "protobuf",
+ "protobuf-codegen",
+ "rand 0.10.0",
+ "regex",
+ "serde",
+ "serde_json",
+ "serde_repr",
+ "serde_with",
+ "strum 0.28.0",
+ "thiserror 2.0.18",
+ "tokio",
+ "toml",
+ "tonic",
+ "tracing",
+ "tracing-appender",
+ "tracing-log",
+ "tracing-opentelemetry-instrumentation-sdk",
+ "tracing-subscriber",
+ "ulid",
+ "utoipa",
+ "uuid",
+ "zeroize",
+]
+
+[[package]]
+name = "hetu-core-macros"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.117",
+]
+
+[[package]]
+name = "hetu-db"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "config",
+ "hetu-common",
+ "hetu-core",
+ "hetusql",
+ "log",
+ "logforth",
+ "sea-query",
+ "sea-query-binder",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "thiserror 2.0.18",
+ "tokio",
+ "tonic",
+ "uuid",
+]
+
+[[package]]
+name = "hetu-grpc"
+version = "0.1.0"
+dependencies = [
+ "config",
+ "futures",
+ "hetu-common",
+ "hetu-core",
+ "http",
+ "log",
+ "protobuf",
+ "serde",
+ "tokio",
+ "tonic",
+ "tonic-reflection",
+ "tonic-types",
+ "tonic-web",
+ "tower-http",
+ "tower-service",
+ "uuid",
+]
+
+[[package]]
+name = "hetu-security"
+version = "0.1.0"
+dependencies = [
+ "dotenvy",
+ "hetu-common",
+ "hetu-core",
+ "josekit",
+ "oauth2",
+ "openidconnect",
+ "reqwest 0.13.2",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+ "tokio",
+ "url",
+]
+
+[[package]]
+name = "hetu-web"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "bytes",
+ "config",
+ "futures",
+ "headers",
+ "hetu-common",
+ "hetu-core",
+ "http",
+ "hyper",
+ "log",
+ "mea",
+ "mime",
+ "reqwest 0.13.2",
+ "serde",
+ "serde_json",
+ "serde_with",
+ "tokio",
+ "tower",
+ "tower-http",
+ "ulid",
+ "utoipa",
+ "uuid",
+]
+
+[[package]]
 name = "hetuflow-agent"
 version = "0.1.0"
 dependencies = [
@@ -2623,6 +2842,7 @@ dependencies = [
  "duration-str",
  "futures-util",
  "hetuflow-core",
+ "hetus",
  "hierarchical_hash_wheel_timer",
  "log",
  "logforth",
@@ -2635,7 +2855,6 @@ dependencies = [
  "thiserror 2.0.18",
  "tokio",
  "tokio-tungstenite",
- "ultimates",
  "uuid",
 ]
 
@@ -2650,6 +2869,9 @@ dependencies = [
  "duration-str",
  "garde",
  "gloo-timers",
+ "hetus",
+ "hetusql",
+ "hetusql-core",
  "hierarchical_hash_wheel_timer",
  "js-sys",
  "log",
@@ -2664,9 +2886,6 @@ dependencies = [
  "toml",
  "tsify",
  "typed-builder",
- "ultimates",
- "ultimatesql",
- "ultimatesql-core",
  "utoipa",
  "uuid",
  "wasm-bindgen",
@@ -2697,6 +2916,8 @@ dependencies = [
  "futures-util",
  "garde",
  "hetuflow-core",
+ "hetus",
+ "hetusql",
  "josekit",
  "log",
  "logforth",
@@ -2709,8 +2930,6 @@ dependencies = [
  "thiserror 2.0.18",
  "tokio",
  "toml",
- "ultimates",
- "ultimatesql",
  "utoipa",
  "utoipa-axum",
  "utoipa-swagger-ui",
@@ -2725,9 +2944,14 @@ dependencies = [
  "axum-test",
  "config",
  "futures-util",
+ "hetu-common",
+ "hetu-core",
+ "hetu-db",
  "hetuflow-agent",
  "hetuflow-core",
  "hetuflow-server",
+ "hetus",
+ "hetusql",
  "log",
  "reqwest 0.13.2",
  "serde",
@@ -2737,11 +2961,6 @@ dependencies = [
  "tokio",
  "tokio-test",
  "tokio-tungstenite",
- "ultimate-common",
- "ultimate-core",
- "ultimate-db",
- "ultimates",
- "ultimatesql",
  "uuid",
 ]
 
@@ -2753,6 +2972,8 @@ dependencies = [
  "config",
  "dirs",
  "hetumind-core",
+ "hetus",
+ "hetusql",
  "reqwest 0.13.2",
  "serde",
  "serde_json",
@@ -2760,8 +2981,6 @@ dependencies = [
  "thiserror 2.0.18",
  "tokio",
  "toml",
- "ultimates",
- "ultimatesql",
  "uuid",
 ]
 
@@ -2774,6 +2993,8 @@ dependencies = [
  "chrono",
  "dashmap",
  "hetumind-core",
+ "hetus",
+ "hetusql",
  "http",
  "log",
  "mea",
@@ -2782,8 +3003,6 @@ dependencies = [
  "sqlx",
  "thiserror 2.0.18",
  "tokio",
- "ultimates",
- "ultimatesql",
 ]
 
 [[package]]
@@ -2800,6 +3019,9 @@ dependencies = [
  "derive_more",
  "dotenvy",
  "duration-str",
+ "hetus",
+ "hetusql",
+ "hetusql-core",
  "jsonschema",
  "log",
  "mime_guess",
@@ -2818,9 +3040,6 @@ dependencies = [
  "strum 0.28.0",
  "thiserror 2.0.18",
  "tokio",
- "ultimates",
- "ultimatesql",
- "ultimatesql-core",
  "uuid",
 ]
 
@@ -2848,6 +3067,7 @@ dependencies = [
  "glob",
  "hetumind-context",
  "hetumind-core",
+ "hetus",
  "image",
  "imageproc",
  "jsonschema",
@@ -2867,7 +3087,6 @@ dependencies = [
  "serde_json_path",
  "thiserror 2.0.18",
  "tokio",
- "ultimates",
  "uuid",
 ]
 
@@ -2888,9 +3107,12 @@ dependencies = [
  "dirs",
  "fastrace",
  "futures",
+ "hetu-core-macros",
  "hetumind-context",
  "hetumind-core",
  "hetumind-nodes",
+ "hetus",
+ "hetusql",
  "http",
  "insta",
  "jieyuan-core",
@@ -2920,13 +3142,174 @@ dependencies = [
  "tower",
  "tower-cookies",
  "tower-http",
- "ultimate-core-macros",
- "ultimates",
- "ultimatesql",
  "url",
  "urlencoding",
  "uuid",
  "zeroize",
+]
+
+[[package]]
+name = "hetus"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "axum",
+ "clap",
+ "dotenvy",
+ "hetu-ai",
+ "hetu-common",
+ "hetu-core",
+ "hetu-core-macros",
+ "hetu-db",
+ "hetu-grpc",
+ "hetu-security",
+ "hetu-web",
+ "hetusql",
+ "hetusql-core",
+ "inventory",
+ "log",
+ "logforth",
+ "regex",
+ "reqwest 0.13.2",
+ "rig-core",
+ "rmcp",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "tokio",
+ "tonic",
+ "tracing",
+ "tracing-subscriber",
+ "ulid",
+ "url",
+ "utoipa",
+]
+
+[[package]]
+name = "hetus-ai-example"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "clap",
+ "dotenvy",
+ "hetus",
+ "logforth",
+ "reqwest 0.13.2",
+ "rig-core",
+ "rmcp",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "uuid",
+]
+
+[[package]]
+name = "hetus-common-example"
+version = "0.1.0"
+dependencies = [
+ "hetus",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "hetus-core-example"
+version = "0.1.0"
+dependencies = [
+ "hetus",
+ "inventory",
+ "log",
+ "regex",
+ "tokio",
+]
+
+[[package]]
+name = "hetus-db-example"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "dotenvy",
+ "hetus",
+ "log",
+ "sqlx",
+ "tokio",
+]
+
+[[package]]
+name = "hetus-security-example"
+version = "0.1.0"
+dependencies = [
+ "dotenvy",
+ "hetus",
+ "reqwest 0.13.2",
+ "tokio",
+ "url",
+]
+
+[[package]]
+name = "hetusql"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "chrono",
+ "config",
+ "derive_more",
+ "duration-str",
+ "hetu-common",
+ "hetusql-core",
+ "hetusql-macros",
+ "log",
+ "logforth",
+ "pgvector",
+ "regex",
+ "rust_decimal",
+ "sea-query",
+ "sea-query-binder",
+ "serde",
+ "serde_json",
+ "serde_with",
+ "sqlx",
+ "thiserror 2.0.18",
+ "tokio",
+ "tonic",
+ "utoipa",
+ "uuid",
+]
+
+[[package]]
+name = "hetusql-core"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "hetu-common",
+ "hetusql-macros",
+ "rust_decimal",
+ "sea-query",
+ "sea-query-binder",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+ "tsify",
+ "utoipa",
+ "uuid",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "hetusql-macros"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "proc-macro2",
+ "quote",
+ "sea-query",
+ "syn 2.0.117",
 ]
 
 [[package]]
@@ -3561,6 +3944,9 @@ dependencies = [
  "chrono",
  "futures",
  "headers",
+ "hetus",
+ "hetusql",
+ "hetusql-core",
  "http",
  "log",
  "reqwest 0.13.2",
@@ -3572,9 +3958,6 @@ dependencies = [
  "sqlx",
  "strum 0.28.0",
  "tower-http",
- "ultimates",
- "ultimatesql",
- "ultimatesql-core",
  "utoipa",
  "uuid",
 ]
@@ -3594,6 +3977,9 @@ dependencies = [
  "enum-iterator",
  "fastrace",
  "futures-util",
+ "hetu-core-macros",
+ "hetus",
+ "hetusql",
  "hyper",
  "hyper-util",
  "image",
@@ -3616,9 +4002,6 @@ dependencies = [
  "tokio",
  "tower",
  "typed-builder",
- "ultimate-core-macros",
- "ultimates",
- "ultimatesql",
  "urlencoding",
  "utoipa",
  "utoipa-axum",
@@ -8514,389 +8897,6 @@ dependencies = [
  "serde",
  "uuid",
  "web-time",
-]
-
-[[package]]
-name = "ultimate-ai"
-version = "0.1.0"
-dependencies = [
- "ahash 0.8.12",
- "anyhow",
- "async-stream",
- "async-trait",
- "base64 0.22.1",
- "bytes",
- "chrono",
- "clap",
- "dashmap",
- "derive_builder",
- "dotenvy",
- "fastembed",
- "futures",
- "http",
- "log",
- "logforth",
- "mime",
- "regex",
- "reqwest 0.13.2",
- "rig-core",
- "rmcp",
- "schemars 1.2.1",
- "serde",
- "serde_json",
- "serde_path_to_error",
- "sqlx",
- "thiserror 2.0.18",
- "tokio",
- "tracing",
- "tracing-futures",
- "tracing-subscriber",
- "ultimate-common",
- "ureq 3.2.0",
- "uuid",
- "worker",
-]
-
-[[package]]
-name = "ultimate-common"
-version = "0.1.0"
-dependencies = [
- "ahash 0.8.12",
- "base16ct 1.0.0",
- "base64ct",
- "chrono",
- "dotenvy",
- "duration-str",
- "getrandom 0.4.2",
- "hmac",
- "js-sys",
- "libc",
- "log",
- "rand 0.10.0",
- "regex",
- "sea-query",
- "serde",
- "serde_json",
- "sha2",
- "sqlx",
- "thiserror 2.0.18",
- "tsify",
- "ulid",
- "utoipa",
- "uuid",
- "wasm-bindgen",
- "windows-sys 0.61.2",
-]
-
-[[package]]
-name = "ultimate-core"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "argon2",
- "async-trait",
- "config",
- "content_inspector",
- "dashmap",
- "dotenvy",
- "fastrace",
- "futures",
- "hierarchical_hash_wheel_timer",
- "init-tracing-opentelemetry",
- "inventory",
- "josekit",
- "log",
- "logforth",
- "mea",
- "mime_guess",
- "protobuf",
- "protobuf-codegen",
- "rand 0.10.0",
- "regex",
- "serde",
- "serde_json",
- "serde_repr",
- "serde_with",
- "strum 0.28.0",
- "thiserror 2.0.18",
- "tokio",
- "toml",
- "tonic",
- "tracing",
- "tracing-appender",
- "tracing-log",
- "tracing-opentelemetry-instrumentation-sdk",
- "tracing-subscriber",
- "ulid",
- "ultimate-common",
- "ultimate-core-macros",
- "ultimatesql",
- "utoipa",
- "uuid",
- "zeroize",
-]
-
-[[package]]
-name = "ultimate-core-macros"
-version = "0.1.0"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.117",
-]
-
-[[package]]
-name = "ultimate-db"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "config",
- "log",
- "logforth",
- "sea-query",
- "sea-query-binder",
- "serde",
- "serde_json",
- "sqlx",
- "thiserror 2.0.18",
- "tokio",
- "tonic",
- "ultimate-common",
- "ultimate-core",
- "ultimatesql",
- "uuid",
-]
-
-[[package]]
-name = "ultimate-grpc"
-version = "0.1.0"
-dependencies = [
- "config",
- "futures",
- "http",
- "log",
- "protobuf",
- "serde",
- "tokio",
- "tonic",
- "tonic-reflection",
- "tonic-types",
- "tonic-web",
- "tower-http",
- "tower-service",
- "ultimate-common",
- "ultimate-core",
- "uuid",
-]
-
-[[package]]
-name = "ultimate-security"
-version = "0.1.0"
-dependencies = [
- "dotenvy",
- "josekit",
- "oauth2",
- "openidconnect",
- "reqwest 0.13.2",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
- "tokio",
- "ultimate-common",
- "ultimate-core",
- "url",
-]
-
-[[package]]
-name = "ultimate-web"
-version = "0.1.0"
-dependencies = [
- "axum",
- "bytes",
- "config",
- "futures",
- "headers",
- "http",
- "hyper",
- "log",
- "mea",
- "mime",
- "reqwest 0.13.2",
- "serde",
- "serde_json",
- "serde_with",
- "tokio",
- "tower",
- "tower-http",
- "ulid",
- "ultimate-common",
- "ultimate-core",
- "utoipa",
- "uuid",
-]
-
-[[package]]
-name = "ultimates"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "axum",
- "clap",
- "dotenvy",
- "inventory",
- "log",
- "logforth",
- "regex",
- "reqwest 0.13.2",
- "rig-core",
- "rmcp",
- "serde",
- "serde_json",
- "sqlx",
- "tokio",
- "tonic",
- "tracing",
- "tracing-subscriber",
- "ulid",
- "ultimate-ai",
- "ultimate-common",
- "ultimate-core",
- "ultimate-core-macros",
- "ultimate-db",
- "ultimate-grpc",
- "ultimate-security",
- "ultimate-web",
- "ultimatesql",
- "ultimatesql-core",
- "url",
- "utoipa",
-]
-
-[[package]]
-name = "ultimates-ai-example"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "clap",
- "dotenvy",
- "logforth",
- "reqwest 0.13.2",
- "rig-core",
- "rmcp",
- "serde",
- "serde_json",
- "sqlx",
- "tokio",
- "tracing",
- "tracing-subscriber",
- "ultimates",
- "uuid",
-]
-
-[[package]]
-name = "ultimates-common-example"
-version = "0.1.0"
-dependencies = [
- "serde",
- "serde_json",
- "ultimates",
-]
-
-[[package]]
-name = "ultimates-core-example"
-version = "0.1.0"
-dependencies = [
- "inventory",
- "log",
- "regex",
- "tokio",
- "ultimates",
-]
-
-[[package]]
-name = "ultimates-db-example"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "dotenvy",
- "log",
- "sqlx",
- "tokio",
- "ultimates",
-]
-
-[[package]]
-name = "ultimates-security-example"
-version = "0.1.0"
-dependencies = [
- "dotenvy",
- "reqwest 0.13.2",
- "tokio",
- "ultimates",
- "url",
-]
-
-[[package]]
-name = "ultimatesql"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "chrono",
- "config",
- "derive_more",
- "duration-str",
- "log",
- "logforth",
- "pgvector",
- "regex",
- "rust_decimal",
- "sea-query",
- "sea-query-binder",
- "serde",
- "serde_json",
- "serde_with",
- "sqlx",
- "thiserror 2.0.18",
- "tokio",
- "tonic",
- "ultimate-common",
- "ultimatesql-core",
- "ultimatesql-macros",
- "utoipa",
- "uuid",
-]
-
-[[package]]
-name = "ultimatesql-core"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "rust_decimal",
- "sea-query",
- "sea-query-binder",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
- "tsify",
- "ultimate-common",
- "ultimatesql-macros",
- "utoipa",
- "uuid",
- "wasm-bindgen",
-]
-
-[[package]]
-name = "ultimatesql-macros"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "proc-macro2",
- "quote",
- "sea-query",
- "syn 2.0.117",
 ]
 
 [[package]]

@@ -9,7 +9,7 @@
 - ⚡ Vite 构建工具
 - 🔧 ESLint 代码检查
 - 📦 集成 pnpm workspaces
-- 🛠️ 使用 @fusion-data/fusion-core 共享工具包
+- 🛠️ 使用 @hetu-data/hetu-core 共享工具包
 
 ## 开发
 

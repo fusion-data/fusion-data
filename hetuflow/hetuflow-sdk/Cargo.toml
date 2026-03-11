@@ -20,18 +20,14 @@ crate-type = ["cdylib", "rlib"]
 
 [features]
 default = []
-with-wasm = [
-  "uuid/js",
-  "hetuflow-core/with-wasm",
-  "fusionsql-core/with-wasm",
-]
+with-wasm = ["uuid/js", "hetuflow-core/with-wasm", "hetusql-core/with-wasm"]
 # WASM optimization features
 wee_alloc = ["dep:wee_alloc"]
 
 
 [dependencies]
 fusions = { workspace = true }
-fusionsql-core = { workspace = true, features = ["with-uuid"] }
+hetusql-core = { workspace = true, features = ["with-uuid"] }
 hetuflow-core = { workspace = true }
 
 serde = { workspace = true }

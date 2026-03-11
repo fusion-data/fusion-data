@@ -2,12 +2,12 @@ use axum::{
   extract::{Path, State},
   response::Json,
 };
-use ultimates::common::model::IdI64Result;
-use ultimates::core::application::Application;
-use ultimates::web::{WebError, WebResult, ok_json};
+use hetus::common::model::IdI64Result;
+use hetus::core::application::Application;
+use hetus::web::{WebError, WebResult, ok_json};
 
 use jieyuan_core::model::{NamespaceEntity, NamespaceForCreate, NamespaceForPage, NamespaceForUpdate};
-use ultimatesql::page::PageResult;
+use hetusql::page::PageResult;
 use utoipa_axum::router::OpenApiRouter;
 
 use crate::namespace::NamespaceSvc;

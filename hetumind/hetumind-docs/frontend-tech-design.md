@@ -4,7 +4,7 @@
 
 ### 1.1 项目背景
 
-**Hetumind Web** 是 Hetumind Studio 的前端项目，为 AI Agent 开发和工作流编排提供可视化的 Web 界面。作为 fusion-data 平台的重要组成部分，Hetumind Web 将为用户提供直观的拖拽式工作流设计、AI Agent 配置、数据映射和实时监控等功能。
+**Hetumind Web** 是 Hetumind Studio 的前端项目，为 AI Agent 开发和工作流编排提供可视化的 Web 界面。作为 hetu-data 平台的重要组成部分，Hetumind Web 将为用户提供直观的拖拽式工作流设计、AI Agent 配置、数据映射和实时监控等功能。
 
 ### 1.2 设计目标
 
@@ -54,8 +54,8 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@monaco-editor/react": "^4.6.0",
     "@tanstack/react-query": "^5.62.3",
-    "@fusion-data/fusion-core": "workspace:*",
-    "@fusion-data/fusionsql": "workspace:*",
+    "@hetu-data/hetu-core": "workspace:*",
+    "@hetu-data/hetusql": "workspace:*",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-router-dom": "^7.9.3",
@@ -2212,9 +2212,12 @@ export class MemoryManager {
 const useMemoryOptimization = () => {
   useEffect(() => {
     // 定期清理缓存
-    const interval = setInterval(() => {
-      MemoryManager.clear();
-    }, 5 * 60 * 1000); // 每5分钟清理一次
+    const interval = setInterval(
+      () => {
+        MemoryManager.clear();
+      },
+      5 * 60 * 1000
+    ); // 每5分钟清理一次
 
     return () => clearInterval(interval);
   }, []);

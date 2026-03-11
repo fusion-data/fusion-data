@@ -3,7 +3,7 @@ use std::ops::Deref;
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use strum::Display;
-use ultimates::common::ahash::HashMap;
+use hetus::common::ahash::HashMap;
 use uuid::Uuid;
 
 use crate::{generate_uuid_newtype, types::JsonValue};
@@ -195,7 +195,7 @@ pub struct WorkflowId(Uuid);
 generate_uuid_newtype!(Struct: ExecutionId, Struct: WorkflowId);
 
 #[cfg(feature = "with-db")]
-ultimatesql::generate_uuid_newtype_to_sea_query_value!(Struct: ExecutionId, Struct: WorkflowId);
+hetusql::generate_uuid_newtype_to_sea_query_value!(Struct: ExecutionId, Struct: WorkflowId);
 
 /// 代码自动完成类型
 #[derive(Debug, Clone, Copy, Serialize_repr, Deserialize_repr)]

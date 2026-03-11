@@ -85,7 +85,7 @@ hetuflow Server 提供了一套完整的 RESTful API，用于管理分布式任�
 ```rust
 // 请求类型
 use hetuflow_core::models::{AgentForQuery, SchedAgent};
-use fusionsql::page::PageResult;
+use hetusql::page::PageResult;
 
 // 服务调用
 let result = agent_svc.query(query_request).await?;

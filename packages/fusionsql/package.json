@@ -1,5 +1,5 @@
 {
-  "name": "@fusion-data/fusionsql",
+  "name": "@hetu-data/hetusql",
   "version": "1.0.0",
   "description": "Shared utilities for FusionSQL",
   "type": "module",
@@ -30,7 +30,7 @@
     "format:check": "prettier --check ."
   },
   "keywords": [
-    "fusionsql"
+    "hetusql"
   ],
   "license": "Apache-2.0",
   "devDependencies": {
@@ -46,6 +46,6 @@
   ],
   "dependencies": {
     "dayjs": "^1.11.18",
-    "@fusion-data/fusion-core": "workspace:*"
+    "@hetu-data/hetu-core": "workspace:*"
   }
 }

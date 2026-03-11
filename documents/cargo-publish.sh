@@ -2,7 +2,7 @@
 # Cargo publish
 
 # Define packages in publish order
-packages="fusion-common fusionsql-macros fusionsql-core fusionsql fusion-core-macros fusion-core fusion-security fusion-grpc fusion-db fusion-ai fusion-web fusions"
+packages="hetu-common hetusql-macros hetusql-core hetusql hetu-core-macros hetu-core hetu-security hetu-grpc hetu-db hetu-ai hetu-web fusions"
 
 # Loop through packages and publish with sleep
 for package in $packages; do

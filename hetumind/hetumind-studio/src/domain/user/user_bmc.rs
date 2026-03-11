@@ -2,7 +2,7 @@ use std::sync::OnceLock;
 
 use sea_query::{Condition, PostgresQueryBuilder, Query};
 use sea_query_binder::SqlxBinder;
-use ultimatesql::{
+use hetusql::{
   ModelManager, SqlError,
   base::{BmcConfig, DbBmc},
   filter::{FilterGroups, FilterNode, OpValInt64},

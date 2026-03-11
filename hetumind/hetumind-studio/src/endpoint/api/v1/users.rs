@@ -3,9 +3,9 @@ use axum::{
   extract::Path,
   routing::{get, post},
 };
-use ultimates::core::application::Application;
-use ultimates::web::{Router, WebResult, ok_json};
-use ultimatesql::page::PageResult;
+use hetus::core::application::Application;
+use hetus::web::{Router, WebResult, ok_json};
+use hetusql::page::PageResult;
 
 use crate::domain::user::{UserEntity, UserForPage, UserForUpdate, UserSvc};
 

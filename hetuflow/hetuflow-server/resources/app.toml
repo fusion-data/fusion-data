@@ -1,9 +1,9 @@
-[ultimate.app]
+[hetu.app]
 run_mode = "dev"
 name = "hetuflow-server"
 time_offset = "+08:00"
 
-[ultimate.log]
+[hetu.log]
 enable = true
 with_target = true
 with_file = true
@@ -17,19 +17,19 @@ log_writers = ["stdout", "file"]
 log_dir = "./runs/logs/server/"
 log_targets = [
   "info",
-  "fusionsql=info",
-  "ultimate_web=info",
+  "hetusql=info",
+  "hetu_web=info",
   "hetuflow_core=debug",
   "hetuflow_server=info",
 ]
 
 
-[ultimate.db]
+[hetu.db]
 enable = true
 # 使用 `psql -h localhost -U fusiondata -d fusiondata` 可以直接访问数据库
 url = "postgres://fusiondata:2025.Fusiondata@localhost:5432/fusiondata"
 
-[ultimate.web]
+[hetu.web]
 enable = true
 server_addr = "0.0.0.0:9500"
 enable_remote_addr = true

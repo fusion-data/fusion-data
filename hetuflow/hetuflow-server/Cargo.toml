@@ -22,13 +22,13 @@ hetuflow-core = { workspace = true, features = [
   "with-cli",
   "with-openapi",
 ] }
-ultimates = { workspace = true, features = [
+hetus = { workspace = true, features = [
   "with-openapi",
   "with-logforth",
   "with-web",
   "with-db",
 ] }
-ultimatesql = { workspace = true, features = ["with-uuid", "with-openapi"] }
+hetusql = { workspace = true, features = ["with-uuid", "with-openapi"] }
 sqlx = { workspace = true, features = [
   "runtime-tokio",
   "chrono",

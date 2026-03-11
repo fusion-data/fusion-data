@@ -1,12 +1,12 @@
 use axum::extract::FromRequestParts;
-use ultimates::common::regex;
-use ultimates::core::{
+use hetus::common::regex;
+use hetus::core::{
   DataError, Result,
   application::Application,
   security::pwd::{generate_pwd, is_strong_password, verify_pwd},
 };
-use ultimates::web::WebError;
-use ultimatesql::{ModelManager, filter::OpValInt64, page::PageResult};
+use hetus::web::WebError;
+use hetusql::{ModelManager, filter::OpValInt64, page::PageResult};
 
 use jieyuan_core::model::{
   TenantUser, TenantUserStatus, UpdatePasswordRequest, User, UserChangeQueryReq, UserChangeQueryResp, UserCredential,
@@ -41,7 +41,7 @@ impl UserSvc {
       }
       generate_pwd(password).await?
     } else {
-      let setting = Application::global().ultimate_setting();
+      let setting = Application::global().hetu_setting();
       generate_pwd(setting.security().pwd().default_pwd()).await?
     };
 
@@ -280,7 +280,7 @@ impl UserSvc {
   ///
   /// # Errors
   /// 如果查询失败
-  pub async fn query_user_changes(&self, req: UserChangeQueryReq) -> ultimates::core::Result<UserChangeQueryResp> {
+  pub async fn query_user_changes(&self, req: UserChangeQueryReq) -> hetus::core::Result<UserChangeQueryResp> {
     UserBmc::query_user_changes(&self.mm, req).await.map_err(DataError::from)
   }
 }

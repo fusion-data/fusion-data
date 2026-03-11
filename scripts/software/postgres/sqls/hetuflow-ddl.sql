@@ -81,7 +81,7 @@ create table sched_schedule (
 create table sched_task (
   id uuid primary key,
   job_id uuid not null references sched_job (id),
-  namespace_id uuid not null, -- namespace_id 由 fusion-iam 管理
+  namespace_id uuid not null, -- namespace_id 由 hetu-iam 管理
   priority int not null default 0, -- 任务优先级，数值越大优先级越高
   status int not null default 1, -- 见 TaskStatus 枚举
   schedule_id uuid references sched_schedule (id), -- 为空时表示手动触发：Event, Flow

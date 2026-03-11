@@ -1,8 +1,8 @@
 use sea_query::enum_def;
 use serde::Serialize;
 use sqlx::FromRow;
-use ultimates::common::time::OffsetDateTime;
-use ultimatesql::{field::Fields, postgres::PgRowType};
+use hetus::common::time::OffsetDateTime;
+use hetusql::{field::Fields, postgres::PgRowType};
 
 /// 用户API密钥表
 #[derive(Debug, Clone, Serialize, FromRow, Fields)]

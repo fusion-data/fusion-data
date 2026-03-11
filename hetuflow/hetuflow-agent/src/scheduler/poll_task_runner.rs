@@ -3,8 +3,8 @@ use std::{sync::Arc, time::Duration};
 use hetuflow_core::protocol::{AcquireTaskRequest, EventMessage};
 use log::{debug, error, info};
 use mea::shutdown::ShutdownRecv;
-use ultimates::common::time::now_offset;
-use ultimates::core::{DataError, concurrent::ServiceTask};
+use hetus::common::time::now_offset;
+use hetus::core::{DataError, concurrent::ServiceTask};
 
 use crate::{connection::ConnectionManager, process::ProcessManager, setting::HetuflowAgentSetting};
 

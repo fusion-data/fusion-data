@@ -5,7 +5,7 @@
 #![allow(dead_code)]
 
 use std::time::{SystemTime, UNIX_EPOCH};
-use ultimates::common::ahash::{HashMap, HashMapExt, HashSet};
+use hetus::common::ahash::{HashMap, HashMapExt, HashSet};
 
 use base64::{Engine as _, engine::general_purpose};
 use regex::Regex;

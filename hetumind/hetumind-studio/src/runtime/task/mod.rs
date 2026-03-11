@@ -12,7 +12,7 @@ use hetumind_core::{
   workflow::{ExecutionData, ExecutionId, NodeElement, NodeExecutionError, NodeName},
 };
 use serde::{Deserialize, Serialize};
-use ultimates::common::time::OffsetDateTime;
+use hetus::common::time::OffsetDateTime;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ExecutionTask {

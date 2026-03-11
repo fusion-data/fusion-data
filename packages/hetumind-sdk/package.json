@@ -1,5 +1,5 @@
 {
-  "name": "@fusion-data/hetumind-sdk",
+  "name": "@hetu-data/hetumind-sdk",
   "version": "1.0.0",
   "description": "Hetumind TypeScript SDK for AI Agent/Flow platform API access",
   "type": "module",
@@ -36,20 +36,20 @@
   ],
   "author": "Fusion Data Team",
   "license": "Apache-2.0",
-  "homepage": "https://github.com/fusion-data/fusion-data",
+  "homepage": "https://github.com/hetu-data/hetu-data",
   "repository": {
     "type": "git",
-    "url": "https://github.com/fusion-data/fusion-data.git",
+    "url": "https://github.com/hetu-data/hetu-data.git",
     "directory": "packages/hetumind-sdk"
   },
   "bugs": {
-    "url": "https://github.com/fusion-data/fusion-data/issues"
+    "url": "https://github.com/hetu-data/hetu-data/issues"
   },
   "dependencies": {
     "axios": "^1.12.2",
     "dayjs": "^1.11.10",
-    "@fusion-data/fusion-core": "workspace:*",
-    "@fusion-data/fusionsql": "workspace:*"
+    "@hetu-data/hetu-core": "workspace:*",
+    "@hetu-data/hetusql": "workspace:*"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",

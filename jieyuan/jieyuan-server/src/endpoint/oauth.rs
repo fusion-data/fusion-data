@@ -1,7 +1,7 @@
 use axum::{Json, extract::State};
-use ultimates::core::application::Application;
-use ultimates::web::{WebResult, ok_json};
-use ultimatesql::ModelManager;
+use hetus::core::application::Application;
+use hetus::web::{WebResult, ok_json};
+use hetusql::ModelManager;
 use utoipa_axum::router::OpenApiRouter;
 
 use jieyuan_core::model::{OAuthAuthorizeRequest, OAuthAuthorizeResponse, OAuthTokenRequest, OAuthTokenResponse};

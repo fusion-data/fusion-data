@@ -1,15 +1,15 @@
-use http::request::Parts;
-use log::error;
-use ultimates::common::ctx::{Ctx, CtxPayload};
-use ultimates::common::time::{Duration, now_utc};
-use ultimates::core::{
+use hetus::common::ctx::{Ctx, CtxPayload};
+use hetus::common::time::{Duration, now_utc};
+use hetus::core::{
   DataError,
   application::Application,
   configuration::{KeyConf, PwdConf},
   security::SecurityUtils,
 };
-use ultimates::web::WebError;
-use ultimatesql::ModelManager;
+use hetus::web::WebError;
+use hetusql::ModelManager;
+use http::request::Parts;
+use log::error;
 
 /// 生成 password token
 pub fn make_token(sub: impl Into<String>, pwd_conf: &PwdConf) -> Result<String, DataError> {

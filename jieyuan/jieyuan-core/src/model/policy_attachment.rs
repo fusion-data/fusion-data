@@ -1,11 +1,11 @@
 use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
-use ultimatesql_core::filter::{OpValInt32, OpValInt64};
-use ultimatesql_core::page::Page;
+use hetusql_core::filter::{OpValInt32, OpValInt64};
+use hetusql_core::page::Page;
 
 /// Policy attachment entity representing the relationship between policies and principals (users/roles)
 #[derive(Debug, Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(sqlx::FromRow, ultimatesql::Fields), sea_query::enum_def)]
+#[cfg_attr(feature = "with-db", derive(sqlx::FromRow, hetusql::Fields), sea_query::enum_def)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct PolicyAttachmentEntity {
   pub id: i64,
@@ -22,7 +22,7 @@ pub struct PolicyAttachmentEntity {
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(ultimatesql::Fields))]
+#[cfg_attr(feature = "with-db", derive(hetusql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct PolicyAttachmentForCreate {
   pub tenant_id: i64,
@@ -33,7 +33,7 @@ pub struct PolicyAttachmentForCreate {
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(ultimatesql::Fields))]
+#[cfg_attr(feature = "with-db", derive(hetusql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct PolicyAttachmentForUpdate {
   pub attachment_type: Option<i32>,
@@ -47,7 +47,7 @@ pub struct PolicyAttachmentForPage {
 }
 
 #[derive(Debug, Default, Deserialize, Serialize)]
-#[cfg_attr(feature = "with-db", derive(ultimatesql::filter::FilterNodes))]
+#[cfg_attr(feature = "with-db", derive(hetusql::filter::FilterNodes))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct PolicyAttachmentFilter {
   pub id: Option<OpValInt64>,

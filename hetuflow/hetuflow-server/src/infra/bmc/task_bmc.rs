@@ -1,7 +1,7 @@
 use std::sync::OnceLock;
 
-use ultimates::common::time::{OffsetDateTime, now_offset};
-use ultimatesql::{
+use hetus::common::time::{OffsetDateTime, now_offset};
+use hetusql::{
   ModelManager, SqlError,
   base::{BmcConfig, DbBmc},
   field::FieldMask,

@@ -1,5 +1,5 @@
+use hetus::core::DataError;
 use thiserror::Error;
-use ultimates::core::DataError;
 
 /// 任务执行错误类型
 #[derive(Debug, Error)]

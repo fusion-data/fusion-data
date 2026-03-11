@@ -55,7 +55,7 @@ impl LogBatch {
     Self {
       batch_id: Uuid::now_v7(),
       messages,
-      batch_timestamp: ultimates::common::time::now_epoch_millis(),
+      batch_timestamp: hetus::common::time::now_epoch_millis(),
       compressed: false,
     }
   }

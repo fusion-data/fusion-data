@@ -7,9 +7,9 @@ use axum::{
   middleware::Next,
   response::Response,
 };
-use ultimates::common::ahash::{HashMap, HashMapExt};
-use ultimates::core::application::Application;
-use ultimates::web::WebError;
+use hetus::common::ahash::{HashMap, HashMapExt};
+use hetus::core::application::Application;
+use hetus::web::WebError;
 
 use crate::{
   model::{AuthorizeRequest, TenantAccessValidator, TenantFilter},
@@ -65,7 +65,7 @@ pub async fn platform_admin_enhancement_middleware(
   // 获取用户上下文
   let ctx = req
     .extensions()
-    .get::<ultimates::common::ctx::Ctx>()
+    .get::<hetus::common::ctx::Ctx>()
     .cloned()
     .ok_or_else(|| WebError::unauthorized("missing user context"))?;
 
@@ -87,9 +87,9 @@ pub async fn platform_admin_enhancement_middleware(
 
 /// 增强用户上下文为平台管理员
 async fn enhance_context_for_platform_admin(
-  mut ctx: ultimates::common::ctx::Ctx,
+  mut ctx: hetus::common::ctx::Ctx,
   req: &Request<axum::body::Body>,
-) -> Result<ultimates::common::ctx::Ctx, WebError> {
+) -> Result<hetus::common::ctx::Ctx, WebError> {
   if ctx.is_platform_admin() {
     // 从数据库或配置中获取平台管理员的租户访问权限
     // 这里简化处理，实际应该查询用户配置
@@ -226,9 +226,9 @@ fn extract_managed_tenant_list(req: &Request<axum::body::Body>) -> Option<Vec<St
 
 /// 创建跨租户访问的临时上下文
 fn create_cross_tenant_context(
-  mut ctx: ultimates::common::ctx::Ctx,
+  mut ctx: hetus::common::ctx::Ctx,
   target_tenant_id: i64,
-) -> Result<ultimates::common::ctx::Ctx, WebError> {
+) -> Result<hetus::common::ctx::Ctx, WebError> {
   // 验证平台管理员权限
   if !ctx.is_platform_admin() {
     return Err(WebError::unauthorized("only platform administrators can access cross-tenant resources"));
@@ -259,7 +259,7 @@ fn extract_client_ip(req: &Request<axum::body::Body>) -> String {
 pub mod authz_helpers {
   use super::*;
   use axum::extract::Request;
-  use ultimates::common::ctx::Ctx;
+  use hetus::common::ctx::Ctx;
 
   /// 检查请求是否有平台管理员权限
   pub fn requires_platform_admin(req: &Request<axum::body::Body>) -> bool {

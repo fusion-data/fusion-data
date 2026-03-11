@@ -30,7 +30,7 @@
 
 ## 2. 核心架构
 
-Agent 遵循 `ultimate-core` 的 `Application` 模式，将所有核心服务和组件统一管理，实现了清晰的依赖注入和生命周期控制。
+Agent 遵循 `hetu-core` 的 `Application` 模式，将所有核心服务和组件统一管理，实现了清晰的依赖注入和生命周期控制。
 
 ### 2.1. 组件关系图
 
@@ -84,7 +84,7 @@ graph TD
 
 ## 3. 配置文件 (`app.toml`)
 
-Agent 的行为通过 `app.toml`（详细配置见: [/resources/app.toml](../../../fusion/hetuflow-agent/resources/app.toml)） 进行配置，并使用 `ultimate-core` 的 `ConfigRegistry` 机制加载。
+Agent 的行为通过 `app.toml`（详细配置见: [/resources/app.toml](../../../fusion/hetuflow-agent/resources/app.toml)） 进行配置，并使用 `hetu-core` 的 `ConfigRegistry` 机制加载。
 
 ## 4. 核心组件实现
 
@@ -96,7 +96,7 @@ Agent 的行为通过 `app.toml`（详细配置见: [/resources/app.toml](../../
 
 ```rust
 use std::sync::Arc;
-use ultimate_core::{application::Application, configuration::ConfigRegistry, DataError};
+use hetu_core::{application::Application, configuration::ConfigRegistry, DataError};
 
 // 从 app.toml 解析的配置结构体
 #[derive(Debug, Clone, serde::Deserialize)]
@@ -116,7 +116,7 @@ pub struct AgentApplication {
 impl AgentApplication {
   /// 创建并初始化一个新的 Agent 应用实例
   pub async fn new() -> Result<Self, DataError> {
-    // 1. 使用 ultimate-core ApplicationBuilder 构建基础应用
+    // 1. 使用 hetu-core ApplicationBuilder 构建基础应用
     let app = Application::builder().build().await?;
 
     // 2. 加载 AgentConfig

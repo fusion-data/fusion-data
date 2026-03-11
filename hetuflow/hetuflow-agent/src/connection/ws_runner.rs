@@ -12,7 +12,7 @@ use tokio_tungstenite::{
   MaybeTlsStream, WebSocketStream,
   tungstenite::{ClientRequestBuilder, Message},
 };
-use ultimates::core::{
+use hetus::core::{
   DataError,
   concurrent::{RetryStrategy, ServiceHandle, ServiceTask},
 };

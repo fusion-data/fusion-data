@@ -191,7 +191,6 @@ export HETUFLOW__AGENT__JWE_TOKEN="<从步骤4获取的Token>"
 ### 密钥管理
 
 1. **私钥保护**：
-
    - 私钥文件权限设置为 600
    - 不要将私钥提交到版本控制系统
    - 使用密钥管理系统（如 HashiCorp Vault）存储私钥
@@ -204,12 +203,10 @@ export HETUFLOW__AGENT__JWE_TOKEN="<从步骤4获取的Token>"
 ### Token 管理
 
 1. **Token 有效期**：
-
    - 设置合理的 Token 有效期（建议 1-24 小时）
    - 实现 Token 自动刷新机制
 
 2. **权限控制**：
-
    - 为不同 Agent 分配不同权限
    - 实现最小权限原则
 
@@ -220,7 +217,6 @@ export HETUFLOW__AGENT__JWE_TOKEN="<从步骤4获取的Token>"
 ### 网络安全
 
 1. **传输加密**：
-
    - 使用 TLS/SSL 加密 WebSocket 连接
    - 配置证书验证
 
@@ -255,6 +251,7 @@ export HETUFLOW__AGENT__JWE_TOKEN="<从步骤4获取的Token>"
    ```
    ERROR: WebSocket connection rejected: Authentication required
    ```
+
    - 检查 Agent 是否配置了 JWE Token
    - 确认 Server 端 JWE 配置已启用
 
@@ -263,7 +260,7 @@ export HETUFLOW__AGENT__JWE_TOKEN="<从步骤4获取的Token>"
 1. **启用调试日志**：
 
    ```toml
-   [fusion.log]
+   [hetu.log]
    log_level = "debug"
    log_targets = [
      "hetuflow_server=debug",

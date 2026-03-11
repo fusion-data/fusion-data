@@ -5,9 +5,9 @@ use hetumind_core::{
 };
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
-use ultimate_core_macros::Component;
-use ultimates::common::time::now;
-use ultimatesql::ModelManager;
+use hetu_core_macros::Component;
+use hetus::common::time::now;
+use hetusql::ModelManager;
 
 use crate::{infra::db::execution::ExecutionStoreService, runtime::workflow::WorkflowEngineService};
 

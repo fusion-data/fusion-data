@@ -1,6 +1,6 @@
 use hetumind_core::workflow::{NodeExecutionError, TriggerError, ValidationError, WorkflowExecutionError};
+use hetus::core::DataError;
 use thiserror::Error;
-use ultimates::core::DataError;
 
 #[derive(Error, Debug)]
 pub enum GuixuError {

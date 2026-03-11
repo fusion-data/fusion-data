@@ -1,7 +1,7 @@
 use axum::{Json, extract::Path};
 use serde_json::Value;
-use ultimates::web::{WebResult, ok_json};
-use ultimatesql::page::PageResult;
+use hetus::web::{WebResult, ok_json};
+use hetusql::page::PageResult;
 
 use hetuflow_core::models::{SchedServer, ServerForQuery, ServerForUpdate};
 use utoipa_axum::router::OpenApiRouter;

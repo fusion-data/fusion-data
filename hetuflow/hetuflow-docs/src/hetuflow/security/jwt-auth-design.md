@@ -228,7 +228,7 @@ use josekit::jwe::{ECDH_ES, A256GCM, JweHeader};
 use josekit::jwk::Jwk;
 use serde::{Deserialize, Serialize};
 use std::time::{SystemTime, UNIX_EPOCH};
-use ultimate_core::DataError;
+use hetu_core::DataError;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AgentClaims {
@@ -408,7 +408,7 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 use uuid::Uuid;
 use crate::security::jwe_service::JweService;
-use ultimate_core::DataError;
+use hetu_core::DataError;
 
 #[derive(Debug, Deserialize)]
 pub struct GenerateTokenRequest {
@@ -617,7 +617,7 @@ general_bind = "0.0.0.0:8080"
 # Token受众
 audience = "hetuflow-system"
 
-[fusion.web]
+[hetu.web]
 enable = true
 server_addr = "0.0.0.0:9500"```
 

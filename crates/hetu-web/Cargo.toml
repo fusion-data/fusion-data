@@ -1,0 +1,40 @@
+[package]
+name = "hetu-web"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = true
+
+[lints]
+workspace = true
+
+[features]
+with-ulid = ["dep:ulid", "hetu-core/with-ulid"]
+with-openapi = ["dep:utoipa", "hetu-core/with-openapi"]
+
+[dependencies]
+hetu-common.workspace = true
+hetu-core.workspace = true
+futures.workspace = true
+tokio.workspace = true
+mea.workspace = true
+log.workspace = true
+bytes.workspace = true
+config.workspace = true
+mime.workspace = true
+hyper.workspace = true
+tower.workspace = true
+tower-http.workspace = true
+http.workspace = true
+headers.workspace = true
+axum.workspace = true
+reqwest.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+serde_with.workspace = true
+uuid = { workspace = true }
+ulid = { workspace = true, optional = true }
+utoipa = { workspace = true, optional = true }

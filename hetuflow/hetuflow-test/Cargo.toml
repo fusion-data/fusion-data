@@ -13,9 +13,9 @@ publish = false
 workspace = true
 
 [dependencies]
-ultimate-common = { workspace = true, features = ["with-uuid"] }
-ultimate-core = { workspace = true }
-ultimates = { workspace = true }
+hetu-common = { workspace = true, features = ["with-uuid"] }
+hetu-core = { workspace = true }
+hetus = { workspace = true }
 hetuflow-core = { workspace = true }
 hetuflow-agent = { path = "../hetuflow-agent" }
 hetuflow-server = { path = "../hetuflow-server" }
@@ -31,8 +31,8 @@ config = { workspace = true }
 anyhow = { workspace = true }
 tokio-test = { workspace = true }
 axum-test = { workspace = true }
-ultimate-db = { workspace = true }
-ultimatesql = { workspace = true }
+hetu-db = { workspace = true }
+hetusql = { workspace = true }
 sqlx = { workspace = true }
 reqwest = { workspace = true }
 tokio-tungstenite = { workspace = true }

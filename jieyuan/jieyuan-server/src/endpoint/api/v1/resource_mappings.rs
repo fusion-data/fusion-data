@@ -1,7 +1,7 @@
 use axum::{Json, extract::Path, http::StatusCode};
-use ultimates::core::application::Application;
-use ultimates::web::{WebError, WebResult, ok_json};
-use ultimatesql::page::PageResult;
+use hetus::core::application::Application;
+use hetus::web::{WebError, WebResult, ok_json};
+use hetusql::page::PageResult;
 use utoipa_axum::router::OpenApiRouter;
 
 use jieyuan_core::model::{

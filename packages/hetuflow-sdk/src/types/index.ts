@@ -1,4 +1,4 @@
-import { Page, PageResult } from '@fusion-data/fusionsql';
+import { Page, PageResult } from '@hetu-data/hetusql';
 
 export interface AgentForCreate {
   name: string;

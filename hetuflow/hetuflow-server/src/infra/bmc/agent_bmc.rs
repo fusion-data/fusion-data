@@ -1,7 +1,7 @@
 use std::sync::OnceLock;
 
-use ultimates::common::time::now_offset;
-use ultimatesql::{
+use hetus::common::time::now_offset;
+use hetusql::{
   ModelManager, SqlError,
   base::{BmcConfig, DbBmc},
   filter::{OpValDateTime, OpValInt32},
@@ -141,7 +141,7 @@ impl AgentBmc {
       } else {
         stats.failure_tasks += 1;
         stats.consecutive_failures += 1;
-        stats.last_failure_ms = ultimates::common::time::now_epoch_millis();
+        stats.last_failure_ms = hetus::common::time::now_epoch_millis();
       }
 
       // 更新平均响应时间（简单移动平均）

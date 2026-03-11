@@ -21,6 +21,7 @@
 ### 技术栈
 
 #### 前端技术
+
 - **React 19.1.1**: 现代化的用户界面框架
 - **TypeScript 5.9.2**: 类型安全的 JavaScript 超集
 - **Ant Design 5.27.4**: 企业级 UI 组件库
@@ -31,6 +32,7 @@
 - **Vite 7.1.7**: 现代化的构建工具
 
 #### 开发工具
+
 - **ESLint 9.36.0**: 代码质量检查
 - **Prettier 3.3.3**: 代码格式化
 - **Jest 29.7.0**: 单元测试框架
@@ -41,6 +43,7 @@
 ### 架构模式
 
 #### 分层架构
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                    表现层 (Presentation Layer)                │
@@ -66,6 +69,7 @@
 ```
 
 #### 设计模式
+
 - **组合模式**: 组件的灵活组合和复用
 - **观察者模式**: 状态变化的响应式更新
 - **策略模式**: 不同算法和策略的可插拔设计
@@ -75,6 +79,7 @@
 ### 核心模块
 
 #### 1. 工作流引擎 (Workflow Engine)
+
 ```typescript
 interface WorkflowEngine {
   // 工作流定义和管理
@@ -94,6 +99,7 @@ interface WorkflowEngine {
 ```
 
 #### 2. 节点系统 (Node System)
+
 ```typescript
 interface NodeSystem {
   // 节点组件
@@ -115,6 +121,7 @@ interface NodeSystem {
 ```
 
 #### 3. 数据处理 (Data Processing)
+
 ```typescript
 interface DataProcessing {
   // 数据映射
@@ -138,12 +145,14 @@ interface DataProcessing {
 ### 环境要求
 
 #### 必需软件
+
 - **Node.js**: >= 22.0.0
 - **pnpm**: >= 8.0.0
 - **Git**: >= 2.30.0
 - **VS Code**: >= 1.85.0 (推荐)
 
 #### 可选软件
+
 - **Chrome**: >= 90.0 (开发调试)
 - **Docker**: >= 20.0 (容器化部署)
 - **Postman**: >= 10.0 (API 测试)
@@ -151,12 +160,14 @@ interface DataProcessing {
 ### 环境配置
 
 #### 1. 克隆项目
+
 ```bash
-git clone https://github.com/fusion-data/hetumind.git
+git clone https://github.com/hetu-data/hetumind.git
 cd hetumind/hetumind-web
 ```
 
 #### 2. 安装依赖
+
 ```bash
 # 安装 pnpm (如果没有安装)
 npm install -g pnpm
@@ -166,6 +177,7 @@ pnpm install
 ```
 
 #### 3. 环境配置
+
 ```bash
 # 复制环境配置文件
 cp .env.example .env
@@ -175,6 +187,7 @@ vim .env
 ```
 
 #### 4. 启动开发服务器
+
 ```bash
 # 启动开发服务器
 pnpm dev
@@ -189,6 +202,7 @@ pnpm dev --port 3000
 ### VS Code 配置
 
 #### 推荐扩展
+
 ```json
 {
   "recommendations": [
@@ -204,6 +218,7 @@ pnpm dev --port 3000
 ```
 
 #### 工作区设置
+
 ```json
 {
   "editor.formatOnSave": true,
@@ -221,6 +236,7 @@ pnpm dev --port 3000
 ### 开发脚本
 
 #### package.json 脚本
+
 ```json
 {
   "scripts": {
@@ -244,6 +260,7 @@ pnpm dev --port 3000
 ## 项目结构
 
 ### 目录结构
+
 ```
 hetumind-web/
 ├── public/                 # 静态资源
@@ -319,6 +336,7 @@ hetumind-web/
 ### 文件命名规范
 
 #### 组件文件
+
 ```
 组件名：PascalCase
 文件名：PascalCase.tsx
@@ -328,6 +346,7 @@ hetumind-web/
 ```
 
 #### 工具文件
+
 ```
 函数名：camelCase
 文件名：camelCase.ts
@@ -336,6 +355,7 @@ hetumind-web/
 ```
 
 #### 目录命名
+
 ```
 目录名：kebab-case
 组件目录：PascalCase/
@@ -348,6 +368,7 @@ hetumind-web/
 ### React 组件
 
 #### 函数组件模式
+
 ```typescript
 interface ComponentProps {
   title: string;
@@ -378,6 +399,7 @@ export default Component;
 ```
 
 #### 组件组合模式
+
 ```typescript
 // 高阶组件
 const withWorkflowProvider = <P extends object>(
@@ -407,6 +429,7 @@ const WorkflowEditor = () => {
 ### 自定义 Hooks
 
 #### 数据获取 Hook
+
 ```typescript
 interface UseWorkflowsOptions {
   enabled?: boolean;
@@ -432,6 +455,7 @@ export const useWorkflows = (options: UseWorkflowsOptions = {}) => {
 ```
 
 #### 状态管理 Hook
+
 ```typescript
 interface UseWorkflowState {
   workflows: Workflow[];
@@ -460,6 +484,7 @@ export const useWorkflowState = (): UseWorkflowState => {
 ### 类型系统
 
 #### 基础类型定义
+
 ```typescript
 // 工作流相关类型
 export interface Workflow {
@@ -502,6 +527,7 @@ export interface NodeData {
 ```
 
 #### 高级类型
+
 ```typescript
 // 条件类型
 type ConditionalType<T, U, V> = T extends U ? V : never;
@@ -527,21 +553,25 @@ type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
 ### 组件设计原则
 
 #### 1. 单一职责
+
 - 每个组件只负责一个功能
 - 保持组件的简洁和可读性
 - 避免组件过于复杂
 
 #### 2. 可复用性
+
 - 设计通用和可配置的组件
 - 使用 props 进行参数化
 - 避免硬编码业务逻辑
 
 #### 3. 可测试性
+
 - 组件逻辑与展示分离
 - 使用依赖注入
 - 编写单元测试
 
 #### 4. 性能优化
+
 - 使用 React.memo 优化渲染
 - 合理使用 useMemo 和 useCallback
 - 避免不必要的重渲染
@@ -549,6 +579,7 @@ type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
 ### 组件模板
 
 #### 基础组件模板
+
 ```typescript
 // ComponentName/ComponentName.tsx
 import React, { useState, useCallback, useEffect } from 'react';
@@ -607,6 +638,7 @@ export default ComponentName;
 ```
 
 #### 组件样式
+
 ```css
 /* ComponentName.module.css */
 .container {
@@ -636,6 +668,7 @@ export default ComponentName;
 ```
 
 #### 组件测试
+
 ```typescript
 // ComponentName.test.tsx
 import { render, screen, fireEvent } from '@testing-library/react';
@@ -672,6 +705,7 @@ describe('ComponentName', () => {
 ### 节点开发
 
 #### 节点基类
+
 ```typescript
 // BaseNode/BaseNode.tsx
 import React from 'react';
@@ -701,6 +735,7 @@ export const BaseNode: React.FC<BaseNodeProps> = ({
 ```
 
 #### 具体节点实现
+
 ```typescript
 // TriggerNode/TriggerNode.tsx
 import React from 'react';
@@ -739,6 +774,7 @@ export const TriggerNode: React.FC<TriggerNodeProps> = ({
 ```
 
 #### 节点注册
+
 ```typescript
 // NodeRegistry/index.ts
 import { NodeRegistry } from './NodeRegistry';
@@ -781,6 +817,7 @@ export default nodeRegistry;
 ### Zustand Store 设计
 
 #### 工作流状态管理
+
 ```typescript
 // store/workflowStore.ts
 import { create } from 'zustand';
@@ -819,43 +856,42 @@ export const useWorkflowStore = create<WorkflowState>()(
         error: null,
 
         // 动作实现
-        setWorkflows: (workflows) => set({ workflows }),
+        setWorkflows: workflows => set({ workflows }),
 
-        setCurrentWorkflow: (workflow) => set({ currentWorkflow: workflow }),
+        setCurrentWorkflow: workflow => set({ currentWorkflow: workflow }),
 
-        addNode: (node) => set((state) => ({
-          currentWorkflow: state.currentWorkflow
-            ? {
-                ...state.currentWorkflow,
-                nodes: [...state.currentWorkflow.nodes, node],
-              }
-            : null,
-        })),
+        addNode: node =>
+          set(state => ({
+            currentWorkflow: state.currentWorkflow
+              ? {
+                  ...state.currentWorkflow,
+                  nodes: [...state.currentWorkflow.nodes, node],
+                }
+              : null,
+          })),
 
-        updateNode: (id, updates) => set((state) => ({
-          currentWorkflow: state.currentWorkflow
-            ? {
-                ...state.currentWorkflow,
-                nodes: state.currentWorkflow.nodes.map((node) =>
-                  node.id === id ? { ...node, ...updates } : node
-                ),
-              }
-            : null,
-        })),
+        updateNode: (id, updates) =>
+          set(state => ({
+            currentWorkflow: state.currentWorkflow
+              ? {
+                  ...state.currentWorkflow,
+                  nodes: state.currentWorkflow.nodes.map(node => (node.id === id ? { ...node, ...updates } : node)),
+                }
+              : null,
+          })),
 
-        deleteNode: (id) => set((state) => ({
-          currentWorkflow: state.currentWorkflow
-            ? {
-                ...state.currentWorkflow,
-                nodes: state.currentWorkflow.nodes.filter((node) => node.id !== id),
-                edges: state.currentWorkflow.edges.filter(
-                  (edge) => edge.source !== id && edge.target !== id
-                ),
-              }
-            : null,
-        })),
+        deleteNode: id =>
+          set(state => ({
+            currentWorkflow: state.currentWorkflow
+              ? {
+                  ...state.currentWorkflow,
+                  nodes: state.currentWorkflow.nodes.filter(node => node.id !== id),
+                  edges: state.currentWorkflow.edges.filter(edge => edge.source !== id && edge.target !== id),
+                }
+              : null,
+          })),
 
-        selectNodes: (nodeIds) => set({ selectedNodes: nodeIds }),
+        selectNodes: nodeIds => set({ selectedNodes: nodeIds }),
         clearSelection: () => set({ selectedNodes: [] }),
 
         reset: () => ({
@@ -868,7 +904,7 @@ export const useWorkflowStore = create<WorkflowState>()(
       }),
       {
         name: 'workflow-store',
-        partialize: (state) => ({
+        partialize: state => ({
           workflows: state.workflows,
           currentWorkflow: state.currentWorkflow,
         }),
@@ -879,6 +915,7 @@ export const useWorkflowStore = create<WorkflowState>()(
 ```
 
 #### 执行状态管理
+
 ```typescript
 // store/executionStore.ts
 import { create } from 'zustand';
@@ -906,26 +943,23 @@ export const useExecutionStore = create<ExecutionState>((set, get) => ({
   isMonitoring: false,
   wsConnection: null,
 
-  setExecutions: (executions) => set({ executions }),
+  setExecutions: executions => set({ executions }),
 
-  setCurrentExecution: (execution) => set({ currentExecution: execution }),
+  setCurrentExecution: execution => set({ currentExecution: execution }),
 
-  updateExecution: (id, updates) => set((state) => ({
-    executions: state.executions.map((execution) =>
-      execution.executionId === id
-        ? { ...execution, ...updates }
-        : execution
-    ),
-    currentExecution:
-      state.currentExecution?.executionId === id
-        ? { ...state.currentExecution, ...updates }
-        : state.currentExecution,
-  })),
+  updateExecution: (id, updates) =>
+    set(state => ({
+      executions: state.executions.map(execution =>
+        execution.executionId === id ? { ...execution, ...updates } : execution
+      ),
+      currentExecution:
+        state.currentExecution?.executionId === id ? { ...state.currentExecution, ...updates } : state.currentExecution,
+    })),
 
   startMonitoring: () => {
     const ws = new WebSocket('ws://localhost:3001/ws');
 
-    ws.onmessage = (event) => {
+    ws.onmessage = event => {
       const data = JSON.parse(event.data);
       get().updateExecution(data.executionId, data);
     };
@@ -946,6 +980,7 @@ export const useExecutionStore = create<ExecutionState>((set, get) => ({
 ### Context API 使用
 
 #### React Context
+
 ```typescript
 // context/WorkflowContext.tsx
 import React, { createContext, useContext, ReactNode } from 'react';
@@ -1008,6 +1043,7 @@ export const useWorkflow = (): WorkflowContextValue => {
 ### HTTP 客户端
 
 #### Axios 配置
+
 ```typescript
 // services/api/client.ts
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
@@ -1030,20 +1066,20 @@ class ApiClient {
   private setupInterceptors() {
     // 请求拦截器
     this.client.interceptors.request.use(
-      (config) => {
+      config => {
         const token = localStorage.getItem('token');
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
         return config;
       },
-      (error) => Promise.reject(error)
+      error => Promise.reject(error)
     );
 
     // 响应拦截器
     this.client.interceptors.response.use(
-      (response) => response,
-      (error) => {
+      response => response,
+      error => {
         if (error.response?.status === 401) {
           // 处理认证失败
           localStorage.removeItem('token');
@@ -1083,6 +1119,7 @@ export const apiClient = new ApiClient(process.env.REACT_APP_API_URL);
 ```
 
 #### API 服务
+
 ```typescript
 // services/api/workflows.ts
 import { apiClient } from './client';
@@ -1090,12 +1127,7 @@ import { Workflow, CreateWorkflowRequest, UpdateWorkflowRequest } from '../../ty
 
 export const workflowAPI = {
   // 获取工作流列表
-  getWorkflows: async (params?: {
-    page?: number;
-    limit?: number;
-    search?: string;
-    status?: string;
-  }) => {
+  getWorkflows: async (params?: { page?: number; limit?: number; search?: string; status?: string }) => {
     const response = await apiClient.get<{
       workflows: Workflow[];
       pagination: {
@@ -1129,13 +1161,16 @@ export const workflowAPI = {
   },
 
   // 执行工作流
-  executeWorkflow: async (id: string, data?: {
-    variables?: Record<string, any>;
-    options?: {
-      timeout?: number;
-      enableLogging?: boolean;
-    };
-  }) => {
+  executeWorkflow: async (
+    id: string,
+    data?: {
+      variables?: Record<string, any>;
+      options?: {
+        timeout?: number;
+        enableLogging?: boolean;
+      };
+    }
+  ) => {
     return apiClient.post<{
       executionId: string;
       status: string;
@@ -1148,18 +1183,14 @@ export const workflowAPI = {
 ### React Query 集成
 
 #### 查询 Hooks
+
 ```typescript
 // hooks/useWorkflows.ts
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { workflowAPI } from '../services/api/workflows';
 import { Workflow } from '../types';
 
-export const useWorkflows = (params?: {
-  page?: number;
-  limit?: number;
-  search?: string;
-  status?: string;
-}) => {
+export const useWorkflows = (params?: { page?: number; limit?: number; search?: string; status?: string }) => {
   return useQuery({
     queryKey: ['workflows', params],
     queryFn: () => workflowAPI.getWorkflows(params),
@@ -1191,8 +1222,7 @@ export const useUpdateWorkflow = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) =>
-      workflowAPI.updateWorkflow(id, data),
+    mutationFn: ({ id, data }: { id: string; data: any }) => workflowAPI.updateWorkflow(id, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['workflows'] });
       queryClient.invalidateQueries({ queryKey: ['workflow', variables.id] });
@@ -1215,6 +1245,7 @@ export const useDeleteWorkflow = () => {
 ### WebSocket 集成
 
 #### WebSocket Hook
+
 ```typescript
 // hooks/useWebSocket.ts
 import { useEffect, useRef, useState } from 'react';
@@ -1255,7 +1286,7 @@ export const useWebSocket = ({
         onOpen?.();
       };
 
-      ws.onmessage = (event) => {
+      ws.onmessage = event => {
         try {
           const data = JSON.parse(event.data);
           onMessage?.(data);
@@ -1277,7 +1308,7 @@ export const useWebSocket = ({
         }
       };
 
-      ws.onerror = (event) => {
+      ws.onerror = event => {
         setError('WebSocket connection error');
         onError?.(event);
       };
@@ -1316,18 +1347,21 @@ export const useWebSocket = ({
 ### 测试策略
 
 #### 1. 单元测试
+
 - **组件测试**: 测试组件的渲染和交互
 - **Hook 测试**: 测试自定义 Hook 的逻辑
 - **工具函数测试**: 测试纯函数的正确性
 - **覆盖率要求**: 80% 以上
 
 #### 2. 集成测试
+
 - **组件集成**: 测试组件间的协作
 - **API 集成**: 测试 API 调用和数据处理
 - **状态管理**: 测试状态管理逻辑
 - **工作流集成**: 测试完整的工作流执行
 
 #### 3. 端到端测试
+
 - **用户流程**: 测试完整的用户操作流程
 - **跨浏览器**: 测试不同浏览器的兼容性
 - **性能测试**: 测试应用的性能表现
@@ -1336,6 +1370,7 @@ export const useWebSocket = ({
 ### 测试工具
 
 #### Jest 配置
+
 ```javascript
 // jest.config.js
 module.exports = {
@@ -1345,11 +1380,7 @@ module.exports = {
   moduleNameMapping: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
-  collectCoverageFrom: [
-    'src/**/*.{ts,tsx}',
-    '!src/**/*.d.ts',
-    '!src/**/*.stories.tsx',
-  ],
+  collectCoverageFrom: ['src/**/*.{ts,tsx}', '!src/**/*.d.ts', '!src/**/*.stories.tsx'],
   coverageThreshold: {
     global: {
       branches: 80,
@@ -1362,6 +1393,7 @@ module.exports = {
 ```
 
 #### Testing Library 配置
+
 ```typescript
 // src/setupTests.ts
 import '@testing-library/jest-dom';
@@ -1388,6 +1420,7 @@ global.ResizeObserver = jest.fn().mockImplementation(() => ({
 ### 测试示例
 
 #### 组件测试
+
 ```typescript
 // components/__tests__/WorkflowCanvas.test.tsx
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
@@ -1456,6 +1489,7 @@ describe('WorkflowCanvas', () => {
 ```
 
 #### Hook 测试
+
 ```typescript
 // hooks/__tests__/useWorkflow.test.tsx
 import { renderHook, act } from '@testing-library/react';
@@ -1511,6 +1545,7 @@ describe('useWorkflow', () => {
 ```
 
 #### 集成测试
+
 ```typescript
 // __tests__/integration/WorkflowExecution.test.tsx
 import { render, screen, waitFor } from '@testing-library/react';
@@ -1573,6 +1608,7 @@ describe('Workflow Execution Integration', () => {
 ### React 性能优化
 
 #### 1. 组件优化
+
 ```typescript
 // 使用 React.memo 避免不必要的重渲染
 export const OptimizedComponent = React.memo<ComponentProps>(
@@ -1614,6 +1650,7 @@ const ComponentWithCallback = ({ onSubmit }: Props) => {
 ```
 
 #### 2. 数据获取优化
+
 ```typescript
 // 使用 React Query 优化数据获取
 const useWorkflows = () => {
@@ -1632,12 +1669,7 @@ const useWorkflowsPaginated = () => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
 
-  const {
-    data,
-    isLoading,
-    isFetching,
-    fetchNextPage,
-  } = useInfiniteQuery({
+  const { data, isLoading, isFetching, fetchNextPage } = useInfiniteQuery({
     queryKey: ['workflows', 'paginated'],
     queryFn: ({ pageParam = 1 }) => fetchWorkflows({ page: pageParam }),
     getNextPageParam: (lastPage, allPages) => {
@@ -1657,6 +1689,7 @@ const useWorkflowsPaginated = () => {
 ```
 
 #### 3. 虚拟化长列表
+
 ```typescript
 // 使用 react-window 虚拟化长列表
 import { FixedSizeList as List } from 'react-window';
@@ -1684,6 +1717,7 @@ const WorkflowNodeList = ({ nodes }: { nodes: WorkflowNode[] }) => {
 ### 内存优化
 
 #### 1. 组件卸载清理
+
 ```typescript
 const WebSocketComponent = () => {
   const wsRef = useRef<WebSocket | null>(null);
@@ -1703,14 +1737,12 @@ const WebSocketComponent = () => {
 ```
 
 #### 2. 大对象处理
+
 ```typescript
 // 使用 WeakMap 避免内存泄漏
 const memoCache = new WeakMap<object, any>();
 
-export const memoize = <T extends (...args: any[]) => any>(
-  fn: T,
-  getKey?: (...args: Parameters<T>) => string
-) => {
+export const memoize = <T extends (...args: any[]) => any>(fn: T, getKey?: (...args: Parameters<T>) => string) => {
   return (...args: Parameters<T>) => {
     const key = getKey ? getKey(...args) : JSON.stringify(args);
     const cacheKey = { key, args } as object;
@@ -1729,6 +1761,7 @@ export const memoize = <T extends (...args: any[]) => any>(
 ### 性能监控
 
 #### 1. 性能指标收集
+
 ```typescript
 // 性能监控 Hook
 export const usePerformanceMonitor = () => {
@@ -1771,12 +1804,10 @@ export const usePerformanceMonitor = () => {
 ```
 
 #### 2. 性能告警
+
 ```typescript
 // 性能告警 Hook
-export const usePerformanceAlert = (thresholds: {
-  renderTime: number;
-  memoryUsage: number;
-}) => {
+export const usePerformanceAlert = (thresholds: { renderTime: number; memoryUsage: number }) => {
   const metrics = usePerformanceMonitor();
   const [alerts, setAlerts] = useState<string[]>([]);
 
@@ -1784,15 +1815,11 @@ export const usePerformanceAlert = (thresholds: {
     const newAlerts: string[] = [];
 
     if (metrics.renderTime > thresholds.renderTime) {
-      newAlerts.push(
-        `渲染时间过长: ${metrics.renderTime.toFixed(2)}ms`
-      );
+      newAlerts.push(`渲染时间过长: ${metrics.renderTime.toFixed(2)}ms`);
     }
 
     if (metrics.memoryUsage > thresholds.memoryUsage) {
-      newAlerts.push(
-        `内存使用过高: ${metrics.memoryUsage.toFixed(2)}MB`
-      );
+      newAlerts.push(`内存使用过高: ${metrics.memoryUsage.toFixed(2)}MB`);
     }
 
     setAlerts(newAlerts);
@@ -1807,6 +1834,7 @@ export const usePerformanceAlert = (thresholds: {
 ### 构建配置
 
 #### Vite 配置
+
 ```typescript
 // vite.config.ts
 import { defineConfig } from 'vite';
@@ -1842,6 +1870,7 @@ export default defineConfig({
 ```
 
 #### 环境变量配置
+
 ```typescript
 // vite-env.d.ts
 interface ImportMetaEnv {
@@ -1859,6 +1888,7 @@ export interface ImportMeta {
 ### Docker 部署
 
 #### Dockerfile
+
 ```dockerfile
 # 多阶段构建
 FROM node:22-alpine AS builder
@@ -1900,6 +1930,7 @@ CMD ["nginx", "-g", "daemon off;"]
 ```
 
 #### Nginx 配置
+
 ```nginx
 # nginx.conf
 events {
@@ -1952,6 +1983,7 @@ http {
 ```
 
 #### Docker Compose
+
 ```yaml
 # docker-compose.yml
 version: '3.8'
@@ -1960,7 +1992,7 @@ services:
   frontend:
     build: .
     ports:
-      - "80:80"
+      - '80:80'
     environment:
       - NODE_ENV=production
     restart: unless-stopped
@@ -1968,7 +2000,7 @@ services:
   backend:
     image: hetumind/backend:latest
     ports:
-      - "3001:3001"
+      - '3001:3001'
     environment:
       - DATABASE_URL=postgresql://user:password@db:5432/hetumind
     depends_on:
@@ -1989,6 +2021,7 @@ services:
 ### CI/CD 配置
 
 #### GitHub Actions
+
 ```yaml
 # .github/workflows/deploy.yml
 name: Deploy
@@ -2078,14 +2111,16 @@ jobs:
 ### 开发流程
 
 #### 1. Fork 项目
+
 ```bash
 # Fork 项目到个人仓库
 git clone https://github.com/your-username/hetumind.git
 cd hetumind
-git remote add upstream https://github.com/fusion-data/hetumind.git
+git remote add upstream https://github.com/hetu-data/hetumind.git
 ```
 
 #### 2. 创建功能分支
+
 ```bash
 # 创建并切换到功能分支
 git checkout -b feature/amazing-feature
@@ -2095,6 +2130,7 @@ git push origin feature/amazing-feature
 ```
 
 #### 3. 开发和测试
+
 ```bash
 # 安装依赖
 pnpm install
@@ -2113,6 +2149,7 @@ pnpm lint:fix
 ```
 
 #### 4. 提交更改
+
 ```bash
 # 添加所有更改
 git add .
@@ -2125,6 +2162,7 @@ git push origin feature/amazing-feature
 ```
 
 #### 5. 创建 Pull Request
+
 - 在 GitHub 上创建 Pull Request
 - 填写清晰的 PR 描述
 - 等待代码审查
@@ -2133,6 +2171,7 @@ git push origin feature/amazing-feature
 ### 代码审查
 
 #### 审查清单
+
 - [ ] 代码符合项目规范
 - [ ] 类型检查通过
 - [ ] 测试覆盖率达标
@@ -2140,6 +2179,7 @@ git push origin feature/amazing-feature
 - [ ] 文档已更新
 
 #### 审查要点
+
 - **代码质量**: 可读性、可维护性
 - **功能正确性**: 实现符合需求
 - **性能影响**: 是否存在性能问题
@@ -2149,16 +2189,19 @@ git push origin feature/amazing-feature
 ### 发布流程
 
 #### 1. 合并到主分支
+
 - 所有 CI 检查通过
 - 代码审查完成
 - 冲突已解决
 
 #### 2. 自动部署
+
 - 自动触发构建和部署
 - 部署到测试环境进行验证
 - 部署到生产环境
 
 #### 3. 版本发布
+
 - 创建版本标签
 - 生成发布说明
 - 更新文档
@@ -2166,6 +2209,7 @@ git push origin feature/amazing-feature
 ### 版本管理
 
 #### 语义化版本
+
 ```
 主版本号.次版本号.修订号
 
@@ -2177,6 +2221,7 @@ git push origin feature/amazing-feature
 ```
 
 #### 发布流程
+
 ```bash
 # 创建版本标签
 git tag -a v1.2.3 -m "Release version 1.2.3"

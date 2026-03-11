@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use async_trait::async_trait;
 pub use execution_store_pg::ExecutionStorePg;
-use ultimates::core::{application::ApplicationBuilder, plugin::Plugin};
+use hetus::core::{application::ApplicationBuilder, plugin::Plugin};
 
 use crate::runtime::execution::ExecutionStore;
 
@@ -20,6 +20,6 @@ impl Plugin for ExecutionStorePlugin {
   }
 
   fn dependencies(&self) -> Vec<&str> {
-    vec![std::any::type_name::<ultimates::db::DbPlugin>()]
+    vec![std::any::type_name::<hetus::db::DbPlugin>()]
   }
 }

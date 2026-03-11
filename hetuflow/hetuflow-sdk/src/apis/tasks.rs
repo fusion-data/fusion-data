@@ -5,9 +5,9 @@ use crate::{
   error::{SdkError, SdkResult},
   platform::Response,
 };
-use ultimates::common::model::IdUuidResult;
-use ultimates::common::page::PageResult;
-use ultimatesql_core::filter::{OpValInt32, OpValUuid};
+use hetus::common::model::IdUuidResult;
+use hetus::common::page::PageResult;
+use hetusql_core::filter::{OpValInt32, OpValUuid};
 use hetuflow_core::models::{SchedTask, TaskForCreate, TaskForQuery, TaskForUpdate};
 use hetuflow_core::types::TaskStatus;
 use serde::de::DeserializeOwned;

@@ -5,14 +5,13 @@
 ### 错误描述
 
 ```
-Uncaught SyntaxError: The requested module '/@fs/Users/yangjing/workspaces/fusion-data/packages/fusion-core/dist/index.js' does not provide an export named 'formatDate' (at App.tsx:4:10)
+Uncaught SyntaxError: The requested module '/@fs/Users/yangjing/workspaces/hetu-data/packages/hetu-core/dist/index.js' does not provide an export named 'formatDate' (at App.tsx:4:10)
 ```
 
 ### 问题根因
 
 1. **模块系统不匹配**：
-
-   - `@fusion-data/fusion-core` 包配置为 CommonJS 格式 (`"module": "commonjs"`)
+   - `@hetu-data/hetu-core` 包配置为 CommonJS 格式 (`"module": "commonjs"`)
    - React 应用使用 ESM 格式 (`"type": "module"`)
    - Vite 构建工具需要 ESM 格式的模块
 
@@ -22,11 +21,11 @@ Uncaught SyntaxError: The requested module '/@fs/Users/yangjing/workspaces/fusio
 
 ## ✅ 解决方案
 
-### 1. 更新 fusion-core 的 package.json
+### 1. 更新 hetu-core 的 package.json
 
 ```json
 {
-  "name": "@fusion-data/fusion-core",
+  "name": "@hetu-data/hetu-core",
   "type": "module", // 声明为 ESM 模块
   "main": "dist/index.js",
   "module": "dist/index.js", // ESM 入口
@@ -57,7 +56,7 @@ Uncaught SyntaxError: The requested module '/@fs/Users/yangjing/workspaces/fusio
 ### 3. 重新编译
 
 ```bash
-cd packages/fusion-core
+cd packages/hetu-core
 pnpm clean && pnpm build
 ```
 
@@ -66,14 +65,14 @@ pnpm clean && pnpm build
 ### 修复前 (CommonJS)
 
 ```javascript
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+'use strict';
+Object.defineProperty(exports, '__esModule', { value: true });
 exports.formatDate = formatDate;
 exports.delay = delay;
 exports.generateId = generateId;
 
 function formatDate(date) {
-  return date.toISOString().split("T")[0];
+  return date.toISOString().split('T')[0];
 }
 ```
 
@@ -81,11 +80,11 @@ function formatDate(date) {
 
 ```javascript
 export function formatDate(date) {
-  return date.toISOString().split("T")[0];
+  return date.toISOString().split('T')[0];
 }
 
 export function delay(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 export function generateId() {

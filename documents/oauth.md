@@ -43,7 +43,7 @@
 
 文件位置与建议修改：
 
-1. 修改文件：`/Users/yangjing/workspaces/fusion-data/scripts/software/postgres/sqls/hetumind-ddl.sql`
+1. 修改文件：`/Users/yangjing/workspaces/hetu-data/scripts/software/postgres/sqls/hetumind-ddl.sql`
 
 ```sql
   -- user_entity.id：移除默认自增序列（保留类型为 bigint）
@@ -60,7 +60,7 @@
   alter table if exists execution_entity add column if not exists tenant_id uuid not null;
 ```
 
-2. 修改文件：`/Users/yangjing/workspaces/fusion-data/scripts/software/postgres/sqls/jieyuan-ddl.sql`
+2. 修改文件：`/Users/yangjing/workspaces/hetu-data/scripts/software/postgres/sqls/jieyuan-ddl.sql`
 
 ```sql
   -- 统一唯一约束（中心负责）
@@ -127,7 +127,7 @@ Hetumind 侧处理要点：
 ```rust
   /* 函数级注释：轮询中心用户变更，更新本地镜像（幂等） */
   async fn poll_user_changes(app: Application, updated_from: String, updated_to: String) -> Result<(), DataError> {
-    let base = app.ultimate_setting().service().get("JIEYUAN_BASE_URL").unwrap_or_default();
+    let base = app.hetu_setting().service().get("JIEYUAN_BASE_URL").unwrap_or_default();
     let url = format!("{}/iam/users/changes", base);
     let payload = serde_json::json!({
       "page": { "page": 1, "limit": 100 },
@@ -154,7 +154,7 @@ Hetumind 侧处理要点：
 
 ## 共享库职责边界（jieyuan-core）
 
-- 路径：`/Users/yangjing/workspaces/fusion-data/jieyuan/jieyuan-core/`
+- 路径：`/Users/yangjing/workspaces/hetu-data/jieyuan/jieyuan-core/`
 - 建议模块：
   - `auth`: `AuthClaims`、`TokenValidationPolicy`、`verify_token`、`map_claims_to_permissions`
   - `model`: `UserPrincipal`、`Role`、`Scope`、`TenantId`
@@ -163,15 +163,15 @@ Hetumind 侧处理要点：
 ## 令牌与上下文复用（SecurityUtils + CtxPayload）
 
 - 工具与数据结构
-  - 令牌校验：复用 `ultimate_core::security::SecurityUtils`（统一封装 JWKS 验签/内省兜底策略）
-  - 请求上下文：复用 `ultimate_common::ctx::CtxPayload`（在中间件完成令牌解析后，注入 `user_id/tenant_id/roles/scopes` 等）
+  - 令牌校验：复用 `hetu_core::security::SecurityUtils`（统一封装 JWKS 验签/内省兜底策略）
+  - 请求上下文：复用 `hetu_common::ctx::CtxPayload`（在中间件完成令牌解析后，注入 `user_id/tenant_id/roles/scopes` 等）
 
-示例：在 Handler 中使用 `ultimate_web::extract_ctx` 从请求提取 `Ctx`（通过 `payload: Map<String, Value>` 存放上下文字段）
+示例：在 Handler 中使用 `hetu_web::extract_ctx` 从请求提取 `Ctx`（通过 `payload: Map<String, Value>` 存放上下文字段）
 
 ```rust
-  use ultimates::common::ctx::Ctx;
-  use ultimate_web::{WebResult, ok_json, extract_ctx};
-  use ultimate_core::application::Application;
+  use hetus::common::ctx::Ctx;
+  use hetu_web::{WebResult, ok_json, extract_ctx};
+  use hetu_core::application::Application;
   use http::request::Parts; // 或 axum::http::request::Parts
 
   /* 函数级注释：在 Handler 中通过 extract_ctx 提取 Ctx 并进行资源层授权判定 */
@@ -180,7 +180,7 @@ Hetumind 侧处理要点：
     mut parts: Parts,
   ) -> WebResult<serde_json::Value> {
     // 从请求提取 Ctx（读取 Authorization Bearer 或查询参数 access_token）
-    let ctx: Ctx = extract_ctx(&parts, app.ultimate_setting().security())?;
+    let ctx: Ctx = extract_ctx(&parts, app.hetu_setting().security())?;
 
     // 示例：检查 scopes（从 ctx.payload() 读取）
     let has_scope = ctx
@@ -188,7 +188,7 @@ Hetumind 侧处理要点：
       .get_strings("scopes")
       .map(|v| v.iter().any(|s| *s == "workflow:write"))
       .unwrap_or(false);
-    if !has_scope { return Err(ultimate_web::error::WebError::from(ultimate_core::DataError::forbidden("insufficient scope"))); }
+    if !has_scope { return Err(hetu_web::error::WebError::from(hetu_core::DataError::forbidden("insufficient scope"))); }
 
     ok_json!(serde_json::json!({"ok": true, "uid": ctx.user_id()}))
   }
@@ -212,11 +212,11 @@ Hetumind 侧处理要点：
 
 说明：
 
-- 通过复用 `ultimate_web::extract_ctx` 获取 `Ctx`，可避免在中间件手动注入上下文；`extract_ctx` 会从请求头或查询参数提取令牌，并使用 `SecurityUtils::decrypt_jwt` 生成 `Ctx`（内部包装 `CtxPayload`）。
+- 通过复用 `hetu_web::extract_ctx` 获取 `Ctx`，可避免在中间件手动注入上下文；`extract_ctx` 会从请求头或查询参数提取令牌，并使用 `SecurityUtils::decrypt_jwt` 生成 `Ctx`（内部包装 `CtxPayload`）。
 
 ## SecurityUtils 接口建议与复用
 
-- 现状：`ultimate_core::security::SecurityUtils` 已存在类型定义（`pub struct SecurityUtils;`）。为统一各应用的令牌校验与兜底策略，建议锁定以下接口名：
+- 现状：`hetu_core::security::SecurityUtils` 已存在类型定义（`pub struct SecurityUtils;`）。为统一各应用的令牌校验与兜底策略，建议锁定以下接口名：
   - `SecurityUtils::verify_jwt(token: &str, jwks_url: &str, expected_iss: &str, expected_aud: &str) -> Result<AuthClaims, DataError>`
   - `SecurityUtils::load_jwks(jwks_url: &str) -> Result<Jwks, DataError>`
   - `SecurityUtils::introspect(token: &str, introspect_url: &str, timeout_ms: u64) -> Result<bool, DataError>`
@@ -224,7 +224,7 @@ Hetumind 侧处理要点：
 
 说明：
 
-- WebAuth 中间件可复用上述接口实现“JWKS 验签优先 + 内省兜底”策略；若部分方法尚未实现，建议在 `fusion-core` 中补充以统一跨应用行为。
+- WebAuth 中间件可复用上述接口实现“JWKS 验签优先 + 内省兜底”策略；若部分方法尚未实现，建议在 `hetu-core` 中补充以统一跨应用行为。
 
 ## 资源命名规范（jieyuan-core）
 
@@ -269,9 +269,9 @@ Hetumind 侧处理要点：
 ## 权限与角色集成（复用 jieyuan 模块）
 
 - 复用路径：
-  - 角色：`/Users/yangjing/workspaces/fusion-data/jieyuan/jieyuan/src/role/`
-  - 权限：`/Users/yangjing/workspaces/fusion-data/jieyuan/jieyuan/src/permission/`
-  - 角色-权限模型：`/Users/yangjing/workspaces/fusion-data/jieyuan/jieyuan-core/src/model/role_permission.rs`
+  - 角色：`/Users/yangjing/workspaces/hetu-data/jieyuan/jieyuan/src/role/`
+  - 权限：`/Users/yangjing/workspaces/hetu-data/jieyuan/jieyuan/src/permission/`
+  - 角色-权限模型：`/Users/yangjing/workspaces/hetu-data/jieyuan/jieyuan-core/src/model/role_permission.rs`
 
 - 建议集成方式：
   - 在 `jieyuan-core` 暴露统一的权限判定接口（如 `has_permission(principal, resource, action)`），内部依据 `RolePermission` 进行计算。
@@ -280,7 +280,7 @@ Hetumind 侧处理要点：
 示例：资源层权限判定（伪代码，使用 Ctx 与 CtxPayload 便捷方法）
 
 ```rust
-  use ultimates::common::ctx::Ctx;
+  use hetus::common::ctx::Ctx;
   use jieyuan_core::model::role_permission::RolePermission; // 示例，引入统一模型
 
   /* 函数级注释：判断用户是否具备某资源某动作的权限 */
@@ -314,11 +314,11 @@ Hetumind 侧处理要点：
 
 ```rust
   use axum::extract::FromRequestParts;
-  use ultimate_core::application::Application;
-  use ultimate_core::DataError;
-  use ultimate_db::ModelManager;
-  use fusionsql::page::PageResult;
-  use ultimate_web::{WebError, WebResult, ok_json, extract_ctx};
+  use hetu_core::application::Application;
+  use hetu_core::DataError;
+  use hetu_db::ModelManager;
+  use hetusql::page::PageResult;
+  use hetu_web::{WebError, WebResult, ok_json, extract_ctx};
   use hetumind_core::workflow::Workflow;
   use http::request::Parts;
 
@@ -332,7 +332,7 @@ Hetumind 侧处理要点：
 
     async fn from_request_parts(parts: &mut Parts, state: &Application) -> core::result::Result<Self, Self::Rejection> {
       // 提取 Ctx（支持 Authorization Bearer 或查询参数 access_token）
-      let ctx = extract_ctx(parts, state.ultimate_setting().security())?;
+      let ctx = extract_ctx(parts, state.hetu_setting().security())?;
       // 按上下文构造依赖（如 ModelManager.with_ctx(ctx)）
       let mm = state.component::<ModelManager>().with_ctx(ctx);
       Ok(WorkflowSvc { mm })
@@ -408,8 +408,8 @@ Hetumind 侧处理要点：
 ```rust
   // src/endpoint/api/auth.rs
   use axum::{Router, routing::get, post, Json, Path, State};
-  use ultimate_core::application::Application;
-  use ultimate_web::{WebResult, ok_json};
+  use hetu_core::application::Application;
+  use hetu_web::{WebResult, ok_json};
   use jieyuan_server::oauth::OAuthSvc;  // 从独立 oauth 模块导入
 
   pub fn auth_routes() -> Router<Application> {
@@ -453,8 +453,8 @@ Hetumind 侧处理要点：
 
 ```rust
   // src/domain/auth/oauth_proxy_svc.rs（示例：处理登录响应并写入映射）
-  use ultimate_core::{DataError, Result};
-  use ultimate_db::ModelManager;
+  use hetu_core::{DataError, Result};
+  use hetu_db::ModelManager;
   use reqwest::Client;
 
   #[derive(Clone)]
@@ -492,7 +492,7 @@ Hetumind 侧处理要点：
 ```rust
   // src/endpoint/api/mod.rs（示例：接入 Jieyuan 的 Token 验证，JWKS）
   use tower_http::auth::AsyncRequireAuthorizationLayer;
-  use ultimate_web::middleware::web_auth::WebAuth;
+  use hetu_web::middleware::web_auth::WebAuth;
 
   pub fn routes() -> axum::Router<Application> {
     let web_auth = WebAuth::default() // 扩展：加载 Jieyuan JWKS/内省
@@ -543,7 +543,7 @@ Hetumind 侧处理要点：
 
 ## 错误处理与安全策略
 
-- 错误处理：统一使用 `ultimate_core::DataError`（如 `unauthorized/bad_request/server_error`），在代理流程与验证失败时返回一致的 HTTP 状态码与错误体。
+- 错误处理：统一使用 `hetu_core::DataError`（如 `unauthorized/bad_request/server_error`），在代理流程与验证失败时返回一致的 HTTP 状态码与错误体。
 - 安全策略：令牌验证由 Jieyuan 统一管理；Hetumind 通过 JWKS/内省进行验签或有效性检查；敏感令牌不在 Hetumind 明文落库。
 
 ## 扩展建议
@@ -577,8 +577,8 @@ Hetumind 侧处理要点：
 ```rust
   // src/endpoint/api/mod.rs
   use axum::Router;
-  use ultimate_core::application::Application;
-  use ultimate_web::middleware::web_auth::WebAuth;
+  use hetu_core::application::Application;
+  use hetu_web::middleware::web_auth::WebAuth;
   use tower_http::auth::AsyncRequireAuthorizationLayer;
 
   /* 函数级注释：统一鉴权，JWKS 验签优先，必要时内省兜底 */
@@ -604,13 +604,13 @@ Hetumind 侧处理要点：
 ```rust
   // src/endpoint/api/auth.rs
   use axum::{Router, routing::post};
-  use ultimate_core::application::Application;
-  use ultimate_web::{WebResult, extract::JsonOrForm, ok_json};
+  use hetu_core::application::Application;
+  use hetu_web::{WebResult, extract::JsonOrForm, ok_json};
   use reqwest::Client;
 
   /* 函数级注释：登录代理，转发至中心并原样响应令牌 */
   async fn signin(app: Application, JsonOrForm(req): JsonOrForm<SigninRequest>) -> WebResult<SigninResponse> {
-    let base = app.ultimate_setting().service().get("JIEYUAN_BASE_URL").unwrap_or("");
+    let base = app.hetu_setting().service().get("JIEYUAN_BASE_URL").unwrap_or("");
     let resp = Client::new().post(format!("{}/auth/signin", base)).json(&req).send().await?;
     if !resp.status().is_success() { /* 返回 DataError 映射 */ }
     let body: SigninResponse = resp.json().await?;
@@ -619,7 +619,7 @@ Hetumind 侧处理要点：
 
   /* 函数级注释：刷新令牌代理（中心刷新 Access） */
   async fn refresh(app: Application, JsonOrForm(req): JsonOrForm<RefreshRequest>) -> WebResult<SigninResponse> {
-    let base = app.ultimate_setting().service().get("JIEYUAN_BASE_URL").unwrap_or("");
+    let base = app.hetu_setting().service().get("JIEYUAN_BASE_URL").unwrap_or("");
     let resp = Client::new().post(format!("{}/auth/refresh", base)).json(&req).send().await?;
     let body: SigninResponse = resp.json().await?;
     ok_json!(body)
@@ -627,7 +627,7 @@ Hetumind 侧处理要点：
 
   /* 函数级注释：登出代理（中心撤销 Refresh Token/加入黑名单） */
   async fn signout(app: Application, JsonOrForm(req): JsonOrForm<SignoutRequest>) -> WebResult<()> {
-    let base = app.ultimate_setting().service().get("JIEYUAN_BASE_URL").unwrap_or("");
+    let base = app.hetu_setting().service().get("JIEYUAN_BASE_URL").unwrap_or("");
     let _ = Client::new().post(format!("{}/auth/signout", base)).json(&req).send().await?;
     ok_json!()
   }

@@ -2,8 +2,8 @@ use hetumind_core::workflow::WorkflowId;
 use sea_query::enum_def;
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
-use ultimates::common::time::OffsetDateTime;
-use ultimatesql::Fields;
+use hetus::common::time::OffsetDateTime;
+use hetusql::Fields;
 use uuid::Uuid;
 
 /// 标签实体表

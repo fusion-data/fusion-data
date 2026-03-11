@@ -5,9 +5,9 @@ use crate::{
   error::{SdkError, SdkResult},
   platform::Response,
 };
-use ultimates::common::model::IdUuidResult;
-use ultimates::common::page::PageResult;
-use ultimatesql_core::filter::OpValString;
+use hetus::common::model::IdUuidResult;
+use hetus::common::page::PageResult;
+use hetusql_core::filter::OpValString;
 use hetuflow_core::models::{JobForCreate, JobForQuery, JobForUpdate, SchedJob};
 use serde::de::DeserializeOwned;
 use uuid::Uuid;

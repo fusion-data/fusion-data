@@ -1,8 +1,8 @@
 // src/value.rs
 use chrono::Duration;
 use serde::{Deserialize, Serialize};
-use ultimates::common::ahash::HashMap;
-use ultimates::common::time::OffsetDateTime;
+use hetus::common::ahash::HashMap;
+use hetus::common::time::OffsetDateTime;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]

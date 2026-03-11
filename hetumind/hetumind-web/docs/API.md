@@ -1352,4 +1352,4 @@ hetumind execution logs exec-123
 
 ---
 
-如有任何问题或建议，请联系我们的技术支持团队或查看 [GitHub Issues](https://github.com/fusion-data/hetumind/issues)。
+如有任何问题或建议，请联系我们的技术支持团队或查看 [GitHub Issues](https://github.com/hetu-data/hetumind/issues)。

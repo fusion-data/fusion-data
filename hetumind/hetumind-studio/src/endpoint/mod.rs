@@ -7,8 +7,8 @@ use tower_http::{
   sensitive_headers::SetSensitiveRequestHeadersLayer,
   trace::{DefaultMakeSpan, TraceLayer},
 };
-use ultimates::core::{DataError, application::Application};
-use ultimates::web::server::WebServerBuilder;
+use hetus::core::{DataError, application::Application};
+use hetus::web::server::WebServerBuilder;
 
 pub mod api;
 

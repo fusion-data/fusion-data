@@ -1,8 +1,8 @@
 pub mod api;
 pub mod oauth;
 
-use ultimates::core::application::Application;
-use ultimates::web::{Router, WebError};
+use hetus::core::application::Application;
+use hetus::web::{Router, WebError};
 use utoipa::OpenApi;
 use utoipa_axum::router::OpenApiRouter;
 use utoipa_swagger_ui::SwaggerUi;

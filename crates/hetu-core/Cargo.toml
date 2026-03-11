@@ -1,0 +1,86 @@
+[package]
+name = "hetu-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = true
+
+[lints.clippy]
+uninlined_format_args = "allow"
+
+[features]
+default = ["hetu-common/with-uuid", "with-macros"]
+with-macros = ["dep:hetu-core-macros"]
+with-ulid = ["dep:ulid", "utoipa/ulid", "hetu-common/with-ulid"]
+with-openapi = ["dep:utoipa", "utoipa/uuid"]
+with-logforth = [
+  "dep:logforth",
+  "dep:fastrace",
+  "logforth/append-opentelemetry",
+]
+with-tracing = [
+  "dep:tracing",
+  "dep:tracing-log",
+  "dep:tracing-appender",
+  "dep:tracing-subscriber",
+  "dep:init-tracing-opentelemetry",
+  "dep:tracing-opentelemetry-instrumentation-sdk",
+]
+tonic = ["dep:tonic", "dep:protobuf"]
+
+[dependencies]
+hetu-common = { workspace = true }
+hetu-core-macros = { workspace = true, optional = true }
+thiserror = { workspace = true }
+dashmap = { workspace = true }
+inventory = { workspace = true }
+async-trait = { workspace = true }
+regex.workspace = true
+futures.workspace = true
+tokio.workspace = true
+mea.workspace = true
+toml.workspace = true
+config.workspace = true
+zeroize.workspace = true
+strum.workspace = true
+uuid = { workspace = true }
+ulid = { workspace = true, optional = true }
+hierarchical_hash_wheel_timer = { workspace = true }
+log.workspace = true
+rand.workspace = true
+argon2.workspace = true
+josekit.workspace = true
+
+# -- fast log
+logforth = { workspace = true, optional = true }
+fastrace = { workspace = true, optional = true }
+
+# -- tokio tracing
+tracing = { workspace = true, optional = true }
+tracing-log = { workspace = true, optional = true }
+tracing-appender = { workspace = true, optional = true }
+tracing-subscriber = { workspace = true, optional = true }
+init-tracing-opentelemetry = { workspace = true, optional = true }
+tracing-opentelemetry-instrumentation-sdk = { workspace = true, optional = true }
+
+serde.workspace = true
+serde_json.workspace = true
+serde_with.workspace = true
+serde_repr.workspace = true
+utoipa = { workspace = true, optional = true }
+tonic = { workspace = true, optional = true }
+protobuf = { workspace = true, optional = true }
+hetusql = { workspace = true, optional = true }
+content_inspector = { workspace = true }
+mime_guess = { workspace = true }
+
+
+[dev-dependencies]
+dotenvy.workspace = true
+anyhow.workspace = true
+
+[build-dependencies]
+protobuf-codegen = { workspace = true }

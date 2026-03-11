@@ -7,7 +7,7 @@
 **Hetumind Web** 是一个现代化的 AI Agent 开发和工作流编排平台，提供直观的可视化界面来设计、构建和管理复杂的 AI 工作流。
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Version](https://img.shields.io/badge/Version-0.1.0-green.svg)](https://github.com/fusion-data/hetumind)
+[![Version](https://img.shields.io/badge/Version-0.1.0-green.svg)](https://github.com/hetu-data/hetumind)
 [![React](https://img.shields.io/badge/React-19.1.1-blue.svg)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9.2-blue.svg)](https://www.typescriptlang.org/)
 [![Ant Design](https://img.shields.io/badge/Ant%20Design-5.27.4-blue.svg)](https://ant.design/)
@@ -77,7 +77,7 @@
 
 ```bash
 # 克隆仓库
-git clone https://github.com/fusion-data/hetumind.git
+git clone https://github.com/hetu-data/hetumind.git
 cd hetumind/hetumind-web
 
 # 安装依赖
@@ -354,7 +354,7 @@ interface DataProcessing {
 #### 1. 克隆和安装
 
 ```bash
-git clone https://github.com/fusion-data/hetumind.git
+git clone https://github.com/hetu-data/hetumind.git
 cd hetumind/hetumind-web
 pnpm install
 ```
@@ -1078,10 +1078,10 @@ Closes #123
 
 ## 📞 联系我们
 
-- **项目主页**: https://github.com/fusion-data/hetumind
+- **项目主页**: https://github.com/hetu-data/hetumind
 - **文档网站**: https://docs.hetumind.com
-- **问题反馈**: https://github.com/fusion-data/hetumind/issues
-- **讨论区**: https://github.com/fusion-data/hetumind/discussions
+- **问题反馈**: https://github.com/hetu-data/hetumind/issues
+- **讨论区**: https://github.com/hetu-data/hetumind/discussions
 
 ---
 

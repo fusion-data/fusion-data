@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use ultimates::common::helper::{default_bool_true, default_u32_1};
+use hetus::common::helper::{default_bool_true, default_u32_1};
 
 use super::{NodeConnectionKind, NodeName};
 

@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use ultimates::common::helper::{default_bool_true, default_usize_0, is_true};
+use hetus::common::helper::{default_bool_true, default_usize_0, is_true};
 
 use super::NodeName;
 

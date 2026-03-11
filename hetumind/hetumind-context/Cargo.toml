@@ -13,13 +13,13 @@ publish = false
 workspace = true
 
 [dependencies]
-ultimates = { workspace = true, features = ["with-web"] }
+hetus = { workspace = true, features = ["with-web"] }
 hetumind-core = { workspace = true, features = ["with-db"] }
 tokio = { workspace = true }
 chrono = { workspace = true }
 log = { workspace = true }
 thiserror = { workspace = true }
-ultimatesql = { workspace = true }
+hetusql = { workspace = true }
 http = { workspace = true }
 axum = { workspace = true }
 sqlx = { workspace = true }

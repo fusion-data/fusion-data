@@ -38,7 +38,7 @@ hetuflow-sdk = { version = "0.1.0", features = ["with-wasm"] }
 
 ```rust
 use hetuflow_sdk::HetuflowClient;
-use ultimates::common::page::Page;
+use hetus::common::page::Page;
 use hetuflow_core::models::{JobForCreate, TaskConfig};
 use hetuflow_core::types::JobStatus;
 
@@ -155,7 +155,7 @@ All list operations use a consistent query pattern:
 
 ```rust
 use hetuflow_core::models::AgentForQuery;
-use ultimates::common::page::Page;
+use hetus::common::page::Page;
 
 // Create query with filtering and pagination
 let mut query = AgentForQuery::default();
@@ -204,7 +204,7 @@ See the `examples/` directory for complete examples:
 use hetuflow_sdk::HetuflowClient;
 use hetuflow_core::models::{AgentForQuery, TaskForQuery};
 use hetuflow_core::types::TaskStatus;
-use ultimates::common::page::Page;
+use hetus::common::page::Page;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -263,7 +263,7 @@ The SDK provides comprehensive error handling:
 
 ```rust
 use hetuflow_core::models::AgentForQuery;
-use ultimates::common::page::Page;
+use hetus::common::page::Page;
 
 // Query specific agent
 let mut query = AgentForQuery::default();
@@ -293,7 +293,7 @@ match client.agents().query(query).await {
 
 ## Data Models
 
-The SDK uses data models from `hetuflow-core` and pagination types from `fusionsql_core`:
+The SDK uses data models from `hetuflow-core` and pagination types from `hetusql_core`:
 
 ### Models (from `hetuflow_core`):
 
@@ -310,7 +310,7 @@ The SDK uses data models from `hetuflow-core` and pagination types from `fusions
 - `ExecuteCommand`, `TaskConfig`, `AgentCapabilities`
 - And many more...
 
-### Pagination (from `fusionsql_core`):
+### Pagination (from `hetusql_core`):
 
 - `PageResult<T>` - Paginated response with `{ page: Paged, result: Vec<T> }`
 - `Page` - Pagination query with `{ page, limit, offset, order_bys }`
@@ -322,7 +322,7 @@ The SDK uses data models from `hetuflow-core` and pagination types from `fusions
 use hetuflow_sdk::HetuflowClient;
 use hetuflow_core::models::{AgentForQuery, JobForCreate, TaskConfig};
 use hetuflow_core::types::{JobStatus, TaskStatus};
-use ultimates::common::page::Page;
+use hetus::common::page::Page;
 
 // Query with pagination
 let mut query = AgentForQuery::default();

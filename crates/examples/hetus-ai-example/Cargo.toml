@@ -1,0 +1,71 @@
+[package]
+name = "hetus-ai-example"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = true
+
+[[bin]]
+name = "simple-example"
+path = "src/simple_example.rs"
+
+[[bin]]
+name = "complex-example"
+path = "src/complex_example.rs"
+
+[[bin]]
+name = "fanout-basic"
+path = "src/fanout_basic.rs"
+
+[[bin]]
+name = "recommendation-flow"
+path = "src/recommendation_flow.rs"
+
+[[bin]]
+name = "tencent-map"
+path = "src/tencent-map.rs"
+
+[[bin]]
+name = "terminal-client"
+path = "src/terminal_client.rs"
+
+[[bin]]
+name = "example-openai-compat"
+path = "src/example-openai_compatible.rs"
+
+[[bin]]
+name = "example-gen-image"
+path = "src/example-gen_image.rs"
+
+[[bin]]
+name = "image-edit-demo"
+path = "src/image_edit_demo.rs"
+
+[[bin]]
+name = "example-vec-to-image"
+path = "src/example-vec-to-image.rs"
+
+[[bin]]
+name = "example-b64-json-to-image"
+path = "src/example-b64-json-to-image.rs"
+
+[dependencies]
+hetus = { workspace = true, features = ["with-ai", "with-db", "with-logforth"] }
+rig-core = { workspace = true }
+rmcp = { workspace = true }
+tokio = { workspace = true, features = ["full"] }
+dotenvy = { workspace = true }
+serde_json = { workspace = true }
+reqwest = { workspace = true }
+async-trait = { workspace = true }
+clap = { workspace = true }
+logforth = { workspace = true }
+sqlx = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+uuid = { workspace = true }
+serde = { workspace = true }

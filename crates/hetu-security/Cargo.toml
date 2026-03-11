@@ -1,0 +1,35 @@
+[package]
+name = "hetu-security"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+publish = true
+
+[lints]
+workspace = true
+
+[features]
+default = ["hetu-common/with-uuid"]
+with-jwt = ["josekit"]
+with-oauth = ["with-jwt", "dep:oauth2"]
+with-openid = ["with-jwt", "dep:openidconnect"]
+
+[dependencies]
+hetu-common = { workspace = true }
+hetu-core = { workspace = true }
+url = { workspace = true }
+tokio = { workspace = true }
+josekit = { workspace = true, optional = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+oauth2 = { workspace = true, optional = true }
+openidconnect = { workspace = true, optional = true }
+reqwest = { workspace = true }
+
+[dev-dependencies]
+dotenvy = { workspace = true }

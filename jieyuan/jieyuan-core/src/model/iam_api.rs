@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
-use ultimates::common::ctx::Ctx;
+use hetus::common::ctx::Ctx;
 
 use crate::model::{CtxExt, DecisionEffect};
 

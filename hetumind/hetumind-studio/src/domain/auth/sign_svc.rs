@@ -3,16 +3,16 @@ use hetumind_context::utils::{make_token, verify_token};
 use hetumind_core::credential::TokenType;
 use http::request::Parts;
 use log::info;
-use ultimates::common::time::now_utc;
-use ultimates::core::{DataError, application::Application};
-use ultimates::web::WebError;
+use hetus::common::time::now_utc;
+use hetus::core::{DataError, application::Application};
+use hetus::web::WebError;
 
 use super::{InvalidAuthTokenBmc, RefreshTokenRequest, RefreshTokenResponse, SignoutRequest};
 use crate::domain::user::{UserBmc, UserStatus};
 
 #[derive(Clone)]
 pub struct SignSvc {
-  mm: ultimatesql::ModelManager,
+  mm: hetusql::ModelManager,
   application: Application,
 }
 
@@ -30,7 +30,7 @@ impl SignSvc {
   /// 刷新访问令牌
   pub async fn refresh_token(&self, refresh_req: RefreshTokenRequest) -> Result<RefreshTokenResponse, DataError> {
     // 验证刷新令牌
-    let payload = verify_token(&refresh_req.refresh_token, self.application.ultimate_setting().security().pwd())?;
+    let payload = verify_token(&refresh_req.refresh_token, self.application.hetu_setting().security().pwd())?;
     let user_id = payload
       .get_subject()
       .ok_or_else(|| DataError::unauthorized("Invalid refresh token: missing user id"))?;
@@ -49,8 +49,8 @@ impl SignSvc {
     }
 
     // 生成新的访问令牌
-    let access_token = make_token(user.id.to_string(), self.application.ultimate_setting().security().pwd())?;
-    let expires_in = self.application.ultimate_setting().security().pwd().expires_in();
+    let access_token = make_token(user.id.to_string(), self.application.hetu_setting().security().pwd())?;
+    let expires_in = self.application.hetu_setting().security().pwd().expires_in();
 
     Ok(RefreshTokenResponse { access_token, token_type: TokenType::Bearer, expires_in })
   }
@@ -61,12 +61,12 @@ impl SignSvc {
 
     if !token_to_invalidate.is_empty() {
       // 将指定的令牌加入黑名单
-      if let Ok(payload) = verify_token(&token_to_invalidate, self.application.ultimate_setting().security().pwd()) {
+      if let Ok(payload) = verify_token(&token_to_invalidate, self.application.hetu_setting().security().pwd()) {
         let exp_timestamp = payload.get_exp().unwrap_or_else(|| {
           // 如果没有过期时间，设置24小时后过期
           (now_utc().timestamp() + 24 * 60 * 60) as i64
         });
-        let expires_at = ultimates::common::time::datetime_from_millis(exp_timestamp * 1000);
+        let expires_at = hetus::common::time::datetime_from_millis(exp_timestamp * 1000);
 
         InvalidAuthTokenBmc::add_token(&self.mm, &token_to_invalidate, expires_at).await?;
         info!("Token added to blacklist: {}", &token_to_invalidate[..8.min(token_to_invalidate.len())]);

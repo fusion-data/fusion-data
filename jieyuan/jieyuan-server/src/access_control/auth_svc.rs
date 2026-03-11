@@ -1,6 +1,6 @@
 use axum::extract::FromRequestParts;
-use ultimates::core::{DataError, Result, application::Application, security::pwd::verify_pwd};
-use ultimates::web::WebError;
+use hetus::core::{DataError, Result, application::Application, security::pwd::verify_pwd};
+use hetus::web::WebError;
 
 use jieyuan_core::model::{
   RefreshTokenReq, SigninRequest, SigninResponse, SignupReq, TenantUserStatus, TokenType, UserFilter, UserStatus,
@@ -82,11 +82,11 @@ impl AuthSvc {
     // 生成访问令牌
     let token = if let Some(tenant_id) = final_tenant_id {
       // 如果有租户ID，生成包含租户信息的令牌
-      let config = Application::global().ultimate_setting();
+      let config = Application::global().hetu_setting();
       make_token_with_tenant(config.security(), user.id, tenant_id, 0)?
     } else {
       // 生成基本令牌
-      let config = Application::global().ultimate_setting();
+      let config = Application::global().hetu_setting();
       make_token(config.security(), user.id)?
     };
 
@@ -102,7 +102,7 @@ impl AuthSvc {
     let (user_id, tenant_id) = validate_token_with_tenant(&req.refresh_token)?;
 
     // 获取用户信息
-    let user_filter = UserFilter { id: Some(ultimatesql::filter::OpValInt64::eq(user_id)), ..Default::default() };
+    let user_filter = UserFilter { id: Some(hetusql::filter::OpValInt64::eq(user_id)), ..Default::default() };
 
     let (user, _credential) = self.user_svc.get_fetch_credential(user_filter).await?;
 
@@ -123,7 +123,7 @@ impl AuthSvc {
     }
 
     // 生成新的访问令牌（包含租户信息）
-    let config = Application::global().ultimate_setting();
+    let config = Application::global().hetu_setting();
     let token = make_token_with_tenant(config.security(), user.id, tenant_id, 0)?;
 
     Ok(SigninResponse { token, token_type: TokenType::Bearer })
@@ -205,14 +205,14 @@ impl AuthSvc {
 }
 
 /// 从请求中提取认证上下文的服务实现
-impl FromRequestParts<ultimates::core::application::Application> for AuthSvc {
+impl FromRequestParts<hetus::core::application::Application> for AuthSvc {
   type Rejection = WebError;
 
   async fn from_request_parts(
     _parts: &mut axum::http::request::Parts,
-    state: &ultimates::core::application::Application,
+    state: &hetus::core::application::Application,
   ) -> core::result::Result<Self, Self::Rejection> {
-    let mm = state.get_component::<ultimatesql::ModelManager>().unwrap();
+    let mm = state.get_component::<hetusql::ModelManager>().unwrap();
     let user_svc = UserSvc::new(mm);
     Ok(AuthSvc::new(user_svc))
   }

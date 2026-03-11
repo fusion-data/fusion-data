@@ -1,0 +1,37 @@
+[package]
+name = "hetu-db"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = true
+
+[lints]
+workspace = true
+
+[features]
+with-postgres = ["hetusql/with-postgres"]
+with-sqlite = ["hetusql/with-sqlite"]
+with-uuid = ["dep:uuid", "hetusql/with-uuid"]
+
+[dependencies]
+hetu-common.workspace = true
+hetu-core = { workspace = true, features = ["hetusql"] }
+hetusql = { workspace = true }
+serde.workspace = true
+serde_json.workspace = true
+log.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+uuid = { workspace = true, optional = true }
+config = { workspace = true }
+sqlx.workspace = true
+sea-query.workspace = true
+sea-query-binder.workspace = true
+tonic = { workspace = true, optional = true }
+
+[dev-dependencies]
+anyhow.workspace = true
+logforth.workspace = true

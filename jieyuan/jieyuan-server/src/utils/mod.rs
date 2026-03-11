@@ -1,8 +1,8 @@
 use axum::http::request::Parts;
-use ultimates::common::ctx::Ctx;
-use ultimates::core::application::Application;
-use ultimates::web::WebError;
-use ultimatesql::ModelManager;
+use hetus::common::ctx::Ctx;
+use hetus::core::application::Application;
+use hetus::web::WebError;
+use hetusql::ModelManager;
 
 pub fn model_manager_from_parts(parts: &Parts, app: &Application) -> Result<ModelManager, WebError> {
   let ctx: &Ctx = parts.extensions.get().ok_or_else(|| WebError::new_with_code(401, "Unauthorized"))?;

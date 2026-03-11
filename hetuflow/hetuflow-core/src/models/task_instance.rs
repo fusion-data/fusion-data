@@ -1,7 +1,7 @@
 use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
-use ultimatesql_core::page::Page;
-use ultimatesql_core::{
+use hetusql_core::page::Page;
+use hetusql_core::{
   field::FieldMask,
   filter::{OpValDateTime, OpValInt32, OpValString, OpValUuid},
 };
@@ -13,7 +13,7 @@ use super::TaskMetrics;
 
 /// SchedTaskInstance 数据模型
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(ultimatesql::Fields, sqlx::FromRow))]
+#[cfg_attr(feature = "with-db", derive(hetusql::Fields, sqlx::FromRow))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct SchedTaskInstance {
   pub id: Uuid,
@@ -33,7 +33,7 @@ pub struct SchedTaskInstance {
 
 /// TaskInstance 创建模型
 #[derive(Debug, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(ultimatesql::Fields))]
+#[cfg_attr(feature = "with-db", derive(hetusql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct TaskInstanceForCreate {
   pub id: Option<Uuid>,
@@ -46,7 +46,7 @@ pub struct TaskInstanceForCreate {
 
 /// TaskInstance 更新模型
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(ultimatesql::Fields))]
+#[cfg_attr(feature = "with-db", derive(hetusql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct TaskInstanceForUpdate {
   pub agent_id: Option<String>,
@@ -70,7 +70,7 @@ pub struct TaskInstanceForQuery {
 
 /// TaskInstance 过滤器
 #[derive(Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(ultimatesql::FilterNodes))]
+#[cfg_attr(feature = "with-db", derive(hetusql::FilterNodes))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct TaskInstanceFilter {
   pub id: Option<OpValUuid>,

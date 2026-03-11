@@ -22,12 +22,8 @@ hetumind-core = { workspace = true, features = ["with-db"] }
 hetumind-context = { workspace = true }
 hetumind-nodes = { workspace = true }
 
-ultimates = { workspace = true, features = [
-  "with-tracing",
-  "with-web",
-  "with-db",
-] }
-ultimate-core-macros = { workspace = true }
+hetus = { workspace = true, features = ["with-tracing", "with-web", "with-db"] }
+hetu-core-macros = { workspace = true }
 jieyuan-core = { workspace = true, features = ["with-web"] }
 
 async-trait = { workspace = true }
@@ -49,7 +45,7 @@ opendal = { workspace = true, features = [
 ] }
 
 # -- db
-ultimatesql = { workspace = true, features = [
+hetusql = { workspace = true, features = [
   "with-postgres",
   "with-uuid",
   "with-rust_decimal",

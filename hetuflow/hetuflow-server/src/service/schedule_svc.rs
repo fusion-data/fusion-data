@@ -1,5 +1,5 @@
-use ultimates::core::DataError;
-use ultimatesql::{ModelManager, page::PageResult};
+use hetus::core::DataError;
+use hetusql::{ModelManager, page::PageResult};
 use uuid::Uuid;
 
 use hetuflow_core::models::{SchedSchedule, ScheduleForCreate, ScheduleForQuery, ScheduleForUpdate};

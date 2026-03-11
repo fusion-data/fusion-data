@@ -2,9 +2,9 @@
 //! `cargo test -p hetumind --test api_workflows_test -- --nocapture`
 
 use hetumind_core::workflow::{Workflow, WorkflowForUpdate, WorkflowStatus};
+use hetus::common::model::IdUuidResult;
 use http::StatusCode;
 use serde_json::json;
-use ultimates::common::model::IdUuidResult;
 
 mod common;
 

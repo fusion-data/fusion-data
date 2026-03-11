@@ -3,8 +3,8 @@ use std::{path::PathBuf, time::Duration};
 use duration_str::deserialize_duration;
 use hetuflow_core::utils::setting::write_app_setting;
 use serde::{Deserialize, Serialize};
-use ultimates::common::env::get_env;
-use ultimates::core::{DataError, configuration::UltimateConfigRegistry};
+use hetus::common::env::get_env;
+use hetus::core::{DataError, configuration::HetuConfigRegistry};
 use uuid::Uuid;
 
 use crate::service::JweConfig;
@@ -77,7 +77,7 @@ pub struct TaskLogConfig {
 const KEY_PATH_SERVER_ID: &str = "hetuflow.server.server_id";
 
 impl HetuflowSetting {
-  pub fn load(config_registry: &UltimateConfigRegistry) -> Result<Self, DataError> {
+  pub fn load(config_registry: &HetuConfigRegistry) -> Result<Self, DataError> {
     let config = config_registry.config();
     // Check if server_id not exists or invalid uuid in config
     if let Err(_e) = config.get::<String>(KEY_PATH_SERVER_ID) {

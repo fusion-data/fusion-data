@@ -1,9 +1,7 @@
 [project]
-name = "fusion-data"
+name = "hetu-data"
 version = "0.1.0"
 description = "Fusion Data"
 readme = "README.md"
 requires-python = ">=3.14"
-dependencies = [
-    "pillow>=12.0.0",
-]
+dependencies = ["pillow>=12.0.0"]

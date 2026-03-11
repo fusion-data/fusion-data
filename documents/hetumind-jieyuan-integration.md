@@ -449,7 +449,7 @@ pub async fn init_web(app: Application) -> Result<(), DataError> {
 ```rust
 // 文件：jieyuan/jieyuan-core/src/web/middleware/mixed_authz.rs
 use axum::{extract::Request, middleware::Next, response::Response};
-use ultimate_core::application::Application;
+use hetu_core::application::Application;
 
 pub async fn mixed_authz_middleware(
     State(app): State<Application>,

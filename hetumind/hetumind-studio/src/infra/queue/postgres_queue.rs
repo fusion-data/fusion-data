@@ -3,8 +3,8 @@ use std::time::Duration;
 use async_trait::async_trait;
 use hetumind_core::task::{QueueError, QueueStats, QueueTask, TaskQueue, TaskResult, TaskStatus};
 use serde::Deserialize;
-use ultimatesql::ModelManager;
-use ultimatesql::store::DbxPostgres;
+use hetusql::ModelManager;
+use hetusql::store::DbxPostgres;
 use uuid::Uuid;
 
 use super::TaskQueueEntity;

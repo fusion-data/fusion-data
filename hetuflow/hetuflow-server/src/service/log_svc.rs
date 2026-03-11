@@ -9,9 +9,9 @@ use mea::{mutex::Mutex, shutdown::ShutdownRecv};
 use tokio::fs::{File, OpenOptions};
 use tokio::io::{AsyncWriteExt, BufWriter};
 use tokio::time::interval;
-use ultimates::common::time::OffsetDateTime;
-use ultimates::common::time::now_epoch_millis;
-use ultimates::core::DataError;
+use hetus::common::time::OffsetDateTime;
+use hetus::common::time::now_epoch_millis;
+use hetus::core::DataError;
 use uuid::Uuid;
 
 use crate::connection::ConnectionManager;

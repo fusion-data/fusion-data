@@ -207,7 +207,7 @@ impl ApiClient {
 
 #[cfg(test)]
 mod tests {
-  use ultimates::common::ahash::HashMap;
+  use hetus::common::ahash::HashMap;
 
   use crate::config::{ApiConfig, CliConfig};
 

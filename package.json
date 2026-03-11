@@ -1,5 +1,5 @@
 {
-  "name": "fusion-data",
+  "name": "hetu-data",
   "version": "1.0.0",
   "description": "Fusion Data project with pnpm workspaces",
   "private": true,

@@ -1,7 +1,7 @@
 use hetuflow_core::protocol::ProcessInfo;
 use mea::rwlock::RwLock;
 use std::{ops::Deref, sync::Arc};
-use ultimates::common::ahash::HashMap;
+use hetus::common::ahash::HashMap;
 use utils::*;
 use uuid::Uuid;
 

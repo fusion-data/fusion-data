@@ -1,4 +1,4 @@
-import { PageResult } from '@fusion-data/fusionsql';
+import { PageResult } from '@hetu-data/hetusql';
 import { HetumindClient } from '../utils/client.js';
 import {
   WorkflowForCreate,

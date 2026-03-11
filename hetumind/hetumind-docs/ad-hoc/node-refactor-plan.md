@@ -445,7 +445,7 @@
 - 后端实现建议：
   - InMemoryMemoryService（本地内存 + TTL）
   - RedisMemoryService（基于 Redis/Valkey，键格式：{tenant_id}:{workflow_id}:{session_id}）
-- Application 注入：通过 ultimate_core::application::Application 注册为全局组件，并在 NodeExecutionContext 中以引用方式访问。
+- Application 注入：通过 hetu_core::application::Application 注册为全局组件，并在 NodeExecutionContext 中以引用方式访问。
 
 2. EngineRequest/Response 统一模型
 
@@ -537,7 +537,7 @@
 
 - jsonschema crate：https://crates.io/crates/jsonschema
 - rig-core（DeepSeek 等模型接入）：参考 hetumind-nodes/src/llm/deepseek_node/
-- Application 组件系统：ultimate_core::application::Application
+- Application 组件系统：hetu_core::application::Application
 - connection_manager：hetumind-nodes/src/core/connection_manager.rs
 - 新增节点：MoonshotModel（hetumind_nodes::MoonshotModel）与 OpenaiModel（hetumind_nodes::OpenaiModel）已注册，沿用统一 helpers 与输出规范。
 

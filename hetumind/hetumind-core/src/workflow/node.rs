@@ -266,7 +266,7 @@ impl NodeDescription {
 }
 
 #[cfg(feature = "with-db")]
-ultimatesql::generate_string_newtype_to_sea_query_value!(Struct: NodeName, Struct: NodeType);
+hetusql::generate_string_newtype_to_sea_query_value!(Struct: NodeName, Struct: NodeType);
 
 pub trait Node {
   fn default_version(&self) -> &Version;

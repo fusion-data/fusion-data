@@ -22,8 +22,8 @@
 ### 组件依赖关系
 
 ```rust
-use ultimate_core::DataError;
-use fusionsql::ModelManager;
+use hetu_core::DataError;
+use hetusql::ModelManager;
 use std::sync::Arc;
 use tokio::sync::{mpsc, RwLock, Mutex};
 use std::collections::HashMap;
@@ -40,8 +40,8 @@ use std::collections::HashMap;
 // src/gateway/gateway_svc.rs
 use tokio::sync::{mpsc, Mutex};
 use tracing::{info, error};
-use ultimate_core::DataError;
-use fusionsql::ModelManager;
+use hetu_core::DataError;
+use hetusql::ModelManager;
 use std::sync::Arc;
 use super::{ConnectionManager, MessageHandler};
 
@@ -172,8 +172,8 @@ Agent 的连接、断开和心跳等事件将直接通过日志系统记录，�
 ```rust
 // 引用在 server-types-entities.md 中定义的 SchedAgent 和 AgentBmc
 use crate::bmc::{AgentBmc, SchedAgent, AgentForUpdate, AgentFilter};
-use ultimate_core::DataError;
-use fusionsql::{ModelManager, SqlError};
+use hetu_core::DataError;
+use hetusql::{ModelManager, SqlError};
 impl AgentBmc {
   /// 查找在线的 Agent
   pub async fn find_online_agents(mm: &ModelManager) -> Result<Vec<SchedAgent>, SqlError> {
@@ -267,8 +267,8 @@ graph TD
 - [ ] TODO: 身份验证和授权 ：验证 Agent 的身份和权限
 
 ```rust
-use ultimate_core::DataError;
-use fusionsql::page::{PageResult, Page};
+use hetu_core::DataError;
+use hetusql::page::{PageResult, Page};
 
 pub struct ConnectionManager {
   mm: ModelManager,
@@ -423,7 +423,7 @@ use hetuflow_core::protocol::{
   WebSocketMessage, MessageKind, AgentRegisterRequest, HeartbeatRequest,
   TaskInstanceUpdate, AgentCapabilities, AgentMetrics
 };
-use ultimate_core::DataError;
+use hetu_core::DataError;
 
 pub struct MessageHandler {
   connection_manager: Arc<ConnectionManager>,
@@ -734,7 +734,7 @@ pub enum GatewayError {
   Serialization(#[from] serde_json::Error),
 
   #[error("Database error: {0}")]
-  Database(#[from]ultimate_core::DataError),
+  Database(#[from]hetu_core::DataError),
 
   #[error("Connection not found: {agent_id}")]
   ConnectionNotFound { agent_id: String },
@@ -793,6 +793,6 @@ API 实现设计详见： [server-gateway-api](server-gateway-api.md)
 4. **高性能架构**：异步 I/O、连接复用、消息压缩等优化措施
 5. **可靠性保障**：自动重连、容错机制、健康检查等功能
 6. **安全防护**：多层次的身份验证和权限控制机制
-7. **错误处理**：使用 `ultimate_core::DataError` 进行统一的数据库错误处理
+7. **错误处理**：使用 `hetu_core::DataError` 进行统一的数据库错误处理
 
 这种设计为整个分布式任务调度系统提供了稳定、高效的通信基础设施。

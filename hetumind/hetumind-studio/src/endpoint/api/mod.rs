@@ -1,5 +1,5 @@
 use axum::Router;
-use ultimates::core::application::Application;
+use hetus::core::application::Application;
 
 pub mod auth;
 pub mod v1;

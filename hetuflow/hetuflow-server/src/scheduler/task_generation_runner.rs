@@ -3,9 +3,9 @@ use std::sync::Arc;
 use log::{error, info};
 use mea::shutdown::ShutdownRecv;
 use tokio::time::interval;
-use ultimates::common::time::now_offset;
-use ultimates::core::{DataError, concurrent::ServiceTask};
-use ultimatesql::ModelManager;
+use hetus::common::time::now_offset;
+use hetus::core::{DataError, concurrent::ServiceTask};
+use hetusql::ModelManager;
 
 use crate::setting::HetuflowSetting;
 

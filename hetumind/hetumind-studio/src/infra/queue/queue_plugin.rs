@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use ultimates::core::{application::ApplicationBuilder, configuration::ConfigRegistry, plugin::Plugin};
+use hetus::core::{application::ApplicationBuilder, configuration::ConfigRegistry, plugin::Plugin};
 
 use crate::infra::queue::{QueueConfig, QueueProvider};
 
@@ -16,6 +16,6 @@ impl Plugin for QueueProviderPlugin {
   }
 
   fn dependencies(&self) -> Vec<&str> {
-    vec![std::any::type_name::<ultimates::db::DbPlugin>()]
+    vec![std::any::type_name::<hetus::db::DbPlugin>()]
   }
 }

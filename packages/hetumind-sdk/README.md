@@ -5,21 +5,21 @@ TypeScript SDK for the Hetumind AI Agent/Flow platform, based on the actual back
 ## Installation
 
 ```bash
-npm install @fusion-data/hetumind-sdk
+npm install @hetu-data/hetumind-sdk
 # or
-yarn add @fusion-data/hetumind-sdk
+yarn add @hetu-data/hetumind-sdk
 # or
-pnpm add @fusion-data/hetumind-sdk
+pnpm add @hetu-data/hetumind-sdk
 ```
 
 ## Usage
 
 ```typescript
-import { HetumindSDK } from '@fusion-data/hetumind-sdk';
+import { HetumindSDK } from '@hetu-data/hetumind-sdk';
 
 const sdk = new HetumindSDK({
   baseURL: 'http://localhost:3000',
-  token: 'your-api-token'
+  token: 'your-api-token',
 });
 
 // Set authentication token
@@ -28,18 +28,18 @@ sdk.setToken('your-jwt-token');
 // Workflows
 const workflows = await sdk.workflows.queryWorkflows({
   options: { page: 1, limit: 10 },
-  filter: { status: { eq: 100 } } // Active workflows
+  filter: { status: { eq: 100 } }, // Active workflows
 });
 
 const workflow = await sdk.workflows.getWorkflow('workflow-id');
 const result = await sdk.workflows.executeWorkflow('workflow-id', {
-  input_data: { key: 'value' }
+  input_data: { key: 'value' },
 });
 
 // Executions
 const executions = await sdk.executions.queryExecutions({
   options: { page: 1, limit: 20 },
-  filter: { workflow_id: { eq: 'workflow-id' } }
+  filter: { workflow_id: { eq: 'workflow-id' } },
 });
 
 const execution = await sdk.executions.getExecution(result.execution_id);
@@ -49,19 +49,19 @@ const status = await sdk.executions.getExecutionStatus(result.execution_id);
 // Credentials
 const credentials = await sdk.credentials.queryCredentials({
   options: { page: 1, limit: 10 },
-  filters: []
+  filters: [],
 });
 
 const credential = await sdk.credentials.getCredential('credential-id');
 const verification = await sdk.credentials.verifyCredential({
   data: { apiKey: 'test-key' },
-  kind: 'api_key'
+  kind: 'api_key',
 });
 
 // Users
 const users = await sdk.users.queryUsers({
   options: { page: 1, limit: 10 },
-  filters: [{ is_active: { eq: true } }]
+  filters: [{ is_active: { eq: true } }],
 });
 
 const user = await sdk.users.getUserById(123);
@@ -96,10 +96,10 @@ new HetumindSDK(config: HetumindClientConfig)
 
 ```typescript
 interface HetumindClientConfig {
-  baseURL: string;           // Hetumind API base URL
-  timeout?: number;          // Request timeout (default: 30000ms)
-  headers?: Record<string, string>;  // Custom headers
-  token?: string;            // Authentication token
+  baseURL: string; // Hetumind API base URL
+  timeout?: number; // Request timeout (default: 30000ms)
+  headers?: Record<string, string>; // Custom headers
+  token?: string; // Authentication token
 }
 ```
 
@@ -172,8 +172,8 @@ const executions = await sdk.executions.queryExecutions({
   options: { page: 1, limit: 20 },
   filter: {
     workflow_id: { eq: 'workflow-id' },
-    status: { eq: 100 } // Success
-  }
+    status: { eq: 100 }, // Success
+  },
 });
 
 // Get execution details
@@ -204,8 +204,8 @@ const credentials = await sdk.credentials.queryCredentials({
   options: { page: 1, limit: 10 },
   filters: [
     { kind: { eq: 1 } }, // Basic auth
-    { is_managed: { eq: false } }
-  ]
+    { is_managed: { eq: false } },
+  ],
 });
 
 // Get credential with decrypted data
@@ -216,13 +216,13 @@ const newCredential = await sdk.credentials.createCredential({
   namespace_id: 'namespace-123',
   name: 'My API Key',
   data: { apiKey: 'secret-key' },
-  kind: 'api_key'
+  kind: 'api_key',
 });
 
 // Update credential
 await sdk.credentials.updateCredential('credential-id', {
   name: 'Updated API Key',
-  data: { apiKey: 'new-secret-key' }
+  data: { apiKey: 'new-secret-key' },
 });
 
 // Delete credential
@@ -231,7 +231,7 @@ await sdk.credentials.deleteCredential('credential-id');
 // Verify credential (without saving)
 const verification = await sdk.credentials.verifyCredential({
   data: { apiKey: 'test-key' },
-  kind: 'api_key'
+  kind: 'api_key',
 });
 
 // Verify stored credential
@@ -247,10 +247,7 @@ const references = await sdk.credentials.getCredentialReferences('credential-id'
 // Query users
 const users = await sdk.users.queryUsers({
   options: { page: 1, limit: 10 },
-  filters: [
-    { is_active: { eq: true } },
-    { is_admin: { eq: false } }
-  ]
+  filters: [{ is_active: { eq: true } }, { is_admin: { eq: false } }],
 });
 
 // Get user by ID
@@ -259,13 +256,13 @@ const user = await sdk.users.getUserById(123);
 // Update user
 await sdk.users.updateUserById(123, {
   display_name: 'John Doe',
-  email: 'john@example.com'
+  email: 'john@example.com',
 });
 
 // Update user password
 await sdk.users.updateUserPassword(123, {
   new_password: 'new-secure-password',
-  old_password: 'old-password' // optional
+  old_password: 'old-password', // optional
 });
 ```
 
@@ -274,7 +271,7 @@ await sdk.users.updateUserPassword(123, {
 The SDK provides comprehensive error handling with typed errors:
 
 ```typescript
-import { HetumindError } from '@fusion-data/hetumind-sdk';
+import { HetumindError } from '@hetu-data/hetumind-sdk';
 
 try {
   await sdk.workflows.getWorkflow('invalid-id');

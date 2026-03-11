@@ -1,9 +1,9 @@
-use ultimates::core::{
+use hetus::core::{
   DataError,
   application::{Application, ApplicationBuilder},
   tracing::TracingPlugin,
 };
-use ultimates::db::DbPlugin;
+use hetus::db::DbPlugin;
 
 use crate::{
   domain::user::UserSyncSvc,

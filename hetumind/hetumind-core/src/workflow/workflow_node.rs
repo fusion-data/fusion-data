@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use serde_repr::{Deserialize_repr, Serialize_repr};
-use ultimates::common::ahash::HashMap;
+use hetus::common::ahash::HashMap;
 
 use crate::credential::CredentialInfo;
 

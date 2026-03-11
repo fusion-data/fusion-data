@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use hetumind_core::binary_storage::BinaryStorageConfig;
-use ultimates::core::{application::ApplicationBuilder, configuration::ConfigRegistry, plugin::Plugin};
+use hetus::core::{application::ApplicationBuilder, configuration::ConfigRegistry, plugin::Plugin};
 
 use crate::binary_storage::BinaryDataManagerFactory;
 

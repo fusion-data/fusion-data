@@ -1,32 +1,32 @@
-[ultimate.app]
+[hetu.app]
 run_mode = "DEV"
-name = "ultimate-iam"
+name = "hetu-iam"
 
-[ultimate.security.pwd]
+[hetu.security.pwd]
 expires_in = 604800
 default_pwd = "2025.Ultimate"
 
-[ultimate.web]
+[hetu.web]
 enable = true
 server_addr = "0.0.0.0:58000"
 
-[ultimate.log]
+[hetu.log]
 enable = true
 log_writers = ["stdout", "file"]
 with_span_events = []
 log_targets = [
-  "ultimate_db=debug",
-  "ultimate_common=debug",
-  "ultimate_web=debug",
+  "hetu_db=debug",
+  "hetu_common=debug",
+  "hetu_web=debug",
   "jieyuan=debug",
 ]
 
-[ultimate.log.otel]
+[hetu.log.otel]
 # enable = true
 exporter_otlp_endpoint = "http://localhost:4317"
 traces_sample = "always_on"
 
-[ultimate.db]
+[hetu.db]
 enable = true
 url = "postgres://fusiondata:2025.Fusiondata@localhost:5432/fusiondata"
 

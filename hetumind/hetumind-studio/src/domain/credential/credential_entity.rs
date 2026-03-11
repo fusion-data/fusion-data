@@ -2,8 +2,8 @@ use hetumind_core::{credential::CredentialId, workflow::CredentialKind};
 use sea_query::enum_def;
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
-use ultimates::common::time::OffsetDateTime;
-use ultimatesql::Fields;
+use hetus::common::time::OffsetDateTime;
+use hetusql::Fields;
 
 /// 凭证实体表
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow, Fields)]

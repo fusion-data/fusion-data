@@ -1,7 +1,7 @@
 use std::sync::OnceLock;
 
 use hetumind_core::workflow::{ExecutionFilter, ExecutionForUpdate};
-use ultimatesql::{
+use hetusql::{
   base::{BmcConfig, DbBmc},
   generate_pg_bmc_common, generate_pg_bmc_filter,
 };

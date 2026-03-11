@@ -5,9 +5,9 @@ use crate::{
   error::{SdkError, SdkResult},
   platform::Response,
 };
-use ultimates::common::model::IdStringResult;
-use ultimates::common::page::PageResult;
-use ultimatesql_core::filter::{OpValInt32, OpValString};
+use hetus::common::model::IdStringResult;
+use hetus::common::page::PageResult;
+use hetusql_core::filter::{OpValInt32, OpValString};
 use hetuflow_core::models::{AgentFilter, AgentForCreate, AgentForQuery, AgentForUpdate, SchedAgent};
 use hetuflow_core::types::AgentStatus;
 use serde::de::DeserializeOwned;

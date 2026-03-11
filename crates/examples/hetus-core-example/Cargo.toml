@@ -1,0 +1,36 @@
+[package]
+name = "hetus-core-example"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = true
+
+[[bin]]
+name = "example-config"
+path = "src/example-config.rs"
+
+[[bin]]
+name = "example-inject"
+path = "src/example-inject.rs"
+
+[[bin]]
+name = "example-macro"
+path = "src/example-macro.rs"
+
+[[bin]]
+name = "example-regex"
+path = "src/example-regex.rs"
+
+[[bin]]
+name = "log-demo"
+path = "src/log_demo.rs"
+
+[dependencies]
+hetus = { workspace = true, features = ["with-logforth"] }
+tokio = { workspace = true, features = ["full"] }
+regex = { workspace = true }
+inventory = { version = "0.3" }
+log = { workspace = true }

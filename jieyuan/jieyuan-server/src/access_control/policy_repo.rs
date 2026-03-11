@@ -1,6 +1,6 @@
 use jieyuan_core::model::{PolicyEngine, PolicyEntity, TABLE_POLICY, TABLE_POLICY_ATTACHMENT};
-use ultimates::core::Result;
-use ultimatesql::{ModelManager, SqlError};
+use hetus::core::Result;
+use hetusql::{ModelManager, SqlError};
 
 /// 策略仓库（基于 BMC 实现）
 #[derive(Clone)]

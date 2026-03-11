@@ -2,7 +2,7 @@ mod _helper;
 pub mod api;
 
 use hetuflow_core::models::{SchedTask, SchedTaskInstance};
-use ultimates::web::Router;
+use hetus::web::Router;
 use utoipa::OpenApi;
 use utoipa_axum::router::OpenApiRouter;
 use utoipa_swagger_ui::SwaggerUi;

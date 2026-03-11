@@ -1,7 +1,7 @@
-use ultimates::common::ctx::{Ctx, CtxPayload};
-use ultimates::common::time::now_offset;
-use ultimates::core::application::Application;
-use ultimates::core::{DataError, Result, configuration::SecuritySetting, security::SecurityUtils};
+use hetus::common::ctx::{Ctx, CtxPayload};
+use hetus::common::time::now_offset;
+use hetus::core::application::Application;
+use hetus::core::{DataError, Result, configuration::SecuritySetting, security::SecurityUtils};
 
 /// 生成基本访问令牌
 ///
@@ -72,7 +72,7 @@ pub async fn validate_token_seq_against_db(
   user_id: i64,
   tenant_id: i64,
   token_seq: i32,
-  mm: &ultimatesql::ModelManager,
+  mm: &hetusql::ModelManager,
 ) -> Result<()> {
   use crate::user::UserCredentialBmc;
 
@@ -100,7 +100,7 @@ pub async fn validate_token_seq_against_db(
 /// # Errors
 /// 如果令牌无效或解析失败
 pub fn validate_token(token: &str) -> Result<i64> {
-  let config = ultimates::core::application::Application::global().ultimate_setting();
+  let config = hetus::core::application::Application::global().hetu_setting();
   let (payload, _header) = SecurityUtils::decrypt_jwt(config.security().pwd(), token)
     .map_err(|_e| DataError::unauthorized("Invalid token"))?;
 
@@ -121,7 +121,7 @@ pub fn validate_token(token: &str) -> Result<i64> {
 /// # Errors
 /// 如果令牌无效或解析失败
 pub fn validate_token_with_tenant(token: &str) -> Result<(i64, i64)> {
-  let config = ultimates::core::application::Application::global().ultimate_setting();
+  let config = hetus::core::application::Application::global().hetu_setting();
   let (payload, _header) = SecurityUtils::decrypt_jwt(config.security().pwd(), token)
     .map_err(|_e| DataError::unauthorized("Invalid token"))?;
 
@@ -146,7 +146,7 @@ pub fn validate_token_with_tenant(token: &str) -> Result<(i64, i64)> {
 /// # Errors
 /// 如果令牌无效或解析失败
 pub fn validate_token_with_tenant_and_seq(token: &str) -> Result<(i64, i64, i32)> {
-  let config = ultimates::core::application::Application::global().ultimate_setting();
+  let config = hetus::core::application::Application::global().hetu_setting();
   let (payload, _header) = SecurityUtils::decrypt_jwt(config.security().pwd(), token)
     .map_err(|_e| DataError::unauthorized("Invalid token"))?;
 
@@ -175,9 +175,9 @@ pub fn validate_token_with_tenant_and_seq(token: &str) -> Result<(i64, i64, i32)
 /// 如果令牌缺失、无效或验证失败
 pub async fn extract_ctx_with_token_seq_validation(
   parts: &axum::http::request::Parts,
-  mm: &ultimatesql::ModelManager,
-) -> Result<ultimates::common::ctx::Ctx> {
-  let app_config = Application::global().ultimate_setting();
+  mm: &hetusql::ModelManager,
+) -> Result<hetus::common::ctx::Ctx> {
+  let app_config = Application::global().hetu_setting();
   let security_config = app_config.security();
 
   // 获取令牌

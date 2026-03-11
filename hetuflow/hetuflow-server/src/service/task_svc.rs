@@ -1,7 +1,7 @@
-use ultimates::core::DataError;
-use ultimatesql::ModelManager;
-use ultimatesql::field::FieldMask;
-use ultimatesql::filter::OpValUuid;
+use hetus::core::DataError;
+use hetusql::ModelManager;
+use hetusql::field::FieldMask;
+use hetusql::filter::OpValUuid;
 use uuid::Uuid;
 
 use hetuflow_core::models::{
@@ -9,7 +9,7 @@ use hetuflow_core::models::{
   TaskInstanceForCreate, TaskInstanceForQuery, TaskInstanceForUpdate,
 };
 use hetuflow_core::types::{ScheduleKind, TaskInstanceStatus, TaskStatus};
-use ultimatesql::page::PageResult;
+use hetusql::page::PageResult;
 
 use crate::infra::bmc::{JobBmc, ScheduleBmc, TaskBmc, TaskInstanceBmc};
 pub struct TaskSvc {

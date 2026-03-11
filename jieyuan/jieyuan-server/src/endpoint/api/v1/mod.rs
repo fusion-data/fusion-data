@@ -1,5 +1,5 @@
-use ultimates::core::application::Application;
-use ultimates::web::middleware::WebAuth;
+use hetus::core::application::Application;
+use hetus::web::middleware::WebAuth;
 use utoipa_axum::router::OpenApiRouter;
 
 mod iams;
