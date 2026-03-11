@@ -1,11 +1,11 @@
 #![doc = include_str!("../../DI.md")]
 mod error;
 
+#[cfg(feature = "with-macros")]
+pub use hetu_core_macros::Component;
 pub use inventory::submit;
 use log::debug;
 use std::{any::Any, collections::HashSet, ops::Deref, sync::Arc};
-#[cfg(feature = "with-macros")]
-pub use hetu_core_macros::Component;
 
 use crate::application::ApplicationBuilder;
 

@@ -4,6 +4,7 @@
 //! 采用 ECDH-ES 密钥协商 + A256GCM 内容加密算法
 
 use chrono::Utc;
+use hetus::core::DataError;
 use josekit::{
   jwe::{JweContext, JweHeader},
   jwk::{
@@ -13,7 +14,6 @@ use josekit::{
 };
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
-use hetus::core::DataError;
 use uuid::Uuid;
 
 /// JWE 配置结构

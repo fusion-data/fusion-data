@@ -1,7 +1,7 @@
-use log::info;
 use hetus::core::component::Component;
 use hetus::core::{application::Application, component::ComponentArc};
 use hetus::db::{DbPlugin, ModelManager};
+use log::info;
 
 #[derive(Clone, Component)]
 struct TestSvc {

@@ -58,7 +58,7 @@ impl Visitor<'_> for StrToApiValidEffect {
 mod tests {
   use hetu_common::env::set_env;
 
-  use crate::configuration::{UltimateSetting, load_config, model::KeyConf};
+  use crate::configuration::{HetuSetting, load_config, model::KeyConf};
 
   #[test]
   fn test_config_load() {
@@ -71,7 +71,7 @@ mod tests {
 
     let c = load_config().unwrap();
     println!("Config cache: {}", c.cache);
-    let qc: UltimateSetting = c.get("hetu").unwrap();
+    let qc: HetuSetting = c.get("hetu").unwrap();
 
     assert_eq!(qc.security().token().secret_key(), b"8462b1ec9af827ebed13926f8f1e5409774fa1a21a1c8f726a4a34cf7dcabaf2");
 

@@ -82,7 +82,7 @@ mod tests {
     assert!(definition.groups.contains(&NodeGroupKind::Transform));
     assert_eq!(&definition.display_name, "Simple Memory");
     assert_eq!(definition.inputs.len(), 1); // AiLM input
-    assert_eq!(definition.outputs.len(), 2); // AiMemory + Error output
+    assert_eq!(definition.outputs.len(), 1); // AiMemory output
     assert_eq!(definition.inputs[0].kind, NodeConnectionKind::AiLanguageModel);
     assert_eq!(definition.outputs[0].kind, NodeConnectionKind::AiMemory);
   }

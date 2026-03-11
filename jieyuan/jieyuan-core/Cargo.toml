@@ -15,14 +15,14 @@ workspace = true
 [features]
 with-openapi = [
   "dep:utoipa",
-  "hetus/with-openapi",
+  "hetus/openapi",
   "hetusql-core/with-openapi",
   "hetusql/with-openapi",
 ]
 with-db = ["dep:sqlx", "dep:hetusql", "dep:sea-query"]
 with-web = [
   "with-openapi",
-  "hetus/with-web",
+  "hetus/web",
   "dep:axum",
   "dep:tower-http",
   "dep:http",

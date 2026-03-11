@@ -10,6 +10,7 @@ pub(crate) mod ops;
 
 // -- Re-Exports
 pub use error::*;
+pub use hetusql_macros::FilterNodes;
 #[cfg(feature = "with-sea-query")]
 pub use into_sea::*;
 pub use nodes::group::*;
@@ -25,4 +26,3 @@ pub use ops::op_val_time::*;
 pub use ops::op_val_uuid::*;
 pub use ops::op_val_value::*;
 pub use ops::*;
-pub use hetusql_macros::FilterNodes;

@@ -1,5 +1,5 @@
-use sea_query::{Nullable, Value};
 use hetusql::postgres::PgRowType;
+use sea_query::{Nullable, Value};
 
 use crate::model::{
   Gender, Permission, PolicyEntity, RolePermission, RoleStatus, TenantStatus, User, UserCredential, UserRole,

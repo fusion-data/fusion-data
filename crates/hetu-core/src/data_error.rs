@@ -1,9 +1,9 @@
 use std::net::AddrParseError;
 
 use config::ConfigError;
+use hetu_common::ctx::CtxError;
 use serde::Serialize;
 use serde_json::json;
-use hetu_common::ctx::CtxError;
 
 use crate::{configuration::ConfigureError, security::Error as SecurityError};
 

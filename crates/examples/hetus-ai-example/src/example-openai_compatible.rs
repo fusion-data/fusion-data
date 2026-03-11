@@ -1,9 +1,9 @@
-use rig::completion::Completion;
 use hetus::ai::{
   AiError, DefaultProviders,
   client::{AgentConfigBuilder, ClientFactory},
   providers::openai_compatible::CompletionModel,
 };
+use rig::completion::Completion;
 
 /// 示例：使用 OpenAI 兼容 API 调用模型
 ///

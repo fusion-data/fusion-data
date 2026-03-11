@@ -40,8 +40,8 @@
 //! cargo run -p hetu-ai --example image_edit_demo
 //! ```
 
-use std::env;
 use hetus::ai::providers::openai_compatible::{Client, image_edit::ImageEditRequest};
+use std::env;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {

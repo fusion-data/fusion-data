@@ -186,8 +186,7 @@ mod with_sea_query {
     ) -> SeaResult<Vec<ConditionExpression>> {
       let Some(for_sea_cond) = for_sea_condition else {
         return Err(IntoSeaError::Custom(
-          "OpValValue must have a #[hetusql(to_sea_value_fn=\"fn_name\"] or to_sea_condition_fn attribute"
-            .to_string(),
+          "OpValValue must have a #[hetusql(to_sea_value_fn=\"fn_name\"] or to_sea_condition_fn attribute".to_string(),
         ));
       };
 

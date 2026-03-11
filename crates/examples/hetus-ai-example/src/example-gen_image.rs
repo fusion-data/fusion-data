@@ -8,14 +8,14 @@
 // .api_key(std::env::var("ZAI_API_KEY").unwrap())
 // .model("cogview-4-250304")
 
-use rig::{client::image_generation::ImageGenerationClient, image_generation::ImageGenerationRequestBuilder};
-#[allow(unused_imports)]
-use serde_json::json;
 use hetus::ai::{
   AiError, DefaultProviders,
   client::{AgentConfigBuilder, ClientFactory},
   utils::vec_to_image_file,
 };
+use rig::{client::image_generation::ImageGenerationClient, image_generation::ImageGenerationRequestBuilder};
+#[allow(unused_imports)]
+use serde_json::json;
 
 /// 生成图片示例
 ///

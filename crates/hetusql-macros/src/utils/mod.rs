@@ -1,6 +1,6 @@
 // region:    --- Modules
-pub mod struct_hetusql_attr;
 pub mod hetusql_field;
+pub mod struct_hetusql_attr;
 
 use quote::ToTokens;
 use syn::{Attribute, DeriveInput, Expr, Field, FieldsNamed, Lit, MetaNameValue};

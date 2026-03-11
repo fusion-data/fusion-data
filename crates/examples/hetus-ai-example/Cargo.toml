@@ -53,7 +53,7 @@ name = "example-b64-json-to-image"
 path = "src/example-b64-json-to-image.rs"
 
 [dependencies]
-hetus = { workspace = true, features = ["with-ai", "with-db", "with-logforth"] }
+hetus = { workspace = true, features = ["ai", "db", "logforth"] }
 rig-core = { workspace = true }
 rmcp = { workspace = true }
 tokio = { workspace = true, features = ["full"] }

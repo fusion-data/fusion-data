@@ -10,9 +10,9 @@ use axum::{
   response::Json,
 };
 use chrono::Utc;
+use hetus::web::WebError;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use hetus::web::WebError;
 use utoipa_axum::router::OpenApiRouter;
 
 use crate::{

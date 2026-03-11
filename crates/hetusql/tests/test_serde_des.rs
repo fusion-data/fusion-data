@@ -1,8 +1,8 @@
 pub type Result<T> = core::result::Result<T, Error>;
 pub type Error = Box<dyn std::error::Error>; // For early dev.
+use hetusql::filter::{FilterNodes, IntoFilterNodes, OpVal, OpValInt64, OpValString};
 use serde::Deserialize;
 use serde_json::Value;
-use hetusql::filter::{FilterNodes, IntoFilterNodes, OpVal, OpValInt64, OpValString};
 
 #[derive(Deserialize, Debug, FilterNodes)]
 struct MyFilter {

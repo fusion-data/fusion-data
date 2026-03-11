@@ -18,8 +18,8 @@ pub mod utils;
 
 pub use async_trait::async_trait;
 pub use data_error::*;
-pub use run_mode::*;
 #[cfg(feature = "with-macros")]
 pub use hetu_core_macros::Builder;
+pub use run_mode::*;
 
 pub type Result<T> = core::result::Result<T, DataError>;

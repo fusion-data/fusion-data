@@ -1,6 +1,6 @@
 use chrono::{DateTime, FixedOffset};
-use serde::{Deserialize, Serialize};
 use hetusql_core::filter::OpValInt64;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]

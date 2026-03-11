@@ -2,11 +2,11 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use async_trait::async_trait;
+use hetus::common::ahash::HashMap;
+use hetus::common::ahash::HashMapExt;
 use log::{error, info, warn};
 use serde::{Deserialize, Serialize};
 use tokio::sync::RwLock;
-use hetus::common::ahash::HashMap;
-use hetus::common::ahash::HashMapExt;
 
 use hetumind_core::{
   workflow::MonitoringConfig,

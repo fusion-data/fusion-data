@@ -29,7 +29,7 @@ name = "log-demo"
 path = "src/log_demo.rs"
 
 [dependencies]
-hetus = { workspace = true, features = ["with-logforth"] }
+hetus = { workspace = true, features = ["logforth"] }
 tokio = { workspace = true, features = ["full"] }
 regex = { workspace = true }
 inventory = { version = "0.3" }

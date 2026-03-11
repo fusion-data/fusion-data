@@ -1,7 +1,7 @@
 use std::ops::{Deref, DerefMut};
 
-use serde::{Deserialize, Serialize};
 use hetus::common::ahash::HashMap;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(transparent)]

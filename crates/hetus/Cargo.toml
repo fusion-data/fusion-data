@@ -12,28 +12,89 @@ publish = true
 workspace = true
 
 [features]
-default = ["hetu-common/with-uuid", "utoipa/uuid", "sqlx/uuid"]
-with-db = [
+# ==================== 默认 features ====================
+# 基础功能：UUID + OpenAPI
+default = [
+  "common-default",
+  "default-openapi",
+]
+
+# 基础依赖
+common-default = ["hetu-common/with-uuid"]
+
+# ==================== 功能模块 ====================
+
+# Web 框架 (Axum)
+web = ["dep:hetu-web", "dep:axum", "common-web"]
+common-web = ["hetu-common/with-openapi", "hetu-web/with-openapi"]
+
+# 数据库 (PostgreSQL + hetusql)
+db = [
   "dep:hetu-db",
   "dep:sqlx",
-  "hetu-common/with-db",
+  "dep:hetusql",
   "sqlx/postgres",
   "hetu-db/with-postgres",
-  "hetu-web/with-openapi",
+  "hetusql/with-postgres",
+  "hetusql/with-uuid",
+  "hetu-common/with-db",
 ]
-with-grpc = ["dep:hetu-grpc", "dep:tonic"]
-with-web = ["dep:hetu-web", "dep:axum"]
-with-ulid = ["dep:ulid", "utoipa/ulid", "hetu-common/with-ulid"]
-with-openapi = [
+# SQLite 支持
+db-sqlite = ["dep:sqlx", "dep:hetusql", "sqlx/sqlite", "hetusql/with-sqlite", "hetu-common/with-db"]
+
+# 安全认证 (JWT)
+security = ["dep:hetu-security", "hetu-security/with-jwt"]
+
+# OAuth2 支持
+oauth = ["security", "hetu-security/with-oauth"]
+
+# AI 模块
+ai = ["dep:hetu-ai", "common-ai"]
+common-ai = ["hetu-common/with-ulid"]
+
+# gRPC 支持
+grpc = ["dep:hetu-grpc", "dep:tonic"]
+
+# ULID 支持
+ulid = ["dep:ulid", "utoipa/ulid", "hetu-common/with-ulid"]
+
+# ==================== 可选功能 ====================
+
+# OpenAPI 文档生成
+default-openapi = [
+  "dep:utoipa",
   "hetu-common/with-openapi",
   "hetu-core/with-openapi",
-  "dep:utoipa",
 ]
-with-ai = ["dep:hetu-ai"]
-with-security = ["dep:hetu-security", "hetu-security/with-jwt"]
-with-oauth = ["with-security", "hetu-security/with-oauth"]
-with-logforth = ["hetu-core/with-logforth", "logforth"]
-with-tracing = ["hetu-core/with-tracing"]
+
+# OpenAPI 文档生成 (非默认)
+openapi = [
+  "dep:utoipa",
+  "hetu-common/with-openapi",
+  "hetu-core/with-openapi",
+]
+
+# 日志框架 (logforth)
+logforth = ["dep:logforth", "hetu-core/with-logforth"]
+
+# 分布式追踪 (tracing)
+tracing = [
+  "hetu-core/with-tracing",
+]
+
+# ==================== 便捷组合 ====================
+
+# 完整功能
+full = ["web", "db", "security", "ai", "grpc"]
+
+# Web API (不含 AI)
+api = ["web", "db", "security"]
+
+# Web 服务
+web-server = ["web", "db"]
+
+# 微服务
+microservice = ["web", "db", "security", "grpc"]
 
 [dependencies]
 hetu-common = { workspace = true }

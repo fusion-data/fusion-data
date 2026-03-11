@@ -1,15 +1,15 @@
 use async_trait::async_trait;
+use hetus::ai::graph_flow::GraphError::TaskExecutionFailed;
+use hetus::ai::graph_flow::{
+  Context, ExecutionStatus, FlowRunner, GraphBuilder, GraphStorage, InMemoryGraphStorage, NextAction,
+  PostgresSessionStorage, Session, SessionStorage, Task, TaskResult,
+};
 use rig::completion::Chat;
 use rig::prelude::*;
 use serde::Deserialize;
 use sqlx::postgres::PgPoolOptions;
 use std::sync::Arc;
 use tracing::{Level, error, info};
-use hetus::ai::graph_flow::GraphError::TaskExecutionFailed;
-use hetus::ai::graph_flow::{
-  Context, ExecutionStatus, FlowRunner, GraphBuilder, GraphStorage, InMemoryGraphStorage, NextAction,
-  PostgresSessionStorage, Session, SessionStorage, Task, TaskResult,
-};
 use uuid::Uuid;
 
 // Maximum number of retries for answer generation

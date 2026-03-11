@@ -2,9 +2,9 @@
 
 use std::time::Duration;
 
-use log::Level;
 use hetus::core::configuration::{LogSetting, LogWriterType};
 use hetus::core::logforth::init_log;
+use log::Level;
 
 fn main() {
   println!("=== 日志配置演示 ===");

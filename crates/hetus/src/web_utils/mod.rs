@@ -1,5 +1,5 @@
-#[cfg(feature = "with-db")]
+#[cfg(feature = "db")]
 mod _db;
 
-#[cfg(feature = "with-db")]
+#[cfg(feature = "db")]
 pub use _db::*;

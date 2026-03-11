@@ -1,8 +1,8 @@
-use log::{error, warn};
-use thiserror::Error;
 use hetus::core::DataError;
 use hetus::web::WebError;
 use hetusql::SqlError;
+use log::{error, warn};
+use thiserror::Error;
 
 /// Gateway 模块专用错误类型
 #[derive(Debug, Error)]

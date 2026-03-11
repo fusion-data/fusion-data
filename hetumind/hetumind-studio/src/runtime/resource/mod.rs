@@ -11,9 +11,9 @@ mod deadlock_detector;
 pub use competition_manager::ResourceCompetitionManager;
 pub use deadlock_detector::DeadlockDetector;
 
+use hetus::common::ahash::HashMap;
 use std::sync::Arc;
 use tokio::sync::{Mutex, Semaphore};
-use hetus::common::ahash::HashMap;
 use uuid::Uuid;
 
 /// 资源类型

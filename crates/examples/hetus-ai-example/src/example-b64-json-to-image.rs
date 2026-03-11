@@ -1,5 +1,5 @@
-use std::fs;
 use hetus::ai::utils::base64_json_to_image;
+use std::fs;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
   // 从当前脚本目录读取 base64_image.json 文件

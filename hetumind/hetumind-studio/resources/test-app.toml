@@ -16,7 +16,7 @@ log_writers = ["stdout"]
 
 [hetu.db]
 enable = true
-url = "postgresql://fusiondata:2025.Fusiondata@localhost:5432/fusiondata_test"
+url = "postgresql://hetudata:2025.Hetudata@localhost:5432/hetudata_test"
 
 # 工作流引擎测试配置
 [hetumind.workflow.engine]

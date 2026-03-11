@@ -23,7 +23,7 @@ with-db = [
 with-cli = ["clap"]
 with-openapi = [
   "utoipa",
-  "hetus/with-openapi",
+  "hetus/openapi",
   "hetusql/with-openapi",
   "hetusql-core/with-openapi",
 ]

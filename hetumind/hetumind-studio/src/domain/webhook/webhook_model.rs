@@ -1,7 +1,7 @@
+use hetusql::{field::Fields, postgres::PgRowType};
 use sea_query::enum_def;
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
-use hetusql::{field::Fields, postgres::PgRowType};
 
 /// Webhook实体表
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow, Fields)]

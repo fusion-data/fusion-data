@@ -1,8 +1,8 @@
+use hetusql_core::filter::{OpValDateTime, OpValString};
+use hetusql_core::page::{Page, Paged};
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use strum::AsRefStr;
-use hetusql_core::filter::{OpValDateTime, OpValString};
-use hetusql_core::page::{Page, Paged};
 
 use super::{UserFilter, UserStatus};
 

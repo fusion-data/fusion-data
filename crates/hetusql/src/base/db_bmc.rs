@@ -1,6 +1,6 @@
-use sea_query::{IntoIden, TableRef};
 use hetusql_core::page::StaticOrderBys;
 use hetusql_core::sea_utils::SIden;
+use sea_query::{IntoIden, TableRef};
 
 #[derive(Debug, Clone)]
 pub struct BmcConfig {

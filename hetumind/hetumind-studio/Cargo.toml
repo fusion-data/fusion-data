@@ -22,7 +22,7 @@ hetumind-core = { workspace = true, features = ["with-db"] }
 hetumind-context = { workspace = true }
 hetumind-nodes = { workspace = true }
 
-hetus = { workspace = true, features = ["with-tracing", "with-web", "with-db"] }
+hetus = { workspace = true, features = ["tracing", "web", "db"] }
 hetu-core-macros = { workspace = true }
 jieyuan-core = { workspace = true, features = ["with-web"] }
 

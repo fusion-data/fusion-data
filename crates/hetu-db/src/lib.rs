@@ -15,8 +15,8 @@ impl Plugin for DbPlugin {
     // sqlx::any::install_default_drivers();
     app.add_config_source(File::from_str(DEFAULT_CONFIG_STR, FileFormat::Toml));
     let config: DbConfig = app
-      .get_config_by_path("fusion.db")
-      .expect("DbPlugin config load failed, please check the config file: `fusion.db`");
+      .get_config_by_path("hetu.db")
+      .expect("DbPlugin config load failed, please check the config file: `hetu.db`");
     let mm = ModelManager::new(&config, Some(app.get_hetu_config().app().name()))
       .await
       .unwrap()

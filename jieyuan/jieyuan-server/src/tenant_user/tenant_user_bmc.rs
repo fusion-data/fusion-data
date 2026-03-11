@@ -1,6 +1,5 @@
 use std::sync::OnceLock;
 
-use sea_query::{Condition, SelectStatement};
 use hetusql::{
   ModelManager, SqlError,
   base::{self, BmcConfig, DbBmc, compute_page},
@@ -8,6 +7,7 @@ use hetusql::{
   filter::{FilterGroups, apply_to_sea_query},
   generate_pg_bmc_common, generate_pg_bmc_filter,
 };
+use sea_query::{Condition, SelectStatement};
 
 use jieyuan_core::model::{
   TABLE_TENANT_USER, TABLE_USER, TenantUser, TenantUserChangeQueryReq, TenantUserChangeQueryResp, TenantUserFilter,

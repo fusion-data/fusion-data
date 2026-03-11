@@ -1,6 +1,6 @@
 use chrono::{DateTime, FixedOffset};
-use serde::{Deserialize, Serialize};
 use hetusql_core::filter::{OpValInt32, OpValString};
+use serde::{Deserialize, Serialize};
 
 use super::RolePermissionFilter;
 

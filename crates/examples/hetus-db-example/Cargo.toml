@@ -21,7 +21,7 @@ name = "lookup"
 path = "src/lookup.rs"
 
 [dependencies]
-hetus = { workspace = true, features = ["with-db"] }
+hetus = { workspace = true, features = ["db"] }
 tokio = { workspace = true, features = ["full"] }
 dotenvy = { workspace = true }
 sqlx = { workspace = true }

@@ -1,6 +1,6 @@
 use crate::utils::get_struct_fields;
-use crate::utils::struct_hetusql_attr::{StructModqlFieldProps, get_struct_hetusql_props};
 use crate::utils::hetusql_field::{ModelsqlFieldProp, get_hetusql_field_props_and_skips};
+use crate::utils::struct_hetusql_attr::{StructModqlFieldProps, get_struct_hetusql_props};
 use proc_macro::TokenStream;
 use proc_macro2::{Ident, Span};
 use quote::quote;

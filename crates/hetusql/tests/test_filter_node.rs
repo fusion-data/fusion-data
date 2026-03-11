@@ -1,10 +1,10 @@
 #![allow(unused)] // For early development.
 
-use sea_query::{ColumnRef, ConditionExpression};
-use std::sync::Arc;
 use hetusql::filter::{
   FilterNode, FilterNodeOptions, IntoSeaError, OpValInt32, OpValValue, SeaResult, ToSeaConditionFnHolder,
 };
+use sea_query::{ColumnRef, ConditionExpression};
+use std::sync::Arc;
 
 #[test]
 fn test_filter_node_with_sea_condition() {

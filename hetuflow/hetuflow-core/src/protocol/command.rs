@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
-use serde::{Deserialize, Serialize};
 use hetus::common::time::now_epoch_millis;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::{

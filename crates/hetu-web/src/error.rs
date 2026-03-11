@@ -1,9 +1,9 @@
 use axum::Json;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
+use hetu_core::DataError;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use hetu_core::DataError;
 
 pub type WebResult<T> = core::result::Result<Json<T>, WebError>;
 

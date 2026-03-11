@@ -1,7 +1,7 @@
-use serde::Serialize;
 use hetus::common::ctx::Ctx;
 use hetus::core::DataError;
 use hetus::web::WebError;
+use serde::Serialize;
 
 use crate::model::{AuthorizeRequest, AuthorizeResponse, path_authz::MatchedMapping};
 

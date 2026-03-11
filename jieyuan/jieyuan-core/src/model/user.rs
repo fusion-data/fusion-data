@@ -1,7 +1,7 @@
-use serde::{Deserialize, Serialize};
 use hetus::common::time::{DateTime, FixedOffset};
 use hetusql_core::filter::{OpValDateTime, OpValInt32, OpValInt64, OpValString};
 use hetusql_core::page::Page;
+use serde::{Deserialize, Serialize};
 
 use super::tenant_user::TenantUserFilter;
 

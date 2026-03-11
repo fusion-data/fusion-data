@@ -186,11 +186,7 @@ fn is_valid_field_mask_path(path: &syn::Path) -> bool {
     [field, field_mask] if *field == "field" && *field_mask == "FieldMask" => true,
 
     // 完整路径: hetusql::field::FieldMask
-    [hetusql, field, field_mask]
-      if *hetusql == "hetusql" && *field == "field" && *field_mask == "FieldMask" =>
-    {
-      true
-    }
+    [hetusql, field, field_mask] if *hetusql == "hetusql" && *field == "field" && *field_mask == "FieldMask" => true,
 
     // crate 路径: crate::field::FieldMask
     [crate_kw, field, field_mask] if *crate_kw == "crate" && *field == "field" && *field_mask == "FieldMask" => true,

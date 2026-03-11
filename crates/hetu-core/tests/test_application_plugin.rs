@@ -1,11 +1,11 @@
 use async_trait::async_trait;
 use config::{File, FileFormat};
-use serde::Deserialize;
 use hetu_core::configuration::{ConfigRegistry, Configurable};
 use hetu_core::{
   application::{Application, ApplicationBuilder},
   plugin::Plugin,
 };
+use serde::Deserialize;
 
 struct MyPlugin;
 

@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
+use hetus::core::DataError;
 use mea::rwlock::RwLock;
 use tokio::sync::{broadcast, mpsc};
-use hetus::core::DataError;
 
 use hetuflow_core::protocol::{AcquireTaskResponse, CommandMessage, EventMessage};
 

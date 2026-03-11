@@ -1,8 +1,8 @@
+use hetus::common::time::OffsetDateTime;
+use hetusql::Fields;
 use sea_query::enum_def;
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
-use hetus::common::time::OffsetDateTime;
-use hetusql::Fields;
 
 /// 测试定义表
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow, Fields)]

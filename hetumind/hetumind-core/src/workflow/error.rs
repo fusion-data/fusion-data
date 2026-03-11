@@ -1,8 +1,8 @@
 use chrono::{DateTime, FixedOffset};
-use serde::{Deserialize, Serialize};
-use thiserror::Error;
 #[cfg(feature = "with-db")]
 use hetusql::SqlError;
+use serde::{Deserialize, Serialize};
+use thiserror::Error;
 
 use crate::{
   types::JsonValue,

@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use hetu_common::time::{self, FixedOffset};
 use init_tracing_opentelemetry::{Guard, TracingConfig};
 use log::Level;
 use tracing::{Subscriber, debug, info, subscriber::DefaultGuard};
@@ -14,11 +15,10 @@ use tracing_subscriber::{
   layer::SubscriberExt,
   registry::LookupSpan,
 };
-use hetu_common::time::{self, FixedOffset};
 
 use crate::{
   DataError, Result,
-  configuration::{LogLevel, LogSetting, LogWriterType, HetuSetting},
+  configuration::{HetuSetting, LogLevel, LogSetting, LogWriterType},
 };
 
 // setup a temporary subscriber to log output during setup

@@ -2,9 +2,9 @@ use std::time::Duration;
 
 use async_trait::async_trait;
 use hetumind_core::task::{QueueError, QueueStats, QueueTask, TaskQueue, TaskResult, TaskStatus};
-use serde::Deserialize;
 use hetusql::ModelManager;
 use hetusql::store::DbxPostgres;
+use serde::Deserialize;
 use uuid::Uuid;
 
 use super::TaskQueueEntity;

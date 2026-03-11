@@ -1,10 +1,10 @@
+use hetus::common::ahash::HashMap;
+use hetus::core::{DataError, application::Application, configuration::ConfigRegistry};
+use hetusql::ModelManager;
 use log::info;
 use reqwest::Client;
 use serde::Deserialize;
 use serde_json::Value;
-use hetus::common::ahash::HashMap;
-use hetus::core::{DataError, application::Application, configuration::ConfigRegistry};
-use hetusql::ModelManager;
 
 use jieyuan_core::model::{
   OAuthAuthorizeRequest, OAuthAuthorizeResponse, OAuthProvider, OAuthTokenRequest, OAuthTokenResponse, TokenType,

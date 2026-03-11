@@ -1,7 +1,7 @@
 use chrono::{DateTime, FixedOffset};
-use serde::{Deserialize, Serialize};
 use hetusql_core::filter::{OpValInt32, OpValInt64};
 use hetusql_core::page::Page;
+use serde::{Deserialize, Serialize};
 
 /// Policy attachment entity representing the relationship between policies and principals (users/roles)
 #[derive(Debug, Default, Serialize, Deserialize)]

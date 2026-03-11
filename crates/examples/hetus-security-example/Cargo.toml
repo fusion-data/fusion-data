@@ -21,7 +21,7 @@ name = "github-async"
 path = "src/github-async.rs"
 
 [dependencies]
-hetus = { workspace = true, features = ["with-oauth"] }
+hetus = { workspace = true, features = ["oauth"] }
 tokio = { workspace = true, features = ["full"] }
 dotenvy = { workspace = true }
 reqwest = { workspace = true }

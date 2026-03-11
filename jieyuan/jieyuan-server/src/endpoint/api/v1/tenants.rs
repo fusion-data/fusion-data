@@ -2,11 +2,11 @@ use axum::{
   extract::{Path, State},
   response::Json,
 };
-use jieyuan_core::model::{Tenant, TenantForCreate, TenantForPage, TenantForUpdate};
 use hetus::common::model::IdI64Result;
 use hetus::core::application::Application;
 use hetus::web::{WebError, WebResult, ok_json};
 use hetusql::page::PageResult;
+use jieyuan_core::model::{Tenant, TenantForCreate, TenantForPage, TenantForUpdate};
 use utoipa_axum::router::OpenApiRouter;
 
 use crate::tenant::TenantSvc;

@@ -180,7 +180,7 @@ mod tests {
   static SECURITY_CONFIG: OnceLock<SecuritySetting> = OnceLock::new();
   fn helper() -> (&'static SecuritySetting, &'static SystemTime) {
     (
-      SECURITY_CONFIG.get_or_init(|| load_config().unwrap().get::<SecuritySetting>("fusion.security").unwrap()),
+      SECURITY_CONFIG.get_or_init(|| load_config().unwrap().get::<SecuritySetting>("hetu.security").unwrap()),
       EXPIRES_AT.get_or_init(|| SystemTime::now().checked_add(Duration::from_secs(60 * 60 * 24 * 30)).unwrap()),
     )
   }

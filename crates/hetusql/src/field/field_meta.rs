@@ -51,8 +51,8 @@ impl FieldMeta {
 // when with-sea-query feature is enabled
 mod with_sea_query {
   use super::*;
-  use sea_query::{Alias, ColumnRef, IntoIden, SelectStatement};
   use hetusql_core::sea_utils::SIden;
+  use sea_query::{Alias, ColumnRef, IntoIden, SelectStatement};
 
   impl FieldMeta {
     pub fn sea_column_ref(&self) -> ColumnRef {

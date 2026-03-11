@@ -2,8 +2,8 @@ use std::sync::Arc;
 
 use crate::runtime::execution::ExecutionStore;
 use hetumind_core::workflow::ExecutionId;
-use log::info;
 use hetus::common::time::now;
+use log::info;
 
 use super::{CheckpointConfig, CheckpointError, ExecutionCheckpoint, ExecutionState};
 

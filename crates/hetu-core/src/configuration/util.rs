@@ -1,11 +1,11 @@
 use std::{collections::HashMap, env, path::Path};
 
 use config::{Config, ConfigBuilder, Environment, File, FileFormat, builder::DefaultState};
-use log::{debug, trace};
 use hetu_common::{
   env::{get_env, get_envs},
   runtime,
 };
+use log::{debug, trace};
 
 use super::ConfigureResult;
 

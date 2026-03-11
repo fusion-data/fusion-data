@@ -2,9 +2,9 @@
 
 pub type Result<T, E = Error> = core::result::Result<T, E>;
 pub type Error = Box<dyn std::error::Error>; // For early dev.
-use sea_query::{Query, SqliteQueryBuilder};
 use hetusql_core::filter::{FilterNodes, OpValInt64, OpValString};
 use hetusql_core::sea_utils::SIden;
+use sea_query::{Query, SqliteQueryBuilder};
 
 #[derive(Clone, FilterNodes, Default)]
 pub struct ProjectFilter {

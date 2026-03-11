@@ -5,16 +5,16 @@ use hetuflow_core::{
   models::AgentCapabilities,
   protocol::{CommandMessage, EventMessage, RegisterAgentRequest},
 };
+use hetus::core::{
+  DataError,
+  concurrent::{RetryStrategy, ServiceHandle, ServiceTask},
+};
 use log::{error, info, warn};
 use mea::shutdown::ShutdownRecv;
 use tokio::{net::TcpStream, sync::mpsc};
 use tokio_tungstenite::{
   MaybeTlsStream, WebSocketStream,
   tungstenite::{ClientRequestBuilder, Message},
-};
-use hetus::core::{
-  DataError,
-  concurrent::{RetryStrategy, ServiceHandle, ServiceTask},
 };
 
 use crate::{connection::ConnectionManager, setting::HetuflowAgentSetting};

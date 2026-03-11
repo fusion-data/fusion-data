@@ -18,10 +18,10 @@ workspace = true
 [dependencies]
 # -- hetus
 hetus = { workspace = true, features = [
-  "with-openapi",
-  "with-db",
-  "with-web",
-  "with-logforth",
+  "openapi",
+  "db",
+  "web",
+  "logforth",
 ] }
 hetu-core-macros = { workspace = true }
 

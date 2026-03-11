@@ -1,9 +1,9 @@
 use async_trait::async_trait;
-use std::sync::Arc;
 use hetus::ai::graph_flow::{
   Context, ExecutionStatus, FlowRunner, GraphBuilder, GraphStorage, InMemoryGraphStorage, InMemorySessionStorage,
   NextAction, Session, SessionStorage, Task, TaskResult,
 };
+use std::sync::Arc;
 
 // We have 2 tasks in this simple example:
 // 1. HelloTask - greets the user by name

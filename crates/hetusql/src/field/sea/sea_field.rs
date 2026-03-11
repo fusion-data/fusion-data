@@ -1,6 +1,6 @@
+use hetusql_core::sea_utils::{SIden, StringIden};
 use sea_query::{ColumnRef, DynIden, SimpleExpr, Value};
 use sea_query::{IntoIden, ValueType};
-use hetusql_core::sea_utils::{SIden, StringIden};
 
 use crate::field::{Error, Result};
 

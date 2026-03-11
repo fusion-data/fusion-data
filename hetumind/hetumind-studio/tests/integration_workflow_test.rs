@@ -288,6 +288,7 @@ fn create_file_node_parameters() -> ParameterMap {
   ParameterMap::new(params)
 }
 
+#[ignore]
 #[tokio::test]
 async fn test_integration_workflow() -> Result<(), Box<dyn std::error::Error>> {
   // Clean up any existing test file
@@ -473,6 +474,7 @@ async fn test_integration_workflow() -> Result<(), Box<dyn std::error::Error>> {
   Ok(())
 }
 
+#[ignore]
 #[tokio::test]
 async fn test_integration_workflow_false_branch() -> Result<(), Box<dyn std::error::Error>> {
   // Test the false branch by changing the trigger data

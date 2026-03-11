@@ -4,8 +4,8 @@ use axum::{
   response::Redirect,
   routing::{get, post},
 };
-use serde::Deserialize;
 use hetus::core::application::Application;
+use serde::Deserialize;
 
 use crate::domain::auth::{OAuthProxySvc, RefreshTokenRequest, RefreshTokenResponse, SignSvc, SignoutRequest};
 use hetus::web::{WebResult, extract::JsonOrForm, ok_json};

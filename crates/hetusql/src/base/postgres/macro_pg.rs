@@ -157,10 +157,7 @@ macro_rules! generate_pg_bmc_filter_x {
 		$(ForUpdate: $update:ty,)?
 	) => {
     impl $struct_name {
-      pub async fn get_filter(
-        mm: &hetusql::ModelManager,
-        filter: Vec<$filter>,
-      ) -> hetusql::Result<Option<$filter>> {
+      pub async fn get_filter(mm: &hetusql::ModelManager, filter: Vec<$filter>) -> hetusql::Result<Option<$filter>> {
         hetusql::base::pg_get_filter::<Self, _, _>(mm, filter).await
       }
     }

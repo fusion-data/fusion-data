@@ -1,12 +1,12 @@
 use chrono::{DateTime, FixedOffset};
 use garde::Validate;
-use serde::{Deserialize, Serialize};
 use hetus::common::ahash::HashMap;
 use hetusql_core::page::Page;
 use hetusql_core::{
   field::FieldMask,
   filter::{OpValDateTime, OpValInt32, OpValString},
 };
+use serde::{Deserialize, Serialize};
 
 use crate::types::{AgentStatus, Labels};
 use crate::utils::defaults;

@@ -23,10 +23,10 @@ hetuflow-core = { workspace = true, features = [
   "with-openapi",
 ] }
 hetus = { workspace = true, features = [
-  "with-openapi",
-  "with-logforth",
-  "with-web",
-  "with-db",
+  "openapi",
+  "logforth",
+  "web",
+  "db",
 ] }
 hetusql = { workspace = true, features = ["with-uuid", "with-openapi"] }
 sqlx = { workspace = true, features = [

@@ -1,7 +1,7 @@
 use axum::extract::FromRequestParts;
-use http::request::Parts;
 use hetus::core::application::Application;
 use hetus::web::WebError;
+use http::request::Parts;
 
 /// OAuth 代理服务 - 简化版，只做重定向到 Jieyuan
 #[derive(Clone)]

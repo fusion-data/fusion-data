@@ -1,8 +1,4 @@
 use chrono::{DateTime, FixedOffset};
-use sea_query::enum_def;
-use serde::{Deserialize, Serialize};
-use serde_repr::{Deserialize_repr, Serialize_repr};
-use sqlx::FromRow;
 use hetus::common::model::sensitive::SensitiveString;
 use hetusql::generate_enum_i32_to_sea_query_value;
 use hetusql::page::Page;
@@ -11,6 +7,10 @@ use hetusql::{
   filter::{FilterNodes, OpValDateTime, OpValInt32, OpValString, OpValUuid},
   postgres::PgRowType,
 };
+use sea_query::enum_def;
+use serde::{Deserialize, Serialize};
+use serde_repr::{Deserialize_repr, Serialize_repr};
+use sqlx::FromRow;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize_repr, Deserialize_repr, sqlx::Type)]
 #[repr(i32)]

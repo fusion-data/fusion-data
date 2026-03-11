@@ -6,8 +6,8 @@ use hetus::common::model::IdI64Result;
 use hetus::core::application::Application;
 use hetus::web::{WebError, WebResult, ok_json};
 
-use jieyuan_core::model::{NamespaceEntity, NamespaceForCreate, NamespaceForPage, NamespaceForUpdate};
 use hetusql::page::PageResult;
+use jieyuan_core::model::{NamespaceEntity, NamespaceForCreate, NamespaceForPage, NamespaceForUpdate};
 use utoipa_axum::router::OpenApiRouter;
 
 use crate::namespace::NamespaceSvc;

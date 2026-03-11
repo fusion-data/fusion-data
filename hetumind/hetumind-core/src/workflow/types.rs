@@ -1,9 +1,9 @@
 use std::ops::Deref;
 
+use hetus::common::ahash::HashMap;
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use strum::Display;
-use hetus::common::ahash::HashMap;
 use uuid::Uuid;
 
 use crate::{generate_uuid_newtype, types::JsonValue};

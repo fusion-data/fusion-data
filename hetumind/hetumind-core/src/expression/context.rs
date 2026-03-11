@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
-use serde::{Deserialize, Serialize};
 use hetus::common::ahash::HashMap;
+use serde::{Deserialize, Serialize};
 
 use crate::workflow::{Execution, Workflow};
 

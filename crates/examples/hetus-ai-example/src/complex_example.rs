@@ -1,13 +1,13 @@
 use std::sync::Arc;
 
 use async_trait::async_trait;
-use rig::{client::CompletionClient, completion::Chat};
-use serde::Deserialize;
-use tracing::{Level, info};
 use hetus::ai::graph_flow::{
   Context, ExecutionStatus, FlowRunner, GraphBuilder, GraphError, GraphStorage, InMemoryGraphStorage,
   InMemorySessionStorage, NextAction, Session, SessionStorage, Task, TaskResult,
 };
+use rig::{client::CompletionClient, completion::Chat};
+use serde::Deserialize;
+use tracing::{Level, info};
 
 // --- Sentiment analysis helpers -------------------------------------------------------------
 #[derive(Deserialize)]
@@ -80,11 +80,7 @@ impl Task for SentimentAnalysisTask {
 
 impl SentimentAnalysisTask {
   // Very small heuristic fallback in case an LLM is not available.
-  async fn dummy_sentiment(
-    &self,
-    context: Context,
-    user_input: String,
-  ) -> hetus::ai::graph_flow::Result<TaskResult> {
+  async fn dummy_sentiment(&self, context: Context, user_input: String) -> hetus::ai::graph_flow::Result<TaskResult> {
     let lowered = user_input.to_lowercase();
     let sentiment = if lowered.contains("good") || lowered.contains("love") { "positive" } else { "negative" };
     context.set("sentiment", sentiment.to_string()).await;

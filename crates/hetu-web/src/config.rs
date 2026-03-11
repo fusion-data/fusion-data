@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use hetu_core::configuration::Configurable;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WebConfig {

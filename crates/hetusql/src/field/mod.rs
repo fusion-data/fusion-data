@@ -9,6 +9,6 @@ pub use error::{Error, Result};
 pub use field_meta::*;
 pub use field_metas::*;
 pub use has_fields::*;
-pub use sea::*;
 pub use hetusql_core::field::*;
 pub use hetusql_macros::{Fields, SeaFieldValue};
+pub use sea::*;

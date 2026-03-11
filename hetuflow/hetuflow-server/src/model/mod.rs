@@ -7,9 +7,9 @@ use uuid::Uuid;
 
 use std::sync::atomic::{AtomicI64, Ordering};
 
+use hetus::common::time::now_epoch_millis;
 use mea::mpsc;
 use serde::{Deserialize, Serialize};
-use hetus::common::time::now_epoch_millis;
 
 use hetuflow_core::protocol::CommandMessage;
 

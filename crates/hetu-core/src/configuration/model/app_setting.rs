@@ -1,7 +1,5 @@
+use hetu_common::time::{DateTime, FixedOffset, Local, deser::deserialize_fixed_offset, ser::serialize_fixed_offset};
 use serde::{Deserialize, Serialize};
-use hetu_common::time::{
-  DateTime, FixedOffset, Local, deser::deserialize_fixed_offset, ser::serialize_fixed_offset,
-};
 
 use crate::RunMode;
 
