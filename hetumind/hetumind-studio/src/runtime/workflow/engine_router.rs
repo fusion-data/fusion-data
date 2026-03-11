@@ -18,8 +18,6 @@ use hetumind_nodes::store::simple_memory_node::SimpleMemorySupplier;
 use log::warn;
 use tokio::time::{Duration, sleep};
 
-use crate::runtime::workflow::WorkflowEnginePlugin; // 预留：后续路由可接入插件体系
-
 /// 引擎路由器：持有必要的依赖，用于处理 EngineRequest
 pub struct EngineRouter {
   node_registry: NodeRegistry,

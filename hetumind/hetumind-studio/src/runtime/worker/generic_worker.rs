@@ -26,7 +26,7 @@ impl GenericWorker {
     loop {
       tokio::select! {
           _ = poll_interval.tick() => {
-              if let Err(e) = self.process_batch().await {
+              if let Err(_e) = self.process_batch().await {
                   error!("Failed to process batch");
               }
           }
@@ -51,18 +51,18 @@ impl GenericWorker {
 
         match result {
           Ok(Ok(task_result)) => {
-            if let Err(e) = queue.ack(&task_key, task_result).await {
+            if let Err(_e) = queue.ack(&task_key, task_result).await {
               error!("Failed to ack task");
             }
           }
           Ok(Err(e)) => {
             let should_retry = task.retry_count < task.max_retries;
-            if let Err(e) = queue.nack(&task_key, &e.to_string(), should_retry).await {
+            if let Err(_e) = queue.nack(&task_key, &e.to_string(), should_retry).await {
               error!("Failed to nack task");
             }
           }
           Err(_) => {
-            if let Err(e) = queue.nack(&task_key, "Timeout", true).await {
+            if let Err(_e) = queue.nack(&task_key, "Timeout", true).await {
               error!("Failed to nack timeout task");
             }
           }

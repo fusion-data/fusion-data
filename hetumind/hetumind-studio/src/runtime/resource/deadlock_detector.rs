@@ -37,6 +37,7 @@ pub struct ResourceAllocationGraph {
 
 /// 进程节点
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct ProcessNode {
   /// 进程ID
   pub process_id: String,
@@ -54,6 +55,7 @@ pub struct ProcessNode {
 
 /// 资源节点
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 pub struct ResourceNode {
   /// 资源类型
   pub resource_type: ResourceType,
@@ -69,6 +71,7 @@ pub struct ResourceNode {
 
 /// 进程状态
 #[derive(Debug, Clone, PartialEq)]
+#[allow(dead_code)]
 pub enum ProcessStatus {
   /// 运行中
   Running,

@@ -75,7 +75,7 @@ pub async fn update_workflow(
 
 /// 删除工作流
 pub async fn delete_workflow(workflow_svc: WorkflowSvc, Path(workflow_id): Path<WorkflowId>) -> WebResult<()> {
-  let res = workflow_svc.get_workflow(&workflow_id).await?;
+  let _res = workflow_svc.get_workflow(&workflow_id).await?;
 
   workflow_svc.delete_workflow(&workflow_id).await?;
   ok_json!()

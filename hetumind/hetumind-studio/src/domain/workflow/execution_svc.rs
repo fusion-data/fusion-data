@@ -13,41 +13,41 @@ pub struct ExecutionSvc {
 }
 
 impl ExecutionSvc {
-  pub async fn cancel_execution(&self, execution_id: ExecutionId) -> Result<(), DataError> {
+  pub async fn cancel_execution(&self, _execution_id: ExecutionId) -> Result<(), DataError> {
     todo!()
   }
 
-  pub async fn retry_execution(&self, execution_id: ExecutionId) -> Result<(), DataError> {
+  pub async fn retry_execution(&self, _execution_id: ExecutionId) -> Result<(), DataError> {
     todo!()
   }
 
-  pub async fn logs(&self, execution_id: ExecutionId) -> Result<Vec<ExecutionData>, DataError> {
+  pub async fn logs(&self, _execution_id: ExecutionId) -> Result<Vec<ExecutionData>, DataError> {
     todo!()
   }
 
-  pub async fn query_executions(&self, input: ExecutionForQuery) -> Result<PageResult<Execution>, DataError> {
+  pub async fn query_executions(&self, _input: ExecutionForQuery) -> Result<PageResult<Execution>, DataError> {
     todo!()
   }
 
   pub async fn find_execution_by_id(&self, execution_id: ExecutionId) -> Result<Execution, DataError> {
-    let entity = ExecutionBmc::find_by_id(&self.mm, execution_id).await?;
+    let _entity = ExecutionBmc::find_by_id(&self.mm, execution_id).await?;
     // let execution = Execution::try_from(entity)?;
     todo!()
   }
 
-  pub async fn create_execution(&self, input: Execution) -> Result<Execution, DataError> {
+  pub async fn create_execution(&self, _input: Execution) -> Result<Execution, DataError> {
     todo!()
   }
 
   pub async fn update_execution(
     &self,
-    execution_id: ExecutionId,
-    input: ExecutionForUpdate,
+    _execution_id: ExecutionId,
+    _input: ExecutionForUpdate,
   ) -> Result<Execution, DataError> {
     todo!()
   }
 
-  pub async fn delete_execution(&self, execution_id: ExecutionId) -> Result<(), DataError> {
+  pub async fn delete_execution(&self, _execution_id: ExecutionId) -> Result<(), DataError> {
     todo!()
   }
 }

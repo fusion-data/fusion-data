@@ -191,6 +191,7 @@ impl EmailTriggerConfig {
   }
 
   /// 生成触发器标识符
+  #[allow(dead_code)]
   pub fn generate_trigger_id(&self) -> String {
     format!(
       "email_trigger_{}_{}_{}",
@@ -209,6 +210,7 @@ impl EmailTriggerConfig {
 
 /// 邮件数据结构
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct EmailData {
   /// 邮件唯一标识符
   pub uid: u32,

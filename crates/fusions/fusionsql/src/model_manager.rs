@@ -1,3 +1,4 @@
+use std::future::Future;
 use std::sync::Arc;
 
 use fusion_common::ctx::Ctx;
@@ -22,10 +23,14 @@ impl ModelManager {
   /// Constructor
   pub async fn new(db_config: &DbConfig, application_name: Option<&str>) -> Result<Self> {
     let dbx = create_dbx(db_config, application_name).await?;
-    Ok(ModelManager { dbx, ctx: None, filter_interceptor: None })
+    Ok(Self { dbx, ctx: None, filter_interceptor: None })
   }
 
-  /// 返回一个新的事务
+  pub fn new_with_dbx(dbx: Dbx) -> Self {
+    Self { dbx, ctx: None, filter_interceptor: None }
+  }
+
+  /// 强制返回一个新的事务，即使当前 ModelManager 已开启事务。
   pub fn txn_cloned(&self) -> ModelManager {
     let dbx = self.dbx.txn_cloned();
     ModelManager { dbx, ctx: self.ctx.clone(), filter_interceptor: self.filter_interceptor.clone() }
@@ -83,6 +88,69 @@ impl ModelManager {
       interceptor(bmc_config, Some(ctx), filters)
     } else {
       Ok(filters)
+    }
+  }
+
+  /// 闭包式事务 API
+  ///
+  /// 自动管理事务的生命周期，在闭包执行成功时提交事务，失败时回滚事务。
+  ///
+  /// # 示例
+  ///
+  /// ```rust
+  /// use fusionsql::ModelManager;
+  ///
+  /// async fn example(mm: &ModelManager) -> Result<()> {
+  ///   mm.transaction(|mm| async move {
+  ///     // 在事务中执行多个操作
+  ///     UserBmc::create(&mm, user).await?;
+  ///     UserBmc::update(&mm, id, update).await?;
+  ///     Ok(())
+  ///   }).await?;
+  ///   Ok(())
+  /// }
+  /// ```
+  ///
+  /// # 嵌套事务支持
+  ///
+  /// 该方法支持嵌套调用，内部使用 SAVEPOINT 机制：
+  ///
+  /// ```rust
+  /// async fn nested_example(mm: &ModelManager) -> Result<()> {
+  ///   mm.transaction(|mm| async move {
+  ///     UserBmc::create(&mm, user1).await?;
+  ///
+  ///     // 嵌套事务
+  ///     mm.transaction(|mm| async move {
+  ///       UserBmc::create(&mm, user2).await?;
+  ///       Ok(())
+  ///     }).await?;
+  ///
+  ///     Ok(())
+  ///   }).await?;
+  ///   Ok(())
+  /// }
+  /// ```
+  pub async fn transaction<F, Fut, T>(&self, f: F) -> Result<T>
+  where
+    F: FnOnce(ModelManager) -> Fut,
+    Fut: Future<Output = Result<T>>,
+  {
+    let mm_txn = self.txn_cloned();
+    mm_txn.dbx().begin_txn().await?;
+
+    match f(mm_txn.clone()).await {
+      Ok(result) => {
+        mm_txn.dbx().commit_txn().await?;
+        Ok(result)
+      }
+      Err(e) => {
+        // 尝试回滚，如果失败则记录警告
+        if let Err(rollback_err) = mm_txn.dbx().rollback_txn().await {
+          log::warn!("Failed to rollback transaction: {:?}", rollback_err);
+        }
+        Err(e)
+      }
     }
   }
 }

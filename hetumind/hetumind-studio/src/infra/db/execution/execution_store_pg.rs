@@ -28,29 +28,29 @@ impl ExecutionStore for ExecutionStorePg {
     Ok(())
   }
 
-  async fn get_execution(&self, id: &ExecutionId) -> Result<Option<Execution>, WorkflowExecutionError> {
+  async fn get_execution(&self, _id: &ExecutionId) -> Result<Option<Execution>, WorkflowExecutionError> {
     todo!()
   }
 
-  async fn get_execution_status(&self, id: &ExecutionId) -> Result<ExecutionStatus, WorkflowExecutionError> {
+  async fn get_execution_status(&self, _id: &ExecutionId) -> Result<ExecutionStatus, WorkflowExecutionError> {
     todo!()
   }
 
   async fn update_execution_status(
     &self,
-    id: &ExecutionId,
-    status: ExecutionStatus,
+    _id: &ExecutionId,
+    _status: ExecutionStatus,
   ) -> Result<(), WorkflowExecutionError> {
     todo!()
   }
 
-  async fn save_checkpoint(&self, checkpoint: ExecutionCheckpoint) -> Result<(), CheckpointError> {
+  async fn save_checkpoint(&self, _checkpoint: ExecutionCheckpoint) -> Result<(), CheckpointError> {
     todo!()
   }
 
   async fn load_latest_checkpoint(
     &self,
-    execution_id: &ExecutionId,
+    _execution_id: &ExecutionId,
   ) -> Result<Option<ExecutionCheckpoint>, CheckpointError> {
     todo!()
   }

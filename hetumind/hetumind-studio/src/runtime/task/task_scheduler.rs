@@ -15,6 +15,7 @@ const MAX_CONCURRENT_TASKS: usize = 100;
 
 /// 项目中的 TaskScheduler（进程内调度器）
 ///这是一个进程内的任务调度器，用于单个工作流执行内部的节点调度：
+#[allow(dead_code)]
 pub struct TaskScheduler {
   /// 待执行任务队列
   task_queue: Arc<RwLock<VecDeque<ExecutionTask>>>,
@@ -25,12 +26,13 @@ pub struct TaskScheduler {
   /// 任务调度器
   scheduler_handle: Option<tokio::task::JoinHandle<()>>,
   /// 控制通道
+  #[allow(dead_code)]
   control_tx: mpsc::UnboundedSender<SchedulerCommand>,
   control_rx: Arc<RwLock<mpsc::UnboundedReceiver<SchedulerCommand>>>,
 }
 
 impl TaskScheduler {
-  pub fn new(config: WorkflowEngineSetting) -> Self {
+  pub fn new(_config: WorkflowEngineSetting) -> Self {
     let (control_tx, control_rx) = mpsc::unbounded_channel();
 
     Self {
@@ -127,17 +129,17 @@ impl TaskScheduler {
     }
   }
 
-  pub async fn pause_execution(&self, execution_id: &ExecutionId) -> Result<(), WorkflowExecutionError> {
+  pub async fn pause_execution(&self, _execution_id: &ExecutionId) -> Result<(), WorkflowExecutionError> {
     // 实现暂停逻辑
     Ok(())
   }
 
-  pub async fn resume_execution(&self, execution_id: &ExecutionId) -> Result<(), WorkflowExecutionError> {
+  pub async fn resume_execution(&self, _execution_id: &ExecutionId) -> Result<(), WorkflowExecutionError> {
     // 实现恢复逻辑
     Ok(())
   }
 
-  pub async fn cancel_execution(&self, execution_id: &ExecutionId) -> Result<(), WorkflowExecutionError> {
+  pub async fn cancel_execution(&self, _execution_id: &ExecutionId) -> Result<(), WorkflowExecutionError> {
     // 实现取消逻辑
     Ok(())
   }
@@ -157,7 +159,7 @@ impl TaskScheduler {
   async fn handle_command(
     cmd: SchedulerCommand,
     task_queue: &Arc<RwLock<VecDeque<ExecutionTask>>>,
-    waiting_tasks: &Arc<RwLock<HashMap<NodeName, WaitingTask>>>,
+    _waiting_tasks: &Arc<RwLock<HashMap<NodeName, WaitingTask>>>,
     running_tasks: &Arc<RwLock<HashMap<NodeName, RunningTask>>>,
   ) {
     match cmd {

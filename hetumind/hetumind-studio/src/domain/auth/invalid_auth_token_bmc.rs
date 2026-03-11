@@ -44,7 +44,7 @@ impl InvalidAuthTokenBmc {
 
   /// 检查令牌是否在黑名单中
   pub async fn is_token_invalid(mm: &ModelManager, token: &str) -> Result<bool, fusions::core::DataError> {
-    let (sql, values) = Query::select()
+    let (sql, _values) = Query::select()
       .column(InvalidAuthTokenIden::Token)
       .from(InvalidAuthTokenIden::Table)
       .and_where(Expr::col(InvalidAuthTokenIden::Token).eq(token))

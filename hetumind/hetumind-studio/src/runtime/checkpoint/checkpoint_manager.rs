@@ -7,14 +7,18 @@ use log::info;
 
 use super::{CheckpointConfig, CheckpointError, ExecutionCheckpoint, ExecutionState};
 
+#[allow(dead_code)]
 pub struct CheckpointManager {
   /// 状态存储
   state_store: Arc<dyn ExecutionStore>,
   /// 检查点配置
+  #[allow(dead_code)]
   config: CheckpointConfig,
 }
 
 impl CheckpointManager {
+  #[allow(unreachable_code)]
+  #[allow(unused_variables)]
   pub async fn create_checkpoint(
     &self,
     execution_id: &ExecutionId,

@@ -79,9 +79,14 @@ impl DbxSqlite {
     }
 
     let mut txh_g = self.txn_holder.lock().await;
-    // If we already have a tx holder, then, we increment
+    // If we already have a tx holder, then, we create a savepoint
     if let Some(txh) = txh_g.as_mut() {
-      txh.inc();
+      let savepoint_name = txh.inc();
+      let sql = format!("SAVEPOINT {}", savepoint_name);
+      sqlx::query(&sql)
+        .execute(txh.txn.as_mut())
+        .await
+        .map_err(|e| DbxError::SavePointError(format!("Failed to create savepoint '{}': {}", savepoint_name, e)))?;
     } else {
       // If not, we create one with a new transaction
       let txn = self.db_pool.begin().await?;
@@ -93,16 +98,28 @@ impl DbxSqlite {
 
   pub async fn rollback_txn(&self) -> Result<()> {
     let mut txh_g = self.txn_holder.lock().await;
-    if let Some(mut txh) = txh_g.take() {
-      // Take the TxnHolder out of the Option
-      if txh.counter > 1 {
-        txh.counter -= 1;
-        let _ = txh_g.replace(txh); // Put it back if not the last reference
+    if let Some(txh) = txh_g.as_mut() {
+      let (counter, savepoint) = txh.dec();
+
+      if counter == 0 {
+        // 回滚整个事务
+        if let Some(txh) = txh_g.take() {
+          txh.txn.rollback().await?;
+          debug!("DbxSqlite.rollback_txn: transaction rolled back");
+        }
+      } else if let Some(sp) = savepoint {
+        // 回滚到 SAVEPOINT
+        let sql = format!("ROLLBACK TO SAVEPOINT {}", sp);
+        sqlx::query(&sql)
+          .execute(txh.txn.as_mut())
+          .await
+          .map_err(|e| DbxError::SavePointError(format!("Failed to rollback to savepoint '{}': {}", sp, e)))?;
+        debug!("DbxSqlite.rollback_txn: rolled back to savepoint '{}', transaction depth now {}", sp, counter);
       } else {
-        // Perform the actual rollback
-        txh.txn.rollback().await?;
-        // No need to replace, as we want to leave it as None
+        // counter > 0 但没有 savepoint，理论上不应该发生
+        debug!("DbxSqlite.rollback_txn: nested rollback with depth {} but no savepoint to rollback to", counter);
       }
+
       Ok(())
     } else {
       Err(DbxError::NoTxn)
@@ -116,20 +133,31 @@ impl DbxSqlite {
 
     let mut txh_g = self.txn_holder.lock().await;
     if let Some(txh) = txh_g.as_mut() {
-      let counter = txh.dec();
-      // If 0, then, it should be matching commit for the first first begin_txn
+      let (counter, savepoint) = txh.dec();
+      // If 0, then, it should be matching commit for the first begin_txn
       // so we can commit.
       if counter == 0 {
         // here we take the txh out of the option
         if let Some(txh) = txh_g.take() {
           txh.txn.commit().await?;
-          // txn.txn.as_mut().commit().await?;
-        } // TODO: Might want to add a warning on the else.
-      } // TODO: Might want to add a warning on the else.
+          debug!("DbxSqlite.commit_txn: transaction committed");
+        }
+      } else if let Some(sp) = savepoint {
+        // 嵌套事务场景，释放 SAVEPOINT
+        let sql = format!("RELEASE SAVEPOINT {}", sp);
+        sqlx::query(&sql)
+          .execute(txh.txn.as_mut())
+          .await
+          .map_err(|e| DbxError::SavePointError(format!("Failed to release savepoint '{}': {}", sp, e)))?;
+        debug!("DbxSqlite.commit_txn: nested commit released savepoint '{}', transaction depth now {}", sp, counter);
+      } else {
+        // counter > 0 但没有 savepoint，理论上不应该发生
+        debug!("DbxSqlite.commit_txn: nested commit with depth {} but no savepoint to release", counter);
+      }
 
       Ok(())
     }
-    // Ohterwise, we have an error
+    // Otherwise, we have an error
     else {
       Err(DbxError::TxnCantCommitNoOpenTxn)
     }
@@ -217,20 +245,25 @@ impl DbxSqlite {
 struct TxnHolder {
   txn: Transaction<'static, Sqlite>,
   counter: i32,
+  savepoints: Vec<String>,
 }
 
 impl TxnHolder {
   fn new(txn: Transaction<'static, Sqlite>) -> Self {
-    TxnHolder { txn, counter: 1 }
+    TxnHolder { txn, counter: 1, savepoints: Vec::new() }
   }
 
-  fn inc(&mut self) {
+  fn inc(&mut self) -> String {
+    let savepoint_name = format!("sp_{}", self.counter);
     self.counter += 1;
+    self.savepoints.push(savepoint_name.clone());
+    savepoint_name
   }
 
-  fn dec(&mut self) -> i32 {
+  fn dec(&mut self) -> (i32, Option<String>) {
     self.counter -= 1;
-    self.counter
+    let savepoint = self.savepoints.pop();
+    (self.counter, savepoint)
   }
 }
 

@@ -79,10 +79,10 @@ impl ProviderRouter {
   fn select_provider<'a>(
     &'a self,
     hint: Option<&str>,
-  ) -> Result<&'a Box<dyn VideoGenerationProvider>, VideoGenerationError> {
+  ) -> Result<&'a dyn VideoGenerationProvider, VideoGenerationError> {
     if let Some(h) = hint {
       if let Some(p) = self.providers.get(h) {
-        return Ok(p);
+        return Ok(p.as_ref());
       } else {
         return Err(VideoGenerationError::Other(format!("provider hint '{}' not registered", h)));
       }
@@ -91,6 +91,7 @@ impl ProviderRouter {
     self
       .providers
       .get(&self.default)
+      .map(|p| p.as_ref())
       .ok_or(VideoGenerationError::Other(format!("default provider '{}' not registered", self.default)))
   }
 }
@@ -106,7 +107,7 @@ impl VideoGenerationProvider for ProviderRouter {
   async fn check_status(&self, request_id: &str) -> Result<VideoGenerationResponse, VideoGenerationError> {
     // Here we cannot know which provider owns the request_id.
     // For demonstration, we try all providers until one returns a non-error.
-    for (_name, prov) in &self.providers {
+    for prov in self.providers.values() {
       match prov.check_status(request_id).await {
         Ok(resp) => return Ok(resp),
         Err(_) => continue,

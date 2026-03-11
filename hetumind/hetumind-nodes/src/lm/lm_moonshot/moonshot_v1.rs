@@ -14,11 +14,11 @@ use rig::completion::{Chat, Completion};
 use serde_json::json;
 
 use crate::constants::MOONSHOT_MODEL_NODE_KIND;
+use crate::lm::set_agent_builder;
 use crate::lm::shared::{
   CommonLlmParameters, ModelCapabilities, UsageStats, create_base_node_definition, create_llm_execution_data_map,
   resolve_api_key, validate_api_key_resolved,
 };
-use crate::lm::{complation_error_2_execution_error, set_agent_builder};
 
 /// Moonshot 节点配置
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]

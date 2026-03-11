@@ -8,6 +8,7 @@ use super::MetricsCollector;
 
 pub struct ExecutionMonitor {
   /// 执行指标收集器
+  #[allow(dead_code)]
   metrics_collector: Arc<MetricsCollector>,
   // 日志记录器
   // logger: Arc<Logger>,
@@ -26,7 +27,7 @@ impl ExecutionMonitor {
 }
 
 impl ExecutionMonitor {
-  pub async fn start_execution_monitoring(&self, execution: &Execution) {
+  pub async fn start_execution_monitoring(&self, _execution: &Execution) {
     info!("开始监控工作流执行");
 
     // 记录执行开始指标
@@ -39,7 +40,7 @@ impl ExecutionMonitor {
 
   pub async fn record_node_execution(
     &self,
-    node_name: &NodeName,
+    _node_name: &NodeName,
     duration: std::time::Duration,
     result: &Result<Vec<VecExecutionData>, NodeExecutionError>,
   ) {
@@ -56,7 +57,7 @@ impl ExecutionMonitor {
 
         debug!("节点执行成功");
       }
-      Err(error) => {
+      Err(_error) => {
         counter!("node_executions_failed").increment(1);
 
         error!("节点执行失败");
@@ -64,7 +65,7 @@ impl ExecutionMonitor {
     }
   }
 
-  pub async fn stop_execution_monitoring(&self, execution_id: &ExecutionId) {
+  pub async fn stop_execution_monitoring(&self, _execution_id: &ExecutionId) {
     gauge!("active_executions").decrement(1.0);
 
     info!("停止监控工作流执行");

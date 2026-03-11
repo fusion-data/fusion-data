@@ -306,11 +306,7 @@ pub fn try_from_message_to_vec_input_item(value: rig::completion::Message) -> Re
             });
           }
           rig::message::AssistantContent::ToolCall(rig::message::ToolCall {
-            id: tool_id,
-            call_id,
-            function,
-            signature,
-            additional_params,
+            id: tool_id, call_id, function, ..
           }) => {
             items.push(InputItem {
               role: None,
@@ -334,7 +330,7 @@ pub fn try_from_message_to_vec_input_item(value: rig::completion::Message) -> Re
               }),
             });
           }
-          message::AssistantContent::Image(image) => todo!(),
+          message::AssistantContent::Image(_) => todo!(),
         }
       }
 
@@ -1246,24 +1242,20 @@ pub fn try_from(message: message::Message) -> Result<Vec<Message>, message::Mess
           content: OneOrMany::one(AssistantContentType::Text(AssistantContent::OutputText(Text { text }))),
           name: None,
         }]),
-        rig::message::AssistantContent::ToolCall(rig::message::ToolCall {
-          id,
-          call_id,
-          function,
-          signature,
-          additional_params,
-        }) => Ok(vec![Message::Assistant {
-          content: OneOrMany::one(AssistantContentType::ToolCall(OutputFunctionCall {
-            call_id: call_id.expect("The call ID should exist"),
-            arguments: function.arguments,
-            id,
-            name: function.name,
+        rig::message::AssistantContent::ToolCall(rig::message::ToolCall { id, call_id, function, .. }) => {
+          Ok(vec![Message::Assistant {
+            content: OneOrMany::one(AssistantContentType::ToolCall(OutputFunctionCall {
+              call_id: call_id.expect("The call ID should exist"),
+              arguments: function.arguments,
+              id,
+              name: function.name,
+              status: ToolStatus::Completed,
+            })),
+            id: assistant_message_id.expect("The assistant message ID should exist!"),
+            name: None,
             status: ToolStatus::Completed,
-          })),
-          id: assistant_message_id.expect("The assistant message ID should exist!"),
-          name: None,
-          status: ToolStatus::Completed,
-        }]),
+          }])
+        }
         rig::message::AssistantContent::Reasoning(rig::message::Reasoning { id, reasoning, .. }) => {
           Ok(vec![Message::Assistant {
             content: OneOrMany::one(AssistantContentType::Reasoning(OpenAIReasoning {
@@ -1277,7 +1269,7 @@ pub fn try_from(message: message::Message) -> Result<Vec<Message>, message::Mess
             status: (ToolStatus::Completed),
           }])
         }
-        message::AssistantContent::Image(image) => todo!(),
+        message::AssistantContent::Image(_) => todo!(),
       }
     }
   }

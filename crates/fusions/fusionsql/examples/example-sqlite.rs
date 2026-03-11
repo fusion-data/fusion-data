@@ -1,8 +1,8 @@
 use anyhow::{Result, anyhow};
 use chrono::{DateTime, FixedOffset};
-use fusions::common::ctx::Ctx;
-use fusions::common::page::{Page, PageResult};
-use fusionsql::base::DbBmc;
+use fusionsql::Ctx;
+use fusionsql::base::{BmcConfig, DbBmc};
+use fusionsql::page::{Page, PageResult};
 use fusionsql::store::Dbx;
 use fusionsql::{DbConfig, ModelManager, generate_sqlite_bmc_common, generate_sqlite_bmc_filter};
 use fusionsql::{
@@ -16,6 +16,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use sqlx::FromRow;
 use std::env;
+use std::sync::OnceLock;
 use std::time::Duration;
 
 #[derive(Debug, Serialize, Deserialize, FromRow, Fields)]
@@ -49,14 +50,19 @@ pub struct UserForUpdate {
 }
 
 pub struct UserBmc;
+
 impl DbBmc for UserBmc {
-  const TABLE: &'static str = "user";
+  fn _bmc_config() -> &'static BmcConfig {
+    static CONFIG: OnceLock<BmcConfig> = OnceLock::new();
+    CONFIG.get_or_init(|| {
+      BmcConfig::new_table("user").with_id_generated_by_db(true) // SQLite AUTOINCREMENT
+    })
+  }
 }
 
 generate_sqlite_bmc_common!(Bmc: UserBmc, Entity: User, ForCreate: UserForCreate, ForUpdate: UserForUpdate,);
 generate_sqlite_bmc_filter!(Bmc: UserBmc, Entity: User, Filter: UserFilter,);
 
-#[derive(Debug)]
 struct SqliteModel {
   db: ModelManager,
 }

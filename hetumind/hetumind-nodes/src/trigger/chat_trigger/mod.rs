@@ -33,6 +33,7 @@ pub struct ChatMessage {
 
 // 聊天接口类型
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[allow(dead_code)]
 pub enum ChatInterfaceType {
   Web,            // Web聊天界面
   Embedded,       // 嵌入式聊天
@@ -42,6 +43,7 @@ pub enum ChatInterfaceType {
 
 // 会话存储方式
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[allow(dead_code)]
 pub enum SessionStorage {
   Memory,   // 内存存储
   Redis,    // Redis存储
@@ -51,6 +53,7 @@ pub enum SessionStorage {
 
 // 认证方式
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[allow(dead_code)]
 pub enum AuthenticationMethod {
   None,                                         // 无认证
   ApiKey { key: String },                       // API密钥

@@ -46,7 +46,7 @@ impl ResourceMonitor {
   pub async fn start_monitoring(&self) {
     let memory_usage = Arc::clone(&self.memory_usage);
     let cpu_usage = Arc::clone(&self.cpu_usage);
-    let active_connections = Arc::clone(&self.active_connections);
+    let _active_connections = Arc::clone(&self.active_connections);
     let config = self.config.clone();
 
     tokio::spawn(async move {
@@ -108,7 +108,7 @@ impl ResourceMonitor {
     todo!()
   }
 
-  async fn check_resource_limits(config: &ResourceConfig, memory_usage: &u64, cpu_usage: &f64) {
+  async fn check_resource_limits(_config: &ResourceConfig, _memory_usage: &u64, _cpu_usage: &f64) {
     todo!()
   }
 }

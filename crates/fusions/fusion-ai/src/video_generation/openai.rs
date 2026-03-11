@@ -66,14 +66,13 @@ impl VideoGenerationProvider for OpenAIVideoProvider {
 
     let parsed: OpenAIStatusResp = resp.json().await?;
     let video_url = parsed.output.as_ref().and_then(|o| {
-      // try find common fields
-      if let Some(v) = o.get("video").and_then(|x| x.as_str()) {
-        Some(v.to_string())
-      } else if let Some(a) = o.get("data").and_then(|d| d.get(0)).and_then(|e| e.get("url")).and_then(|u| u.as_str()) {
-        Some(a.to_string())
-      } else {
-        None
-      }
+      o.get("video").and_then(|x| x.as_str()).map(|v| v.to_string()).or_else(|| {
+        o.get("data")
+          .and_then(|d| d.get(0))
+          .and_then(|e| e.get("url"))
+          .and_then(|u| u.as_str())
+          .map(|a| a.to_string())
+      })
     });
 
     Ok(VideoGenerationResponse {

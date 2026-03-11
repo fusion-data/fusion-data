@@ -194,5 +194,6 @@ struct UsageStats {
   prompt_tokens: u64,
   completion_tokens: u64,
   total_tokens: u64,
+  #[allow(dead_code)]
   estimated_cost: f64,
 }

@@ -117,6 +117,7 @@ pub fn evaluate_single_condition_with_options(
 }
 
 /// 评估单个条件（保持向后兼容）
+#[allow(dead_code)]
 pub fn evaluate_single_condition(
   condition: &ConditionConfig,
   input_data: &JsonValue,

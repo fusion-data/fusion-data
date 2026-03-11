@@ -259,15 +259,16 @@ pub fn create_llm_execution_data_map(
 /// Convert NodeExecutionError to JSON for error output
 pub fn create_error_execution_data(error: &NodeExecutionError) -> ExecutionDataMap {
   use fusions::common::ahash::{HashMap, HashMapExt};
-  let mut map = HashMap::new();
+  let map = HashMap::new();
 
-  let error_json = json!({
+  let _error_json = json!({
     "error": error.to_string(),
     "error_type": "execution_error",
     "timestamp": chrono::Utc::now().timestamp()
   });
 
   // TODO 是否应该返回 Result<T, E>
+  // TODO: insert error_json into map
 
   map
 }

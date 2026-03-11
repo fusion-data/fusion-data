@@ -102,7 +102,6 @@ impl UserSyncSvc {
     info!("Starting user sync since: {}", since);
 
     let query_until = Utc::now().with_timezone(&FixedOffset::east_opt(0).unwrap());
-    let mut processed_changes = 0i64;
     let mut successful_syncs = 0i64;
     let mut failed_syncs = 0i64;
 
@@ -114,7 +113,7 @@ impl UserSyncSvc {
 
     // 查询用户变更
     let changes = self.query_user_changes(query_req).await?;
-    processed_changes = changes.len() as i64;
+    let processed_changes = changes.len() as i64;
 
     debug!("Found {} user changes to process", changes.len());
 
@@ -185,7 +184,7 @@ impl UserSyncSvc {
     info!("Handling user created for user_id: {}", user_data.id);
 
     // 检查用户是否已存在
-    if let Some(existing_user) = UserBmc::get_by_id(&self.mm, user_data.id).await? {
+    if UserBmc::get_by_id(&self.mm, user_data.id).await?.is_some() {
       warn!("User {} already exists, skipping creation", user_data.id);
       return Ok(());
     }

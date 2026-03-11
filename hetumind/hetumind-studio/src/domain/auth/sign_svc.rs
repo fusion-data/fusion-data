@@ -18,7 +18,7 @@ pub struct SignSvc {
 
 impl SignSvc {
   /// 验证来自 Jieyuan 的令牌并返回本地令牌（用于代理模式）
-  pub async fn verify_and_proxy_token(&self, jieyuan_token: &str) -> Result<super::SigninResponse, DataError> {
+  pub async fn verify_and_proxy_token(&self, _jieyuan_token: &str) -> Result<super::SigninResponse, DataError> {
     // TODO: 实现 Jieyuan 令牌验证逻辑，可能需要调用 Jieyuan 的验证端点或使用 JWKS
     // 这里暂时返回未实现错误，在真实实现中需要：
     // 1. 验证 Jieyuan 令牌签名

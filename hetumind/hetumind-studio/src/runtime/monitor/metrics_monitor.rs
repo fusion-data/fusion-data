@@ -19,11 +19,11 @@ impl MetricsCollector {
 
   pub async fn record_node_execution(
     &self,
-    node_name: &NodeName,
-    duration: std::time::Duration,
-    result: &Result<Vec<ExecutionData>, NodeExecutionError>,
+    _node_name: &NodeName,
+    _duration: std::time::Duration,
+    _result: &Result<Vec<ExecutionData>, NodeExecutionError>,
   ) {
-    let metrics = self.metrics.write().await;
+    let _metrics = self.metrics.write().await;
     // TODO 更新指标...
   }
 }

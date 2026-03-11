@@ -36,6 +36,7 @@ pub trait TaskProcessor: Send + Sync {
 }
 
 #[derive(Clone, Component)]
+#[allow(dead_code)]
 pub struct WorkflowTaskProcessor {
   #[component]
   mm: ModelManager,
@@ -46,10 +47,11 @@ pub struct WorkflowTaskProcessor {
 }
 
 impl WorkflowTaskProcessor {
+  #[allow(dead_code)]
   async fn update_execution_status(
     &self,
-    execution_id: uuid::Uuid,
-    status: ExecutionStatus,
+    _execution_id: uuid::Uuid,
+    _status: ExecutionStatus,
   ) -> Result<(), ProcessError> {
     // TODO: 实现执行状态更新逻辑
     Ok(())
@@ -59,10 +61,10 @@ impl WorkflowTaskProcessor {
 #[async_trait]
 impl TaskProcessor for WorkflowTaskProcessor {
   async fn process(&self, task: &QueueTask) -> Result<TaskResult, ProcessError> {
-    let start_time = now();
+    let _start_time = now();
 
     // 解析任务负载
-    let payload: WorkflowTaskPayload = serde_json::from_value(task.payload.clone())?;
+    let _payload: WorkflowTaskPayload = serde_json::from_value(task.payload.clone())?;
 
     todo!()
   }

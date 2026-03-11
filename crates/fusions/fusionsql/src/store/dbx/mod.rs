@@ -112,6 +112,15 @@ impl Dbx {
     }
   }
 
+  pub async fn rollback_txn(&self) -> Result<()> {
+    match self {
+      #[cfg(feature = "with-postgres")]
+      Dbx::Postgres(dbx_postgres) => dbx_postgres.rollback_txn().await,
+      #[cfg(feature = "with-sqlite")]
+      Dbx::Sqlite(dbx_sqlite) => dbx_sqlite.rollback_txn().await,
+    }
+  }
+
   #[cfg(feature = "with-postgres")]
   pub fn db_postgres(&self) -> Result<&DbxPostgres> {
     match self {
@@ -130,6 +139,7 @@ impl Dbx {
     }
   }
 
+  /// 强制返回一个新的事务，即使当前 ModelManager 已开启事务。
   pub fn txn_cloned(&self) -> Dbx {
     match self {
       #[cfg(feature = "with-postgres")]

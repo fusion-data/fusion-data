@@ -33,12 +33,13 @@ impl CredentialSvc {
     let encrypted_data = self.encrypt_credential_data(&data)?;
     input.data = encrypted_data;
 
-    let id = if input.id.is_none() {
-      let id = Uuid::now_v7();
-      input.id = Some(id);
-      id
-    } else {
-      input.id.unwrap()
+    let id = match input.id {
+      Some(id) => id,
+      None => {
+        let id = Uuid::now_v7();
+        input.id = Some(id);
+        id
+      }
     };
 
     CredentialBmc::insert(&self.mm, input).await?;
