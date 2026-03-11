@@ -1,5 +1,5 @@
-use fusions::common::time::OffsetDateTime;
 use serde::{Deserialize, Serialize};
+use ultimates::common::time::OffsetDateTime;
 use uuid::Uuid;
 
 use crate::{

@@ -2216,389 +2216,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e6d5a32815ae3f33302d95fdcb2ce17862f8c65363dcfd29360480ba1001fc9c"
 
 [[package]]
-name = "fusion-ai"
-version = "0.1.0"
-dependencies = [
- "ahash 0.8.12",
- "anyhow",
- "async-stream",
- "async-trait",
- "base64 0.22.1",
- "bytes",
- "chrono",
- "clap",
- "dashmap",
- "derive_builder",
- "dotenvy",
- "fastembed",
- "fusion-common",
- "futures",
- "http",
- "log",
- "logforth",
- "mime",
- "regex",
- "reqwest 0.13.2",
- "rig-core",
- "rmcp",
- "schemars 1.2.1",
- "serde",
- "serde_json",
- "serde_path_to_error",
- "sqlx",
- "thiserror 2.0.18",
- "tokio",
- "tracing",
- "tracing-futures",
- "tracing-subscriber",
- "ureq 3.2.0",
- "uuid",
- "worker",
-]
-
-[[package]]
-name = "fusion-common"
-version = "0.1.0"
-dependencies = [
- "ahash 0.8.12",
- "base16ct 1.0.0",
- "base64ct",
- "chrono",
- "dotenvy",
- "duration-str",
- "getrandom 0.4.2",
- "hmac",
- "js-sys",
- "libc",
- "log",
- "rand 0.10.0",
- "regex",
- "sea-query",
- "serde",
- "serde_json",
- "sha2",
- "sqlx",
- "thiserror 2.0.18",
- "tsify",
- "ulid",
- "utoipa",
- "uuid",
- "wasm-bindgen",
- "windows-sys 0.61.2",
-]
-
-[[package]]
-name = "fusion-core"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "argon2",
- "async-trait",
- "config",
- "content_inspector",
- "dashmap",
- "dotenvy",
- "fastrace",
- "fusion-common",
- "fusion-core-macros",
- "fusionsql",
- "futures",
- "hierarchical_hash_wheel_timer",
- "init-tracing-opentelemetry",
- "inventory",
- "josekit",
- "log",
- "logforth",
- "mea",
- "mime_guess",
- "protobuf",
- "protobuf-codegen",
- "rand 0.10.0",
- "regex",
- "serde",
- "serde_json",
- "serde_repr",
- "serde_with",
- "strum 0.28.0",
- "thiserror 2.0.18",
- "tokio",
- "toml",
- "tonic",
- "tracing",
- "tracing-appender",
- "tracing-log",
- "tracing-opentelemetry-instrumentation-sdk",
- "tracing-subscriber",
- "ulid",
- "utoipa",
- "uuid",
- "zeroize",
-]
-
-[[package]]
-name = "fusion-core-macros"
-version = "0.1.0"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.117",
-]
-
-[[package]]
-name = "fusion-db"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "config",
- "fusion-common",
- "fusion-core",
- "fusionsql",
- "log",
- "logforth",
- "sea-query",
- "sea-query-binder",
- "serde",
- "serde_json",
- "sqlx",
- "thiserror 2.0.18",
- "tokio",
- "tonic",
- "uuid",
-]
-
-[[package]]
-name = "fusion-grpc"
-version = "0.1.0"
-dependencies = [
- "config",
- "fusion-common",
- "fusion-core",
- "futures",
- "http",
- "log",
- "protobuf",
- "serde",
- "tokio",
- "tonic",
- "tonic-reflection",
- "tonic-types",
- "tonic-web",
- "tower-http",
- "tower-service",
- "uuid",
-]
-
-[[package]]
-name = "fusion-security"
-version = "0.1.0"
-dependencies = [
- "dotenvy",
- "fusion-common",
- "fusion-core",
- "josekit",
- "oauth2",
- "openidconnect",
- "reqwest 0.13.2",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
- "tokio",
- "url",
-]
-
-[[package]]
-name = "fusion-web"
-version = "0.1.0"
-dependencies = [
- "axum",
- "bytes",
- "config",
- "fusion-common",
- "fusion-core",
- "futures",
- "headers",
- "http",
- "hyper",
- "log",
- "mea",
- "mime",
- "reqwest 0.13.2",
- "serde",
- "serde_json",
- "serde_with",
- "tokio",
- "tower",
- "tower-http",
- "ulid",
- "utoipa",
- "uuid",
-]
-
-[[package]]
-name = "fusions"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "axum",
- "clap",
- "dotenvy",
- "fusion-ai",
- "fusion-common",
- "fusion-core",
- "fusion-core-macros",
- "fusion-db",
- "fusion-grpc",
- "fusion-security",
- "fusion-web",
- "fusionsql",
- "fusionsql-core",
- "inventory",
- "log",
- "logforth",
- "regex",
- "reqwest 0.13.2",
- "rig-core",
- "rmcp",
- "serde",
- "serde_json",
- "sqlx",
- "tokio",
- "tonic",
- "tracing",
- "tracing-subscriber",
- "ulid",
- "url",
- "utoipa",
-]
-
-[[package]]
-name = "fusions-ai-example"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "clap",
- "dotenvy",
- "fusions",
- "logforth",
- "reqwest 0.13.2",
- "rig-core",
- "rmcp",
- "serde",
- "serde_json",
- "sqlx",
- "tokio",
- "tracing",
- "tracing-subscriber",
- "uuid",
-]
-
-[[package]]
-name = "fusions-common-example"
-version = "0.1.0"
-dependencies = [
- "fusions",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "fusions-core-example"
-version = "0.1.0"
-dependencies = [
- "fusions",
- "inventory",
- "log",
- "regex",
- "tokio",
-]
-
-[[package]]
-name = "fusions-db-example"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "dotenvy",
- "fusions",
- "log",
- "sqlx",
- "tokio",
-]
-
-[[package]]
-name = "fusions-security-example"
-version = "0.1.0"
-dependencies = [
- "dotenvy",
- "fusions",
- "reqwest 0.13.2",
- "tokio",
- "url",
-]
-
-[[package]]
-name = "fusionsql"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "chrono",
- "config",
- "derive_more",
- "duration-str",
- "fusion-common",
- "fusionsql-core",
- "fusionsql-macros",
- "log",
- "logforth",
- "pgvector",
- "regex",
- "rust_decimal",
- "sea-query",
- "sea-query-binder",
- "serde",
- "serde_json",
- "serde_with",
- "sqlx",
- "thiserror 2.0.18",
- "tokio",
- "tonic",
- "utoipa",
- "uuid",
-]
-
-[[package]]
-name = "fusionsql-core"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "fusion-common",
- "fusionsql-macros",
- "rust_decimal",
- "sea-query",
- "sea-query-binder",
- "serde",
- "serde_json",
- "thiserror 2.0.18",
- "tsify",
- "utoipa",
- "uuid",
- "wasm-bindgen",
-]
-
-[[package]]
-name = "fusionsql-macros"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "proc-macro2",
- "quote",
- "sea-query",
- "syn 2.0.117",
-]
-
-[[package]]
 name = "futf"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3004,7 +2621,6 @@ dependencies = [
  "croner",
  "dirs",
  "duration-str",
- "fusions",
  "futures-util",
  "hetuflow-core",
  "hierarchical_hash_wheel_timer",
@@ -3019,6 +2635,7 @@ dependencies = [
  "thiserror 2.0.18",
  "tokio",
  "tokio-tungstenite",
+ "ultimates",
  "uuid",
 ]
 
@@ -3031,9 +2648,6 @@ dependencies = [
  "config",
  "croner",
  "duration-str",
- "fusions",
- "fusionsql",
- "fusionsql-core",
  "garde",
  "gloo-timers",
  "hierarchical_hash_wheel_timer",
@@ -3050,6 +2664,9 @@ dependencies = [
  "toml",
  "tsify",
  "typed-builder",
+ "ultimates",
+ "ultimatesql",
+ "ultimatesql-core",
  "utoipa",
  "uuid",
  "wasm-bindgen",
@@ -3077,8 +2694,6 @@ dependencies = [
  "croner",
  "duration-str",
  "fastrace",
- "fusions",
- "fusionsql",
  "futures-util",
  "garde",
  "hetuflow-core",
@@ -3094,6 +2709,8 @@ dependencies = [
  "thiserror 2.0.18",
  "tokio",
  "toml",
+ "ultimates",
+ "ultimatesql",
  "utoipa",
  "utoipa-axum",
  "utoipa-swagger-ui",
@@ -3107,11 +2724,6 @@ dependencies = [
  "anyhow",
  "axum-test",
  "config",
- "fusion-common",
- "fusion-core",
- "fusion-db",
- "fusions",
- "fusionsql",
  "futures-util",
  "hetuflow-agent",
  "hetuflow-core",
@@ -3125,6 +2737,11 @@ dependencies = [
  "tokio",
  "tokio-test",
  "tokio-tungstenite",
+ "ultimate-common",
+ "ultimate-core",
+ "ultimate-db",
+ "ultimates",
+ "ultimatesql",
  "uuid",
 ]
 
@@ -3135,8 +2752,6 @@ dependencies = [
  "clap",
  "config",
  "dirs",
- "fusions",
- "fusionsql",
  "hetumind-core",
  "reqwest 0.13.2",
  "serde",
@@ -3145,6 +2760,8 @@ dependencies = [
  "thiserror 2.0.18",
  "tokio",
  "toml",
+ "ultimates",
+ "ultimatesql",
  "uuid",
 ]
 
@@ -3156,8 +2773,6 @@ dependencies = [
  "axum",
  "chrono",
  "dashmap",
- "fusions",
- "fusionsql",
  "hetumind-core",
  "http",
  "log",
@@ -3167,6 +2782,8 @@ dependencies = [
  "sqlx",
  "thiserror 2.0.18",
  "tokio",
+ "ultimates",
+ "ultimatesql",
 ]
 
 [[package]]
@@ -3183,9 +2800,6 @@ dependencies = [
  "derive_more",
  "dotenvy",
  "duration-str",
- "fusions",
- "fusionsql",
- "fusionsql-core",
  "jsonschema",
  "log",
  "mime_guess",
@@ -3204,6 +2818,9 @@ dependencies = [
  "strum 0.28.0",
  "thiserror 2.0.18",
  "tokio",
+ "ultimates",
+ "ultimatesql",
+ "ultimatesql-core",
  "uuid",
 ]
 
@@ -3227,7 +2844,6 @@ dependencies = [
  "croner",
  "dotenvy",
  "duration-str",
- "fusions",
  "futures",
  "glob",
  "hetumind-context",
@@ -3251,6 +2867,7 @@ dependencies = [
  "serde_json_path",
  "thiserror 2.0.18",
  "tokio",
+ "ultimates",
  "uuid",
 ]
 
@@ -3270,9 +2887,6 @@ dependencies = [
  "croner",
  "dirs",
  "fastrace",
- "fusion-core-macros",
- "fusions",
- "fusionsql",
  "futures",
  "hetumind-context",
  "hetumind-core",
@@ -3306,6 +2920,9 @@ dependencies = [
  "tower",
  "tower-cookies",
  "tower-http",
+ "ultimate-core-macros",
+ "ultimates",
+ "ultimatesql",
  "url",
  "urlencoding",
  "uuid",
@@ -3942,9 +3559,6 @@ version = "0.1.0"
 dependencies = [
  "axum",
  "chrono",
- "fusions",
- "fusionsql",
- "fusionsql-core",
  "futures",
  "headers",
  "http",
@@ -3958,6 +3572,9 @@ dependencies = [
  "sqlx",
  "strum 0.28.0",
  "tower-http",
+ "ultimates",
+ "ultimatesql",
+ "ultimatesql-core",
  "utoipa",
  "uuid",
 ]
@@ -3976,9 +3593,6 @@ dependencies = [
  "derive_more",
  "enum-iterator",
  "fastrace",
- "fusion-core-macros",
- "fusions",
- "fusionsql",
  "futures-util",
  "hyper",
  "hyper-util",
@@ -4002,6 +3616,9 @@ dependencies = [
  "tokio",
  "tower",
  "typed-builder",
+ "ultimate-core-macros",
+ "ultimates",
+ "ultimatesql",
  "urlencoding",
  "utoipa",
  "utoipa-axum",
@@ -8897,6 +8514,389 @@ dependencies = [
  "serde",
  "uuid",
  "web-time",
+]
+
+[[package]]
+name = "ultimate-ai"
+version = "0.1.0"
+dependencies = [
+ "ahash 0.8.12",
+ "anyhow",
+ "async-stream",
+ "async-trait",
+ "base64 0.22.1",
+ "bytes",
+ "chrono",
+ "clap",
+ "dashmap",
+ "derive_builder",
+ "dotenvy",
+ "fastembed",
+ "futures",
+ "http",
+ "log",
+ "logforth",
+ "mime",
+ "regex",
+ "reqwest 0.13.2",
+ "rig-core",
+ "rmcp",
+ "schemars 1.2.1",
+ "serde",
+ "serde_json",
+ "serde_path_to_error",
+ "sqlx",
+ "thiserror 2.0.18",
+ "tokio",
+ "tracing",
+ "tracing-futures",
+ "tracing-subscriber",
+ "ultimate-common",
+ "ureq 3.2.0",
+ "uuid",
+ "worker",
+]
+
+[[package]]
+name = "ultimate-common"
+version = "0.1.0"
+dependencies = [
+ "ahash 0.8.12",
+ "base16ct 1.0.0",
+ "base64ct",
+ "chrono",
+ "dotenvy",
+ "duration-str",
+ "getrandom 0.4.2",
+ "hmac",
+ "js-sys",
+ "libc",
+ "log",
+ "rand 0.10.0",
+ "regex",
+ "sea-query",
+ "serde",
+ "serde_json",
+ "sha2",
+ "sqlx",
+ "thiserror 2.0.18",
+ "tsify",
+ "ulid",
+ "utoipa",
+ "uuid",
+ "wasm-bindgen",
+ "windows-sys 0.61.2",
+]
+
+[[package]]
+name = "ultimate-core"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "argon2",
+ "async-trait",
+ "config",
+ "content_inspector",
+ "dashmap",
+ "dotenvy",
+ "fastrace",
+ "futures",
+ "hierarchical_hash_wheel_timer",
+ "init-tracing-opentelemetry",
+ "inventory",
+ "josekit",
+ "log",
+ "logforth",
+ "mea",
+ "mime_guess",
+ "protobuf",
+ "protobuf-codegen",
+ "rand 0.10.0",
+ "regex",
+ "serde",
+ "serde_json",
+ "serde_repr",
+ "serde_with",
+ "strum 0.28.0",
+ "thiserror 2.0.18",
+ "tokio",
+ "toml",
+ "tonic",
+ "tracing",
+ "tracing-appender",
+ "tracing-log",
+ "tracing-opentelemetry-instrumentation-sdk",
+ "tracing-subscriber",
+ "ulid",
+ "ultimate-common",
+ "ultimate-core-macros",
+ "ultimatesql",
+ "utoipa",
+ "uuid",
+ "zeroize",
+]
+
+[[package]]
+name = "ultimate-core-macros"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.117",
+]
+
+[[package]]
+name = "ultimate-db"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "config",
+ "log",
+ "logforth",
+ "sea-query",
+ "sea-query-binder",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "thiserror 2.0.18",
+ "tokio",
+ "tonic",
+ "ultimate-common",
+ "ultimate-core",
+ "ultimatesql",
+ "uuid",
+]
+
+[[package]]
+name = "ultimate-grpc"
+version = "0.1.0"
+dependencies = [
+ "config",
+ "futures",
+ "http",
+ "log",
+ "protobuf",
+ "serde",
+ "tokio",
+ "tonic",
+ "tonic-reflection",
+ "tonic-types",
+ "tonic-web",
+ "tower-http",
+ "tower-service",
+ "ultimate-common",
+ "ultimate-core",
+ "uuid",
+]
+
+[[package]]
+name = "ultimate-security"
+version = "0.1.0"
+dependencies = [
+ "dotenvy",
+ "josekit",
+ "oauth2",
+ "openidconnect",
+ "reqwest 0.13.2",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+ "tokio",
+ "ultimate-common",
+ "ultimate-core",
+ "url",
+]
+
+[[package]]
+name = "ultimate-web"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "bytes",
+ "config",
+ "futures",
+ "headers",
+ "http",
+ "hyper",
+ "log",
+ "mea",
+ "mime",
+ "reqwest 0.13.2",
+ "serde",
+ "serde_json",
+ "serde_with",
+ "tokio",
+ "tower",
+ "tower-http",
+ "ulid",
+ "ultimate-common",
+ "ultimate-core",
+ "utoipa",
+ "uuid",
+]
+
+[[package]]
+name = "ultimates"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "axum",
+ "clap",
+ "dotenvy",
+ "inventory",
+ "log",
+ "logforth",
+ "regex",
+ "reqwest 0.13.2",
+ "rig-core",
+ "rmcp",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "tokio",
+ "tonic",
+ "tracing",
+ "tracing-subscriber",
+ "ulid",
+ "ultimate-ai",
+ "ultimate-common",
+ "ultimate-core",
+ "ultimate-core-macros",
+ "ultimate-db",
+ "ultimate-grpc",
+ "ultimate-security",
+ "ultimate-web",
+ "ultimatesql",
+ "ultimatesql-core",
+ "url",
+ "utoipa",
+]
+
+[[package]]
+name = "ultimates-ai-example"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "clap",
+ "dotenvy",
+ "logforth",
+ "reqwest 0.13.2",
+ "rig-core",
+ "rmcp",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "ultimates",
+ "uuid",
+]
+
+[[package]]
+name = "ultimates-common-example"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "ultimates",
+]
+
+[[package]]
+name = "ultimates-core-example"
+version = "0.1.0"
+dependencies = [
+ "inventory",
+ "log",
+ "regex",
+ "tokio",
+ "ultimates",
+]
+
+[[package]]
+name = "ultimates-db-example"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "dotenvy",
+ "log",
+ "sqlx",
+ "tokio",
+ "ultimates",
+]
+
+[[package]]
+name = "ultimates-security-example"
+version = "0.1.0"
+dependencies = [
+ "dotenvy",
+ "reqwest 0.13.2",
+ "tokio",
+ "ultimates",
+ "url",
+]
+
+[[package]]
+name = "ultimatesql"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "chrono",
+ "config",
+ "derive_more",
+ "duration-str",
+ "log",
+ "logforth",
+ "pgvector",
+ "regex",
+ "rust_decimal",
+ "sea-query",
+ "sea-query-binder",
+ "serde",
+ "serde_json",
+ "serde_with",
+ "sqlx",
+ "thiserror 2.0.18",
+ "tokio",
+ "tonic",
+ "ultimate-common",
+ "ultimatesql-core",
+ "ultimatesql-macros",
+ "utoipa",
+ "uuid",
+]
+
+[[package]]
+name = "ultimatesql-core"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "rust_decimal",
+ "sea-query",
+ "sea-query-binder",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+ "tsify",
+ "ultimate-common",
+ "ultimatesql-macros",
+ "utoipa",
+ "uuid",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "ultimatesql-macros"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "proc-macro2",
+ "quote",
+ "sea-query",
+ "syn 2.0.117",
 ]
 
 [[package]]

@@ -9,9 +9,9 @@
   - 数据库访问统一使用 BMC 模式（`fusionsql` 宏），并复用当前项目已有模块与错误处理：`fusion-common`、`fusion-core`、`fusion-db`、`fusion-web`、`fusionsql`、`jieyuan-core`。
     - BMC 参考示例见 `jieyuan/jieyuan-server/src/namespace/namespace_bmc.rs` 和 `jieyuan/jieyuan-server/src/user/user_credential_bmc.rs`
   - 错误统一复用：
-    - 业务及通用错误：`fusion_core::DataError`
+    - 业务及通用错误：`ultimate_core::DataError`
     - BMC 层错误：`fusionsql::SqlError`
-    - Axum Route 错误：`fusion_web::WebError`
+    - Axum Route 错误：`ultimate_web::WebError`
   - 并发访问：对外服务对象（如 `PolicySvc`）可便宜 `clone`
   - 统一依赖来自工作区 `Cargo.toml`，不引入未声明的第三方库。若需要的库不存在，则终止任务并显示需要的库列表和原因
   - 不设计审计功能；不考虑历史版本兼容与数据库迁移逻辑（系统尚未发布）。
@@ -115,7 +115,6 @@ IAM Resource Mapping 管理机制通过 jieyuan 管理后台配置 API 路径与
 ### 资源与行为命名规范
 
 - **资源标识格式**：`iam:{service}:{tenant_id}:{type}/{id}`
-
   - **策略配置**：完整格式，如 `iam:hetumind:42:workflow/123`
   - **API 调用**：简化格式，如 `iam:hetumind:workflow/123`（自动注入 tenant_id）
   - **约定简化**：`iam:user:{tenant_id}:{user_id}`、`iam:role:{tenant_id}:{role_id}`、`iam:policy:{tenant_id}:{policy_id}`
@@ -312,7 +311,6 @@ pub struct PathLookupResponse {
 ### 支持的条件键（混合架构）
 
 - **用户身份条件键**：
-
   - `iam:user_id`: 用户 ID
   - `iam:roles`: 用户角色列表
   - `iam:is_platform_admin`: 是否平台管理员
@@ -320,7 +318,6 @@ pub struct PathLookupResponse {
   - `iam:managed_tenant_ids`: 管理的租户 ID 列表
 
 - **请求信息条件键**：
-
   - `iam:request_ip`: 客户端 IP 地址
   - `iam:method`: HTTP 方法
   - `iam:path`: 请求路径
@@ -331,11 +328,11 @@ pub struct PathLookupResponse {
 
 ### 上下文数据来源
 
-条件键的数据来源于 `fusion_common::ctx::Ctx` 通过 `CtxExt` trait 提供：
+条件键的数据来源于 `ultimate_common::ctx::Ctx` 通过 `CtxExt` trait 提供：
 
 ```rust
 // 当前实现：直接使用 Ctx 和 CtxExt
-use fusions::common::ctx::Ctx;
+use ultimates::common::ctx::Ctx;
 use crate::model::CtxExt;
 
 // 在策略评估中直接使用
@@ -447,7 +444,7 @@ access_control/
 
 ```rust
 use std::sync::Arc;
-use fusion_core::{Result, DataError};
+use ultimate_core::{Result, DataError};
 use jieyuan_core::model::{PolicyEntity, ctx_ext::CtxExt};
 
 /// 策略服务（Arc 并发友好）
@@ -543,7 +540,7 @@ impl PolicySvc {
 
 ```rust
 use std::sync::Arc;
-use fusion_core::Result;
+use ultimate_core::Result;
 use jieyuan_core::model::{iam_resource_mapping::*, path_lookup::*};
 
 /// IAM Resource Mapping 服务
@@ -631,7 +628,7 @@ pub enum DecisionEffect { Allow, Deny }
 
 ```rust
 use std::sync::Arc;
-use fusion_core::{Result, DataError};
+use ultimate_core::{Result, DataError};
 use jieyuan_core::model::PolicyEntity;
 
 /// 仓库接口（基于 BMC 实现）
@@ -639,10 +636,10 @@ use jieyuan_core::model::PolicyEntity;
 /// - 角色表达统一为“字符串编码”（如 `tenant_admin`、`platform_admin`），仓库接口使用 `&[String]`；
 ///   若需映射数值 ID，由仓库内部完成，服务层不传播数值类型。
 /// - AppSetting 获取统一：在 Axum route 层通过 `State<Application>` 获取，再调用
-///   `.fusion_setting().app().time_offset()`；业务层由调用方传入所需配置，不直接访问 `Application::global()`。
+///   `.ultimate_setting().app().time_offset()`；业务层由调用方传入所需配置，不直接访问 `Application::global()`。
 /// - 占位符来源统一：模板渲染的内置占位符仅来自 `Ctx`；路由参数统一通过 `extras` 显式注入。
-/// - 便捷构建方法统一：直接使用 `fusion_common::ctx::Ctx`，无需额外转换。
-/// - 错误分层统一：仓库层返回 `fusion_core::DataError`（内部映射 `SqlError`）；端点/中间件仅使用 `fusion_web::WebError`。
+/// - 便捷构建方法统一：直接使用 `ultimate_common::ctx::Ctx`，无需额外转换。
+/// - 错误分层统一：仓库层返回 `ultimate_core::DataError`（内部映射 `SqlError`）；端点/中间件仅使用 `ultimate_web::WebError`。
 #[derive(Clone)]
 pub struct PolicyRepo {
   mm: ModelManager,
@@ -771,7 +768,7 @@ generate_pg_bmc_filter!(
 
 ```rust
 use axum::{Router, routing::get};
-use fusion_web::auth::{AsyncRequireAuthorizationLayer, WebAuth};
+use ultimate_web::auth::{AsyncRequireAuthorizationLayer, WebAuth};
 // PolicySvc 可便宜 clone，无需 Arc 包裹
 
 /// 函数级注释：示例路由集成鉴权层（PolicySvc 可便宜 clone，无需 Arc 包裹）
@@ -789,10 +786,10 @@ pub fn routes(policy_svc: PolicySvc) -> Router {
 ````rust
 use axum::{http::Request, middleware::Next, response::Response};
 use axum::extract::State;
-use fusions::common::ctx::Ctx;
-use fusion_web::WebError;
-use fusion_core::application::Application;
-use fusion_core::model::{auth_ctx::build_auth_context, PolicySvc};
+use ultimates::common::ctx::Ctx;
+use ultimate_web::WebError;
+use ultimate_core::application::Application;
+use ultimate_core::model::{auth_ctx::build_auth_context, PolicySvc};
 
 // `jieyuan/jieyuan-core/src/web/middleware/authorization_middleware.rs`
 /// 函数级注释：最小授权中间件，将业务层 DataError 映射为 WebError
@@ -803,7 +800,7 @@ pub async fn authz_guard<B>(
   mut req: Request<B>,
   next: Next<B>,
 ) -> Result<Response, WebError> {
-  let ac = build_auth_context(&ctx, *app.fusion_setting().app().time_offset())
+  let ac = build_auth_context(&ctx, *app.ultimate_setting().app().time_offset())
     .map_err(|e| WebError::bad_request(e.to_string()))?;
   let action = req.method().as_str().to_lowercase();
   let resource = req.uri().path().to_string();
@@ -819,7 +816,7 @@ pub async fn authz_guard<B>(
 
 ## 远程授权 API 合约
 
-为满足“jieyuan 作为独立 IAM 微服务，其他项目仅通过远程调用使用”的约束，定义统一的远程授权接口。客户端（hetumind-studio、hetuflow-server）通过该接口完成令牌校验与权限评估，并复用既有数据结构：返回中的 `decision` 使用 `DecisionEffect`（值为 `allow`/`deny`），失败错误信息复用 `fusion_web::WebError`。
+为满足“jieyuan 作为独立 IAM 微服务，其他项目仅通过远程调用使用”的约束，定义统一的远程授权接口。客户端（hetumind-studio、hetuflow-server）通过该接口完成令牌校验与权限评估，并复用既有数据结构：返回中的 `decision` 使用 `DecisionEffect`（值为 `allow`/`deny`），失败错误信息复用 `ultimate_web::WebError`。
 
 ### Endpoint
 
@@ -855,7 +852,6 @@ pub async fn authz_guard<B>(
 ### Response（状态码语义与数据结构）
 
 - 200 OK（权限允许）：
-
   - 语义：令牌有效，权限评估通过。
   - 结构：包含 `decision` 与 `ctx`，其中 `decision` 复用 `DecisionEffect`（序列化为 `allow`）。
   - 示例：
@@ -877,9 +873,8 @@ pub async fn authz_guard<B>(
     ```
 
 - 403 Forbidden（权限拒绝）：
-
   - 语义：令牌有效，但策略评估拒绝。
-  - 结构：错误信息复用 `fusion_web::WebError`，并在 `err_detail` 中携带 `decision=deny` 与 `ctx`（便于客户端日志与提示）。
+  - 结构：错误信息复用 `ultimate_web::WebError`，并在 `err_detail` 中携带 `decision=deny` 与 `ctx`（便于客户端日志与提示）。
   - 示例：
     ```json
     {
@@ -903,9 +898,8 @@ pub async fn authz_guard<B>(
     ```
 
 - 401 Unauthorized（令牌无效或过期）：
-
   - 语义：令牌校验失败（签名无效、过期、缺失）。
-  - 结构：错误信息复用 `fusion_web::WebError`；不返回 `ctx`（不可用）。
+  - 结构：错误信息复用 `ultimate_web::WebError`；不返回 `ctx`（不可用）。
   - 示例：
     ```json
     {
@@ -1038,7 +1032,7 @@ pub async fn authorize(
         .ok_or_else(|| WebError::new_with_code(401, "invalid token"))?;
 
     // 2) 构建授权上下文 (Ctx)
-    let time_offset = *app.fusion_setting().app().time_offset();
+    let time_offset = *app.ultimate_setting().app().time_offset();
     let ac = build_auth_context_with_timezone(ctx, time_offset)
         .map_err(|e| WebError::new_with_code(401, format!("invalid token: {}", e)))?;
 
@@ -1090,7 +1084,7 @@ pub async fn authorize_by_path(
         .ok_or_else(|| WebError::new_with_code(401, "invalid token"))?;
 
     // 2) 构建授权上下文
-    let time_offset = *app.fusion_setting().app().time_offset();
+    let time_offset = *app.ultimate_setting().app().time_offset();
     let ac = build_auth_context_with_timezone(ctx, time_offset)
         .map_err(|e| WebError::new_with_code(401, format!("invalid token: {}", e)))?;
 
@@ -1426,15 +1420,14 @@ enable_permission_boundary = false
 ## 错误处理
 
 - 统一错误类型（按层次使用）：
-
-  - 业务服务层统一使用 `fusion_core::DataError`；
+  - 业务服务层统一使用 `ultimate_core::DataError`；
   - 数据库访问层统一使用/转换为 `fusionsql::SqlError`；
-  - 仅在 Axum 端点函数及中间件中使用 `fusion_web::WebError` 作为响应错误类型。
+  - 仅在 Axum 端点函数及中间件中使用 `ultimate_web::WebError` 作为响应错误类型。
 
 - 示例：
 
 ```rust
-use fusion_web::WebError;
+use ultimate_web::WebError;
 
 /// 授权失败的统一映射
 pub fn unauthorized_err(msg: &str) -> WebError {

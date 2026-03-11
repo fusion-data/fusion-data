@@ -1,4 +1,4 @@
-use fusions::core::{DataError, utils::wait_exit_signals};
+use ultimates::core::{DataError, utils::wait_exit_signals};
 
 use hetuflow_server::application::ServerApplication;
 

@@ -6,8 +6,8 @@ use axum::{
   middleware::Next,
   response::Response,
 };
-use fusions::core::application::Application;
-use fusions::web::WebError;
+use ultimates::core::application::Application;
+use ultimates::web::WebError;
 
 use crate::{model::AuthorizeRequest, web::JieyuanClient};
 

@@ -1,0 +1,82 @@
+[package]
+name = "ultimates"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = true
+
+[lints]
+workspace = true
+
+[features]
+default = [
+  "ultimate-common/with-uuid",
+  "utoipa/uuid",
+  "sqlx/uuid",
+]
+with-db = [
+  "dep:ultimate-db",
+  "dep:sqlx",
+  "ultimate-common/with-db",
+  "sqlx/postgres",
+  "ultimate-db/with-postgres",
+  "ultimate-web/with-openapi",
+]
+with-grpc = ["dep:ultimate-grpc", "dep:tonic"]
+with-web = ["dep:ultimate-web", "dep:axum"]
+with-ulid = ["dep:ulid", "utoipa/ulid", "ultimate-common/with-ulid"]
+with-openapi = [
+  "ultimate-common/with-openapi",
+  "ultimate-core/with-openapi",
+  "dep:utoipa",
+]
+with-ai = ["dep:ultimate-ai"]
+with-security = ["dep:ultimate-security", "ultimate-security/with-jwt"]
+with-oauth = ["with-security", "ultimate-security/with-oauth"]
+with-logforth = ["ultimate-core/with-logforth", "logforth"]
+with-tracing = ["ultimate-core/with-tracing"]
+
+[dependencies]
+ultimate-common = { workspace = true }
+ultimate-core = { workspace = true }
+ultimate-core-macros = { workspace = true }
+# -- security
+ultimate-security = { workspace = true, optional = true }
+# -- db & ultimatesql
+ultimatesql-core = { workspace = true, optional = true }
+ultimatesql = { workspace = true, optional = true }
+ultimate-db = { workspace = true, optional = true }
+sqlx = { workspace = true, optional = true }
+# -- web & axum
+axum = { workspace = true, optional = true }
+ultimate-web = { workspace = true, optional = true }
+utoipa = { workspace = true, optional = true }
+# -- grpc & tonic
+ultimate-grpc = { workspace = true, optional = true }
+tonic = { workspace = true, optional = true }
+# -- ai
+ultimate-ai = { workspace = true, optional = true }
+# -- misc
+ulid = { workspace = true, optional = true }
+rig-core = { workspace = true }
+rmcp = { workspace = true }
+clap = { workspace = true }
+tracing = { workspace = true }
+url = { workspace = true }
+serde = { workspace = true }
+async-trait = { workspace = true }
+reqwest = { workspace = true }
+log = { workspace = true }
+regex = { workspace = true }
+anyhow = { workspace = true }
+inventory = { version = "0.3" }
+logforth = { workspace = true, optional = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["full"] }
+serde_json = { workspace = true }
+dotenvy = { workspace = true }
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }

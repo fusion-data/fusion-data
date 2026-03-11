@@ -1,6 +1,6 @@
 //! Usage example for the Hetuflow SDK using full APIs
 
-use fusions::common::page::Page;
+use ultimates::common::page::Page;
 use hetuflow_core::models::{AgentForQuery, JobForCreate, JobForQuery, TaskForQuery};
 use hetuflow_core::types::JobStatus;
 use hetuflow_core::utils::defaults::default_namespace_id;

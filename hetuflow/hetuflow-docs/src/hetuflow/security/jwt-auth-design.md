@@ -228,7 +228,7 @@ use josekit::jwe::{ECDH_ES, A256GCM, JweHeader};
 use josekit::jwk::Jwk;
 use serde::{Deserialize, Serialize};
 use std::time::{SystemTime, UNIX_EPOCH};
-use fusion_core::DataError;
+use ultimate_core::DataError;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AgentClaims {
@@ -408,7 +408,7 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 use uuid::Uuid;
 use crate::security::jwe_service::JweService;
-use fusion_core::DataError;
+use ultimate_core::DataError;
 
 #[derive(Debug, Deserialize)]
 pub struct GenerateTokenRequest {
@@ -748,27 +748,22 @@ echo "注意：私钥泄露将导致所有 Token 被破解！"
 ### 7.1 认证失败场景
 
 - **Token 格式错误**：返回 400 Bad Request
-
   - JWE Token 格式不正确
   - 缺少必要的 JWE 组件（header、encrypted_key、iv、ciphertext、tag）
 
 - **Token 解密失败**：返回 401 Unauthorized
-
   - 密钥不匹配或已更换
   - Token 被篡改或损坏
 
 - **Token 过期**：返回 401 Unauthorized
-
   - Token 中的 exp 字段已过期
 
 - **Agent ID 验证失败**：返回 403 Forbidden
-
   - 连接参数中的 agent_id 与 Token 中的 sub 字段不匹配
   - Token 中缺少 agent_id 声明
   - agent_id 格式不是有效的 UUID
 
 - **权限不足**：返回 403 Forbidden
-
   - Token 中缺少必要的权限
 
 - **API 访问限制**：返回 403 Forbidden

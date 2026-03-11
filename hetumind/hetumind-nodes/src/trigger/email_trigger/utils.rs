@@ -4,8 +4,8 @@
 
 #![allow(dead_code)]
 
-use fusions::common::ahash::{HashMap, HashMapExt, HashSet};
 use std::time::{SystemTime, UNIX_EPOCH};
+use ultimates::common::ahash::{HashMap, HashMapExt, HashSet};
 
 use base64::{Engine as _, engine::general_purpose};
 use regex::Regex;

@@ -3,9 +3,9 @@ use axum::{
   extract::{Path, State},
   http::{StatusCode, request::Parts},
 };
-use fusions::common::model::IdI64Result;
-use fusions::core::application::Application;
-use fusions::web::{WebError, WebResult, extract_ctx, ok_json};
+use ultimates::common::model::IdI64Result;
+use ultimates::core::application::Application;
+use ultimates::web::{WebError, WebResult, extract_ctx, ok_json};
 use utoipa_axum::router::OpenApiRouter;
 
 use jieyuan_core::model::{UpdatePasswordRequest, User, UserForCreate, UserForPage, UserForUpdate};
@@ -102,12 +102,12 @@ async fn user_delete(user_svc: UserSvc, Path(id): Path<i64>) -> WebResult<()> {
   path = "/query",
   request_body = UserForPage,
   responses(
-    (status = 200, description = "查询成功", body = fusionsql::page::PageResult<User>),
+    (status = 200, description = "查询成功", body = ultimatesql::page::PageResult<User>),
     (status = 400, description = "请求参数错误")
   ),
   tag = "用户管理"
 )]
-async fn user_page(user_svc: UserSvc, Json(req): Json<UserForPage>) -> WebResult<fusionsql::page::PageResult<User>> {
+async fn user_page(user_svc: UserSvc, Json(req): Json<UserForPage>) -> WebResult<ultimatesql::page::PageResult<User>> {
   let result = user_svc.page(req).await?;
   ok_json!(result)
 }
@@ -137,7 +137,7 @@ async fn user_update_password(
   Json(req): Json<UpdatePasswordRequest>,
 ) -> WebResult<()> {
   // 从请求中提取用户上下文
-  let ctx = extract_ctx(&parts, _app.fusion_setting().security())?;
+  let ctx = extract_ctx(&parts, _app.ultimate_setting().security())?;
 
   // 调用用户服务修改密码
   user_svc.update_password(ctx.user_id(), ctx.tenant_id(), target_user_id, req).await?;

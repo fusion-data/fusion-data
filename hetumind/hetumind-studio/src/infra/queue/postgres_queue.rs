@@ -1,10 +1,10 @@
 use std::time::Duration;
 
 use async_trait::async_trait;
-use fusionsql::ModelManager;
-use fusionsql::store::DbxPostgres;
 use hetumind_core::task::{QueueError, QueueStats, QueueTask, TaskQueue, TaskResult, TaskStatus};
 use serde::Deserialize;
+use ultimatesql::ModelManager;
+use ultimatesql::store::DbxPostgres;
 use uuid::Uuid;
 
 use super::TaskQueueEntity;

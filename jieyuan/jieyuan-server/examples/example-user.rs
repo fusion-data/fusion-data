@@ -1,6 +1,6 @@
-use fusions::core::{DataError, application::Application};
-use fusions::db::DbPlugin;
-use fusionsql::filter::OpValInt64;
+use ultimates::core::{DataError, application::Application};
+use ultimates::db::DbPlugin;
+use ultimatesql::filter::OpValInt64;
 
 use jieyuan_core::model::{SigninRequest, UserFilter, UserForCreate};
 use jieyuan_server::{access_control::AuthSvc, user::UserSvc};

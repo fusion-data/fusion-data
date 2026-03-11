@@ -1,11 +1,11 @@
 use axum::extract::FromRequestParts;
-use fusions::common::ahash::HashMap;
-use fusions::web::WebError;
-use fusionsql::{ModelManager, SqlError, page::PageResult};
 use jieyuan_core::model::{
   IamResourceMappingEntity, IamResourceMappingForCreateWithService, IamResourceMappingForQuery,
   IamResourceMappingForUpdate, MappingParam, ResourceMappingLookupRequest, ResourceMappingLookupResponse,
 };
+use ultimates::common::ahash::HashMap;
+use ultimates::web::WebError;
+use ultimatesql::{ModelManager, SqlError, page::PageResult};
 
 use crate::access_control::resource_mapping_bmc::ResourceMappingBmc;
 
@@ -233,12 +233,12 @@ impl ResourceMappingSvc {
   }
 }
 
-impl FromRequestParts<fusions::core::application::Application> for ResourceMappingSvc {
+impl FromRequestParts<ultimates::core::application::Application> for ResourceMappingSvc {
   type Rejection = WebError;
 
   async fn from_request_parts(
     parts: &mut axum::http::request::Parts,
-    state: &fusions::core::application::Application,
+    state: &ultimates::core::application::Application,
   ) -> core::result::Result<Self, Self::Rejection> {
     let mm = crate::utils::model_manager_from_parts(parts, state)?;
     Ok(Self::new(mm))

@@ -4,7 +4,6 @@
 //! 每个工作流执行实例维护自己的内存缓冲区。
 
 use async_trait::async_trait;
-use fusions::core::application::Application;
 use hetumind_context::services::memory_service::MemoryService;
 use hetumind_core::{
   version::Version,
@@ -16,6 +15,7 @@ use hetumind_core::{
 use log::{debug, info, warn};
 use serde_json::json;
 use std::sync::Arc;
+use ultimates::core::application::Application;
 
 use crate::constants::SIMPLE_MEMORY_NODE_KIND;
 use crate::store::simple_memory_node::memory_config::{

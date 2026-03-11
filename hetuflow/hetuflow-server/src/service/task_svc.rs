@@ -1,15 +1,15 @@
-use fusions::core::DataError;
-use fusionsql::ModelManager;
-use fusionsql::field::FieldMask;
-use fusionsql::filter::OpValUuid;
+use ultimates::core::DataError;
+use ultimatesql::ModelManager;
+use ultimatesql::field::FieldMask;
+use ultimatesql::filter::OpValUuid;
 use uuid::Uuid;
 
-use fusionsql::page::PageResult;
 use hetuflow_core::models::{
   SchedTask, SchedTaskInstance, TaskFilter, TaskForCreate, TaskForQuery, TaskForUpdate, TaskInstanceFilter,
   TaskInstanceForCreate, TaskInstanceForQuery, TaskInstanceForUpdate,
 };
 use hetuflow_core::types::{ScheduleKind, TaskInstanceStatus, TaskStatus};
+use ultimatesql::page::PageResult;
 
 use crate::infra::bmc::{JobBmc, ScheduleBmc, TaskBmc, TaskInstanceBmc};
 pub struct TaskSvc {

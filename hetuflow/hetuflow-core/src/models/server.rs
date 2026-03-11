@@ -1,16 +1,16 @@
 use chrono::{DateTime, FixedOffset};
-use fusionsql_core::page::Page;
-use fusionsql_core::{
+use serde::{Deserialize, Serialize};
+use ultimatesql_core::page::Page;
+use ultimatesql_core::{
   field::FieldMask,
   filter::{OpValDateTime, OpValInt32, OpValString},
 };
-use serde::{Deserialize, Serialize};
 
 use crate::types::ServerStatus;
 
 /// SchedServer 数据模型
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(fusionsql::Fields, sqlx::FromRow))]
+#[cfg_attr(feature = "with-db", derive(ultimatesql::Fields, sqlx::FromRow))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct SchedServer {
   pub id: String,
@@ -25,7 +25,7 @@ pub struct SchedServer {
 
 /// Server 创建模型
 #[derive(Debug, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
+#[cfg_attr(feature = "with-db", derive(ultimatesql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct ServerForRegister {
   pub id: String,
@@ -36,7 +36,7 @@ pub struct ServerForRegister {
 
 /// Server 更新模型
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
+#[cfg_attr(feature = "with-db", derive(ultimatesql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct ServerForUpdate {
   pub name: Option<String>,
@@ -58,7 +58,7 @@ pub struct ServerForQuery {
 
 /// Server 过滤器
 #[derive(Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(fusionsql::FilterNodes))]
+#[cfg_attr(feature = "with-db", derive(ultimatesql::FilterNodes))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct ServerFilter {
   pub id: Option<OpValString>,

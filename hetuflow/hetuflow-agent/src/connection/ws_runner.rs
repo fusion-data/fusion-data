@@ -1,9 +1,5 @@
 use std::sync::Arc;
 
-use fusions::core::{
-  DataError,
-  concurrent::{RetryStrategy, ServiceHandle, ServiceTask},
-};
 use futures_util::{SinkExt, StreamExt, stream::SplitSink};
 use hetuflow_core::{
   models::AgentCapabilities,
@@ -15,6 +11,10 @@ use tokio::{net::TcpStream, sync::mpsc};
 use tokio_tungstenite::{
   MaybeTlsStream, WebSocketStream,
   tungstenite::{ClientRequestBuilder, Message},
+};
+use ultimates::core::{
+  DataError,
+  concurrent::{RetryStrategy, ServiceHandle, ServiceTask},
 };
 
 use crate::{connection::ConnectionManager, setting::HetuflowAgentSetting};

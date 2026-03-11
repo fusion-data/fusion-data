@@ -12,10 +12,10 @@ publish = true
 workspace = true
 
 [features]
-with-db = ["sqlx", "sea-query", "fusionsql", "fusionsql-core/with-sea-query"]
+with-db = ["sqlx", "sea-query", "ultimatesql", "ultimatesql-core/with-sea-query"]
 
 [dependencies]
-fusions = { workspace = true }
+ultimates = { workspace = true }
 semver = { workspace = true }
 config = { workspace = true }
 thiserror = { workspace = true }
@@ -40,8 +40,8 @@ petgraph = { workspace = true }
 num_cpus = { workspace = true }
 sqlx = { workspace = true, optional = true }
 sea-query = { workspace = true, optional = true }
-fusionsql = { workspace = true, optional = true }
-fusionsql-core = { workspace = true, features = ["with-uuid"] }
+ultimatesql = { workspace = true, optional = true }
+ultimatesql-core = { workspace = true, features = ["with-uuid"] }
 dashmap = { workspace = true }
 content_inspector = "0.2"
 mime_guess = { workspace = true }

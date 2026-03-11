@@ -1,12 +1,12 @@
 #![deny(clippy::all)]
 // #![warn(clippy::exhaustive_structs)]
 
-use fusionsql::postgres::PgRowType;
 use sqlx::encode::IsNull;
 use sqlx::error::BoxDynError;
 use sqlx::postgres::{PgArgumentBuffer, PgHasArrayType, PgTypeInfo, PgValueRef};
 use sqlx::types::Json;
 use sqlx::{Decode, Encode, Postgres, Type};
+use ultimatesql::postgres::PgRowType;
 
 use crate::types::Labels;
 

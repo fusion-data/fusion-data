@@ -1,11 +1,11 @@
 use chrono::{DateTime, FixedOffset};
-use fusions::common::time::now_offset;
-use fusionsql_core::page::Page;
-use fusionsql_core::{
+use serde::{Deserialize, Serialize};
+use ultimates::common::time::now_offset;
+use ultimatesql_core::page::Page;
+use ultimatesql_core::{
   field::FieldMask,
   filter::{OpValDateTime, OpValInt32, OpValUuid},
 };
-use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::types::{ScheduleKind, ScheduleStatus};
@@ -14,7 +14,7 @@ use crate::types::{ScheduleKind, ScheduleStatus};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(
   feature = "with-db",
-  derive(fusionsql::Fields, sqlx::FromRow),
+  derive(ultimatesql::Fields, sqlx::FromRow),
   sea_query::enum_def(table_name = "sched_schedule")
 )]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
@@ -59,7 +59,7 @@ impl SchedSchedule {
 
 /// Schedule 创建模型
 #[derive(Debug, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
+#[cfg_attr(feature = "with-db", derive(ultimatesql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct ScheduleForCreate {
   pub id: Uuid,
@@ -75,7 +75,7 @@ pub struct ScheduleForCreate {
 
 /// Schedule 更新模型
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
+#[cfg_attr(feature = "with-db", derive(ultimatesql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct ScheduleForUpdate {
   pub name: Option<String>,
@@ -90,7 +90,7 @@ pub struct ScheduleForUpdate {
 
 /// Schedule 过滤器
 #[derive(Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(fusionsql::FilterNodes))]
+#[cfg_attr(feature = "with-db", derive(ultimatesql::FilterNodes))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct ScheduleFilter {
   pub id: Option<OpValUuid>,

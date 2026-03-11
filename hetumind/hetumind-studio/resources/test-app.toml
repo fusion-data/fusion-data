@@ -1,20 +1,20 @@
-[fusion.app]
+[ultimate.app]
 run_mode = "TEST"
 name = "hetumind"
 
-[fusion.security.pwd]
+[ultimate.security.pwd]
 expires_in = 604800
 default_pwd = "2025.Hetumind"
 
-[fusion.web]
+[ultimate.web]
 enable = true
 server_addr = "0.0.0.0:50000"
 
-[fusion.log]
+[ultimate.log]
 enable = false
 log_writers = ["stdout"]
 
-[fusion.db]
+[ultimate.db]
 enable = true
 url = "postgresql://fusiondata:2025.Fusiondata@localhost:5432/fusiondata_test"
 

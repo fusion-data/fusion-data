@@ -1,7 +1,7 @@
-use fusions::common::time::{DateTime, FixedOffset};
-use fusionsql_core::filter::{OpValDateTime, OpValInt32, OpValInt64, OpValString};
-use fusionsql_core::page::Page;
 use serde::{Deserialize, Serialize};
+use ultimates::common::time::{DateTime, FixedOffset};
+use ultimatesql_core::filter::{OpValDateTime, OpValInt32, OpValInt64, OpValString};
+use ultimatesql_core::page::Page;
 
 /// Namespace status enumeration
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -43,7 +43,7 @@ impl sea_query::Nullable for NamespaceStatus {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(
   feature = "with-db",
-  derive(sqlx::FromRow, fusionsql::Fields),
+  derive(sqlx::FromRow, ultimatesql::Fields),
   sea_query::enum_def(table_name = "iam_namespace")
 )]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
@@ -61,7 +61,7 @@ pub struct NamespaceEntity {
 
 /// Namespace creation request model
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
+#[cfg_attr(feature = "with-db", derive(ultimatesql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct NamespaceForCreate {
   pub name: String,
@@ -71,7 +71,7 @@ pub struct NamespaceForCreate {
 
 /// Namespace update request model
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
+#[cfg_attr(feature = "with-db", derive(ultimatesql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct NamespaceForUpdate {
   pub name: Option<String>,
@@ -91,7 +91,7 @@ pub struct NamespaceForPage {
 
 /// Namespace filter for query operations
 #[derive(Debug, Clone, Default, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(fusionsql::filter::FilterNodes))]
+#[cfg_attr(feature = "with-db", derive(ultimatesql::filter::FilterNodes))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct NamespaceFilter {
   pub id: Option<OpValInt64>,

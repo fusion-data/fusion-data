@@ -121,8 +121,8 @@ impl CliConfig {
 #[cfg(test)]
 mod tests {
   use super::*;
-  use fusions::common::env::set_env;
   use tempfile::tempdir;
+  use ultimates::common::env::set_env;
 
   #[test]
   fn test_config_serialization() {

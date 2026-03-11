@@ -1,12 +1,12 @@
 use std::sync::Arc;
 
-use fusions::core::DataError;
-use fusions::core::application::Application;
-use fusions::core::concurrent::{ServiceTask, TaskServiceHandle};
-use fusions::core::timer::{Timer, TimerPlugin};
 use log::info;
 use mea::mutex::Mutex;
 use mea::shutdown::ShutdownRecv;
+use ultimates::core::DataError;
+use ultimates::core::application::Application;
+use ultimates::core::concurrent::{ServiceTask, TaskServiceHandle};
+use ultimates::core::timer::{Timer, TimerPlugin};
 
 use crate::connection::{ConnectionManager, WsRunner};
 use crate::executor::{ProcessEventRunner, TaskExecuteRunner};

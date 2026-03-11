@@ -1,12 +1,12 @@
 use std::{env::consts, path::PathBuf, sync::Arc, time::Duration};
 
 use duration_str::deserialize_duration;
-use fusions::common::{ahash::HashMap, env::get_env};
-use fusions::core::{DataError, configuration::FusionConfigRegistry};
 use hetuflow_core::{types::Labels, utils::setting::write_app_setting};
 use log::{info, warn};
 use serde::{Deserialize, Serialize};
 use sysinfo::System;
+use ultimates::common::{ahash::HashMap, env::get_env};
+use ultimates::core::{DataError, configuration::UltimateConfigRegistry};
 use uuid::Uuid;
 
 /// 连接配置
@@ -194,7 +194,7 @@ pub struct HetuflowAgentSetting {
 const KEY_PATH_AGENT_ID: &str = "hetuflow.agent.agent_id";
 
 impl HetuflowAgentSetting {
-  pub fn load(config_registry: &FusionConfigRegistry) -> Result<Self, DataError> {
+  pub fn load(config_registry: &UltimateConfigRegistry) -> Result<Self, DataError> {
     let default_setting = include_str!("default.toml");
     let setting_source = config::File::from_str(default_setting, config::FileFormat::Toml);
     config_registry.append_config_source(setting_source)?;

@@ -1,7 +1,7 @@
 use axum::{extract::Json, http::request::Parts};
-use fusions::common::ctx::Ctx;
-use fusions::core::application::Application;
-use fusions::web::{WebError, WebResult};
+use ultimates::common::ctx::Ctx;
+use ultimates::core::application::Application;
+use ultimates::web::{WebError, WebResult};
 use utoipa_axum::router::OpenApiRouter;
 
 use jieyuan_core::model::{AuthorizeRequest, AuthorizeResponse, Decision, render_resource};

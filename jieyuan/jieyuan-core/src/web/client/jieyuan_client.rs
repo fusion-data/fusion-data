@@ -1,7 +1,7 @@
-use fusions::common::ctx::Ctx;
-use fusions::core::DataError;
-use fusions::web::WebError;
 use serde::Serialize;
+use ultimates::common::ctx::Ctx;
+use ultimates::core::DataError;
+use ultimates::web::WebError;
 
 use crate::model::{AuthorizeRequest, AuthorizeResponse, path_authz::MatchedMapping};
 

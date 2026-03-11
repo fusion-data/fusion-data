@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use fusions::core::{DataError, concurrent::ServiceTask};
 use hetuflow_core::{
   protocol::{EventMessage, ProcessEvent, ProcessEventKind, TaskInstanceChanged},
   types::TaskInstanceStatus,
@@ -8,6 +7,7 @@ use hetuflow_core::{
 use log::{error, info, warn};
 use mea::shutdown::ShutdownRecv;
 use tokio::sync::broadcast;
+use ultimates::core::{DataError, concurrent::ServiceTask};
 
 use crate::{connection::ConnectionManager, process::ProcessManager, setting::HetuflowAgentSetting};
 

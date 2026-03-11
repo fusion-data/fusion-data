@@ -1,12 +1,12 @@
 use chrono::{DateTime, FixedOffset};
-use fusions::common::ahash::HashMap;
-use fusionsql_core::page::Page;
-use fusionsql_core::{
+use garde::Validate;
+use serde::{Deserialize, Serialize};
+use ultimates::common::ahash::HashMap;
+use ultimatesql_core::page::Page;
+use ultimatesql_core::{
   field::FieldMask,
   filter::{OpValDateTime, OpValInt32, OpValString},
 };
-use garde::Validate;
-use serde::{Deserialize, Serialize};
 
 use crate::types::{AgentStatus, Labels};
 use crate::utils::defaults;
@@ -62,7 +62,7 @@ pub struct AgentStatistics {
 
 /// SchedAgent 数据模型
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(sqlx::FromRow, fusionsql::Fields))]
+#[cfg_attr(feature = "with-db", derive(sqlx::FromRow, ultimatesql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct SchedAgent {
   pub id: String,
@@ -77,7 +77,7 @@ pub struct SchedAgent {
 
 /// Agent 创建模型
 #[derive(Debug, Serialize, Deserialize, Validate)]
-#[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
+#[cfg_attr(feature = "with-db", derive(ultimatesql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct AgentForCreate {
   #[garde(skip)]
@@ -96,7 +96,7 @@ pub struct AgentForCreate {
 
 /// Agent 更新模型
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-#[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
+#[cfg_attr(feature = "with-db", derive(ultimatesql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct AgentForUpdate {
   pub description: Option<String>,
@@ -111,7 +111,7 @@ pub struct AgentForUpdate {
 
 /// Agent 过滤器
 #[derive(Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(fusionsql::FilterNodes))]
+#[cfg_attr(feature = "with-db", derive(ultimatesql::FilterNodes))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct AgentFilter {
   pub id: Option<OpValString>,

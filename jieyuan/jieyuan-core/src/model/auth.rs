@@ -1,8 +1,8 @@
-use fusionsql_core::filter::{OpValDateTime, OpValString};
-use fusionsql_core::page::{Page, Paged};
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use strum::AsRefStr;
+use ultimatesql_core::filter::{OpValDateTime, OpValString};
+use ultimatesql_core::page::{Page, Paged};
 
 use super::{UserFilter, UserStatus};
 
@@ -181,7 +181,7 @@ pub struct UserChangeQueryReq {
 
 /// Filter for user changes
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(fusionsql::FilterNodes))]
+#[cfg_attr(feature = "with-db", derive(ultimatesql::FilterNodes))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct UserChangeFilter {
   #[serde(rename = "updated_at")]
@@ -199,7 +199,7 @@ pub struct UserChangeQueryResp {
 /// User change information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
-#[cfg_attr(feature = "with-db", derive(sqlx::FromRow, fusionsql::Fields))]
+#[cfg_attr(feature = "with-db", derive(sqlx::FromRow, ultimatesql::Fields))]
 pub struct UserChangeInfo {
   pub id: i64,
   pub status: UserStatus,
@@ -216,7 +216,7 @@ pub struct TenantUserChangeQueryReq {
 
 /// Filter for tenant user changes
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(fusionsql::FilterNodes))]
+#[cfg_attr(feature = "with-db", derive(ultimatesql::FilterNodes))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct TenantUserChangeFilter {
   #[serde(rename = "updated_at")]
@@ -234,7 +234,7 @@ pub struct TenantUserChangeQueryResp {
 /// Tenant user change information
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
-#[cfg_attr(feature = "with-db", derive(sqlx::FromRow, fusionsql::Fields))]
+#[cfg_attr(feature = "with-db", derive(sqlx::FromRow, ultimatesql::Fields))]
 pub struct TenantUserChangeInfo {
   pub tenant_id: i64,
   pub user_id: i64,

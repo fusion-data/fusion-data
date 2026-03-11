@@ -1,10 +1,10 @@
-use fusions::common::time::OffsetDateTime;
-use fusions::core::DataError;
-use fusionsql::{field::Fields, postgres::PgRowType};
 use hetumind_core::workflow::{Workflow, WorkflowId, WorkflowStatus};
 use sea_query::enum_def;
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
+use ultimates::common::time::OffsetDateTime;
+use ultimates::core::DataError;
+use ultimatesql::{field::Fields, postgres::PgRowType};
 
 /// 工作流实体表
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow, Fields)]

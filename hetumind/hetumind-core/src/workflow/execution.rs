@@ -2,9 +2,9 @@
 use std::sync::Arc;
 
 use chrono::{DateTime, FixedOffset};
-use fusions::common::ahash::HashMap;
-use fusions::common::time::now;
 use serde::{Deserialize, Serialize, de::DeserializeOwned, ser::Error};
+use ultimates::common::ahash::HashMap;
+use ultimates::common::time::now;
 use uuid::Uuid;
 
 use crate::{

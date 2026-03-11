@@ -1,10 +1,10 @@
 //! 基础指标收集
 
 use crate::binary_storage::BinaryStorageError;
-use fusions::common::ahash::HashMap;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
+use ultimates::common::ahash::HashMap;
 use uuid::Uuid;
 
 /// 操作进度

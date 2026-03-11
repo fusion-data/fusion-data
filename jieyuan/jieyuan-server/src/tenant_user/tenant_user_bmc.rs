@@ -1,13 +1,13 @@
 use std::sync::OnceLock;
 
-use fusionsql::{
+use sea_query::{Condition, SelectStatement};
+use ultimatesql::{
   ModelManager, SqlError,
   base::{self, BmcConfig, DbBmc, compute_page},
   filter::OpValInt64,
   filter::{FilterGroups, apply_to_sea_query},
   generate_pg_bmc_common, generate_pg_bmc_filter,
 };
-use sea_query::{Condition, SelectStatement};
 
 use jieyuan_core::model::{
   TABLE_TENANT_USER, TABLE_USER, TenantUser, TenantUserChangeQueryReq, TenantUserChangeQueryResp, TenantUserFilter,
@@ -115,7 +115,7 @@ impl TenantUserBmc {
   /// Get user's active tenant count
   pub async fn get_user_active_tenant_count(mm: &ModelManager, user_id: i64) -> Result<i64, SqlError> {
     let req = UserForQuery {
-      page: fusionsql::page::Page::default(),
+      page: ultimatesql::page::Page::default(),
       filters: vec![
         TenantUserFilter { user_id: Some(OpValInt64::eq(user_id)), ..Default::default() },
         TenantUserFilter { status: Some(OpValInt64::eq(TenantUserStatus::Active as i64)), ..Default::default() },

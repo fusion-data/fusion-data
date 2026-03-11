@@ -1,6 +1,6 @@
 use axum::extract::FromRequestParts;
-use fusions::core::DataError;
-use fusionsql::page::PageResult;
+use ultimates::core::DataError;
+use ultimatesql::page::PageResult;
 
 use jieyuan_core::model::{NamespaceEntity, NamespaceForCreate, NamespaceForPage, NamespaceForUpdate, NamespaceStatus};
 
@@ -8,12 +8,12 @@ use super::NamespaceBmc;
 
 #[derive(Clone)]
 pub struct NamespaceSvc {
-  mm: fusionsql::ModelManager,
+  mm: ultimatesql::ModelManager,
 }
 
 impl NamespaceSvc {
   /// Create new namespace service instance
-  pub fn new(mm: fusionsql::ModelManager) -> Self {
+  pub fn new(mm: ultimatesql::ModelManager) -> Self {
     Self { mm }
   }
 
@@ -147,16 +147,16 @@ impl NamespaceSvc {
 }
 
 // FromRequestParts implementation for Axum integration
-impl FromRequestParts<fusions::core::application::Application> for NamespaceSvc {
-  type Rejection = fusions::web::WebError;
+impl FromRequestParts<ultimates::core::application::Application> for NamespaceSvc {
+  type Rejection = ultimates::web::WebError;
 
   async fn from_request_parts(
     parts: &mut axum::http::request::Parts,
-    state: &fusions::core::application::Application,
+    state: &ultimates::core::application::Application,
   ) -> core::result::Result<Self, Self::Rejection> {
     // Extract context and create model manager
-    let ctx = fusions::web::extract_ctx(parts, state.fusion_setting().security())?;
-    let mm = state.component::<fusionsql::ModelManager>().with_ctx(ctx);
+    let ctx = ultimates::web::extract_ctx(parts, state.ultimate_setting().security())?;
+    let mm = state.component::<ultimatesql::ModelManager>().with_ctx(ctx);
 
     Ok(Self::new(mm))
   }

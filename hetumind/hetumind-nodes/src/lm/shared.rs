@@ -258,7 +258,7 @@ pub fn create_llm_execution_data_map(
 
 /// Convert NodeExecutionError to JSON for error output
 pub fn create_error_execution_data(error: &NodeExecutionError) -> ExecutionDataMap {
-  use fusions::common::ahash::{HashMap, HashMapExt};
+  use ultimates::common::ahash::{HashMap, HashMapExt};
   let map = HashMap::new();
 
   let _error_json = json!({

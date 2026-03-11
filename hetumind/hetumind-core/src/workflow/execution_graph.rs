@@ -1,4 +1,4 @@
-use fusions::common::ahash::HashMap;
+use ultimates::common::ahash::HashMap;
 
 use crate::workflow::NodeRegistry;
 

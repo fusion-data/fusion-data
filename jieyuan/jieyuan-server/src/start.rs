@@ -1,7 +1,7 @@
-use fusions::core::logforth::LogforthPlugin;
-use fusions::core::{DataError, application::Application};
-use fusions::db::DbPlugin;
-use fusions::web::server::WebServerBuilder;
+use ultimates::core::logforth::LogforthPlugin;
+use ultimates::core::{DataError, application::Application};
+use ultimates::db::DbPlugin;
+use ultimates::web::server::WebServerBuilder;
 
 use crate::endpoint::routes;
 

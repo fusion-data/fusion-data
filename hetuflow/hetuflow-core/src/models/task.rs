@@ -1,12 +1,12 @@
 use chrono::{DateTime, FixedOffset};
-use fusions::common::ahash::HashMap;
-use fusionsql_core::page::Page;
-use fusionsql_core::{
+use serde::{Deserialize, Serialize};
+use strum::AsRefStr;
+use ultimates::common::ahash::HashMap;
+use ultimatesql_core::page::Page;
+use ultimatesql_core::{
   field::FieldMask,
   filter::{OpValDateTime, OpValInt32, OpValString, OpValUuid, OpValValue},
 };
-use serde::{Deserialize, Serialize};
-use strum::AsRefStr;
 use uuid::Uuid;
 
 use crate::types::{Labels, ResourceLimits, ScheduleKind, TaskStatus};
@@ -88,7 +88,7 @@ pub struct TaskMetrics {
 
 /// SchedTask 数据模型
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(fusionsql::Fields, sqlx::FromRow))]
+#[cfg_attr(feature = "with-db", derive(ultimatesql::Fields, sqlx::FromRow))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct SchedTask {
   pub id: Uuid,
@@ -148,7 +148,7 @@ impl SchedTask {
 
 /// SchedTask 创建模型
 #[derive(Debug, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
+#[cfg_attr(feature = "with-db", derive(ultimatesql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct TaskForCreate {
   pub id: Option<Uuid>,
@@ -184,7 +184,7 @@ fn default_parameters() -> serde_json::Value {
 
 /// SchedTask 更新模型
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
+#[cfg_attr(feature = "with-db", derive(ultimatesql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct TaskForUpdate {
   pub priority: Option<i32>,
@@ -214,7 +214,7 @@ pub struct TaskForQuery {
 
 /// SchedTask 过滤器
 #[derive(Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(fusionsql::FilterNodes))]
+#[cfg_attr(feature = "with-db", derive(ultimatesql::FilterNodes))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct TaskFilter {
   pub id: Option<OpValUuid>,

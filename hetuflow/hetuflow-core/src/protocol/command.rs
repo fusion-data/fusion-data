@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
-use fusions::common::time::now_epoch_millis;
 use serde::{Deserialize, Serialize};
+use ultimates::common::time::now_epoch_millis;
 use uuid::Uuid;
 
 use crate::{

@@ -38,7 +38,7 @@ hetuflow-sdk = { version = "0.1.0", features = ["with-wasm"] }
 
 ```rust
 use hetuflow_sdk::HetuflowClient;
-use fusions::common::page::Page;
+use ultimates::common::page::Page;
 use hetuflow_core::models::{JobForCreate, TaskConfig};
 use hetuflow_core::types::JobStatus;
 
@@ -101,28 +101,24 @@ fn main() {
 The SDK provides full coverage of the Hetuflow API with modern pagination and filtering:
 
 - **Agents API**: Manage and monitor agents
-
   - `query(agent_query)` - Query agents with filtering and pagination
   - `create(agent)` - Create new agent
   - `update(id, update)` - Update existing agent
   - `delete(id)` - Delete agent
 
 - **Jobs API**: Create, update, and manage jobs
-
   - `query(job_query)` - Query jobs with filtering and pagination
   - `create(job)` - Create new job
   - `update(id, update)` - Update existing job
   - `delete(id)` - Delete job
 
 - **Tasks API**: Query and control task execution
-
   - `query(task_query)` - Query tasks with filtering and pagination
   - `create(task)` - Create new task
   - `update(id, update)` - Update existing task
   - `delete(id)` - Delete task
 
 - **Schedules API**: Configure task scheduling
-
   - `query(schedule_query)` - Query schedules with filtering and pagination
   - `create(schedule)` - Create new schedule
   - `update(id, update)` - Update existing schedule
@@ -130,26 +126,22 @@ The SDK provides full coverage of the Hetuflow API with modern pagination and fi
   - `get_schedulable()` - Get schedulable schedules
 
 - **Task Instances API**: Monitor task execution instances
-
   - `query(instance_query)` - Query task instances with filtering and pagination
   - `create(instance)` - Create new task instance
   - `update(id, update)` - Update existing task instance
   - `delete(id)` - Delete task instance
 
 - **Servers API**: Manage server instances
-
   - `query(server_query)` - Query servers with filtering and pagination
   - `get(id)` - Get specific server
   - `update(id, update)` - Update existing server
   - `delete(id)` - Delete server
 
 - **System API**: Health checks and metrics
-
   - `health()` - Get system health status
   - `metrics()` - Get system metrics
 
 - **Gateway API**: WebSocket connections and commands
-
   - `connect()` - Establish WebSocket connection
   - `send_command()` - Send commands via WebSocket
 
@@ -163,7 +155,7 @@ All list operations use a consistent query pattern:
 
 ```rust
 use hetuflow_core::models::AgentForQuery;
-use fusions::common::page::Page;
+use ultimates::common::page::Page;
 
 // Create query with filtering and pagination
 let mut query = AgentForQuery::default();
@@ -212,7 +204,7 @@ See the `examples/` directory for complete examples:
 use hetuflow_sdk::HetuflowClient;
 use hetuflow_core::models::{AgentForQuery, TaskForQuery};
 use hetuflow_core::types::TaskStatus;
-use fusions::common::page::Page;
+use ultimates::common::page::Page;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -271,7 +263,7 @@ The SDK provides comprehensive error handling:
 
 ```rust
 use hetuflow_core::models::AgentForQuery;
-use fusions::common::page::Page;
+use ultimates::common::page::Page;
 
 // Query specific agent
 let mut query = AgentForQuery::default();
@@ -330,7 +322,7 @@ The SDK uses data models from `hetuflow-core` and pagination types from `fusions
 use hetuflow_sdk::HetuflowClient;
 use hetuflow_core::models::{AgentForQuery, JobForCreate, TaskConfig};
 use hetuflow_core::types::{JobStatus, TaskStatus};
-use fusions::common::page::Page;
+use ultimates::common::page::Page;
 
 // Query with pagination
 let mut query = AgentForQuery::default();

@@ -1,3 +1,0 @@
-[fusion.web]
-server_addr = "0.0.0.0:9500"
-enable_remote_addr = true

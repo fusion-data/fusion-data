@@ -1,18 +1,22 @@
 [workspace]
 members = [
-  "crates/fusions/fusion-common",
-  "crates/fusions/fusion-core",
-  "crates/fusions/fusion-core-macros",
-  "crates/fusions/fusion-db",
-  "crates/fusions/fusion-web",
-  "crates/fusions/fusion-grpc",
-  "crates/fusions/fusion-security",
-  "crates/fusions/fusion-ai",
-  "crates/fusions/fusions",
-  "crates/fusions/fusionsql",
-  "crates/fusions/fusionsql-core",
-  "crates/fusions/fusionsql-macros",
-  "crates/fusions/examples/*",
+  "crates/ultimate-common",
+  "crates/ultimate-core",
+  "crates/ultimate-core-macros",
+  "crates/ultimate-db",
+  "crates/ultimate-web",
+  "crates/ultimate-grpc",
+  "crates/ultimate-security",
+  "crates/ultimate-ai",
+  "crates/ultimates",
+  "crates/ultimatesql",
+  "crates/ultimatesql-core",
+  "crates/ultimatesql-macros",
+  "crates/examples/ultimates-common-example",
+  "crates/examples/ultimates-core-example",
+  "crates/examples/ultimates-db-example",
+  "crates/examples/ultimates-security-example",
+  "crates/examples/ultimates-ai-example",
   "jieyuan/jieyuan-core",
   "jieyuan/jieyuan-server",
   "hetuflow/hetuflow-core",
@@ -63,18 +67,18 @@ opt-level = 3
 
 [workspace.dependencies]
 # -- projects begin
-fusion-common = { version = "0.1.0", path = "crates/fusions/fusion-common" }
-fusion-core-macros = { version = "0.1.0", path = "crates/fusions/fusion-core-macros" }
-fusion-core = { version = "0.1.0", path = "crates/fusions/fusion-core" }
-fusion-security = { version = "0.1.0", path = "crates/fusions/fusion-security" }
-fusionsql-core = { version = "0.1.0", path = "crates/fusions/fusionsql-core" }
-fusionsql-macros = { version = "0.1.0", path = "crates/fusions/fusionsql-macros" }
-fusionsql = { version = "0.1.0", path = "crates/fusions/fusionsql" }
-fusion-db = { version = "0.1.0", path = "crates/fusions/fusion-db" }
-fusion-web = { version = "0.1.0", path = "crates/fusions/fusion-web" }
-fusion-grpc = { version = "0.1.0", path = "crates/fusions/fusion-grpc" }
-fusion-ai = { version = "0.1.0", path = "crates/fusions/fusion-ai" }
-fusions = { version = "0.1.0", path = "crates/fusions/fusions" }
+ultimate-common = { version = "0.1.0", path = "crates/ultimate-common" }
+ultimate-core-macros = { version = "0.1.0", path = "crates/ultimate-core-macros" }
+ultimate-core = { version = "0.1.0", path = "crates/ultimate-core" }
+ultimate-security = { version = "0.1.0", path = "crates/ultimate-security" }
+ultimatesql-core = { version = "0.1.0", path = "crates/ultimatesql-core" }
+ultimatesql-macros = { version = "0.1.0", path = "crates/ultimatesql-macros" }
+ultimatesql = { version = "0.1.0", path = "crates/ultimatesql" }
+ultimate-db = { version = "0.1.0", path = "crates/ultimate-db" }
+ultimate-web = { version = "0.1.0", path = "crates/ultimate-web" }
+ultimate-grpc = { version = "0.1.0", path = "crates/ultimate-grpc" }
+ultimate-ai = { version = "0.1.0", path = "crates/ultimate-ai" }
+ultimates = { version = "0.1.0", path = "crates/ultimates" }
 jieyuan-core = { version = "0.1.0", path = "jieyuan/jieyuan-core" }
 hetuflow-core = { version = "0.1.0", path = "hetuflow/hetuflow-core" }
 hetumind-core = { version = "0.1.0", path = "hetumind/hetumind-core" }

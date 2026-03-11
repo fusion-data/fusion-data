@@ -1,5 +1,3 @@
-use fusions::common::time::OffsetDateTime;
-use fusionsql::{field::Fields, postgres::PgRowType};
 use hetumind_core::{
   task::{TaskPriority, TaskStatus},
   workflow::{ExecutionId, WorkflowId},
@@ -7,6 +5,8 @@ use hetumind_core::{
 use sea_query::enum_def;
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
+use ultimates::common::time::OffsetDateTime;
+use ultimatesql::{field::Fields, postgres::PgRowType};
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow, Fields)]

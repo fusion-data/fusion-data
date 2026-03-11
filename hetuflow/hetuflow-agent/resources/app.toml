@@ -1,4 +1,4 @@
-[fusion.log]
+[ultimate.log]
 enable = true
 with_target = true
 with_file = true
@@ -12,12 +12,12 @@ log_writers = ["stdout", "file"]
 log_dir = "./runs/logs/agent/"
 log_targets = ["info", "hetuflow_core=debug", "hetuflow_agent=info"]
 
-[fusion.log.otel]
+[ultimate.log.otel]
 enable = false
 traces_sample = "always_on"
 exporter_otlp_endpoint = "http://localhost:4317"
 
-[fusion.app]
+[ultimate.app]
 name = "hetuflow-agent"
 time_offset = "+08:00"
 run_mode = "dev"

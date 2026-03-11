@@ -674,7 +674,7 @@ graph TD
 
 - **Application 容器模式**: 使用 [`fusion-core::Application`](../../../crates/libs/fusion-core/src/) 统一管理服务依赖和生命周期
 - **类型安全 ORM**: 基于 [`fusionsql`](../../../crates/libs/fusionsql/) 的全程类型安全数据库操作
-- **分层错误处理**: `fusionsql::SqlError → fusion_core::DataError` 的分层错误转换机制
+- **分层错误处理**: `fusionsql::SqlError → ultimate_core::DataError` 的分层错误转换机制
 - **WebSocket 全双工通信**: 支持服务器推送和 Agent 上报的双向实时通信
 - **强一致性存储**: 基于 PostgreSQL 事务保证的 ACID 特性
 

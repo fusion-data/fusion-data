@@ -2,11 +2,11 @@ use axum::{
   extract::{Path, State},
   response::Json,
 };
-use fusions::common::model::IdI64Result;
-use fusions::core::application::Application;
-use fusions::web::{WebError, WebResult, ok_json};
-use fusionsql::page::PageResult;
 use jieyuan_core::model::{Tenant, TenantForCreate, TenantForPage, TenantForUpdate};
+use ultimates::common::model::IdI64Result;
+use ultimates::core::application::Application;
+use ultimates::web::{WebError, WebResult, ok_json};
+use ultimatesql::page::PageResult;
 use utoipa_axum::router::OpenApiRouter;
 
 use crate::tenant::TenantSvc;

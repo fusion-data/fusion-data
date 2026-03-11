@@ -1,12 +1,12 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use fusions::common::time::now_offset;
-use fusions::core::{DataError, concurrent::ServiceTask, timer::TimerRef};
 use log::{debug, error, info, warn};
 use mea::mpsc;
 use mea::shutdown::ShutdownRecv;
 use tokio::sync::broadcast::{self, error::RecvError};
+use ultimates::common::time::now_offset;
+use ultimates::core::{DataError, concurrent::ServiceTask, timer::TimerRef};
 
 use hetuflow_core::{
   protocol::{CommandMessage, ScheduledTask},
@@ -87,7 +87,7 @@ impl CommandProcessRunner {
           error!("Agent registration failed, agent_id: {}, response: {:?}", self.setting.agent_id, resp);
           // Send SIGTERM signal to self to terminate the process
           #[cfg(any(unix, windows))]
-          fusions::common::process::send_sigterm_to_self();
+          ultimates::common::process::send_sigterm_to_self();
           #[cfg(not(any(unix, windows)))]
           panic!("Exit");
         }

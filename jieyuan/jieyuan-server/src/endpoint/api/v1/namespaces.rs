@@ -2,12 +2,12 @@ use axum::{
   extract::{Path, State},
   response::Json,
 };
-use fusions::common::model::IdI64Result;
-use fusions::core::application::Application;
-use fusions::web::{WebError, WebResult, ok_json};
+use ultimates::common::model::IdI64Result;
+use ultimates::core::application::Application;
+use ultimates::web::{WebError, WebResult, ok_json};
 
-use fusionsql::page::PageResult;
 use jieyuan_core::model::{NamespaceEntity, NamespaceForCreate, NamespaceForPage, NamespaceForUpdate};
+use ultimatesql::page::PageResult;
 use utoipa_axum::router::OpenApiRouter;
 
 use crate::namespace::NamespaceSvc;

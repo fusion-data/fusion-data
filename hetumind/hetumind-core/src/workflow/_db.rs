@@ -1,4 +1,4 @@
-use fusionsql::generate_enum_i32_to_sea_query_value;
+use ultimatesql::generate_enum_i32_to_sea_query_value;
 
 use crate::workflow::CredentialKind;
 

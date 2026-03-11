@@ -1,6 +1,6 @@
 use axum::Router;
-use fusions::core::application::Application;
-use fusions::web::middleware::WebAuth;
+use ultimates::core::application::Application;
+use ultimates::web::middleware::WebAuth;
 
 mod credentials;
 mod executions;

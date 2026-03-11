@@ -1,11 +1,11 @@
 use std::sync::Arc;
 
-use fusions::common::ahash::HashMap;
-use fusionsql_core::field::FieldMask;
-use fusionsql_core::filter::{OpValBool, OpValInt32, OpValInt64, OpValString, OpValUuid};
-use fusionsql_core::page::Page;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
+use ultimates::common::ahash::HashMap;
+use ultimatesql_core::field::FieldMask;
+use ultimatesql_core::filter::{OpValBool, OpValInt32, OpValInt64, OpValString, OpValUuid};
+use ultimatesql_core::page::Page;
 
 use crate::types::JsonValue;
 
@@ -57,7 +57,7 @@ pub enum ErrorHandlingStrategy {
 }
 
 #[cfg(feature = "with-db")]
-fusionsql::generate_enum_i32_to_sea_query_value!(Enum: WorkflowStatus, Enum: ErrorHandlingStrategy);
+ultimatesql::generate_enum_i32_to_sea_query_value!(Enum: WorkflowStatus, Enum: ErrorHandlingStrategy);
 
 /// 工作流设置
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -304,7 +304,7 @@ impl Workflow {
 }
 
 #[derive(Clone, Deserialize)]
-#[cfg_attr(feature = "fusionsql", derive(fusionsql::Fields))]
+#[cfg_attr(feature = "ultimatesql", derive(ultimatesql::Fields))]
 pub struct WorkflowForCreate {
   pub id: Option<WorkflowId>,
   pub name: String,
@@ -371,7 +371,7 @@ impl TryFrom<WorkflowForCreate> for Workflow {
 }
 
 #[derive(Clone, Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "fusionsql", derive(fusionsql::Fields))]
+#[cfg_attr(feature = "ultimatesql", derive(ultimatesql::Fields))]
 pub struct WorkflowForUpdate {
   pub name: Option<String>,
   pub status: Option<WorkflowStatus>,
@@ -385,7 +385,7 @@ pub struct WorkflowForUpdate {
   pub meta: Option<serde_json::Value>,
   pub parent_folder_id: Option<String>,
   pub is_archived: Option<bool>,
-  #[cfg_attr(feature = "fusionsql", field(skip))]
+  #[cfg_attr(feature = "ultimatesql", field(skip))]
   pub field_mask: Option<FieldMask>,
 }
 
@@ -428,7 +428,7 @@ pub struct WorkflowForQuery {
 }
 
 #[derive(Serialize, Deserialize)]
-#[cfg_attr(feature = "fusionsql", derive(fusionsql::filter::FilterNodes))]
+#[cfg_attr(feature = "ultimatesql", derive(ultimatesql::filter::FilterNodes))]
 pub struct WorkflowFilter {
   pub name: Option<OpValString>,
   pub status: Option<OpValInt32>,

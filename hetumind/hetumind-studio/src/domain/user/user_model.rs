@@ -1,16 +1,16 @@
 use chrono::{DateTime, FixedOffset};
-use fusions::common::model::sensitive::SensitiveString;
-use fusionsql::generate_enum_i32_to_sea_query_value;
-use fusionsql::page::Page;
-use fusionsql::{
-  field::{FieldMask, Fields},
-  filter::{FilterNodes, OpValDateTime, OpValInt32, OpValString, OpValUuid},
-  postgres::PgRowType,
-};
 use sea_query::enum_def;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use sqlx::FromRow;
+use ultimates::common::model::sensitive::SensitiveString;
+use ultimatesql::generate_enum_i32_to_sea_query_value;
+use ultimatesql::page::Page;
+use ultimatesql::{
+  field::{FieldMask, Fields},
+  filter::{FilterNodes, OpValDateTime, OpValInt32, OpValString, OpValUuid},
+  postgres::PgRowType,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize_repr, Deserialize_repr, sqlx::Type)]
 #[repr(i32)]
@@ -73,9 +73,9 @@ pub struct UserForUpdate {
 /// 3. old_password 和 code 都为空，则需要验证当前用户是否是管理人。
 #[derive(Debug, Deserialize, Fields)]
 pub struct UserForUpdatePassword {
-  #[fusionsql(skip)]
+  #[ultimatesql(skip)]
   pub old_password: Option<String>,
-  #[fusionsql(skip)]
+  #[ultimatesql(skip)]
   pub code: Option<String>,
   pub password: String,
 }

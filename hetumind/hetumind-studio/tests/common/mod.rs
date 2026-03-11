@@ -3,12 +3,12 @@
 use axum::Router;
 use axum_test::TestServer;
 use config::File;
-use fusions::core::application::Application;
-use fusionsql::{ModelManager, store::DbxPostgres};
 use once_cell::sync::Lazy;
 use serde_json::json;
 use sqlx::Executor;
 use tokio::sync::OnceCell;
+use ultimates::core::application::Application;
+use ultimatesql::{ModelManager, store::DbxPostgres};
 
 use hetumind_core::workflow::{ErrorHandlingStrategy, ExecutionMode, WorkflowId, WorkflowStatus};
 use hetumind_studio::{endpoint, start::app_builder};

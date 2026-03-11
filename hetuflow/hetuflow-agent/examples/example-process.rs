@@ -1,5 +1,5 @@
-use fusions::core::DataError;
 use tokio::process::Command;
+use ultimates::core::DataError;
 
 #[tokio::main]
 async fn main() -> Result<(), DataError> {

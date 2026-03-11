@@ -1,13 +1,13 @@
 use chrono::{DateTime, FixedOffset, Utc};
-use fusions::common::env::get_env;
-use fusions::core::DataError;
-use fusionsql::ModelManager;
 use log::{debug, error, info, warn};
 use mea::shutdown::ShutdownRecv;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use std::time::Duration;
+use ultimates::common::env::get_env;
+use ultimates::core::DataError;
+use ultimatesql::ModelManager;
 use url::Url;
 
 use super::{UserBmc, UserForUpdate, UserStatus};

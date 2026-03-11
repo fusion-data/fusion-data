@@ -1,8 +1,8 @@
 use chrono::{DateTime, FixedOffset};
-#[cfg(feature = "with-db")]
-use fusionsql::SqlError;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
+#[cfg(feature = "with-db")]
+use ultimatesql::SqlError;
 
 use crate::{
   types::JsonValue,

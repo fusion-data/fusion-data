@@ -1,5 +1,5 @@
-use fusionsql::postgres::PgRowType;
 use sea_query::{Nullable, Value};
+use ultimatesql::postgres::PgRowType;
 
 use crate::model::{
   Gender, Permission, PolicyEntity, RolePermission, RoleStatus, TenantStatus, User, UserCredential, UserRole,

@@ -1,7 +1,7 @@
 use chrono::{DateTime, FixedOffset};
-use fusionsql_core::filter::{OpValInt32, OpValInt64, OpValString};
-use fusionsql_core::page::Page;
 use serde::{Deserialize, Serialize};
+use ultimatesql_core::filter::{OpValInt32, OpValInt64, OpValString};
+use ultimatesql_core::page::Page;
 
 /// Policy decision effect type
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -111,7 +111,7 @@ pub struct PolicyDocument {
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(sqlx::FromRow, fusionsql::Fields), sea_query::enum_def)]
+#[cfg_attr(feature = "with-db", derive(sqlx::FromRow, ultimatesql::Fields), sea_query::enum_def)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct PolicyEntity {
   pub id: i64,
@@ -127,7 +127,7 @@ pub struct PolicyEntity {
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
+#[cfg_attr(feature = "with-db", derive(ultimatesql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct PolicyForCreate {
   pub tenant_id: i64,
@@ -137,7 +137,7 @@ pub struct PolicyForCreate {
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
+#[cfg_attr(feature = "with-db", derive(ultimatesql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct PolicyForUpdate {
   pub description: Option<String>,
@@ -153,7 +153,7 @@ pub struct PolicyForPage {
 }
 
 #[derive(Debug, Default, Deserialize, Serialize)]
-#[cfg_attr(feature = "with-db", derive(fusionsql::filter::FilterNodes))]
+#[cfg_attr(feature = "with-db", derive(ultimatesql::filter::FilterNodes))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct PolicyFilter {
   pub id: Option<OpValInt64>,

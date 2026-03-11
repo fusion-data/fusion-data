@@ -1,6 +1,6 @@
 use std::sync::OnceLock;
 
-use fusionsql::{
+use ultimatesql::{
   ModelManager, SqlError,
   base::{BmcConfig, DbBmc},
   filter::{OpValInt32, OpValInt64, OpValString},

@@ -1,7 +1,7 @@
-use fusions::common::time::{DateTime, FixedOffset};
-use fusionsql_core::filter::{OpValDateTime, OpValInt64};
-use fusionsql_core::page::Page;
 use serde::{Deserialize, Serialize};
+use ultimates::common::time::{DateTime, FixedOffset};
+use ultimatesql_core::filter::{OpValDateTime, OpValInt64};
+use ultimatesql_core::page::Page;
 
 /// Tenant User status enumeration
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -38,7 +38,7 @@ impl sea_query::Nullable for TenantUserStatus {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(sqlx::FromRow, fusionsql::Fields), sea_query::enum_def)]
+#[cfg_attr(feature = "with-db", derive(sqlx::FromRow, ultimatesql::Fields), sea_query::enum_def)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct TenantUser {
   pub tenant_id: i64,
@@ -49,7 +49,7 @@ pub struct TenantUser {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
+#[cfg_attr(feature = "with-db", derive(ultimatesql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct TenantUserForCreate {
   pub tenant_id: i64,
@@ -58,7 +58,7 @@ pub struct TenantUserForCreate {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
+#[cfg_attr(feature = "with-db", derive(ultimatesql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct TenantUserForUpdate {
   pub status: Option<TenantUserStatus>,
@@ -72,7 +72,7 @@ pub struct TenantUserForPage {
 }
 
 #[derive(Debug, Default, Clone, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(fusionsql::filter::FilterNodes))]
+#[cfg_attr(feature = "with-db", derive(ultimatesql::filter::FilterNodes))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct TenantUserFilter {
   pub tenant_id: Option<OpValInt64>,

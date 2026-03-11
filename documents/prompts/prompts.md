@@ -190,7 +190,6 @@ self
 API 接口规范：
 
 1. POST /api/auth/signup 用户注册接口
-
    - 请求参数：使用 @jieyuan/jieyuan-core/src/model/auth.rs 中定义的 SignupReq 结构体
      - 必须字段：password（密码）
      - 互斥字段：email 或 phone（必须提供且仅能提供一个）
@@ -199,14 +198,12 @@ API 接口规范：
      - 失败：HTTP 400 状态码，返回包含错误信息的 WebError 结构体
 
 2. POST /api/auth/signout 用户登出接口
-
    - 请求参数：无（从 Authorization 头中提取 token）
    - 响应：
      - 成功：HTTP 200 状态码，返回空 JSON 对象
      - 失败：HTTP 400 状态码，返回包含错误信息的 WebError 结构体
 
 3. POST /api/auth/refresh_token 刷新令牌接口
-
    - 请求参数：使用 @jieyuan/jieyuan-core/src/model/auth.rs 中定义的 RefreshTokenReq 结构体（包含 refresh_token 字段）
    - 响应：
      - 成功：HTTP 200 状态码，返回 SigninResponse 结构体（复用登录接口的响应格式）
@@ -215,7 +212,7 @@ API 接口规范：
 4. POST /api/auth/extract_token 令牌解析接口
    - 请求参数：无（从 Authorization 头中提取 token）
    - 响应：
-     - 成功：返回 fusion_common::ctx::Ctx 的 JSON 格式数据（使用 extract_ctx 函数解析 token）
+     - 成功：返回 ultimate_common::ctx::Ctx 的 JSON 格式数据（使用 extract_ctx 函数解析 token）
      - 失败：HTTP 401 状态码，返回包含错误信息的 WebError 结构体
 
 开发要求：

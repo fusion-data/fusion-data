@@ -1,5 +1,5 @@
 use axum::{extract::FromRequestParts, http::request::Parts};
-use fusions::web::WebError;
+use ultimates::web::WebError;
 
 use crate::application::ServerApplication;
 use crate::service::{AgentSvc, JobSvc, LogSvc, ScheduleSvc, ServerSvc, TaskSvc};

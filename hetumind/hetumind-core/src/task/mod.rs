@@ -1,9 +1,9 @@
-use fusions::common::ahash::HashMap;
-use fusions::common::time::OffsetDateTime;
-#[cfg(feature = "with-db")]
-use fusionsql::generate_enum_i32_to_sea_query_value;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
+use ultimates::common::ahash::HashMap;
+use ultimates::common::time::OffsetDateTime;
+#[cfg(feature = "with-db")]
+use ultimatesql::generate_enum_i32_to_sea_query_value;
 
 mod error;
 mod task_queue;

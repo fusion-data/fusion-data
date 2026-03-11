@@ -1,12 +1,12 @@
 use std::sync::OnceLock;
 
-use fusionsql::{
-  base::{BmcConfig, DbBmc},
-  generate_pg_bmc_common, generate_pg_bmc_filter,
-};
 use jieyuan_core::model::{
   PolicyAttachmentEntity, PolicyAttachmentFilter, PolicyAttachmentForCreate, PolicyAttachmentForUpdate,
   TABLE_POLICY_ATTACHMENT,
+};
+use ultimatesql::{
+  base::{BmcConfig, DbBmc},
+  generate_pg_bmc_common, generate_pg_bmc_filter,
 };
 
 #[allow(dead_code)]

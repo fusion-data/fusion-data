@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use chrono::{DateTime, FixedOffset, Utc};
-use fusions::common::ctx::Ctx;
+use ultimates::common::ctx::Ctx;
 
 use crate::workflow::ExecutionId;
 

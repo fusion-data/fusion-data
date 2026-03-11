@@ -1,8 +1,8 @@
-use fusions::common::time::OffsetDateTime;
-use fusionsql::Fields;
 use sea_query::enum_def;
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
+use ultimates::common::time::OffsetDateTime;
+use ultimatesql::Fields;
 
 /// 已安装包表
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow, Fields)]

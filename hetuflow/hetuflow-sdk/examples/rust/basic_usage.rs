@@ -1,7 +1,7 @@
 //! Basic usage example for the Hetuflow SDK
 
 use hetuflow_sdk::{HetuflowClient, Config};
-use fusionsql::page::Page;
+use ultimatesql::page::Page;
 use std::time::Duration;
 
 #[tokio::main]

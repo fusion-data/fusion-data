@@ -1,7 +1,7 @@
 use std::sync::OnceLock;
 
-use fusions::core::{DataError, Result};
-use fusionsql::{
+use ultimates::core::{DataError, Result};
+use ultimatesql::{
   ModelManager,
   base::{BmcConfig, DbBmc},
   generate_pg_bmc_common, generate_pg_bmc_filter,

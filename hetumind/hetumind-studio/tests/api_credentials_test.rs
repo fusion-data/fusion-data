@@ -1,11 +1,11 @@
 //! tests/api_credentials_test.rs
 //! `cargo test -p hetumind --test api_credentials_test -- --nocapture`
 
-use fusions::common::model::IdUuidResult;
 use hetumind_core::{credential::CredentialId, workflow::CredentialKind};
 use hetumind_studio::domain::credential::CredentialVerifyResult;
 use http::StatusCode;
 use serde_json::json;
+use ultimates::common::model::IdUuidResult;
 use uuid::Uuid;
 
 mod common;

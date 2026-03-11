@@ -1,15 +1,15 @@
 use axum::extract::FromRequestParts;
-use fusions::core::application::Application;
-use fusions::core::security::jose::{decrypt_jwe_ecdh_es, encrypt_jwe_ecdh_es};
-use fusions::core::{DataError, Result};
-use fusions::db::ModelManager;
-use fusions::web::{WebError, extract_ctx};
-use fusionsql::common::now_offset;
-use fusionsql::page::PageResult;
 use hetumind_core::workflow::CredentialKind;
 use http::request::Parts;
 use josekit::jwt::JwtPayload;
 use serde_json;
+use ultimates::core::application::Application;
+use ultimates::core::security::jose::{decrypt_jwe_ecdh_es, encrypt_jwe_ecdh_es};
+use ultimates::core::{DataError, Result};
+use ultimates::db::ModelManager;
+use ultimates::web::{WebError, extract_ctx};
+use ultimatesql::common::now_offset;
+use ultimatesql::page::PageResult;
 use uuid::Uuid;
 
 use crate::domain::credential::{
@@ -170,7 +170,7 @@ impl FromRequestParts<Application> for CredentialSvc {
   type Rejection = WebError;
 
   async fn from_request_parts(parts: &mut Parts, state: &Application) -> core::result::Result<Self, Self::Rejection> {
-    let ctx = extract_ctx(parts, state.fusion_setting().security())?;
+    let ctx = extract_ctx(parts, state.ultimate_setting().security())?;
     let mm = state.component::<ModelManager>().with_ctx(ctx);
     let key_manager = state.component();
     Ok(CredentialSvc { mm, key_manager })

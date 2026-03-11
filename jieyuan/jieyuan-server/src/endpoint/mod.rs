@@ -1,8 +1,8 @@
 pub mod api;
 pub mod oauth;
 
-use fusions::core::application::Application;
-use fusions::web::{Router, WebError};
+use ultimates::core::application::Application;
+use ultimates::web::{Router, WebError};
 use utoipa::OpenApi;
 use utoipa_axum::router::OpenApiRouter;
 use utoipa_swagger_ui::SwaggerUi;

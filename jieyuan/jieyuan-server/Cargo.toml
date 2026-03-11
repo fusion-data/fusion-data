@@ -16,14 +16,14 @@ path = "bin/jieyuan-server.rs"
 workspace = true
 
 [dependencies]
-# -- fusions
-fusions = { workspace = true, features = [
+# -- ultimates
+ultimates = { workspace = true, features = [
   "with-openapi",
   "with-db",
   "with-web",
   "with-logforth",
 ] }
-fusion-core-macros = { workspace = true }
+ultimate-core-macros = { workspace = true }
 
 # -- hetus
 jieyuan-core = { workspace = true, features = [
@@ -57,7 +57,7 @@ fastrace = { workspace = true }
 log = { workspace = true }
 
 # -- db
-fusionsql = { workspace = true, features = [
+ultimatesql = { workspace = true, features = [
   "with-postgres",
   "with-uuid",
   "with-openapi",
@@ -89,4 +89,4 @@ pretty_assertions.workspace = true
 hyper = { workspace = true }
 hyper-util = { workspace = true }
 tower = { workspace = true }
-fusion-core-macros = { workspace = true }
+ultimate-core-macros = { workspace = true }

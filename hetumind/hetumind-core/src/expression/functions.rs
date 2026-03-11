@@ -1,9 +1,9 @@
 // src/functions.rs
 use chrono::{Duration, NaiveTime};
-use fusions::common::ahash::HashMap;
-use fusions::common::time::now;
 use regex::Regex;
 use serde_json_path::JsonPath;
+use ultimates::common::ahash::HashMap;
+use ultimates::common::time::now;
 
 use super::{
   context::ExpressionExecutionContext,

@@ -7,7 +7,6 @@ use std::sync::Arc;
 use ahash::HashMap;
 use async_trait::async_trait;
 use chrono::{DateTime, FixedOffset};
-use fusions::common::time::now_offset;
 use hetumind_core::types::JsonValue;
 use hetumind_core::version::Version;
 use hetumind_core::workflow::{
@@ -15,6 +14,7 @@ use hetumind_core::workflow::{
   NodeDescription, NodeExecutionContext, NodeExecutionError, NodeGroupKind, NodeProperty, NodePropertyKind, NodeType,
   RegistrationError, make_execution_data_map,
 };
+use ultimates::common::time::now_offset;
 
 use crate::constants::CHAT_TRIGGERN_NODE_KIND as CHAT_TRIGGER_NODE_KIND;
 use serde_json::json;

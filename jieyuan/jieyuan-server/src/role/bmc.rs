@@ -1,13 +1,13 @@
 use std::sync::OnceLock;
 
-use fusionsql::page::{Page, PageResult};
-use fusionsql::{
+use sea_query::{Condition, Expr, Query, SelectStatement};
+use ultimatesql::page::{Page, PageResult};
+use ultimatesql::{
   ModelManager, Result,
   base::{self, BmcConfig, DbBmc, compute_page},
   filter::{FilterGroups, apply_to_sea_query},
   generate_pg_bmc_common,
 };
-use sea_query::{Condition, Expr, Query, SelectStatement};
 
 use jieyuan_core::model::{CreateRoleDto, Role, RoleFilters, RoleForUpdate, RoleIden, RolePermissionIden};
 

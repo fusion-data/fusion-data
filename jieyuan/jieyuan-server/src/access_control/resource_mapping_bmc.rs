@@ -1,15 +1,15 @@
 use std::sync::OnceLock;
 
-use fusions::common::ahash::HashMap;
-use fusionsql::page::PageResult;
-use fusionsql::{
-  ModelManager, SqlError,
-  base::{BmcConfig, DbBmc, pg_page},
-  generate_pg_bmc_common, generate_pg_bmc_filter,
-};
 use jieyuan_core::model::{
   IamResourceMappingEntity, IamResourceMappingFilter, IamResourceMappingForCreate, IamResourceMappingForQuery,
   IamResourceMappingForUpdate, TABLE_IAM_RESOURCE_MAPPING,
+};
+use ultimates::common::ahash::HashMap;
+use ultimatesql::page::PageResult;
+use ultimatesql::{
+  ModelManager, SqlError,
+  base::{BmcConfig, DbBmc, pg_page},
+  generate_pg_bmc_common, generate_pg_bmc_filter,
 };
 
 pub struct ResourceMappingBmc;

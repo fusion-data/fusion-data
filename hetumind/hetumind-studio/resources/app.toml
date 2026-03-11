@@ -1,4 +1,4 @@
-[fusion.app]
+[ultimate.app]
 run_mode = "DEV"
 name = "hetumind"
 
@@ -39,15 +39,15 @@ kind = "memory"
 root = "/tmp"
 max_pool_size = 10
 
-[fusion.security.pwd]
+[ultimate.security.pwd]
 expires_in = 604800
 default_pwd = "2025.Hetumind"
 
-[fusion.web]
+[ultimate.web]
 enable = true
 server_addr = "0.0.0.0:50000"
 
-[fusion.log]
+[ultimate.log]
 enable = true
 log_writers = ["stdout", "file"]
 with_span_events = []
@@ -59,17 +59,17 @@ log_targets = [
   "hetumind_core=debug",
   "fusionsql=debug",
   "fusionsql_core=debug",
-  "fusion_db=debug",
-  "fusion_common=debug",
-  "fusion_core=debug",
-  "fusion_web=debug",
+  "ultimate_db=debug",
+  "ultimate_common=debug",
+  "ultimate_core=debug",
+  "ultimate_web=debug",
 ]
 
-[fusion.db]
+[ultimate.db]
 enable = true
 url = "postgresql://fusiondata:2025.Fusiondata@localhost:5432/fusiondata"
 
-[fusion.log.otel]
+[ultimate.log.otel]
 enable = false
 exporter_otlp_endpoint = "http://localhost:4317"
 traces_sample = "always_on"

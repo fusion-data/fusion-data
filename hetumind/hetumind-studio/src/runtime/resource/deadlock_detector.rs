@@ -2,10 +2,10 @@
 //!
 //! 实现资源分配图和死锁检测算法，预防和解决死锁问题
 
-use fusions::common::ahash::HashSet;
 use std::collections::{HashMap, VecDeque};
 use std::sync::Arc;
 use tokio::sync::{Mutex, Notify};
+use ultimates::common::ahash::HashSet;
 
 use super::{ResourceError, ResourceType};
 

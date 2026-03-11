@@ -15,7 +15,7 @@ pub use hetumind_core::workflow::{
   WorkflowStatus,
 };
 
-pub use fusionsql::page::PageResult;
+pub use ultimatesql::page::PageResult;
 
 use serde::{Deserialize, Serialize};
 

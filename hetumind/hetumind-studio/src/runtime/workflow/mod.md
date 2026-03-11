@@ -110,7 +110,7 @@ cargo test -p hetumind-studio test_execution_graph
 ```rust,ignore
 use std::sync::Arc;
 
-use fusions::common::ctx::Ctx;
+use ultimates::common::ctx::Ctx;
 use hetumind_studio::runtime::workflow::WorkflowEngineImpl;
 use hetumind_studio::runtime::execution::ExecutionStore;
 use hetumind_studio::runtime::checkpoint::{CheckpointError, ExecutionCheckpoint};

@@ -1,8 +1,8 @@
-use fusions::common::time::{DateTime, FixedOffset};
-use fusionsql_core::filter::{OpValDateTime, OpValInt32, OpValInt64, OpValString};
-use fusionsql_core::page::Page;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
+use ultimates::common::time::{DateTime, FixedOffset};
+use ultimatesql_core::filter::{OpValDateTime, OpValInt32, OpValInt64, OpValString};
+use ultimatesql_core::page::Page;
 
 /// Tenant status enumeration
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize_repr, Deserialize_repr)]
@@ -16,7 +16,7 @@ pub enum TenantStatus {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(sqlx::FromRow, fusionsql::Fields), sea_query::enum_def)]
+#[cfg_attr(feature = "with-db", derive(sqlx::FromRow, ultimatesql::Fields), sea_query::enum_def)]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct Tenant {
   pub id: i64,
@@ -30,7 +30,7 @@ pub struct Tenant {
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
+#[cfg_attr(feature = "with-db", derive(ultimatesql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct TenantForCreate {
   pub name: String,
@@ -39,7 +39,7 @@ pub struct TenantForCreate {
 }
 
 #[derive(Debug, Serialize, Default, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(fusionsql::Fields))]
+#[cfg_attr(feature = "with-db", derive(ultimatesql::Fields))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct TenantForUpdate {
   pub name: Option<String>,
@@ -55,7 +55,7 @@ pub struct TenantForPage {
 }
 
 #[derive(Debug, Default, Deserialize)]
-#[cfg_attr(feature = "with-db", derive(fusionsql::filter::FilterNodes))]
+#[cfg_attr(feature = "with-db", derive(ultimatesql::filter::FilterNodes))]
 #[cfg_attr(feature = "with-openapi", derive(utoipa::ToSchema))]
 pub struct TenantFilter {
   pub id: Option<OpValInt64>,

@@ -1,6 +1,6 @@
 use std::sync::OnceLock;
 
-use fusionsql::{
+use ultimatesql::{
   ModelManager, SqlError,
   base::{BmcConfig, DbBmc, pg_page},
   generate_pg_bmc_common, generate_pg_bmc_filter,

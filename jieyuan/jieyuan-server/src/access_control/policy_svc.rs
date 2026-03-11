@@ -1,8 +1,8 @@
 use axum::extract::FromRequestParts;
-use fusions::common::ctx::Ctx;
-use fusions::core::{Result, application::Application};
-use fusions::web::WebError;
-use fusionsql::{ModelManager, page::PageResult};
+use ultimates::common::ctx::Ctx;
+use ultimates::core::{Result, application::Application};
+use ultimates::web::WebError;
+use ultimatesql::{ModelManager, page::PageResult};
 
 use jieyuan_core::model::{
   CtxExt, Decision, DecisionEffect, PolicyEngine, PolicyEntity, PolicyForCreate, PolicyForPage, PolicyForUpdate,

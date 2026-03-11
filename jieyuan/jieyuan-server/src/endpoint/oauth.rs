@@ -1,7 +1,7 @@
 use axum::{Json, extract::State};
-use fusions::core::application::Application;
-use fusions::web::{WebResult, ok_json};
-use fusionsql::ModelManager;
+use ultimates::core::application::Application;
+use ultimates::web::{WebResult, ok_json};
+use ultimatesql::ModelManager;
 use utoipa_axum::router::OpenApiRouter;
 
 use jieyuan_core::model::{OAuthAuthorizeRequest, OAuthAuthorizeResponse, OAuthTokenRequest, OAuthTokenResponse};

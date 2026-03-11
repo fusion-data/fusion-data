@@ -85,7 +85,6 @@ graph LR
 - **格式**：`iam:{service}:{type}/{id}`
 - **特点**：简化、灵活、智能租户处理
 - **租户处理**：运行时根据用户上下文自动注入
-
   - 普通用户：当前租户 ID
   - 平台管理员：根据访问模式处理（当前/全部/特定）
 
@@ -450,7 +449,7 @@ pub async fn init_web(app: Application) -> Result<(), DataError> {
 ```rust
 // 文件：jieyuan/jieyuan-core/src/web/middleware/mixed_authz.rs
 use axum::{extract::Request, middleware::Next, response::Response};
-use fusion_core::application::Application;
+use ultimate_core::application::Application;
 
 pub async fn mixed_authz_middleware(
     State(app): State<Application>,

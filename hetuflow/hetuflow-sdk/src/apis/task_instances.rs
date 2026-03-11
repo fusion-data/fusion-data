@@ -4,7 +4,7 @@ use crate::{
   error::{SdkError, SdkResult},
   platform::Response,
 };
-use fusions::common::page::PageResult;
+use ultimates::common::page::PageResult;
 use hetuflow_core::models::{SchedTaskInstance, TaskInstanceForCreate, TaskInstanceForQuery, TaskInstanceForUpdate};
 use serde::de::DeserializeOwned;
 use uuid::Uuid;

@@ -15,18 +15,18 @@ workspace = true
 [features]
 with-openapi = [
   "dep:utoipa",
-  "fusions/with-openapi",
-  "fusionsql-core/with-openapi",
-  "fusionsql/with-openapi",
+  "ultimates/with-openapi",
+  "ultimatesql-core/with-openapi",
+  "ultimatesql/with-openapi",
 ]
 with-db = [
   "dep:sqlx",
-  "dep:fusionsql",
+  "dep:ultimatesql",
   "dep:sea-query",
 ]
 with-web = [
   "with-openapi",
-  "fusions/with-web",
+  "ultimates/with-web",
   "dep:axum",
   "dep:tower-http",
   "dep:http",
@@ -36,7 +36,7 @@ with-web = [
 ]
 
 [dependencies]
-fusions = { workspace = true }
+ultimates = { workspace = true }
 uuid = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -45,8 +45,8 @@ strum = { workspace = true }
 utoipa = { workspace = true, optional = true }
 sqlx = { workspace = true, optional = true }
 sea-query = { workspace = true, optional = true }
-fusionsql = { workspace = true, optional = true }
-fusionsql-core = { workspace = true }
+ultimatesql = { workspace = true, optional = true }
+ultimatesql-core = { workspace = true }
 axum = { workspace = true, optional = true }
 tower-http = { workspace = true, optional = true }
 futures = { workspace = true, optional = true }

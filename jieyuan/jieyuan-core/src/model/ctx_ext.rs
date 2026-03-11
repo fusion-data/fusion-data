@@ -1,4 +1,4 @@
-use fusions::common::ctx::Ctx;
+use ultimates::common::ctx::Ctx;
 
 use crate::model::policy::TenantAccessMode;
 

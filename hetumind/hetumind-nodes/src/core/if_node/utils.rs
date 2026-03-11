@@ -1,8 +1,8 @@
-use fusions::common::time::OffsetDateTime;
 use log::{debug, error, info, warn};
 use regex::Regex;
 use serde_json::json;
 use serde_json_path::JsonPath;
+use ultimates::common::time::OffsetDateTime;
 
 use hetumind_core::types::{DataType, JsonValue};
 use hetumind_core::workflow::NodeExecutionError;
@@ -658,7 +658,7 @@ pub fn parse_expression_expression(expression: &str, input_data: &JsonValue) -> 
         }
       } else if expr == "$now" {
         // 当前时间
-        let now = fusions::common::time::now();
+        let now = ultimates::common::time::now();
         Ok(json!(now.to_string()))
       } else if expr == "$random" {
         // 随机数

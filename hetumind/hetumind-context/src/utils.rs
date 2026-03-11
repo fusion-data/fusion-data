@@ -1,15 +1,15 @@
-use fusions::common::ctx::{Ctx, CtxPayload};
-use fusions::common::time::{Duration, now_utc};
-use fusions::core::{
+use http::request::Parts;
+use log::error;
+use ultimates::common::ctx::{Ctx, CtxPayload};
+use ultimates::common::time::{Duration, now_utc};
+use ultimates::core::{
   DataError,
   application::Application,
   configuration::{KeyConf, PwdConf},
   security::SecurityUtils,
 };
-use fusions::web::WebError;
-use fusionsql::ModelManager;
-use http::request::Parts;
-use log::error;
+use ultimates::web::WebError;
+use ultimatesql::ModelManager;
 
 /// 生成 password token
 pub fn make_token(sub: impl Into<String>, pwd_conf: &PwdConf) -> Result<String, DataError> {

@@ -1,7 +1,7 @@
 use std::sync::OnceLock;
 
-use fusions::common::time::now_offset;
-use fusionsql::{
+use ultimates::common::time::now_offset;
+use ultimatesql::{
   ModelManager, SqlError,
   base::{BmcConfig, DbBmc},
   filter::OpValInt32,

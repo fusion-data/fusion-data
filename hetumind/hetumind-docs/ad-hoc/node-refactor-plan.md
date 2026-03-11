@@ -312,13 +312,13 @@
 
 - 已确认采用方案 C：独立 Memory Service 组件（在 Application 组件系统中注入）。
 - 设计要点：
-    - 以独立服务组件形式注入到 Application（例如通过 Application::global().get_component 获取），由宿主统一管理生命周期与资源。
- - 后端可插拔：支持 Redis/Valkey、本地内存 + TTL；支持跨执行共享与持久会话（按租户/工作流/会话维度隔离）。
-  - 多租户隔离策略：Memory Service API 自动注入 tenant_id 与 workflow_id；提供会话键生成策略（workflow_id + session_id）。
-  - 统一接口：get_buffer/store_messages/retrieve_messages/cleanup，供 SimpleMemorySupplier/FlowNode 使用。
-  - 与 NodeExecutionContext 的关系：上下文仅持有到 Memory Service 的引用，不负责内存存储；执行引擎负责清理策略与观测指标整合。
-  - 扩展方法：为 SimpleMemorySupplier 提供 with_ctx 版本（store_messages_with_ctx/retrieve_messages_with_ctx），仅在引擎/Agent 路径使用以注入 ExecutionContext（tenant/workflow）。
-  
+  - 以独立服务组件形式注入到 Application（例如通过 Application::global().get_component 获取），由宿主统一管理生命周期与资源。
+- 后端可插拔：支持 Redis/Valkey、本地内存 + TTL；支持跨执行共享与持久会话（按租户/工作流/会话维度隔离）。
+- 多租户隔离策略：Memory Service API 自动注入 tenant_id 与 workflow_id；提供会话键生成策略（workflow_id + session_id）。
+- 统一接口：get_buffer/store_messages/retrieve_messages/cleanup，供 SimpleMemorySupplier/FlowNode 使用。
+- 与 NodeExecutionContext 的关系：上下文仅持有到 Memory Service 的引用，不负责内存存储；执行引擎负责清理策略与观测指标整合。
+- 扩展方法：为 SimpleMemorySupplier 提供 with_ctx 版本（store_messages_with_ctx/retrieve_messages_with_ctx），仅在引擎/Agent 路径使用以注入 ExecutionContext（tenant/workflow）。
+
 4. Agent 的工具调用返回：
 
 - 已确认采用方案 1：EngineRequest 风格（在 AiTool 端口输出请求对象，由引擎调度二次执行）。
@@ -445,7 +445,7 @@
 - 后端实现建议：
   - InMemoryMemoryService（本地内存 + TTL）
   - RedisMemoryService（基于 Redis/Valkey，键格式：{tenant_id}:{workflow_id}:{session_id}）
-- Application 注入：通过 fusion_core::application::Application 注册为全局组件，并在 NodeExecutionContext 中以引用方式访问。
+- Application 注入：通过 ultimate_core::application::Application 注册为全局组件，并在 NodeExecutionContext 中以引用方式访问。
 
 2. EngineRequest/Response 统一模型
 
@@ -537,7 +537,7 @@
 
 - jsonschema crate：https://crates.io/crates/jsonschema
 - rig-core（DeepSeek 等模型接入）：参考 hetumind-nodes/src/llm/deepseek_node/
-- Application 组件系统：fusion_core::application::Application
+- Application 组件系统：ultimate_core::application::Application
 - connection_manager：hetumind-nodes/src/core/connection_manager.rs
 - 新增节点：MoonshotModel（hetumind_nodes::MoonshotModel）与 OpenaiModel（hetumind_nodes::OpenaiModel）已注册，沿用统一 helpers 与输出规范。
 

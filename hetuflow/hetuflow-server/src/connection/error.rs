@@ -1,8 +1,8 @@
-use fusions::core::DataError;
-use fusions::web::WebError;
-use fusionsql::SqlError;
 use log::{error, warn};
 use thiserror::Error;
+use ultimates::core::DataError;
+use ultimates::web::WebError;
+use ultimatesql::SqlError;
 
 /// Gateway 模块专用错误类型
 #[derive(Debug, Error)]
@@ -78,7 +78,7 @@ impl GatewayError {
   }
 }
 
-/// 与 fusions::core::DataError 的兼容性转换
+/// 与 ultimates::core::DataError 的兼容性转换
 impl From<GatewayError> for DataError {
   fn from(err: GatewayError) -> Self {
     match err {
@@ -92,7 +92,7 @@ impl From<GatewayError> for DataError {
   }
 }
 
-/// 与 fusions::web::WebError 的兼容性置换
+/// 与 ultimates::web::WebError 的兼容性置换
 impl From<GatewayError> for WebError {
   fn from(err: GatewayError) -> Self {
     match err {
