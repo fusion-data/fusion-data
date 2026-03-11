@@ -1,4 +1,4 @@
-use rmcp::{Peer, RoleClient, ServiceExt, model::CallToolRequestParam, transport::StreamableHttpClientTransport};
+use rmcp::{Peer, RoleClient, ServiceExt, model::CallToolRequestParams, transport::StreamableHttpClientTransport};
 use serde_json::json;
 use std::error::Error;
 
@@ -113,19 +113,16 @@ async fn main() -> Result<(), Box<dyn Error>> {
 /// IP 定位示例
 /// 根据 IP 地址获取地理位置信息
 async fn demo_ip_location(service: &Peer<RoleClient>) -> Result<(), Box<dyn Error>> {
-  let params = CallToolRequestParam {
-    name: "ipLocation".into(),
-    arguments: Some(
-      json!({
-        "ip": "117.59.114.33",
-        "coord_type": "5",  // 坐标类型：5-腾讯坐标
-        "get_poi": "1"      // 是否返回周边POI列表：0-不返回，1-返回
-      })
-      .as_object()
-      .unwrap()
-      .clone(),
-    ),
-  };
+  let params = CallToolRequestParams::new("ipLocation").with_arguments(
+    json!({
+      "ip": "117.59.114.33",
+      "coord_type": "5",  // 坐标类型：5-腾讯坐标
+      "get_poi": "1"      // 是否返回周边POI列表：0-不返回，1-返回
+    })
+    .as_object()
+    .unwrap()
+    .clone(),
+  );
 
   println!("  📍 正在查询 IP: 117.59.114.33 的地理位置...");
   let result = service.call_tool(params).await?;
@@ -136,19 +133,16 @@ async fn demo_ip_location(service: &Peer<RoleClient>) -> Result<(), Box<dyn Erro
 /// 地址解析示例（地理编码）
 /// 将地址转换为经纬度坐标
 async fn demo_geocoding(service: &Peer<RoleClient>) -> Result<(), Box<dyn Error>> {
-  let params = CallToolRequestParam {
-    name: "geocoder".into(),
-    arguments: Some(
-      json!({
-        "address": "北京市海淀区北四环西路66号",
-        "region": "北京",     // 指定地址所在城市
-        "coord_type": "1"     // 返回坐标类型：1-GPS坐标
-      })
-      .as_object()
-      .unwrap()
-      .clone(),
-    ),
-  };
+  let params = CallToolRequestParams::new("geocoder").with_arguments(
+    json!({
+      "address": "北京市海淀区北四环西路66号",
+      "region": "北京",     // 指定地址所在城市
+      "coord_type": "1"     // 返回坐标类型：1-GPS坐标
+    })
+    .as_object()
+    .unwrap()
+    .clone(),
+  );
 
   println!("  🗺️ 正在解析地址: 北京市海淀区北四环西路66号...");
   let result = service.call_tool(params).await?;
@@ -159,20 +153,17 @@ async fn demo_geocoding(service: &Peer<RoleClient>) -> Result<(), Box<dyn Error>
 /// 地点搜索示例
 /// 在指定城市搜索地点POI信息
 async fn demo_city_search(service: &Peer<RoleClient>) -> Result<(), Box<dyn Error>> {
-  let params = CallToolRequestParam {
-    name: "placeSearchNearby".into(),
-    arguments: Some(
-      json!({
-        "keyword": "洪崖洞",
-        "location": "重庆",            // 搜索范围：重庆市
-        "page_size": "10",            // 每页条目数
-        "page_index": "1"             // 页码
-      })
-      .as_object()
-      .unwrap()
-      .clone(),
-    ),
-  };
+  let params = CallToolRequestParams::new("placeSearchNearby").with_arguments(
+    json!({
+      "keyword": "洪崖洞",
+      "location": "重庆",            // 搜索范围：重庆市
+      "page_size": "10",            // 每页条目数
+      "page_index": "1"             // 页码
+    })
+    .as_object()
+    .unwrap()
+    .clone(),
+  );
 
   println!("  🔍 正在搜索: 洪崖洞 (重庆)...");
   let result = service.call_tool(params).await?;
@@ -183,21 +174,18 @@ async fn demo_city_search(service: &Peer<RoleClient>) -> Result<(), Box<dyn Erro
 /// 驾车路线规划示例
 /// 计算两点间的驾车路线
 async fn demo_driving_route(service: &Peer<RoleClient>) -> Result<(), Box<dyn Error>> {
-  let params = CallToolRequestParam {
-    name: "directionDriving".into(),
-    arguments: Some(
-      json!({
-        "from": "39.908823,116.397470", // 天安门坐标
-        "to": "39.999718,116.326364",   // 鸟巢坐标
-        "policy": "0",                  // 路线策略：0-参考实时路况的最快捷路线
-        "from_poi": "天安门",           // 起点POI名称
-        "to_poi": "鸟巢"                // 终点POI名称
-      })
-      .as_object()
-      .unwrap()
-      .clone(),
-    ),
-  };
+  let params = CallToolRequestParams::new("directionDriving").with_arguments(
+    json!({
+      "from": "39.908823,116.397470", // 天安门坐标
+      "to": "39.999718,116.326364",   // 鸟巢坐标
+      "policy": "0",                  // 路线策略：0-参考实时路况的最快捷路线
+      "from_poi": "天安门",           // 起点POI名称
+      "to_poi": "鸟巢"                // 终点POI名称
+    })
+    .as_object()
+    .unwrap()
+    .clone(),
+  );
 
   println!("  🚗 正在规划路线: 天安门 → 鸟巢...");
   let result = service.call_tool(params).await?;

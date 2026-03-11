@@ -3,7 +3,7 @@ use std::sync::OnceLock;
 use argon2::password_hash::SaltString;
 use argon2::{Argon2, PasswordHash, PasswordHasher, PasswordVerifier, password_hash};
 use log::{error, trace};
-use rand::RngCore;
+use rand::Rng;
 use regex::Regex;
 
 use super::{Error, INVARIANT_VIOLATED_MSG, RECOMMENDED_LENGTH, Result};

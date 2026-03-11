@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use duration_str::deserialize_option_duration;
+use duration_str::deserialize_duration;
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
@@ -32,18 +32,18 @@ pub struct DbConfig {
   min_connections: Option<u32>,
 
   /// Maximum idle time for a particular connection to prevent network resource exhaustion
-  #[serde(default, deserialize_with = "deserialize_option_duration")]
+  #[serde(default, deserialize_with = "deserialize_duration")]
   idle_timeout: Option<Duration>,
 
   /// Set the maximum amount of time to spend waiting for acquiring a connection
-  #[serde(default, deserialize_with = "deserialize_option_duration")]
+  #[serde(default, deserialize_with = "deserialize_duration")]
   acquire_timeout: Option<Duration>,
 
   /// Set the query to execute after connecting to the database
   after_connect: Option<String>,
 
   /// Set the maximum lifetime of individual connections
-  #[serde(default, deserialize_with = "deserialize_option_duration")]
+  #[serde(default, deserialize_with = "deserialize_duration")]
   max_lifetime: Option<Duration>,
 
   /// Enable SQLx statement logging

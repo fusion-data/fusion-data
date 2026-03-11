@@ -122,7 +122,7 @@ impl ExecutionMetricsCollector {
 
   /// 采样率控制逻辑
   fn should_sample(&self, execution_id: &ExecutionId) -> bool {
-    use rand::Rng;
+    use rand::RngExt;
 
     let sample_rate = self
       .sampling_rates

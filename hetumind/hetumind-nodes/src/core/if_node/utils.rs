@@ -662,7 +662,7 @@ pub fn parse_expression_expression(expression: &str, input_data: &JsonValue) -> 
         Ok(json!(now.to_string()))
       } else if expr == "$random" {
         // 随机数
-        use rand::Rng;
+        use rand::RngExt;
         let mut rng = rand::rng();
         let random_value: f64 = rng.random();
         Ok(json!(random_value))

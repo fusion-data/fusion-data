@@ -292,7 +292,7 @@ where
                                                 })
                                                 .collect::<Vec<String>>()
                                                 .join("\n");
-                                            yield Ok(streaming::RawStreamingChoice::Reasoning { reasoning, id: Some(id.to_string()), signature: None })
+                                            yield Ok(streaming::RawStreamingChoice::Reasoning { content: rig::message::ReasoningContent::Summary(reasoning), id: Some(id.to_string()) })
                                         }
                                         _ => continue
                                     }
@@ -306,7 +306,7 @@ where
                                     yield Ok(streaming::RawStreamingChoice::Message(delta.delta.clone()))
                                 }
                                 ItemChunkKind::FunctionCallArgsDelta(delta) => {
-                                    yield Ok(streaming::RawStreamingChoice::ToolCallDelta { id: delta.item_id.clone(), content: streaming::ToolCallDeltaContent::Delta(delta.delta.clone()) })
+                                    yield Ok(streaming::RawStreamingChoice::ToolCallDelta { id: delta.item_id.clone(), content: streaming::ToolCallDeltaContent::Delta(delta.delta.clone()), internal_call_id: String::new() })
                                 }
 
                                 _ => { continue }

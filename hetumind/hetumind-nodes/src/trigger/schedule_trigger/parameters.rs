@@ -3,7 +3,7 @@ use std::str::FromStr;
 use std::time::Duration;
 
 use croner::Cron;
-use duration_str::deserialize_option_duration;
+use duration_str::deserialize_duration;
 use hetumind_core::workflow::{NodeExecutionError, ParameterMap, ValidationError};
 use serde::{Deserialize, Serialize};
 
@@ -14,10 +14,10 @@ pub struct ScheduleParameters {
 
   pub cron_expression: Option<String>,
 
-  #[serde(deserialize_with = "deserialize_option_duration")]
+  #[serde(deserialize_with = "deserialize_duration")]
   pub interval: Option<Duration>,
 
-  #[serde(deserialize_with = "deserialize_option_duration")]
+  #[serde(deserialize_with = "deserialize_duration")]
   pub start_delay: Option<Duration>,
 
   pub timezone: Option<String>,
@@ -26,7 +26,7 @@ pub struct ScheduleParameters {
 
   pub retry_count: Option<u32>,
 
-  #[serde(deserialize_with = "deserialize_option_duration")]
+  #[serde(deserialize_with = "deserialize_duration")]
   pub retry_interval: Option<Duration>,
 }
 

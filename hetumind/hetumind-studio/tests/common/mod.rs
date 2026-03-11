@@ -23,7 +23,7 @@ pub async fn get_server() -> TestServer {
   // 清理测试数据
   cleanup_test_data(&context.dbx).await;
 
-  let mut server = TestServer::new(context.router).unwrap();
+  let mut server = TestServer::new(context.router);
   server.add_header("Authorization", format!("Bearer {}", ADMIN_TOKEN));
   server
 }

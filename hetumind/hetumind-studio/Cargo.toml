@@ -101,6 +101,7 @@ serde_json = { workspace = true }
 serde_repr = { workspace = true }
 
 # -- encoding
+url = { workspace = true }
 urlencoding = { workspace = true }
 
 # -- security & config

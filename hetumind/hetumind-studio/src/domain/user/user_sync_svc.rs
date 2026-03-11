@@ -8,6 +8,7 @@ use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use std::time::Duration;
+use url::Url;
 
 use super::{UserBmc, UserForUpdate, UserStatus};
 
@@ -146,12 +147,19 @@ impl UserSyncSvc {
 
   /// 查询用户变更
   async fn query_user_changes(&self, req: UserChangeQueryReq) -> Result<Vec<UserChangeInfo>, DataError> {
-    let url = format!("{}/api/v1/auth/user-changes", self.jieyuan_base_url);
+    let mut url = Url::parse(&format!("{}/api/v1/auth/user-changes", self.jieyuan_base_url))
+      .map_err(|e| DataError::server_error(format!("Failed to parse URL: {}", e)))?;
+
+    let req_json = serde_json::to_value(&req).unwrap();
+    if let Some(obj) = req_json.as_object() {
+      for (key, value) in obj {
+        url.query_pairs_mut().append_pair(key, &value.to_string());
+      }
+    }
 
     let response = self
       .http
-      .get(&url)
-      .query(&req)
+      .get(url)
       .send()
       .await
       .map_err(|e| DataError::server_error(format!("Failed to query user changes: {}", e)))?;

@@ -319,12 +319,24 @@ pub fn try_from_message_to_vec_input_item(value: rig::completion::Message) -> Re
               }),
             });
           }
-          rig::message::AssistantContent::Reasoning(rig::message::Reasoning { id, reasoning, .. }) => {
+          rig::message::AssistantContent::Reasoning(rig::message::Reasoning { id, content, .. }) => {
             items.push(InputItem {
               role: None,
               input: InputContent::Reasoning(OpenAIReasoning {
                 id: id.expect("An OpenAI-generated ID is required when using OpenAI reasoning items"),
-                summary: reasoning.into_iter().map(|x| ReasoningSummary::new(&x)).collect(),
+                summary: content
+                  .into_iter()
+                  .map(|x| {
+                    let text = match x {
+                      rig::message::ReasoningContent::Text { text, .. } => text.clone(),
+                      rig::message::ReasoningContent::Encrypted(s) => s.clone(),
+                      rig::message::ReasoningContent::Redacted { data } => data.clone(),
+                      rig::message::ReasoningContent::Summary(s) => s.clone(),
+                      _ => String::new(),
+                    };
+                    ReasoningSummary::new(&text)
+                  })
+                  .collect(),
                 encrypted_content: None,
                 status: None,
               }),
@@ -1023,10 +1035,11 @@ impl TryFrom<CompletionResponse> for completion::CompletionResponse<CompletionRe
         input_tokens: usage.input_tokens,
         output_tokens: usage.output_tokens,
         total_tokens: usage.total_tokens,
+        cached_input_tokens: 0,
       })
       .unwrap_or_default();
 
-    Ok(completion::CompletionResponse { choice, usage, raw_response: response })
+    Ok(completion::CompletionResponse { choice, usage, raw_response: response, message_id: None })
   }
 }
 
@@ -1256,11 +1269,23 @@ pub fn try_from(message: message::Message) -> Result<Vec<Message>, message::Mess
             status: ToolStatus::Completed,
           }])
         }
-        rig::message::AssistantContent::Reasoning(rig::message::Reasoning { id, reasoning, .. }) => {
+        rig::message::AssistantContent::Reasoning(rig::message::Reasoning { id, content, .. }) => {
           Ok(vec![Message::Assistant {
             content: OneOrMany::one(AssistantContentType::Reasoning(OpenAIReasoning {
               id: id.expect("An OpenAI-generated ID is required when using OpenAI reasoning items"),
-              summary: reasoning.into_iter().map(|x| ReasoningSummary::SummaryText { text: x }).collect(),
+              summary: content
+                .into_iter()
+                .map(|x| {
+                  let text = match x {
+                    rig::message::ReasoningContent::Text { text, .. } => text.clone(),
+                    rig::message::ReasoningContent::Encrypted(s) => s.clone(),
+                    rig::message::ReasoningContent::Redacted { data } => data.clone(),
+                    rig::message::ReasoningContent::Summary(s) => s.clone(),
+                    _ => String::new(),
+                  };
+                  ReasoningSummary::SummaryText { text }
+                })
+                .collect(),
               encrypted_content: None,
               status: Some(ToolStatus::Completed),
             })),

@@ -28,12 +28,12 @@ members = [
   "hetumind/hetumind-studio",
   "hetumind/hetumind-docs",
 ]
-resolver = "2"
+resolver = "3"
 
 [workspace.package]
 version = "0.1.0"
 edition = "2024"
-rust-version = "1.92"
+rust-version = "1.94"
 description = "A data fusion platform with scheduler, ai agent studio and core libraries"
 license = "Apache-2.0"
 repository = "https://github.com/fusion-data/fusion-data"
@@ -104,7 +104,7 @@ windows-sys = { version = "0.61", features = [
   "Win32_UI_WindowsAndMessaging",
 ] }
 libc = "0.2"
-sysinfo = "0.37"
+sysinfo = "0.38"
 dirs = { version = "6" }
 dotenvy = "0.15"
 zeroize = { version = "1.8", features = ["derive"] }
@@ -123,7 +123,7 @@ config = { version = "0.15", default-features = false, features = [
 ] }
 itertools = "0.14"
 regex = { version = "1.12", features = ["unicode-case"] }
-rand = { version = "0.9", default-features = false, features = ["thread_rng"] }
+rand = { version = "0.10", default-features = false, features = ["thread_rng"] }
 bytes = "1.11"
 ulid = { version = "1", features = ["serde", "uuid"] }
 uuid = { version = "1", features = [
@@ -147,17 +147,17 @@ inventory = { version = "0.3" }
 backon = { version = "1.6" }
 # -- Helpful macros for working with enums and strings
 enum-iterator = "2"
-strum = { version = "0.27", features = ["derive"] }
+strum = { version = "0.28", features = ["derive"] }
 enum_dispatch = "0.3"
 # -- Error
-anyhow = "1"
-thiserror = "2"
+anyhow = "1.0"
+thiserror = "2.0"
 # -- Macros
 quote = "1.0"
 syn = { version = "2.0", features = ["full"] }
 proc-macro2 = "1"
 # -- Crypt & Encoding
-base16ct = { version = "0.3", features = ["alloc"] }
+base16ct = { version = "1.0", features = ["alloc"] }
 base64ct = { version = "1.8", features = ["std", "alloc"] }
 # 相比 base64ct 功能特性更丰富，性能更好。但 base64ct 更注重安全性，常用于密钥
 base64 = "0.22"
@@ -186,7 +186,7 @@ futures = "0.3"
 futures-util = "0.3"
 async-trait = "0.1"
 async-stream = "0.3"
-tokio = { version = "1.49", features = [
+tokio = { version = "1.50", features = [
   "macros",          # #[tokio::main] and #[tokio::test]
   "rt-multi-thread", # Multi-threaded runtime
   "signal",          # Signal handling for graceful shutdown
@@ -219,7 +219,7 @@ tracing-subscriber = { version = "0.3", features = [
   "json",
 ] }
 tracing-appender = "0.2"
-init-tracing-opentelemetry = { version = "0.34", features = [
+init-tracing-opentelemetry = { version = "0.36", features = [
   "tracing_subscriber_ext",
 ] }
 tracing-opentelemetry-instrumentation-sdk = "0.32"
@@ -230,7 +230,7 @@ chrono = { version = "0.4", default-features = false, features = [
   "serde",
 ] }
 chrono-tz = "0.10"
-duration-str = "0.18"
+duration-str = "0.21"
 # -- scheduler
 croner = "3.0"
 hierarchical_hash_wheel_timer = { version = "1.3", features = ["uuid"] }
@@ -242,14 +242,14 @@ pgvector = { version = "0.4", features = ["sqlx"] }
 # -- Serde
 serde = { version = "1.0", features = ["derive", "rc"] }
 serde_path_to_error = "0.1"
-serde_with = { version = "3.16", features = ["chrono_0_4"] }
+serde_with = { version = "3.17", features = ["chrono_0_4"] }
 serde_json = { version = "1.0" }
 tsify = { version = "0.5", features = ["js"] }
 sonic-rs = { version = "0.5" }
 serde_repr = "0.1"
 serde_json_path = { version = "0.7" }
 schemars = { version = "1.2" }
-jsonschema = { version = "0.38" }
+jsonschema = { version = "0.45" }
 nom = "8.0"
 # -- Web
 url = "2.5"
@@ -263,8 +263,8 @@ http-body-util = "0.1"
 js-sys = { version = "0.3" }
 wasm-bindgen = { version = "0.2", features = ["serde-serialize"] }
 wasm-bindgen-futures = { version = "0.4" }
-getrandom = { version = "0.3", default-features = false }
-rand_wasm = { version = "0.9", package = "rand" }
+getrandom = { version = "0.4", default-features = false }
+rand_wasm = { version = "0.10", package = "rand" }
 web-sys = { version = "0.3", features = [
   "Headers",
   "Request",
@@ -281,7 +281,7 @@ console_error_panic_hook = { version = "0.1" }
 serde-wasm-bindgen = { version = "0.6" }
 wee_alloc = { version = "0.4" }
 # async http client
-reqwest = { version = "0.12", features = [
+reqwest = { version = "0.13", features = [
   # "rustls-tls-webpki-roots",
   "json",
   "gzip",
@@ -289,7 +289,7 @@ reqwest = { version = "0.12", features = [
   "multipart",
 ] }
 # lightweight sync http client
-ureq = { version = "3.1", features = ["json", "charset"] }
+ureq = { version = "3.2", features = ["json", "charset"] }
 hyper = "1"
 hyper-util = "0.1"
 tower = "0.5"
@@ -315,7 +315,7 @@ axum = { version = "0.8", features = [
 axum-core = { version = "0.5" }
 axum-extra = { version = "0.12", features = ["typed-header"] }
 axum-macros = { version = "0.5" }
-axum-test = { version = "18", features = ["reqwest", "typed-routing", "ws"] }
+axum-test = { version = "19", features = ["reqwest", "typed-routing", "ws"] }
 utoipa = { version = "5.4", features = [
   "axum_extras",
   "chrono",
@@ -341,17 +341,17 @@ tonic-reflection = "0.14"
 tonic-web = "0.14"
 tonic-build = { version = "0.14" }
 # -- Protocol Buffers
-protobuf = "4.33.3-release"
-protobuf-codegen = "4.33.3-release"
+protobuf = "4.33.5-release"
+protobuf-codegen = "4.33.5-release"
 protobuf-json-mapping = "3"
 protobuf-parse = "3"
 # protoc-bin-vendored = "3"
 # -- Template Engin
 minijinja = { version = "2.5" }
 # -- Data Science
-polars = "0.52"
+polars = "0.53"
 # An Excel/OpenDocument Spreadsheets reader and deserializer in pure rust
-calamine = "0.32"
+calamine = "0.34"
 # This written in pure Rust to read and write xlsx file.
 umya-spreadsheet = "2.3"
 # -- Redis & Valkey client
@@ -365,10 +365,10 @@ opendal = { version = "0.55", features = [
 ] }
 minio = { version = "0.3" }
 # -- LLM
-rig-core = { version = "0.28", features = ["derive"] }
+rig-core = { version = "0.32", features = ["derive"] }
 # rig-core = { git = "https://github.com/0xPlaygrounds/rig.git", branch = "main" }
-rig-postgres = { version = "0.1" }
-rmcp = { version = "0.12", features = [
+rig-postgres = { version = "0.2" }
+rmcp = { version = "1.1", features = [
   "client",
   "reqwest",
   "transport-streamable-http-client-reqwest",

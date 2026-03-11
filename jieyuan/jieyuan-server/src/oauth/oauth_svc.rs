@@ -212,7 +212,7 @@ impl OAuthSvc {
   /// # Returns
   /// 随机生成的 code_verifier 字符串
   fn generate_code_verifier(&self) -> String {
-    use rand::Rng;
+    use rand::RngExt;
     const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~";
     let mut rng = rand::rng();
     (0..128)

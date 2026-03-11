@@ -185,6 +185,7 @@ where
                                         yield Ok(streaming::RawStreamingChoice::ToolCallDelta {
                                           id: id.clone(),
                                           content: streaming::ToolCallDeltaContent::Delta(new_arguments.clone()),
+                                          internal_call_id: String::new(),
                                         });
                                     } else {
                                         debug!("Partial tool call received but tool call was never started.");

@@ -573,10 +573,11 @@ impl TryFrom<CompletionResponse> for completion::CompletionResponse<CompletionRe
         input_tokens: usage.prompt_tokens as u64,
         output_tokens: (usage.total_tokens - usage.prompt_tokens) as u64,
         total_tokens: usage.total_tokens as u64,
+        cached_input_tokens: 0,
       })
       .unwrap_or_default();
 
-    Ok(completion::CompletionResponse { choice, usage, raw_response: response })
+    Ok(completion::CompletionResponse { choice, usage, raw_response: response, message_id: None })
   }
 }
 
