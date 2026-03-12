@@ -16,14 +16,14 @@ Enter `jieyuan/jieyuan` directory:
 grpcurl -plaintext localhost:58010 describe
 
 
-grpcurl -plaintext -import-path ./fusions/hetu-iam/proto \
+grpcurl -plaintext -import-path ./hetus/hetu-iam/proto \
   -proto hetu_iam/v1/auth.proto \
   -d '{"email":"admin@fusiondata.com", "password":"2024.Fusiondata"}' \
   localhost:58010 hetu_iam.v1.Auth/Signin
 
 
 grpcurl -plaintext -proto hetu_iam/v1/user.proto \
-  -import-path ./fusions/hetu-iam/proto \
+  -import-path ./hetus/hetu-iam/proto \
   -import-path ./hetus/hetu-api/proto \
   -H 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiYWxnIjoiZGlyIn0..tEzlNmgpceHjDcW0mEAlCg.elEEVDBlz5aINB-HyoPolE8ahROWw-aZdxMN2bPIXAY.i5WYuPGJbHKR8_F1F55uhw' \
   -d '{"id":1}' \
@@ -31,7 +31,7 @@ grpcurl -plaintext -proto hetu_iam/v1/user.proto \
 
 
 grpcurl -plaintext -proto hetu_iam/v1/role.proto \
-  -import-path ./fusions/hetu-iam/proto \
+  -import-path ./hetus/hetu-iam/proto \
   -import-path ./hetus/hetu-api/proto \
   -H 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiYWxnIjoiZGlyIn0..tEzlNmgpceHjDcW0mEAlCg.elEEVDBlz5aINB-HyoPolE8ahROWw-aZdxMN2bPIXAY.i5WYuPGJbHKR8_F1F55uhw' \
   -d '{
@@ -47,7 +47,7 @@ grpcurl -plaintext -proto hetu_iam/v1/role.proto \
 
 
 grpcurl -plaintext -proto hetu_iam/v1/role.proto \
-  -import-path ./fusions/hetu-iam/proto \
+  -import-path ./hetus/hetu-iam/proto \
   -import-path ./hetus/hetu-api/proto \
   -H 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiYWxnIjoiZGlyIn0..tEzlNmgpceHjDcW0mEAlCg.elEEVDBlz5aINB-HyoPolE8ahROWw-aZdxMN2bPIXAY.i5WYuPGJbHKR8_F1F55uhw' \
   -d '{
@@ -58,7 +58,7 @@ grpcurl -plaintext -proto hetu_iam/v1/role.proto \
 
 
 grpcurl -plaintext -proto hetu_iam/v1/access_control.proto \
-  -import-path ./fusions/hetu-iam/proto \
+  -import-path ./hetus/hetu-iam/proto \
   -import-path ./hetus/hetu-api/proto \
   -H 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiYWxnIjoiZGlyIn0..tEzlNmgpceHjDcW0mEAlCg.elEEVDBlz5aINB-HyoPolE8ahROWw-aZdxMN2bPIXAY.i5WYuPGJbHKR8_F1F55uhw' \
   -d '{
@@ -69,7 +69,7 @@ grpcurl -plaintext -proto hetu_iam/v1/access_control.proto \
 
 ## 需要把 id 替换成正确的值（可以使用上一个 CreatePolicyStatement 的返回值）
 grpcurl -plaintext -proto hetu_iam/v1/access_control.proto \
-  -import-path ./fusions/hetu-iam/proto \
+  -import-path ./hetus/hetu-iam/proto \
   -import-path ./hetus/hetu-api/proto \
   -H 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiYWxnIjoiZGlyIn0..tEzlNmgpceHjDcW0mEAlCg.elEEVDBlz5aINB-HyoPolE8ahROWw-aZdxMN2bPIXAY.i5WYuPGJbHKR8_F1F55uhw' \
   -d '{

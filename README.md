@@ -17,7 +17,7 @@ hetu-data 是一个基于 Rust 生态开发的 **融合数据** 平台，当前�
 - **hetusql**: 基于 [sea-query](https://github.com/SeaQL/sea-query/) 开发的数据库 ORM
 - **hetusql-core**: 核心类型、特性和数据库抽象
 - **hetusql-macros**: 模型定义派生宏
-- **fusions**: 所有 fusion 库的元包
+- **hetus**: 所有 fusion 库的元包
 
 ### 应用项目
 

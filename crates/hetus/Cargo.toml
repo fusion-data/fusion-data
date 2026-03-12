@@ -13,11 +13,8 @@ workspace = true
 
 [features]
 # ==================== 默认 features ====================
-# 基础功能：UUID + OpenAPI
-default = [
-  "common-default",
-  "default-openapi",
-]
+# 基础功能：UUID
+default = ["common-default"]
 
 # 基础依赖
 common-default = ["hetu-common/with-uuid"]
@@ -61,13 +58,6 @@ ulid = ["dep:ulid", "utoipa/ulid", "hetu-common/with-ulid"]
 # ==================== 可选功能 ====================
 
 # OpenAPI 文档生成
-default-openapi = [
-  "dep:utoipa",
-  "hetu-common/with-openapi",
-  "hetu-core/with-openapi",
-]
-
-# OpenAPI 文档生成 (非默认)
 openapi = [
   "dep:utoipa",
   "hetu-common/with-openapi",

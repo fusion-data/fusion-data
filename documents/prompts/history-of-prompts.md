@@ -1,8 +1,8 @@
 # History of Prompts
 
-## 重构：使用 fusions 聚合 crate 替代各个单独的 hetu-xxx 导入
+## 重构：使用 hetus 聚合 crate 替代各个单独的 hetu-xxx 导入
 
-项目使用 fusion 库时，只需要导入单一的 fusions 库来替代各个单独的 hetu-xxx 导入。比如：
+项目使用 fusion 库时，只需要导入单一的 hetus 库来替代各个单独的 hetu-xxx 导入。比如：
 
 ```rust
 use hetus::core::DataError; // ✅

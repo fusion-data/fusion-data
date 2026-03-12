@@ -2,7 +2,7 @@
 # Cargo publish
 
 # Define packages in publish order
-packages="hetu-common hetusql-macros hetusql-core hetusql hetu-core-macros hetu-core hetu-security hetu-grpc hetu-db hetu-ai hetu-web fusions"
+packages="hetu-common hetusql-macros hetusql-core hetusql hetu-core-macros hetu-core hetu-security hetu-grpc hetu-db hetu-ai hetu-web hetus"
 
 # Loop through packages and publish with sleep
 for package in $packages; do

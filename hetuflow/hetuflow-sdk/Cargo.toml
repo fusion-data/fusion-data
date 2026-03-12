@@ -26,7 +26,7 @@ wee_alloc = ["dep:wee_alloc"]
 
 
 [dependencies]
-fusions = { workspace = true }
+hetus = { workspace = true }
 hetusql-core = { workspace = true, features = ["with-uuid"] }
 hetuflow-core = { workspace = true }
 
