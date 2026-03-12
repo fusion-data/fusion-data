@@ -1,6 +1,6 @@
 use std::{future::Future, time::Duration};
 
-use crate::DataError;
+use hetu_common::DataError;
 
 use super::{ServiceHandle, TaskResult};
 

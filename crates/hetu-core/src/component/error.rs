@@ -1,6 +1,6 @@
 use thiserror::Error;
 
-use crate::DataError;
+use hetu_common::DataError;
 
 pub type ComponentResult<T> = core::result::Result<T, ComponentError>;
 

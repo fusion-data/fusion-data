@@ -3,7 +3,7 @@ use std::{env::consts, path::PathBuf, sync::Arc, time::Duration};
 use duration_str::deserialize_duration;
 use hetuflow_core::{types::Labels, utils::setting::write_app_setting};
 use hetus::common::{ahash::HashMap, env::get_env};
-use hetus::core::{DataError, configuration::HetuConfigRegistry};
+use hetus::{DataError, core::configuration::HetuConfigRegistry};
 use log::{info, warn};
 use serde::{Deserialize, Serialize};
 use sysinfo::System;

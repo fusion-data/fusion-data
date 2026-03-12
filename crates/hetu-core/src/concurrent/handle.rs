@@ -1,6 +1,6 @@
 use tokio::task::JoinHandle;
 
-use crate::DataError;
+use hetu_common::DataError;
 
 pub struct ServiceHandle<T = ()> {
   name: String,

@@ -1,5 +1,5 @@
 use axum::extract::FromRequestParts;
-use hetus::core::DataError;
+use hetus::DataError;
 use hetusql::page::PageResult;
 
 use jieyuan_core::model::{NamespaceEntity, NamespaceForCreate, NamespaceForPage, NamespaceForUpdate, NamespaceStatus};

@@ -66,7 +66,7 @@ pub use hetusql as sql;
 #[cfg(feature = "web")]
 pub mod web_utils;
 
-// ==================== 核心类型 re-export ====================
+// ==================== 基础类型 re-export ====================
 
-/// 核心错误类型
-pub use core::{DataError, Result};
+/// 基础错误类型
+pub use common::{DataError, Result};

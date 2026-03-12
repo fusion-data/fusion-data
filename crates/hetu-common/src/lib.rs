@@ -19,3 +19,6 @@ pub mod uuid;
 pub mod ahash {
   pub use ::ahash::*;
 }
+
+// Re-export 常用错误类型
+pub use error::{DataError, DataResult, Error, Result};

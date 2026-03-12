@@ -2,7 +2,10 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use hetus::common::time::now_offset;
-use hetus::core::{DataError, concurrent::ServiceTask, timer::TimerRef};
+use hetus::{
+  DataError,
+  core::{concurrent::ServiceTask, timer::TimerRef},
+};
 use log::{debug, error, info, warn};
 use mea::mpsc;
 use mea::shutdown::ShutdownRecv;

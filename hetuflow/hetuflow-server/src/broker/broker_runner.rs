@@ -4,8 +4,8 @@ use hetuflow_core::{
   models::{AgentFilter, AgentForUpdate, ServerFilter, ServerForUpdate},
   types::{AgentStatus, ServerStatus},
 };
+use hetus::DataError;
 use hetus::common::time::now_offset;
-use hetus::core::DataError;
 use hetusql::{
   ModelManager,
   filter::{OpValDateTime, OpValInt32},

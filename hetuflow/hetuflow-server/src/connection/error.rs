@@ -1,4 +1,4 @@
-use hetus::core::DataError;
+use hetus::DataError;
 use hetus::web::WebError;
 use hetusql::SqlError;
 use log::{error, warn};
@@ -78,7 +78,7 @@ impl GatewayError {
   }
 }
 
-/// 与 hetus::core::DataError 的兼容性转换
+/// 与 hetus::DataError 的兼容性转换
 impl From<GatewayError> for DataError {
   fn from(err: GatewayError) -> Self {
     match err {

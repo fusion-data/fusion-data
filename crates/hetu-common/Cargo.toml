@@ -19,6 +19,14 @@ with-openapi = ["dep:utoipa"]
 with-db = ["dep:sqlx", "dep:sea-query"]
 # WASM compatibility features
 with-wasm = []
+# Tokio 相关错误转换
+with-tokio = ["dep:tokio"]
+# MEA 相关错误转换
+with-mea = ["dep:mea"]
+# Tonic/gRPC 相关错误转换
+with-tonic = ["dep:tonic", "dep:protobuf"]
+# Config 相关错误转换
+with-config = ["dep:config"]
 
 [dependencies]
 thiserror.workspace = true
@@ -41,6 +49,12 @@ sqlx = { workspace = true, optional = true }
 sea-query = { workspace = true, optional = true }
 libc = { workspace = true }
 windows-sys = { workspace = true }
+# 可选依赖用于错误转换
+tokio = { workspace = true, optional = true }
+mea = { workspace = true, optional = true }
+tonic = { workspace = true, optional = true }
+protobuf = { workspace = true, optional = true }
+config = { workspace = true, optional = true }
 
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]

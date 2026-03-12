@@ -100,3 +100,57 @@ impl SqlError {
     }
   }
 }
+
+// ==========================================
+// DataError 转换实现
+// ==========================================
+
+impl From<SqlError> for hetu_common::DataError {
+  fn from(value: SqlError) -> Self {
+    match value {
+      SqlError::Unauthorized(e) => hetu_common::DataError::unauthorized(e),
+      SqlError::InvalidArgument { message } => {
+        hetu_common::DataError::bad_request(format!("InvalidArgument, {message}"))
+      }
+      SqlError::EntityNotFound { schema, entity, id } => {
+        hetu_common::DataError::not_found(format!("EntityNotFound, {}:{}:{}", schema.unwrap_or_default(), entity, id))
+      }
+      SqlError::NotFound { schema, table, sql } => {
+        log::debug!("NotFound, schema: {}, table: {}, sql: {}", schema.unwrap_or_default(), table, sql);
+        hetu_common::DataError::not_found(format!("NotFound, {}:{}", schema.unwrap_or_default(), table))
+      }
+      SqlError::ListLimitOverMax { max, actual } => {
+        hetu_common::DataError::bad_request(format!("ListLimitOverMax, max: {max}, actual: {actual}"))
+      }
+      SqlError::ListLimitUnderMin { min, actual } => {
+        hetu_common::DataError::bad_request(format!("ListLimitUnderMin, min: {min}, actual: {actual}"))
+      }
+      SqlError::ListPageUnderMin { min, actual } => {
+        hetu_common::DataError::bad_request(format!("ListPageUnderMin, min: {min}, actual: {actual}"))
+      }
+      SqlError::UserAlreadyExists { key, value } => {
+        hetu_common::DataError::conflicted(format!("UserAlreadyExists, {key}:{value}"))
+      }
+      SqlError::UniqueViolation { table, constraint } => {
+        hetu_common::DataError::conflicted(format!("UniqueViolation, {table}:{constraint}"))
+      }
+      SqlError::ExecuteError { table, message } => {
+        hetu_common::DataError::server_error(format!("ExecuteError, {}:{}", table, message))
+      }
+      SqlError::ExecuteFail { schema, table } => {
+        hetu_common::DataError::server_error(format!("ExecuteFail, {:?}:{}", schema, table))
+      }
+      SqlError::CountFail { schema, table } => {
+        hetu_common::DataError::server_error(format!("CountFail, {:?}:{}", schema, table))
+      }
+      e @ SqlError::InvalidDatabase(_) => hetu_common::DataError::server_error(e.to_string()),
+      e @ SqlError::CantCreateModelManagerProvider(_) => hetu_common::DataError::server_error(e.to_string()),
+      e @ SqlError::IntoSeaError(_) => hetu_common::DataError::server_error(e.to_string()),
+      e @ SqlError::SeaQueryError(_) => hetu_common::DataError::server_error(e.to_string()),
+      e @ SqlError::JsonError(_) => hetu_common::DataError::server_error(e.to_string()),
+      SqlError::Custom(msg) => hetu_common::DataError::server_error(msg),
+      SqlError::DbxError(e) => hetu_common::DataError::internal(500, e.to_string(), Some(Box::new(e))),
+      SqlError::Sqlx(e) => hetu_common::DataError::internal(500, e.to_string(), Some(Box::new(e))),
+    }
+  }
+}

@@ -1,5 +1,5 @@
 use hetuflow_core::models::{SchedServer, ServerForQuery, ServerForUpdate};
-use hetus::core::DataError;
+use hetus::DataError;
 use hetusql::{ModelManager, page::PageResult};
 
 use crate::infra::bmc::ServerBmc;

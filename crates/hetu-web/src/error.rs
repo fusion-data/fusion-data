@@ -1,7 +1,7 @@
 use axum::Json;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
-use hetu_core::DataError;
+use hetu_common::DataError;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 

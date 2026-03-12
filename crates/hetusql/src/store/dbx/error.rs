@@ -38,3 +38,13 @@ pub enum DbxError {
   #[error(transparent)]
   Sqlx(#[from] sqlx::Error),
 }
+
+// ==========================================
+// DataError 转换实现
+// ==========================================
+
+impl From<DbxError> for hetu_common::DataError {
+  fn from(value: DbxError) -> Self {
+    hetu_common::DataError::server_error(value.to_string())
+  }
+}

@@ -2,8 +2,8 @@ use hetumind_core::{
   user::UserId,
   workflow::{Execution, ExecutionId, ExecutionMode, ExecutionStatus, WorkflowId},
 };
+use hetus::DataError;
 use hetus::common::time::OffsetDateTime;
-use hetus::core::DataError;
 use hetusql::{field::Fields, postgres::PgRowType};
 use sea_query::enum_def;
 use serde::{Deserialize, Serialize};

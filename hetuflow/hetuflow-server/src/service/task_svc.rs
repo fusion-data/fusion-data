@@ -1,4 +1,4 @@
-use hetus::core::DataError;
+use hetus::DataError;
 use hetusql::ModelManager;
 use hetusql::field::FieldMask;
 use hetusql::filter::OpValUuid;

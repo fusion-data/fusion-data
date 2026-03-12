@@ -89,7 +89,7 @@ async fn update_user_tenant_status(
   let mm = app.get_component::<hetusql::ModelManager>().unwrap();
   let user_svc = UserSvc::new(mm);
 
-  let status = req.status.ok_or_else(|| hetus::core::DataError::bad_request("status is required"))?;
+  let status = req.status.ok_or_else(|| hetus::DataError::bad_request("status is required"))?;
 
   user_svc.update_user_tenant_status(user_id, tenant_id, status).await?;
 

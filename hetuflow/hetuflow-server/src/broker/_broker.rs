@@ -1,8 +1,11 @@
 use std::sync::Arc;
 
 use hetuflow_core::{models::ServerForRegister, types::ServerStatus};
-use hetus::core::{DataError, application::Application, configuration::ConfigRegistry};
 use hetus::web::config::WebConfig;
+use hetus::{
+  DataError,
+  core::{application::Application, configuration::ConfigRegistry},
+};
 use hetusql::ModelManager;
 use log::{error, info};
 use mea::shutdown::ShutdownRecv;

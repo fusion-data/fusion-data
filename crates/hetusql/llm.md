@@ -301,26 +301,59 @@ let result = UserBmc::page(&mm, vec![filter], page).await?;
 
 ## 错误处理
 
+> **注意**: `SqlError -> DataError` 和 `DbxError -> DataError` 转换已在 hetusql 中实现。
+
+### SqlError -> DataError 转换
+
+```rust
+// hetusql 已内置 From<SqlError> for hetu_common::DataError
+// 自动映射规则：
+// - SqlError::Unauthorized -> DataError::unauthorized
+// - SqlError::EntityNotFound -> DataError::not_found
+// - SqlError::NotFound -> DataError::not_found
+// - SqlError::UniqueViolation -> DataError::conflicted
+// - SqlError::UserAlreadyExists -> DataError::conflicted
+// - SqlError::InvalidArgument -> DataError::bad_request
+// - SqlError::ListLimitOverMax/UnderMin/PageUnderMin -> DataError::bad_request
+// - 其他 -> DataError::server_error 或 DataError::internal
+```
+
+### DbxError -> DataError 转换
+
+```rust
+// hetusql 已内置 From<DbxError> for hetu_common::DataError
+// 自动映射为 DataError::server_error
+```
+
+### BMC 层
+
 ```rust
 // BMC 层返回 SqlError
 pub async fn get_by_id(mm: &ModelManager, id: i64) -> Result<Option<User>, SqlError>;
+```
 
-// Service 层转换为 DataError
-impl From<SqlError> for DataError {
-  fn from(err: SqlError) -> Self {
-    match err {
-      SqlError::EntityNotFound { .. } => DataError::NotFound(...),
-      SqlError::UniqueViolation { .. } => DataError::Conflict(...),
-      _ => DataError::InternalError(...),
-    }
-  }
+### Service 层
+
+```rust
+use hetu_common::DataError;
+
+// 直接使用 ? 运算符，自动转换 SqlError -> DataError
+pub async fn get_by_id(&self, id: i64) -> Result<User, DataError> {
+  UserBmc::get_by_id(&self.mm, id)
+    .await?  // SqlError 自动转换为 DataError
+    .ok_or_else(|| DataError::not_found("用户不存在"))
 }
 
-// 使用
-UserBmc::get_by_id(&self.mm, id)
-  .await
-  .map_err(DataError::from)?
-  .ok_or_else(|| DataError::not_found("用户不存在"))
+// 事务处理
+pub async fn create_with_txn(&self, input: UserForCreate) -> Result<i64, DataError> {
+  let mm = self.mm.get_txn_clone();
+  mm.dbx().begin_txn().await?;  // DbxError 自动转换为 DataError
+
+  let id = UserBmc::create(&mm, input).await?;
+
+  mm.dbx().commit_txn().await?;
+  Ok(id)
+}
 ```
 
 ---

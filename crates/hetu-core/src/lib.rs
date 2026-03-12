@@ -2,7 +2,6 @@ pub mod application;
 pub mod component;
 pub mod concurrent;
 pub mod configuration;
-mod data_error;
 pub mod file;
 #[cfg(feature = "with-logforth")]
 pub mod logforth;
@@ -17,9 +16,9 @@ pub mod tracing;
 pub mod utils;
 
 pub use async_trait::async_trait;
-pub use data_error::*;
 #[cfg(feature = "with-macros")]
 pub use hetu_core_macros::Builder;
 pub use run_mode::*;
 
-pub type Result<T> = core::result::Result<T, DataError>;
+/// Result 类型别名，使用 hetu_common::DataError
+pub type Result<T> = core::result::Result<T, hetu_common::DataError>;

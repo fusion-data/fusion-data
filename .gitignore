@@ -345,7 +345,7 @@ runs/
 # AI Codings
 ################
 .trae/documents/
-.claude/
+.claude/settings.local.json
 .qwen/
 QWEN.md
 .kilocode/

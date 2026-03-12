@@ -1,4 +1,4 @@
-use hetus::core::DataError;
+use hetus::DataError;
 use hetusql::{ModelManager, page::PageResult};
 use uuid::Uuid;
 

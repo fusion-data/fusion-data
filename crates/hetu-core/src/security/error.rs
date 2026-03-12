@@ -47,3 +47,16 @@ impl Serialize for Error {
     serializer.serialize_str(&self.to_string())
   }
 }
+
+// Security Error -> DataError 转换
+impl From<Error> for hetu_common::DataError {
+  fn from(value: Error) -> Self {
+    match value {
+      Error::TokenExpired => hetu_common::DataError::unauthorized("Token expired"),
+      Error::SignatureNotMatching => hetu_common::DataError::unauthorized("Signature not matching"),
+      Error::InvalidPassword => hetu_common::DataError::unauthorized("Invalid password"),
+      Error::FailedToVerifyPassword => hetu_common::DataError::unauthorized("Failed to verify password"),
+      _ => hetu_common::DataError::server_error(value.to_string()),
+    }
+  }
+}

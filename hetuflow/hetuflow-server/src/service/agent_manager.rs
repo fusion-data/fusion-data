@@ -1,13 +1,11 @@
 use std::sync::Arc;
 
+use hetus::DataError;
 use hetus::common::{
   ahash::{HashMap, HashSet},
   time::datetime_from_millis,
 };
-use hetus::core::{
-  DataError,
-  concurrent::{ServiceHandle, ServiceTask, TaskResult},
-};
+use hetus::core::concurrent::{ServiceHandle, ServiceTask, TaskResult};
 use hetusql::{ModelManager, filter::OpValUuid};
 use log::{error, info, warn};
 use mea::{mpsc, shutdown::ShutdownRecv};

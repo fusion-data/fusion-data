@@ -1,4 +1,4 @@
-use hetus::core::DataError;
+use hetus::DataError;
 use tokio::process::Command;
 
 #[tokio::main]

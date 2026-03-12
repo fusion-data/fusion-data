@@ -17,9 +17,10 @@ use tracing_subscriber::{
 };
 
 use crate::{
-  DataError, Result,
+  Result,
   configuration::{HetuSetting, LogLevel, LogSetting, LogWriterType},
 };
+use hetu_common::DataError;
 
 // setup a temporary subscriber to log output during setup
 pub(crate) fn init_tracing_guard() -> (DefaultGuard, Option<String>) {

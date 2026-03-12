@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use hetus::core::DataError;
+use hetus::DataError;
 use mea::rwlock::RwLock;
 use tokio::sync::{broadcast, mpsc};
 

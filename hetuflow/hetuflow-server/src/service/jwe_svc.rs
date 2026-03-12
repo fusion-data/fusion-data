@@ -4,7 +4,7 @@
 //! 采用 ECDH-ES 密钥协商 + A256GCM 内容加密算法
 
 use chrono::Utc;
-use hetus::core::DataError;
+use hetus::DataError;
 use josekit::{
   jwe::{JweContext, JweHeader},
   jwk::{

@@ -29,10 +29,11 @@ with-tracing = [
   "dep:init-tracing-opentelemetry",
   "dep:tracing-opentelemetry-instrumentation-sdk",
 ]
-tonic = ["dep:tonic", "dep:protobuf"]
+tonic = ["dep:tonic", "dep:protobuf", "hetu-common/with-tonic"]
+hetusql = ["dep:hetusql"]
 
 [dependencies]
-hetu-common = { workspace = true }
+hetu-common = { workspace = true, features = ["with-tokio", "with-mea", "with-config"] }
 hetu-core-macros = { workspace = true, optional = true }
 thiserror = { workspace = true }
 dashmap = { workspace = true }

@@ -1,4 +1,4 @@
-use hetus::core::{DataError, utils::wait_exit_signals};
+use hetus::{DataError, core::utils::wait_exit_signals};
 
 use jieyuan_server::start::start_jieyuan;
 

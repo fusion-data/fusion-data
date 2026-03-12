@@ -21,11 +21,7 @@ impl DbBmc for InvalidAuthTokenBmc {
 
 impl InvalidAuthTokenBmc {
   /// 添加无效令牌到黑名单
-  pub async fn add_token(
-    mm: &ModelManager,
-    token: &str,
-    expires_at: OffsetDateTime,
-  ) -> Result<(), hetus::core::DataError> {
+  pub async fn add_token(mm: &ModelManager, token: &str, expires_at: OffsetDateTime) -> Result<(), hetus::DataError> {
     let (sql, values) = Query::insert()
       .into_table(InvalidAuthTokenIden::Table)
       .columns([InvalidAuthTokenIden::Token, InvalidAuthTokenIden::ExpiresAt])
@@ -43,7 +39,7 @@ impl InvalidAuthTokenBmc {
   }
 
   /// 检查令牌是否在黑名单中
-  pub async fn is_token_invalid(mm: &ModelManager, token: &str) -> Result<bool, hetus::core::DataError> {
+  pub async fn is_token_invalid(mm: &ModelManager, token: &str) -> Result<bool, hetus::DataError> {
     let (sql, _values) = Query::select()
       .column(InvalidAuthTokenIden::Token)
       .from(InvalidAuthTokenIden::Table)
@@ -65,7 +61,7 @@ impl InvalidAuthTokenBmc {
   }
 
   /// 清理过期的无效令牌
-  pub async fn cleanup_expired_tokens(mm: &ModelManager) -> Result<u64, hetus::core::DataError> {
+  pub async fn cleanup_expired_tokens(mm: &ModelManager) -> Result<u64, hetus::DataError> {
     let (sql, values) = Query::delete()
       .from_table(InvalidAuthTokenIden::Table)
       .and_where(Expr::col(InvalidAuthTokenIden::ExpiresAt).lt(now_utc()))

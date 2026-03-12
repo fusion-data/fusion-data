@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use hetus::core::DataError;
+use hetus::DataError;
 use hetus::core::application::Application;
 use hetus::core::concurrent::{ServiceTask, TaskServiceHandle};
 use hetus::core::timer::{Timer, TimerPlugin};

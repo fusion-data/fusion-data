@@ -1,4 +1,4 @@
-use hetus::core::DataError;
+use hetus::DataError;
 use thiserror::Error;
 
 /// 任务执行错误类型

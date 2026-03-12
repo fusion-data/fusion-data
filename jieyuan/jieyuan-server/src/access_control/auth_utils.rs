@@ -1,7 +1,8 @@
+use hetus::DataError;
 use hetus::common::ctx::{Ctx, CtxPayload};
 use hetus::common::time::now_offset;
 use hetus::core::application::Application;
-use hetus::core::{DataError, Result, configuration::SecuritySetting, security::SecurityUtils};
+use hetus::core::{Result, configuration::SecuritySetting, security::SecurityUtils};
 
 /// 生成基本访问令牌
 ///

@@ -174,9 +174,9 @@ pub enum TenantAccessError {
   InvalidConfiguration(String),
 }
 
-impl From<TenantAccessError> for hetus::core::DataError {
+impl From<TenantAccessError> for hetus::DataError {
   fn from(err: TenantAccessError) -> Self {
-    hetus::core::DataError::BadRequest(err.to_string())
+    hetus::DataError::BadRequest(err.to_string())
   }
 }
 

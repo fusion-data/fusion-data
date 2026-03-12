@@ -3,7 +3,7 @@ use std::{path::PathBuf, time::Duration};
 use duration_str::deserialize_duration;
 use hetuflow_core::utils::setting::write_app_setting;
 use hetus::common::env::get_env;
-use hetus::core::{DataError, configuration::HetuConfigRegistry};
+use hetus::{DataError, core::configuration::HetuConfigRegistry};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 

@@ -1,9 +1,9 @@
-use hetus::core::{
-  DataError,
-  application::{Application, ApplicationBuilder},
-  tracing::TracingPlugin,
-};
+use hetus::core::tracing::TracingPlugin;
 use hetus::db::DbPlugin;
+use hetus::{
+  DataError,
+  core::application::{Application, ApplicationBuilder},
+};
 
 use crate::{
   domain::user::UserSyncSvc,

@@ -3,7 +3,7 @@ use std::sync::Arc;
 use hetuflow_core::protocol::{ProcessEvent, ProcessEventKind, ProcessStatus};
 use hetus::common::process::is_zombie_process;
 use hetus::common::time::now_epoch_millis;
-use hetus::core::{DataError, concurrent::ServiceTask};
+use hetus::{DataError, core::concurrent::ServiceTask};
 use log::{info, warn};
 use mea::shutdown::ShutdownRecv;
 

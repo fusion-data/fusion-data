@@ -37,21 +37,58 @@ pub enum Error {
 }
 ```
 
-### DataError Trait
+### DataError 结构体
 
 ```rust
-pub trait DataError: Error + Debug + Display + Serialize {
-  fn code(&self) -> i32;
-  fn msg(&self) -> &str;
-  fn data(&self) -> Option<&serde_json::Value>;
-  fn source(&self) -> Option<&(dyn Error + 'static)>;
+/// 数据（业务）错误，兼容 jsonrpc error
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DataError {
+  pub code: i32,                              // HTTP 状态码或业务错误码
+  pub message: String,                        // 错误消息
+  #[serde(skip_serializing_if = "Option::is_none")]
+  pub detail: Option<serde_json::Value>,      // 详细信息（可选）
+  #[serde(skip)]
+  pub source: Option<Box<dyn Error + Send + Sync>>, // 源错误（不序列化）
 }
+
+// 构造方法
+impl DataError {
+  pub fn bad_request(msg: impl Into<String>) -> Self;    // 400
+  pub fn not_found(msg: impl Into<String>) -> Self;      // 404
+  pub fn conflicted(msg: impl Into<String>) -> Self;     // 409
+  pub fn unauthorized(msg: impl Into<String>) -> Self;   // 401
+  pub fn forbidden(msg: impl Into<String>) -> Self;      // 403
+  pub fn server_error(msg: impl Into<String>) -> Self;   // 500
+  pub fn biz_error(code: i32, msg: impl Into<String>, data: Option<Value>) -> Self;
+  pub fn internal(code: i32, msg: impl Into<String>, source: Option<Box<dyn Error + Send + Sync>>) -> Self;
+  pub fn retry_limit(msg: impl Into<String>, retry_limit: u32) -> Self; // 1429
+}
+
+// From 实现（基础）
+impl From<Error> for DataError;
+impl From<std::io::Error> for DataError;
+impl From<serde_json::Error> for DataError;
+impl From<std::time::SystemTimeError> for DataError;
+impl From<CtxError> for DataError;
+impl From<std::net::AddrParseError> for DataError;
+
+// From 实现（feature-gated）
+#[cfg(feature = "with-uuid")]
+impl From<uuid::Error> for DataError;
+
+#[cfg(feature = "with-tokio")]
+impl From<tokio::task::JoinError> for DataError;
+
+#[cfg(feature = "with-config")]
+impl From<config::ConfigError> for DataError;
 ```
 
 ### Result 类型
 
 ```rust
 pub type Result<T> = core::result::Result<T, Error>;
+pub type DataResult<T> = core::result::Result<T, DataError>;
 ```
 
 ---

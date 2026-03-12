@@ -1,5 +1,5 @@
 use hetumind_core::workflow::{NodeExecutionError, TriggerError, ValidationError, WorkflowExecutionError};
-use hetus::core::DataError;
+use hetus::DataError;
 use thiserror::Error;
 
 #[derive(Error, Debug)]

@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use hetus::core::DataError;
+use hetus::DataError;
 use hetusql::ModelManager;
 use log::{debug, info, warn};
 use uuid::Uuid;

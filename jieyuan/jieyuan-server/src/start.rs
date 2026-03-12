@@ -1,7 +1,7 @@
 use hetus::core::logforth::LogforthPlugin;
-use hetus::core::{DataError, application::Application};
 use hetus::db::DbPlugin;
 use hetus::web::server::WebServerBuilder;
+use hetus::{DataError, core::application::Application};
 
 use crate::endpoint::routes;
 

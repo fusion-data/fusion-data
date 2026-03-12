@@ -1,6 +1,7 @@
 use std::sync::OnceLock;
 
-use hetus::core::{DataError, Result};
+use hetus::DataError;
+use hetus::core::Result;
 use hetusql::{
   ModelManager,
   base::{BmcConfig, DbBmc},

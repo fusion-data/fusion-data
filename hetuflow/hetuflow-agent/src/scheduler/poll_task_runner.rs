@@ -2,7 +2,7 @@ use std::{sync::Arc, time::Duration};
 
 use hetuflow_core::protocol::{AcquireTaskRequest, EventMessage};
 use hetus::common::time::now_offset;
-use hetus::core::{DataError, concurrent::ServiceTask};
+use hetus::{DataError, core::concurrent::ServiceTask};
 use log::{debug, error, info};
 use mea::shutdown::ShutdownRecv;
 

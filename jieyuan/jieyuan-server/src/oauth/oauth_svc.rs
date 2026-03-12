@@ -1,5 +1,8 @@
 use hetus::common::ahash::HashMap;
-use hetus::core::{DataError, application::Application, configuration::ConfigRegistry};
+use hetus::{
+  DataError,
+  core::{application::Application, configuration::ConfigRegistry},
+};
 use hetusql::ModelManager;
 use log::info;
 use reqwest::Client;

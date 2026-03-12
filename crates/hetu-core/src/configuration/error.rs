@@ -13,3 +13,10 @@ pub enum ConfigureError {
   #[error(transparent)]
   ConfigError(#[from] config::ConfigError),
 }
+
+// ConfigureError -> DataError 转换
+impl From<ConfigureError> for hetu_common::DataError {
+  fn from(value: ConfigureError) -> Self {
+    hetu_common::DataError::server_error(value.to_string())
+  }
+}

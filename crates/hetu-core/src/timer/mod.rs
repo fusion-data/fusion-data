@@ -8,7 +8,8 @@ use hierarchical_hash_wheel_timer::{
 pub use hierarchical_hash_wheel_timer::{OneShotClosureState, PeriodicClosureState, TimerReturn};
 use uuid::Uuid;
 
-use crate::{DataError, application::ApplicationBuilder, plugin::Plugin};
+use crate::{application::ApplicationBuilder, plugin::Plugin};
+use hetu_common::DataError;
 
 pub type TimerCore = TimerWithThread<Uuid, OneShotClosureState<Uuid>, PeriodicClosureState<Uuid>>;
 

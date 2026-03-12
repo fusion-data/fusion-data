@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use hetus::common::time::now_offset;
-use hetus::core::{DataError, concurrent::ServiceTask};
+use hetus::{DataError, core::concurrent::ServiceTask};
 use hetusql::ModelManager;
 use log::{error, info};
 use mea::shutdown::ShutdownRecv;

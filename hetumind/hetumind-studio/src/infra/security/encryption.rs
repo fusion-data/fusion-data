@@ -1,5 +1,6 @@
 use chrono::{DateTime, FixedOffset, Utc};
-use hetus::core::{DataError, Result};
+use hetus::DataError;
+use hetus::core::Result;
 use openssl::{
   ec::{EcGroup, EcKey},
   nid::Nid,

@@ -4,7 +4,7 @@ mod task;
 pub use handle::ServiceHandle;
 pub use task::{RetryStrategy, ServiceTask};
 
-use crate::DataError;
+use hetu_common::DataError;
 
 pub struct TaskResult<T = ()> {
   pub result: T,

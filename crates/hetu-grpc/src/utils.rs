@@ -1,9 +1,8 @@
 use std::{future::Future, time::Duration};
 
 use futures::TryFutureExt;
-use hetu_common::ctx::CtxPayload;
-use hetu_common::env::set_env;
-use hetu_core::{DataError, configuration::SecuritySetting, security::SecurityUtils};
+use hetu_common::{DataError, ctx::CtxPayload, env::set_env};
+use hetu_core::{configuration::SecuritySetting, security::SecurityUtils};
 use log::info;
 use tokio::{net::TcpListener, sync::oneshot};
 use tonic::{
@@ -23,7 +22,7 @@ use crate::{GrpcSettings, GrpcStartInfo};
 #[allow(unused_mut)]
 pub async fn init_grpc_server(
   setting: GrpcSettings,
-) -> hetu_core::Result<(oneshot::Receiver<GrpcStartInfo>, impl Future<Output = hetu_core::Result<()>>)> {
+) -> Result<(oneshot::Receiver<GrpcStartInfo>, impl Future<Output = Result<(), DataError>>), DataError> {
   let conf = &setting.conf;
   let (tx, rx) = oneshot::channel();
   let tcp_listener = TcpListener::bind(&conf.server_addr).await?;

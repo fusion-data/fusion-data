@@ -5,10 +5,8 @@ use hetuflow_core::{
   models::AgentCapabilities,
   protocol::{CommandMessage, EventMessage, RegisterAgentRequest},
 };
-use hetus::core::{
-  DataError,
-  concurrent::{RetryStrategy, ServiceHandle, ServiceTask},
-};
+use hetus::DataError;
+use hetus::core::concurrent::{RetryStrategy, ServiceHandle, ServiceTask};
 use log::{error, info, warn};
 use mea::shutdown::ShutdownRecv;
 use tokio::{net::TcpStream, sync::mpsc};

@@ -4,7 +4,7 @@ use hetuflow_core::{
   protocol::{EventMessage, ProcessEvent, ProcessEventKind, TaskInstanceChanged},
   types::TaskInstanceStatus,
 };
-use hetus::core::{DataError, concurrent::ServiceTask};
+use hetus::{DataError, core::concurrent::ServiceTask};
 use log::{error, info, warn};
 use mea::shutdown::ShutdownRecv;
 use tokio::sync::broadcast;

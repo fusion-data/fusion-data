@@ -4,7 +4,8 @@ use axum::Router;
 use config::{File, FileFormat};
 use log::info;
 
-use hetu_core::{DataError, application::Application, configuration::ConfigRegistry};
+use hetu_common::DataError;
+use hetu_core::{application::Application, configuration::ConfigRegistry};
 use mea::shutdown::ShutdownRecv;
 
 use crate::config::{DEFAULT_CONFIG_STR, WebConfig};

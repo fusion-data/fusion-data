@@ -1,5 +1,5 @@
+use hetus::DataError;
 use hetus::common::time::now_epoch_millis;
-use hetus::core::DataError;
 use log::{debug, error, info, warn};
 use uuid::Uuid;
 

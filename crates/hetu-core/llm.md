@@ -221,26 +221,53 @@ let log_setting = hetu_setting.log();
 
 ## DataError 错误处理
 
+> **注意**: `DataError` 定义在 `hetu-common` 中。hetu-core 不重新导出，需要时使用 `hetu_common::DataError` 或 `hetus::DataError`。
+
 ```rust
-use hetu_core::DataError;
+// 使用 hetu_common::DataError
+use hetu_common::DataError;
 
-// 从其他错误转换
-impl From<SqlError> for DataError {
-  fn from(err: SqlError) -> Self {
-    match err {
-      SqlError::EntityNotFound => DataError::not_found("实体不存在"),
-      SqlError::UniqueViolation => DataError::conflict("唯一性冲突"),
-      _ => DataError::internal(500, "内部错误", Some(Box::new(err))),
-    }
-  }
-}
+// 或通过 hetus meta-crate
+use hetus::DataError;
 
-// 使用
+// 使用示例
 fn get_user(id: i64) -> Result<User, DataError> {
   user_bmc.get_by_id(&mm, id)
     .await
     .map_err(DataError::from)?
     .ok_or_else(|| DataError::not_found("用户不存在"))
+}
+```
+
+### 本地错误转换
+
+hetu-core 为本地错误类型提供了 From 实现：
+
+```rust
+// security::Error -> DataError (在 security/error.rs 中)
+impl From<Error> for hetu_common::DataError {
+  fn from(err: Error) -> Self {
+    match err {
+      Error::TokenExpired => hetu_common::DataError::unauthorized("Token expired"),
+      Error::SignatureNotMatching => hetu_common::DataError::unauthorized("Signature not matching"),
+      Error::InvalidPassword => hetu_common::DataError::unauthorized("Invalid password"),
+      _ => hetu_common::DataError::server_error(err.to_string()),
+    }
+  }
+}
+
+// ConfigureError -> DataError (在 configuration/error.rs 中)
+impl From<ConfigureError> for hetu_common::DataError {
+  fn from(err: ConfigureError) -> Self {
+    hetu_common::DataError::server_error(err.to_string())
+  }
+}
+
+// ComponentError -> DataError (在 component/error.rs 中)
+impl From<ComponentError> for hetu_common::DataError {
+  fn from(err: ComponentError) -> Self {
+    hetu_common::DataError::internal(500, err.to_string(), Some(Box::new(err)))
+  }
 }
 ```
 
